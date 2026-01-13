@@ -17,6 +17,12 @@ function App() {
     if (!storedData) {
       storedData = sampleData;
       storage.set(storedData);
+    } else {
+      // Migration: add measurements field if it doesn't exist
+      if (!storedData.measurements) {
+        storedData.measurements = sampleData.measurements;
+        storage.set(storedData);
+      }
     }
     setAppState(storedData);
   }, []);

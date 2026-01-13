@@ -19,7 +19,7 @@ export function MeasurementsView({ client, measurements, onAddMeasurement }: Mea
     date: new Date().toISOString().split('T')[0],
   });
 
-  const clientMeasurements = measurements
+  const clientMeasurements = (measurements || [])
     .filter((m) => m.clientId === client.id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
@@ -97,7 +97,7 @@ export function MeasurementsView({ client, measurements, onAddMeasurement }: Mea
               <MeasurementRow label="Biceps" current={latest.biceps} previous={previous?.biceps} unit='"' />
               <MeasurementRow label="Thighs" current={latest.thighs} previous={previous?.thighs} unit='"' />
               {latest.notes && (
-                <div className="pt-2 mt-2 border-t">
+                <div className="pt-3 mt-1">
                   <p className="text-sm text-muted-foreground">{latest.notes}</p>
                 </div>
               )}
