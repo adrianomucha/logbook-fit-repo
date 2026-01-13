@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { WorkoutPlan, WorkoutWeek, WorkoutDay, Exercise } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Trash2, Copy } from 'lucide-react';
+import { ExerciseSelector } from './ExerciseSelector';
+import { Plus, Trash2, Copy, Library } from 'lucide-react';
 
 interface PlanBuilderProps {
   plan: WorkoutPlan;
@@ -14,11 +15,24 @@ interface PlanBuilderProps {
 export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0);
+  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
 
   const currentWeek = plan.weeks[selectedWeek];
   const currentDay = currentWeek?.days[selectedDay];
 
   const addExercise = () => {
+    setShowExerciseSelector(true);
+  };
+
+  const handleAddExerciseFromLibrary = (exercise: Exercise) => {
+    if (!currentDay) return;
+
+    const updatedPlan = { ...plan };
+    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.push(exercise);
+    onUpdatePlan(updatedPlan);
+  };
+
+  const addBlankExercise = () => {
     if (!currentDay) return;
 
     const newExercise: Exercise = {
@@ -128,6 +142,7 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
   }
 
   return (
+    <>
     <Card>
       <CardHeader>
         <div className="space-y-3">
@@ -199,10 +214,16 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
                 className="font-semibold max-w-xs"
                 placeholder="Day name"
               />
-              <Button size="sm" onClick={addExercise}>
-                <Plus className="w-4 h-4 mr-1" />
-                Add Exercise
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={addBlankExercise}>
+                  <Plus className="w-4 h-4 mr-1" />
+                  Blank
+                </Button>
+                <Button size="sm" onClick={addExercise}>
+                  <Library className="w-4 h-4 mr-1" />
+                  From Library
+                </Button>
+              </div>
             </div>
 
             {currentDay.exercises.map((exercise, idx) => (
@@ -275,12 +296,20 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
 
             {currentDay.exercises.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
-                No exercises yet. Click "Add Exercise" to get started.
+                No exercises yet. Click "From Library" to add from the exercise library.
               </div>
             )}
           </div>
         </div>
       </CardContent>
     </Card>
+
+    {showExerciseSelector && (
+      <ExerciseSelector
+        onSelect={handleAddExerciseFromLibrary}
+        onClose={() => setShowExerciseSelector(false)}
+      />
+    )}
+  </>
   );
 }
