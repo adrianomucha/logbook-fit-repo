@@ -1,10 +1,10 @@
 import { useState } from 'react';
-import { AppState, Message } from '@/types';
+import { AppState, Message, WorkoutPlan, WorkoutWeek, WorkoutDay } from '@/types';
 import { ClientList } from '@/components/coach/ClientList';
 import { PlanBuilder } from '@/components/coach/PlanBuilder';
 import { ChatView } from '@/components/coach/ChatView';
 import { Button } from '@/components/ui/button';
-import { Users, Dumbbell, MessageSquare } from 'lucide-react';
+import { Users, Dumbbell, MessageSquare, Plus } from 'lucide-react';
 
 interface CoachDashboardProps {
   appState: AppState;
@@ -46,6 +46,39 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     onUpdateState((state) => ({
       ...state,
       plans: state.plans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p))
+    }));
+  };
+
+  const handleCreateNewPlan = () => {
+    if (!selectedClient) return;
+
+    const newPlan: WorkoutPlan = {
+      id: `plan-${Date.now()}`,
+      name: 'New Workout Plan',
+      description: 'Click to edit description',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      weeks: [
+        {
+          id: `week-${Date.now()}`,
+          weekNumber: 1,
+          days: [
+            {
+              id: `day-${Date.now()}`,
+              name: 'Day 1',
+              exercises: []
+            }
+          ]
+        }
+      ]
+    };
+
+    onUpdateState((state) => ({
+      ...state,
+      plans: [...state.plans, newPlan],
+      clients: state.clients.map((c) =>
+        c.id === selectedClientId ? { ...c, currentPlanId: newPlan.id } : c
+      )
     }));
   };
 
@@ -100,8 +133,22 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
               </div>
             )}
 
-            {currentView === 'plans' && selectedPlan && (
-              <PlanBuilder plan={selectedPlan} onUpdatePlan={handleUpdatePlan} />
+            {currentView === 'plans' && selectedClient && (
+              <div className="space-y-4">
+                {selectedPlan ? (
+                  <PlanBuilder plan={selectedPlan} onUpdatePlan={handleUpdatePlan} />
+                ) : (
+                  <div className="text-center py-12 space-y-4">
+                    <p className="text-muted-foreground">
+                      No workout plan assigned to this client yet.
+                    </p>
+                    <Button onClick={handleCreateNewPlan}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Create New Plan
+                    </Button>
+                  </div>
+                )}
+              </div>
             )}
 
             {currentView === 'chat' && selectedClient && (
