@@ -79,7 +79,7 @@ export function ExerciseSelector({ onSelect, onClose }: ExerciseSelectorProps) {
             ))}
           </div>
 
-          <div className="overflow-y-auto max-h-[50vh] space-y-2 pr-2">
+          <div className="overflow-y-auto max-h-[50vh] min-h-[50vh] space-y-2 pr-2">
             {filteredExercises.map((exercise) => (
               <div
                 key={exercise.id}
