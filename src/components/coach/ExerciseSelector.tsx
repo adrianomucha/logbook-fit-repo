@@ -39,9 +39,9 @@ export function ExerciseSelector({ onSelect, onClose }: ExerciseSelectorProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-2xl max-h-[80vh] flex flex-col">
-        <CardContent className="pt-6 flex flex-col h-full">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
+      <Card className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+        <CardContent className="pt-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold">Add Exercise</h3>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -79,41 +79,39 @@ export function ExerciseSelector({ onSelect, onClose }: ExerciseSelectorProps) {
             ))}
           </div>
 
-          <ScrollArea className="flex-1">
-            <div className="space-y-2">
-              {filteredExercises.map((exercise) => (
-                <div
-                  key={exercise.id}
-                  className="p-3 border rounded-md hover:bg-muted cursor-pointer transition-colors"
-                  onClick={() => handleSelectExercise(exercise)}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <p className="font-medium">{exercise.name}</p>
-                      <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
-                        <Badge variant="secondary" className="text-xs capitalize">
-                          {exercise.category}
-                        </Badge>
-                        {exercise.equipment && (
-                          <span>{exercise.equipment}</span>
-                        )}
-                        {exercise.defaultSets && exercise.defaultReps && (
-                          <span>
-                            {exercise.defaultSets} x {exercise.defaultReps}
-                          </span>
-                        )}
-                      </div>
+          <div className="overflow-y-auto max-h-[50vh] space-y-2 pr-2">
+            {filteredExercises.map((exercise) => (
+              <div
+                key={exercise.id}
+                className="p-3 border rounded-md hover:bg-muted cursor-pointer transition-colors"
+                onClick={() => handleSelectExercise(exercise)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="font-medium">{exercise.name}</p>
+                    <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
+                      <Badge variant="secondary" className="text-xs capitalize">
+                        {exercise.category}
+                      </Badge>
+                      {exercise.equipment && (
+                        <span>{exercise.equipment}</span>
+                      )}
+                      {exercise.defaultSets && exercise.defaultReps && (
+                        <span>
+                          {exercise.defaultSets} x {exercise.defaultReps}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
-              ))}
-              {filteredExercises.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">
-                  No exercises found. Try a different search term.
-                </p>
-              )}
-            </div>
-          </ScrollArea>
+              </div>
+            ))}
+            {filteredExercises.length === 0 && (
+              <p className="text-center text-muted-foreground py-8">
+                No exercises found. Try a different search term.
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
