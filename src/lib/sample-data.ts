@@ -261,5 +261,63 @@ export const sampleData: AppState = {
         }
       ]
     }
+  ],
+  measurements: [
+    {
+      id: 'measure-1',
+      clientId: 'client-1',
+      date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+      weight: 185,
+      bodyFat: 18.5,
+      chest: 42,
+      waist: 34,
+      hips: 40,
+      biceps: 15,
+      thighs: 24,
+      notes: 'Starting measurements'
+    },
+    {
+      id: 'measure-2',
+      clientId: 'client-1',
+      date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      weight: 183,
+      bodyFat: 17.8,
+      chest: 42.5,
+      waist: 33.5,
+      hips: 40,
+      biceps: 15.25,
+      thighs: 24.5
+    },
+    {
+      id: 'measure-3',
+      clientId: 'client-1',
+      date: new Date().toISOString(),
+      weight: 181,
+      bodyFat: 17.2,
+      chest: 43,
+      waist: 33,
+      hips: 39.5,
+      biceps: 15.5,
+      thighs: 25,
+      notes: 'Great progress!'
+    },
+    {
+      id: 'measure-4',
+      clientId: 'client-2',
+      date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      weight: 142,
+      bodyFat: 22.5,
+      waist: 27,
+      hips: 36
+    },
+    {
+      id: 'measure-5',
+      clientId: 'client-2',
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      weight: 140,
+      bodyFat: 21.8,
+      waist: 26.5,
+      hips: 36
+    }
   ]
 };

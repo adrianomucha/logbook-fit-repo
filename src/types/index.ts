@@ -67,6 +67,20 @@ export interface CompletedWorkout {
   exercises: Exercise[];
 }
 
+export interface Measurement {
+  id: string;
+  clientId: string;
+  date: string;
+  weight?: number;
+  bodyFat?: number;
+  chest?: number;
+  waist?: number;
+  hips?: number;
+  biceps?: number;
+  thighs?: number;
+  notes?: string;
+}
+
 export type Role = 'coach' | 'client';
 
 export interface AppState {
@@ -77,4 +91,5 @@ export interface AppState {
   plans: WorkoutPlan[];
   messages: Message[];
   completedWorkouts: CompletedWorkout[];
+  measurements: Measurement[];
 }

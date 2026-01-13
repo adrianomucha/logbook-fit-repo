@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { AppState, Message, WorkoutPlan, WorkoutWeek, WorkoutDay } from '@/types';
+import { AppState, Message, WorkoutPlan, Measurement } from '@/types';
 import { ClientList } from '@/components/coach/ClientList';
 import { PlanBuilder } from '@/components/coach/PlanBuilder';
 import { ChatView } from '@/components/coach/ChatView';
+import { MeasurementsView } from '@/components/coach/MeasurementsView';
 import { Button } from '@/components/ui/button';
-import { Users, Dumbbell, MessageSquare, Plus } from 'lucide-react';
+import { Users, Dumbbell, MessageSquare, Plus, Ruler } from 'lucide-react';
 
 interface CoachDashboardProps {
   appState: AppState;
   onUpdateState: (updater: (state: AppState) => AppState) => void;
 }
 
-type View = 'clients' | 'plans' | 'chat';
+type View = 'clients' | 'plans' | 'measurements' | 'chat';
 
 export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps) {
   const [currentView, setCurrentView] = useState<View>('clients');
@@ -82,6 +83,18 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     }));
   };
 
+  const handleAddMeasurement = (measurement: Omit<Measurement, 'id'>) => {
+    const newMeasurement: Measurement = {
+      ...measurement,
+      id: `measure-${Date.now()}`
+    };
+
+    onUpdateState((state) => ({
+      ...state,
+      measurements: [...state.measurements, newMeasurement]
+    }));
+  };
+
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="max-w-7xl mx-auto space-y-4">
@@ -102,6 +115,14 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
             >
               <Dumbbell className="w-4 h-4 mr-2" />
               Plans
+            </Button>
+            <Button
+              variant={currentView === 'measurements' ? 'default' : 'outline'}
+              onClick={() => setCurrentView('measurements')}
+              disabled={!selectedClient}
+            >
+              <Ruler className="w-4 h-4 mr-2" />
+              Progress
             </Button>
             <Button
               variant={currentView === 'chat' ? 'default' : 'outline'}
@@ -149,6 +170,14 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
                   </div>
                 )}
               </div>
+            )}
+
+            {currentView === 'measurements' && selectedClient && (
+              <MeasurementsView
+                client={selectedClient}
+                measurements={appState.measurements}
+                onAddMeasurement={handleAddMeasurement}
+              />
             )}
 
             {currentView === 'chat' && selectedClient && (
