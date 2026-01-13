@@ -10,7 +10,7 @@ import { UserCog, User } from 'lucide-react';
 
 function App() {
   const [appState, setAppState] = useState<AppState | null>(null);
-  const [showRoleSelector, setShowRoleSelector] = useState(false);
+  const [showRoleSelector, setShowRoleSelector] = useState(true);
 
   useEffect(() => {
     let storedData = storage.get();
