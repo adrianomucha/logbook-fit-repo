@@ -256,22 +256,6 @@ export function ClientOverview({
           )}
         </CardContent>
       </Card>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-3 gap-4">
-        <Button variant="outline" className="w-full" onClick={onViewPlans}>
-          <Dumbbell className="w-4 h-4 mr-2" />
-          Manage Plan
-        </Button>
-        <Button variant="outline" className="w-full" onClick={onViewProgress}>
-          <Ruler className="w-4 h-4 mr-2" />
-          Track Progress
-        </Button>
-        <Button variant="outline" className="w-full" onClick={onViewChat}>
-          <MessageSquare className="w-4 h-4 mr-2" />
-          Send Message
-        </Button>
-      </div>
     </div>
   );
 }
