@@ -1,7 +1,11 @@
+import { useState } from 'react';
 import { Client, CompletedWorkout, Measurement, Message, WorkoutPlan } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { MeasurementsModal } from './MeasurementsModal';
+import { MessagesModal } from './MessagesModal';
+import { WorkoutsModal } from './WorkoutsModal';
 import {
   TrendingUp,
   TrendingDown,
@@ -36,6 +40,10 @@ export function ClientOverview({
   onViewProgress,
   onViewChat
 }: ClientOverviewProps) {
+  const [showMeasurementsModal, setShowMeasurementsModal] = useState(false);
+  const [showMessagesModal, setShowMessagesModal] = useState(false);
+  const [showWorkoutsModal, setShowWorkoutsModal] = useState(false);
+
   const clientMeasurements = measurements
     .filter((m) => m.clientId === client.id)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -125,7 +133,7 @@ export function ClientOverview({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Latest Measurements</CardTitle>
-              <Button variant="ghost" size="sm" onClick={onViewProgress}>
+              <Button variant="ghost" size="sm" onClick={() => setShowMeasurementsModal(true)}>
                 <Ruler className="w-4 h-4 mr-1" />
                 View All
               </Button>
@@ -185,7 +193,7 @@ export function ClientOverview({
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Recent Messages</CardTitle>
-              <Button variant="ghost" size="sm" onClick={onViewChat}>
+              <Button variant="ghost" size="sm" onClick={() => setShowMessagesModal(true)}>
                 <MessageSquare className="w-4 h-4 mr-1" />
                 View All
               </Button>
@@ -220,9 +228,9 @@ export function ClientOverview({
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-base">Recent Workouts</CardTitle>
-            <Button variant="ghost" size="sm" onClick={onViewPlans}>
+            <Button variant="ghost" size="sm" onClick={() => setShowWorkoutsModal(true)}>
               <Dumbbell className="w-4 h-4 mr-1" />
-              View Plan
+              View All
             </Button>
           </div>
         </CardHeader>
@@ -256,6 +264,31 @@ export function ClientOverview({
           )}
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      {showMeasurementsModal && (
+        <MeasurementsModal
+          measurements={clientMeasurements}
+          onClose={() => setShowMeasurementsModal(false)}
+        />
+      )}
+
+      {showMessagesModal && (
+        <MessagesModal
+          messages={messages.filter(m => m.senderId === client.id || m.senderId !== client.id)}
+          clientName={client.name}
+          onClose={() => setShowMessagesModal(false)}
+        />
+      )}
+
+      {showWorkoutsModal && (
+        <WorkoutsModal
+          workouts={clientWorkouts}
+          plan={plan}
+          clientName={client.name}
+          onClose={() => setShowWorkoutsModal(false)}
+        />
+      )}
     </div>
   );
 }
