@@ -4,6 +4,7 @@ import { ClientList } from '@/components/coach/ClientList';
 import { PlanBuilder } from '@/components/coach/PlanBuilder';
 import { ChatView } from '@/components/coach/ChatView';
 import { MeasurementsView } from '@/components/coach/MeasurementsView';
+import { ClientOverview } from '@/components/coach/ClientOverview';
 import { Button } from '@/components/ui/button';
 import { Users, Dumbbell, MessageSquare, Plus, Ruler } from 'lucide-react';
 
@@ -146,12 +147,16 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
 
           <div className="lg:col-span-2">
             {currentView === 'clients' && selectedClient && (
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold">Client Overview</h2>
-                <p className="text-muted-foreground">
-                  View detailed client information, progress, and adherence here.
-                </p>
-              </div>
+              <ClientOverview
+                client={selectedClient}
+                plan={selectedPlan}
+                measurements={appState.measurements}
+                completedWorkouts={appState.completedWorkouts}
+                messages={appState.messages}
+                onViewPlans={() => setCurrentView('plans')}
+                onViewProgress={() => setCurrentView('measurements')}
+                onViewChat={() => setCurrentView('chat')}
+              />
             )}
 
             {currentView === 'plans' && selectedClient && (
