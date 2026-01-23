@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { ExerciseSelector } from './ExerciseSelector';
 import { Plus, Trash2, Copy, Library } from 'lucide-react';
 
@@ -146,24 +147,38 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
     <Card>
       <CardHeader>
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <Input
-              value={plan.name}
-              onChange={(e) => updatePlanName(e.target.value)}
-              className="text-xl font-bold max-w-md"
-              placeholder="Plan name"
-            />
+          <div className="flex items-center gap-3">
+            {plan.emoji && <span className="text-3xl">{plan.emoji}</span>}
+            <div className="flex-1">
+              <Input
+                value={plan.name}
+                onChange={(e) => updatePlanName(e.target.value)}
+                className="text-xl font-bold"
+                placeholder="Plan name"
+              />
+              {plan.description && (
+                <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
+              )}
+            </div>
             <Button size="sm" onClick={addDay}>
               <Plus className="w-4 h-4 mr-1" />
               Add Day
             </Button>
           </div>
-          <Input
-            value={plan.description || ''}
-            onChange={(e) => updatePlanDescription(e.target.value)}
-            className="text-sm"
-            placeholder="Plan description (optional)"
-          />
+          {(plan.durationWeeks || plan.workoutsPerWeek) && (
+            <div className="flex gap-2">
+              {plan.durationWeeks && (
+                <Badge variant="secondary">
+                  {plan.durationWeeks} {plan.durationWeeks === 1 ? 'week' : 'weeks'}
+                </Badge>
+              )}
+              {plan.workoutsPerWeek && (
+                <Badge variant="secondary">
+                  {plan.workoutsPerWeek} {plan.workoutsPerWeek === 1 ? 'workout' : 'workouts'}/week
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -175,6 +190,7 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
                   variant={selectedDay === idx ? 'default' : 'outline'}
                   size="sm"
                   onClick={() => setSelectedDay(idx)}
+                  className={day.isRestDay ? 'opacity-60' : ''}
                 >
                   {day.name}
                 </Button>
@@ -214,19 +230,29 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
                 className="font-semibold max-w-xs"
                 placeholder="Day name"
               />
-              <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={addBlankExercise}>
-                  <Plus className="w-4 h-4 mr-1" />
-                  Blank
-                </Button>
-                <Button size="sm" onClick={addExercise}>
-                  <Library className="w-4 h-4 mr-1" />
-                  From Library
-                </Button>
-              </div>
+              {!currentDay.isRestDay && (
+                <div className="flex gap-2">
+                  <Button size="sm" variant="outline" onClick={addBlankExercise}>
+                    <Plus className="w-4 h-4 mr-1" />
+                    Blank
+                  </Button>
+                  <Button size="sm" onClick={addExercise}>
+                    <Library className="w-4 h-4 mr-1" />
+                    From Library
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {currentDay.exercises.map((exercise, idx) => (
+            {currentDay.isRestDay ? (
+              <div className="text-center py-12 space-y-2">
+                <div className="text-4xl">😴</div>
+                <p className="text-lg font-medium text-gray-700">Rest Day</p>
+                <p className="text-sm text-gray-500">No exercises scheduled for this day</p>
+              </div>
+            ) : (
+              <>
+                {currentDay.exercises.map((exercise, idx) => (
               <Card key={exercise.id}>
                 <CardContent className="pt-6">
                   <div className="space-y-3">
@@ -294,10 +320,12 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
               </Card>
             ))}
 
-            {currentDay.exercises.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                No exercises yet. Click "From Library" to add from the exercise library.
-              </div>
+                {currentDay.exercises.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No exercises yet. Click "From Library" to add from the exercise library.
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -13,6 +13,7 @@ export interface WorkoutDay {
   id: string;
   name: string;
   exercises: Exercise[];
+  isRestDay?: boolean;
 }
 
 export interface WorkoutWeek {
@@ -25,6 +26,9 @@ export interface WorkoutPlan {
   id: string;
   name: string;
   description?: string;
+  emoji?: string;
+  durationWeeks?: number;
+  workoutsPerWeek?: number;
   weeks: WorkoutWeek[];
   createdAt: string;
   updatedAt: string;
@@ -39,6 +43,15 @@ export interface Message {
   read: boolean;
 }
 
+export interface CheckIn {
+  id: string;
+  clientId: string;
+  coachId: string;
+  date: string;
+  status: 'completed' | 'pending';
+  notes?: string;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -48,6 +61,7 @@ export interface Client {
   adherenceRate?: number;
   status: 'active' | 'inactive';
   avatar?: string;
+  lastCheckInDate?: string;
 }
 
 export interface Coach {
@@ -92,4 +106,21 @@ export interface AppState {
   messages: Message[];
   completedWorkouts: CompletedWorkout[];
   measurements: Measurement[];
+  checkIns: CheckIn[];
+}
+
+// Plan Setup Form Types
+export interface PlanSetupFormData {
+  name: string;
+  description: string;
+  emoji: string;
+  durationWeeks: number;
+  workoutsPerWeek: number;
+}
+
+export interface PlanSetupFormErrors {
+  name?: string;
+  description?: string;
+  durationWeeks?: string;
+  workoutsPerWeek?: string;
 }

@@ -1,19 +1,25 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppState, Role } from '@/types';
 import { storage } from '@/lib/storage';
 import { sampleData } from '@/lib/sample-data';
+import { migratePlansToV2, needsMigration } from '@/lib/migrations/plan-migration';
 import { CoachDashboard } from '@/pages/CoachDashboard';
 import { ClientDashboard } from '@/pages/ClientDashboard';
+import ClientCheckIn from '@/pages/ClientCheckIn';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserCog, User } from 'lucide-react';
 
-function App() {
+function AppContent() {
+  const navigate = useNavigate();
   const [appState, setAppState] = useState<AppState | null>(null);
-  const [showRoleSelector, setShowRoleSelector] = useState(true);
+  const [showRoleSelector, setShowRoleSelector] = useState(false);
 
   useEffect(() => {
     let storedData = storage.get();
+    const isFirstLoad = !storedData;
+
     if (!storedData) {
       storedData = sampleData;
       storage.set(storedData);
@@ -23,8 +29,32 @@ function App() {
         storedData.measurements = sampleData.measurements;
         storage.set(storedData);
       }
+      // Migration: add checkIns field if it doesn't exist
+      if (!storedData.checkIns) {
+        storedData.checkIns = sampleData.checkIns;
+        // Update clients with lastCheckInDate
+        storedData.clients = storedData.clients.map((client, idx) => ({
+          ...client,
+          lastCheckInDate: sampleData.clients[idx]?.lastCheckInDate
+        }));
+        storage.set(storedData);
+      }
+      // Migration: upgrade plans to v2 (add emoji, durationWeeks, workoutsPerWeek, isRestDay)
+      if (needsMigration(storedData.plans)) {
+        console.log('Migrating plans to v2...');
+        storedData.plans = migratePlansToV2(storedData.plans);
+        storage.set(storedData);
+        console.log('Plan migration complete');
+      }
     }
     setAppState(storedData);
+
+    // Show role selector on first load, hide it if user has already selected a role
+    if (isFirstLoad) {
+      setShowRoleSelector(true);
+    } else if (storedData.currentRole && storedData.currentUserId) {
+      setShowRoleSelector(false);
+    }
   }, []);
 
   const handleUpdateState = (updater: (state: AppState) => AppState) => {
@@ -44,6 +74,9 @@ function App() {
     setAppState(newState);
     storage.set(newState);
     setShowRoleSelector(false);
+
+    // Navigate to the correct route
+    navigate(role === 'coach' ? '/coach' : '/client');
   };
 
   if (!appState) {
@@ -126,22 +159,49 @@ function App() {
 
   return (
     <div className="relative">
-      <div className="fixed bottom-4 right-4 z-50">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setShowRoleSelector(true)}
-        >
-          Switch Role
-        </Button>
-      </div>
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowRoleSelector(true)}
+          >
+            Switch Role
+          </Button>
+        </div>
 
-      {appState.currentRole === 'coach' ? (
-        <CoachDashboard appState={appState} onUpdateState={handleUpdateState} />
-      ) : (
-        <ClientDashboard appState={appState} onUpdateState={handleUpdateState} />
-      )}
-    </div>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              appState.currentRole === 'coach' ? (
+                <Navigate to="/coach" replace />
+              ) : (
+                <Navigate to="/client" replace />
+              )
+            }
+          />
+          <Route
+            path="/coach"
+            element={<CoachDashboard appState={appState} onUpdateState={handleUpdateState} />}
+          />
+          <Route
+            path="/client"
+            element={<ClientDashboard appState={appState} onUpdateState={handleUpdateState} />}
+          />
+          <Route
+            path="/coach/client/:clientId/check-in"
+            element={<ClientCheckIn />}
+          />
+        </Routes>
+      </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
+    </BrowserRouter>
   );
 }
 

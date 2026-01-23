@@ -1,25 +1,32 @@
 import { useState } from 'react';
-import { AppState, Message, WorkoutPlan, Measurement } from '@/types';
+import { AppState, Message, WorkoutPlan, Measurement, PlanSetupFormData } from '@/types';
 import { ClientList } from '@/components/coach/ClientList';
 import { PlanBuilder } from '@/components/coach/PlanBuilder';
 import { ChatView } from '@/components/coach/ChatView';
 import { MeasurementsView } from '@/components/coach/MeasurementsView';
 import { ClientOverview } from '@/components/coach/ClientOverview';
+import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip';
+import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
+import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
+import { WorkoutStructureView } from '@/components/coach/WorkoutStructureView';
 import { Button } from '@/components/ui/button';
-import { Users, Dumbbell, MessageSquare, Plus, Ruler } from 'lucide-react';
+import { Users, Dumbbell, MessageSquare, Plus, Ruler, Home, CheckCircle } from 'lucide-react';
+import { generatePlanStructure } from '@/lib/plan-generator';
 
 interface CoachDashboardProps {
   appState: AppState;
   onUpdateState: (updater: (state: AppState) => AppState) => void;
 }
 
-type View = 'clients' | 'plans' | 'measurements' | 'chat';
+type View = 'dashboard' | 'clients' | 'plans' | 'structure' | 'measurements' | 'chat';
 
 export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps) {
-  const [currentView, setCurrentView] = useState<View>('clients');
+  const [currentView, setCurrentView] = useState<View>('dashboard');
   const [selectedClientId, setSelectedClientId] = useState<string | undefined>(
     appState.clients[0]?.id
   );
+  const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
 
   const selectedClient = appState.clients.find((c) => c.id === selectedClientId);
   const selectedPlan = selectedClient
@@ -52,28 +59,13 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
   };
 
   const handleCreateNewPlan = () => {
+    setShowPlanSetupModal(true);
+  };
+
+  const handlePlanCreated = (formData: PlanSetupFormData) => {
     if (!selectedClient) return;
 
-    const newPlan: WorkoutPlan = {
-      id: `plan-${Date.now()}`,
-      name: 'New Workout Plan',
-      description: 'Click to edit description',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      weeks: [
-        {
-          id: `week-${Date.now()}`,
-          weekNumber: 1,
-          days: [
-            {
-              id: `day-${Date.now()}`,
-              name: 'Day 1',
-              exercises: []
-            }
-          ]
-        }
-      ]
-    };
+    const newPlan = generatePlanStructure(formData);
 
     onUpdateState((state) => ({
       ...state,
@@ -82,6 +74,12 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         c.id === selectedClientId ? { ...c, currentPlanId: newPlan.id } : c
       )
     }));
+
+    setShowPlanSetupModal(false);
+
+    // Show success toast
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 3000);
   };
 
   const handleAddMeasurement = (measurement: Omit<Measurement, 'id'>) => {
@@ -98,16 +96,38 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
 
   return (
     <div className="min-h-screen bg-background p-4">
+      {/* Success Toast */}
+      {showSuccessToast && (
+        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top">
+          <CheckCircle className="h-5 w-5" />
+          <span className="font-medium">Plan created successfully!</span>
+        </div>
+      )}
+
+      {/* Plan Setup Modal */}
+      <PlanSetupModal
+        isOpen={showPlanSetupModal}
+        onClose={() => setShowPlanSetupModal(false)}
+        onSubmit={handlePlanCreated}
+      />
+
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Coach Dashboard</h1>
           <div className="flex gap-2">
             <Button
+              variant={currentView === 'dashboard' ? 'default' : 'outline'}
+              onClick={() => setCurrentView('dashboard')}
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Dashboard
+            </Button>
+            <Button
               variant={currentView === 'clients' ? 'default' : 'outline'}
               onClick={() => setCurrentView('clients')}
             >
               <Users className="w-4 h-4 mr-2" />
-              Clients
+              All Clients
             </Button>
             <Button
               variant={currentView === 'plans' ? 'default' : 'outline'}
@@ -136,31 +156,64 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-1">
-            <ClientList
+        {currentView === 'dashboard' && (
+          <div className="space-y-4">
+            <WeeklyConfidenceStrip
               clients={appState.clients}
-              onSelectClient={setSelectedClientId}
-              selectedClientId={selectedClientId}
+              checkIns={appState.checkIns}
+            />
+            <ClientsRequiringAction
+              clients={appState.clients}
+              messages={appState.messages}
+              checkIns={appState.checkIns}
+              onSelectClient={(id) => {
+                setSelectedClientId(id);
+              }}
+              onViewChat={() => setCurrentView('chat')}
             />
           </div>
+        )}
 
-          <div className="lg:col-span-2">
-            {currentView === 'clients' && selectedClient && (
-              <ClientOverview
-                client={selectedClient}
-                plan={selectedPlan}
-                measurements={appState.measurements}
-                completedWorkouts={appState.completedWorkouts}
-                messages={appState.messages}
-                onViewPlans={() => setCurrentView('plans')}
-                onViewProgress={() => setCurrentView('measurements')}
-                onViewChat={() => setCurrentView('chat')}
+        {currentView !== 'dashboard' && (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div className="lg:col-span-1">
+              <ClientList
+                clients={appState.clients}
+                onSelectClient={setSelectedClientId}
+                selectedClientId={selectedClientId}
               />
-            )}
+            </div>
+
+            <div className="lg:col-span-2">
+              {currentView === 'clients' && selectedClient && (
+                <ClientOverview
+                  client={selectedClient}
+                  plan={selectedPlan}
+                  measurements={appState.measurements}
+                  completedWorkouts={appState.completedWorkouts}
+                  messages={appState.messages}
+                  onViewPlans={() => setCurrentView('plans')}
+                  onViewProgress={() => setCurrentView('measurements')}
+                  onViewChat={() => setCurrentView('chat')}
+                />
+              )}
 
             {currentView === 'plans' && selectedClient && (
               <div className="space-y-4">
+                {selectedPlan && (
+                  <div className="flex justify-end gap-2 mb-4">
+                    <Button
+                      onClick={() => setCurrentView('structure')}
+                      variant="outline"
+                    >
+                      Edit Structure
+                    </Button>
+                    <Button onClick={handleCreateNewPlan} variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      New Plan
+                    </Button>
+                  </div>
+                )}
                 {selectedPlan ? (
                   <PlanBuilder plan={selectedPlan} onUpdatePlan={handleUpdatePlan} />
                 ) : (
@@ -175,6 +228,15 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
                   </div>
                 )}
               </div>
+            )}
+
+            {currentView === 'structure' && selectedClient && selectedPlan && (
+              <WorkoutStructureView
+                plan={selectedPlan}
+                onUpdatePlan={handleUpdatePlan}
+                onBack={() => setCurrentView('plans')}
+                onContinue={() => setCurrentView('plans')}
+              />
             )}
 
             {currentView === 'measurements' && selectedClient && (
@@ -195,13 +257,14 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
               />
             )}
 
-            {!selectedClient && (
-              <div className="text-center py-12 text-muted-foreground">
-                Select a client to view details
-              </div>
-            )}
+              {!selectedClient && (
+                <div className="text-center py-12 text-muted-foreground">
+                  Select a client to view details
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

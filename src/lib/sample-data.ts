@@ -20,7 +20,8 @@ export const sampleData: AppState = {
       lastWorkoutDate: new Date().toISOString(),
       adherenceRate: 85,
       status: 'active',
-      avatar: '👨'
+      avatar: '👨',
+      lastCheckInDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
       id: 'client-2',
@@ -30,7 +31,8 @@ export const sampleData: AppState = {
       lastWorkoutDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       adherenceRate: 92,
       status: 'active',
-      avatar: '👩'
+      avatar: '👩',
+      lastCheckInDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
     },
     {
       id: 'client-3',
@@ -40,7 +42,8 @@ export const sampleData: AppState = {
       lastWorkoutDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       adherenceRate: 65,
       status: 'active',
-      avatar: '🧑'
+      avatar: '🧑',
+      lastCheckInDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
     }
   ],
   plans: [
@@ -48,6 +51,9 @@ export const sampleData: AppState = {
       id: 'plan-1',
       name: 'Strength Building Program',
       description: '12-week progressive strength program',
+      emoji: '💪',
+      durationWeeks: 12,
+      workoutsPerWeek: 3,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       weeks: [
@@ -58,6 +64,7 @@ export const sampleData: AppState = {
             {
               id: 'day-1',
               name: 'Upper Body Push',
+              isRestDay: false,
               exercises: [
                 {
                   id: 'ex-1',
@@ -92,6 +99,7 @@ export const sampleData: AppState = {
             {
               id: 'day-2',
               name: 'Lower Body',
+              isRestDay: false,
               exercises: [
                 {
                   id: 'ex-5',
@@ -126,6 +134,7 @@ export const sampleData: AppState = {
             {
               id: 'day-3',
               name: 'Upper Body Pull',
+              isRestDay: false,
               exercises: [
                 {
                   id: 'ex-9',
@@ -165,6 +174,9 @@ export const sampleData: AppState = {
       id: 'plan-2',
       name: 'HIIT & Conditioning',
       description: '8-week high intensity program',
+      emoji: '🔥',
+      durationWeeks: 8,
+      workoutsPerWeek: 4,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       weeks: [
@@ -175,6 +187,7 @@ export const sampleData: AppState = {
             {
               id: 'day-4',
               name: 'HIIT Circuit',
+              isRestDay: false,
               exercises: [
                 {
                   id: 'ex-13',
@@ -318,6 +331,40 @@ export const sampleData: AppState = {
       bodyFat: 21.8,
       waist: 26.5,
       hips: 36
+    }
+  ],
+  checkIns: [
+    {
+      id: 'checkin-1',
+      clientId: 'client-1',
+      coachId: 'coach-1',
+      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed',
+      notes: 'Feeling good, energy levels high'
+    },
+    {
+      id: 'checkin-1-pending',
+      clientId: 'client-1',
+      coachId: 'coach-1',
+      date: new Date().toISOString(),
+      status: 'pending',
+      notes: 'This week went great! Hit all my workouts. Bench press is feeling stronger - moved up to 140lbs. Sleeping well and nutrition is on track. Ready for next week!'
+    },
+    {
+      id: 'checkin-2',
+      clientId: 'client-2',
+      coachId: 'coach-1',
+      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed',
+      notes: 'Workouts going well, noticed strength gains'
+    },
+    {
+      id: 'checkin-3',
+      clientId: 'client-3',
+      coachId: 'coach-1',
+      date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed',
+      notes: 'Struggled with consistency this week'
     }
   ]
 };
