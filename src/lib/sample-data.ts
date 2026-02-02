@@ -1,4 +1,5 @@
 import { AppState } from '@/types';
+import { generateCommonExercises } from './common-exercises';
 
 export const sampleData: AppState = {
   currentRole: 'coach',
@@ -39,11 +40,11 @@ export const sampleData: AppState = {
       name: 'Alex Rodriguez',
       email: 'alex@example.com',
       currentPlanId: 'plan-1',
-      lastWorkoutDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      adherenceRate: 65,
+      lastWorkoutDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      adherenceRate: 85,
       status: 'active',
       avatar: '🧑',
-      lastCheckInDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString()
+      lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
     }
   ],
   plans: [
@@ -273,6 +274,61 @@ export const sampleData: AppState = {
           completed: true
         }
       ]
+    },
+    // Alex Rodriguez - consistent, on-track client (all 3 workouts LAST WEEK)
+    {
+      id: 'completed-alex-1',
+      clientId: 'client-3',
+      planId: 'plan-1',
+      weekId: 'week-1',
+      dayId: 'day-1',
+      completedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days ago (Monday of last week)
+      exercises: [
+        {
+          id: 'ex-1',
+          name: 'Barbell Bench Press',
+          sets: 4,
+          reps: '8-10',
+          weight: '155 lbs',
+          completed: true
+        }
+      ]
+    },
+    {
+      id: 'completed-alex-2',
+      clientId: 'client-3',
+      planId: 'plan-1',
+      weekId: 'week-1',
+      dayId: 'day-2',
+      completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago (Wednesday of last week)
+      exercises: [
+        {
+          id: 'ex-1',
+          name: 'Deadlift',
+          sets: 4,
+          reps: '6-8',
+          weight: '225 lbs',
+          completed: true
+        }
+      ]
+    },
+    {
+      id: 'completed-alex-3',
+      clientId: 'client-3',
+      planId: 'plan-1',
+      weekId: 'week-1',
+      dayId: 'day-3',
+      completedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago (Friday of last week)
+      exercises: [
+        {
+          id: 'ex-1',
+          name: 'Squat',
+          sets: 4,
+          reps: '8-10',
+          weight: '185 lbs',
+          completed: true
+        }
+      ]
     }
   ],
   measurements: [
@@ -366,5 +422,6 @@ export const sampleData: AppState = {
       status: 'completed',
       notes: 'Struggled with consistency this week'
     }
-  ]
+  ],
+  coachExercises: generateCommonExercises('coach-1')
 };

@@ -1,124 +1,54 @@
 import { useNavigate } from 'react-router-dom';
-import { Client, Message, CheckIn } from '@/types';
+import { Client, Message, CheckIn, CompletedWorkout, WorkoutPlan } from '@/types';
+import { getClientStatus } from '@/lib/client-status';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertCircle, Clock, MessageSquare, CheckCircle2, ClipboardCheck } from 'lucide-react';
+import { CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 interface ClientsRequiringActionProps {
   clients: Client[];
   messages: Message[];
   checkIns: CheckIn[];
+  completedWorkouts: CompletedWorkout[];
+  plans: WorkoutPlan[];
   onSelectClient: (clientId: string) => void;
-  onViewChat: () => void;
 }
 
 export function ClientsRequiringAction({
   clients,
   messages,
   checkIns,
-  onSelectClient,
-  onViewChat
+  completedWorkouts,
+  plans,
+  onSelectClient
 }: ClientsRequiringActionProps) {
   const navigate = useNavigate();
 
-  const getClientStatus = (client: Client) => {
-    const lastCheckIn = client.lastCheckInDate ? new Date(client.lastCheckInDate) : null;
-    const daysSinceCheckIn = lastCheckIn
-      ? Math.floor((Date.now() - lastCheckIn.getTime()) / (1000 * 60 * 60 * 24))
-      : 999;
-
-    const unreadMessages = messages.filter(
-      (m) => m.senderId === client.id && !m.read
-    ).length;
-
-    const pendingCheckIn = checkIns?.find(
-      (c) => c.clientId === client.id && c.status === 'pending'
-    );
-
-    // Priority order (per PRD): Pending check-in > At risk > Check-in overdue > Awaiting response
-    // "At risk" is highest urgency because we can still prevent them from becoming overdue
-
-    if (pendingCheckIn) {
-      return {
-        type: 'pending-checkin' as const,
-        icon: ClipboardCheck,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50 dark:bg-purple-950/20',
-        borderColor: 'border-purple-200 dark:border-purple-900',
-        label: 'Check-in Ready to Review',
-        priority: 0,
-        hasUnread: false,
-        checkIn: pendingCheckIn
-      };
-    }
-
-    if (daysSinceCheckIn >= 5 && daysSinceCheckIn < 7) {
-      return {
-        type: 'at-risk' as const,
-        icon: Clock,
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-50 dark:bg-yellow-950/20',
-        borderColor: 'border-yellow-200 dark:border-yellow-900',
-        label: 'At Risk',
-        priority: 1,
-        hasUnread: unreadMessages > 0
-      };
-    }
-
-    if (daysSinceCheckIn >= 7) {
-      return {
-        type: 'overdue' as const,
-        icon: AlertCircle,
-        color: 'text-red-600',
-        bgColor: 'bg-red-50 dark:bg-red-950/20',
-        borderColor: 'border-red-200 dark:border-red-900',
-        label: 'Check-in Overdue',
-        priority: 2,
-        hasUnread: unreadMessages > 0
-      };
-    }
-
-    if (unreadMessages > 0) {
-      return {
-        type: 'unread' as const,
-        icon: MessageSquare,
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50 dark:bg-blue-950/20',
-        borderColor: 'border-blue-200 dark:border-blue-900',
-        label: `${unreadMessages} Unread`,
-        priority: 3,
-        hasUnread: true
-      };
-    }
-
-    return {
-      type: 'ok' as const,
-      icon: CheckCircle2,
-      color: 'text-green-600',
-      bgColor: 'bg-background',
-      borderColor: 'border-border',
-      label: 'All caught up',
-      priority: 4,
-      hasUnread: false
-    };
-  };
-
   const clientsWithStatus = clients.map((client) => ({
     client,
-    status: getClientStatus(client)
+    status: getClientStatus(
+      client,
+      messages,
+      checkIns,
+      completedWorkouts,
+      plans.find(p => p.id === client.currentPlanId)
+    )
   }));
 
   const clientsNeedingAction = clientsWithStatus
-    .filter((c) => c.status.priority <= 3)
+    .filter((c) => c.status.priority <= 5)
     .sort((a, b) => a.status.priority - b.status.priority);
 
-  const clientsAllCaughtUp = clientsWithStatus.filter((c) => c.status.priority === 4);
+  const clientsAllCaughtUp = clientsWithStatus.filter((c) => c.status.priority === 6);
 
   const handleClientAction = (clientId: string, statusType: string) => {
-    // All actions now go to check-in page
-    navigate(`/coach/client/${clientId}/check-in`);
+    // Navigate to unified client profile
+    // Pending check-ins and overdue clients should see Overview tab with quick action to start check-in
+    // Unread messages should switch to Messages tab
+    const tab = statusType === 'unread' ? 'messages' : 'overview';
+    navigate(`/coach/clients/${clientId}?tab=${tab}`);
   };
 
   return (

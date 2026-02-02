@@ -1,16 +1,23 @@
-import { useState } from 'react';
-import { AppState, Message, WorkoutPlan, Measurement, PlanSetupFormData } from '@/types';
-import { ClientList } from '@/components/coach/ClientList';
+import { useState, useEffect, useMemo } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AppState, PlanSetupFormData } from '@/types';
 import { PlanBuilder } from '@/components/coach/PlanBuilder';
-import { ChatView } from '@/components/coach/ChatView';
-import { MeasurementsView } from '@/components/coach/MeasurementsView';
-import { ClientOverview } from '@/components/coach/ClientOverview';
 import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip';
 import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
-import { WorkoutStructureView } from '@/components/coach/WorkoutStructureView';
+import { AssignClientModal } from '@/components/coach/AssignClientModal';
+import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, Dumbbell, MessageSquare, Plus, Ruler, Home, CheckCircle } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Users, Dumbbell, Plus, Home, CheckCircle, X, UserPlus } from 'lucide-react';
 import { generatePlanStructure } from '@/lib/plan-generator';
 
 interface CoachDashboardProps {
@@ -18,38 +25,46 @@ interface CoachDashboardProps {
   onUpdateState: (updater: (state: AppState) => AppState) => void;
 }
 
-type View = 'dashboard' | 'clients' | 'plans' | 'structure' | 'measurements' | 'chat';
+type View = 'dashboard' | 'plans';
 
 export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps) {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('dashboard');
-  const [selectedClientId, setSelectedClientId] = useState<string | undefined>(
-    appState.clients[0]?.id
+  const [selectedPlanId, setSelectedPlanId] = useState<string | undefined>(
+    appState.plans[0]?.id
   );
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [showAssignClientModal, setShowAssignClientModal] = useState(false);
+  const [clientToUnassign, setClientToUnassign] = useState<string | null>(null);
 
-  const selectedClient = appState.clients.find((c) => c.id === selectedClientId);
-  const selectedPlan = selectedClient
-    ? appState.plans.find((p) => p.id === selectedClient.currentPlanId)
-    : undefined;
+  const selectedPlan = appState.plans.find((p) => p.id === selectedPlanId);
 
-  const currentCoach = appState.coaches.find((c) => c.id === appState.currentUserId);
+  const assignedClients = useMemo(
+    () => appState.clients.filter((c) => c.currentPlanId === selectedPlanId),
+    [appState.clients, selectedPlanId]
+  );
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      senderId: appState.currentUserId,
-      senderName: currentCoach?.name || 'Coach',
-      content,
-      timestamp: new Date().toISOString(),
-      read: false
-    };
+  const clientToUnassignName = useMemo(
+    () => appState.clients.find((c) => c.id === clientToUnassign)?.name || '',
+    [appState.clients, clientToUnassign]
+  );
 
-    onUpdateState((state) => ({
-      ...state,
-      messages: [...state.messages, newMessage]
-    }));
-  };
+  // Handle view query parameter
+  useEffect(() => {
+    const view = searchParams.get('view');
+    if (view === 'plans') {
+      setCurrentView('plans');
+    }
+  }, [searchParams]);
+
+  // Ensure a plan is selected when switching to Plans view
+  useEffect(() => {
+    if (currentView === 'plans' && !selectedPlanId && appState.plans.length > 0) {
+      setSelectedPlanId(appState.plans[0].id);
+    }
+  }, [currentView, selectedPlanId, appState.plans]);
 
   const handleUpdatePlan = (updatedPlan: any) => {
     onUpdateState((state) => ({
@@ -63,18 +78,14 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
   };
 
   const handlePlanCreated = (formData: PlanSetupFormData) => {
-    if (!selectedClient) return;
-
     const newPlan = generatePlanStructure(formData);
 
     onUpdateState((state) => ({
       ...state,
       plans: [...state.plans, newPlan],
-      clients: state.clients.map((c) =>
-        c.id === selectedClientId ? { ...c, currentPlanId: newPlan.id } : c
-      )
     }));
 
+    setSelectedPlanId(newPlan.id);
     setShowPlanSetupModal(false);
 
     // Show success toast
@@ -82,16 +93,26 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     setTimeout(() => setShowSuccessToast(false), 3000);
   };
 
-  const handleAddMeasurement = (measurement: Omit<Measurement, 'id'>) => {
-    const newMeasurement: Measurement = {
-      ...measurement,
-      id: `measure-${Date.now()}`
-    };
-
+  const handleAssignClientToPlan = (clientId: string) => {
+    if (!selectedPlanId) return;
     onUpdateState((state) => ({
       ...state,
-      measurements: [...state.measurements, newMeasurement]
+      clients: state.clients.map((c) =>
+        c.id === clientId ? { ...c, currentPlanId: selectedPlanId } : c
+      )
     }));
+    setShowAssignClientModal(false);
+  };
+
+  const handleUnassignClientFromPlan = () => {
+    if (!clientToUnassign) return;
+    onUpdateState((state) => ({
+      ...state,
+      clients: state.clients.map((c) =>
+        c.id === clientToUnassign ? { ...c, currentPlanId: undefined } : c
+      )
+    }));
+    setClientToUnassign(null);
   };
 
   return (
@@ -111,9 +132,35 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         onSubmit={handlePlanCreated}
       />
 
+      {/* Assign Client Modal */}
+      {selectedPlanId && (
+        <AssignClientModal
+          isOpen={showAssignClientModal}
+          onClose={() => setShowAssignClientModal(false)}
+          onAssign={handleAssignClientToPlan}
+          clients={appState.clients}
+          plans={appState.plans}
+          currentPlanId={selectedPlanId}
+        />
+      )}
+
+      {/* Unassign Client Confirmation */}
+      <ConfirmationModal
+        isOpen={!!clientToUnassign}
+        onClose={() => setClientToUnassign(null)}
+        onConfirm={handleUnassignClientFromPlan}
+        title="Remove Client from Plan"
+        message={`Remove ${clientToUnassignName} from this plan?`}
+        warningMessage="The client will no longer have an assigned workout plan."
+        confirmLabel="Remove"
+        confirmVariant="destructive"
+      />
+
       <div className="max-w-7xl mx-auto space-y-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Coach Dashboard</h1>
+          <h1 className="text-3xl font-bold">
+            {currentView === 'plans' ? 'Plans' : 'Dashboard'}
+          </h1>
           <div className="flex gap-2">
             <Button
               variant={currentView === 'dashboard' ? 'default' : 'outline'}
@@ -123,35 +170,18 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
               Dashboard
             </Button>
             <Button
-              variant={currentView === 'clients' ? 'default' : 'outline'}
-              onClick={() => setCurrentView('clients')}
+              variant="outline"
+              onClick={() => navigate('/coach/clients')}
             >
               <Users className="w-4 h-4 mr-2" />
-              All Clients
+              Clients
             </Button>
             <Button
               variant={currentView === 'plans' ? 'default' : 'outline'}
               onClick={() => setCurrentView('plans')}
-              disabled={!selectedClient}
             >
               <Dumbbell className="w-4 h-4 mr-2" />
               Plans
-            </Button>
-            <Button
-              variant={currentView === 'measurements' ? 'default' : 'outline'}
-              onClick={() => setCurrentView('measurements')}
-              disabled={!selectedClient}
-            >
-              <Ruler className="w-4 h-4 mr-2" />
-              Progress
-            </Button>
-            <Button
-              variant={currentView === 'chat' ? 'default' : 'outline'}
-              onClick={() => setCurrentView('chat')}
-              disabled={!selectedClient}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Chat
             </Button>
           </div>
         </div>
@@ -166,103 +196,102 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
               clients={appState.clients}
               messages={appState.messages}
               checkIns={appState.checkIns}
-              onSelectClient={(id) => {
-                setSelectedClientId(id);
-              }}
-              onViewChat={() => setCurrentView('chat')}
+              completedWorkouts={appState.completedWorkouts}
+              plans={appState.plans}
+              onSelectClient={() => {}}
             />
           </div>
         )}
 
-        {currentView !== 'dashboard' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-1">
-              <ClientList
-                clients={appState.clients}
-                onSelectClient={setSelectedClientId}
-                selectedClientId={selectedClientId}
-              />
-            </div>
+        {currentView === 'plans' && (
+          <div className="space-y-4">
+            {appState.plans.length > 0 ? (
+              <>
+                <div className="flex items-center justify-between gap-2">
+                  <Select
+                    value={selectedPlanId || ''}
+                    onValueChange={setSelectedPlanId}
+                  >
+                    <SelectTrigger className="w-[320px]">
+                      <SelectValue placeholder="Select a plan" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {appState.plans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.emoji} {plan.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
-            <div className="lg:col-span-2">
-              {currentView === 'clients' && selectedClient && (
-                <ClientOverview
-                  client={selectedClient}
-                  plan={selectedPlan}
-                  measurements={appState.measurements}
-                  completedWorkouts={appState.completedWorkouts}
-                  messages={appState.messages}
-                  onViewPlans={() => setCurrentView('plans')}
-                  onViewProgress={() => setCurrentView('measurements')}
-                  onViewChat={() => setCurrentView('chat')}
-                />
-              )}
+                  <Button onClick={handleCreateNewPlan}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    New Plan
+                  </Button>
+                </div>
 
-            {currentView === 'plans' && selectedClient && (
-              <div className="space-y-4">
                 {selectedPlan && (
-                  <div className="flex justify-end gap-2 mb-4">
-                    <Button
-                      onClick={() => setCurrentView('structure')}
-                      variant="outline"
-                    >
-                      Edit Structure
-                    </Button>
-                    <Button onClick={handleCreateNewPlan} variant="outline">
-                      <Plus className="w-4 h-4 mr-2" />
-                      New Plan
-                    </Button>
-                  </div>
+                  <>
+                    {/* Plan Assignments */}
+                    <Card>
+                      <CardContent className="py-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h3 className="font-semibold">Assigned Clients</h3>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowAssignClientModal(true)}
+                          >
+                            <UserPlus className="w-4 h-4 mr-2" />
+                            Assign Client
+                          </Button>
+                        </div>
+                        {assignedClients.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            No clients assigned to this plan yet.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-2">
+                            {assignedClients.map((client) => (
+                              <Badge
+                                key={client.id}
+                                variant="secondary"
+                                className="pl-2 pr-1 py-1 flex items-center gap-1"
+                              >
+                                <span>{client.avatar || '👤'}</span>
+                                <span>{client.name}</span>
+                                <button
+                                  onClick={() => setClientToUnassign(client.id)}
+                                  className="ml-1 rounded-full p-0.5 hover:bg-gray-300 transition-colors"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+
+                    <PlanBuilder plan={selectedPlan} onUpdatePlan={handleUpdatePlan} appState={appState} />
+                  </>
                 )}
-                {selectedPlan ? (
-                  <PlanBuilder plan={selectedPlan} onUpdatePlan={handleUpdatePlan} />
-                ) : (
-                  <div className="text-center py-12 space-y-4">
-                    <p className="text-muted-foreground">
-                      No workout plan assigned to this client yet.
-                    </p>
-                    <Button onClick={handleCreateNewPlan}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create New Plan
-                    </Button>
-                  </div>
-                )}
+              </>
+            ) : (
+              <div className="text-center py-16 space-y-4 border rounded-lg bg-white">
+                <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground" />
+                <div className="space-y-2">
+                  <h2 className="text-xl font-semibold">No plans yet</h2>
+                  <p className="text-muted-foreground max-w-sm mx-auto">
+                    Create your first workout plan template. You can assign it to clients later.
+                  </p>
+                </div>
+                <Button onClick={handleCreateNewPlan} size="lg">
+                  <Plus className="w-5 h-5 mr-2" />
+                  Create Your First Plan
+                </Button>
               </div>
             )}
-
-            {currentView === 'structure' && selectedClient && selectedPlan && (
-              <WorkoutStructureView
-                plan={selectedPlan}
-                onUpdatePlan={handleUpdatePlan}
-                onBack={() => setCurrentView('plans')}
-                onContinue={() => setCurrentView('plans')}
-              />
-            )}
-
-            {currentView === 'measurements' && selectedClient && (
-              <MeasurementsView
-                client={selectedClient}
-                measurements={appState.measurements}
-                onAddMeasurement={handleAddMeasurement}
-              />
-            )}
-
-            {currentView === 'chat' && selectedClient && (
-              <ChatView
-                client={selectedClient}
-                messages={appState.messages}
-                currentUserId={appState.currentUserId}
-                currentUserName={currentCoach?.name || 'Coach'}
-                onSendMessage={handleSendMessage}
-              />
-            )}
-
-              {!selectedClient && (
-                <div className="text-center py-12 text-muted-foreground">
-                  Select a client to view details
-                </div>
-              )}
-            </div>
           </div>
         )}
       </div>

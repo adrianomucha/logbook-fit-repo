@@ -1,22 +1,23 @@
 import { useState } from 'react';
-import { WorkoutPlan, WorkoutWeek, WorkoutDay, Exercise } from '@/types';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { WorkoutPlan, WorkoutWeek, WorkoutDay, Exercise, AppState } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { ExerciseSelector } from './ExerciseSelector';
-import { Plus, Trash2, Copy, Library } from 'lucide-react';
+import { WorkoutSidebar } from './workout-builder/WorkoutSidebar';
+import { ExerciseRow } from './workout-builder/ExerciseRow';
+import { Plus, Library } from 'lucide-react';
 
 interface PlanBuilderProps {
   plan: WorkoutPlan;
   onUpdatePlan: (plan: WorkoutPlan) => void;
+  appState?: AppState;
 }
 
-export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
+export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) {
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0);
   const [showExerciseSelector, setShowExerciseSelector] = useState(false);
+  const [newlyAddedExerciseId, setNewlyAddedExerciseId] = useState<string | null>(null);
 
   const currentWeek = plan.weeks[selectedWeek];
   const currentDay = currentWeek?.days[selectedDay];
@@ -29,35 +30,47 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
     if (!currentDay) return;
 
     const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.push(exercise);
+    // Add at the top (index 0)
+    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(exercise);
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
 
   const addBlankExercise = () => {
     if (!currentDay) return;
 
+    const newExerciseId = `ex-${Date.now()}`;
     const newExercise: Exercise = {
-      id: `ex-${Date.now()}`,
+      id: newExerciseId,
       name: '',
       sets: 3,
       reps: '10'
     };
 
     const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.push(newExercise);
+    // Add at the top (index 0)
+    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(newExercise);
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
+
+    // Mark this exercise as newly added so it starts expanded
+    setNewlyAddedExerciseId(newExerciseId);
+    // Clear after a short delay to allow re-rendering
+    setTimeout(() => setNewlyAddedExerciseId(null), 100);
   };
 
   const updateExercise = (exerciseIndex: number, field: keyof Exercise, value: any) => {
     const updatedPlan = { ...plan };
     const exercise = updatedPlan.weeks[selectedWeek].days[selectedDay].exercises[exerciseIndex];
     (exercise as any)[field] = value;
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
 
   const deleteExercise = (exerciseIndex: number) => {
     const updatedPlan = { ...plan };
     updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(exerciseIndex, 1);
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
 
@@ -69,72 +82,47 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
     };
 
     const updatedPlan = { ...plan };
+    // Insert duplicate right after the original
     updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(
       exerciseIndex + 1,
       0,
       newExercise
     );
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
 
-  const addDay = () => {
-    const newDay: WorkoutDay = {
-      id: `day-${Date.now()}`,
-      name: `Day ${currentWeek.days.length + 1}`,
-      exercises: []
-    };
+  const moveExerciseUp = (exerciseIndex: number) => {
+    if (exerciseIndex === 0) return;
 
     const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days.push(newDay);
+    const exercises = updatedPlan.weeks[selectedWeek].days[selectedDay].exercises;
+    [exercises[exerciseIndex], exercises[exerciseIndex - 1]] = [
+      exercises[exerciseIndex - 1],
+      exercises[exerciseIndex]
+    ];
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
-    setSelectedDay(updatedPlan.weeks[selectedWeek].days.length - 1);
   };
 
-  const deleteDay = (dayIndex: number) => {
-    if (currentWeek.days.length <= 1) {
-      alert('Cannot delete the last day. Plans must have at least one day.');
-      return;
-    }
+  const moveExerciseDown = (exerciseIndex: number) => {
+    const exercises = currentDay.exercises;
+    if (exerciseIndex === exercises.length - 1) return;
 
     const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days.splice(dayIndex, 1);
+    const exercisesRef = updatedPlan.weeks[selectedWeek].days[selectedDay].exercises;
+    [exercisesRef[exerciseIndex], exercisesRef[exerciseIndex + 1]] = [
+      exercisesRef[exerciseIndex + 1],
+      exercisesRef[exerciseIndex]
+    ];
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
-
-    if (selectedDay >= updatedPlan.weeks[selectedWeek].days.length) {
-      setSelectedDay(updatedPlan.weeks[selectedWeek].days.length - 1);
-    }
-  };
-
-  const duplicateDay = (dayIndex: number) => {
-    const dayToCopy = currentWeek.days[dayIndex];
-    const newDay: WorkoutDay = {
-      id: `day-${Date.now()}`,
-      name: `${dayToCopy.name} (Copy)`,
-      exercises: dayToCopy.exercises.map(ex => ({
-        ...ex,
-        id: `ex-${Date.now()}-${Math.random()}`
-      }))
-    };
-
-    const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days.splice(dayIndex + 1, 0, newDay);
-    onUpdatePlan(updatedPlan);
-    setSelectedDay(dayIndex + 1);
   };
 
   const updateDayName = (name: string) => {
     const updatedPlan = { ...plan };
     updatedPlan.weeks[selectedWeek].days[selectedDay].name = name;
-    onUpdatePlan(updatedPlan);
-  };
-
-  const updatePlanName = (name: string) => {
-    const updatedPlan = { ...plan, name, updatedAt: new Date().toISOString() };
-    onUpdatePlan(updatedPlan);
-  };
-
-  const updatePlanDescription = (description: string) => {
-    const updatedPlan = { ...plan, description, updatedAt: new Date().toISOString() };
+    updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
 
@@ -144,200 +132,101 @@ export function PlanBuilder({ plan, onUpdatePlan }: PlanBuilderProps) {
 
   return (
     <>
-    <Card>
-      <CardHeader>
-        <div className="space-y-3">
-          <div className="flex items-center gap-3">
-            {plan.emoji && <span className="text-3xl">{plan.emoji}</span>}
-            <div className="flex-1">
-              <Input
-                value={plan.name}
-                onChange={(e) => updatePlanName(e.target.value)}
-                className="text-xl font-bold"
-                placeholder="Plan name"
-              />
-              {plan.description && (
-                <p className="text-sm text-gray-600 mt-1">{plan.description}</p>
-              )}
-            </div>
-            <Button size="sm" onClick={addDay}>
-              <Plus className="w-4 h-4 mr-1" />
-              Add Day
-            </Button>
-          </div>
-          {(plan.durationWeeks || plan.workoutsPerWeek) && (
-            <div className="flex gap-2">
-              {plan.durationWeeks && (
-                <Badge variant="secondary">
-                  {plan.durationWeeks} {plan.durationWeeks === 1 ? 'week' : 'weeks'}
-                </Badge>
-              )}
-              {plan.workoutsPerWeek && (
-                <Badge variant="secondary">
-                  {plan.workoutsPerWeek} {plan.workoutsPerWeek === 1 ? 'workout' : 'workouts'}/week
-                </Badge>
-              )}
-            </div>
-          )}
+      <div className="flex gap-6">
+        {/* Sidebar - 300px fixed with navigation and structure editing */}
+        <div className="w-[300px] flex-shrink-0">
+          <WorkoutSidebar
+            plan={plan}
+            currentWeekIndex={selectedWeek}
+            currentDayIndex={selectedDay}
+            onSelectWorkout={(weekIdx, dayIdx) => {
+              setSelectedWeek(weekIdx);
+              setSelectedDay(dayIdx);
+            }}
+            onUpdatePlan={onUpdatePlan}
+          />
         </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {currentWeek.days.map((day, idx) => (
-              <div key={day.id} className="flex gap-1">
-                <Button
-                  variant={selectedDay === idx ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedDay(idx)}
-                  className={day.isRestDay ? 'opacity-60' : ''}
-                >
-                  {day.name}
-                </Button>
-                {selectedDay === idx && (
-                  <div className="flex gap-1">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => duplicateDay(idx)}
-                      title="Duplicate day"
-                    >
-                      <Copy className="w-3 h-3" />
-                    </Button>
-                    {currentWeek.days.length > 1 && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => deleteDay(idx)}
-                        title="Delete day"
-                      >
-                        <Trash2 className="w-3 h-3 text-destructive" />
-                      </Button>
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <Input
-                value={currentDay.name}
-                onChange={(e) => updateDayName(e.target.value)}
-                className="font-semibold max-w-xs"
-                placeholder="Day name"
-              />
-              {!currentDay.isRestDay && (
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={addBlankExercise}>
-                    <Plus className="w-4 h-4 mr-1" />
-                    Blank
-                  </Button>
-                  <Button size="sm" onClick={addExercise}>
-                    <Library className="w-4 h-4 mr-1" />
-                    From Library
-                  </Button>
-                </div>
-              )}
+        {/* Main Content - Exercise Editing */}
+        <div className="flex-1 min-w-0">
+          <div className="bg-white rounded-lg border">
+            {/* Header Section */}
+            <div className="border-b p-6">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-xl font-semibold">
+                  {plan.emoji} {plan.name} • Week {selectedWeek + 1}
+                </h2>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <Input
+                  value={currentDay.name}
+                  onChange={(e) => updateDayName(e.target.value)}
+                  className="max-w-md font-medium"
+                  placeholder="Workout name"
+                />
+                <span className="text-sm text-muted-foreground">
+                  {currentDay.exercises.length} {currentDay.exercises.length === 1 ? 'exercise' : 'exercises'}
+                </span>
+              </div>
             </div>
 
+            {/* Add Exercise Buttons */}
+            {!currentDay.isRestDay && (
+              <div className="p-6 border-b flex gap-2">
+                <Button variant="outline" size="sm" onClick={addBlankExercise}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Blank
+                </Button>
+                <Button variant="outline" size="sm" onClick={addExercise}>
+                  <Library className="w-4 h-4 mr-2" />
+                  From Library
+                </Button>
+              </div>
+            )}
+
+            {/* Exercise List or Rest Day Message */}
             {currentDay.isRestDay ? (
-              <div className="text-center py-12 space-y-2">
-                <div className="text-4xl">😴</div>
-                <p className="text-lg font-medium text-gray-700">Rest Day</p>
-                <p className="text-sm text-gray-500">No exercises scheduled for this day</p>
+              <div className="p-12 text-center space-y-3">
+                <p className="text-3xl">😴</p>
+                <p className="text-muted-foreground">This is a rest day</p>
               </div>
             ) : (
-              <>
-                {currentDay.exercises.map((exercise, idx) => (
-              <Card key={exercise.id}>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder="Exercise name"
-                        value={exercise.name}
-                        onChange={(e) => updateExercise(idx, 'name', e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => duplicateExercise(idx)}
-                        title="Duplicate exercise"
-                      >
-                        <Copy className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => deleteExercise(idx)}
-                        title="Delete exercise"
-                      >
-                        <Trash2 className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      <div>
-                        <label className="text-xs text-muted-foreground">Sets</label>
-                        <Input
-                          type="number"
-                          value={exercise.sets}
-                          onChange={(e) => updateExercise(idx, 'sets', parseInt(e.target.value))}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">Reps</label>
-                        <Input
-                          placeholder="10 or 8-10"
-                          value={exercise.reps || ''}
-                          onChange={(e) => updateExercise(idx, 'reps', e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs text-muted-foreground">Weight</label>
-                        <Input
-                          placeholder="e.g. 135 lbs"
-                          value={exercise.weight || ''}
-                          onChange={(e) => updateExercise(idx, 'weight', e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-xs text-muted-foreground">Notes</label>
-                      <Textarea
-                        placeholder="Exercise notes..."
-                        value={exercise.notes || ''}
-                        onChange={(e) => updateExercise(idx, 'notes', e.target.value)}
-                        rows={2}
-                      />
-                    </div>
+              <div className="divide-y">
+                {currentDay.exercises.length === 0 ? (
+                  <div className="p-12 text-center text-muted-foreground">
+                    <p>No exercises yet. Add your first exercise to get started.</p>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-
-                {currentDay.exercises.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No exercises yet. Click "From Library" to add from the exercise library.
-                  </div>
+                ) : (
+                  currentDay.exercises.map((exercise, idx) => (
+                    <ExerciseRow
+                      key={exercise.id}
+                      exercise={exercise}
+                      exerciseIndex={idx}
+                      isFirst={idx === 0}
+                      isLast={idx === currentDay.exercises.length - 1}
+                      initialExpanded={exercise.id === newlyAddedExerciseId}
+                      onUpdate={(field, value) => updateExercise(idx, field, value)}
+                      onDuplicate={() => duplicateExercise(idx)}
+                      onCopyToWorkouts={() => {}}
+                      onMoveUp={() => moveExerciseUp(idx)}
+                      onMoveDown={() => moveExerciseDown(idx)}
+                      onDelete={() => deleteExercise(idx)}
+                    />
+                  ))
                 )}
-              </>
+              </div>
             )}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
 
-    {showExerciseSelector && (
-      <ExerciseSelector
-        onSelect={handleAddExerciseFromLibrary}
-        onClose={() => setShowExerciseSelector(false)}
-      />
-    )}
-  </>
+      {showExerciseSelector && (
+        <ExerciseSelector
+          onSelect={handleAddExerciseFromLibrary}
+          onClose={() => setShowExerciseSelector(false)}
+        />
+      )}
+    </>
   );
 }

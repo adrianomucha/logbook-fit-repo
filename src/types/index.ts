@@ -107,6 +107,7 @@ export interface AppState {
   completedWorkouts: CompletedWorkout[];
   measurements: Measurement[];
   checkIns: CheckIn[];
+  coachExercises: CoachExercise[];
 }
 
 // Plan Setup Form Types
@@ -123,4 +124,52 @@ export interface PlanSetupFormErrors {
   description?: string;
   durationWeeks?: string;
   workoutsPerWeek?: string;
+}
+
+// Exercise Library Types
+export type ExerciseCategory =
+  | 'UPPER_BODY'
+  | 'LOWER_BODY'
+  | 'CORE'
+  | 'CARDIO'
+  | 'MOBILITY'
+  | 'OTHER';
+
+export type ExerciseEquipment =
+  | 'BARBELL'
+  | 'DUMBBELL'
+  | 'KETTLEBELL'
+  | 'BODYWEIGHT'
+  | 'MACHINE'
+  | 'CABLE'
+  | 'BANDS'
+  | 'OTHER';
+
+export interface CoachExercise {
+  id: string;
+  coachId: string;
+  name: string;
+  category: ExerciseCategory;
+  equipment: ExerciseEquipment;
+  defaultSets: number;
+  notes?: string;
+  usageCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ExerciseFormData {
+  name: string;
+  category: ExerciseCategory;
+  equipment: ExerciseEquipment;
+  defaultSets: number;
+  notes: string;
+}
+
+export interface ExerciseFormErrors {
+  name?: string;
+  category?: string;
+  equipment?: string;
+  defaultSets?: string;
+  notes?: string;
 }

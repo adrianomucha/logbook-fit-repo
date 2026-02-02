@@ -7,6 +7,8 @@ import { migratePlansToV2, needsMigration } from '@/lib/migrations/plan-migratio
 import { CoachDashboard } from '@/pages/CoachDashboard';
 import { ClientDashboard } from '@/pages/ClientDashboard';
 import ClientCheckIn from '@/pages/ClientCheckIn';
+import { UnifiedClientProfile } from '@/pages/UnifiedClientProfile';
+import { AllClientsPage } from '@/pages/AllClientsPage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { UserCog, User } from 'lucide-react';
@@ -45,6 +47,69 @@ function AppContent() {
         storedData.plans = migratePlansToV2(storedData.plans);
         storage.set(storedData);
         console.log('Plan migration complete');
+      }
+      // Migration: add coachExercises field if it doesn't exist or is empty
+      if (!storedData.coachExercises || storedData.coachExercises.length === 0) {
+        console.log('Adding default coach exercises...');
+        storedData.coachExercises = sampleData.coachExercises;
+        storage.set(storedData);
+        console.log('Coach exercises added');
+      }
+      // Migration: Update Alex Rodriguez to be "all caught up" example - FORCE UPDATE V4
+      const alexClient = storedData.clients.find(c => c.id === 'client-3');
+      if (alexClient) {
+        // Check if we need to update (using a version flag)
+        if (!storedData.alexMigrationV4) {
+          console.log('Forcing Alex Rodriguez update to be caught up (V4 - all workouts LAST week)...');
+          storedData.clients = storedData.clients.map(client =>
+            client.id === 'client-3'
+              ? {
+                  ...client,
+                  lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+                  lastWorkoutDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
+                  adherenceRate: 85
+                }
+              : client
+          );
+
+          // Remove old Alex workouts and add new ones (all within LAST WEEK)
+          storedData.completedWorkouts = storedData.completedWorkouts.filter(w => w.clientId !== 'client-3');
+          storedData.completedWorkouts = [
+            ...storedData.completedWorkouts,
+            {
+              id: 'completed-alex-1',
+              clientId: 'client-3',
+              planId: 'plan-1',
+              weekId: 'week-1',
+              dayId: 'day-1',
+              completedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days ago (Monday of last week)
+              exercises: [{ id: 'ex-1', name: 'Barbell Bench Press', sets: 4, reps: '8-10', weight: '155 lbs', completed: true }]
+            },
+            {
+              id: 'completed-alex-2',
+              clientId: 'client-3',
+              planId: 'plan-1',
+              weekId: 'week-1',
+              dayId: 'day-2',
+              completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago (Wednesday of last week)
+              exercises: [{ id: 'ex-1', name: 'Deadlift', sets: 4, reps: '6-8', weight: '225 lbs', completed: true }]
+            },
+            {
+              id: 'completed-alex-3',
+              clientId: 'client-3',
+              planId: 'plan-1',
+              weekId: 'week-1',
+              dayId: 'day-3',
+              completedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago (Friday of last week)
+              exercises: [{ id: 'ex-1', name: 'Squat', sets: 4, reps: '8-10', weight: '185 lbs', completed: true }]
+            }
+          ];
+
+          // Mark migration as complete
+          storedData.alexMigrationV4 = true;
+          storage.set(storedData);
+          console.log('Alex Rodriguez V4 update successful - all 3 workouts LAST week');
+        }
       }
     }
     setAppState(storedData);
@@ -183,6 +248,14 @@ function AppContent() {
           <Route
             path="/coach"
             element={<CoachDashboard appState={appState} onUpdateState={handleUpdateState} />}
+          />
+          <Route
+            path="/coach/clients"
+            element={<AllClientsPage appState={appState} onUpdateState={handleUpdateState} />}
+          />
+          <Route
+            path="/coach/clients/:clientId"
+            element={<UnifiedClientProfile appState={appState} onUpdateState={handleUpdateState} />}
           />
           <Route
             path="/client"
