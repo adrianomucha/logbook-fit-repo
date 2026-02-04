@@ -63,15 +63,15 @@ export function ClientsRequiringAction({
               {clientsNeedingAction.map(({ client, status }) => (
                 <div
                   key={client.id}
-                  className={`p-4 rounded-lg border-2 ${status.bgColor} ${status.borderColor}`}
+                  className={`p-3 sm:p-4 rounded-lg border-2 ${status.bgColor} ${status.borderColor}`}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3 flex-1">
-                      <div className="text-2xl">{client.avatar}</div>
-                      <div className="flex-1">
-                        <p className="font-medium">{client.name}</p>
-                        <div className="flex items-center gap-2 mt-1">
-                          <status.icon className={`w-3 h-3 ${status.color}`} />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="text-xl sm:text-2xl shrink-0">{client.avatar}</div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{client.name}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
+                          <status.icon className={`w-3 h-3 shrink-0 ${status.color}`} />
                           <span className={`text-xs font-medium ${status.color}`}>
                             {status.label}
                           </span>
@@ -102,6 +102,7 @@ export function ClientsRequiringAction({
                     <Button
                       variant={status.type === 'pending-checkin' || status.type === 'overdue' ? 'default' : 'outline'}
                       size="sm"
+                      className="w-full sm:w-auto shrink-0"
                       onClick={() => handleClientAction(client.id, status.type)}
                     >
                       {status.type === 'pending-checkin'
@@ -133,12 +134,12 @@ export function ClientsRequiringAction({
               {clientsAllCaughtUp.map(({ client }) => (
                 <div
                   key={client.id}
-                  className="flex items-center justify-between p-3 rounded-lg border bg-background"
+                  className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 p-3 rounded-lg border bg-background"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="text-2xl">{client.avatar}</div>
-                    <div>
-                      <p className="font-medium">{client.name}</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="text-xl sm:text-2xl shrink-0">{client.avatar}</div>
+                    <div className="min-w-0">
+                      <p className="font-medium truncate">{client.name}</p>
                       <p className="text-xs text-muted-foreground">
                         Last check-in{' '}
                         {client.lastCheckInDate
@@ -152,6 +153,7 @@ export function ClientsRequiringAction({
                   <Button
                     variant="ghost"
                     size="sm"
+                    className="w-full sm:w-auto shrink-0"
                     onClick={() => handleClientAction(client.id, 'ok')}
                   >
                     View

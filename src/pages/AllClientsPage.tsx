@@ -47,28 +47,32 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
   // Empty state: no clients at all
   if (clientsWithStatus.length === 0) {
     return (
-      <div className="min-h-screen bg-background p-4">
+      <div className="min-h-screen bg-background p-3 sm:p-4">
         <div className="max-w-7xl mx-auto space-y-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-bold">Coach Dashboard</h1>
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h1 className="text-2xl sm:text-3xl font-bold">Coach Dashboard</h1>
+            <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 variant="outline"
                 onClick={() => navigate('/coach')}
+                className="flex-1 sm:flex-none"
+                size="sm"
               >
-                <Home className="w-4 h-4 mr-2" />
-                Dashboard
+                <Home className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
               </Button>
-              <Button variant="default">
-                <Users className="w-4 h-4 mr-2" />
-                Clients
+              <Button variant="default" className="flex-1 sm:flex-none" size="sm">
+                <Users className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Clients</span>
               </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate('/coach?view=plans')}
+                className="flex-1 sm:flex-none"
+                size="sm"
               >
-                <Dumbbell className="w-4 h-4 mr-2" />
-                Plans
+                <Dumbbell className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">Plans</span>
               </Button>
             </div>
           </div>
@@ -79,29 +83,33 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Header with Navigation */}
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">Coach Dashboard</h1>
-          <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">Coach Dashboard</h1>
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={() => navigate('/coach')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <Home className="w-4 h-4 mr-2" />
-              Dashboard
+              <Home className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Dashboard</span>
             </Button>
-            <Button variant="default">
-              <Users className="w-4 h-4 mr-2" />
-              Clients
+            <Button variant="default" className="flex-1 sm:flex-none" size="sm">
+              <Users className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Clients</span>
             </Button>
             <Button
               variant="outline"
               onClick={() => navigate('/coach?view=plans')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <Dumbbell className="w-4 h-4 mr-2" />
-              Plans
+              <Dumbbell className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Plans</span>
             </Button>
           </div>
         </div>

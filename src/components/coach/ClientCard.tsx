@@ -60,21 +60,21 @@ export function ClientCard({ client, status, variant, snippet, nextCheckInDate }
       className={`border-l-4 ${borderColor} ${bgColor} cursor-pointer transition-shadow hover:shadow-md`}
       onClick={handleCardClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between gap-4">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {/* Avatar */}
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-2xl flex-shrink-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
               {client.avatar || client.name.charAt(0)}
             </div>
 
             {/* Content */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold">{client.name}</h3>
+              <h3 className="text-base font-bold truncate">{client.name}</h3>
 
               <div className="flex items-center gap-2 mt-1">
-                <status.icon className={`w-4 h-4 ${status.color}`} />
-                <span className="text-sm text-muted-foreground">{status.label}</span>
+                <status.icon className={`w-4 h-4 shrink-0 ${status.color}`} />
+                <span className="text-sm text-muted-foreground truncate">{status.label}</span>
               </div>
 
               {/* Snippet (needs-attention only) */}
@@ -97,7 +97,7 @@ export function ClientCard({ client, status, variant, snippet, nextCheckInDate }
           <Button
             variant={variant === 'needs-attention' ? 'default' : 'ghost'}
             size="sm"
-            className="flex-shrink-0"
+            className="flex-shrink-0 w-full sm:w-auto"
             onClick={(e) => {
               e.stopPropagation();
               handleButtonAction();

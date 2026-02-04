@@ -132,9 +132,9 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
 
   return (
     <>
-      <div className="flex gap-6">
-        {/* Sidebar - 300px fixed with navigation and structure editing */}
-        <div className="w-[300px] flex-shrink-0">
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+        {/* Sidebar - stacks on top on mobile, fixed 300px on desktop */}
+        <div className="w-full lg:w-[300px] lg:flex-shrink-0">
           <WorkoutSidebar
             plan={plan}
             currentWeekIndex={selectedWeek}
@@ -151,21 +151,21 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
         <div className="flex-1 min-w-0">
           <div className="bg-white rounded-lg border">
             {/* Header Section */}
-            <div className="border-b p-6">
+            <div className="border-b p-4 sm:p-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-lg sm:text-xl font-semibold truncate">
                   {plan.emoji} {plan.name} • Week {selectedWeek + 1}
                 </h2>
               </div>
 
-              <div className="flex items-center gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
                 <Input
                   value={currentDay.name}
                   onChange={(e) => updateDayName(e.target.value)}
-                  className="max-w-md font-medium"
+                  className="sm:max-w-md font-medium"
                   placeholder="Workout name"
                 />
-                <span className="text-sm text-muted-foreground">
+                <span className="text-sm text-muted-foreground shrink-0">
                   {currentDay.exercises.length} {currentDay.exercises.length === 1 ? 'exercise' : 'exercises'}
                 </span>
               </div>
@@ -173,7 +173,7 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
 
             {/* Add Exercise Buttons */}
             {!currentDay.isRestDay && (
-              <div className="p-6 border-b flex gap-2">
+              <div className="p-4 sm:p-6 border-b flex gap-2">
                 <Button variant="outline" size="sm" onClick={addBlankExercise}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Blank

@@ -36,14 +36,14 @@ export function ProgressHistory({ completedWorkouts, plans }: ProgressHistoryPro
             key={workout.id}
             className="p-3 rounded-md border border-border"
           >
-            <div className="flex items-start justify-between">
-              <div>
-                <h4 className="font-medium">{getDayName(workout)}</h4>
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h4 className="font-medium truncate">{getDayName(workout)}</h4>
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(workout.completedAt), 'MMM d, yyyy • h:mm a')}
                 </p>
                 <div className="flex items-center gap-1 mt-1">
-                  <CheckCircle className="w-3 h-3 text-green-500" />
+                  <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
                   <span className="text-xs text-muted-foreground">
                     {workout.exercises.filter((e) => e.completed).length} exercises
                   </span>

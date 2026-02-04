@@ -116,12 +116,12 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
   };
 
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4">
       {/* Success Toast */}
       {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top">
-          <CheckCircle className="h-5 w-5" />
-          <span className="font-medium">Plan created successfully!</span>
+        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top">
+          <CheckCircle className="h-5 w-5 shrink-0" />
+          <span className="font-medium text-sm sm:text-base">Plan created!</span>
         </div>
       )}
 
@@ -156,32 +156,38 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         confirmVariant="destructive"
       />
 
-      <div className="max-w-7xl mx-auto space-y-4">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold">
+      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold">
             {currentView === 'plans' ? 'Plans' : 'Dashboard'}
           </h1>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant={currentView === 'dashboard' ? 'default' : 'outline'}
               onClick={() => setCurrentView('dashboard')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <Home className="w-4 h-4 mr-2" />
-              Dashboard
+              <Home className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Dashboard</span>
             </Button>
             <Button
               variant="outline"
               onClick={() => navigate('/coach/clients')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <Users className="w-4 h-4 mr-2" />
-              Clients
+              <Users className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Clients</span>
             </Button>
             <Button
               variant={currentView === 'plans' ? 'default' : 'outline'}
               onClick={() => setCurrentView('plans')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <Dumbbell className="w-4 h-4 mr-2" />
-              Plans
+              <Dumbbell className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Plans</span>
             </Button>
           </div>
         </div>
@@ -207,12 +213,12 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
           <div className="space-y-4">
             {appState.plans.length > 0 ? (
               <>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
                   <Select
                     value={selectedPlanId || ''}
                     onValueChange={setSelectedPlanId}
                   >
-                    <SelectTrigger className="w-[320px]">
+                    <SelectTrigger className="w-full sm:w-[320px]">
                       <SelectValue placeholder="Select a plan" />
                     </SelectTrigger>
                     <SelectContent>
@@ -224,7 +230,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
                     </SelectContent>
                   </Select>
 
-                  <Button onClick={handleCreateNewPlan}>
+                  <Button onClick={handleCreateNewPlan} className="shrink-0" size="sm">
                     <Plus className="w-4 h-4 mr-2" />
                     New Plan
                   </Button>

@@ -39,7 +39,7 @@ export function ClientChat({
   };
 
   return (
-    <Card className="flex flex-col h-[600px]">
+    <Card className="flex flex-col h-[calc(100vh-12rem)] sm:h-[600px]">
       <CardHeader>
         <CardTitle className="text-lg">Chat with {coachName}</CardTitle>
       </CardHeader>
@@ -52,7 +52,7 @@ export function ClientChat({
                 className={`flex ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] rounded-lg p-3 ${
+                  className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 ${
                     message.senderId === currentUserId
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
@@ -80,7 +80,7 @@ export function ClientChat({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
             />
-            <Button onClick={handleSend} size="icon">
+            <Button onClick={handleSend} size="icon" className="shrink-0 touch-manipulation">
               <Send className="w-4 h-4" />
             </Button>
           </div>

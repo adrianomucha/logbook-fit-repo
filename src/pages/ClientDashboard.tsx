@@ -105,34 +105,40 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-4xl mx-auto space-y-4">
-        <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-background p-3 sm:p-4">
+      <div className="max-w-4xl mx-auto space-y-3 sm:space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">My Workouts</h1>
-            <p className="text-muted-foreground">Welcome back, {currentClient.name}</p>
+            <h1 className="text-2xl sm:text-3xl font-bold">My Workouts</h1>
+            <p className="text-muted-foreground text-sm">Welcome back, {currentClient.name}</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             <Button
               variant={currentView === 'workout' ? 'default' : 'outline'}
               onClick={() => setCurrentView('workout')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <Dumbbell className="w-4 h-4 mr-2" />
-              Workout
+              <Dumbbell className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Workout</span>
             </Button>
             <Button
               variant={currentView === 'chat' ? 'default' : 'outline'}
               onClick={() => setCurrentView('chat')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Chat
+              <MessageSquare className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Chat</span>
             </Button>
             <Button
               variant={currentView === 'progress' ? 'default' : 'outline'}
               onClick={() => setCurrentView('progress')}
+              className="flex-1 sm:flex-none"
+              size="sm"
             >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Progress
+              <TrendingUp className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">Progress</span>
             </Button>
           </div>
         </div>

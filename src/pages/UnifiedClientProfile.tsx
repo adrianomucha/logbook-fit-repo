@@ -179,28 +179,30 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   }
 
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="max-w-7xl mx-auto space-y-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4">
+      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         {/* Client Profile Header */}
         <Card>
           <CardContent className="py-4">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               {/* Left: Back + Client info + Status badge */}
-              <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon" onClick={handleBack}>
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <Button variant="ghost" size="icon" onClick={handleBack} className="shrink-0">
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
-                <div className="text-4xl">{client.avatar || '👤'}</div>
-                <div>
-                  <h1 className="text-2xl font-bold">{client.name}</h1>
-                  <p className="text-sm text-muted-foreground">{client.email}</p>
+                <div className="text-3xl sm:text-4xl shrink-0">{client.avatar || '👤'}</div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl sm:text-2xl font-bold truncate">{client.name}</h1>
+                    {status && (
+                      <Badge className={`${status.color} ${status.bgColor} ${status.borderColor} shrink-0`}>
+                        <status.icon className="w-3 h-3 mr-1" />
+                        {status.label}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-muted-foreground truncate">{client.email}</p>
                 </div>
-                {status && (
-                  <Badge className={`${status.color} ${status.bgColor} ${status.borderColor}`}>
-                    <status.icon className="w-3 h-3 mr-1" />
-                    {status.label}
-                  </Badge>
-                )}
               </div>
 
               {/* Right: Quick actions */}
@@ -217,29 +219,36 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
         {/* Tab Navigation */}
         <Card>
           <CardContent className="py-2">
-            <div className="flex gap-1">
+            <div className="flex gap-1 overflow-x-auto scrollbar-hide -mx-2 px-2">
               <Button
                 variant={activeTab === 'overview' ? 'default' : 'ghost'}
                 onClick={() => handleTabChange('overview')}
+                size="sm"
+                className="shrink-0"
               >
                 Overview
               </Button>
               <Button
                 variant={activeTab === 'progress' ? 'default' : 'ghost'}
                 onClick={() => handleTabChange('progress')}
+                size="sm"
+                className="shrink-0"
               >
                 Progress
               </Button>
               <Button
                 variant={activeTab === 'plan' ? 'default' : 'ghost'}
                 onClick={() => handleTabChange('plan')}
+                size="sm"
+                className="shrink-0"
               >
                 Plan
               </Button>
               <Button
                 variant={activeTab === 'messages' ? 'default' : 'ghost'}
                 onClick={() => handleTabChange('messages')}
-                className="relative"
+                className="relative shrink-0"
+                size="sm"
               >
                 Messages
                 {unreadCount > 0 && (

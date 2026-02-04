@@ -47,13 +47,14 @@ export function WorkoutView({ plan, onCompleteExercise, completedExercises }: Wo
           <CardDescription>Week {currentWeek.weekNumber}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 scrollbar-hide">
             {currentWeek.days.map((day, idx) => (
               <Button
                 key={day.id}
                 variant={selectedDay === idx ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setSelectedDay(idx)}
+                className="shrink-0"
               >
                 {day.name}
               </Button>
@@ -90,7 +91,7 @@ export function WorkoutView({ plan, onCompleteExercise, completedExercises }: Wo
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h4 className="font-semibold">{exercise.name}</h4>
-                        <div className="flex gap-4 text-sm text-muted-foreground mt-1">
+                        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                           <span>{exercise.sets} sets</span>
                           {exercise.reps && <span>{exercise.reps} reps</span>}
                           {exercise.time && <span>{exercise.time}</span>}
@@ -104,12 +105,12 @@ export function WorkoutView({ plan, onCompleteExercise, completedExercises }: Wo
                       </div>
                       <button
                         onClick={() => handleToggleExercise(exercise.id)}
-                        className="ml-4"
+                        className="ml-3 p-2 -m-2 touch-manipulation"
                       >
                         {isCompleted ? (
-                          <CheckCircle2 className="w-6 h-6 text-primary" />
+                          <CheckCircle2 className="w-7 h-7 sm:w-6 sm:h-6 text-primary" />
                         ) : (
-                          <Circle className="w-6 h-6 text-muted-foreground" />
+                          <Circle className="w-7 h-7 sm:w-6 sm:h-6 text-muted-foreground" />
                         )}
                       </button>
                     </div>

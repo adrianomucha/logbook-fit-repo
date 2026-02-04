@@ -33,42 +33,42 @@ export function WeeklyConfidenceStrip({ clients, checkIns }: WeeklyConfidenceStr
 
   return (
     <Card className="bg-primary/5 border-primary/20">
-      <CardContent className="pt-6 pb-6">
+      <CardContent className="pt-4 sm:pt-6 pb-4 sm:pb-6">
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-lg font-bold">This Week</p>
-              <p className="text-sm text-muted-foreground">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-base sm:text-lg font-bold">This Week</p>
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Weekly check-in progress
               </p>
             </div>
             <div className="text-right">
-              <p className="text-3xl font-bold">
+              <p className="text-2xl sm:text-3xl font-bold">
                 {checkedInThisWeek}<span className="text-muted-foreground">/{clients.length}</span>
               </p>
               <p className="text-xs text-muted-foreground">checked in</p>
             </div>
           </div>
 
-          <div className="flex gap-6 pt-2">
+          <div className="flex gap-4 sm:gap-6 pt-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-green-600" />
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
               <div>
-                <p className="text-2xl font-bold">{checkedInThisWeek}</p>
+                <p className="text-xl sm:text-2xl font-bold">{checkedInThisWeek}</p>
                 <p className="text-xs text-muted-foreground">Checked In</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-yellow-600" />
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 shrink-0" />
               <div>
-                <p className="text-2xl font-bold">{atRisk}</p>
+                <p className="text-xl sm:text-2xl font-bold">{atRisk}</p>
                 <p className="text-xs text-muted-foreground">At Risk</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-red-600" />
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
               <div>
-                <p className="text-2xl font-bold">{overdue}</p>
+                <p className="text-xl sm:text-2xl font-bold">{overdue}</p>
                 <p className="text-xs text-muted-foreground">Overdue</p>
               </div>
             </div>
