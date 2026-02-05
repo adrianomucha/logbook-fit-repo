@@ -1,6 +1,5 @@
 import { Client, AppState } from '@/types';
 import { ClientStatus } from '@/lib/client-status';
-import { getConsecutiveMissedWorkouts } from '@/lib/workout-tracking';
 
 export function getClientSnippet(
   client: Client,
@@ -9,8 +8,7 @@ export function getClientSnippet(
 ): string | undefined {
   switch (status.type) {
     case 'pending-checkin':
-    case 'awaiting-response':
-      if ('checkIn' in status && status.checkIn?.notes) {
+      if (status.checkIn?.notes) {
         return truncate(status.checkIn.notes, 100);
       }
       break;
@@ -27,14 +25,6 @@ export function getClientSnippet(
         (Date.now() - new Date(client.lastCheckInDate!).getTime()) / (1000 * 60 * 60 * 24)
       );
       return `Last check-in was ${days} days ago`;
-
-    case 'at-risk-workouts':
-      const missed = getConsecutiveMissedWorkouts(
-        client,
-        appState.plans.find(p => p.id === client.currentPlanId),
-        appState.completedWorkouts
-      );
-      return `Missed ${missed} consecutive weeks of workouts`;
 
     default:
       return undefined;

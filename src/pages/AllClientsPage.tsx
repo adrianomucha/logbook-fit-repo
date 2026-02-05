@@ -24,9 +24,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
       status: getClientStatus(
         client,
         appState.messages,
-        appState.checkIns,
-        appState.completedWorkouts,
-        appState.plans.find(p => p.id === client.currentPlanId)
+        appState.checkIns
       )
     }));
   }, [appState.clients, appState.messages, appState.checkIns, appState.completedWorkouts, appState.plans]);

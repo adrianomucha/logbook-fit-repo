@@ -192,15 +192,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                 </Button>
                 <div className="text-3xl sm:text-4xl shrink-0">{client.avatar || '👤'}</div>
                 <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl sm:text-2xl font-bold truncate">{client.name}</h1>
-                    {status && (
-                      <Badge className={`${status.color} ${status.bgColor} ${status.borderColor} shrink-0`}>
-                        <status.icon className="w-3 h-3 mr-1" />
-                        {status.label}
-                      </Badge>
-                    )}
-                  </div>
+                  <h1 className="text-xl sm:text-2xl font-bold truncate">{client.name}</h1>
                   <p className="text-sm text-muted-foreground truncate">{client.email}</p>
                 </div>
               </div>

@@ -3,7 +3,6 @@ import { Client, Message, CheckIn, CompletedWorkout, WorkoutPlan } from '@/types
 import { getClientStatus } from '@/lib/client-status';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -28,25 +27,18 @@ export function ClientsRequiringAction({
 
   const clientsWithStatus = clients.map((client) => ({
     client,
-    status: getClientStatus(
-      client,
-      messages,
-      checkIns,
-      completedWorkouts,
-      plans.find(p => p.id === client.currentPlanId)
-    )
+    status: getClientStatus(client, messages, checkIns)
   }));
 
+  // Only clients that actually need action (not 'ok')
   const clientsNeedingAction = clientsWithStatus
-    .filter((c) => c.status.priority <= 5)
+    .filter((c) => c.status.type !== 'ok')
     .sort((a, b) => a.status.priority - b.status.priority);
 
-  const clientsAllCaughtUp = clientsWithStatus.filter((c) => c.status.priority === 6);
+  // Clients with no action needed
+  const clientsAllCaughtUp = clientsWithStatus.filter((c) => c.status.type === 'ok');
 
   const handleClientAction = (clientId: string, statusType: string) => {
-    // Navigate to unified client profile
-    // Pending check-ins and overdue clients should see Overview tab with quick action to start check-in
-    // Unread messages should switch to Messages tab
     const tab = statusType === 'unread' ? 'messages' : 'overview';
     navigate(`/coach/clients/${clientId}?tab=${tab}`);
   };
@@ -93,14 +85,14 @@ export function ClientsRequiringAction({
                           )}
                         </div>
                         {status.type === 'pending-checkin' && 'checkIn' in status && status.checkIn?.notes && (
-                          <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                            "{status.checkIn.notes}"
+                          <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
+                            "{status.checkIn.notes.length > 60 ? status.checkIn.notes.slice(0, 60) + '…' : status.checkIn.notes}"
                           </p>
                         )}
                       </div>
                     </div>
                     <Button
-                      variant={status.type === 'pending-checkin' || status.type === 'overdue' ? 'default' : 'outline'}
+                      variant={status.type === 'at-risk' || status.type === 'overdue' ? 'destructive' : 'default'}
                       size="sm"
                       className="w-full sm:w-auto shrink-0"
                       onClick={() => handleClientAction(client.id, status.type)}
@@ -121,7 +113,17 @@ export function ClientsRequiringAction({
         </Card>
       )}
 
-      {clientsAllCaughtUp.length > 0 && (
+      {clientsNeedingAction.length === 0 && (
+        <Card className="border-green-200 bg-green-50/50">
+          <CardContent className="py-8 text-center">
+            <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
+            <p className="font-medium text-green-900">All clients are on track</p>
+            <p className="text-sm text-green-700 mt-1">No action needed right now</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {clientsAllCaughtUp.length > 0 && clientsNeedingAction.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">

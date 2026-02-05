@@ -15,12 +15,12 @@ export interface ClientStatus {
 
 /**
  * Determines a client's status based on check-ins, messages, and last check-in date.
- * Priority order (0 = highest):
- * 0. Pending check-in - Client submitted, coach needs to review
- * 1. At risk - 5-6 days since last check-in
- * 2. Check-in overdue - 7+ days since last check-in
+ * Priority order (0 = highest urgency):
+ * 0. At risk - 5-6 days since last check-in (coach must act NOW)
+ * 1. Check-in overdue - 7+ days since last check-in
+ * 2. Pending check-in - Client submitted, coach needs to review
  * 3. Unread messages - Client has sent messages
- * 4. All caught up - Everything is up to date
+ * 4. All caught up - Everything is up to date (NO action needed)
  */
 export function getClientStatus(
   client: Client,
@@ -40,36 +40,21 @@ export function getClientStatus(
     (c) => c.clientId === client.id && c.status === 'pending'
   );
 
-  // Priority 0: Pending check-in (highest priority)
-  if (pendingCheckIn) {
-    return {
-      type: 'pending-checkin',
-      icon: ClipboardCheck,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50 dark:bg-purple-950/20',
-      borderColor: 'border-purple-200 dark:border-purple-900',
-      label: 'Check-in Ready to Review',
-      priority: 0,
-      hasUnread: false,
-      checkIn: pendingCheckIn
-    };
-  }
-
-  // Priority 1: At risk (5-6 days since check-in)
+  // Priority 0: At risk (5-6 days since check-in) — most urgent, coach must act
   if (daysSinceCheckIn >= 5 && daysSinceCheckIn < 7) {
     return {
       type: 'at-risk',
-      icon: Clock,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50 dark:bg-yellow-950/20',
-      borderColor: 'border-yellow-200 dark:border-yellow-900',
+      icon: AlertCircle,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50 dark:bg-red-950/20',
+      borderColor: 'border-red-200 dark:border-red-900',
       label: 'At Risk',
-      priority: 1,
+      priority: 0,
       hasUnread: unreadMessages > 0
     };
   }
 
-  // Priority 2: Check-in overdue (7+ days)
+  // Priority 1: Check-in overdue (7+ days)
   if (daysSinceCheckIn >= 7) {
     return {
       type: 'overdue',
@@ -78,8 +63,23 @@ export function getClientStatus(
       bgColor: 'bg-red-50 dark:bg-red-950/20',
       borderColor: 'border-red-200 dark:border-red-900',
       label: 'Check-in Overdue',
-      priority: 2,
+      priority: 1,
       hasUnread: unreadMessages > 0
+    };
+  }
+
+  // Priority 2: Pending check-in (client submitted, coach reviews)
+  if (pendingCheckIn) {
+    return {
+      type: 'pending-checkin',
+      icon: ClipboardCheck,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50 dark:bg-blue-950/20',
+      borderColor: 'border-blue-200 dark:border-blue-900',
+      label: 'Check-in Ready to Review',
+      priority: 2,
+      hasUnread: false,
+      checkIn: pendingCheckIn
     };
   }
 
@@ -97,7 +97,7 @@ export function getClientStatus(
     };
   }
 
-  // Priority 4: All caught up (lowest priority, everything is good)
+  // Priority 4: All caught up — NO action needed
   return {
     type: 'ok',
     icon: CheckCircle2,

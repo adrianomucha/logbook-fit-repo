@@ -34,7 +34,7 @@ export function CheckInStatusCard({
                   Check-in Overdue
                 </h3>
                 <p className="text-sm text-red-700 dark:text-red-200">
-                  Last check-in: {daysSinceCheckIn} days ago • Expected every 7 days
+                  {daysSinceCheckIn} days since last check-in · 7-day cadence · {daysSinceCheckIn - 7} {daysSinceCheckIn - 7 === 1 ? 'day' : 'days'} overdue
                 </p>
               </div>
             </div>
@@ -48,28 +48,28 @@ export function CheckInStatusCard({
     );
   }
 
-  // Variant 2: Pending Check-in (Purple)
+  // Variant 2: Pending Check-in (Blue)
   if (status.type === 'pending-checkin' && status.checkIn) {
     const checkInAge = Math.floor(
       (Date.now() - new Date(status.checkIn.date).getTime()) / (1000 * 60 * 60 * 24)
     );
 
     return (
-      <Card className="border-purple-200 bg-purple-50 dark:bg-purple-950/20">
+      <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
         <CardContent className="py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <ClipboardCheck className="w-10 h-10 text-purple-600 flex-shrink-0" />
+              <ClipboardCheck className="w-10 h-10 text-blue-600 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <h3 className="text-lg font-bold text-purple-900 dark:text-purple-100">
+                <h3 className="text-lg font-bold text-blue-900 dark:text-blue-100">
                   Check-in Ready to Review
                 </h3>
-                <p className="text-sm text-purple-700 dark:text-purple-200">
-                  Submitted {checkInAge} days ago • Awaiting your response
+                <p className="text-sm text-blue-700 dark:text-blue-200">
+                  Submitted {checkInAge} days ago · Awaiting your response
                 </p>
                 {status.checkIn.notes && (
-                  <p className="text-sm text-purple-600 dark:text-purple-300 mt-1 italic line-clamp-2">
-                    "{status.checkIn.notes.slice(0, 80)}{status.checkIn.notes.length > 80 ? '...' : ''}"
+                  <p className="text-sm text-blue-600 dark:text-blue-300 mt-1 italic line-clamp-1">
+                    "{status.checkIn.notes.length > 60 ? status.checkIn.notes.slice(0, 60) + '…' : status.checkIn.notes}"
                   </p>
                 )}
               </div>
@@ -83,29 +83,28 @@ export function CheckInStatusCard({
     );
   }
 
-  // Variant 3: At Risk (Yellow)
+  // Variant 3: At Risk (Red - urgent)
   if (status.type === 'at-risk') {
     const daysUntilOverdue = 7 - daysSinceCheckIn;
 
     return (
-      <Card className="border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
+      <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
         <CardContent className="py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Clock className="w-10 h-10 text-yellow-600 flex-shrink-0" />
+              <AlertCircle className="w-10 h-10 text-red-600 flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-bold text-yellow-900 dark:text-yellow-100">
-                  Check-in Due Soon
+                <h3 className="text-lg font-bold text-red-900 dark:text-red-100">
+                  At Risk
                 </h3>
-                <p className="text-sm text-yellow-700 dark:text-yellow-200">
-                  Last check-in: {daysSinceCheckIn} days ago • Send check-in in next {daysUntilOverdue} days
+                <p className="text-sm text-red-700 dark:text-red-200">
+                  {daysSinceCheckIn} days since last check-in · 7-day cadence · {daysUntilOverdue} {daysUntilOverdue === 1 ? 'day' : 'days'} until overdue
                 </p>
               </div>
             </div>
             <Button
-              variant="outline"
+              variant="destructive"
               size="lg"
-              className="border-yellow-600 text-yellow-700 hover:bg-yellow-100"
               onClick={onStartCheckIn}
             >
               <ClipboardCheck className="w-4 h-4 mr-2" />
@@ -131,7 +130,7 @@ export function CheckInStatusCard({
                 All Caught Up
               </h3>
               <p className="text-sm text-green-700 dark:text-green-200">
-                Last check-in: {daysSinceCheckIn} days ago • Next check-in due in {daysUntilNextCheckIn} days
+                Checked in {daysSinceCheckIn} {daysSinceCheckIn === 1 ? 'day' : 'days'} ago · 7-day cadence · next due in {daysUntilNextCheckIn} {daysUntilNextCheckIn === 1 ? 'day' : 'days'}
               </p>
             </div>
           </div>

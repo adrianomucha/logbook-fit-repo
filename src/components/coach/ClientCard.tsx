@@ -24,10 +24,8 @@ export function ClientCard({ client, status, variant, snippet, nextCheckInDate }
   const handleButtonAction = () => {
     switch (status.type) {
       case 'pending-checkin':
-      case 'awaiting-response':
         navigate(`/coach/client/${client.id}/check-in`);
         break;
-      case 'at-risk-workouts':
       case 'at-risk':
       case 'overdue':
         navigate(`/coach/clients/${client.id}?tab=messages&action=remind`);
@@ -43,8 +41,6 @@ export function ClientCard({ client, status, variant, snippet, nextCheckInDate }
   const getButtonText = () => {
     switch (status.type) {
       case 'pending-checkin': return 'Review Check-in';
-      case 'awaiting-response': return 'Respond to Check-in';
-      case 'at-risk-workouts': return 'Send Workout Reminder';
       case 'overdue': return 'Send Check-in Reminder';
       case 'at-risk': return 'Send Check-in Reminder';
       case 'unread': return 'Review Messages';

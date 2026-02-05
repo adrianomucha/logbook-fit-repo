@@ -4,6 +4,7 @@ import { ClientStatus } from '@/lib/client-status';
 import { getWeeklyActivity, getCoachInteractions } from '@/lib/client-activity';
 import { CheckInStatusCard } from './overview/CheckInStatusCard';
 import { AtRiskExplanationCard } from './overview/AtRiskExplanationCard';
+import { LastCheckInSnippet } from './overview/LastCheckInSnippet';
 import { WeeklyActivityCard } from './overview/WeeklyActivityCard';
 import { CoachInteractionsCard } from './overview/CoachInteractionsCard';
 
@@ -53,6 +54,12 @@ export function ClientOverviewTab({
 
   const showAtRiskExplanation = status.type === 'at-risk' || status.type === 'overdue';
 
+  const lastCompletedCheckIn = useMemo(() => {
+    return checkIns
+      .filter(c => c.clientId === client.id && c.status === 'completed' && c.notes)
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] || null;
+  }, [checkIns, client.id]);
+
   return (
     <div className="space-y-4">
       {/* Hero: Check-in Status */}
@@ -73,23 +80,26 @@ export function ClientOverviewTab({
         />
       )}
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* This Week's Activity */}
-        <WeeklyActivityCard
-          client={client}
-          plan={plan}
-          weeklyActivity={weeklyActivity}
-        />
+      {/* Last check-in sentiment snippet */}
+      {lastCompletedCheckIn && (
+        <LastCheckInSnippet checkIn={lastCompletedCheckIn} clientName={client.name} />
+      )}
 
-        {/* Recent Coach Interactions */}
-        <CoachInteractionsCard
-          client={client}
-          plan={plan}
-          interactions={coachInteractions}
-          onViewMessages={onSwitchToMessages}
-          onEditPlan={onSwitchToPlan}
-        />
-      </div>
+      {/* This Week's Activity - full width */}
+      <WeeklyActivityCard
+        client={client}
+        plan={plan}
+        weeklyActivity={weeklyActivity}
+      />
+
+      {/* Recent Messages */}
+      <CoachInteractionsCard
+        client={client}
+        plan={plan}
+        interactions={coachInteractions}
+        onViewMessages={onSwitchToMessages}
+        onEditPlan={onSwitchToPlan}
+      />
     </div>
   );
 }
