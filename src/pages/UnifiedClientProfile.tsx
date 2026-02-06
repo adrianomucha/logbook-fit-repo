@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { AppState, Message, Measurement, PlanSetupFormData, WorkoutPlan } from '@/types';
 import { getClientStatus } from '@/lib/client-status';
+import { getActiveCheckIn, createCheckIn } from '@/lib/checkin-helpers';
 import { generatePlanStructure } from '@/lib/plan-generator';
 import { ClientOverviewTab } from '@/components/coach/profile/ClientOverviewTab';
 import { ClientProgressTab } from '@/components/coach/profile/ClientProgressTab';
@@ -79,13 +80,24 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
 
   // Handlers
   const handleBack = () => {
-    navigate('/coach');
+    navigate('/coach/clients');
   };
 
   const handleStartCheckIn = () => {
-    if (clientId) {
-      navigate(`/coach/client/${clientId}/check-in`);
+    if (!clientId) return;
+
+    // Check if there's already an active check-in (pending or responded)
+    const activeCheckIn = getActiveCheckIn(clientId, appState.checkIns);
+    if (!activeCheckIn) {
+      // Create a new check-in
+      const newCheckIn = createCheckIn(clientId, appState.currentUserId);
+      onUpdateState((state) => ({
+        ...state,
+        checkIns: [...state.checkIns, newCheckIn],
+      }));
     }
+
+    navigate(`/coach/client/${clientId}/check-in`);
   };
 
   const handleCreateNewPlan = () => {

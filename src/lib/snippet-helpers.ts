@@ -8,6 +8,9 @@ export function getClientSnippet(
 ): string | undefined {
   switch (status.type) {
     case 'pending-checkin':
+      if (status.checkIn?.clientNotes) {
+        return truncate(status.checkIn.clientNotes, 100);
+      }
       if (status.checkIn?.notes) {
         return truncate(status.checkIn.notes, 100);
       }

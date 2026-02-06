@@ -39,6 +39,10 @@ export function ClientsRequiringAction({
   const clientsAllCaughtUp = clientsWithStatus.filter((c) => c.status.type === 'ok');
 
   const handleClientAction = (clientId: string, statusType: string) => {
+    if (statusType === 'pending-checkin') {
+      navigate(`/coach/client/${clientId}/check-in`);
+      return;
+    }
     const tab = statusType === 'unread' ? 'messages' : 'overview';
     navigate(`/coach/clients/${clientId}?tab=${tab}`);
   };
@@ -84,9 +88,9 @@ export function ClientsRequiringAction({
                             </span>
                           )}
                         </div>
-                        {status.type === 'pending-checkin' && 'checkIn' in status && status.checkIn?.notes && (
+                        {status.type === 'pending-checkin' && 'checkIn' in status && status.checkIn?.clientNotes && (
                           <p className="text-xs text-muted-foreground mt-2 line-clamp-1">
-                            "{status.checkIn.notes.length > 60 ? status.checkIn.notes.slice(0, 60) + '…' : status.checkIn.notes}"
+                            "{status.checkIn.clientNotes.length > 60 ? status.checkIn.clientNotes.slice(0, 60) + '…' : status.checkIn.clientNotes}"
                           </p>
                         )}
                       </div>

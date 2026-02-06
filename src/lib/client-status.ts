@@ -36,8 +36,9 @@ export function getClientStatus(
     (m) => m.senderId === client.id && !m.read
   ).length;
 
-  const pendingCheckIn = checkIns?.find(
-    (c) => c.clientId === client.id && c.status === 'pending'
+  // Find check-in where client has responded (coach needs to review)
+  const respondedCheckIn = checkIns?.find(
+    (c) => c.clientId === client.id && c.status === 'responded'
   );
 
   // Priority 0: At risk (5-6 days since check-in) — most urgent, coach must act
@@ -68,8 +69,8 @@ export function getClientStatus(
     };
   }
 
-  // Priority 2: Pending check-in (client submitted, coach reviews)
-  if (pendingCheckIn) {
+  // Priority 2: Client responded to check-in, coach needs to review
+  if (respondedCheckIn) {
     return {
       type: 'pending-checkin',
       icon: ClipboardCheck,
@@ -79,7 +80,7 @@ export function getClientStatus(
       label: 'Check-in Ready to Review',
       priority: 2,
       hasUnread: false,
-      checkIn: pendingCheckIn
+      checkIn: respondedCheckIn
     };
   }
 

@@ -56,8 +56,8 @@ export function ClientOverviewTab({
 
   const lastCompletedCheckIn = useMemo(() => {
     return checkIns
-      .filter(c => c.clientId === client.id && c.status === 'completed' && c.notes)
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())[0] || null;
+      .filter(c => c.clientId === client.id && c.status === 'completed' && (c.clientNotes || c.notes))
+      .sort((a, b) => new Date(b.completedAt || b.date).getTime() - new Date(a.completedAt || a.date).getTime())[0] || null;
   }, [checkIns, client.id]);
 
   return (
@@ -67,6 +67,7 @@ export function ClientOverviewTab({
         client={client}
         status={status}
         daysSinceCheckIn={daysSinceCheckIn}
+        checkIns={checkIns}
         onStartCheckIn={onStartCheckIn}
         onReviewCheckIn={onStartCheckIn}  // Same flow for now
         onSendMessage={onSwitchToMessages}

@@ -43,12 +43,31 @@ export interface Message {
   read: boolean;
 }
 
+export type WorkoutFeeling = 'TOO_EASY' | 'ABOUT_RIGHT' | 'TOO_HARD';
+export type BodyFeeling = 'FRESH' | 'NORMAL' | 'TIRED' | 'RUN_DOWN';
+export type CheckInStatus = 'pending' | 'responded' | 'completed';
+
 export interface CheckIn {
   id: string;
   clientId: string;
   coachId: string;
   date: string;
-  status: 'completed' | 'pending';
+  status: CheckInStatus;
+
+  // Client response fields (populated when status: pending → responded)
+  workoutFeeling?: WorkoutFeeling;
+  bodyFeeling?: BodyFeeling;
+  clientNotes?: string;
+  flaggedWorkoutId?: string;
+  flaggedWorkoutNote?: string;
+  clientRespondedAt?: string;
+
+  // Coach response fields (populated when status: responded → completed)
+  coachResponse?: string;
+  planAdjustment?: boolean;
+  completedAt?: string;
+
+  // Legacy field for backward compat
   notes?: string;
 }
 
@@ -62,6 +81,7 @@ export interface Client {
   status: 'active' | 'inactive';
   avatar?: string;
   lastCheckInDate?: string;
+  planStartDate?: string;  // ISO date when plan was assigned
 }
 
 export interface Coach {
@@ -79,6 +99,40 @@ export interface CompletedWorkout {
   dayId: string;
   completedAt: string;
   exercises: Exercise[];
+}
+
+// Workout completion status for granular tracking
+export type WorkoutCompletionStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+
+// Day status for weekly overview
+export type DayStatus = 'TODAY' | 'COMPLETED' | 'UPCOMING' | 'MISSED' | 'REST';
+
+// Granular workout completion (enhanced version of CompletedWorkout)
+export interface WorkoutCompletion {
+  id: string;
+  clientId: string;
+  planId: string;
+  weekId: string;
+  dayId: string;
+  status: WorkoutCompletionStatus;
+  startedAt?: string;
+  completedAt?: string;
+  completionPct: number;      // 0-100
+  exercisesDone: number;
+  exercisesTotal: number;
+  durationSec?: number;
+}
+
+// Set-level completion tracking
+export interface SetCompletion {
+  id: string;
+  workoutCompletionId: string;
+  exerciseId: string;
+  setNumber: number;          // 1-indexed
+  completed: boolean;
+  actualWeight?: string;
+  actualReps?: string;
+  completedAt?: string;
 }
 
 export interface Measurement {
@@ -108,6 +162,10 @@ export interface AppState {
   measurements: Measurement[];
   checkIns: CheckIn[];
   coachExercises: CoachExercise[];
+  workoutCompletions: WorkoutCompletion[];
+  setCompletions: SetCompletion[];
+  // Migration flags
+  alexMigrationV4?: boolean;
 }
 
 // Plan Setup Form Types

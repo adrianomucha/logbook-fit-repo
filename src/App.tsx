@@ -6,7 +6,9 @@ import { sampleData } from '@/lib/sample-data';
 import { migratePlansToV2, needsMigration } from '@/lib/migrations/plan-migration';
 import { CoachDashboard } from '@/pages/CoachDashboard';
 import { ClientDashboard } from '@/pages/ClientDashboard';
-import ClientCheckIn from '@/pages/ClientCheckIn';
+import { ClientWorkoutExecution } from '@/pages/ClientWorkoutExecution';
+import { ClientCheckIn } from '@/pages/ClientCheckIn';
+import { ClientCheckInForm } from '@/pages/ClientCheckInForm';
 import { UnifiedClientProfile } from '@/pages/UnifiedClientProfile';
 import { AllClientsPage } from '@/pages/AllClientsPage';
 import { Button } from '@/components/ui/button';
@@ -54,6 +56,24 @@ function AppContent() {
         storedData.coachExercises = sampleData.coachExercises;
         storage.set(storedData);
         console.log('Coach exercises added');
+      }
+      // Migration: add workoutCompletions and setCompletions arrays
+      if (!storedData.workoutCompletions) {
+        console.log('Adding workoutCompletions and setCompletions arrays...');
+        storedData.workoutCompletions = [];
+        storedData.setCompletions = [];
+        storage.set(storedData);
+        console.log('Workout completion arrays added');
+      }
+      // Migration: add planStartDate to clients
+      if (storedData.clients.some(c => !c.planStartDate)) {
+        console.log('Adding planStartDate to clients...');
+        storedData.clients = storedData.clients.map((client, idx) => ({
+          ...client,
+          planStartDate: client.planStartDate || sampleData.clients[idx]?.planStartDate || '2026-01-27'
+        }));
+        storage.set(storedData);
+        console.log('planStartDate added to clients');
       }
       // Migration: Update Alex Rodriguez to be "all caught up" example - FORCE UPDATE V4
       const alexClient = storedData.clients.find(c => c.id === 'client-3');
@@ -262,8 +282,16 @@ function AppContent() {
             element={<ClientDashboard appState={appState} onUpdateState={handleUpdateState} />}
           />
           <Route
+            path="/client/workout/:weekId/:dayId"
+            element={<ClientWorkoutExecution appState={appState} onUpdateState={handleUpdateState} />}
+          />
+          <Route
+            path="/client/checkin/:checkinId"
+            element={<ClientCheckInForm appState={appState} onUpdateState={handleUpdateState} />}
+          />
+          <Route
             path="/coach/client/:clientId/check-in"
-            element={<ClientCheckIn />}
+            element={<ClientCheckIn appState={appState} onUpdateState={handleUpdateState} />}
           />
         </Routes>
       </div>

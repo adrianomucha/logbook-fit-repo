@@ -1,13 +1,16 @@
-import { Client } from '@/types';
+import { Client, CheckIn } from '@/types';
 import { ClientStatus } from '@/lib/client-status';
+import { getActiveCheckIn } from '@/lib/checkin-helpers';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Clock, CheckCircle2, ClipboardCheck } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
 
 interface CheckInStatusCardProps {
   client: Client;
   status: ClientStatus;
   daysSinceCheckIn: number;
+  checkIns?: CheckIn[];
   onStartCheckIn: () => void;
   onReviewCheckIn?: () => void;
   onSendMessage: () => void;
@@ -17,10 +20,43 @@ export function CheckInStatusCard({
   client,
   status,
   daysSinceCheckIn,
+  checkIns,
   onStartCheckIn,
   onReviewCheckIn,
   onSendMessage
 }: CheckInStatusCardProps) {
+  // Check for pending check-in (sent to client, awaiting their response)
+  const pendingCheckIn = checkIns ? getActiveCheckIn(client.id, checkIns) : undefined;
+  const hasPendingAwaitingClient = pendingCheckIn?.status === 'pending';
+
+  // Variant 0: Awaiting client response (Amber) — check-in sent but client hasn't responded
+  if (hasPendingAwaitingClient && status.type !== 'pending-checkin') {
+    const sentAgo = formatDistanceToNow(new Date(pendingCheckIn.date), { addSuffix: true });
+
+    return (
+      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+        <CardContent className="py-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Clock className="w-10 h-10 text-amber-600 flex-shrink-0" />
+              <div>
+                <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100">
+                  Check-in Sent
+                </h3>
+                <p className="text-sm text-amber-700 dark:text-amber-200">
+                  Sent {sentAgo} · Waiting for {client.name} to respond
+                </p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={onReviewCheckIn}>
+              View Check-in
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Variant 1: Overdue (Red)
   if (status.type === 'overdue') {
     return (
@@ -67,9 +103,12 @@ export function CheckInStatusCard({
                 <p className="text-sm text-blue-700 dark:text-blue-200">
                   Submitted {checkInAge} days ago · Awaiting your response
                 </p>
-                {status.checkIn.notes && (
+                {(status.checkIn.clientNotes || status.checkIn.notes) && (
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1 italic line-clamp-1">
-                    "{status.checkIn.notes.length > 60 ? status.checkIn.notes.slice(0, 60) + '…' : status.checkIn.notes}"
+                    "{(() => {
+                      const text = status.checkIn!.clientNotes || status.checkIn!.notes || '';
+                      return text.length > 60 ? text.slice(0, 60) + '…' : text;
+                    })()}"
                   </p>
                 )}
               </div>

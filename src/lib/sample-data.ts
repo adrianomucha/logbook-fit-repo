@@ -22,7 +22,8 @@ export const sampleData: AppState = {
       adherenceRate: 85,
       status: 'active',
       avatar: '👨',
-      lastCheckInDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
+      lastCheckInDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+      planStartDate: '2026-01-27'  // A Monday ~2 weeks ago
     },
     {
       id: 'client-2',
@@ -33,7 +34,8 @@ export const sampleData: AppState = {
       adherenceRate: 92,
       status: 'active',
       avatar: '👩',
-      lastCheckInDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      lastCheckInDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      planStartDate: '2026-01-27'  // A Monday ~2 weeks ago
     },
     {
       id: 'client-3',
@@ -44,7 +46,8 @@ export const sampleData: AppState = {
       adherenceRate: 85,
       status: 'active',
       avatar: '🧑',
-      lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      planStartDate: '2026-01-27'  // A Monday ~2 weeks ago
     }
   ],
   plans: [
@@ -390,38 +393,107 @@ export const sampleData: AppState = {
     }
   ],
   checkIns: [
+    // Mike Chen - has a responded check-in awaiting coach review
     {
-      id: 'checkin-1',
+      id: 'checkin-mike-responded',
       clientId: 'client-1',
       coachId: 'coach-1',
-      date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed',
-      notes: 'Feeling good, energy levels high'
+      date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'responded' as const,
+      workoutFeeling: 'ABOUT_RIGHT' as const,
+      bodyFeeling: 'NORMAL' as const,
+      clientNotes: 'This week went great! Hit all my workouts. Bench press is feeling stronger - moved up to 140lbs.',
+      clientRespondedAt: new Date().toISOString(),
     },
+    // Mike Chen - completed check-ins (history)
     {
-      id: 'checkin-1-pending',
+      id: 'checkin-mike-week3',
       clientId: 'client-1',
       coachId: 'coach-1',
-      date: new Date().toISOString(),
-      status: 'pending',
-      notes: 'This week went great! Hit all my workouts. Bench press is feeling stronger - moved up to 140lbs. Sleeping well and nutrition is on track. Ready for next week!'
+      date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed' as const,
+      workoutFeeling: 'TOO_HARD' as const,
+      bodyFeeling: 'TIRED' as const,
+      clientNotes: 'Deadlifts were rough this week. Lower back felt tight after Friday\'s session.',
+      clientRespondedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+      coachResponse: 'I hear you on the lower back tightness. Let\'s reduce deadlift volume next week - 3 sets instead of 4. Also try adding some cat-cow stretches before leg days. Your squat form is looking great though!',
+      planAdjustment: true,
+      completedAt: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
-      id: 'checkin-2',
+      id: 'checkin-mike-week2',
+      clientId: 'client-1',
+      coachId: 'coach-1',
+      date: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed' as const,
+      workoutFeeling: 'ABOUT_RIGHT' as const,
+      bodyFeeling: 'FRESH' as const,
+      clientNotes: 'Feeling strong! Really enjoying the program. Hit a PR on bench press - 145 lbs for 8 reps!',
+      clientRespondedAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+      coachResponse: 'Amazing work on the bench PR! That\'s solid progress. Keep pushing and let me know how the overhead press feels this week.',
+      planAdjustment: false,
+      completedAt: new Date(Date.now() - 13 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    {
+      id: 'checkin-mike-week1',
+      clientId: 'client-1',
+      coachId: 'coach-1',
+      date: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed' as const,
+      workoutFeeling: 'TOO_EASY' as const,
+      bodyFeeling: 'NORMAL' as const,
+      clientNotes: 'First week done! Feeling like the weights might be a bit light, especially on bench.',
+      clientRespondedAt: new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString(),
+      coachResponse: 'Great first week! Let\'s bump up the bench press by 10 lbs and see how that feels. We\'ll increase other lifts next week based on your feedback.',
+      planAdjustment: true,
+      completedAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    // Emma Wilson - completed check-in
+    {
+      id: 'checkin-emma-week3',
       clientId: 'client-2',
       coachId: 'coach-1',
       date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed',
-      notes: 'Workouts going well, noticed strength gains'
+      status: 'completed' as const,
+      workoutFeeling: 'ABOUT_RIGHT' as const,
+      bodyFeeling: 'NORMAL' as const,
+      clientNotes: 'HIIT sessions are getting easier. Can I add an extra day?',
+      clientRespondedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      coachResponse: 'Love the enthusiasm! Let\'s keep it at 4 days for now to ensure proper recovery. If you\'re still feeling great next week, we can discuss adding a 5th lighter session.',
+      planAdjustment: false,
+      completedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+    },
+    // Alex Rodriguez - has a completed check-in THIS WEEK (for client feedback card demo)
+    {
+      id: 'checkin-alex-thisweek',
+      clientId: 'client-3',
+      coachId: 'coach-1',
+      date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      status: 'completed' as const,
+      workoutFeeling: 'ABOUT_RIGHT' as const,
+      bodyFeeling: 'FRESH' as const,
+      clientNotes: 'Back on track this week! Made up for last week\'s missed sessions. Feeling motivated.',
+      clientRespondedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
+      coachResponse: 'Great comeback, Alex! Consistency is key and you showed real dedication making up those sessions. Keep that momentum going into next week. Your squat form looked solid in the video you sent!',
+      planAdjustment: false,
+      completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     },
     {
-      id: 'checkin-3',
+      id: 'checkin-alex-week2',
       clientId: 'client-3',
       coachId: 'coach-1',
       date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-      status: 'completed',
-      notes: 'Struggled with consistency this week'
-    }
+      status: 'completed' as const,
+      workoutFeeling: 'TOO_HARD' as const,
+      bodyFeeling: 'RUN_DOWN' as const,
+      clientNotes: 'Struggled with consistency this week. Work has been crazy.',
+      clientRespondedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+      coachResponse: 'No worries, life happens! The important thing is getting back on track. Let\'s focus on just 2 quality sessions next week rather than stressing about hitting all 3. Quality over quantity!',
+      planAdjustment: false,
+      completedAt: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
+    },
   ],
-  coachExercises: generateCommonExercises('coach-1')
+  coachExercises: generateCommonExercises('coach-1'),
+  workoutCompletions: [],
+  setCompletions: []
 };
