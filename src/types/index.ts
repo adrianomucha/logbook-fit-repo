@@ -116,6 +116,9 @@ export type WorkoutCompletionStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED
 // Day status for weekly overview
 export type DayStatus = 'TODAY' | 'COMPLETED' | 'UPCOMING' | 'MISSED' | 'REST';
 
+// Effort rating for post-workout feedback
+export type EffortRating = 'EASY' | 'MEDIUM' | 'HARD';
+
 // Granular workout completion (enhanced version of CompletedWorkout)
 export interface WorkoutCompletion {
   id: string;
@@ -130,6 +133,7 @@ export interface WorkoutCompletion {
   exercisesDone: number;
   exercisesTotal: number;
   durationSec?: number;
+  effortRating?: EffortRating;  // Optional post-workout feedback
 }
 
 // Set-level completion tracking

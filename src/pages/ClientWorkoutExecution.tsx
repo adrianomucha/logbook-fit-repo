@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AppState, Exercise, Message } from '@/types';
+import { AppState, Exercise, Message, EffortRating } from '@/types';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
 import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
 import { FinishWorkoutButton } from '@/components/client/execution/FinishWorkoutButton';
@@ -20,7 +20,7 @@ import {
 } from '@/lib/workout-execution-helpers';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Dumbbell } from 'lucide-react';
+import { CheckCircle2, Dumbbell, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ClientWorkoutExecutionProps {
@@ -39,6 +39,13 @@ export function ClientWorkoutExecution({
   const [showPartialConfirm, setShowPartialConfirm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [messageSheetExercise, setMessageSheetExercise] = useState<Exercise | null>(null);
+  const [completedWorkoutData, setCompletedWorkoutData] = useState<{
+    exercisesDone: number;
+    exercisesTotal: number;
+    durationMin: number;
+    workoutCompletionId: string;
+  } | null>(null);
+  const celebrationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Find current client
   const currentClient = appState.clients.find((c) => c.id === appState.currentUserId);
@@ -119,6 +126,15 @@ export function ClientWorkoutExecution({
       setExpandedExerciseId(nextIncomplete || exercises[0].id);
     }
   }, [workoutCompletion, exercises, workoutSetCompletions, expandedExerciseId, isReadOnly]);
+
+  // Cleanup celebration timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (celebrationTimeoutRef.current) {
+        clearTimeout(celebrationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Handle set toggle
   const handleToggleSet = useCallback(
@@ -279,6 +295,11 @@ export function ClientWorkoutExecution({
       workoutSetCompletions
     );
 
+    // Calculate duration in minutes
+    const startTime = workoutCompletion.startedAt ? new Date(workoutCompletion.startedAt).getTime() : Date.now();
+    const endTime = Date.now();
+    const durationMin = Math.round((endTime - startTime) / 60000);
+
     onUpdateState((state) => ({
       ...state,
       workoutCompletions: state.workoutCompletions.map((wc) =>
@@ -286,13 +307,21 @@ export function ClientWorkoutExecution({
       ),
     }));
 
+    // Store completed workout data for celebration screen
+    setCompletedWorkoutData({
+      exercisesDone: stats.exercisesDone,
+      exercisesTotal: stats.exercisesTotal,
+      durationMin,
+      workoutCompletionId: workoutCompletion.id,
+    });
+
     setShowPartialConfirm(false);
     setShowCelebration(true);
 
-    // Auto-dismiss celebration after 4 seconds
-    setTimeout(() => {
+    // Auto-dismiss celebration after 6 seconds (longer to allow effort rating tap)
+    celebrationTimeoutRef.current = setTimeout(() => {
       navigate('/client');
-    }, 4000);
+    }, 6000);
   };
 
   // Handle back navigation
@@ -300,8 +329,32 @@ export function ClientWorkoutExecution({
     navigate('/client');
   };
 
-  // Handle celebration click (dismiss early)
-  const handleCelebrationClick = () => {
+  // Handle celebration dismiss (tap outside effort buttons)
+  const handleCelebrationDismiss = () => {
+    if (celebrationTimeoutRef.current) {
+      clearTimeout(celebrationTimeoutRef.current);
+    }
+    navigate('/client');
+  };
+
+  // Handle effort rating selection
+  const handleEffortRating = (rating: EffortRating) => {
+    if (celebrationTimeoutRef.current) {
+      clearTimeout(celebrationTimeoutRef.current);
+    }
+
+    // Save the effort rating to the workout completion
+    if (completedWorkoutData) {
+      onUpdateState((state) => ({
+        ...state,
+        workoutCompletions: state.workoutCompletions.map((wc) =>
+          wc.id === completedWorkoutData.workoutCompletionId
+            ? { ...wc, effortRating: rating }
+            : wc
+        ),
+      }));
+    }
+
     navigate('/client');
   };
 
@@ -351,30 +404,76 @@ export function ClientWorkoutExecution({
     );
   }
 
-  // Celebration overlay
-  if (showCelebration) {
+  // Celebration overlay with effort rating
+  if (showCelebration && completedWorkoutData) {
     return (
       <div
-        className="fixed inset-0 z-50 bg-green-50 dark:bg-green-950 flex items-center justify-center p-4"
-        onClick={handleCelebrationClick}
+        className="fixed inset-0 z-50 bg-green-50 dark:bg-green-950 flex flex-col items-center justify-center p-6"
+        onClick={handleCelebrationDismiss}
       >
-        <div className="text-center">
-          <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500 flex items-center justify-center">
+        {/* Celebration Header */}
+        <div className="text-center mb-8">
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center animate-in zoom-in duration-300">
             <CheckCircle2 className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-green-800 dark:text-green-200 mb-2">
-            Workout Complete!
-          </h1>
-          <p className="text-xl text-green-700 dark:text-green-300 mb-2">
+          <h1 className="text-2xl font-bold text-green-800 dark:text-green-200">
             {day.name}
-          </p>
-          <p className="text-green-600 dark:text-green-400">
-            {stats.exercisesDone}/{stats.exercisesTotal} exercises
-          </p>
-          <p className="text-sm text-green-500 dark:text-green-500 mt-6">
-            Tap anywhere to continue
-          </p>
+          </h1>
         </div>
+
+        {/* Workout Summary */}
+        <div className="flex items-center justify-center gap-8 mb-10">
+          <div className="text-center">
+            <p className="text-3xl font-bold text-green-800 dark:text-green-200">
+              {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
+            </p>
+            <p className="text-sm text-green-600 dark:text-green-400">exercises</p>
+          </div>
+          <div className="w-px h-12 bg-green-300 dark:bg-green-700" />
+          <div className="text-center">
+            <div className="flex items-center justify-center gap-1">
+              <Clock className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <p className="text-3xl font-bold text-green-800 dark:text-green-200">
+                {completedWorkoutData.durationMin}
+              </p>
+            </div>
+            <p className="text-sm text-green-600 dark:text-green-400">min</p>
+          </div>
+        </div>
+
+        {/* Effort Rating */}
+        <div
+          className="text-center"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <p className="text-green-700 dark:text-green-300 mb-4 font-medium">
+            How did that feel?
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => handleEffortRating('EASY')}
+              className="px-6 py-3 rounded-full bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 font-medium hover:bg-green-300 dark:hover:bg-green-700 transition-colors touch-manipulation"
+            >
+              Easy
+            </button>
+            <button
+              onClick={() => handleEffortRating('MEDIUM')}
+              className="px-6 py-3 rounded-full bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 font-medium hover:bg-green-300 dark:hover:bg-green-700 transition-colors touch-manipulation"
+            >
+              Medium
+            </button>
+            <button
+              onClick={() => handleEffortRating('HARD')}
+              className="px-6 py-3 rounded-full bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 font-medium hover:bg-green-300 dark:hover:bg-green-700 transition-colors touch-manipulation"
+            >
+              Hard
+            </button>
+          </div>
+        </div>
+
+        <p className="text-xs text-green-500 dark:text-green-600 mt-8">
+          Tap anywhere to skip
+        </p>
       </div>
     );
   }
