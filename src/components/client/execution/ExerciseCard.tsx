@@ -1,5 +1,6 @@
 import { Card, CardContent } from '@/components/ui/card';
-import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, ChevronDown, ChevronUp, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Exercise, SetCompletion } from '@/types';
 import { SetRow } from './SetRow';
@@ -17,6 +18,13 @@ interface ExerciseCardProps {
   workoutCompletionId: string;
   setCompletions: SetCompletion[];
   onToggleSet: (exerciseId: string, setNumber: number) => void;
+  // Flagging props
+  isFlagged?: boolean;
+  flagNote?: string;
+  onToggleFlag?: () => void;
+  onUpdateFlagNote?: (note: string) => void;
+  onMessageCoach?: () => void;
+  isReadOnly?: boolean;
 }
 
 export function ExerciseCard({
@@ -27,6 +35,12 @@ export function ExerciseCard({
   workoutCompletionId,
   setCompletions,
   onToggleSet,
+  isFlagged = false,
+  flagNote,
+  onToggleFlag,
+  onUpdateFlagNote,
+  onMessageCoach,
+  isReadOnly = false,
 }: ExerciseCardProps) {
   const isComplete = isExerciseComplete(exercise, setCompletions, workoutCompletionId);
   const completedSets = getCompletedSetsCount(exercise.id, setCompletions, workoutCompletionId);
@@ -43,11 +57,19 @@ export function ExerciseCard({
   // Generate set rows
   const setRows = Array.from({ length: exercise.sets }, (_, i) => i + 1);
 
+  const handleFlagClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isReadOnly && onToggleFlag) {
+      onToggleFlag();
+    }
+  };
+
   return (
     <Card
       className={cn(
         'transition-all overflow-hidden',
-        isComplete && 'border-green-200 dark:border-green-800'
+        isComplete && 'border-green-200 dark:border-green-800',
+        isFlagged && !isComplete && 'border-amber-200 dark:border-amber-800'
       )}
     >
       {/* Header - always visible, clickable */}
@@ -74,14 +96,20 @@ export function ExerciseCard({
 
         {/* Exercise info */}
         <div className="flex-1 min-w-0">
-          <p
-            className={cn(
-              'font-semibold truncate',
-              isComplete && 'text-green-700 dark:text-green-400'
+          <div className="flex items-center gap-2">
+            <p
+              className={cn(
+                'font-semibold truncate',
+                isComplete && 'text-green-700 dark:text-green-400'
+              )}
+            >
+              {exercise.name}
+            </p>
+            {/* Flag indicator when collapsed */}
+            {isFlagged && !isExpanded && (
+              <div className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
             )}
-          >
-            {exercise.name}
-          </p>
+          </div>
           <p className="text-sm text-muted-foreground">
             {getSummary()}
             {completedSets > 0 && !isComplete && (
@@ -91,6 +119,28 @@ export function ExerciseCard({
             )}
           </p>
         </div>
+
+        {/* Flag icon */}
+        <button
+          type="button"
+          onClick={handleFlagClick}
+          disabled={isReadOnly}
+          className={cn(
+            'p-2 rounded-full transition-colors flex-shrink-0',
+            !isReadOnly && 'hover:bg-muted active:bg-muted/80',
+            isReadOnly && 'opacity-50 cursor-default'
+          )}
+          aria-label={isFlagged ? 'Remove flag' : 'Flag exercise'}
+        >
+          <Flag
+            className={cn(
+              'w-4 h-4 transition-colors',
+              isFlagged
+                ? 'text-amber-500 fill-amber-500'
+                : 'text-muted-foreground/50'
+            )}
+          />
+        </button>
 
         {/* Chevron */}
         {isExpanded ? (
@@ -109,6 +159,47 @@ export function ExerciseCard({
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <span className="font-medium">Coach tip:</span> {exercise.notes}
               </p>
+            </div>
+          )}
+
+          {/* Flag note section - only visible when flagged */}
+          {isFlagged && (
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+              <div className="flex items-center gap-2 mb-2">
+                <Flag className="w-4 h-4 text-amber-600" />
+                <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                  Flagged for coach
+                </span>
+              </div>
+              {!isReadOnly ? (
+                <>
+                  <Input
+                    placeholder="Add a note (optional)..."
+                    value={flagNote || ''}
+                    onChange={(e) => onUpdateFlagNote?.(e.target.value)}
+                    maxLength={200}
+                    className="text-sm"
+                  />
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-muted-foreground">
+                      {(flagNote?.length || 0)}/200
+                    </span>
+                    <button
+                      type="button"
+                      onClick={onMessageCoach}
+                      className="text-xs text-primary hover:underline"
+                    >
+                      Message coach about this →
+                    </button>
+                  </div>
+                </>
+              ) : (
+                flagNote && (
+                  <p className="text-sm text-amber-800 dark:text-amber-200 italic">
+                    "{flagNote}"
+                  </p>
+                )
+              )}
             </div>
           )}
 

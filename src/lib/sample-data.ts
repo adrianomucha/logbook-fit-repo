@@ -495,5 +495,6 @@ export const sampleData: AppState = {
   ],
   coachExercises: generateCommonExercises('coach-1'),
   workoutCompletions: [],
-  setCompletions: []
+  setCompletions: [],
+  exerciseFlags: [],
 };

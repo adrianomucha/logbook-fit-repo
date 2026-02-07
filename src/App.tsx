@@ -65,6 +65,13 @@ function AppContent() {
         storage.set(storedData);
         console.log('Workout completion arrays added');
       }
+      // Migration: add exerciseFlags array
+      if (!storedData.exerciseFlags) {
+        console.log('Adding exerciseFlags array...');
+        storedData.exerciseFlags = [];
+        storage.set(storedData);
+        console.log('Exercise flags array added');
+      }
       // Migration: add planStartDate to clients
       if (storedData.clients.some(c => !c.planStartDate)) {
         console.log('Adding planStartDate to clients...');

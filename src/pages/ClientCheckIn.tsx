@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AppState } from '@/types';
+import { AppState, ExerciseFlag } from '@/types';
 import { getActiveCheckIn, completeCheckIn, createCheckIn, getRecentWorkouts } from '@/lib/checkin-helpers';
 import { WeekSummaryCard } from '@/components/coach/checkin/WeekSummaryCard';
 import { PreviousCheckIns } from '@/components/coach/checkin/PreviousCheckIns';
@@ -8,8 +8,8 @@ import { RecentContextPanel, RecentContextPanelMobile } from '@/components/coach
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Clock, CheckCircle2, ClipboardCheck, AlertTriangle, Dumbbell, Send } from 'lucide-react';
-import { format, formatDistanceToNow } from 'date-fns';
+import { ArrowLeft, Clock, CheckCircle2, ClipboardCheck, AlertTriangle, Dumbbell, Send, Flag } from 'lucide-react';
+import { format, formatDistanceToNow, subDays } from 'date-fns';
 
 interface ClientCheckInProps {
   appState: AppState;
@@ -57,6 +57,48 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
     if (!activeCheckIn?.flaggedWorkoutId) return null;
     return appState.completedWorkouts.find(w => w.id === activeCheckIn.flaggedWorkoutId);
   }, [activeCheckIn, appState.completedWorkouts]);
+
+  // Get flagged exercises from recent workouts (past 7 days)
+  const flaggedExercisesFromWeek = useMemo(() => {
+    if (!clientId) return [];
+
+    const sevenDaysAgo = subDays(new Date(), 7);
+
+    // Get workout completions from the past week for this client
+    const recentCompletions = appState.workoutCompletions.filter(
+      (wc) =>
+        wc.clientId === clientId &&
+        wc.status === 'COMPLETED' &&
+        wc.completedAt &&
+        new Date(wc.completedAt) >= sevenDaysAgo
+    );
+
+    const recentCompletionIds = new Set(recentCompletions.map((wc) => wc.id));
+
+    // Filter exercise flags to those workout completions
+    return appState.exerciseFlags.filter(
+      (ef) => recentCompletionIds.has(ef.workoutCompletionId)
+    );
+  }, [clientId, appState.workoutCompletions, appState.exerciseFlags]);
+
+  // Helper to get exercise name from exercise ID
+  const getExerciseNameById = (exerciseId: string): string => {
+    if (!plan) return 'Exercise';
+    for (const week of plan.weeks) {
+      for (const day of week.days) {
+        const exercise = day.exercises.find((e) => e.id === exerciseId);
+        if (exercise) return exercise.name;
+      }
+    }
+    return 'Exercise';
+  };
+
+  // Helper to get workout name from workoutCompletionId
+  const getWorkoutNameByCompletionId = (workoutCompletionId: string): string => {
+    const completion = appState.workoutCompletions.find((wc) => wc.id === workoutCompletionId);
+    if (!completion) return 'Workout';
+    return getWorkoutName(completion.dayId);
+  };
 
   const getWorkoutName = (dayId: string): string => {
     if (!plan) return 'Workout';
@@ -318,6 +360,39 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
                       </p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Flagged Exercises from Recent Workouts */}
+            {flaggedExercisesFromWeek.length > 0 && (
+              <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/10">
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Flag className="w-4 h-4 text-amber-600" />
+                    Flagged Exercises This Week ({flaggedExercisesFromWeek.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {flaggedExercisesFromWeek.map((flag) => (
+                    <div key={flag.id} className="bg-background rounded-lg p-3 border">
+                      <div className="flex items-center gap-2">
+                        <Dumbbell className="w-4 h-4 text-muted-foreground" />
+                        <span className="font-medium text-sm">
+                          {getExerciseNameById(flag.exerciseId)}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {getWorkoutNameByCompletionId(flag.workoutCompletionId)} ·{' '}
+                        {format(new Date(flag.flaggedAt), 'MMM d')}
+                      </p>
+                      {flag.note && (
+                        <p className="text-sm mt-2 p-2 bg-muted rounded italic">
+                          "{flag.note}"
+                        </p>
+                      )}
+                    </div>
+                  ))}
                 </CardContent>
               </Card>
             )}

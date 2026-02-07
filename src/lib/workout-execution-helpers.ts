@@ -1,4 +1,4 @@
-import { Exercise, WorkoutCompletion, SetCompletion } from '@/types';
+import { Exercise, WorkoutCompletion, SetCompletion, ExerciseFlag } from '@/types';
 
 /**
  * Create a new WorkoutCompletion when starting a workout
@@ -208,5 +208,83 @@ export function isSetCompleted(
       sc.exerciseId === exerciseId &&
       sc.setNumber === setNumber &&
       sc.completed
+  );
+}
+
+// =============================================================================
+// Exercise Flagging Helpers
+// =============================================================================
+
+/**
+ * Toggle flag for an exercise (add or remove)
+ * Returns updated exerciseFlags array
+ */
+export function toggleExerciseFlag(
+  exerciseFlags: ExerciseFlag[],
+  workoutCompletionId: string,
+  exerciseId: string
+): ExerciseFlag[] {
+  const existingIndex = exerciseFlags.findIndex(
+    (ef) =>
+      ef.workoutCompletionId === workoutCompletionId &&
+      ef.exerciseId === exerciseId
+  );
+
+  if (existingIndex >= 0) {
+    // Remove existing flag
+    return exerciseFlags.filter((_, i) => i !== existingIndex);
+  } else {
+    // Add new flag
+    const newFlag: ExerciseFlag = {
+      id: `ef-${Date.now()}-${exerciseId}`,
+      workoutCompletionId,
+      exerciseId,
+      flaggedAt: new Date().toISOString(),
+    };
+    return [...exerciseFlags, newFlag];
+  }
+}
+
+/**
+ * Check if an exercise is flagged
+ */
+export function isExerciseFlagged(
+  exerciseId: string,
+  exerciseFlags: ExerciseFlag[],
+  workoutCompletionId: string
+): boolean {
+  return exerciseFlags.some(
+    (ef) =>
+      ef.workoutCompletionId === workoutCompletionId &&
+      ef.exerciseId === exerciseId
+  );
+}
+
+/**
+ * Get flag for an exercise (returns flag object or undefined)
+ */
+export function getExerciseFlag(
+  exerciseId: string,
+  exerciseFlags: ExerciseFlag[],
+  workoutCompletionId: string
+): ExerciseFlag | undefined {
+  return exerciseFlags.find(
+    (ef) =>
+      ef.workoutCompletionId === workoutCompletionId &&
+      ef.exerciseId === exerciseId
+  );
+}
+
+/**
+ * Update flag note
+ * Returns updated exerciseFlags array
+ */
+export function updateFlagNote(
+  exerciseFlags: ExerciseFlag[],
+  flagId: string,
+  note: string
+): ExerciseFlag[] {
+  return exerciseFlags.map((ef) =>
+    ef.id === flagId ? { ...ef, note: note.slice(0, 200) } : ef
   );
 }

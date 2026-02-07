@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AppState, WorkoutCompletion, SetCompletion } from '@/types';
+import { AppState, Exercise, Message } from '@/types';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
 import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
 import { FinishWorkoutButton } from '@/components/client/execution/FinishWorkoutButton';
+import { FlagMessageSheet } from '@/components/client/execution/FlagMessageSheet';
 import {
   startWorkout,
   toggleSet,
@@ -11,6 +12,11 @@ import {
   getNextIncompleteExercise,
   finishWorkout,
   isExerciseComplete,
+  toggleExerciseFlag,
+  isExerciseFlagged,
+  getExerciseFlag,
+  updateFlagNote,
+  getCompletedSetsCount,
 } from '@/lib/workout-execution-helpers';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,6 +38,7 @@ export function ClientWorkoutExecution({
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [showPartialConfirm, setShowPartialConfirm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [messageSheetExercise, setMessageSheetExercise] = useState<Exercise | null>(null);
 
   // Find current client
   const currentClient = appState.clients.find((c) => c.id === appState.currentUserId);
@@ -63,6 +70,14 @@ export function ClientWorkoutExecution({
       (sc) => sc.workoutCompletionId === workoutCompletion.id
     );
   }, [appState.setCompletions, workoutCompletion]);
+
+  // Get exercise flags for this workout
+  const workoutExerciseFlags = useMemo(() => {
+    if (!workoutCompletion) return [];
+    return appState.exerciseFlags.filter(
+      (ef) => ef.workoutCompletionId === workoutCompletion.id
+    );
+  }, [appState.exerciseFlags, workoutCompletion]);
 
   // Calculate completion stats
   const stats = useMemo(() => {
@@ -146,6 +161,98 @@ export function ClientWorkoutExecution({
     [workoutCompletion, isReadOnly, exercises, appState.setCompletions, onUpdateState]
   );
 
+  // Handle flag toggle
+  const handleToggleFlag = useCallback(
+    (exerciseId: string) => {
+      if (!workoutCompletion || isReadOnly) return;
+
+      onUpdateState((state) => ({
+        ...state,
+        exerciseFlags: toggleExerciseFlag(
+          state.exerciseFlags,
+          workoutCompletion.id,
+          exerciseId
+        ),
+      }));
+    },
+    [workoutCompletion, isReadOnly, onUpdateState]
+  );
+
+  // Handle flag note update
+  const handleUpdateFlagNote = useCallback(
+    (exerciseId: string, note: string) => {
+      if (!workoutCompletion || isReadOnly) return;
+
+      const flag = getExerciseFlag(exerciseId, appState.exerciseFlags, workoutCompletion.id);
+      if (!flag) return;
+
+      onUpdateState((state) => ({
+        ...state,
+        exerciseFlags: updateFlagNote(state.exerciseFlags, flag.id, note),
+      }));
+    },
+    [workoutCompletion, isReadOnly, appState.exerciseFlags, onUpdateState]
+  );
+
+  // Handle message coach (open sheet)
+  const handleMessageCoach = useCallback(
+    (exerciseId: string) => {
+      const exercise = exercises.find((e) => e.id === exerciseId);
+      if (exercise) {
+        setMessageSheetExercise(exercise);
+      }
+    },
+    [exercises]
+  );
+
+  // Build prescription text for an exercise
+  const getExercisePrescription = (exercise: Exercise) => {
+    const parts: string[] = [`${exercise.sets}x`];
+    if (exercise.reps) parts.push(exercise.reps);
+    if (exercise.time) parts.push(exercise.time);
+    if (exercise.weight) parts.push(`@ ${exercise.weight}`);
+    return parts.join(' ');
+  };
+
+  // Handle send message from sheet
+  const handleSendMessage = useCallback(
+    (content: string) => {
+      if (!messageSheetExercise || !currentClient || !workoutCompletion) return;
+
+      const flag = getExerciseFlag(messageSheetExercise.id, appState.exerciseFlags, workoutCompletion.id);
+      const setsCompleted = getCompletedSetsCount(
+        messageSheetExercise.id,
+        workoutSetCompletions,
+        workoutCompletion.id
+      );
+
+      const newMessage: Message = {
+        id: `msg-${Date.now()}`,
+        senderId: appState.currentUserId,
+        senderName: currentClient.name,
+        content: content || `I have a question about ${messageSheetExercise.name}`,
+        timestamp: new Date().toISOString(),
+        read: false,
+        exerciseContext: {
+          exerciseId: messageSheetExercise.id,
+          exerciseName: messageSheetExercise.name,
+          prescription: getExercisePrescription(messageSheetExercise),
+          setsCompleted,
+          totalSets: messageSheetExercise.sets,
+          flagNote: flag?.note,
+        },
+      };
+
+      onUpdateState((state) => ({
+        ...state,
+        messages: [...state.messages, newMessage],
+      }));
+
+      setMessageSheetExercise(null);
+    },
+    [messageSheetExercise, currentClient, workoutCompletion, appState.exerciseFlags, appState.currentUserId, workoutSetCompletions, onUpdateState]
+  );
+
   // Handle exercise expand toggle
   const handleToggleExpand = (exerciseId: string) => {
     setExpandedExerciseId((prev) => (prev === exerciseId ? null : exerciseId));
@@ -196,6 +303,19 @@ export function ClientWorkoutExecution({
   // Handle celebration click (dismiss early)
   const handleCelebrationClick = () => {
     navigate('/client');
+  };
+
+  // Get message sheet completion state
+  const getMessageSheetCompletionState = () => {
+    if (!messageSheetExercise || !workoutCompletion) {
+      return { setsCompleted: 0, totalSets: 0 };
+    }
+    const setsCompleted = getCompletedSetsCount(
+      messageSheetExercise.id,
+      workoutSetCompletions,
+      workoutCompletion.id
+    );
+    return { setsCompleted, totalSets: messageSheetExercise.sets };
   };
 
   // Error states
@@ -318,6 +438,20 @@ export function ClientWorkoutExecution({
             workoutCompletionId={workoutCompletion?.id || ''}
             setCompletions={workoutSetCompletions}
             onToggleSet={handleToggleSet}
+            isFlagged={
+              workoutCompletion
+                ? isExerciseFlagged(exercise.id, workoutExerciseFlags, workoutCompletion.id)
+                : false
+            }
+            flagNote={
+              workoutCompletion
+                ? getExerciseFlag(exercise.id, workoutExerciseFlags, workoutCompletion.id)?.note
+                : undefined
+            }
+            onToggleFlag={() => handleToggleFlag(exercise.id)}
+            onUpdateFlagNote={(note) => handleUpdateFlagNote(exercise.id, note)}
+            onMessageCoach={() => handleMessageCoach(exercise.id)}
+            isReadOnly={isReadOnly}
           />
         ))}
       </div>
@@ -330,6 +464,20 @@ export function ClientWorkoutExecution({
           onFinish={handleFinishClick}
         />
       )}
+
+      {/* Message coach bottom sheet */}
+      <FlagMessageSheet
+        isOpen={!!messageSheetExercise}
+        onClose={() => setMessageSheetExercise(null)}
+        exercise={messageSheetExercise}
+        flagNote={
+          messageSheetExercise && workoutCompletion
+            ? getExerciseFlag(messageSheetExercise.id, workoutExerciseFlags, workoutCompletion.id)?.note
+            : undefined
+        }
+        completionState={getMessageSheetCompletionState()}
+        onSend={handleSendMessage}
+      />
     </div>
   );
 }

@@ -41,6 +41,15 @@ export interface Message {
   content: string;
   timestamp: string;
   read: boolean;
+  // Optional exercise context when message is sent about a flagged exercise
+  exerciseContext?: {
+    exerciseId: string;
+    exerciseName: string;
+    prescription: string;     // "4x 8-10 @ 135 lbs"
+    setsCompleted: number;
+    totalSets: number;
+    flagNote?: string;
+  };
 }
 
 export type WorkoutFeeling = 'TOO_EASY' | 'ABOUT_RIGHT' | 'TOO_HARD';
@@ -135,6 +144,15 @@ export interface SetCompletion {
   completedAt?: string;
 }
 
+// Exercise-level flag during workout
+export interface ExerciseFlag {
+  id: string;
+  workoutCompletionId: string;
+  exerciseId: string;
+  note?: string;              // Optional 200 char max note
+  flaggedAt: string;          // ISO timestamp
+}
+
 export interface Measurement {
   id: string;
   clientId: string;
@@ -164,6 +182,7 @@ export interface AppState {
   coachExercises: CoachExercise[];
   workoutCompletions: WorkoutCompletion[];
   setCompletions: SetCompletion[];
+  exerciseFlags: ExerciseFlag[];
   // Migration flags
   alexMigrationV4?: boolean;
 }

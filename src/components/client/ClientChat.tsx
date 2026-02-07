@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send } from 'lucide-react';
+import { Send, Dumbbell } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface ClientChatProps {
@@ -58,6 +58,27 @@ export function ClientChat({
                       : 'bg-muted'
                   }`}
                 >
+                  {/* Exercise context card if present */}
+                  {message.exerciseContext && (
+                    <div className={`rounded p-2 mb-2 text-xs ${
+                      message.senderId === currentUserId
+                        ? 'bg-primary-foreground/10'
+                        : 'bg-background/50'
+                    }`}>
+                      <div className="flex items-center gap-1">
+                        <Dumbbell className="w-3 h-3" />
+                        <span className="font-medium">{message.exerciseContext.exerciseName}</span>
+                      </div>
+                      <p className={message.senderId === currentUserId ? 'opacity-80' : 'text-muted-foreground'}>
+                        {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets done
+                      </p>
+                      {message.exerciseContext.flagNote && (
+                        <p className="italic mt-1">
+                          Note: "{message.exerciseContext.flagNote}"
+                        </p>
+                      )}
+                    </div>
+                  )}
                   <p className="text-sm">{message.content}</p>
                   <p className="text-xs mt-1 opacity-70">
                     {format(new Date(message.timestamp), 'MMM d, h:mm a')}
