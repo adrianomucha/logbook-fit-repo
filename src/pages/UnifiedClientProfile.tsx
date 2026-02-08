@@ -45,6 +45,23 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     setSearchParams({ tab });
   };
 
+  // Mark messages as read when viewing messages tab
+  useEffect(() => {
+    if (activeTab === 'messages' && clientId) {
+      const hasUnread = appState.messages.some(
+        (m) => m.senderId === clientId && !m.read
+      );
+      if (hasUnread) {
+        onUpdateState((state) => ({
+          ...state,
+          messages: state.messages.map((m) =>
+            m.senderId === clientId && !m.read ? { ...m, read: true } : m
+          ),
+        }));
+      }
+    }
+  }, [activeTab, clientId, appState.messages, onUpdateState]);
+
   // Derived state from AppState
   const client = useMemo(
     () => appState.clients.find((c) => c.id === clientId),

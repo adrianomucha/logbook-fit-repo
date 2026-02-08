@@ -51,6 +51,14 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     [appState.clients, clientToUnassign]
   );
 
+  // Calculate total unread messages from all clients
+  const totalUnreadMessages = useMemo(() => {
+    const coachClientIds = appState.clients.map((c) => c.id);
+    return appState.messages.filter(
+      (m) => coachClientIds.includes(m.senderId) && !m.read
+    ).length;
+  }, [appState.clients, appState.messages]);
+
   // Handle view query parameter
   useEffect(() => {
     const view = searchParams.get('view');
@@ -179,6 +187,11 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
             >
               <Users className="w-4 h-4 sm:mr-2" />
               <span className="hidden sm:inline">Clients</span>
+              {totalUnreadMessages > 0 && (
+                <Badge variant="destructive" className="ml-1 px-1.5 py-0 h-5 text-xs">
+                  {totalUnreadMessages}
+                </Badge>
+              )}
             </Button>
             <Button
               variant={currentView === 'plans' ? 'default' : 'outline'}

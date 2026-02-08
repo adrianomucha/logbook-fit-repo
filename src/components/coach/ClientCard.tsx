@@ -3,6 +3,7 @@ import { ClientStatus } from '@/lib/client-status';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { MessageSquare } from 'lucide-react';
 
 interface ClientCardProps {
   client: Client;
@@ -59,9 +60,17 @@ export function ClientCard({ client, status, variant, snippet, nextCheckInDate }
       <CardContent className="p-3 sm:p-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
           <div className="flex items-center gap-3 flex-1 min-w-0">
-            {/* Avatar */}
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl sm:text-2xl flex-shrink-0">
-              {client.avatar || client.name.charAt(0)}
+            {/* Avatar with unread indicator */}
+            <div className="relative flex-shrink-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-primary/10 flex items-center justify-center text-xl sm:text-2xl">
+                {client.avatar || client.name.charAt(0)}
+              </div>
+              {/* Show message badge when hasUnread and not already showing as unread status */}
+              {status.hasUnread && status.type !== 'unread' && (
+                <div className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+                  <MessageSquare className="w-3 h-3 text-white" />
+                </div>
+              )}
             </div>
 
             {/* Content */}
