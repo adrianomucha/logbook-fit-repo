@@ -1,66 +1,39 @@
-import { useState, useEffect, useMemo } from 'react';
-import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { AppState, Message, Measurement, PlanSetupFormData, WorkoutPlan } from '@/types';
+import { useState, useMemo, useRef } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { AppState, Message, PlanSetupFormData, ExerciseFlag, CheckIn, WorkoutPlan } from '@/types';
 import { getClientStatus } from '@/lib/client-status';
-import { getActiveCheckIn, createCheckIn } from '@/lib/checkin-helpers';
-import { generatePlanStructure } from '@/lib/plan-generator';
-import { ClientOverviewTab } from '@/components/coach/profile/ClientOverviewTab';
-import { ClientProgressTab } from '@/components/coach/profile/ClientProgressTab';
-import { ClientMessagesTab } from '@/components/coach/profile/ClientMessagesTab';
-import { ClientPlanTab } from '@/components/coach/profile/ClientPlanTab';
+import { getActiveCheckIn } from '@/lib/checkin-helpers';
+import { ContextualStatusHeader } from '@/components/coach/workspace/ContextualStatusHeader';
+import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
+import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
+import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
+import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
+import { ChatView } from '@/components/coach/ChatView';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
+import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
+import { CoachNav } from '@/components/coach/CoachNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ClipboardCheck, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { generatePlanStructure } from '@/lib/plan-generator';
 
 interface UnifiedClientProfileProps {
   appState: AppState;
   onUpdateState: (updater: (state: AppState) => AppState) => void;
 }
 
-type TabType = 'overview' | 'progress' | 'messages' | 'plan';
-
 export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientProfileProps) {
   const { clientId } = useParams<{ clientId: string }>();
-  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
+  const [showAssignPlanModal, setShowAssignPlanModal] = useState(false);
+  const [chatPrefill, setChatPrefill] = useState<string | undefined>(undefined);
+  const [justSentCheckIn, setJustSentCheckIn] = useState(false);
 
-  // Sync tab with URL query param
-  useEffect(() => {
-    const tab = searchParams.get('tab');
-    if (tab === 'overview' || tab === 'progress' || tab === 'messages' || tab === 'plan') {
-      setActiveTab(tab);
-    } else {
-      // Default to overview if no valid tab in URL
-      setSearchParams({ tab: 'overview' });
-    }
-  }, [searchParams, setSearchParams]);
-
-  // Update URL on tab change
-  const handleTabChange = (tab: TabType) => {
-    setActiveTab(tab);
-    setSearchParams({ tab });
-  };
-
-  // Mark messages as read when viewing messages tab
-  useEffect(() => {
-    if (activeTab === 'messages' && clientId) {
-      const hasUnread = appState.messages.some(
-        (m) => m.senderId === clientId && !m.read
-      );
-      if (hasUnread) {
-        onUpdateState((state) => ({
-          ...state,
-          messages: state.messages.map((m) =>
-            m.senderId === clientId && !m.read ? { ...m, read: true } : m
-          ),
-        }));
-      }
-    }
-  }, [activeTab, clientId, appState.messages, onUpdateState]);
+  // Refs for scrolling
+  const checkInRef = useRef<HTMLDivElement>(null);
+  const planEditorRef = useRef<HTMLDivElement>(null);
+  const chatRef = useRef<HTMLDivElement>(null);
 
   // Derived state from AppState
   const client = useMemo(
@@ -68,21 +41,17 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     [appState.clients, clientId]
   );
 
+  // Calculate total unread messages from all clients (needed for nav badge)
+  const totalUnreadMessages = useMemo(() => {
+    const coachClientIds = appState.clients.map((c) => c.id);
+    return appState.messages.filter(
+      (m) => coachClientIds.includes(m.senderId) && !m.read
+    ).length;
+  }, [appState.clients, appState.messages]);
+
   const plan = useMemo(
     () => appState.plans.find((p) => p.id === client?.currentPlanId),
     [appState.plans, client?.currentPlanId]
-  );
-
-  const clientMessages = useMemo(
-    () => appState.messages.filter(
-      (m) => m.senderId === clientId || (m as any).recipientId === clientId
-    ),
-    [appState.messages, clientId]
-  );
-
-  const clientMeasurements = useMemo(
-    () => appState.measurements.filter((m) => m.clientId === clientId),
-    [appState.measurements, clientId]
   );
 
   const status = useMemo(
@@ -90,35 +59,127 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     [client, appState.messages, appState.checkIns]
   );
 
-  const unreadCount = useMemo(
-    () => appState.messages.filter((m) => m.senderId === clientId && !m.read).length,
-    [appState.messages, clientId]
+  // Get active check-in (pending or responded)
+  const activeCheckIn = useMemo(() => {
+    if (!clientId) return null;
+    return getActiveCheckIn(clientId, appState.checkIns) || null;
+  }, [appState.checkIns, clientId]);
+
+  // Get last completed check-in for status header
+  const lastCompletedCheckIn = useMemo(() => {
+    if (!clientId) return null;
+    return appState.checkIns
+      .filter((c) => c.clientId === clientId && c.status === 'completed')
+      .sort((a, b) =>
+        new Date(b.completedAt || b.date).getTime() -
+        new Date(a.completedAt || a.date).getTime()
+      )[0] || null;
+  }, [appState.checkIns, clientId]);
+
+  // Get responded check-in (for status header context)
+  const respondedCheckIn = useMemo(() => {
+    if (!clientId) return null;
+    return appState.checkIns
+      .filter((c) => c.clientId === clientId && c.status === 'responded')
+      .sort((a, b) =>
+        new Date(b.clientRespondedAt || b.date).getTime() -
+        new Date(a.clientRespondedAt || a.date).getTime()
+      )[0] || null;
+  }, [appState.checkIns, clientId]);
+
+  // Get client's exercise flags
+  const clientFlags = useMemo(() => {
+    if (!clientId) return [];
+    const clientCompletionIds = appState.workoutCompletions
+      .filter((wc) => wc.clientId === clientId)
+      .map((wc) => wc.id);
+    return appState.exerciseFlags.filter((flag) =>
+      clientCompletionIds.includes(flag.workoutCompletionId)
+    );
+  }, [appState.exerciseFlags, appState.workoutCompletions, clientId]);
+
+  // Get coach info
+  const currentCoach = useMemo(
+    () => appState.coaches.find((c) => c.id === appState.currentUserId),
+    [appState.coaches, appState.currentUserId]
   );
 
   // Handlers
-  const handleBack = () => {
-    navigate('/coach/clients');
+  const handleScrollToCheckIn = () => {
+    checkInRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleStartCheckIn = () => {
-    if (!clientId) return;
-
-    // Check if there's already an active check-in (pending or responded)
-    const activeCheckIn = getActiveCheckIn(clientId, appState.checkIns);
+    // If no active check-in, create one
     if (!activeCheckIn) {
-      // Create a new check-in
-      const newCheckIn = createCheckIn(clientId, appState.currentUserId);
+      const newCheckIn: CheckIn = {
+        id: `checkin-${Date.now()}`,
+        clientId: client?.id || '',
+        coachId: appState.currentUserId,
+        date: new Date().toISOString(),
+        status: 'pending',
+      };
       onUpdateState((state) => ({
         ...state,
         checkIns: [...state.checkIns, newCheckIn],
       }));
+      // Show "just sent" confirmation
+      setJustSentCheckIn(true);
+      setTimeout(() => setJustSentCheckIn(false), 5000);
     }
+    // Scroll to the check-in section
+    handleScrollToCheckIn();
+  };
 
-    navigate(`/coach/client/${clientId}/check-in`);
+  const handleCompleteCheckIn = (completedCheckIn: CheckIn) => {
+    onUpdateState((state) => ({
+      ...state,
+      checkIns: state.checkIns.map((c) =>
+        c.id === completedCheckIn.id ? completedCheckIn : c
+      ),
+      clients: state.clients.map((c) =>
+        c.id === clientId
+          ? { ...c, lastCheckInDate: new Date().toISOString() }
+          : c
+      ),
+    }));
+  };
+
+  const handleCreateCheckIn = (newCheckIn: CheckIn) => {
+    onUpdateState((state) => ({
+      ...state,
+      checkIns: [...state.checkIns, newCheckIn],
+    }));
   };
 
   const handleCreateNewPlan = () => {
     setShowPlanSetupModal(true);
+  };
+
+  const handleChangePlan = () => {
+    setShowAssignPlanModal(true);
+  };
+
+  const handleViewFullPlan = () => {
+    navigate('/coach?view=plans');
+  };
+
+  const handleUnassignPlan = () => {
+    onUpdateState((state) => ({
+      ...state,
+      clients: state.clients.map((c) =>
+        c.id === clientId
+          ? { ...c, currentPlanId: undefined, planStartDate: undefined }
+          : c
+      ),
+    }));
+  };
+
+  const handleUpdatePlan = (updatedPlan: WorkoutPlan) => {
+    onUpdateState((state) => ({
+      ...state,
+      plans: state.plans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p)),
+    }));
   };
 
   const handlePlanCreated = (formData: PlanSetupFormData) => {
@@ -128,212 +189,184 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
       ...state,
       plans: [...state.plans, newPlan],
       clients: state.clients.map((c) =>
-        c.id === clientId ? { ...c, currentPlanId: newPlan.id } : c
-      )
+        c.id === clientId
+          ? { ...c, currentPlanId: newPlan.id, planStartDate: new Date().toISOString() }
+          : c
+      ),
     }));
 
     setShowPlanSetupModal(false);
-  };
-
-  const handleUpdatePlan = (updatedPlan: WorkoutPlan) => {
-    onUpdateState((state) => ({
-      ...state,
-      plans: state.plans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p))
-    }));
   };
 
   const handleAssignPlan = (planId: string) => {
     onUpdateState((state) => ({
       ...state,
       clients: state.clients.map((c) =>
-        c.id === clientId ? { ...c, currentPlanId: planId } : c
-      )
+        c.id === clientId
+          ? { ...c, currentPlanId: planId, planStartDate: new Date().toISOString() }
+          : c
+      ),
     }));
-  };
-
-  const handleUnassignPlan = () => {
-    onUpdateState((state) => ({
-      ...state,
-      clients: state.clients.map((c) =>
-        c.id === clientId ? { ...c, currentPlanId: undefined } : c
-      )
-    }));
+    setShowAssignPlanModal(false);
   };
 
   const handleSendMessage = (content: string) => {
-    const currentCoach = appState.coaches.find((c) => c.id === appState.currentUserId);
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
       senderId: appState.currentUserId,
       senderName: currentCoach?.name || 'Coach',
       content,
       timestamp: new Date().toISOString(),
-      read: false
+      read: false,
     };
 
     onUpdateState((state) => ({
       ...state,
-      messages: [...state.messages, newMessage]
+      messages: [...state.messages, newMessage],
     }));
+
+    // Clear prefill after sending
+    setChatPrefill(undefined);
   };
 
-  const handleAddMeasurement = (measurement: Omit<Measurement, 'id'>) => {
-    const newMeasurement: Measurement = {
-      ...measurement,
-      id: `measure-${Date.now()}`
-    };
+  const handleMessageAboutFlag = (flag: ExerciseFlag, exerciseName: string) => {
+    const prefillMessage = `Regarding ${exerciseName}${flag.note ? `: "${flag.note}"` : ''} - `;
+    setChatPrefill(prefillMessage);
+    chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
-    onUpdateState((state) => ({
-      ...state,
-      measurements: [...state.measurements, newMeasurement]
-    }));
+  const handleScrollToPlanEditor = (dayId: string) => {
+    planEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Could also set the selected day in the editor here if we add that prop
   };
 
   // Client not found error state
   if (!client) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="text-center py-12">
-            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
-            <p className="text-muted-foreground mb-4">
-              The client you're looking for doesn't exist or has been removed.
-            </p>
-            <Button onClick={handleBack}>Back to Dashboard</Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background p-3 sm:p-4">
+        <div className="max-w-7xl mx-auto space-y-4">
+          <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
+          <Card className="max-w-md mx-auto">
+            <CardContent className="text-center py-12">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
+              <p className="text-muted-foreground mb-4">
+                The client you're looking for doesn't exist or has been removed.
+              </p>
+              <Button onClick={() => navigate('/coach/clients')}>Back to Clients</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4">
-      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
-        {/* Client Profile Header */}
-        <Card>
-          <CardContent className="py-4">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-              {/* Left: Back + Client info + Status badge */}
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <Button variant="ghost" size="icon" onClick={handleBack} className="shrink-0">
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-                <div className="text-3xl sm:text-4xl shrink-0">{client.avatar || '👤'}</div>
-                <div className="min-w-0">
-                  <h1 className="text-xl sm:text-2xl font-bold truncate">{client.name}</h1>
-                  <p className="text-sm text-muted-foreground truncate">{client.email}</p>
-                </div>
-              </div>
+      <div className="max-w-7xl mx-auto space-y-4">
+        {/* Top Navigation */}
+        <CoachNav
+          activeTab="clients"
+          unreadCount={totalUnreadMessages}
+          backTo={{ label: 'Back to Clients', path: '/coach/clients' }}
+          clientInfo={{ name: client.name, avatar: client.avatar }}
+        />
 
-              {/* Right: Quick actions */}
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={handleStartCheckIn}>
-                  <ClipboardCheck className="w-4 h-4 mr-2" />
-                  Start Check-in
-                </Button>
-              </div>
+        {/* Contextual Status Header */}
+        {status && (
+          <ContextualStatusHeader
+            client={client}
+            status={status}
+            lastCheckIn={lastCompletedCheckIn}
+            respondedCheckIn={respondedCheckIn}
+            activeCheckIn={activeCheckIn}
+            onScrollToCheckIn={handleScrollToCheckIn}
+            onStartCheckIn={handleStartCheckIn}
+          />
+        )}
+
+        {/* Main Workspace Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+          {/* Left Column (60%) - Check-in & Plan */}
+          <div className="lg:col-span-3 space-y-4">
+            {/* Check-In Workspace */}
+            <div ref={checkInRef}>
+              <InlineCheckInReview
+                client={client}
+                activeCheckIn={activeCheckIn}
+                plan={plan}
+                workoutCompletions={appState.workoutCompletions}
+                exerciseFlags={clientFlags}
+                currentUserId={appState.currentUserId}
+                onCompleteCheckIn={handleCompleteCheckIn}
+                onCreateCheckIn={handleCreateCheckIn}
+                onMessageAboutFlag={handleMessageAboutFlag}
+                justSentFromParent={justSentCheckIn}
+              />
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Tab Navigation */}
-        <Card>
-          <CardContent className="py-2">
-            <div className="flex gap-1 overflow-x-auto scrollbar-hide -mx-2 px-2">
-              <Button
-                variant={activeTab === 'overview' ? 'default' : 'ghost'}
-                onClick={() => handleTabChange('overview')}
-                size="sm"
-                className="shrink-0"
-              >
-                Overview
-              </Button>
-              <Button
-                variant={activeTab === 'progress' ? 'default' : 'ghost'}
-                onClick={() => handleTabChange('progress')}
-                size="sm"
-                className="shrink-0"
-              >
-                Progress
-              </Button>
-              <Button
-                variant={activeTab === 'plan' ? 'default' : 'ghost'}
-                onClick={() => handleTabChange('plan')}
-                size="sm"
-                className="shrink-0"
-              >
-                Plan
-              </Button>
-              <Button
-                variant={activeTab === 'messages' ? 'default' : 'ghost'}
-                onClick={() => handleTabChange('messages')}
-                className="relative shrink-0"
-                size="sm"
-              >
-                Messages
-                {unreadCount > 0 && (
-                  <Badge className="ml-2 px-1.5 py-0 h-5 text-xs" variant="destructive">
-                    {unreadCount}
-                  </Badge>
-                )}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tab Content Area - Full Width */}
-        <div className="w-full">
-          {activeTab === 'overview' && (
-            <ClientOverviewTab
-              client={client}
-              plan={plan}
-              measurements={clientMeasurements}
-              completedWorkouts={appState.completedWorkouts}
-              messages={clientMessages}
+            {/* Check-In History */}
+            <CheckInHistoryPanel
               checkIns={appState.checkIns}
-              status={status!}
-              currentUserId={appState.currentUserId}
-              onSwitchToProgress={() => handleTabChange('progress')}
-              onSwitchToMessages={() => handleTabChange('messages')}
-              onSwitchToPlan={() => handleTabChange('plan')}
-              onStartCheckIn={handleStartCheckIn}
+              clientId={client.id}
+              clientName={client.name}
+              initialCount={3}
             />
-          )}
-          {activeTab === 'progress' && (
-            <ClientProgressTab
-              client={client}
-              measurements={appState.measurements}
-              onAddMeasurement={handleAddMeasurement}
-            />
-          )}
-          {activeTab === 'plan' && (
-            <ClientPlanTab
-              client={client}
-              plan={plan}
-              onUpdatePlan={handleUpdatePlan}
-              onCreatePlan={handleCreateNewPlan}
-              onAssignPlan={handleAssignPlan}
-              onUnassignPlan={handleUnassignPlan}
-              appState={appState}
-            />
-          )}
-          {activeTab === 'messages' && (
-            <ClientMessagesTab
-              client={client}
-              messages={appState.messages}
-              currentUserId={appState.currentUserId}
-              currentUserName={appState.coaches.find((c) => c.id === appState.currentUserId)?.name || 'Coach'}
-              onSendMessage={handleSendMessage}
-            />
-          )}
+
+            {/* Inline Plan Editor */}
+            <div ref={planEditorRef}>
+              <InlinePlanEditor
+                client={client}
+                plan={plan}
+                planStartDate={client.planStartDate}
+                onUpdatePlan={handleUpdatePlan}
+                onViewFullPlan={handleViewFullPlan}
+                onChangePlan={handleChangePlan}
+                onCreatePlan={handleCreateNewPlan}
+                onUnassignPlan={handleUnassignPlan}
+              />
+            </div>
+          </div>
+
+          {/* Right Column (40%) - Chat */}
+          <div className="lg:col-span-2" ref={chatRef}>
+            <div className="lg:sticky lg:top-4">
+              <ChatView
+                client={client}
+                messages={appState.messages}
+                currentUserId={appState.currentUserId}
+                currentUserName={currentCoach?.name || 'Coach'}
+                onSendMessage={handleSendMessage}
+                initialPrefill={chatPrefill}
+                heightClass="h-[500px] lg:h-[calc(100vh-120px)]"
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Plan Setup Modal */}
+        {/* Interactive Weekly Strip - Full Width */}
+        <InteractiveWeeklyStrip
+          client={client}
+          plan={plan}
+          planStartDate={client.planStartDate}
+          workoutCompletions={appState.workoutCompletions}
+          onScrollToPlanEditor={handleScrollToPlanEditor}
+        />
+
+        {/* Plan Setup Modal (for creating new plan) */}
         <PlanSetupModal
           isOpen={showPlanSetupModal}
           onSubmit={handlePlanCreated}
           onClose={() => setShowPlanSetupModal(false)}
+        />
+
+        {/* Assign Plan Modal (for selecting existing plan) */}
+        <AssignPlanModal
+          isOpen={showAssignPlanModal}
+          onClose={() => setShowAssignPlanModal(false)}
+          onAssign={handleAssignPlan}
+          plans={appState.plans}
+          currentPlanId={plan?.id}
         />
       </div>
     </div>

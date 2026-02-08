@@ -2,6 +2,23 @@ import { CheckIn, Client, CompletedWorkout, WorkoutFeeling, BodyFeeling } from '
 import { format, addDays } from 'date-fns';
 
 /**
+ * Human-readable labels for workout and body feelings
+ */
+export const FEELING_LABELS = {
+  workout: {
+    TOO_EASY: 'Too Easy',
+    ABOUT_RIGHT: 'About Right',
+    TOO_HARD: 'Too Hard',
+  } as Record<string, string>,
+  body: {
+    FRESH: 'Fresh',
+    NORMAL: 'Normal',
+    TIRED: 'Tired',
+    RUN_DOWN: 'Run Down',
+  } as Record<string, string>,
+};
+
+/**
  * Create a new check-in (coach initiates, status = pending)
  */
 export function createCheckIn(clientId: string, coachId: string): CheckIn {

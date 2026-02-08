@@ -1,40 +1,29 @@
 import { useMemo } from 'react';
-import { Client, CompletedWorkout, Measurement, Message, WorkoutPlan, CheckIn } from '@/types';
+import { Client, CompletedWorkout, WorkoutPlan, CheckIn } from '@/types';
 import { ClientStatus } from '@/lib/client-status';
-import { getWeeklyActivity, getCoachInteractions } from '@/lib/client-activity';
+import { getWeeklyActivity } from '@/lib/client-activity';
 import { CheckInStatusCard } from './overview/CheckInStatusCard';
 import { AtRiskExplanationCard } from './overview/AtRiskExplanationCard';
 import { LastCheckInSnippet } from './overview/LastCheckInSnippet';
 import { WeeklyActivityCard } from './overview/WeeklyActivityCard';
-import { CoachInteractionsCard } from './overview/CoachInteractionsCard';
 
 interface ClientOverviewTabProps {
   client: Client;
   plan?: WorkoutPlan;
-  measurements: Measurement[];
   completedWorkouts: CompletedWorkout[];
-  messages: Message[];
   checkIns: CheckIn[];
   status: ClientStatus;
-  currentUserId: string;
-  onSwitchToProgress: () => void;
   onSwitchToMessages: () => void;
-  onSwitchToPlan: () => void;
   onStartCheckIn: () => void;
 }
 
 export function ClientOverviewTab({
   client,
   plan,
-  measurements,
   completedWorkouts,
-  messages,
   checkIns,
   status,
-  currentUserId,
-  onSwitchToProgress,
   onSwitchToMessages,
-  onSwitchToPlan,
   onStartCheckIn
 }: ClientOverviewTabProps) {
   const daysSinceCheckIn = useMemo(() => {
@@ -45,11 +34,6 @@ export function ClientOverviewTab({
   const weeklyActivity = useMemo(
     () => getWeeklyActivity(client, plan, completedWorkouts),
     [client, plan, completedWorkouts]
-  );
-
-  const coachInteractions = useMemo(
-    () => getCoachInteractions(client, plan, messages, currentUserId),
-    [client, plan, messages, currentUserId]
   );
 
   const showAtRiskExplanation = status.type === 'at-risk' || status.type === 'overdue';
@@ -91,15 +75,6 @@ export function ClientOverviewTab({
         client={client}
         plan={plan}
         weeklyActivity={weeklyActivity}
-      />
-
-      {/* Recent Messages */}
-      <CoachInteractionsCard
-        client={client}
-        plan={plan}
-        interactions={coachInteractions}
-        onViewMessages={onSwitchToMessages}
-        onEditPlan={onSwitchToPlan}
       />
     </div>
   );

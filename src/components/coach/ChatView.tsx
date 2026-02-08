@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Message, Client } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,10 +13,41 @@ interface ChatViewProps {
   currentUserId: string;
   currentUserName: string;
   onSendMessage: (content: string) => void;
+  /** Optional initial message to prefill the input (e.g., for flagged exercise context) */
+  initialPrefill?: string;
+  /** Optional: hide the header for embedded use */
+  hideHeader?: boolean;
+  /** Optional: custom height class (default: h-[600px]) */
+  heightClass?: string;
 }
 
-export function ChatView({ client, messages, currentUserId, currentUserName, onSendMessage }: ChatViewProps) {
+export function ChatView({
+  client,
+  messages,
+  currentUserId,
+  currentUserName,
+  onSendMessage,
+  initialPrefill,
+  hideHeader = false,
+  heightClass = 'h-[600px]',
+}: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Handle initial prefill
+  useEffect(() => {
+    if (initialPrefill) {
+      setNewMessage(initialPrefill);
+      // Focus and move cursor to end
+      setTimeout(() => {
+        inputRef.current?.focus();
+        inputRef.current?.setSelectionRange(
+          initialPrefill.length,
+          initialPrefill.length
+        );
+      }, 0);
+    }
+  }, [initialPrefill]);
 
   const handleSend = () => {
     if (newMessage.trim()) {
@@ -37,10 +68,12 @@ export function ChatView({ client, messages, currentUserId, currentUserName, onS
   );
 
   return (
-    <Card className="flex flex-col h-[600px]">
-      <CardHeader>
-        <CardTitle className="text-lg">Chat with {client.name}</CardTitle>
-      </CardHeader>
+    <Card className={`flex flex-col ${heightClass}`}>
+      {!hideHeader && (
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Chat with {client.name.split(' ')[0]}</CardTitle>
+        </CardHeader>
+      )}
       <CardContent className="flex-1 flex flex-col p-0">
         <ScrollArea className="flex-1 px-6">
           <div className="space-y-4 pb-4">
@@ -73,6 +106,7 @@ export function ChatView({ client, messages, currentUserId, currentUserName, onS
         <div className="p-4 border-t">
           <div className="flex gap-2">
             <Input
+              ref={inputRef}
               placeholder="Type a message..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}

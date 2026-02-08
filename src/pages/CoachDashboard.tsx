@@ -8,8 +8,8 @@ import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignClientModal } from '@/components/coach/AssignClientModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -17,7 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Users, Dumbbell, Plus, Home, CheckCircle, X, UserPlus } from 'lucide-react';
+import { Dumbbell, Plus, CheckCircle, X, UserPlus } from 'lucide-react';
+import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { generatePlanStructure } from '@/lib/plan-generator';
 
 interface CoachDashboardProps {
@@ -26,6 +27,9 @@ interface CoachDashboardProps {
 }
 
 type View = 'dashboard' | 'plans';
+
+// Map View to CoachNavTab (clients is separate page)
+const viewToNavTab = (view: View): CoachNavTab => view;
 
 export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps) {
   const navigate = useNavigate();
@@ -165,45 +169,17 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
       />
 
       <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h1 className="text-2xl sm:text-3xl font-bold">
-            {currentView === 'plans' ? 'Plans' : 'Dashboard'}
-          </h1>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button
-              variant={currentView === 'dashboard' ? 'default' : 'outline'}
-              onClick={() => setCurrentView('dashboard')}
-              className="flex-1 sm:flex-none"
-              size="sm"
-            >
-              <Home className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Dashboard</span>
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate('/coach/clients')}
-              className="flex-1 sm:flex-none"
-              size="sm"
-            >
-              <Users className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Clients</span>
-              {totalUnreadMessages > 0 && (
-                <Badge variant="destructive" className="ml-1 px-1.5 py-0 h-5 text-xs">
-                  {totalUnreadMessages}
-                </Badge>
-              )}
-            </Button>
-            <Button
-              variant={currentView === 'plans' ? 'default' : 'outline'}
-              onClick={() => setCurrentView('plans')}
-              className="flex-1 sm:flex-none"
-              size="sm"
-            >
-              <Dumbbell className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Plans</span>
-            </Button>
-          </div>
-        </div>
+        <CoachNav
+          activeTab={viewToNavTab(currentView)}
+          unreadCount={totalUnreadMessages}
+          onTabChange={(tab) => {
+            if (tab === 'clients') {
+              navigate('/coach/clients');
+            } else {
+              setCurrentView(tab as View);
+            }
+          }}
+        />
 
         {currentView === 'dashboard' && (
           <div className="space-y-4">

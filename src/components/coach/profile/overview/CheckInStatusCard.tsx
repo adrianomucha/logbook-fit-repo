@@ -74,7 +74,7 @@ export function CheckInStatusCard({
                 </p>
               </div>
             </div>
-            <Button variant="destructive" size="lg" onClick={onStartCheckIn}>
+            <Button variant="default" size="lg" onClick={onStartCheckIn}>
               <ClipboardCheck className="w-4 h-4 mr-2" />
               Send Check-in
             </Button>
@@ -142,7 +142,7 @@ export function CheckInStatusCard({
               </div>
             </div>
             <Button
-              variant="destructive"
+              variant="default"
               size="lg"
               onClick={onStartCheckIn}
             >
