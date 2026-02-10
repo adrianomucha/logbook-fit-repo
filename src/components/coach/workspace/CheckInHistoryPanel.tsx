@@ -26,6 +26,8 @@ interface CheckInHistoryPanelProps {
   clientName: string;
   /** Number of check-ins to show initially (default: 5) */
   initialCount?: number;
+  /** Whether the panel starts collapsed (default: true) */
+  defaultCollapsed?: boolean;
 }
 
 export function CheckInHistoryPanel({
@@ -33,7 +35,9 @@ export function CheckInHistoryPanel({
   clientId,
   clientName,
   initialCount = 5,
+  defaultCollapsed = true,
 }: CheckInHistoryPanelProps) {
+  const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
   const [showAll, setShowAll] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -48,21 +52,32 @@ export function CheckInHistoryPanel({
       );
   }, [checkIns, clientId]);
 
+  // Empty state - show muted collapsed row
   if (completedCheckIns.length === 0) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <History className="w-4 h-4" />
-            Check-In History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No completed check-ins yet
-          </p>
-        </CardContent>
-      </Card>
+      <div className="flex items-center gap-2 p-3 border rounded-lg text-muted-foreground/70">
+        <History className="w-4 h-4" />
+        <span className="text-sm">Check-In History</span>
+        <span className="text-xs">· No check-ins yet</span>
+      </div>
+    );
+  }
+
+  // Collapsed state - single muted row
+  if (isCollapsed) {
+    return (
+      <button
+        onClick={() => setIsCollapsed(false)}
+        className={cn(
+          'w-full flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors',
+          'text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/30'
+        )}
+      >
+        <History className="w-4 h-4" />
+        <span className="text-sm">Check-In History</span>
+        <span className="text-xs">· {completedCheckIns.length} total</span>
+        <ChevronDown className="w-4 h-4 ml-auto" />
+      </button>
     );
   }
 
@@ -75,10 +90,14 @@ export function CheckInHistoryPanel({
     <Card>
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
+          <button
+            onClick={() => setIsCollapsed(true)}
+            className="flex items-center gap-2 text-base font-semibold hover:text-muted-foreground transition-colors"
+          >
             <History className="w-4 h-4" />
             Check-In History
-          </CardTitle>
+            <ChevronUp className="w-4 h-4" />
+          </button>
           <span className="text-xs text-muted-foreground">
             {completedCheckIns.length} total
           </span>

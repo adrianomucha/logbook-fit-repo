@@ -8,6 +8,7 @@ import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInR
 import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
 import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
+import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { ChatView } from '@/components/coach/ChatView';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
@@ -27,6 +28,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   const navigate = useNavigate();
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
   const [showAssignPlanModal, setShowAssignPlanModal] = useState(false);
+  const [showPlanDrawer, setShowPlanDrawer] = useState(false);
   const [chatPrefill, setChatPrefill] = useState<string | undefined>(undefined);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
 
@@ -64,6 +66,9 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     if (!clientId) return null;
     return getActiveCheckIn(clientId, appState.checkIns) || null;
   }, [appState.checkIns, clientId]);
+
+  // Priority Mode: A = check-in active (coach should respond), B = no check-in (routine visit)
+  const priorityMode: 'A' | 'B' = activeCheckIn ? 'A' : 'B';
 
   // Get last completed check-in for status header
   const lastCompletedCheckIn = useMemo(() => {
@@ -161,7 +166,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   };
 
   const handleViewFullPlan = () => {
-    navigate('/coach?view=plans');
+    setShowPlanDrawer(true);
   };
 
   const handleUnassignPlan = () => {
@@ -272,8 +277,8 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           clientInfo={{ name: client.name, avatar: client.avatar }}
         />
 
-        {/* Contextual Status Header */}
-        {status && (
+        {/* Contextual Status Header - Hidden in Mode B when status is 'ok' */}
+        {status && !(priorityMode === 'B' && status.type === 'ok') && (
           <ContextualStatusHeader
             client={client}
             status={status}
@@ -285,52 +290,97 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           />
         )}
 
+        {/* Compact Weekly Strip - Moved to top for quick orientation */}
+        <InteractiveWeeklyStrip
+          client={client}
+          plan={plan}
+          planStartDate={client.planStartDate}
+          workoutCompletions={appState.workoutCompletions}
+          onScrollToPlanEditor={handleScrollToPlanEditor}
+          compact
+        />
+
         {/* Main Workspace Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-          {/* Left Column (60%) - Check-in & Plan */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch">
+          {/* Left Column (60%) - Mode-dependent content */}
           <div className="lg:col-span-3 space-y-4">
-            {/* Check-In Workspace */}
-            <div ref={checkInRef}>
-              <InlineCheckInReview
-                client={client}
-                activeCheckIn={activeCheckIn}
-                plan={plan}
-                workoutCompletions={appState.workoutCompletions}
-                exerciseFlags={clientFlags}
-                currentUserId={appState.currentUserId}
-                onCompleteCheckIn={handleCompleteCheckIn}
-                onCreateCheckIn={handleCreateCheckIn}
-                onMessageAboutFlag={handleMessageAboutFlag}
-                justSentFromParent={justSentCheckIn}
-              />
-            </div>
+            {priorityMode === 'A' ? (
+              <>
+                {/* Mode A: Check-in prominent */}
+                <div ref={checkInRef}>
+                  <InlineCheckInReview
+                    client={client}
+                    activeCheckIn={activeCheckIn}
+                    plan={plan}
+                    workoutCompletions={appState.workoutCompletions}
+                    exerciseFlags={clientFlags}
+                    currentUserId={appState.currentUserId}
+                    onCompleteCheckIn={handleCompleteCheckIn}
+                    onCreateCheckIn={handleCreateCheckIn}
+                    onMessageAboutFlag={handleMessageAboutFlag}
+                    justSentFromParent={justSentCheckIn}
+                    hideTitle={activeCheckIn?.status === 'responded'}
+                  />
+                </div>
 
-            {/* Check-In History */}
-            <CheckInHistoryPanel
-              checkIns={appState.checkIns}
-              clientId={client.id}
-              clientName={client.name}
-              initialCount={3}
-            />
+                {/* History collapsed in Mode A */}
+                <CheckInHistoryPanel
+                  checkIns={appState.checkIns}
+                  clientId={client.id}
+                  clientName={client.name}
+                  initialCount={3}
+                  defaultCollapsed={true}
+                />
 
-            {/* Inline Plan Editor */}
-            <div ref={planEditorRef}>
-              <InlinePlanEditor
-                client={client}
-                plan={plan}
-                planStartDate={client.planStartDate}
-                onUpdatePlan={handleUpdatePlan}
-                onViewFullPlan={handleViewFullPlan}
-                onChangePlan={handleChangePlan}
-                onCreatePlan={handleCreateNewPlan}
-                onUnassignPlan={handleUnassignPlan}
-              />
-            </div>
+                {/* Plan collapsed in Mode A */}
+                <div ref={planEditorRef}>
+                  <InlinePlanEditor
+                    client={client}
+                    plan={plan}
+                    planStartDate={client.planStartDate}
+                    onUpdatePlan={handleUpdatePlan}
+                    onViewFullPlan={handleViewFullPlan}
+                    onChangePlan={handleChangePlan}
+                    onCreatePlan={handleCreateNewPlan}
+                    onUnassignPlan={handleUnassignPlan}
+                    exercisesCollapsed={true}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Mode B: Plan prominent, check-in hidden */}
+                <div ref={planEditorRef}>
+                  <InlinePlanEditor
+                    client={client}
+                    plan={plan}
+                    planStartDate={client.planStartDate}
+                    onUpdatePlan={handleUpdatePlan}
+                    onViewFullPlan={handleViewFullPlan}
+                    onChangePlan={handleChangePlan}
+                    onCreatePlan={handleCreateNewPlan}
+                    onUnassignPlan={handleUnassignPlan}
+                    exercisesCollapsed={false}
+                  />
+                </div>
+
+                {/* History at bottom, less collapsed in Mode B */}
+                <CheckInHistoryPanel
+                  checkIns={appState.checkIns}
+                  clientId={client.id}
+                  clientName={client.name}
+                  initialCount={3}
+                  defaultCollapsed={true}
+                />
+
+                {/* Check-in section hidden entirely in Mode B */}
+              </>
+            )}
           </div>
 
           {/* Right Column (40%) - Chat */}
-          <div className="lg:col-span-2" ref={chatRef}>
-            <div className="lg:sticky lg:top-4">
+          <div className="lg:col-span-2 flex flex-col" ref={chatRef}>
+            <div className="lg:sticky lg:top-4 flex-1 flex flex-col min-h-0">
               <ChatView
                 client={client}
                 messages={appState.messages}
@@ -338,20 +388,11 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                 currentUserName={currentCoach?.name || 'Coach'}
                 onSendMessage={handleSendMessage}
                 initialPrefill={chatPrefill}
-                heightClass="h-[500px] lg:h-[calc(100vh-120px)]"
+                heightClass="h-[500px] lg:flex-1"
               />
             </div>
           </div>
         </div>
-
-        {/* Interactive Weekly Strip - Full Width */}
-        <InteractiveWeeklyStrip
-          client={client}
-          plan={plan}
-          planStartDate={client.planStartDate}
-          workoutCompletions={appState.workoutCompletions}
-          onScrollToPlanEditor={handleScrollToPlanEditor}
-        />
 
         {/* Plan Setup Modal (for creating new plan) */}
         <PlanSetupModal
@@ -368,6 +409,17 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           plans={appState.plans}
           currentPlanId={plan?.id}
         />
+
+        {/* Plan Editor Drawer */}
+        {plan && (
+          <PlanEditorDrawer
+            open={showPlanDrawer}
+            onOpenChange={setShowPlanDrawer}
+            plan={plan}
+            onUpdatePlan={handleUpdatePlan}
+            appState={appState}
+          />
+        )}
       </div>
     </div>
   );

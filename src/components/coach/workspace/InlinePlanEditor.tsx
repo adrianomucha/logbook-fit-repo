@@ -35,6 +35,8 @@ interface InlinePlanEditorProps {
   onChangePlan: () => void;
   onCreatePlan: () => void;
   onUnassignPlan: () => void;
+  /** Whether exercises start collapsed (default: true) */
+  exercisesCollapsed?: boolean;
 }
 
 export function InlinePlanEditor({
@@ -46,9 +48,11 @@ export function InlinePlanEditor({
   onChangePlan,
   onCreatePlan,
   onUnassignPlan,
+  exercisesCollapsed = true,
 }: InlinePlanEditorProps) {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+  const [exercisesExpanded, setExercisesExpanded] = useState(!exercisesCollapsed);
 
   // Get current week number
   const currentWeekNum = useMemo(() => {
@@ -263,72 +267,109 @@ export function InlinePlanEditor({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* Day tabs */}
+        {/* Day tabs with exercise counts */}
         {currentWeek && (
           <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
-            {currentWeek.days.map((day, idx) => (
-              <Button
-                key={day.id}
-                variant={selectedDayIndex === idx ? 'default' : 'outline'}
-                size="sm"
-                className={cn(
-                  'shrink-0 text-xs',
-                  day.isRestDay && 'opacity-60'
-                )}
-                onClick={() => setSelectedDayIndex(idx)}
-              >
-                {day.name || `Day ${idx + 1}`}
-                {day.isRestDay && ' 💤'}
-              </Button>
-            ))}
+            {currentWeek.days.map((day, idx) => {
+              const exerciseCount = day.exercises?.length || 0;
+              return (
+                <Button
+                  key={day.id}
+                  variant={selectedDayIndex === idx ? 'default' : 'outline'}
+                  size="sm"
+                  className={cn(
+                    'shrink-0 text-xs',
+                    day.isRestDay && 'opacity-60'
+                  )}
+                  onClick={() => {
+                    setSelectedDayIndex(idx);
+                    // Expand exercises when clicking a tab
+                    if (!day.isRestDay) {
+                      setExercisesExpanded(true);
+                    }
+                  }}
+                >
+                  {day.name || `Day ${idx + 1}`}
+                  {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
+                </Button>
+              );
+            })}
           </div>
         )}
 
-        {/* Selected day exercises */}
-        {selectedDay && (
-          <div className="space-y-1 divide-y border rounded-lg overflow-hidden">
-            {selectedDay.isRestDay ? (
-              <div className="p-4 text-center text-muted-foreground">
-                <p className="text-sm">Rest Day</p>
-              </div>
-            ) : selectedDay.exercises?.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                <p className="text-sm">No exercises yet</p>
-              </div>
-            ) : (
-              selectedDay.exercises?.map((exercise, idx) => (
-                <InlineExerciseRow
-                  key={exercise.id}
-                  exercise={exercise}
-                  index={idx}
-                  isExpanded={expandedExerciseId === exercise.id}
-                  onToggleExpand={() =>
-                    setExpandedExerciseId(
-                      expandedExerciseId === exercise.id ? null : exercise.id
-                    )
-                  }
-                  onUpdate={(field, value) =>
-                    handleExerciseUpdate(exercise.id, field, value)
-                  }
-                  onDuplicate={() => handleDuplicateExercise(exercise)}
-                  onDelete={() => handleDeleteExercise(exercise.id)}
-                />
-              ))
+        {/* Collapsed exercises row */}
+        {selectedDay && !exercisesExpanded && !selectedDay.isRestDay && (
+          <button
+            onClick={() => setExercisesExpanded(true)}
+            className={cn(
+              'w-full flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors',
+              'text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/30'
             )}
-          </div>
+          >
+            <Dumbbell className="w-4 h-4" />
+            <span className="text-sm">
+              {selectedDay.exercises?.length || 0} exercises
+            </span>
+            <ChevronDown className="w-4 h-4 ml-auto" />
+          </button>
         )}
 
-        {/* Add exercise button */}
-        {selectedDay && !selectedDay.isRestDay && (
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            onClick={handleAddExercise}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Exercise
-          </Button>
+        {/* Selected day exercises - only shown when expanded */}
+        {selectedDay && exercisesExpanded && (
+          <>
+            {/* Collapse button */}
+            <button
+              onClick={() => setExercisesExpanded(false)}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ChevronUp className="w-3 h-3" />
+              Collapse
+            </button>
+
+            <div className="space-y-1 divide-y border rounded-lg overflow-hidden">
+              {selectedDay.isRestDay ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  <p className="text-sm">Rest Day</p>
+                </div>
+              ) : selectedDay.exercises?.length === 0 ? (
+                <div className="p-4 text-center text-muted-foreground">
+                  <p className="text-sm">No exercises yet</p>
+                </div>
+              ) : (
+                selectedDay.exercises?.map((exercise, idx) => (
+                  <InlineExerciseRow
+                    key={exercise.id}
+                    exercise={exercise}
+                    index={idx}
+                    isExpanded={expandedExerciseId === exercise.id}
+                    onToggleExpand={() =>
+                      setExpandedExerciseId(
+                        expandedExerciseId === exercise.id ? null : exercise.id
+                      )
+                    }
+                    onUpdate={(field, value) =>
+                      handleExerciseUpdate(exercise.id, field, value)
+                    }
+                    onDuplicate={() => handleDuplicateExercise(exercise)}
+                    onDelete={() => handleDeleteExercise(exercise.id)}
+                  />
+                ))
+              )}
+            </div>
+
+            {/* Add exercise button */}
+            {!selectedDay.isRestDay && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={handleAddExercise}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Exercise
+              </Button>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

@@ -59,6 +59,8 @@ interface InlineCheckInReviewProps {
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
   /** Signal from parent that check-in was just sent (for showing confirmation) */
   justSentFromParent?: boolean;
+  /** Hide the title when it would be redundant with status header */
+  hideTitle?: boolean;
 }
 
 export function InlineCheckInReview({
@@ -72,6 +74,7 @@ export function InlineCheckInReview({
   onCreateCheckIn,
   onMessageAboutFlag,
   justSentFromParent = false,
+  hideTitle = false,
 }: InlineCheckInReviewProps) {
   const [coachResponse, setCoachResponse] = useState('');
   const [planAdjustment, setPlanAdjustment] = useState(false);
@@ -303,24 +306,26 @@ export function InlineCheckInReview({
 
   return (
     <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/10">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <ClipboardCheck className="w-4 h-4 text-blue-600" />
-            {client.name.split(' ')[0]}'s Check-In
-          </CardTitle>
-          <span className="text-xs text-muted-foreground">
-            {activeCheckIn.clientRespondedAt
-              ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })
-              : 'recently'}
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Feeling indicators */}
-        <div className="grid grid-cols-2 gap-2">
+      {!hideTitle && (
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ClipboardCheck className="w-4 h-4 text-blue-600" />
+              {client.name.split(' ')[0]}'s Check-In
+            </CardTitle>
+            <span className="text-xs text-muted-foreground">
+              {activeCheckIn.clientRespondedAt
+                ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })
+                : 'recently'}
+            </span>
+          </div>
+        </CardHeader>
+      )}
+      <CardContent className={cn("space-y-4", hideTitle && "pt-4")}>
+        {/* Feeling indicators - flattened, no nested borders */}
+        <div className="grid grid-cols-2 gap-3">
           {workoutFeeling && (
-            <div className="bg-background rounded-lg p-2.5 border">
+            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2.5">
               <p className="text-xs text-muted-foreground mb-0.5">Workouts felt</p>
               <p className="text-sm font-medium">
                 {workoutFeeling.emoji} {workoutFeeling.label}
@@ -328,7 +333,7 @@ export function InlineCheckInReview({
             </div>
           )}
           {bodyFeeling && (
-            <div className="bg-background rounded-lg p-2.5 border">
+            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2.5">
               <p className="text-xs text-muted-foreground mb-0.5">Body feels</p>
               <p className="text-sm font-medium">
                 {bodyFeeling.emoji} {bodyFeeling.label}
@@ -337,13 +342,13 @@ export function InlineCheckInReview({
           )}
         </div>
 
-        {/* Client notes */}
+        {/* Client notes - flattened styling */}
         {activeCheckIn.clientNotes && (
           <div>
             <p className="text-xs text-muted-foreground mb-1">
               Notes from {client.name.split(' ')[0]}
             </p>
-            <p className="text-sm bg-background rounded-lg p-3 border">
+            <p className="text-sm bg-white/60 dark:bg-background/40 rounded-lg p-3">
               "{activeCheckIn.clientNotes}"
             </p>
           </div>

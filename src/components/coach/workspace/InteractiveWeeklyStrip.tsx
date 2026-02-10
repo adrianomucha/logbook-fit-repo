@@ -18,6 +18,8 @@ interface InteractiveWeeklyStripProps {
   planStartDate?: string;
   workoutCompletions: WorkoutCompletion[];
   onScrollToPlanEditor?: (dayId: string) => void;
+  /** Render as compact single-row strip (~60-72px height) */
+  compact?: boolean;
 }
 
 export function InteractiveWeeklyStrip({
@@ -26,6 +28,7 @@ export function InteractiveWeeklyStrip({
   planStartDate,
   workoutCompletions,
   onScrollToPlanEditor,
+  compact = false,
 }: InteractiveWeeklyStripProps) {
   const [expandedDayNumber, setExpandedDayNumber] = useState<number | null>(null);
 
@@ -59,6 +62,14 @@ export function InteractiveWeeklyStrip({
   const expandedWorkout = expandedDayInfo?.workoutDay;
 
   if (!plan || weekDays.length === 0) {
+    if (compact) {
+      return (
+        <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg text-muted-foreground">
+          <span className="text-sm">This Week</span>
+          <span className="text-xs">No plan assigned</span>
+        </div>
+      );
+    }
     return (
       <Card>
         <CardHeader>
@@ -70,6 +81,38 @@ export function InteractiveWeeklyStrip({
           </p>
         </CardContent>
       </Card>
+    );
+  }
+
+  // Compact mode: single row ~60-72px height
+  if (compact) {
+    return (
+      <div className="flex items-center gap-3 py-2 px-3 bg-muted/20 rounded-lg">
+        {/* Week indicator */}
+        <span className="text-xs text-muted-foreground whitespace-nowrap">
+          Week {currentWeekNum}/{plan.weeks.length}
+        </span>
+
+        {/* 7-day compact strip */}
+        <div className="flex gap-0.5 flex-1 justify-center">
+          {weekDays.map((day) => (
+            <CompactDayCell key={day.dayNumber} day={day} />
+          ))}
+        </div>
+
+        {/* Progress summary */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+          <span>
+            {progress.completed}/{progress.total}
+          </span>
+          <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+            <div
+              className="h-full bg-green-500 rounded-full transition-all"
+              style={{ width: `${progress.percentage}%` }}
+            />
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -292,5 +335,35 @@ function InteractiveDayCell({ day, isExpanded, onClick }: InteractiveDayCellProp
       {/* Spacer */}
       {(day.status !== 'COMPLETED' || !effortRating) && <div className="h-2" />}
     </button>
+  );
+}
+
+// Compact day cell for the condensed strip
+function CompactDayCell({ day }: { day: WeekDayInfo }) {
+  return (
+    <div className="flex flex-col items-center gap-0.5">
+      <span className="text-[10px] text-muted-foreground leading-none">
+        {day.dayOfWeek}
+      </span>
+      <div
+        className={cn(
+          'w-6 h-6 rounded-full flex items-center justify-center',
+          day.status === 'COMPLETED' && 'bg-green-600',
+          day.status === 'TODAY' && 'border-2 border-teal-500 bg-teal-50 dark:bg-teal-950/30',
+          day.status === 'MISSED' && 'bg-muted',
+          day.status === 'UPCOMING' && 'border border-muted-foreground/30',
+          day.status === 'REST' && 'opacity-50'
+        )}
+      >
+        {day.status === 'COMPLETED' && <Check className="w-3 h-3 text-white" />}
+        {day.status === 'TODAY' && (
+          <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+        )}
+        {day.status === 'MISSED' && <Minus className="w-3 h-3 text-muted-foreground" />}
+        {day.status === 'REST' && (
+          <div className="w-4 border-b border-dashed border-muted-foreground/50" />
+        )}
+      </div>
+    </div>
   );
 }

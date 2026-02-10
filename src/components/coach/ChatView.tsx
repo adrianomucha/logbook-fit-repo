@@ -68,7 +68,7 @@ export function ChatView({
   );
 
   return (
-    <Card className={`flex flex-col ${heightClass}`}>
+    <Card className={`flex flex-col min-h-0 ${heightClass}`}>
       {!hideHeader && (
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Chat with {client.name.split(' ')[0]}</CardTitle>
