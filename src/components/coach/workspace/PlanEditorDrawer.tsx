@@ -8,18 +8,16 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Plus,
-  Library,
   ChevronLeft,
   ChevronRight,
   Dumbbell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { WorkoutPlan, WorkoutDay, Exercise, AppState } from '@/types';
-import { ExerciseRow } from '../workout-builder/ExerciseRow';
-import { ExerciseSelector } from '../ExerciseSelector';
+import { WorkoutPlan, Exercise, AppState } from '@/types';
+import { ExerciseCard } from './ExerciseCard';
+import { ExerciseEditorDrawer } from './ExerciseEditorDrawer';
 
 interface PlanEditorDrawerProps {
   open: boolean;
@@ -40,12 +38,13 @@ export function PlanEditorDrawer({
   onUpdatePlan,
   initialWeekIndex = 0,
   initialDayIndex = 0,
-  appState,
 }: PlanEditorDrawerProps) {
   const [selectedWeek, setSelectedWeek] = useState(initialWeekIndex);
   const [selectedDay, setSelectedDay] = useState(initialDayIndex);
-  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
-  const [newlyAddedExerciseId, setNewlyAddedExerciseId] = useState<string | null>(null);
+
+  // Exercise editor drawer state
+  const [exerciseDrawerOpen, setExerciseDrawerOpen] = useState(false);
+  const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
 
   const currentWeek = plan.weeks[selectedWeek];
   const currentDay = currentWeek?.days[selectedDay];
@@ -65,93 +64,40 @@ export function PlanEditorDrawer({
     }
   };
 
-  // Exercise handlers
-  const handleAddExerciseFromLibrary = (exercise: Exercise) => {
-    if (!currentDay) return;
+  // Open exercise drawer for new exercise
+  const handleAddExercise = () => {
+    setEditingExerciseIndex(null);
+    setExerciseDrawerOpen(true);
+  };
 
+  // Open exercise drawer for editing
+  const handleEditExercise = (index: number) => {
+    setEditingExerciseIndex(index);
+    setExerciseDrawerOpen(true);
+  };
+
+  // Save exercise (new or update)
+  const handleSaveExercise = (exercise: Exercise) => {
     const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(exercise);
+
+    if (editingExerciseIndex !== null) {
+      // Update existing
+      updatedPlan.weeks[selectedWeek].days[selectedDay].exercises[editingExerciseIndex] = exercise;
+    } else {
+      // Add new at top
+      updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(exercise);
+    }
+
     updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
 
-  const addBlankExercise = () => {
-    if (!currentDay) return;
-
-    const newExerciseId = `ex-${Date.now()}`;
-    const newExercise: Exercise = {
-      id: newExerciseId,
-      name: '',
-      sets: 3,
-      reps: '10',
-    };
+  // Delete exercise
+  const handleDeleteExercise = () => {
+    if (editingExerciseIndex === null) return;
 
     const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(newExercise);
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
-
-    setNewlyAddedExerciseId(newExerciseId);
-    setTimeout(() => setNewlyAddedExerciseId(null), 100);
-  };
-
-  const updateExercise = (exerciseIndex: number, field: keyof Exercise, value: any) => {
-    const updatedPlan = { ...plan };
-    const exercise = updatedPlan.weeks[selectedWeek].days[selectedDay].exercises[exerciseIndex];
-    (exercise as any)[field] = value;
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
-  };
-
-  const deleteExercise = (exerciseIndex: number) => {
-    const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(exerciseIndex, 1);
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
-  };
-
-  const duplicateExercise = (exerciseIndex: number) => {
-    if (!currentDay) return;
-    const exerciseToCopy = currentDay.exercises[exerciseIndex];
-    const newExercise: Exercise = {
-      ...exerciseToCopy,
-      id: `ex-${Date.now()}-${Math.random()}`,
-    };
-
-    const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(
-      exerciseIndex + 1,
-      0,
-      newExercise
-    );
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
-  };
-
-  const moveExerciseUp = (exerciseIndex: number) => {
-    if (exerciseIndex === 0) return;
-
-    const updatedPlan = { ...plan };
-    const exercises = updatedPlan.weeks[selectedWeek].days[selectedDay].exercises;
-    [exercises[exerciseIndex], exercises[exerciseIndex - 1]] = [
-      exercises[exerciseIndex - 1],
-      exercises[exerciseIndex],
-    ];
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
-  };
-
-  const moveExerciseDown = (exerciseIndex: number) => {
-    if (!currentDay) return;
-    const exercises = currentDay.exercises;
-    if (exerciseIndex === exercises.length - 1) return;
-
-    const updatedPlan = { ...plan };
-    const exercisesRef = updatedPlan.weeks[selectedWeek].days[selectedDay].exercises;
-    [exercisesRef[exerciseIndex], exercisesRef[exerciseIndex + 1]] = [
-      exercisesRef[exerciseIndex + 1],
-      exercisesRef[exerciseIndex],
-    ];
+    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(editingExerciseIndex, 1);
     updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
@@ -163,6 +109,11 @@ export function PlanEditorDrawer({
     onUpdatePlan(updatedPlan);
   };
 
+  // Get the exercise being edited (if any)
+  const editingExercise = editingExerciseIndex !== null
+    ? currentDay?.exercises[editingExerciseIndex]
+    : null;
+
   if (!currentWeek || !currentDay) {
     return null;
   }
@@ -170,7 +121,7 @@ export function PlanEditorDrawer({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-[700px] p-0 flex flex-col">
+        <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col">
           {/* Header */}
           <div className="p-4 border-b space-y-3">
             <SheetHeader>
@@ -179,7 +130,7 @@ export function PlanEditorDrawer({
                 <span className="truncate">{plan.name}</span>
               </SheetTitle>
               <SheetDescription>
-                Edit workout plan details and exercises
+                Tap an exercise to edit
               </SheetDescription>
             </SheetHeader>
 
@@ -246,20 +197,16 @@ export function PlanEditorDrawer({
               />
             </div>
 
-            {/* Add Exercise Buttons */}
+            {/* Add Exercise Button */}
             {!currentDay.isRestDay && (
-              <div className="p-4 border-b flex gap-2">
-                <Button variant="outline" size="sm" onClick={addBlankExercise}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Blank
-                </Button>
+              <div className="p-4 border-b">
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => setShowExerciseSelector(true)}
+                  className="w-full"
+                  onClick={handleAddExercise}
                 >
-                  <Library className="w-4 h-4 mr-2" />
-                  From Library
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Exercise
                 </Button>
               </div>
             )}
@@ -280,19 +227,11 @@ export function PlanEditorDrawer({
                   </div>
                 ) : (
                   currentDay.exercises.map((exercise, idx) => (
-                    <ExerciseRow
+                    <ExerciseCard
                       key={exercise.id}
                       exercise={exercise}
                       exerciseIndex={idx}
-                      isFirst={idx === 0}
-                      isLast={idx === currentDay.exercises.length - 1}
-                      initialExpanded={exercise.id === newlyAddedExerciseId}
-                      onUpdate={(field, value) => updateExercise(idx, field, value)}
-                      onDuplicate={() => duplicateExercise(idx)}
-                      onCopyToWorkouts={() => {}}
-                      onMoveUp={() => moveExerciseUp(idx)}
-                      onMoveDown={() => moveExerciseDown(idx)}
-                      onDelete={() => deleteExercise(idx)}
+                      onClick={() => handleEditExercise(idx)}
                     />
                   ))
                 )}
@@ -302,13 +241,15 @@ export function PlanEditorDrawer({
         </SheetContent>
       </Sheet>
 
-      {/* Exercise Selector Modal */}
-      {showExerciseSelector && (
-        <ExerciseSelector
-          onSelect={handleAddExerciseFromLibrary}
-          onClose={() => setShowExerciseSelector(false)}
-        />
-      )}
+      {/* Exercise Editor Drawer - nested */}
+      <ExerciseEditorDrawer
+        open={exerciseDrawerOpen}
+        onOpenChange={setExerciseDrawerOpen}
+        exercise={editingExercise || null}
+        onSave={handleSaveExercise}
+        onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
+        exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
+      />
     </>
   );
 }

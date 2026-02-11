@@ -87,8 +87,8 @@ export function CheckInHistoryPanel({
   const hasMore = completedCheckIns.length > initialCount;
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card className="h-full flex flex-col">
+      <CardHeader className="pb-2 shrink-0">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setIsCollapsed(true)}
@@ -103,7 +103,7 @@ export function CheckInHistoryPanel({
           </span>
         </div>
       </CardHeader>
-      <CardContent className="space-y-2">
+      <CardContent className="space-y-2 flex-1 overflow-y-auto">
         {displayedCheckIns.map((checkIn) => {
           const isExpanded = expandedId === checkIn.id;
           const checkInDate = new Date(checkIn.completedAt || checkIn.date);

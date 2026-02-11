@@ -165,7 +165,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     setShowAssignPlanModal(true);
   };
 
-  const handleViewFullPlan = () => {
+  const handleEditPlan = () => {
     setShowPlanDrawer(true);
   };
 
@@ -301,9 +301,9 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
         />
 
         {/* Main Workspace Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-stretch">
-          {/* Left Column (60%) - Mode-dependent content */}
-          <div className="lg:col-span-3 space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
+          {/* Left Column - Mode-dependent content */}
+          <div className="flex flex-col gap-4">
             {priorityMode === 'A' ? (
               <>
                 {/* Mode A: Check-in prominent */}
@@ -323,15 +323,6 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                   />
                 </div>
 
-                {/* History collapsed in Mode A */}
-                <CheckInHistoryPanel
-                  checkIns={appState.checkIns}
-                  clientId={client.id}
-                  clientName={client.name}
-                  initialCount={3}
-                  defaultCollapsed={true}
-                />
-
                 {/* Plan collapsed in Mode A */}
                 <div ref={planEditorRef}>
                   <InlinePlanEditor
@@ -339,11 +330,22 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                     plan={plan}
                     planStartDate={client.planStartDate}
                     onUpdatePlan={handleUpdatePlan}
-                    onViewFullPlan={handleViewFullPlan}
+                    onEditPlan={handleEditPlan}
                     onChangePlan={handleChangePlan}
                     onCreatePlan={handleCreateNewPlan}
                     onUnassignPlan={handleUnassignPlan}
                     exercisesCollapsed={true}
+                  />
+                </div>
+
+                {/* History - grows to fill remaining space */}
+                <div className="flex-1 min-h-0">
+                  <CheckInHistoryPanel
+                    checkIns={appState.checkIns}
+                    clientId={client.id}
+                    clientName={client.name}
+                    initialCount={3}
+                    defaultCollapsed={false}
                   />
                 </div>
               </>
@@ -356,7 +358,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                     plan={plan}
                     planStartDate={client.planStartDate}
                     onUpdatePlan={handleUpdatePlan}
-                    onViewFullPlan={handleViewFullPlan}
+                    onEditPlan={handleEditPlan}
                     onChangePlan={handleChangePlan}
                     onCreatePlan={handleCreateNewPlan}
                     onUnassignPlan={handleUnassignPlan}
@@ -364,33 +366,31 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                   />
                 </div>
 
-                {/* History at bottom, less collapsed in Mode B */}
-                <CheckInHistoryPanel
-                  checkIns={appState.checkIns}
-                  clientId={client.id}
-                  clientName={client.name}
-                  initialCount={3}
-                  defaultCollapsed={true}
-                />
-
-                {/* Check-in section hidden entirely in Mode B */}
+                {/* History - grows to fill remaining space */}
+                <div className="flex-1 min-h-0">
+                  <CheckInHistoryPanel
+                    checkIns={appState.checkIns}
+                    clientId={client.id}
+                    clientName={client.name}
+                    initialCount={3}
+                    defaultCollapsed={false}
+                  />
+                </div>
               </>
             )}
           </div>
 
-          {/* Right Column (40%) - Chat */}
-          <div className="lg:col-span-2 flex flex-col" ref={chatRef}>
-            <div className="lg:sticky lg:top-4 flex-1 flex flex-col min-h-0">
-              <ChatView
-                client={client}
-                messages={appState.messages}
-                currentUserId={appState.currentUserId}
-                currentUserName={currentCoach?.name || 'Coach'}
-                onSendMessage={handleSendMessage}
-                initialPrefill={chatPrefill}
-                heightClass="h-[500px] lg:flex-1"
-              />
-            </div>
+          {/* Right Column - Chat */}
+          <div ref={chatRef} className="flex flex-col min-h-[500px]">
+            <ChatView
+              client={client}
+              messages={appState.messages}
+              currentUserId={appState.currentUserId}
+              currentUserName={currentCoach?.name || 'Coach'}
+              onSendMessage={handleSendMessage}
+              initialPrefill={chatPrefill}
+              heightClass="flex-1"
+            />
           </div>
         </div>
 

@@ -1,8 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,17 +11,13 @@ import {
 import {
   Dumbbell,
   MoreHorizontal,
-  Eye,
+  Pencil,
   ArrowRightLeft,
   Plus,
   Trash2,
-  ChevronDown,
-  ChevronUp,
-  MoreVertical,
-  Copy,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Client, WorkoutPlan, WorkoutDay, Exercise } from '@/types';
+import { Client, WorkoutPlan, Exercise } from '@/types';
 import { getCurrentWeekNumber } from '@/lib/workout-week-helpers';
 
 interface InlinePlanEditorProps {
@@ -31,7 +25,7 @@ interface InlinePlanEditorProps {
   plan?: WorkoutPlan;
   planStartDate?: string;
   onUpdatePlan: (plan: WorkoutPlan) => void;
-  onViewFullPlan: () => void;
+  onEditPlan: () => void;
   onChangePlan: () => void;
   onCreatePlan: () => void;
   onUnassignPlan: () => void;
@@ -43,16 +37,14 @@ export function InlinePlanEditor({
   client,
   plan,
   planStartDate,
-  onUpdatePlan,
-  onViewFullPlan,
+  onEditPlan,
   onChangePlan,
   onCreatePlan,
   onUnassignPlan,
   exercisesCollapsed = true,
 }: InlinePlanEditorProps) {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
-  const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
-  const [exercisesExpanded, setExercisesExpanded] = useState(!exercisesCollapsed);
+  const [showExercises, setShowExercises] = useState(!exercisesCollapsed);
 
   // Get current week number
   const currentWeekNum = useMemo(() => {
@@ -71,125 +63,6 @@ export function InlinePlanEditor({
     if (!currentWeek) return null;
     return currentWeek.days[selectedDayIndex] || currentWeek.days[0];
   }, [currentWeek, selectedDayIndex]);
-
-  // Handle exercise update
-  const handleExerciseUpdate = (exerciseId: string, field: keyof Exercise, value: any) => {
-    if (!plan || !currentWeek || !selectedDay) return;
-
-    const updatedPlan: WorkoutPlan = {
-      ...plan,
-      weeks: plan.weeks.map((week) => {
-        if (week.id !== currentWeek.id) return week;
-        return {
-          ...week,
-          days: week.days.map((day) => {
-            if (day.id !== selectedDay.id) return day;
-            return {
-              ...day,
-              exercises: day.exercises.map((ex) => {
-                if (ex.id !== exerciseId) return ex;
-                return { ...ex, [field]: value };
-              }),
-            };
-          }),
-        };
-      }),
-      updatedAt: new Date().toISOString(),
-    };
-
-    onUpdatePlan(updatedPlan);
-  };
-
-  // Handle add exercise
-  const handleAddExercise = () => {
-    if (!plan || !currentWeek || !selectedDay) return;
-
-    const newExercise: Exercise = {
-      id: `ex-${Date.now()}`,
-      name: 'New Exercise',
-      sets: 3,
-      reps: '10',
-    };
-
-    const updatedPlan: WorkoutPlan = {
-      ...plan,
-      weeks: plan.weeks.map((week) => {
-        if (week.id !== currentWeek.id) return week;
-        return {
-          ...week,
-          days: week.days.map((day) => {
-            if (day.id !== selectedDay.id) return day;
-            return {
-              ...day,
-              exercises: [...(day.exercises || []), newExercise],
-            };
-          }),
-        };
-      }),
-      updatedAt: new Date().toISOString(),
-    };
-
-    onUpdatePlan(updatedPlan);
-    setExpandedExerciseId(newExercise.id);
-  };
-
-  // Handle duplicate exercise
-  const handleDuplicateExercise = (exercise: Exercise) => {
-    if (!plan || !currentWeek || !selectedDay) return;
-
-    const duplicatedExercise: Exercise = {
-      ...exercise,
-      id: `ex-${Date.now()}`,
-    };
-
-    const updatedPlan: WorkoutPlan = {
-      ...plan,
-      weeks: plan.weeks.map((week) => {
-        if (week.id !== currentWeek.id) return week;
-        return {
-          ...week,
-          days: week.days.map((day) => {
-            if (day.id !== selectedDay.id) return day;
-            const currentIndex = day.exercises.findIndex((e) => e.id === exercise.id);
-            const newExercises = [...day.exercises];
-            newExercises.splice(currentIndex + 1, 0, duplicatedExercise);
-            return { ...day, exercises: newExercises };
-          }),
-        };
-      }),
-      updatedAt: new Date().toISOString(),
-    };
-
-    onUpdatePlan(updatedPlan);
-  };
-
-  // Handle delete exercise
-  const handleDeleteExercise = (exerciseId: string) => {
-    if (!plan || !currentWeek || !selectedDay) return;
-
-    const updatedPlan: WorkoutPlan = {
-      ...plan,
-      weeks: plan.weeks.map((week) => {
-        if (week.id !== currentWeek.id) return week;
-        return {
-          ...week,
-          days: week.days.map((day) => {
-            if (day.id !== selectedDay.id) return day;
-            return {
-              ...day,
-              exercises: day.exercises.filter((ex) => ex.id !== exerciseId),
-            };
-          }),
-        };
-      }),
-      updatedAt: new Date().toISOString(),
-    };
-
-    onUpdatePlan(updatedPlan);
-    if (expandedExerciseId === exerciseId) {
-      setExpandedExerciseId(null);
-    }
-  };
 
   // Empty state - no plan assigned
   if (!plan) {
@@ -231,143 +104,101 @@ export function InlinePlanEditor({
             <span className="text-lg">{plan.emoji || '💪'}</span>
             <span className="truncate">{plan.name}</span>
             <span className="text-xs text-muted-foreground font-normal">
-              Week {currentWeekNum} of {plan.weeks.length}
+              Week {currentWeekNum}
             </span>
           </CardTitle>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onViewFullPlan}>
-                <Eye className="w-4 h-4 mr-2" />
-                View Full Plan
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onChangePlan}>
-                <ArrowRightLeft className="w-4 h-4 mr-2" />
-                Switch Plan
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onCreatePlan}>
-                <Plus className="w-4 h-4 mr-2" />
-                Create New Plan
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={onUnassignPlan}
-                className="text-red-600 focus:text-red-600"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Remove Plan
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" onClick={onEditPlan}>
+              <Pencil className="w-3.5 h-3.5 mr-1.5" />
+              Edit
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <MoreHorizontal className="w-4 h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={onChangePlan}>
+                  <ArrowRightLeft className="w-4 h-4 mr-2" />
+                  Switch Plan
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onCreatePlan}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Plan
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={onUnassignPlan}
+                  className="text-red-600 focus:text-red-600"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Remove Plan
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="space-y-3">
-        {/* Day tabs with exercise counts */}
+        {/* Day selector tabs */}
         {currentWeek && (
-          <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1">
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5">
             {currentWeek.days.map((day, idx) => {
               const exerciseCount = day.exercises?.length || 0;
+              const isSelected = selectedDayIndex === idx;
+
               return (
-                <Button
+                <button
                   key={day.id}
-                  variant={selectedDayIndex === idx ? 'default' : 'outline'}
-                  size="sm"
-                  className={cn(
-                    'shrink-0 text-xs',
-                    day.isRestDay && 'opacity-60'
-                  )}
                   onClick={() => {
                     setSelectedDayIndex(idx);
-                    // Expand exercises when clicking a tab
-                    if (!day.isRestDay) {
-                      setExercisesExpanded(true);
-                    }
+                    setShowExercises(true);
                   }}
+                  className={cn(
+                    'shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+                    isSelected
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
+                    day.isRestDay && 'opacity-60'
+                  )}
                 >
                   {day.name || `Day ${idx + 1}`}
-                  {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
-                </Button>
+                  {!day.isRestDay && (
+                    <span className="ml-1 opacity-70">{exerciseCount}</span>
+                  )}
+                </button>
               );
             })}
           </div>
         )}
 
-        {/* Collapsed exercises row */}
-        {selectedDay && !exercisesExpanded && !selectedDay.isRestDay && (
-          <button
-            onClick={() => setExercisesExpanded(true)}
-            className={cn(
-              'w-full flex items-center gap-2 p-3 border rounded-lg cursor-pointer transition-colors',
-              'text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/30'
-            )}
-          >
-            <Dumbbell className="w-4 h-4" />
-            <span className="text-sm">
-              {selectedDay.exercises?.length || 0} exercises
-            </span>
-            <ChevronDown className="w-4 h-4 ml-auto" />
-          </button>
-        )}
-
-        {/* Selected day exercises - only shown when expanded */}
-        {selectedDay && exercisesExpanded && (
+        {/* Exercise list */}
+        {selectedDay && showExercises && (
           <>
-            {/* Collapse button */}
-            <button
-              onClick={() => setExercisesExpanded(false)}
-              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ChevronUp className="w-3 h-3" />
-              Collapse
-            </button>
-
-            <div className="space-y-1 divide-y border rounded-lg overflow-hidden">
-              {selectedDay.isRestDay ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  <p className="text-sm">Rest Day</p>
-                </div>
-              ) : selectedDay.exercises?.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  <p className="text-sm">No exercises yet</p>
-                </div>
-              ) : (
-                selectedDay.exercises?.map((exercise, idx) => (
-                  <InlineExerciseRow
-                    key={exercise.id}
-                    exercise={exercise}
-                    index={idx}
-                    isExpanded={expandedExerciseId === exercise.id}
-                    onToggleExpand={() =>
-                      setExpandedExerciseId(
-                        expandedExerciseId === exercise.id ? null : exercise.id
-                      )
-                    }
-                    onUpdate={(field, value) =>
-                      handleExerciseUpdate(exercise.id, field, value)
-                    }
-                    onDuplicate={() => handleDuplicateExercise(exercise)}
-                    onDelete={() => handleDeleteExercise(exercise.id)}
-                  />
-                ))
-              )}
-            </div>
-
-            {/* Add exercise button */}
-            {!selectedDay.isRestDay && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={handleAddExercise}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Exercise
-              </Button>
+            {selectedDay.isRestDay ? (
+              <div className="py-3 text-center text-sm text-muted-foreground">
+                Rest Day
+              </div>
+            ) : selectedDay.exercises?.length === 0 ? (
+              <div className="py-4 text-center">
+                <p className="text-sm text-muted-foreground">No exercises</p>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="mt-1 h-auto p-0"
+                  onClick={onEditPlan}
+                >
+                  Add exercises →
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-0.5">
+                {selectedDay.exercises?.map((exercise) => (
+                  <ExerciseRow key={exercise.id} exercise={exercise} />
+                ))}
+              </div>
             )}
           </>
         )}
@@ -376,136 +207,31 @@ export function InlinePlanEditor({
   );
 }
 
-// Simplified inline exercise row for the workspace
-function InlineExerciseRow({
-  exercise,
-  index,
-  isExpanded,
-  onToggleExpand,
-  onUpdate,
-  onDuplicate,
-  onDelete,
-}: {
-  exercise: Exercise;
-  index: number;
-  isExpanded: boolean;
-  onToggleExpand: () => void;
-  onUpdate: (field: keyof Exercise, value: any) => void;
-  onDuplicate: () => void;
-  onDelete: () => void;
-}) {
+/**
+ * Simple read-only exercise row
+ */
+function ExerciseRow({ exercise }: { exercise: Exercise }) {
+  // Build params string: "3×10 · 135 lbs"
+  const parts: string[] = [];
+
+  if (exercise.sets && exercise.reps) {
+    parts.push(`${exercise.sets}×${exercise.reps}`);
+  }
+
+  if (exercise.weight) {
+    const weight = exercise.weight;
+    const unit = (exercise as any).weightUnit || 'lbs';
+    // Add unit only if weight is just a number
+    parts.push(/^\d+$/.test(weight) ? `${weight} ${unit}` : weight);
+  }
+
   return (
-    <div className={cn('group transition-colors', isExpanded && 'bg-muted/30')}>
-      {/* Collapsed View */}
-      <div
-        className="p-3 cursor-pointer flex items-center justify-between gap-2"
-        onClick={onToggleExpand}
-      >
-        <div className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="text-xs font-semibold text-muted-foreground w-5 shrink-0">
-            {index + 1}.
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium truncate">{exercise.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {exercise.sets}x{exercise.reps || '—'}
-              {exercise.weight && ` @ ${exercise.weight}`}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="w-3 h-3" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={onDuplicate}>
-                <Copy className="w-4 h-4 mr-2" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Remove
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground" />
-          )}
-        </div>
-      </div>
-
-      {/* Expanded Edit View */}
-      {isExpanded && (
-        <div
-          className="px-3 pb-3 space-y-3"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {/* Exercise Name */}
-          <div>
-            <label className="text-xs text-muted-foreground">Name</label>
-            <Input
-              value={exercise.name}
-              onChange={(e) => onUpdate('name', e.target.value)}
-              className="mt-1 h-8 text-sm"
-            />
-          </div>
-
-          {/* Parameters Grid */}
-          <div className="grid grid-cols-3 gap-2">
-            <div>
-              <label className="text-xs text-muted-foreground">Sets</label>
-              <Input
-                type="number"
-                value={exercise.sets}
-                onChange={(e) => onUpdate('sets', parseInt(e.target.value) || 1)}
-                min="1"
-                className="mt-1 h-8 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Reps</label>
-              <Input
-                value={exercise.reps || ''}
-                onChange={(e) => onUpdate('reps', e.target.value)}
-                placeholder="8-10"
-                className="mt-1 h-8 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground">Weight</label>
-              <Input
-                value={exercise.weight || ''}
-                onChange={(e) => onUpdate('weight', e.target.value)}
-                placeholder="135 lbs"
-                className="mt-1 h-8 text-sm"
-              />
-            </div>
-          </div>
-
-          {/* Notes */}
-          <div>
-            <label className="text-xs text-muted-foreground">Notes</label>
-            <Textarea
-              value={exercise.notes || ''}
-              onChange={(e) => onUpdate('notes', e.target.value)}
-              placeholder="Coaching cues..."
-              rows={2}
-              className="mt-1 text-sm"
-            />
-          </div>
-        </div>
+    <div className="flex items-center justify-between py-1.5 px-0.5">
+      <span className="text-sm truncate">{exercise.name}</span>
+      {parts.length > 0 && (
+        <span className="text-xs text-muted-foreground ml-3 shrink-0">
+          {parts.join(' · ')}
+        </span>
       )}
     </div>
   );
