@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { WorkoutPlan, WorkoutWeek, WorkoutDay, Exercise, AppState } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ExerciseSelector } from './ExerciseSelector';
 import { WorkoutSidebar } from './workout-builder/WorkoutSidebar';
 import { ExerciseRow } from './workout-builder/ExerciseRow';
-import { Plus, Library } from 'lucide-react';
+import { ExerciseEditorDrawer } from './workspace/ExerciseEditorDrawer';
+import { Plus, Dumbbell } from 'lucide-react';
 
 interface PlanBuilderProps {
   plan: WorkoutPlan;
@@ -16,48 +16,56 @@ interface PlanBuilderProps {
 export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) {
   const [selectedWeek, setSelectedWeek] = useState(0);
   const [selectedDay, setSelectedDay] = useState(0);
-  const [showExerciseSelector, setShowExerciseSelector] = useState(false);
-  const [newlyAddedExerciseId, setNewlyAddedExerciseId] = useState<string | null>(null);
+
+  // Exercise editor drawer state
+  const [exerciseDrawerOpen, setExerciseDrawerOpen] = useState(false);
+  const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
 
   const currentWeek = plan.weeks[selectedWeek];
   const currentDay = currentWeek?.days[selectedDay];
 
-  const addExercise = () => {
-    setShowExerciseSelector(true);
+  // Open drawer for new exercise
+  const handleAddExercise = () => {
+    setEditingExerciseIndex(null);
+    setExerciseDrawerOpen(true);
   };
 
-  const handleAddExerciseFromLibrary = (exercise: Exercise) => {
-    if (!currentDay) return;
+  // Open drawer for editing existing exercise
+  const handleEditExercise = (index: number) => {
+    setEditingExerciseIndex(index);
+    setExerciseDrawerOpen(true);
+  };
 
+  // Save exercise (new or update)
+  const handleSaveExercise = (exercise: Exercise) => {
     const updatedPlan = { ...plan };
-    // Add at the top (index 0)
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(exercise);
+
+    if (editingExerciseIndex !== null) {
+      // Update existing
+      updatedPlan.weeks[selectedWeek].days[selectedDay].exercises[editingExerciseIndex] = exercise;
+    } else {
+      // Add new at top
+      updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(exercise);
+    }
+
     updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
   };
 
-  const addBlankExercise = () => {
-    if (!currentDay) return;
-
-    const newExerciseId = `ex-${Date.now()}`;
-    const newExercise: Exercise = {
-      id: newExerciseId,
-      name: '',
-      sets: 3,
-      reps: '10'
-    };
+  // Delete exercise
+  const handleDeleteExerciseFromDrawer = () => {
+    if (editingExerciseIndex === null) return;
 
     const updatedPlan = { ...plan };
-    // Add at the top (index 0)
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(newExercise);
+    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(editingExerciseIndex, 1);
     updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
-
-    // Mark this exercise as newly added so it starts expanded
-    setNewlyAddedExerciseId(newExerciseId);
-    // Clear after a short delay to allow re-rendering
-    setTimeout(() => setNewlyAddedExerciseId(null), 100);
   };
+
+  // Get the exercise being edited (if any)
+  const editingExercise = editingExerciseIndex !== null
+    ? currentDay?.exercises[editingExerciseIndex]
+    : null;
 
   const updateExercise = (exerciseIndex: number, field: keyof Exercise, value: any) => {
     const updatedPlan = { ...plan };
@@ -171,16 +179,12 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
               </div>
             </div>
 
-            {/* Add Exercise Buttons */}
+            {/* Add Exercise Button */}
             {!currentDay.isRestDay && (
-              <div className="p-4 sm:p-6 border-b flex gap-2">
-                <Button variant="outline" size="sm" onClick={addBlankExercise}>
+              <div className="p-4 sm:p-6 border-b">
+                <Button variant="outline" className="w-full sm:w-auto" onClick={handleAddExercise}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Blank
-                </Button>
-                <Button variant="outline" size="sm" onClick={addExercise}>
-                  <Library className="w-4 h-4 mr-2" />
-                  From Library
+                  Add Exercise
                 </Button>
               </div>
             )}
@@ -205,8 +209,8 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
                       exerciseIndex={idx}
                       isFirst={idx === 0}
                       isLast={idx === currentDay.exercises.length - 1}
-                      initialExpanded={exercise.id === newlyAddedExerciseId}
                       onUpdate={(field, value) => updateExercise(idx, field, value)}
+                      onEdit={() => handleEditExercise(idx)}
                       onDuplicate={() => duplicateExercise(idx)}
                       onCopyToWorkouts={() => {}}
                       onMoveUp={() => moveExerciseUp(idx)}
@@ -221,12 +225,15 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
         </div>
       </div>
 
-      {showExerciseSelector && (
-        <ExerciseSelector
-          onSelect={handleAddExerciseFromLibrary}
-          onClose={() => setShowExerciseSelector(false)}
-        />
-      )}
+      {/* Exercise Editor Drawer */}
+      <ExerciseEditorDrawer
+        open={exerciseDrawerOpen}
+        onOpenChange={setExerciseDrawerOpen}
+        exercise={editingExercise || null}
+        onSave={handleSaveExercise}
+        onDelete={editingExerciseIndex !== null ? handleDeleteExerciseFromDrawer : undefined}
+        exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
+      />
     </>
   );
 }

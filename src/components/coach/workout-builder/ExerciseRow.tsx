@@ -33,6 +33,8 @@ interface ExerciseRowProps {
   isLast: boolean;
   initialExpanded?: boolean;
   onUpdate: (field: keyof Exercise, value: any) => void;
+  /** Opens the exercise editor drawer with library support */
+  onEdit?: () => void;
   onDuplicate: () => void;
   onCopyToWorkouts: () => void;
   onMoveUp: () => void;
@@ -47,6 +49,7 @@ export function ExerciseRow({
   isLast,
   initialExpanded = false,
   onUpdate,
+  onEdit,
   onDuplicate,
   onCopyToWorkouts,
   onMoveUp,
@@ -55,12 +58,21 @@ export function ExerciseRow({
 }: ExerciseRowProps) {
   const [isExpanded, setIsExpanded] = useState(initialExpanded);
 
+  // If onEdit is provided, clicking opens drawer instead of expanding inline
+  const handleRowClick = () => {
+    if (onEdit) {
+      onEdit();
+    } else {
+      setIsExpanded(!isExpanded);
+    }
+  };
+
   return (
     <div className="group hover:bg-muted/50 transition-colors">
       {/* Collapsed View */}
       <div
         className="p-4 cursor-pointer flex items-center justify-between"
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={handleRowClick}
       >
         <div className="flex items-start gap-3 flex-1">
           <span className="text-sm font-semibold text-muted-foreground mt-0.5">
@@ -143,8 +155,8 @@ export function ExerciseRow({
         </div>
       </div>
 
-      {/* Expanded Edit View */}
-      {isExpanded && (
+      {/* Expanded Edit View - only shown when onEdit is not provided */}
+      {isExpanded && !onEdit && (
         <div
           className="px-4 pb-4 space-y-3 bg-muted/30"
           onClick={(e) => e.stopPropagation()}

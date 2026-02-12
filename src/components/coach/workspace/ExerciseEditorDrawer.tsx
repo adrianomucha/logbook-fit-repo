@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -16,44 +16,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
 import { Library, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
-
-// Common exercise library for quick selection
-const EXERCISE_LIBRARY = [
-  { name: 'Barbell Squat', category: 'Legs' },
-  { name: 'Romanian Deadlift', category: 'Legs' },
-  { name: 'Leg Press', category: 'Legs' },
-  { name: 'Leg Curl', category: 'Legs' },
-  { name: 'Leg Extension', category: 'Legs' },
-  { name: 'Calf Raise', category: 'Legs' },
-  { name: 'Barbell Bench Press', category: 'Chest' },
-  { name: 'Incline Dumbbell Press', category: 'Chest' },
-  { name: 'Cable Fly', category: 'Chest' },
-  { name: 'Dumbbell Fly', category: 'Chest' },
-  { name: 'Pull-Up', category: 'Back' },
-  { name: 'Lat Pulldown', category: 'Back' },
-  { name: 'Barbell Row', category: 'Back' },
-  { name: 'Seated Cable Row', category: 'Back' },
-  { name: 'Face Pull', category: 'Back' },
-  { name: 'Overhead Press', category: 'Shoulders' },
-  { name: 'Lateral Raise', category: 'Shoulders' },
-  { name: 'Front Raise', category: 'Shoulders' },
-  { name: 'Rear Delt Fly', category: 'Shoulders' },
-  { name: 'Barbell Curl', category: 'Arms' },
-  { name: 'Dumbbell Curl', category: 'Arms' },
-  { name: 'Hammer Curl', category: 'Arms' },
-  { name: 'Tricep Pushdown', category: 'Arms' },
-  { name: 'Skull Crusher', category: 'Arms' },
-  { name: 'Overhead Tricep Extension', category: 'Arms' },
-  { name: 'Plank', category: 'Core' },
-  { name: 'Cable Crunch', category: 'Core' },
-  { name: 'Hanging Leg Raise', category: 'Core' },
-];
-
-const CATEGORIES = ['All', 'Legs', 'Chest', 'Back', 'Shoulders', 'Arms', 'Core'];
+import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
 
 interface ExerciseEditorDrawerProps {
   open: boolean;
@@ -79,7 +46,13 @@ export function ExerciseEditorDrawer({
   const isNew = !exercise;
   const [mode, setMode] = useState<'library' | 'custom'>(isNew ? 'library' : 'custom');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  // Get unique categories from the library
+  const categories = useMemo(() =>
+    Array.from(new Set(exerciseLibrary.map((ex) => ex.category))),
+    []
+  );
 
   // Form state
   const [name, setName] = useState(exercise?.name || '');
@@ -100,7 +73,7 @@ export function ExerciseEditorDrawer({
       setWeightUnit((exercise as any)?.weightUnit || 'lbs');
       setRestSeconds((exercise as any)?.restSeconds?.toString() || '');
       setNotes(exercise.notes || '');
-      setMode('custom');
+      setMode('custom'); // Start on form when editing
     } else {
       // New exercise - reset to defaults
       setName('');
@@ -110,20 +83,38 @@ export function ExerciseEditorDrawer({
       setWeightUnit('lbs');
       setRestSeconds('');
       setNotes('');
-      setMode('library');
+      setMode('library'); // Start on library for new
     }
     setSearchQuery('');
-    setSelectedCategory('All');
+    setSelectedCategory(null);
   }, [exercise, open]);
 
-  const filteredLibrary = EXERCISE_LIBRARY.filter((ex) => {
-    const matchesSearch = ex.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory === 'All' || ex.category === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
+  // Filter exercises from library
+  const filteredLibrary = useMemo(() => {
+    if (searchQuery) {
+      return searchExercises(searchQuery);
+    }
+    if (selectedCategory) {
+      return exerciseLibrary.filter((ex) => ex.category === selectedCategory);
+    }
+    return exerciseLibrary;
+  }, [searchQuery, selectedCategory]);
 
-  const handleSelectFromLibrary = (libraryExercise: { name: string; category: string }) => {
-    setName(libraryExercise.name);
+  // Select from library (for new exercises) - populates with defaults
+  const handleSelectFromLibrary = (template: ExerciseTemplate) => {
+    setName(template.name);
+    if (template.defaultSets) setSets(template.defaultSets.toString());
+    if (template.defaultReps) setReps(template.defaultReps);
+    if (template.notes) setNotes(template.notes);
+    setMode('custom');
+  };
+
+  // Replace with library exercise (for existing) - keeps current sets/reps/weight
+  const handleReplaceWithLibrary = (template: ExerciseTemplate) => {
+    setName(template.name);
+    // Optionally update defaults if current values are empty
+    if (!sets || sets === '0') setSets(template.defaultSets?.toString() || '3');
+    if (!reps) setReps(template.defaultReps || '10');
     setMode('custom');
   };
 
@@ -161,34 +152,32 @@ export function ExerciseEditorDrawer({
             </SheetDescription>
           </SheetHeader>
 
-          {/* Mode toggle for new exercises */}
-          {isNew && (
-            <div className="mt-4 flex gap-2">
-              <Button
-                variant={mode === 'library' ? 'default' : 'outline'}
-                size="sm"
-                className="flex-1 gap-2"
-                onClick={() => setMode('library')}
-              >
-                <Library className="w-4 h-4" />
-                From Library
-              </Button>
-              <Button
-                variant={mode === 'custom' ? 'default' : 'outline'}
-                size="sm"
-                className="flex-1 gap-2"
-                onClick={() => setMode('custom')}
-              >
-                <Plus className="w-4 h-4" />
-                Custom
-              </Button>
-            </div>
-          )}
+          {/* Mode toggle - always available */}
+          <div className="mt-4 flex gap-2">
+            <Button
+              variant={mode === 'library' ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setMode('library')}
+            >
+              <Library className="w-4 h-4" />
+              {isNew ? 'From Library' : 'Replace'}
+            </Button>
+            <Button
+              variant={mode === 'custom' ? 'default' : 'outline'}
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setMode('custom')}
+            >
+              <Plus className="w-4 h-4" />
+              {isNew ? 'Custom' : 'Edit Details'}
+            </Button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto">
-          {mode === 'library' && isNew ? (
+          {mode === 'library' ? (
             <div className="p-4 space-y-4">
               {/* Search */}
               <div className="relative">
@@ -202,34 +191,55 @@ export function ExerciseEditorDrawer({
               </div>
 
               {/* Category filter */}
-              <div className="flex gap-1.5 flex-wrap">
-                {CATEGORIES.map((cat) => (
-                  <Button
+              <div className="flex gap-2 flex-wrap">
+                <Badge
+                  variant={selectedCategory === null ? 'default' : 'outline'}
+                  className="cursor-pointer"
+                  onClick={() => setSelectedCategory(null)}
+                >
+                  All
+                </Badge>
+                {categories.map((cat) => (
+                  <Badge
                     key={cat}
                     variant={selectedCategory === cat ? 'default' : 'outline'}
-                    size="sm"
-                    className="text-xs h-7"
+                    className="cursor-pointer capitalize"
                     onClick={() => setSelectedCategory(cat)}
                   >
                     {cat}
-                  </Button>
+                  </Badge>
                 ))}
               </div>
 
               {/* Exercise list */}
-              <div className="space-y-1">
+              <div className="space-y-2">
                 {filteredLibrary.map((ex) => (
                   <button
-                    key={ex.name}
-                    onClick={() => handleSelectFromLibrary(ex)}
+                    key={ex.id}
+                    onClick={() => isNew ? handleSelectFromLibrary(ex) : handleReplaceWithLibrary(ex)}
                     className={cn(
-                      'w-full text-left px-3 py-2.5 rounded-lg transition-colors',
-                      'hover:bg-muted/80 active:bg-muted',
-                      'flex items-center justify-between group'
+                      'w-full text-left p-3 border rounded-lg transition-colors',
+                      'hover:bg-muted/80 active:bg-muted'
                     )}
                   >
-                    <span className="font-medium">{ex.name}</span>
-                    <span className="text-xs text-muted-foreground">{ex.category}</span>
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-medium">{ex.name}</p>
+                        <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
+                          <Badge variant="secondary" className="text-xs capitalize">
+                            {ex.category}
+                          </Badge>
+                          {ex.equipment && (
+                            <span>{ex.equipment}</span>
+                          )}
+                          {ex.defaultSets && ex.defaultReps && (
+                            <span>
+                              {ex.defaultSets} × {ex.defaultReps}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </button>
                 ))}
                 {filteredLibrary.length === 0 && (
@@ -252,15 +262,25 @@ export function ExerciseEditorDrawer({
           ) : (
             /* Custom / Edit form */
             <div className="p-4 space-y-4">
-              {/* Exercise Name */}
+              {/* Exercise Name - with library picker */}
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Exercise Name</label>
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Barbell Squat"
-                  autoFocus={isNew && mode === 'custom'}
-                />
+                <div className="flex gap-2">
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="e.g., Barbell Squat"
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setMode('library')}
+                    title="Pick from library"
+                  >
+                    <Library className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
               {/* Sets & Reps */}
@@ -335,7 +355,7 @@ export function ExerciseEditorDrawer({
 
         {/* Footer */}
         <div className="p-4 border-t bg-background">
-          {mode === 'custom' || !isNew ? (
+          {mode === 'custom' ? (
             <div className="space-y-3">
               <Button
                 onClick={handleSave}
@@ -360,9 +380,24 @@ export function ExerciseEditorDrawer({
               )}
             </div>
           ) : (
-            <p className="text-center text-sm text-muted-foreground">
-              Select an exercise from the library or switch to custom
-            </p>
+            <div className="space-y-3">
+              <p className="text-center text-sm text-muted-foreground">
+                {isNew ? 'Select an exercise or switch to custom' : 'Select an exercise to replace current'}
+              </p>
+              {/* Delete option available in library mode too for existing */}
+              {!isNew && onDelete && (
+                <button
+                  onClick={() => {
+                    onDelete();
+                    onOpenChange(false);
+                  }}
+                  className="w-full text-center text-sm text-destructive hover:text-destructive/80 transition-colors py-2"
+                >
+                  <Trash2 className="w-4 h-4 inline mr-1.5" />
+                  Remove Exercise
+                </button>
+              )}
+            </div>
           )}
         </div>
       </SheetContent>
