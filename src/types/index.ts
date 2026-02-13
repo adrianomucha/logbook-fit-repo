@@ -32,6 +32,10 @@ export interface WorkoutPlan {
   weeks: WorkoutWeek[];
   createdAt: string;
   updatedAt: string;
+  // Template/Instance model fields
+  isTemplate?: boolean;        // true = template (shown on Plans page), false/undefined = instance
+  sourceTemplateId?: string;   // for instances: which template it was forked from
+  archivedAt?: string;         // ISO date for soft delete (archive)
 }
 
 export interface Message {

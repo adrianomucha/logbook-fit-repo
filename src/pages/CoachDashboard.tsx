@@ -1,25 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { AppState, PlanSetupFormData } from '@/types';
-import { PlanBuilder } from '@/components/coach/PlanBuilder';
+import { AppState, PlanSetupFormData, WorkoutPlan } from '@/types';
 import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip';
 import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
-import { AssignClientModal } from '@/components/coach/AssignClientModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
-import { Card, CardContent } from '@/components/ui/card';
+import { PlanTemplateCard } from '@/components/coach/plans/PlanTemplateCard';
+import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Dumbbell, Plus, CheckCircle, X, UserPlus } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Dumbbell, Plus, CheckCircle } from 'lucide-react';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
-import { generatePlanStructure } from '@/lib/plan-generator';
+import { generatePlanStructure, deepCopyPlan } from '@/lib/plan-generator';
 
 interface CoachDashboardProps {
   appState: AppState;
@@ -35,25 +27,36 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('dashboard');
-  const [selectedPlanId, setSelectedPlanId] = useState<string | undefined>(
-    appState.plans[0]?.id
-  );
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [showAssignClientModal, setShowAssignClientModal] = useState(false);
-  const [clientToUnassign, setClientToUnassign] = useState<string | null>(null);
+  const [showArchivedTemplates, setShowArchivedTemplates] = useState(false);
+  const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
+  const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
-  const selectedPlan = appState.plans.find((p) => p.id === selectedPlanId);
+  // Get plan being edited
+  const editingPlan = appState.plans.find((p) => p.id === editingPlanId);
 
-  const assignedClients = useMemo(
-    () => appState.clients.filter((c) => c.currentPlanId === selectedPlanId),
-    [appState.clients, selectedPlanId]
-  );
+  // Filter templates (not instances, optionally include archived)
+  const templates = useMemo(() => {
+    return appState.plans.filter((p) => {
+      if (!p.isTemplate) return false;
+      if (!showArchivedTemplates && p.archivedAt) return false;
+      return true;
+    });
+  }, [appState.plans, showArchivedTemplates]);
 
-  const clientToUnassignName = useMemo(
-    () => appState.clients.find((c) => c.id === clientToUnassign)?.name || '',
-    [appState.clients, clientToUnassign]
-  );
+  // Count clients using each template (via sourceTemplateId on instances)
+  const getClientCountForTemplate = (templateId: string) => {
+    return appState.plans.filter(
+      (p) => !p.isTemplate && p.sourceTemplateId === templateId && !p.archivedAt
+    ).length;
+  };
+
+  // Get plan name for delete confirmation
+  const planToDeleteName = useMemo(() => {
+    if (!planToDelete) return '';
+    return appState.plans.find((p) => p.id === planToDelete)?.name || '';
+  }, [appState.plans, planToDelete]);
 
   // Calculate total unread messages from all clients
   const totalUnreadMessages = useMemo(() => {
@@ -71,14 +74,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     }
   }, [searchParams]);
 
-  // Ensure a plan is selected when switching to Plans view
-  useEffect(() => {
-    if (currentView === 'plans' && !selectedPlanId && appState.plans.length > 0) {
-      setSelectedPlanId(appState.plans[0].id);
-    }
-  }, [currentView, selectedPlanId, appState.plans]);
-
-  const handleUpdatePlan = (updatedPlan: any) => {
+  const handleUpdatePlan = (updatedPlan: WorkoutPlan) => {
     onUpdateState((state) => ({
       ...state,
       plans: state.plans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p))
@@ -97,7 +93,6 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
       plans: [...state.plans, newPlan],
     }));
 
-    setSelectedPlanId(newPlan.id);
     setShowPlanSetupModal(false);
 
     // Show success toast
@@ -105,26 +100,50 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     setTimeout(() => setShowSuccessToast(false), 3000);
   };
 
-  const handleAssignClientToPlan = (clientId: string) => {
-    if (!selectedPlanId) return;
+  const handleDuplicateTemplate = (templateId: string) => {
+    const source = appState.plans.find((p) => p.id === templateId);
+    if (!source) return;
+
+    const newTemplate = deepCopyPlan(source, { makeInstance: false });
     onUpdateState((state) => ({
       ...state,
-      clients: state.clients.map((c) =>
-        c.id === clientId ? { ...c, currentPlanId: selectedPlanId } : c
-      )
+      plans: [...state.plans, newTemplate],
     }));
-    setShowAssignClientModal(false);
+
+    // Show success toast
+    setShowSuccessToast(true);
+    setTimeout(() => setShowSuccessToast(false), 3000);
   };
 
-  const handleUnassignClientFromPlan = () => {
-    if (!clientToUnassign) return;
+  const handleArchiveTemplate = (templateId: string) => {
     onUpdateState((state) => ({
       ...state,
-      clients: state.clients.map((c) =>
-        c.id === clientToUnassign ? { ...c, currentPlanId: undefined } : c
-      )
+      plans: state.plans.map((p) =>
+        p.id === templateId
+          ? { ...p, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
+          : p
+      ),
     }));
-    setClientToUnassign(null);
+  };
+
+  const handleRestoreTemplate = (templateId: string) => {
+    onUpdateState((state) => ({
+      ...state,
+      plans: state.plans.map((p) =>
+        p.id === templateId
+          ? { ...p, archivedAt: undefined, updatedAt: new Date().toISOString() }
+          : p
+      ),
+    }));
+  };
+
+  const handleDeleteTemplate = () => {
+    if (!planToDelete) return;
+    onUpdateState((state) => ({
+      ...state,
+      plans: state.plans.filter((p) => p.id !== planToDelete),
+    }));
+    setPlanToDelete(null);
   };
 
   return (
@@ -144,29 +163,28 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         onSubmit={handlePlanCreated}
       />
 
-      {/* Assign Client Modal */}
-      {selectedPlanId && (
-        <AssignClientModal
-          isOpen={showAssignClientModal}
-          onClose={() => setShowAssignClientModal(false)}
-          onAssign={handleAssignClientToPlan}
-          clients={appState.clients}
-          plans={appState.plans}
-          currentPlanId={selectedPlanId}
-        />
-      )}
-
-      {/* Unassign Client Confirmation */}
+      {/* Delete Template Confirmation */}
       <ConfirmationModal
-        isOpen={!!clientToUnassign}
-        onClose={() => setClientToUnassign(null)}
-        onConfirm={handleUnassignClientFromPlan}
-        title="Remove Client from Plan"
-        message={`Remove ${clientToUnassignName} from this plan?`}
-        warningMessage="The client will no longer have an assigned workout plan."
-        confirmLabel="Remove"
+        isOpen={!!planToDelete}
+        onClose={() => setPlanToDelete(null)}
+        onConfirm={handleDeleteTemplate}
+        title="Delete Template"
+        message={`Are you sure you want to delete "${planToDeleteName}"?`}
+        warningMessage="This action cannot be undone. Client plans created from this template will not be affected."
+        confirmLabel="Delete"
         confirmVariant="destructive"
       />
+
+      {/* Plan Editor Drawer */}
+      {editingPlan && (
+        <PlanEditorDrawer
+          open={!!editingPlanId}
+          onOpenChange={(open) => !open && setEditingPlanId(null)}
+          plan={editingPlan}
+          onUpdatePlan={handleUpdatePlan}
+          appState={appState}
+        />
+      )}
 
       <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
         <CoachNav
@@ -200,90 +218,65 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
 
         {currentView === 'plans' && (
           <div className="space-y-4">
-            {appState.plans.length > 0 ? (
-              <>
-                <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
-                  <Select
-                    value={selectedPlanId || ''}
-                    onValueChange={setSelectedPlanId}
-                  >
-                    <SelectTrigger className="w-full sm:w-[320px]">
-                      <SelectValue placeholder="Select a plan" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {appState.plans.map((plan) => (
-                        <SelectItem key={plan.id} value={plan.id}>
-                          {plan.emoji} {plan.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+            {/* Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">Plan Templates</h2>
+                <p className="text-sm text-muted-foreground">
+                  Create and manage workout plan templates. Assign them to clients to create personalized copies.
+                </p>
+              </div>
+              <Button onClick={handleCreateNewPlan} className="shrink-0">
+                <Plus className="w-4 h-4 mr-2" />
+                New Template
+              </Button>
+            </div>
 
-                  <Button onClick={handleCreateNewPlan} className="shrink-0" size="sm">
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Plan
-                  </Button>
-                </div>
+            {/* Include Archived Toggle */}
+            {appState.plans.some((p) => p.isTemplate && p.archivedAt) && (
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="show-archived"
+                  checked={showArchivedTemplates}
+                  onCheckedChange={(checked) => setShowArchivedTemplates(!!checked)}
+                />
+                <label
+                  htmlFor="show-archived"
+                  className="text-sm text-muted-foreground cursor-pointer"
+                >
+                  Show archived templates
+                </label>
+              </div>
+            )}
 
-                {selectedPlan && (
-                  <>
-                    {/* Plan Assignments */}
-                    <Card>
-                      <CardContent className="py-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="font-semibold">Assigned Clients</h3>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setShowAssignClientModal(true)}
-                          >
-                            <UserPlus className="w-4 h-4 mr-2" />
-                            Assign Client
-                          </Button>
-                        </div>
-                        {assignedClients.length === 0 ? (
-                          <p className="text-sm text-muted-foreground">
-                            No clients assigned to this plan yet.
-                          </p>
-                        ) : (
-                          <div className="flex flex-wrap gap-2">
-                            {assignedClients.map((client) => (
-                              <Badge
-                                key={client.id}
-                                variant="secondary"
-                                className="pl-2 pr-1 py-1 flex items-center gap-1"
-                              >
-                                <span>{client.avatar || '👤'}</span>
-                                <span>{client.name}</span>
-                                <button
-                                  onClick={() => setClientToUnassign(client.id)}
-                                  className="ml-1 rounded-full p-0.5 hover:bg-gray-300 transition-colors"
-                                >
-                                  <X className="w-3 h-3" />
-                                </button>
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-
-                    <PlanBuilder plan={selectedPlan} onUpdatePlan={handleUpdatePlan} appState={appState} />
-                  </>
-                )}
-              </>
+            {/* Template Cards Grid */}
+            {templates.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {templates.map((plan) => (
+                  <PlanTemplateCard
+                    key={plan.id}
+                    plan={plan}
+                    clientCount={getClientCountForTemplate(plan.id)}
+                    onEdit={() => setEditingPlanId(plan.id)}
+                    onDuplicate={() => handleDuplicateTemplate(plan.id)}
+                    onArchive={() => handleArchiveTemplate(plan.id)}
+                    onRestore={plan.archivedAt ? () => handleRestoreTemplate(plan.id) : undefined}
+                    onDelete={() => setPlanToDelete(plan.id)}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="text-center py-16 space-y-4 border rounded-lg bg-white">
                 <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground" />
                 <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">No plans yet</h2>
+                  <h2 className="text-xl font-semibold">No templates yet</h2>
                   <p className="text-muted-foreground max-w-sm mx-auto">
                     Create your first workout plan template. You can assign it to clients later.
                   </p>
                 </div>
                 <Button onClick={handleCreateNewPlan} size="lg">
                   <Plus className="w-5 h-5 mr-2" />
-                  Create Your First Plan
+                  Create Your First Template
                 </Button>
               </div>
             )}

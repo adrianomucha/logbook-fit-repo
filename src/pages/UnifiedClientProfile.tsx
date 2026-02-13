@@ -16,7 +16,7 @@ import { CoachNav } from '@/components/coach/CoachNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle } from 'lucide-react';
-import { generatePlanStructure } from '@/lib/plan-generator';
+import { generatePlanStructure, deepCopyPlan } from '@/lib/plan-generator';
 
 interface UnifiedClientProfileProps {
   appState: AppState;
@@ -188,14 +188,20 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   };
 
   const handlePlanCreated = (formData: PlanSetupFormData) => {
-    const newPlan = generatePlanStructure(formData);
+    // Create the template
+    const newTemplate = generatePlanStructure(formData);
+
+    // Fork it into a client instance
+    const clientInstance = deepCopyPlan(newTemplate, { makeInstance: true });
 
     onUpdateState((state) => ({
       ...state,
-      plans: [...state.plans, newPlan],
+      // Add both the template and the instance
+      plans: [...state.plans, newTemplate, clientInstance],
+      // Assign the instance (not the template) to the client
       clients: state.clients.map((c) =>
         c.id === clientId
-          ? { ...c, currentPlanId: newPlan.id, planStartDate: new Date().toISOString() }
+          ? { ...c, currentPlanId: clientInstance.id, planStartDate: new Date().toISOString() }
           : c
       ),
     }));
@@ -203,12 +209,22 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     setShowPlanSetupModal(false);
   };
 
-  const handleAssignPlan = (planId: string) => {
+  const handleAssignPlan = (templateId: string) => {
+    // Find the template
+    const template = appState.plans.find((p) => p.id === templateId);
+    if (!template) return;
+
+    // Fork the template into a client instance
+    const clientInstance = deepCopyPlan(template, { makeInstance: true });
+
     onUpdateState((state) => ({
       ...state,
+      // Add the new instance to plans array
+      plans: [...state.plans, clientInstance],
+      // Assign the instance (not the template) to the client
       clients: state.clients.map((c) =>
         c.id === clientId
-          ? { ...c, currentPlanId: planId, planStartDate: new Date().toISOString() }
+          ? { ...c, currentPlanId: clientInstance.id, planStartDate: new Date().toISOString() }
           : c
       ),
     }));

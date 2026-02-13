@@ -4,6 +4,7 @@ import { AppState, Role } from '@/types';
 import { storage } from '@/lib/storage';
 import { sampleData } from '@/lib/sample-data';
 import { migratePlansToV2, needsMigration } from '@/lib/migrations/plan-migration';
+import { migratePlansToTemplateModel, needsTemplateMigration } from '@/lib/migrations/plan-template-migration';
 import { CoachDashboard } from '@/pages/CoachDashboard';
 import { ClientDashboard } from '@/pages/ClientDashboard';
 import { ClientWorkoutExecution } from '@/pages/ClientWorkoutExecution';
@@ -49,6 +50,13 @@ function AppContent() {
         storedData.plans = migratePlansToV2(storedData.plans);
         storage.set(storedData);
         console.log('Plan migration complete');
+      }
+      // Migration: add isTemplate field to plans (template/instance model)
+      if (needsTemplateMigration(storedData.plans)) {
+        console.log('Migrating plans to template model...');
+        storedData.plans = migratePlansToTemplateModel(storedData.plans);
+        storage.set(storedData);
+        console.log('Template migration complete');
       }
       // Migration: add coachExercises field if it doesn't exist or is empty
       if (!storedData.coachExercises || storedData.coachExercises.length === 0) {

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +22,12 @@ export function AssignPlanModal({
 }: AssignPlanModalProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
 
+  // Filter to only show templates (not archived)
+  const templatePlans = useMemo(() =>
+    plans.filter(p => p.isTemplate && !p.archivedAt),
+    [plans]
+  );
+
   const handleClose = () => {
     setSelectedPlanId(null);
     onClose();
@@ -34,14 +40,14 @@ export function AssignPlanModal({
     }
   };
 
-  if (plans.length === 0) {
+  if (templatePlans.length === 0) {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="Assign Plan" maxWidth="md">
         <div className="text-center py-8">
           <Dumbbell className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-semibold mb-2">No Plans Available</h3>
+          <h3 className="text-lg font-semibold mb-2">No Templates Available</h3>
           <p className="text-muted-foreground">
-            Create a plan first before assigning one to a client.
+            Create a plan template first before assigning one to a client.
           </p>
         </div>
       </Modal>
@@ -66,7 +72,7 @@ export function AssignPlanModal({
       }
     >
       <div className="space-y-2">
-        {plans.map((plan) => {
+        {templatePlans.map((plan) => {
           const isCurrent = plan.id === currentPlanId;
           const isSelected = plan.id === selectedPlanId;
 

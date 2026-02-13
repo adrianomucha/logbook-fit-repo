@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { WorkoutSidebar } from './workout-builder/WorkoutSidebar';
 import { ExerciseRow } from './workout-builder/ExerciseRow';
 import { ExerciseEditorDrawer } from './workspace/ExerciseEditorDrawer';
-import { Plus, Dumbbell } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface PlanBuilderProps {
   plan: WorkoutPlan;
@@ -161,9 +162,14 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
             {/* Header Section */}
             <div className="border-b p-4 sm:p-6">
               <div className="flex items-center justify-between mb-3">
-                <h2 className="text-lg sm:text-xl font-semibold truncate">
-                  {plan.emoji} {plan.name} • Week {selectedWeek + 1}
-                </h2>
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-lg sm:text-xl font-semibold truncate">
+                    {plan.emoji} {plan.name} • Week {selectedWeek + 1}
+                  </h2>
+                  <Badge variant={plan.isTemplate ? 'outline' : 'secondary'} className="shrink-0">
+                    {plan.isTemplate ? 'Template' : 'Client Plan'}
+                  </Badge>
+                </div>
               </div>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
