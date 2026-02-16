@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 interface ClientsRequiringActionProps {
   clients: Client[];
@@ -96,9 +97,17 @@ export function ClientsRequiringAction({
                       </div>
                     </div>
                     <Button
-                      variant={status.type === 'at-risk' || status.type === 'overdue' ? 'destructive' : 'default'}
+                      variant={
+                        status.type === 'overdue' || status.type === 'at-risk'
+                          ? 'outline'
+                          : 'default'
+                      }
                       size="sm"
-                      className="w-full sm:w-auto shrink-0"
+                      className={cn(
+                        'w-full sm:w-auto shrink-0',
+                        (status.type === 'overdue' || status.type === 'at-risk') &&
+                          'border-amber-500 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-950/30'
+                      )}
                       onClick={() => handleClientAction(client.id, status.type)}
                     >
                       {status.type === 'pending-checkin'
@@ -118,11 +127,12 @@ export function ClientsRequiringAction({
       )}
 
       {clientsNeedingAction.length === 0 && (
-        <Card className="border-green-200 bg-green-50/50">
-          <CardContent className="py-8 text-center">
-            <CheckCircle2 className="w-8 h-8 text-green-600 mx-auto mb-2" />
-            <p className="font-medium text-green-900">All clients are on track</p>
-            <p className="text-sm text-green-700 mt-1">No action needed right now</p>
+        <Card>
+          <CardContent className="py-6 text-center">
+            <div className="flex items-center justify-center gap-2 text-muted-foreground">
+              <CheckCircle2 className="w-5 h-5" />
+              <p className="text-sm">All clients on track</p>
+            </div>
           </CardContent>
         </Card>
       )}

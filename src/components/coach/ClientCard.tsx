@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ClientCardProps {
   client: Client;
@@ -100,9 +101,19 @@ export function ClientCard({ client, status, variant, snippet, nextCheckInDate }
 
           {/* CTA Button */}
           <Button
-            variant={variant === 'needs-attention' ? 'default' : 'ghost'}
+            variant={
+              status.type === 'overdue' || status.type === 'at-risk'
+                ? 'outline'
+                : variant === 'needs-attention'
+                ? 'default'
+                : 'ghost'
+            }
             size="sm"
-            className="flex-shrink-0 w-full sm:w-auto"
+            className={cn(
+              'flex-shrink-0 w-full sm:w-auto',
+              (status.type === 'overdue' || status.type === 'at-risk') &&
+                'border-amber-500 text-amber-700 hover:bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:hover:bg-amber-950/30'
+            )}
             onClick={(e) => {
               e.stopPropagation();
               handleButtonAction();

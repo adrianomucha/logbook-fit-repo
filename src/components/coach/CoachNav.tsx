@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { Home, Users, Dumbbell, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -67,77 +68,90 @@ export function CoachNav({
     }
   };
 
+  // Mobile bottom nav items
+  const mobileNavItems = [
+    { id: 'dashboard' as const, label: 'Dashboard', icon: Home },
+    { id: 'clients' as const, label: 'Clients', icon: Users, badge: unreadCount },
+    { id: 'plans' as const, label: 'Plans', icon: Dumbbell },
+  ];
+
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-      {/* Left side: Title or Back + Client Info */}
-      <div className="flex items-center gap-3">
-        {backTo && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(backTo.path)}
-            className="shrink-0"
-            aria-label={backTo.label}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-        )}
-
-        {clientInfo ? (
-          <div className="flex items-center gap-2">
-            <span className="text-2xl">{clientInfo.avatar || '👤'}</span>
-            <h1 className="text-xl sm:text-2xl font-bold truncate">
-              {clientInfo.name}
-            </h1>
-          </div>
-        ) : (
-          <h1 className="text-2xl sm:text-3xl font-bold">{displayTitle}</h1>
-        )}
-      </div>
-
-      {/* Right side: Navigation tabs */}
-      <div className="flex gap-2 w-full sm:w-auto">
-        <Button
-          variant={activeTab === 'dashboard' ? 'default' : 'outline'}
-          onClick={() => handleTabClick('dashboard')}
-          className="flex-1 sm:flex-none"
-          size="sm"
-        >
-          <Home className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Dashboard</span>
-        </Button>
-
-        <Button
-          variant={activeTab === 'clients' ? 'default' : 'outline'}
-          onClick={() => handleTabClick('clients')}
-          className="flex-1 sm:flex-none"
-          size="sm"
-        >
-          <Users className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Clients</span>
-          {unreadCount > 0 && (
-            <Badge
-              variant="destructive"
-              className={cn(
-                'ml-1 px-1.5 py-0 h-5 text-xs',
-                activeTab === 'clients' && 'bg-white text-primary'
-              )}
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        {/* Left side: Title or Back + Client Info */}
+        <div className="flex items-center gap-3">
+          {backTo && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate(backTo.path)}
+              className="shrink-0"
+              aria-label={backTo.label}
             >
-              {unreadCount}
-            </Badge>
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
           )}
-        </Button>
 
-        <Button
-          variant={activeTab === 'plans' ? 'default' : 'outline'}
-          onClick={() => handleTabClick('plans')}
-          className="flex-1 sm:flex-none"
-          size="sm"
-        >
-          <Dumbbell className="w-4 h-4 sm:mr-2" />
-          <span className="hidden sm:inline">Plans</span>
-        </Button>
+          {clientInfo ? (
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">{clientInfo.avatar || '👤'}</span>
+              <h1 className="text-xl sm:text-2xl font-bold truncate">
+                {clientInfo.name}
+              </h1>
+            </div>
+          ) : (
+            <h1 className="text-2xl sm:text-3xl font-bold">{displayTitle}</h1>
+          )}
+        </div>
+
+        {/* Right side: Desktop navigation tabs - hidden on mobile */}
+        <div className="hidden sm:flex gap-2">
+          <Button
+            variant={activeTab === 'dashboard' ? 'default' : 'outline'}
+            onClick={() => handleTabClick('dashboard')}
+            size="sm"
+          >
+            <Home className="w-4 h-4 mr-2" />
+            Dashboard
+          </Button>
+
+          <Button
+            variant={activeTab === 'clients' ? 'default' : 'outline'}
+            onClick={() => handleTabClick('clients')}
+            size="sm"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            Clients
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className={cn(
+                  'ml-1 px-1.5 py-0 h-5 text-xs',
+                  activeTab === 'clients' && 'bg-white text-primary'
+                )}
+              >
+                {unreadCount}
+              </Badge>
+            )}
+          </Button>
+
+          <Button
+            variant={activeTab === 'plans' ? 'default' : 'outline'}
+            onClick={() => handleTabClick('plans')}
+            size="sm"
+          >
+            <Dumbbell className="w-4 h-4 mr-2" />
+            Plans
+          </Button>
+        </div>
       </div>
-    </div>
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav
+        items={mobileNavItems}
+        activeId={activeTab}
+        onSelect={(id) => handleTabClick(id as CoachNavTab)}
+      />
+    </>
   );
 }

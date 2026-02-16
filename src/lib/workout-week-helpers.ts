@@ -196,3 +196,23 @@ export function formatDayDate(date: Date): string {
 export function formatDayNumber(date: Date): string {
   return format(date, 'd');
 }
+
+/**
+ * Get today's workout from the week days array
+ */
+export function getTodayWorkout(weekDays: WeekDayInfo[]): WeekDayInfo | null {
+  return weekDays.find((d) => isToday(d.date)) || null;
+}
+
+/**
+ * Get the action state for today's workout based on completion status
+ */
+export function getTodayWorkoutState(
+  todayWorkout: WeekDayInfo | null,
+  completion: WorkoutCompletion | null
+): 'scheduled' | 'in-progress' | 'completed' | 'rest' {
+  if (!todayWorkout || todayWorkout.status === 'REST') return 'rest';
+  if (completion?.status === 'COMPLETED') return 'completed';
+  if (completion?.status === 'IN_PROGRESS') return 'in-progress';
+  return 'scheduled';
+}

@@ -13,36 +13,47 @@ interface DayCardProps {
 export function DayCard({ day, onClick }: DayCardProps) {
   const { date, dayOfWeek, workoutDay, status, isInteractive } = day;
 
-  // Get status-specific styles
+  // Get status-specific styles following PRD visual specifications
   const getStatusStyles = () => {
     switch (status) {
       case 'TODAY':
         return {
-          card: 'border-green-500 border-2 shadow-md shadow-green-100 dark:shadow-green-900/20 cursor-pointer hover:shadow-lg transition-shadow',
-          badge: 'bg-green-500 text-white',
+          card: cn(
+            'border-teal-600 border-2',
+            'shadow-lg shadow-teal-500/20',
+            'ring-2 ring-teal-500/10',
+            'cursor-pointer hover:shadow-xl hover:shadow-teal-500/30',
+            'transition-all'
+          ),
+          badge: 'bg-teal-600 text-white',
           badgeText: 'Today',
         };
       case 'COMPLETED':
         return {
-          card: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 cursor-pointer hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors',
-          badge: 'bg-green-600 text-white',
+          card: cn(
+            'bg-emerald-50 dark:bg-emerald-950/30',
+            'border-emerald-200 dark:border-emerald-800',
+            'cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-950/50',
+            'transition-colors'
+          ),
+          badge: 'bg-emerald-600 text-white',
           badgeText: 'Done',
         };
       case 'UPCOMING':
         return {
-          card: 'opacity-55',
+          card: 'opacity-55 pointer-events-none',
           badge: null,
           badgeText: null,
         };
       case 'MISSED':
         return {
           card: 'cursor-pointer hover:bg-muted/50 transition-colors',
-          badge: null,
-          badgeText: null,
+          badge: 'bg-slate-500 text-white',
+          badgeText: 'Missed',
         };
       case 'REST':
         return {
-          card: 'border-dashed opacity-60',
+          card: 'border-dashed border-muted-foreground/30 opacity-60',
           badge: 'bg-muted text-muted-foreground',
           badgeText: 'Rest',
         };

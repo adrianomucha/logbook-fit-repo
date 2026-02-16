@@ -2,13 +2,16 @@ import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppState, Message } from '@/types';
 import { getThisWeekCompletedCheckIn } from '@/lib/checkin-context-helpers';
+import { getCurrentWeekNumber, getWeekDays, getTodayWorkout } from '@/lib/workout-week-helpers';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
+import { TodayFocusView } from '@/components/client/today/TodayFocusView';
 import { ClientChat } from '@/components/client/ClientChat';
 import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { Dumbbell, MessageSquare, TrendingUp, ClipboardCheck } from 'lucide-react';
 
 interface ClientDashboardProps {
@@ -18,9 +21,12 @@ interface ClientDashboardProps {
 
 type View = 'workout' | 'chat' | 'progress';
 
+type WorkoutViewMode = 'today' | 'weekly';
+
 export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProps) {
   const navigate = useNavigate();
   const [currentView, setCurrentView] = useState<View>('workout');
+  const [workoutViewMode, setWorkoutViewMode] = useState<WorkoutViewMode>('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
 
   const currentClient = appState.clients.find((c) => c.id === appState.currentUserId);
@@ -55,6 +61,44 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     [appState.checkIns, appState.currentUserId]
   );
 
+  // Get today's workout data for Clarity Mode
+  const { todayWorkout, todayCompletion, latestCoachMessage, currentWeek } = useMemo(() => {
+    if (!currentClient?.planStartDate || !currentPlan) {
+      return { todayWorkout: null, todayCompletion: null, latestCoachMessage: undefined, currentWeek: null };
+    }
+
+    const durationWeeks = currentPlan.durationWeeks || currentPlan.weeks.length;
+    const weekNumber = getCurrentWeekNumber(currentClient.planStartDate, durationWeeks);
+    const currentWeek = currentPlan.weeks.find((w) => w.weekNumber === weekNumber);
+
+    if (!currentWeek) {
+      return { todayWorkout: null, todayCompletion: null, latestCoachMessage: undefined, currentWeek: null };
+    }
+
+    const weekDays = getWeekDays(
+      currentClient.planStartDate,
+      currentWeek,
+      clientWorkoutCompletions,
+      currentClient.id
+    );
+
+    const today = getTodayWorkout(weekDays);
+    const completion = today?.completion || null;
+
+    // Get latest coach message (messages from coach to this client)
+    const coachMessages = clientMessages
+      .filter((m) => m.senderId === coach?.id)
+      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    const latestMessage = coachMessages[0];
+
+    return {
+      todayWorkout: today,
+      todayCompletion: completion,
+      latestCoachMessage: latestMessage,
+      currentWeek,
+    };
+  }, [currentClient, currentPlan, clientWorkoutCompletions, clientMessages, coach]);
+
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
@@ -71,6 +115,41 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     }));
   };
 
+  // Handlers for TodayFocusView
+  const handleStartWorkout = () => {
+    if (todayWorkout?.workoutDay && currentWeek) {
+      navigate(`/client/workout/${currentWeek.id}/${todayWorkout.workoutDay.id}`);
+    }
+  };
+
+  const handleResumeWorkout = () => {
+    if (todayWorkout?.workoutDay && currentWeek) {
+      navigate(`/client/workout/${currentWeek.id}/${todayWorkout.workoutDay.id}`);
+    }
+  };
+
+  const handleSendFeedback = (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => {
+    if (!todayCompletion) return;
+
+    onUpdateState((state) => ({
+      ...state,
+      workoutCompletions: state.workoutCompletions.map((c) =>
+        c.id === todayCompletion.id
+          ? { ...c, effortRating: rating }
+          : c
+      ),
+    }));
+
+    // Optionally send a message to coach with the feedback
+    if (notes) {
+      handleSendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
+    }
+  };
+
+  const handleMessageCoach = () => {
+    setCurrentView('chat');
+  };
+
   if (!currentClient || !currentPlan) {
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
@@ -84,8 +163,15 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     );
   }
 
+  // Mobile bottom nav items
+  const mobileNavItems = [
+    { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
+    { id: 'chat' as const, label: 'Chat', icon: MessageSquare },
+    { id: 'progress' as const, label: 'Progress', icon: TrendingUp },
+  ];
+
   return (
-    <div className="min-h-screen bg-background p-4">
+    <div className="min-h-screen bg-background p-4 pb-24 sm:pb-4">
       <div className="max-w-4xl mx-auto space-y-4">
         {/* Check-in prompt banner */}
         {pendingCheckIn && (
@@ -115,51 +201,80 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
             <h1 className="text-2xl sm:text-3xl font-bold">My Workouts</h1>
             <p className="text-muted-foreground text-sm">Welcome back, {currentClient.name}</p>
           </div>
-          <div className="flex gap-2 w-full sm:w-auto">
+          {/* Desktop navigation tabs - hidden on mobile */}
+          <div className="hidden sm:flex gap-2">
             <Button
               variant={currentView === 'workout' ? 'default' : 'outline'}
               onClick={() => setCurrentView('workout')}
-              className="flex-1 sm:flex-none"
               size="sm"
             >
-              <Dumbbell className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Workout</span>
+              <Dumbbell className="w-4 h-4 mr-2" />
+              Workout
             </Button>
             <Button
               variant={currentView === 'chat' ? 'default' : 'outline'}
               onClick={() => setCurrentView('chat')}
-              className="flex-1 sm:flex-none"
               size="sm"
             >
-              <MessageSquare className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Chat</span>
+              <MessageSquare className="w-4 h-4 mr-2" />
+              Chat
             </Button>
             <Button
               variant={currentView === 'progress' ? 'default' : 'outline'}
               onClick={() => setCurrentView('progress')}
-              className="flex-1 sm:flex-none"
               size="sm"
             >
-              <TrendingUp className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">Progress</span>
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Progress
             </Button>
           </div>
         </div>
 
         {/* Coach feedback card (shows if coach responded to this week's check-in) */}
-        {thisWeekCheckIn && currentView === 'workout' && (
+        {thisWeekCheckIn && currentView === 'workout' && workoutViewMode === 'weekly' && (
           <CoachFeedbackCard
             checkIn={thisWeekCheckIn}
             onViewDetails={() => setShowCheckInModal(true)}
           />
         )}
 
-        {currentView === 'workout' && (
-          <WeeklyOverview
+        {/* Workout Views */}
+        {currentView === 'workout' && workoutViewMode === 'today' && (
+          <TodayFocusView
             client={currentClient}
             plan={currentPlan}
-            completions={clientWorkoutCompletions}
+            todayWorkout={todayWorkout}
+            todayCompletion={todayCompletion}
+            latestCoachMessage={latestCoachMessage}
+            coachName={coach?.name}
+            coachAvatar={undefined}
+            feedbackSubmitted={!!todayCompletion?.effortRating}
+            onStartWorkout={handleStartWorkout}
+            onResumeWorkout={handleResumeWorkout}
+            onSendFeedback={handleSendFeedback}
+            onMessageCoach={handleMessageCoach}
+            onViewWeekly={() => setWorkoutViewMode('weekly')}
           />
+        )}
+
+        {currentView === 'workout' && workoutViewMode === 'weekly' && (
+          <>
+            <div className="flex items-center justify-between mb-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setWorkoutViewMode('today')}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                ← Back to today
+              </Button>
+            </div>
+            <WeeklyOverview
+              client={currentClient}
+              plan={currentPlan}
+              completions={clientWorkoutCompletions}
+            />
+          </>
         )}
 
         {currentView === 'chat' && coach && (
@@ -184,6 +299,13 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
         checkIn={thisWeekCheckIn}
         completedWorkouts={clientWorkouts}
         plan={currentPlan}
+      />
+
+      {/* Mobile bottom navigation */}
+      <MobileBottomNav
+        items={mobileNavItems}
+        activeId={currentView}
+        onSelect={(id) => setCurrentView(id as View)}
       />
     </div>
   );
