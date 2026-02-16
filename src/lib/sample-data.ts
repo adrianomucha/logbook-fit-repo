@@ -9,7 +9,7 @@ export const sampleData: AppState = {
       id: 'coach-1',
       name: 'Sarah Johnson',
       email: 'sarah@coach.com',
-      clients: ['client-1', 'client-2', 'client-3']
+      clients: ['client-1', 'client-2', 'client-3', 'client-4']
     }
   ],
   clients: [
@@ -34,7 +34,7 @@ export const sampleData: AppState = {
       adherenceRate: 92,
       status: 'active',
       avatar: '👩',
-      lastCheckInDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+      lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),  // Recent check-in, but has unread message
       planStartDate: '2026-01-27'  // A Monday ~2 weeks ago
     },
     {
@@ -48,6 +48,18 @@ export const sampleData: AppState = {
       avatar: '🧑',
       lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       planStartDate: '2026-01-27'  // A Monday ~2 weeks ago
+    },
+    {
+      id: 'client-4',
+      name: 'Jordan Lee',
+      email: 'jordan@example.com',
+      currentPlanId: 'plan-1',
+      lastWorkoutDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),
+      adherenceRate: 65,
+      status: 'active',
+      avatar: '🧔',
+      lastCheckInDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString(),  // 6 days ago = at-risk
+      planStartDate: '2026-01-27'
     }
   ],
   plans: [
