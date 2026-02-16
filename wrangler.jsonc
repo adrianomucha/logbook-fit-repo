@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "logbook-fit",
+  "name": "logbook-fit-repo",
   "compatibility_date": "2026-02-16",
   "assets": {
     "directory": "./dist"
