@@ -45,6 +45,7 @@ export interface Message {
   content: string;
   timestamp: string;
   read: boolean;
+  clientId: string;  // The client this message belongs to (for data isolation)
   // Optional exercise context when message is sent about a flagged exercise
   exerciseContext?: {
     exerciseId: string;

@@ -249,6 +249,7 @@ export function ClientWorkoutExecution({
         content: content || `I have a question about ${messageSheetExercise.name}`,
         timestamp: new Date().toISOString(),
         read: false,
+        clientId: currentClient.id,  // Add clientId for proper data isolation
         exerciseContext: {
           exerciseId: messageSheetExercise.id,
           exerciseName: messageSheetExercise.name,

@@ -232,6 +232,8 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   };
 
   const handleSendMessage = (content: string) => {
+    if (!client) return;  // Guard for TypeScript
+
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
       senderId: appState.currentUserId,
@@ -239,6 +241,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
       content,
       timestamp: new Date().toISOString(),
       read: false,
+      clientId: client.id,  // Add clientId for proper data isolation
     };
 
     onUpdateState((state) => ({

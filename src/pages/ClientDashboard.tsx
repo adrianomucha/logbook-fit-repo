@@ -36,8 +36,9 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
 
   const coach = appState.coaches.find((c) => c.clients.includes(appState.currentUserId));
 
+  // Filter messages for this client only (using clientId for proper data isolation)
   const clientMessages = appState.messages.filter(
-    (msg) => msg.senderId === appState.currentUserId || msg.senderId === coach?.id
+    (msg) => msg.clientId === appState.currentUserId
   );
 
   const clientWorkouts = appState.completedWorkouts.filter(
@@ -106,7 +107,8 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
       senderName: currentClient?.name || 'Client',
       content,
       timestamp: new Date().toISOString(),
-      read: false
+      read: false,
+      clientId: appState.currentUserId  // Add clientId for proper data isolation
     };
 
     onUpdateState((state) => ({

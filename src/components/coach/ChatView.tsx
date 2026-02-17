@@ -63,8 +63,9 @@ export function ChatView({
     }
   };
 
+  // Filter messages for this specific client only (using clientId for proper data isolation)
   const clientMessages = messages.filter(
-    (msg) => msg.senderId === client.id || msg.senderId === currentUserId
+    (msg) => msg.clientId === client.id
   );
 
   return (

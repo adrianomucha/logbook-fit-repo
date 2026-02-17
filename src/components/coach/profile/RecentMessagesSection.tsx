@@ -33,12 +33,12 @@ export function RecentMessagesSection({
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [newMessage, setNewMessage] = useState(initialMessage || '');
 
-  // Filter and sort messages for this client
+  // Filter and sort messages for this client (using clientId for proper data isolation)
   const clientMessages = useMemo(() => {
     return messages
-      .filter((msg) => msg.senderId === client.id || msg.senderId === currentUserId)
+      .filter((msg) => msg.clientId === client.id)
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }, [messages, client.id, currentUserId]);
+  }, [messages, client.id]);
 
   // Get last 3 messages for preview
   const recentMessages = clientMessages.slice(0, 3).reverse();

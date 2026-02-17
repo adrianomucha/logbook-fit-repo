@@ -66,7 +66,15 @@ export function ClientsRequiringAction({
                     <div className="flex items-center gap-3 flex-1 min-w-0">
                       <div className="text-xl sm:text-2xl shrink-0">{client.avatar}</div>
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{client.name}</p>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/coach/clients/${client.id}`);
+                          }}
+                          className="font-medium truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer"
+                        >
+                          {client.name}
+                        </button>
                         <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <status.icon className={`w-3 h-3 shrink-0 ${status.color}`} />
                           <span className={`text-xs font-medium ${status.color}`}>
@@ -155,7 +163,15 @@ export function ClientsRequiringAction({
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="text-xl sm:text-2xl shrink-0">{client.avatar}</div>
                     <div className="min-w-0">
-                      <p className="font-medium truncate">{client.name}</p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/coach/clients/${client.id}`);
+                        }}
+                        className="font-medium truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer"
+                      >
+                        {client.name}
+                      </button>
                       <p className="text-xs text-muted-foreground">
                         Last check-in{' '}
                         {client.lastCheckInDate

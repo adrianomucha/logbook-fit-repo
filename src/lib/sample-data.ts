@@ -238,13 +238,15 @@ export const sampleData: AppState = {
     }
   ],
   messages: [
+    // Mike Chen (client-1) conversation
     {
       id: 'msg-1',
       senderId: 'client-1',
       senderName: 'Mike Chen',
       content: 'Hey Sarah! Had a great session today. The bench press felt much stronger.',
       timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      read: true
+      read: true,
+      clientId: 'client-1'
     },
     {
       id: 'msg-2',
@@ -252,23 +254,46 @@ export const sampleData: AppState = {
       senderName: 'Sarah Johnson',
       content: 'That\'s awesome Mike! Let\'s bump up the weight by 5 lbs next week.',
       timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      read: true
+      read: true,
+      clientId: 'client-1'
     },
+    // Emma Wilson (client-2) conversation
     {
       id: 'msg-3',
       senderId: 'client-2',
       senderName: 'Emma Wilson',
       content: 'Quick question - should I do the HIIT on the same day as lower body?',
       timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      read: false
+      read: false,
+      clientId: 'client-2'
     },
+    {
+      id: 'msg-5',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Great question Emma! I\'d recommend doing them on separate days for best recovery.',
+      timestamp: new Date(Date.now() - 25 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-2'
+    },
+    // Alex Rodriguez (client-3) conversation
     {
       id: 'msg-4',
       senderId: 'client-3',
       senderName: 'Alex Rodriguez',
       content: 'Sorry I missed yesterday, got caught up with work. Will make it up today!',
       timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      read: true
+      read: true,
+      clientId: 'client-3'
+    },
+    {
+      id: 'msg-6',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'No worries Alex! Life happens. Just get back on track when you can.',
+      timestamp: new Date(Date.now() - 23 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-3'
     }
   ],
   completedWorkouts: [
