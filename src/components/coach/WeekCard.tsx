@@ -4,6 +4,7 @@ import type { WorkoutWeek, WorkoutDay } from '../../types';
 import { WorkoutRow } from './WorkoutRow';
 import { duplicateDay } from '../../lib/workout-helpers';
 import { Modal } from '../ui/Modal';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface WeekCardProps {
   week: WorkoutWeek;
@@ -91,15 +92,14 @@ export function WeekCard({
 
   return (
     <>
-      <div className="border border-gray-300 rounded-lg bg-white shadow-sm">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gray-50">
-          <h3 className="text-lg font-semibold text-gray-900">Week {week.weekNumber}</h3>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <CardTitle className="text-lg">Week {week.weekNumber}</CardTitle>
           <div className="flex gap-2">
             {weekIndex > 0 && (
               <button
                 onClick={() => onMoveWeek('up')}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                 title="Move week up"
               >
                 <ChevronUp className="w-4 h-4" />
@@ -108,7 +108,7 @@ export function WeekCard({
             {weekIndex < totalWeeks - 1 && (
               <button
                 onClick={() => onMoveWeek('down')}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-200 rounded-md transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
                 title="Move week down"
               >
                 <ChevronDown className="w-4 h-4" />
@@ -116,7 +116,7 @@ export function WeekCard({
             )}
             <button
               onClick={onDuplicateWeek}
-              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+              className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
               title="Duplicate week"
             >
               <Copy className="w-4 h-4" />
@@ -124,17 +124,16 @@ export function WeekCard({
             {totalWeeks > 1 && (
               <button
                 onClick={handleDeleteWeek}
-                className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
                 title="Delete week"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>
-        </div>
+        </CardHeader>
 
-        {/* Content */}
-        <div className="p-6">
+        <CardContent>
           <div className="space-y-2">
             {week.days.map((day, dayIdx) => (
               <WorkoutRow
@@ -153,13 +152,13 @@ export function WeekCard({
           {weekIndex < totalWeeks - 1 && onCopyToNextWeek && (
             <button
               onClick={onCopyToNextWeek}
-              className="mt-4 w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+              className="mt-4 w-full px-4 py-2 text-sm font-medium text-foreground bg-background border border-input rounded-md hover:bg-muted transition-colors"
             >
               Copy to Week {week.weekNumber + 1}
             </button>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       {/* Delete confirmation modal */}
       {showDeleteConfirm && (

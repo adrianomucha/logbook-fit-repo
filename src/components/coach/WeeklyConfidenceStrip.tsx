@@ -63,13 +63,15 @@ export function WeeklyConfidenceStrip({ clients, checkIns }: WeeklyConfidenceStr
                 <p className="text-xs text-muted-foreground">Checked In</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
-              <div>
-                <p className="text-xl sm:text-2xl font-bold">{needsAttention}</p>
-                <p className="text-xs text-muted-foreground">Need Attention</p>
+            {needsAttention > 0 && (
+              <div className="flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
+                <div>
+                  <p className="text-xl sm:text-2xl font-bold">{needsAttention}</p>
+                  <p className="text-xs text-muted-foreground">Need Attention</p>
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex items-center gap-2">
               <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" />
               <div>
