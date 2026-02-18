@@ -172,6 +172,25 @@ function AppContent() {
           console.log('Alex Rodriguez V4 update successful - all 3 workouts LAST week');
         }
       }
+
+      // ALWAYS refresh client check-in dates on page load to keep demo data fresh
+      // This ensures clients never become stale/at-risk due to time passing
+      console.log('Refreshing client check-in dates for demo freshness...');
+      storedData.clients = storedData.clients.map(client => {
+        switch (client.id) {
+          case 'client-1': // Mike Chen - 3 days ago (normal, has responded check-in)
+            return { ...client, lastCheckInDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() };
+          case 'client-2': // Emma Wilson - 2 days ago (has unread message)
+            return { ...client, lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() };
+          case 'client-3': // Alex Rodriguez - 2 days ago (all caught up)
+            return { ...client, lastCheckInDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString() };
+          case 'client-4': // Jordan Lee - 6 days ago (at-risk, intentional demo)
+            return { ...client, lastCheckInDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString() };
+          default:
+            return client;
+        }
+      });
+      storage.set(storedData);
     }
     setAppState(storedData);
 

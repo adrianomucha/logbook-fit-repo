@@ -66,33 +66,9 @@ export function ContextualStatusHeader({
           </p>
         );
 
-      case 'pending-checkin':
-        if (respondedCheckIn) {
-          const workoutLabel = respondedCheckIn.workoutFeeling
-            ? FEELING_LABELS.workout[respondedCheckIn.workoutFeeling]
-            : null;
-          const bodyLabel = respondedCheckIn.bodyFeeling
-            ? FEELING_LABELS.body[respondedCheckIn.bodyFeeling]
-            : null;
-
-          return (
-            <p className="text-sm mt-1">
-              {client.name.split(' ')[0]} responded{' '}
-              {respondedCheckIn.clientRespondedAt &&
-                formatDistanceToNow(new Date(respondedCheckIn.clientRespondedAt), {
-                  addSuffix: true,
-                })}
-              .
-              {(workoutLabel || bodyLabel) && (
-                <span className="text-muted-foreground">
-                  {' '}Feeling:{' '}
-                  {[workoutLabel, bodyLabel].filter(Boolean).join(' · ')}
-                </span>
-              )}
-            </p>
-          );
-        }
-        return null;
+      // Note: Removed 'pending-checkin' case per Fix 17.
+      // The pending check-in is already visible in the InlineCheckInReview component below,
+      // so showing a banner here is redundant. Falls through to return null.
 
       case 'unread':
         return (
@@ -116,13 +92,8 @@ export function ContextualStatusHeader({
   // Get action button config
   const getActionButton = () => {
     switch (status.type) {
-      case 'pending-checkin':
-        return {
-          label: 'Review Now',
-          onClick: onScrollToCheckIn,
-          variant: 'default' as const,
-          disabled: false,
-        };
+      // Note: Removed 'pending-checkin' case per Fix 17.
+      // The check-in review UI is already visible in InlineCheckInReview below.
       case 'overdue':
       case 'at-risk':
         // Disable the button if there's already an active check-in

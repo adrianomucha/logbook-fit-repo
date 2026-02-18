@@ -296,8 +296,9 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           clientInfo={{ name: client.name, avatar: client.avatar }}
         />
 
-        {/* Contextual Status Header - Hidden in Mode B when status is 'ok' */}
-        {status && !(priorityMode === 'B' && status.type === 'ok') && (
+        {/* Contextual Status Header - Hidden when status is 'ok' (Mode B) or 'pending-checkin' (Fix 17) */}
+        {/* For pending-checkin, the InlineCheckInReview below already shows the check-in context */}
+        {status && !(priorityMode === 'B' && status.type === 'ok') && status.type !== 'pending-checkin' && (
           <ContextualStatusHeader
             client={client}
             status={status}
