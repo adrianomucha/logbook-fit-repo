@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { AppState, Message } from '@/types';
 import { getThisWeekCompletedCheckIn } from '@/lib/checkin-context-helpers';
 import { getCurrentWeekNumber, getWeekDays, getTodayWorkout } from '@/lib/workout-week-helpers';
@@ -25,9 +25,18 @@ type WorkoutViewMode = 'today' | 'weekly';
 
 export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProps) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('workout');
   const [workoutViewMode, setWorkoutViewMode] = useState<WorkoutViewMode>('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
+
+  // Handle URL tab parameter
+  useEffect(() => {
+    const tab = searchParams.get('tab');
+    if (tab === 'chat') setCurrentView('chat');
+    else if (tab === 'progress') setCurrentView('progress');
+    else if (tab === 'workout') setCurrentView('workout');
+  }, [searchParams]);
 
   const currentClient = appState.clients.find((c) => c.id === appState.currentUserId);
   const currentPlan = currentClient

@@ -194,6 +194,9 @@ export interface AppState {
   exerciseFlags: ExerciseFlag[];
   // Migration flags
   alexMigrationV4?: boolean;
+  messagesMigrationV2?: boolean;
+  workoutCompletionsMigrationV2?: boolean;
+  mikeWorkoutTodayMigration?: boolean;
 }
 
 // Plan Setup Form Types

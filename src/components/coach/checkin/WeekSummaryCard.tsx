@@ -56,7 +56,7 @@ export function WeekSummaryCard({ clientId, completedWorkouts, plan }: WeekSumma
                   </p>
                 </div>
                 <p className="text-xs text-muted-foreground shrink-0">
-                  {workout.exercises.length} exercises
+                  {workout.exercises.length} {workout.exercises.length === 1 ? 'exercise' : 'exercises'}
                 </p>
               </div>
             ))}

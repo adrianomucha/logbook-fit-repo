@@ -66,12 +66,14 @@ function AppContent() {
         console.log('Coach exercises added');
       }
       // Migration: add workoutCompletions and setCompletions arrays
-      if (!storedData.workoutCompletions) {
-        console.log('Adding workoutCompletions and setCompletions arrays...');
-        storedData.workoutCompletions = [];
-        storedData.setCompletions = [];
+      // Force refresh if empty or missing version flag (critical for mobile bug fix)
+      if (!storedData.workoutCompletions || storedData.workoutCompletions.length === 0 || !storedData.workoutCompletionsMigrationV2) {
+        console.log('Adding workoutCompletions and setCompletions arrays with sample data...');
+        storedData.workoutCompletions = sampleData.workoutCompletions;
+        storedData.setCompletions = sampleData.setCompletions || [];
+        storedData.workoutCompletionsMigrationV2 = true;
         storage.set(storedData);
-        console.log('Workout completion arrays added');
+        console.log('Workout completion arrays added with sample data');
       }
       // Migration: add exerciseFlags array
       if (!storedData.exerciseFlags) {
@@ -79,6 +81,17 @@ function AppContent() {
         storedData.exerciseFlags = [];
         storage.set(storedData);
         console.log('Exercise flags array added');
+      }
+      // Migration: add clientId to messages that are missing it (data isolation fix)
+      // Also force-refresh messages if any are missing clientId (critical for mobile bug fix)
+      const messagesNeedClientId = storedData.messages.some(msg => !msg.clientId);
+      if (messagesNeedClientId || !storedData.messagesMigrationV2) {
+        console.log('Adding clientId to messages for data isolation...');
+        // Replace with fresh sample messages that have proper clientId
+        storedData.messages = sampleData.messages;
+        storedData.messagesMigrationV2 = true;
+        storage.set(storedData);
+        console.log('Messages clientId migration complete');
       }
       // Migration: add planStartDate to clients
       if (storedData.clients.some(c => !c.planStartDate)) {
@@ -89,6 +102,19 @@ function AppContent() {
         }));
         storage.set(storedData);
         console.log('planStartDate added to clients');
+      }
+      // Migration: Force Mike Chen to have today's workout (planStartDate = today)
+      if (!storedData.mikeWorkoutTodayMigration) {
+        console.log('Setting Mike Chen planStartDate to today so he has a workout...');
+        const today = new Date().toISOString().split('T')[0];
+        storedData.clients = storedData.clients.map(client =>
+          client.id === 'client-1'
+            ? { ...client, planStartDate: today }
+            : client
+        );
+        storedData.mikeWorkoutTodayMigration = true;
+        storage.set(storedData);
+        console.log('Mike Chen now has a workout scheduled for today');
       }
       // Migration: Update Alex Rodriguez to be "all caught up" example - FORCE UPDATE V4
       const alexClient = storedData.clients.find(c => c.id === 'client-3');
@@ -198,7 +224,7 @@ function AppContent() {
             <p className="text-muted-foreground">Demo Mode - Select a role to continue</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Card className="cursor-pointer hover:border-primary transition-colors">
               <CardHeader>
                 <div className="flex items-center gap-3 mb-2">
@@ -259,7 +285,8 @@ function AppContent() {
 
   return (
     <div className="relative">
-        <div className="fixed bottom-4 right-4 z-50">
+        {/* Switch Role button - positioned above mobile nav on small screens */}
+        <div className="fixed bottom-20 sm:bottom-4 right-4 z-50">
           <Button
             variant="outline"
             size="sm"
@@ -308,6 +335,10 @@ function AppContent() {
             path="/coach/client/:clientId/check-in"
             element={<ClientCheckIn appState={appState} onUpdateState={handleUpdateState} />}
           />
+          {/* Catch-all routes - redirect unknown paths */}
+          <Route path="/client/*" element={<Navigate to="/client" replace />} />
+          <Route path="/coach/*" element={<Navigate to="/coach" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
   );

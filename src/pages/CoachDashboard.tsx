@@ -45,11 +45,21 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     });
   }, [appState.plans, showArchivedTemplates]);
 
-  // Count clients using each template (via sourceTemplateId on instances)
+  // Count clients using each template
+  // First check for plan instances forked from this template, then also count
+  // clients directly assigned to this template (for backward compatibility)
   const getClientCountForTemplate = (templateId: string) => {
-    return appState.plans.filter(
+    // Count plan instances forked from this template
+    const instanceCount = appState.plans.filter(
       (p) => !p.isTemplate && p.sourceTemplateId === templateId && !p.archivedAt
     ).length;
+
+    // Also count clients directly assigned to this template (legacy/demo data)
+    const directlyAssignedCount = appState.clients.filter(
+      (c) => c.currentPlanId === templateId
+    ).length;
+
+    return instanceCount + directlyAssignedCount;
   };
 
   // Get plan name for delete confirmation
@@ -147,7 +157,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
   };
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
       {/* Success Toast */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top">

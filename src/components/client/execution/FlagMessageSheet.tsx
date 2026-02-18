@@ -135,10 +135,10 @@ export function FlagMessageSheet({
 
         {/* Footer */}
         <div className="p-4 border-t flex gap-3">
-          <Button variant="outline" onClick={onClose} className="flex-1">
+          <Button variant="outline" onClick={onClose} className="flex-1 min-h-[44px]">
             Cancel
           </Button>
-          <Button onClick={handleSend} className="flex-1">
+          <Button onClick={handleSend} className="flex-1 min-h-[44px]">
             <Send className="w-4 h-4 mr-2" />
             Send Message
           </Button>

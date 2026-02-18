@@ -23,7 +23,7 @@ export const sampleData: AppState = {
       status: 'active',
       avatar: '👨',
       lastCheckInDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      planStartDate: '2026-01-27'  // A Monday ~2 weeks ago
+      planStartDate: new Date().toISOString().split('T')[0]  // Today - so Mike has a workout today
     },
     {
       id: 'client-2',

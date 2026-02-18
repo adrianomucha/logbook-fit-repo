@@ -267,7 +267,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   // Client not found error state
   if (!client) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4">
+      <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
         <div className="max-w-7xl mx-auto space-y-4">
           <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
           <Card className="max-w-md mx-auto">
@@ -286,7 +286,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   }
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
       <div className="max-w-7xl mx-auto space-y-4">
         {/* Top Navigation */}
         <CoachNav
@@ -400,7 +400,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           </div>
 
           {/* Right Column - Chat */}
-          <div ref={chatRef} className="flex flex-col min-h-[500px]">
+          <div ref={chatRef} className="flex flex-col min-h-[400px] sm:min-h-[500px]">
             <ChatView
               client={client}
               messages={appState.messages}

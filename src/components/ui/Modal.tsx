@@ -65,8 +65,8 @@ export function Modal({
         aria-labelledby="modal-title"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-8 py-6 flex items-center justify-between">
-          <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
+        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
+          <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-gray-900">
             {title}
           </h2>
           <Button
@@ -81,11 +81,11 @@ export function Modal({
         </div>
 
         {/* Body */}
-        <div className="px-8 py-6">{children}</div>
+        <div className="px-4 sm:px-8 py-4 sm:py-6">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 px-8 py-6">
+          <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 sm:px-8 py-4 sm:py-6">
             {footer}
           </div>
         )}

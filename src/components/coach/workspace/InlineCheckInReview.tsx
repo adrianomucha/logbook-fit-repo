@@ -307,13 +307,13 @@ export function InlineCheckInReview({
   return (
     <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/10">
       {!hideTitle && (
-        <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-base flex items-center gap-2">
-              <ClipboardCheck className="w-4 h-4 text-blue-600" />
-              {client.name.split(' ')[0]}'s Check-In
+        <CardHeader className="pb-2 px-3 sm:px-6">
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-base flex items-center gap-2 min-w-0">
+              <ClipboardCheck className="w-4 h-4 text-blue-600 shrink-0" />
+              <span className="truncate">{client.name.split(' ')[0]}'s Check-In</span>
             </CardTitle>
-            <span className="text-xs text-muted-foreground">
+            <span className="text-xs text-muted-foreground shrink-0">
               {activeCheckIn.clientRespondedAt
                 ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })
                 : 'recently'}
@@ -321,11 +321,11 @@ export function InlineCheckInReview({
           </div>
         </CardHeader>
       )}
-      <CardContent className={cn("space-y-4", hideTitle && "pt-4")}>
+      <CardContent className={cn("space-y-4 px-3 sm:px-6", hideTitle && "pt-4")}>
         {/* Feeling indicators - flattened, no nested borders */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {workoutFeeling && (
-            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2.5">
+            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2 sm:p-2.5">
               <p className="text-xs text-muted-foreground mb-0.5">Workouts felt</p>
               <p className="text-sm font-medium">
                 {workoutFeeling.emoji} {workoutFeeling.label}
@@ -333,7 +333,7 @@ export function InlineCheckInReview({
             </div>
           )}
           {bodyFeeling && (
-            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2.5">
+            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2 sm:p-2.5">
               <p className="text-xs text-muted-foreground mb-0.5">Body feels</p>
               <p className="text-sm font-medium">
                 {bodyFeeling.emoji} {bodyFeeling.label}
@@ -378,10 +378,11 @@ export function InlineCheckInReview({
             </p>
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-start gap-2 cursor-pointer min-h-[44px]">
             <Checkbox
               checked={planAdjustment}
               onCheckedChange={(checked) => setPlanAdjustment(!!checked)}
+              className="mt-0.5"
             />
             <span className="text-sm">I'll adjust the plan based on this feedback</span>
           </label>
@@ -389,7 +390,7 @@ export function InlineCheckInReview({
           <Button
             onClick={handleCompleteCheckIn}
             disabled={!coachResponse.trim()}
-            className="w-full"
+            className="w-full min-h-[44px]"
             size="sm"
           >
             <Send className="w-4 h-4 mr-2" />

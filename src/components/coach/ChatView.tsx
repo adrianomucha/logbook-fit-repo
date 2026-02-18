@@ -71,20 +71,20 @@ export function ChatView({
   return (
     <Card className={`flex flex-col min-h-0 h-full ${heightClass}`}>
       {!hideHeader && (
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-2 px-3 sm:px-6">
           <CardTitle className="text-base">Chat with {client.name.split(' ')[0]}</CardTitle>
         </CardHeader>
       )}
       <CardContent className="flex-1 flex flex-col p-0">
-        <ScrollArea className="flex-1 px-6">
-          <div className="space-y-4 pb-4">
+        <ScrollArea className="flex-1 px-3 sm:px-6">
+          <div className="space-y-3 sm:space-y-4 pb-4">
             {clientMessages.map((message) => (
               <div
                 key={message.id}
                 className={`flex ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] rounded-lg p-3 ${
+                  className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-2.5 sm:p-3 ${
                     message.senderId === currentUserId
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
@@ -104,7 +104,7 @@ export function ChatView({
             )}
           </div>
         </ScrollArea>
-        <div className="p-4 border-t">
+        <div className="p-3 sm:p-4 border-t">
           <div className="flex gap-2">
             <Input
               ref={inputRef}
@@ -113,7 +113,7 @@ export function ChatView({
               onChange={(e) => setNewMessage(e.target.value)}
               onKeyPress={handleKeyPress}
             />
-            <Button onClick={handleSend} size="icon">
+            <Button onClick={handleSend} size="icon" className="shrink-0 min-h-[44px] min-w-[44px]">
               <Send className="w-4 h-4" />
             </Button>
           </div>

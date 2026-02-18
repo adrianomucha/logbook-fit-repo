@@ -46,10 +46,11 @@ export function InlinePlanEditor({
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [showExercises, setShowExercises] = useState(!exercisesCollapsed);
 
-  // Get current week number
+  // Get current week number - use durationWeeks for consistency with client view
   const currentWeekNum = useMemo(() => {
     if (!plan || !planStartDate) return 1;
-    return getCurrentWeekNumber(planStartDate, plan.weeks.length);
+    const durationWeeks = plan.durationWeeks || plan.weeks.length;
+    return getCurrentWeekNumber(planStartDate, durationWeeks);
   }, [plan, planStartDate]);
 
   // Get current week's days
@@ -98,17 +99,17 @@ export function InlinePlanEditor({
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <span className="text-lg">{plan.emoji || '💪'}</span>
+      <CardHeader className="pb-2 px-3 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <CardTitle className="text-base flex items-center gap-2 min-w-0">
+            <span className="text-lg shrink-0">{plan.emoji || '💪'}</span>
             <span className="truncate">{plan.name}</span>
-            <span className="text-xs text-muted-foreground font-normal">
+            <span className="text-xs text-muted-foreground font-normal shrink-0">
               Week {currentWeekNum}
             </span>
           </CardTitle>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" onClick={onEditPlan}>
+          <div className="flex items-center gap-1 shrink-0">
+            <Button variant="outline" size="sm" onClick={onEditPlan} className="flex-1 sm:flex-none">
               <Pencil className="w-3.5 h-3.5 mr-1.5" />
               Edit
             </Button>
@@ -141,10 +142,10 @@ export function InlinePlanEditor({
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 px-3 sm:px-6">
         {/* Day selector tabs */}
         {currentWeek && (
-          <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+          <div className="flex gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1">
             {currentWeek.days.map((day, idx) => {
               const exerciseCount = day.exercises?.length || 0;
               const isSelected = selectedDayIndex === idx;
@@ -157,7 +158,7 @@ export function InlinePlanEditor({
                     setShowExercises(true);
                   }}
                   className={cn(
-                    'shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+                    'shrink-0 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium transition-colors min-h-[44px] sm:min-h-0 flex items-center',
                     isSelected
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',

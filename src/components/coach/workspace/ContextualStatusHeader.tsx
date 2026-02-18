@@ -150,8 +150,8 @@ export function ContextualStatusHeader({
 
   return (
     <Card className={cn(status.bgColor, status.borderColor, 'border')}>
-      <CardContent className="py-4">
-        <div className="flex items-start justify-between gap-4">
+      <CardContent className="py-3 sm:py-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <div
               className={cn(
@@ -175,7 +175,7 @@ export function ContextualStatusHeader({
               size="sm"
               onClick={actionButton.onClick}
               disabled={actionButton.disabled}
-              className="shrink-0"
+              className="shrink-0 w-full sm:w-auto"
             >
               {actionButton.label}
             </Button>

@@ -178,7 +178,6 @@ export function ExerciseCard({
                     value={flagNote || ''}
                     onChange={(e) => onUpdateFlagNote?.(e.target.value)}
                     maxLength={200}
-                    className="text-sm"
                   />
                   <div className="flex items-center justify-between mt-2">
                     <span className="text-xs text-muted-foreground">
@@ -187,7 +186,7 @@ export function ExerciseCard({
                     <button
                       type="button"
                       onClick={onMessageCoach}
-                      className="text-xs text-primary hover:underline"
+                      className="text-sm text-primary hover:underline min-h-[44px] flex items-center"
                     >
                       Message coach about this →
                     </button>

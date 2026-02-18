@@ -51,7 +51,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
   // Empty state: no clients at all
   if (clientsWithStatus.length === 0) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4">
+      <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
         <div className="max-w-7xl mx-auto space-y-4">
           <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
           <EmptyStateNoClients />
@@ -61,7 +61,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
   }
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
       <div className="max-w-7xl mx-auto space-y-4">
         <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
 

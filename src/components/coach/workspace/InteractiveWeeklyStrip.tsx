@@ -32,10 +32,11 @@ export function InteractiveWeeklyStrip({
 }: InteractiveWeeklyStripProps) {
   const [expandedDayNumber, setExpandedDayNumber] = useState<number | null>(null);
 
-  // Calculate current week data
+  // Calculate current week data - use durationWeeks for consistency with client view
   const currentWeekNum = useMemo(() => {
     if (!planStartDate || !plan?.weeks?.length) return 1;
-    return getCurrentWeekNumber(planStartDate, plan.weeks.length);
+    const durationWeeks = plan.durationWeeks || plan.weeks.length;
+    return getCurrentWeekNumber(planStartDate, durationWeeks);
   }, [planStartDate, plan]);
 
   const currentWeek = useMemo(() => {
@@ -87,21 +88,39 @@ export function InteractiveWeeklyStrip({
   // Compact mode: single row ~60-72px height
   if (compact) {
     return (
-      <div className="flex items-center gap-3 py-2 px-3 bg-muted/20 rounded-lg">
-        {/* Week indicator */}
-        <span className="text-xs text-muted-foreground whitespace-nowrap">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-2 px-3 bg-muted/20 rounded-lg">
+        {/* Top row on mobile: Week indicator + Progress */}
+        <div className="flex items-center justify-between sm:hidden">
+          <span className="text-xs text-muted-foreground whitespace-nowrap">
+            Week {currentWeekNum}/{plan.weeks.length}
+          </span>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+            <span>
+              {progress.completed}/{progress.total}
+            </span>
+            <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-500 rounded-full transition-all"
+                style={{ width: `${progress.percentage}%` }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Desktop: Week indicator */}
+        <span className="hidden sm:block text-xs text-muted-foreground whitespace-nowrap">
           Week {currentWeekNum}/{plan.weeks.length}
         </span>
 
         {/* 7-day compact strip */}
-        <div className="flex gap-0.5 flex-1 justify-center">
+        <div className="flex gap-1 sm:gap-0.5 flex-1 justify-center sm:justify-center">
           {weekDays.map((day) => (
             <CompactDayCell key={day.dayNumber} day={day} />
           ))}
         </div>
 
-        {/* Progress summary */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+        {/* Desktop: Progress summary */}
+        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
           <span>
             {progress.completed}/{progress.total}
           </span>

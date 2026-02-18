@@ -170,7 +170,6 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
                 onBlur={() => handleBlur('name')}
                 className={errors.name && touched.name ? 'border-red-500' : ''}
                 maxLength={50}
-                autoFocus
               />
               <div className="flex justify-between mt-1">
                 {errors.name && touched.name && (

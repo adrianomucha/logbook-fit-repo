@@ -101,7 +101,7 @@ export function CheckInStatusCard({
                   Check-in Ready to Review
                 </h3>
                 <p className="text-sm text-blue-700 dark:text-blue-200">
-                  Submitted {checkInAge} days ago · Awaiting your response
+                  Submitted {checkInAge} {checkInAge === 1 ? 'day' : 'days'} ago · Awaiting your response
                 </p>
                 {(status.checkIn.clientNotes || status.checkIn.notes) && (
                   <p className="text-sm text-blue-600 dark:text-blue-300 mt-1 italic line-clamp-1">

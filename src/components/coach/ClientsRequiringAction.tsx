@@ -71,7 +71,7 @@ export function ClientsRequiringAction({
                             e.stopPropagation();
                             navigate(`/coach/clients/${client.id}`);
                           }}
-                          className="font-medium truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer"
+                          className="font-medium truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer block min-h-[44px] flex items-center"
                         >
                           {client.name}
                         </button>
@@ -168,7 +168,7 @@ export function ClientsRequiringAction({
                           e.stopPropagation();
                           navigate(`/coach/clients/${client.id}`);
                         }}
-                        className="font-medium truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer"
+                        className="font-medium truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer block min-h-[44px] flex items-center"
                       >
                         {client.name}
                       </button>
