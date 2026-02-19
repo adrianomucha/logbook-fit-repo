@@ -1,64 +1,71 @@
-import { CompletedWorkout, WorkoutPlan } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { format } from 'date-fns';
-import { Calendar, CheckCircle } from 'lucide-react';
+import { CompletedWorkout, WorkoutPlan, WorkoutCompletion, Measurement, Client } from '@/types';
+import { ProgressSummaryRow } from './progress/ProgressSummaryRow';
+import { BodyStatsCard } from './progress/BodyStatsCard';
+import { EnrichedWorkoutHistory } from './progress/EnrichedWorkoutHistory';
 
 interface ProgressHistoryProps {
+  // Legacy props (kept for backward compatibility)
   completedWorkouts: CompletedWorkout[];
   plans: WorkoutPlan[];
+  // New props for enhanced progress view
+  client?: Client;
+  plan?: WorkoutPlan;
+  workoutCompletions?: WorkoutCompletion[];
+  measurements?: Measurement[];
 }
 
-export function ProgressHistory({ completedWorkouts, plans }: ProgressHistoryProps) {
-  const sortedWorkouts = [...completedWorkouts].sort(
-    (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
-  );
+export function ProgressHistory({
+  completedWorkouts,
+  plans,
+  client,
+  plan,
+  workoutCompletions,
+  measurements,
+}: ProgressHistoryProps) {
+  // If we have the new props, render the enhanced view
+  const hasEnhancedData = client && plan && workoutCompletions;
 
-  const getDayName = (workout: CompletedWorkout) => {
-    const plan = plans.find((p) => p.id === workout.planId);
-    if (!plan) return 'Unknown';
-    const week = plan.weeks.find((w) => w.id === workout.weekId);
-    if (!week) return 'Unknown';
-    const day = week.days.find((d) => d.id === workout.dayId);
-    return day?.name || 'Unknown';
-  };
+  if (hasEnhancedData) {
+    return (
+      <div className="space-y-4">
+        {/* Summary Row - "How Am I Doing?" */}
+        <ProgressSummaryRow
+          client={client}
+          plan={plan}
+          completions={workoutCompletions}
+        />
 
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          Workout History
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {sortedWorkouts.map((workout) => (
-          <div
-            key={workout.id}
-            className="p-3 rounded-md border border-border"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h4 className="font-medium truncate">{getDayName(workout)}</h4>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(workout.completedAt), 'MMM d, yyyy • h:mm a')}
-                </p>
-                <div className="flex items-center gap-1 mt-1">
-                  <CheckCircle className="w-3 h-3 text-green-500 shrink-0" />
-                  <span className="text-xs text-muted-foreground">
-                    {workout.exercises.filter((e) => e.completed).length} exercises
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-
-        {sortedWorkouts.length === 0 && (
-          <div className="text-center py-8 text-muted-foreground">
-            No completed workouts yet. Get started today!
-          </div>
+        {/* Body Stats Card */}
+        {measurements && measurements.length > 0 && (
+          <BodyStatsCard
+            measurements={measurements}
+            clientId={client.id}
+            desiredDirection={{
+              weight: 'down', // Default assumption, could be configurable
+              bodyFat: 'down',
+            }}
+          />
         )}
-      </CardContent>
-    </Card>
+
+        {/* Enriched Workout History */}
+        <EnrichedWorkoutHistory
+          completions={workoutCompletions}
+          plans={plans}
+          initialCount={5}
+        />
+      </div>
+    );
+  }
+
+  // Fallback: Legacy view (kept for backward compatibility)
+  // This uses completedWorkouts instead of workoutCompletions
+  return (
+    <div className="space-y-4">
+      <EnrichedWorkoutHistory
+        completions={[]}
+        plans={plans}
+        initialCount={5}
+      />
+    </div>
   );
 }

@@ -299,7 +299,14 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
         )}
 
         {currentView === 'progress' && (
-          <ProgressHistory completedWorkouts={clientWorkouts} plans={appState.plans} />
+          <ProgressHistory
+            completedWorkouts={clientWorkouts}
+            plans={appState.plans}
+            client={currentClient}
+            plan={currentPlan}
+            workoutCompletions={clientWorkoutCompletions}
+            measurements={appState.measurements.filter((m) => m.clientId === currentClient.id)}
+          />
         )}
       </div>
 
