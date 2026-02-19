@@ -1,6 +1,8 @@
 import { CompletedWorkout, WorkoutPlan, WorkoutCompletion, Measurement, Client } from '@/types';
 import { ProgressSummaryRow } from './progress/ProgressSummaryRow';
 import { BodyStatsCard } from './progress/BodyStatsCard';
+import { VolumeTrendChart } from './progress/VolumeTrendChart';
+import { PRBoard } from './progress/PRBoard';
 import { EnrichedWorkoutHistory } from './progress/EnrichedWorkoutHistory';
 
 interface ProgressHistoryProps {
@@ -46,6 +48,18 @@ export function ProgressHistory({
             }}
           />
         )}
+
+        {/* Volume Trend Chart (Phase 2) */}
+        <VolumeTrendChart
+          completions={workoutCompletions}
+          plan={plan}
+        />
+
+        {/* PR Board (Phase 2) */}
+        <PRBoard
+          completions={workoutCompletions}
+          plan={plan}
+        />
 
         {/* Enriched Workout History */}
         <EnrichedWorkoutHistory
