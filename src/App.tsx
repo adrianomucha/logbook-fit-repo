@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppState, Role } from '@/types';
 import { storage } from '@/lib/storage';
 import { sampleData } from '@/lib/sample-data';
@@ -18,12 +18,8 @@ import { UserCog, User } from 'lucide-react';
 
 function AppContent() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [appState, setAppState] = useState<AppState | null>(null);
   const [showRoleSelector, setShowRoleSelector] = useState(false);
-
-  // Dev mode: show role selector when ?dev=true is in URL
-  const isDevMode = searchParams.get('dev') === 'true';
 
   useEffect(() => {
     let storedData = storage.get();
@@ -308,18 +304,15 @@ function AppContent() {
 
   return (
     <div className="relative">
-        {/* Dev mode: Switch Role button - only shown when ?dev=true */}
-        {isDevMode && (
-          <div className="fixed bottom-20 sm:bottom-4 right-4 z-50">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowRoleSelector(true)}
-            >
-              Switch Role
-            </Button>
-          </div>
-        )}
+        <div className="fixed bottom-20 sm:bottom-4 right-4 z-50">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowRoleSelector(true)}
+          >
+            Switch Role
+          </Button>
+        </div>
 
         <Routes>
           <Route
