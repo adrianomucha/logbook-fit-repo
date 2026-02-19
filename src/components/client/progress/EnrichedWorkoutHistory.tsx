@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { WorkoutCompletion, WorkoutPlan, EffortRating } from '@/types';
-import { format, parseISO } from 'date-fns';
+import { WorkoutCompletion, WorkoutPlan, WorkoutDay, EffortRating } from '@/types';
+import { format, parseISO, getDay } from 'date-fns';
 import {
   Calendar,
   ChevronDown,
@@ -13,6 +13,39 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+/**
+ * Get a user-friendly workout name with fallback chain
+ * 1. day.name (e.g., "Upper Body Pull")
+ * 2. Day index label (e.g., "Day 1")
+ * 3. Date-based label (e.g., "Monday Workout" or "Workout · Feb 16")
+ */
+function getWorkoutDisplayName(
+  day: WorkoutDay | undefined,
+  dayIndex: number,
+  completedAt: string | undefined
+): string {
+  // Prefer the day name if it exists
+  if (day?.name) {
+    return day.name;
+  }
+
+  // Fall back to day index
+  if (dayIndex >= 0) {
+    return `Day ${dayIndex + 1}`;
+  }
+
+  // Fall back to date-based label
+  if (completedAt) {
+    const date = parseISO(completedAt);
+    const dayOfWeek = getDay(date);
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return `${dayNames[dayOfWeek]} Workout`;
+  }
+
+  // Last resort - but this should rarely happen
+  return 'Workout';
+}
 
 interface EnrichedWorkoutHistoryProps {
   completions: WorkoutCompletion[];
@@ -158,12 +191,13 @@ export function EnrichedWorkoutHistory({
       const plan = plans.find((p) => p.id === completion.planId);
       const week = plan?.weeks.find((w) => w.id === completion.weekId);
       const day = week?.days.find((d) => d.id === completion.dayId);
+      const dayIndex = week?.days.findIndex((d) => d.id === completion.dayId) ?? -1;
 
       return {
         completion,
-        dayName: day?.name || 'Unknown Workout',
+        dayName: getWorkoutDisplayName(day, dayIndex, completion.completedAt),
         weekNumber: week?.weekNumber || 1,
-        planName: plan?.name || 'Unknown Plan',
+        planName: plan?.name || 'Training',
       };
     });
   }, [completions, plans]);

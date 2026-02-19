@@ -72,9 +72,9 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
   );
 
   // Get today's workout data for Clarity Mode
-  const { todayWorkout, todayCompletion, latestCoachMessage, currentWeek } = useMemo(() => {
+  const { todayWorkout, todayCompletion, todayCoachNote, currentWeek } = useMemo(() => {
     if (!currentClient?.planStartDate || !currentPlan) {
-      return { todayWorkout: null, todayCompletion: null, latestCoachMessage: undefined, currentWeek: null };
+      return { todayWorkout: null, todayCompletion: null, todayCoachNote: undefined, currentWeek: null };
     }
 
     const durationWeeks = currentPlan.durationWeeks || currentPlan.weeks.length;
@@ -82,7 +82,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     const currentWeek = currentPlan.weeks.find((w) => w.weekNumber === weekNumber);
 
     if (!currentWeek) {
-      return { todayWorkout: null, todayCompletion: null, latestCoachMessage: undefined, currentWeek: null };
+      return { todayWorkout: null, todayCompletion: null, todayCoachNote: undefined, currentWeek: null };
     }
 
     const weekDays = getWeekDays(
@@ -95,19 +95,18 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     const today = getTodayWorkout(weekDays);
     const completion = today?.completion || null;
 
-    // Get latest coach message (messages from coach to this client)
-    const coachMessages = clientMessages
-      .filter((m) => m.senderId === coach?.id)
-      .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    const latestMessage = coachMessages[0];
+    // Get first non-empty coach note from today's workout exercises
+    // This is forward-looking instruction, not backward-looking chat
+    const exercises = today?.workoutDay?.exercises || [];
+    const firstNote = exercises.find((e) => e.notes?.trim())?.notes;
 
     return {
       todayWorkout: today,
       todayCompletion: completion,
-      latestCoachMessage: latestMessage,
+      todayCoachNote: firstNote,
       currentWeek,
     };
-  }, [currentClient, currentPlan, clientWorkoutCompletions, clientMessages, coach]);
+  }, [currentClient, currentPlan, clientWorkoutCompletions]);
 
   const handleSendMessage = (content: string) => {
     const newMessage: Message = {
@@ -207,13 +206,22 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
           </Card>
         )}
 
+        {/* Contextual header per tab */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">My Workouts</h1>
-            <p className="text-muted-foreground text-sm">Welcome back, {currentClient.name}</p>
-          </div>
+          {/* Header text - hidden on Chat tab */}
+          {currentView !== 'chat' && (
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold">
+                {currentView === 'workout' ? 'My Workouts' : 'My Progress'}
+              </h1>
+              {currentView === 'workout' && (
+                <p className="text-muted-foreground text-sm">Welcome back, {currentClient.name}</p>
+              )}
+            </div>
+          )}
+
           {/* Desktop navigation tabs - hidden on mobile */}
-          <div className="hidden sm:flex gap-2">
+          <div className={`hidden sm:flex gap-2 ${currentView === 'chat' ? 'ml-auto' : ''}`}>
             <Button
               variant={currentView === 'workout' ? 'default' : 'outline'}
               onClick={() => setCurrentView('workout')}
@@ -256,7 +264,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
             plan={currentPlan}
             todayWorkout={todayWorkout}
             todayCompletion={todayCompletion}
-            latestCoachMessage={latestCoachMessage}
+            coachNote={todayCoachNote}
             coachName={coach?.name}
             coachAvatar={undefined}
             feedbackSubmitted={!!todayCompletion?.effortRating}

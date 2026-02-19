@@ -1,9 +1,6 @@
 import { CompletedWorkout, WorkoutPlan, WorkoutCompletion, Measurement, Client } from '@/types';
-import { ProgressSummaryRow } from './progress/ProgressSummaryRow';
-import { BodyStatsCard } from './progress/BodyStatsCard';
-import { VolumeTrendChart } from './progress/VolumeTrendChart';
-import { PRBoard } from './progress/PRBoard';
 import { EnrichedWorkoutHistory } from './progress/EnrichedWorkoutHistory';
+import { CollapsedBodyStats } from './progress/CollapsedBodyStats';
 
 interface ProgressHistoryProps {
   // Legacy props (kept for backward compatibility)
@@ -30,55 +27,31 @@ export function ProgressHistory({
   if (hasEnhancedData) {
     return (
       <div className="space-y-4">
-        {/* Summary Row - "How Am I Doing?" */}
-        <ProgressSummaryRow
-          client={client}
-          plan={plan}
-          completions={workoutCompletions}
-        />
-
-        {/* Body Stats Card */}
-        {measurements && measurements.length > 0 && (
-          <BodyStatsCard
-            measurements={measurements}
-            clientId={client.id}
-            desiredDirection={{
-              weight: 'down', // Default assumption, could be configurable
-              bodyFat: 'down',
-            }}
-          />
-        )}
-
-        {/* Volume Trend Chart (Phase 2) */}
-        <VolumeTrendChart
-          completions={workoutCompletions}
-          plan={plan}
-        />
-
-        {/* PR Board (Phase 2) */}
-        <PRBoard
-          completions={workoutCompletions}
-          plan={plan}
-        />
-
-        {/* Enriched Workout History */}
+        {/* Workout History - primary content */}
         <EnrichedWorkoutHistory
           completions={workoutCompletions}
           plans={plans}
-          initialCount={5}
+          initialCount={10}
         />
+
+        {/* Collapsed Body Stats - at bottom, tappable to expand */}
+        {measurements && measurements.length > 0 && (
+          <CollapsedBodyStats
+            measurements={measurements}
+            clientId={client.id}
+          />
+        )}
       </div>
     );
   }
 
   // Fallback: Legacy view (kept for backward compatibility)
-  // This uses completedWorkouts instead of workoutCompletions
   return (
     <div className="space-y-4">
       <EnrichedWorkoutHistory
         completions={[]}
         plans={plans}
-        initialCount={5}
+        initialCount={10}
       />
     </div>
   );

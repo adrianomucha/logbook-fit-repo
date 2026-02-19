@@ -1,4 +1,4 @@
-import { Client, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
+import { Client, WorkoutPlan, WorkoutCompletion } from '@/types';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
 import { StatusHeader, StatusType } from './StatusHeader';
 import { TodayActionCard, ActionState } from './TodayActionCard';
@@ -12,7 +12,8 @@ interface TodayFocusViewProps {
   plan: WorkoutPlan;
   todayWorkout: WeekDayInfo | null;
   todayCompletion: WorkoutCompletion | null;
-  latestCoachMessage?: Message;
+  /** Coach's instruction note from today's workout exercises */
+  coachNote?: string;
   coachName?: string;
   coachAvatar?: string;
   feedbackSubmitted?: boolean;
@@ -47,7 +48,7 @@ export function TodayFocusView({
   plan,
   todayWorkout,
   todayCompletion,
-  latestCoachMessage,
+  coachNote,
   coachName,
   coachAvatar,
   feedbackSubmitted,
@@ -98,12 +99,12 @@ export function TodayFocusView({
         onAction={handleAction}
       />
 
-      {/* Coach Context Strip (only if message exists) */}
-      {latestCoachMessage && coachName && (
+      {/* Coach Context Strip (only if coach note exists) */}
+      {coachNote && coachName && (
         <CoachContextStrip
           coachName={coachName}
           coachAvatar={coachAvatar}
-          message={latestCoachMessage.content}
+          note={coachNote}
         />
       )}
 
