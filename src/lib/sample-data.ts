@@ -1,6 +1,143 @@
 import { AppState } from '@/types';
 import { generateCommonExercises } from './common-exercises';
 
+// Helper to generate progressive weeks for the strength program
+function generateStrengthProgramWeeks() {
+  const weeks = [];
+
+  // Base weights for week 1 (in lbs)
+  const baseWeights = {
+    benchPress: 135,
+    overheadPress: 95,
+    dumbbellFlyes: 25,
+    squat: 185,
+    romanianDeadlift: 135,
+    legPress: 270,
+    deadlift: 225,
+    barbellRows: 115,
+    bicepCurls: 30,
+  };
+
+  for (let weekNum = 1; weekNum <= 12; weekNum++) {
+    // Progressive overload: add 5 lbs every 2 weeks for main lifts
+    const progressionMultiplier = Math.floor((weekNum - 1) / 2) * 5;
+
+    weeks.push({
+      id: `week-${weekNum}`,
+      weekNumber: weekNum,
+      days: [
+        {
+          id: `w${weekNum}-day-1`,
+          name: 'Upper Body Push',
+          isRestDay: false,
+          exercises: [
+            {
+              id: `w${weekNum}-ex-1`,
+              name: 'Barbell Bench Press',
+              sets: 4,
+              reps: weekNum <= 4 ? '8-10' : weekNum <= 8 ? '6-8' : '5-6',
+              weight: `${baseWeights.benchPress + progressionMultiplier} lbs`,
+              notes: weekNum === 1 ? 'Focus on controlled descent' : undefined
+            },
+            {
+              id: `w${weekNum}-ex-2`,
+              name: 'Overhead Press',
+              sets: 3,
+              reps: '8-10',
+              weight: `${baseWeights.overheadPress + progressionMultiplier} lbs`
+            },
+            {
+              id: `w${weekNum}-ex-3`,
+              name: 'Dumbbell Flyes',
+              sets: 3,
+              reps: '12-15',
+              weight: `${baseWeights.dumbbellFlyes + Math.floor(progressionMultiplier / 2)} lbs`
+            },
+            {
+              id: `w${weekNum}-ex-4`,
+              name: 'Tricep Dips',
+              sets: 3,
+              reps: '10-12'
+            }
+          ]
+        },
+        {
+          id: `w${weekNum}-day-2`,
+          name: 'Lower Body',
+          isRestDay: false,
+          exercises: [
+            {
+              id: `w${weekNum}-ex-5`,
+              name: 'Barbell Squat',
+              sets: 4,
+              reps: weekNum <= 4 ? '8-10' : weekNum <= 8 ? '6-8' : '5-6',
+              weight: `${baseWeights.squat + progressionMultiplier} lbs`,
+              notes: weekNum === 1 ? 'Depth to parallel or below' : undefined
+            },
+            {
+              id: `w${weekNum}-ex-6`,
+              name: 'Romanian Deadlift',
+              sets: 3,
+              reps: '10-12',
+              weight: `${baseWeights.romanianDeadlift + progressionMultiplier} lbs`
+            },
+            {
+              id: `w${weekNum}-ex-7`,
+              name: 'Leg Press',
+              sets: 3,
+              reps: '12-15',
+              weight: `${baseWeights.legPress + progressionMultiplier * 2} lbs`
+            },
+            {
+              id: `w${weekNum}-ex-8`,
+              name: 'Calf Raises',
+              sets: 4,
+              reps: '15-20'
+            }
+          ]
+        },
+        {
+          id: `w${weekNum}-day-3`,
+          name: 'Upper Body Pull',
+          isRestDay: false,
+          exercises: [
+            {
+              id: `w${weekNum}-ex-9`,
+              name: 'Deadlift',
+              sets: 4,
+              reps: weekNum <= 4 ? '6-8' : weekNum <= 8 ? '5-6' : '4-5',
+              weight: `${baseWeights.deadlift + progressionMultiplier} lbs`,
+              notes: weekNum === 1 ? 'Neutral spine throughout' : undefined
+            },
+            {
+              id: `w${weekNum}-ex-10`,
+              name: 'Pull-ups',
+              sets: 3,
+              reps: '8-10'
+            },
+            {
+              id: `w${weekNum}-ex-11`,
+              name: 'Barbell Rows',
+              sets: 3,
+              reps: '10-12',
+              weight: `${baseWeights.barbellRows + progressionMultiplier} lbs`
+            },
+            {
+              id: `w${weekNum}-ex-12`,
+              name: 'Bicep Curls',
+              sets: 3,
+              reps: '12-15',
+              weight: `${baseWeights.bicepCurls + Math.floor(progressionMultiplier / 2)} lbs`
+            }
+          ]
+        }
+      ]
+    });
+  }
+
+  return weeks;
+}
+
 export const sampleData: AppState = {
   currentRole: 'coach',
   currentUserId: 'coach-1',
@@ -72,119 +209,7 @@ export const sampleData: AppState = {
       workoutsPerWeek: 3,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      weeks: [
-        {
-          id: 'week-1',
-          weekNumber: 1,
-          days: [
-            {
-              id: 'day-1',
-              name: 'Upper Body Push',
-              isRestDay: false,
-              exercises: [
-                {
-                  id: 'ex-1',
-                  name: 'Barbell Bench Press',
-                  sets: 4,
-                  reps: '8-10',
-                  weight: '135 lbs',
-                  notes: 'Focus on controlled descent'
-                },
-                {
-                  id: 'ex-2',
-                  name: 'Overhead Press',
-                  sets: 3,
-                  reps: '8-10',
-                  weight: '95 lbs'
-                },
-                {
-                  id: 'ex-3',
-                  name: 'Dumbbell Flyes',
-                  sets: 3,
-                  reps: '12-15',
-                  weight: '25 lbs'
-                },
-                {
-                  id: 'ex-4',
-                  name: 'Tricep Dips',
-                  sets: 3,
-                  reps: '10-12'
-                }
-              ]
-            },
-            {
-              id: 'day-2',
-              name: 'Lower Body',
-              isRestDay: false,
-              exercises: [
-                {
-                  id: 'ex-5',
-                  name: 'Barbell Squat',
-                  sets: 4,
-                  reps: '8-10',
-                  weight: '185 lbs',
-                  notes: 'Depth to parallel or below'
-                },
-                {
-                  id: 'ex-6',
-                  name: 'Romanian Deadlift',
-                  sets: 3,
-                  reps: '10-12',
-                  weight: '135 lbs'
-                },
-                {
-                  id: 'ex-7',
-                  name: 'Leg Press',
-                  sets: 3,
-                  reps: '12-15',
-                  weight: '270 lbs'
-                },
-                {
-                  id: 'ex-8',
-                  name: 'Calf Raises',
-                  sets: 4,
-                  reps: '15-20'
-                }
-              ]
-            },
-            {
-              id: 'day-3',
-              name: 'Upper Body Pull',
-              isRestDay: false,
-              exercises: [
-                {
-                  id: 'ex-9',
-                  name: 'Deadlift',
-                  sets: 4,
-                  reps: '6-8',
-                  weight: '225 lbs',
-                  notes: 'Neutral spine throughout'
-                },
-                {
-                  id: 'ex-10',
-                  name: 'Pull-ups',
-                  sets: 3,
-                  reps: '8-10'
-                },
-                {
-                  id: 'ex-11',
-                  name: 'Barbell Rows',
-                  sets: 3,
-                  reps: '10-12',
-                  weight: '115 lbs'
-                },
-                {
-                  id: 'ex-12',
-                  name: 'Bicep Curls',
-                  sets: 3,
-                  reps: '12-15',
-                  weight: '30 lbs'
-                }
-              ]
-            }
-          ]
-        }
-      ]
+      weeks: generateStrengthProgramWeeks()
     },
     {
       id: 'plan-2',
@@ -301,16 +326,16 @@ export const sampleData: AppState = {
       id: 'completed-1',
       clientId: 'client-1',
       planId: 'plan-1',
-      weekId: 'week-1',
-      dayId: 'day-1',
+      weekId: 'week-4',  // Mike is on week 4 of 12
+      dayId: 'w4-day-1',
       completedAt: new Date().toISOString(),
       exercises: [
         {
-          id: 'ex-1',
+          id: 'w4-ex-1',
           name: 'Barbell Bench Press',
           sets: 4,
           reps: '8-10',
-          weight: '135 lbs',
+          weight: '145 lbs',
           completed: true
         }
       ]
@@ -320,12 +345,12 @@ export const sampleData: AppState = {
       id: 'completed-alex-1',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-1',
-      dayId: 'day-1',
+      weekId: 'week-3',  // Alex is on week 3
+      dayId: 'w3-day-1',
       completedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(), // 12 days ago (Monday of last week)
       exercises: [
         {
-          id: 'ex-1',
+          id: 'w3-ex-1',
           name: 'Barbell Bench Press',
           sets: 4,
           reps: '8-10',
@@ -338,12 +363,12 @@ export const sampleData: AppState = {
       id: 'completed-alex-2',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-1',
-      dayId: 'day-2',
+      weekId: 'week-3',
+      dayId: 'w3-day-2',
       completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(), // 10 days ago (Wednesday of last week)
       exercises: [
         {
-          id: 'ex-1',
+          id: 'w3-ex-9',
           name: 'Deadlift',
           sets: 4,
           reps: '6-8',
@@ -356,13 +381,13 @@ export const sampleData: AppState = {
       id: 'completed-alex-3',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-1',
-      dayId: 'day-3',
+      weekId: 'week-3',
+      dayId: 'w3-day-3',
       completedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(), // 8 days ago (Friday of last week)
       exercises: [
         {
-          id: 'ex-1',
-          name: 'Squat',
+          id: 'w3-ex-5',
+          name: 'Barbell Squat',
           sets: 4,
           reps: '8-10',
           weight: '185 lbs',
@@ -532,13 +557,13 @@ export const sampleData: AppState = {
   ],
   coachExercises: generateCommonExercises('coach-1'),
   workoutCompletions: [
-    // Alex Rodriguez (client-3) - completed workouts from last week
+    // Alex Rodriguez (client-3) - completed workouts from 2 weeks ago (week 2)
     {
       id: 'wc-alex-1',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-1',
-      dayId: 'day-1',
+      weekId: 'week-2',
+      dayId: 'w2-day-1',
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000 + 45 * 60 * 1000).toISOString(),
@@ -552,8 +577,8 @@ export const sampleData: AppState = {
       id: 'wc-alex-2',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-1',
-      dayId: 'day-2',
+      weekId: 'week-2',
+      dayId: 'w2-day-2',
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000 + 50 * 60 * 1000).toISOString(),
@@ -567,8 +592,8 @@ export const sampleData: AppState = {
       id: 'wc-alex-3',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-1',
-      dayId: 'day-3',
+      weekId: 'week-2',
+      dayId: 'w2-day-3',
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000 + 40 * 60 * 1000).toISOString(),
@@ -578,13 +603,13 @@ export const sampleData: AppState = {
       durationSec: 2400, // 40 min
       effortRating: 'EASY' as const,
     },
-    // Alex - this week's workouts (week 2)
+    // Alex - this week's workouts (week 3)
     {
       id: 'wc-alex-4',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-2',
-      dayId: 'day-1',
+      weekId: 'week-3',
+      dayId: 'w3-day-1',
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 48 * 60 * 1000).toISOString(),
@@ -598,8 +623,8 @@ export const sampleData: AppState = {
       id: 'wc-alex-5',
       clientId: 'client-3',
       planId: 'plan-1',
-      weekId: 'week-2',
-      dayId: 'day-2',
+      weekId: 'week-3',
+      dayId: 'w3-day-2',
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 + 55 * 60 * 1000).toISOString(),
@@ -609,13 +634,13 @@ export const sampleData: AppState = {
       durationSec: 3300, // 55 min
       effortRating: 'MEDIUM' as const,
     },
-    // Mike Chen (client-1) - completed yesterday's workout
+    // Mike Chen (client-1) - completed yesterday's workout (week 4)
     {
       id: 'wc-mike-1',
       clientId: 'client-1',
       planId: 'plan-1',
-      weekId: 'week-3',
-      dayId: 'day-1',
+      weekId: 'week-4',
+      dayId: 'w4-day-1',
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 + 42 * 60 * 1000).toISOString(),
@@ -625,13 +650,13 @@ export const sampleData: AppState = {
       durationSec: 2520, // 42 min
       effortRating: 'MEDIUM' as const,
     },
-    // Emma Wilson (client-2) - completed this week's workouts
+    // Emma Wilson (client-2) - completed this week's workouts (plan-2 uses different IDs)
     {
       id: 'wc-emma-1',
       clientId: 'client-2',
       planId: 'plan-2',
-      weekId: 'week-1',
-      dayId: 'day-1',
+      weekId: 'week-2',  // plan-2's week-2
+      dayId: 'day-4',    // plan-2 uses day-4
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 + 35 * 60 * 1000).toISOString(),
@@ -645,8 +670,8 @@ export const sampleData: AppState = {
       id: 'wc-emma-2',
       clientId: 'client-2',
       planId: 'plan-2',
-      weekId: 'week-1',
-      dayId: 'day-2',
+      weekId: 'week-2',  // plan-2's week-2
+      dayId: 'day-4',    // plan-2 uses day-4
       status: 'COMPLETED' as const,
       startedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
       completedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 + 40 * 60 * 1000).toISOString(),
