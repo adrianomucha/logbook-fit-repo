@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AppState, Message, PlanSetupFormData, ExerciseFlag, CheckIn, WorkoutPlan } from '@/types';
 import { getClientStatus } from '@/lib/client-status';
@@ -108,6 +108,22 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     () => appState.coaches.find((c) => c.id === appState.currentUserId),
     [appState.coaches, appState.currentUserId]
   );
+
+  // Auto-mark client messages as read when coach views their profile
+  useEffect(() => {
+    if (!clientId) return;
+    const hasUnread = appState.messages.some(
+      (m) => m.senderId === clientId && !m.read
+    );
+    if (hasUnread) {
+      onUpdateState((state) => ({
+        ...state,
+        messages: state.messages.map((m) =>
+          m.senderId === clientId && !m.read ? { ...m, read: true } : m
+        ),
+      }));
+    }
+  }, [clientId]); // Only run when navigating to a new client profile
 
   // Handlers
   const handleScrollToCheckIn = () => {

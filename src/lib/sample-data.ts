@@ -289,7 +289,7 @@ export const sampleData: AppState = {
       senderName: 'Emma Wilson',
       content: 'Quick question - should I do the HIIT on the same day as lower body?',
       timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      read: false,
+      read: true,
       clientId: 'client-2'
     },
     {
