@@ -196,7 +196,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         />
       )}
 
-      <div className="max-w-7xl mx-auto space-y-3 sm:space-y-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav
           activeTab={viewToNavTab(currentView)}
           unreadCount={totalUnreadMessages}
@@ -210,7 +210,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         />
 
         {currentView === 'dashboard' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <WeeklyConfidenceStrip
               clients={appState.clients}
               checkIns={appState.checkIns}
@@ -227,7 +227,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         )}
 
         {currentView === 'plans' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
@@ -261,7 +261,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
 
             {/* Template Cards Grid */}
             {templates.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {templates.map((plan) => (
                   <PlanTemplateCard
                     key={plan.id}

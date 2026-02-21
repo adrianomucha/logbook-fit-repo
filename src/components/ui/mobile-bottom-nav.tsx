@@ -1,4 +1,3 @@
-import { cva } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 import { LucideIcon } from 'lucide-react';
 
@@ -15,24 +14,9 @@ interface MobileBottomNavProps {
   onSelect: (id: string) => void;
 }
 
-const tabVariants = cva(
-  'flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[56px] px-3 py-2 rounded-lg transition-colors',
-  {
-    variants: {
-      active: {
-        true: 'bg-primary text-primary-foreground',
-        false: 'text-muted-foreground hover:text-foreground hover:bg-muted',
-      },
-    },
-    defaultVariants: {
-      active: false,
-    },
-  }
-);
-
 export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background border-t border-border px-2 pb-[env(safe-area-inset-bottom)] sm:hidden z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border/50 px-2 pb-[env(safe-area-inset-bottom)] sm:hidden z-50">
       <div className="flex items-center justify-around py-2">
         {items.map((item) => {
           const Icon = item.icon;
@@ -42,18 +26,33 @@ export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavPr
             <button
               key={item.id}
               onClick={() => onSelect(item.id)}
-              className={cn(tabVariants({ active: isActive }))}
+              className={cn(
+                'flex flex-col items-center justify-center gap-1 min-w-[64px] py-1.5 px-3 transition-colors',
+                isActive
+                  ? 'text-foreground'
+                  : 'text-muted-foreground/60 hover:text-muted-foreground'
+              )}
               aria-current={isActive ? 'page' : undefined}
             >
               <div className="relative">
-                <Icon className="w-5 h-5" />
+                <Icon
+                  className={cn(
+                    'w-[22px] h-[22px]',
+                    isActive ? 'stroke-[2px]' : 'stroke-[1.5px]'
+                  )}
+                />
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[18px] h-[18px] px-1 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {item.badge > 99 ? '99+' : item.badge}
-                  </span>
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-orange-500 rounded-full" />
                 )}
               </div>
-              <span className="text-[10px] font-medium leading-tight mt-0.5">{item.label}</span>
+              <span
+                className={cn(
+                  'text-[10px] leading-tight',
+                  isActive ? 'font-semibold' : 'font-normal'
+                )}
+              >
+                {item.label}
+              </span>
             </button>
           );
         })}
