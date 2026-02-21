@@ -164,7 +164,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">No Workout Plan Assigned</h1>
+          <h1 className="text-2xl font-bold font-heading mb-2">No Workout Plan Assigned</h1>
           <p className="text-muted-foreground">
             Contact your coach to get started with a workout plan.
           </p>
@@ -211,7 +211,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
           {/* Header text - hidden on Chat tab */}
           {currentView !== 'chat' && (
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">
+              <h1 className="text-2xl sm:text-3xl font-bold font-heading">
                 {currentView === 'workout' ? 'My Workouts' : 'My Progress'}
               </h1>
               {currentView === 'workout' && (
@@ -223,7 +223,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
           {/* Desktop navigation tabs - hidden on mobile */}
           <div className={`hidden sm:flex gap-2 ${currentView === 'chat' ? 'ml-auto' : ''}`}>
             <Button
-              variant={currentView === 'workout' ? 'default' : 'outline'}
+              variant={currentView === 'workout' ? 'default' : 'ghost'}
               onClick={() => setCurrentView('workout')}
               size="sm"
             >
@@ -231,7 +231,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
               Workout
             </Button>
             <Button
-              variant={currentView === 'chat' ? 'default' : 'outline'}
+              variant={currentView === 'chat' ? 'default' : 'ghost'}
               onClick={() => setCurrentView('chat')}
               size="sm"
             >
@@ -239,7 +239,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
               Chat
             </Button>
             <Button
-              variant={currentView === 'progress' ? 'default' : 'outline'}
+              variant={currentView === 'progress' ? 'default' : 'ghost'}
               onClick={() => setCurrentView('progress')}
               size="sm"
             >

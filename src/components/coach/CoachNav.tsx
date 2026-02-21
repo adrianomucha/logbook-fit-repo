@@ -95,19 +95,19 @@ export function CoachNav({
           {clientInfo ? (
             <div className="flex items-center gap-2">
               <span className="text-2xl">{clientInfo.avatar || '👤'}</span>
-              <h1 className="text-xl sm:text-2xl font-bold truncate">
+              <h1 className="text-xl sm:text-2xl font-bold font-heading truncate">
                 {clientInfo.name}
               </h1>
             </div>
           ) : (
-            <h1 className="text-2xl sm:text-3xl font-bold">{displayTitle}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-heading">{displayTitle}</h1>
           )}
         </div>
 
         {/* Right side: Desktop navigation tabs - hidden on mobile */}
         <div className="hidden sm:flex gap-2">
           <Button
-            variant={activeTab === 'dashboard' ? 'default' : 'outline'}
+            variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
             onClick={() => handleTabClick('dashboard')}
             size="sm"
           >
@@ -116,7 +116,7 @@ export function CoachNav({
           </Button>
 
           <Button
-            variant={activeTab === 'clients' ? 'default' : 'outline'}
+            variant={activeTab === 'clients' ? 'default' : 'ghost'}
             onClick={() => handleTabClick('clients')}
             size="sm"
           >
@@ -136,7 +136,7 @@ export function CoachNav({
           </Button>
 
           <Button
-            variant={activeTab === 'plans' ? 'default' : 'outline'}
+            variant={activeTab === 'plans' ? 'default' : 'ghost'}
             onClick={() => handleTabClick('plans')}
             size="sm"
           >

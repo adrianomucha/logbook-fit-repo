@@ -239,7 +239,7 @@ function AppContent() {
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="max-w-4xl w-full space-y-4">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2">LogBook.fit</h1>
+            <h1 className="text-4xl font-bold font-heading mb-2">LogBook.fit</h1>
             <p className="text-muted-foreground">Demo Mode - Select a role to continue</p>
           </div>
 
@@ -306,8 +306,9 @@ function AppContent() {
     <div className="relative">
         <div className="fixed bottom-20 sm:bottom-4 right-4 z-50">
           <Button
-            variant="outline"
+            variant="ghost"
             size="sm"
+            className="text-xs text-muted-foreground opacity-60 hover:opacity-100 transition-opacity"
             onClick={() => setShowRoleSelector(true)}
           >
             Switch Role

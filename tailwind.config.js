@@ -58,6 +58,7 @@ export default {
       },
       fontFamily: {
         mono: ['JetBrains Mono', 'monospace'],
+        heading: ['Syne', 'system-ui', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

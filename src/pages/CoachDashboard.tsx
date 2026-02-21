@@ -231,7 +231,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
             {/* Header */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
-                <h2 className="text-xl font-semibold">Plan Templates</h2>
+                <h2 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Plan Templates</h2>
                 <p className="text-sm text-muted-foreground">
                   Create and manage workout plan templates. Assign them to clients to create personalized copies.
                 </p>
