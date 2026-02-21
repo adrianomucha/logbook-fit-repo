@@ -164,7 +164,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold font-heading mb-2">No Workout Plan Assigned</h1>
+          <h1 className="text-2xl font-bold mb-2">No Workout Plan Assigned</h1>
           <p className="text-muted-foreground">
             Contact your coach to get started with a workout plan.
           </p>
@@ -211,7 +211,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
           {/* Header text - hidden on Chat tab */}
           {currentView !== 'chat' && (
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-heading">
+              <h1 className="text-2xl sm:text-3xl font-bold">
                 {currentView === 'workout' ? 'My Workouts' : 'My Progress'}
               </h1>
               {currentView === 'workout' && (

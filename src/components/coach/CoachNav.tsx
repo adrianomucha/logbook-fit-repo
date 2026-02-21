@@ -95,12 +95,12 @@ export function CoachNav({
           {clientInfo ? (
             <div className="flex items-center gap-2">
               <span className="text-2xl">{clientInfo.avatar || '👤'}</span>
-              <h1 className="text-xl sm:text-2xl font-bold font-heading truncate">
+              <h1 className="text-xl sm:text-2xl font-bold truncate">
                 {clientInfo.name}
               </h1>
             </div>
           ) : (
-            <h1 className="text-2xl sm:text-3xl font-bold font-heading">{displayTitle}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">{displayTitle}</h1>
           )}
         </div>
 
