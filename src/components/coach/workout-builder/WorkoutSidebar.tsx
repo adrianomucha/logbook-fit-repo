@@ -34,7 +34,7 @@ function getWorkoutStatus(day: WorkoutDay): WorkoutStatus {
 function StatusIcon({ status }: { status: WorkoutStatus }) {
   switch (status) {
     case 'rest':
-      return <MinusCircle className="w-4 h-4 text-gray-400" />;
+      return <MinusCircle className="w-4 h-4 text-muted-foreground" />;
     case 'empty':
       return <AlertCircle className="w-4 h-4 text-amber-500" />;
     case 'complete':
@@ -236,7 +236,7 @@ export function WorkoutSidebar({
   };
 
   return (
-    <div className="bg-white rounded-lg border">
+    <div className="bg-card rounded-lg border">
       {/* Compact Header */}
       <div className="p-4 border-b space-y-2">
         <div className="flex items-center justify-between">
@@ -257,7 +257,7 @@ export function WorkoutSidebar({
             <span>Empty</span>
           </div>
           <div className="flex items-center gap-1">
-            <MinusCircle className="w-3 h-3 text-gray-400" />
+            <MinusCircle className="w-3 h-3 text-muted-foreground" />
             <span>Rest</span>
           </div>
         </div>

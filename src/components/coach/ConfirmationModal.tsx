@@ -41,7 +41,7 @@ export function ConfirmationModal({
       }
     >
       <div className="space-y-3">
-        <p className="text-gray-700">{message}</p>
+        <p className="text-muted-foreground">{message}</p>
         {warningMessage && (
           <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
             <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />

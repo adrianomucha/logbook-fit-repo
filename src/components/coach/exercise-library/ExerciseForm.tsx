@@ -173,7 +173,7 @@ export function ExerciseForm({
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Exercise Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Exercise name*
           </label>
           <Input
@@ -190,21 +190,21 @@ export function ExerciseForm({
               <p className="text-red-600 text-sm">{errors.name}</p>
             )}
             {formData.name.length >= 40 && (
-              <p className="text-gray-500 text-xs ml-auto">{formData.name.length}/50</p>
+              <p className="text-muted-foreground text-xs ml-auto">{formData.name.length}/50</p>
             )}
           </div>
         </div>
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Category*</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Category*</label>
           <select
             value={formData.category}
             onChange={(e) =>
               handleFieldChange('category', e.target.value as ExerciseCategory)
             }
             onBlur={() => handleBlur('category')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           >
             {CATEGORIES.map((cat) => (
               <option key={cat.value} value={cat.value}>
@@ -219,14 +219,14 @@ export function ExerciseForm({
 
         {/* Equipment */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Equipment*</label>
+          <label className="block text-sm font-medium text-foreground mb-2">Equipment*</label>
           <select
             value={formData.equipment}
             onChange={(e) =>
               handleFieldChange('equipment', e.target.value as ExerciseEquipment)
             }
             onBlur={() => handleBlur('equipment')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           >
             {EQUIPMENT.map((eq) => (
               <option key={eq.value} value={eq.value}>
@@ -241,7 +241,7 @@ export function ExerciseForm({
 
         {/* Default Sets */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Default sets
           </label>
           <Input
@@ -260,7 +260,7 @@ export function ExerciseForm({
 
         {/* Coaching Notes */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Coaching notes (optional)
           </label>
           <Textarea
@@ -277,7 +277,7 @@ export function ExerciseForm({
               <p className="text-red-600 text-sm">{errors.notes}</p>
             )}
             {formData.notes.length >= 150 && (
-              <p className="text-gray-500 text-xs ml-auto">{formData.notes.length}/200</p>
+              <p className="text-muted-foreground text-xs ml-auto">{formData.notes.length}/200</p>
             )}
           </div>
         </div>

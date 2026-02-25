@@ -59,14 +59,14 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-y-auto bg-white rounded-lg shadow-xl`}
+        className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-y-auto bg-background rounded-lg shadow-xl`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
-          <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-gray-900">
+        <div className="sticky top-0 bg-background border-b border-border px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
+          <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-foreground">
             {title}
           </h2>
           <Button
@@ -85,7 +85,7 @@ export function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="sticky bottom-0 bg-white border-t border-gray-200 px-4 sm:px-8 py-4 sm:py-6">
+          <div className="sticky bottom-0 bg-background border-t border-border px-4 sm:px-8 py-4 sm:py-6">
             {footer}
           </div>
         )}

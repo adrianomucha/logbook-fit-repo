@@ -85,10 +85,10 @@ export function AssignClientModal({
               onClick={() => setSelectedClientId(client.id)}
               className={`w-full text-left p-3 rounded-lg border transition-colors ${
                 isOnThisPlan
-                  ? 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed'
+                  ? 'bg-muted border-border opacity-60 cursor-not-allowed'
                   : isSelected
                   ? 'bg-primary/5 border-primary ring-1 ring-primary'
-                  : 'bg-white border-gray-200 hover:border-gray-300 hover:bg-gray-50 cursor-pointer'
+                  : 'bg-card border-border hover:border-input hover:bg-muted cursor-pointer'
               }`}
             >
               <div className="flex items-center justify-between">

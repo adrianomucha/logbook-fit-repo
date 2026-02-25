@@ -56,12 +56,12 @@ export function WorkoutRow({
       onDrop={handleDrop}
       className={`flex items-center gap-3 p-3 border rounded-lg transition-colors cursor-move ${
         day.isRestDay
-          ? 'bg-gray-50 border-gray-200'
-          : 'bg-white border-gray-300 hover:border-gray-400'
+          ? 'bg-muted border-border'
+          : 'bg-card border-input hover:border-ring'
       }`}
     >
       {/* Drag handle */}
-      <div className="text-gray-400 cursor-grab active:cursor-grabbing">
+      <div className="text-muted-foreground cursor-grab active:cursor-grabbing">
         <GripVertical className="w-4 h-4" />
       </div>
 
@@ -70,7 +70,7 @@ export function WorkoutRow({
         type="text"
         value={day.name}
         onChange={handleNameChange}
-        className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
         placeholder={day.isRestDay ? 'Rest Day' : 'Workout name'}
         disabled={day.isRestDay}
       />
@@ -80,15 +80,15 @@ export function WorkoutRow({
         onClick={handleToggleRestDay}
         className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
           day.isRestDay
-            ? 'bg-blue-500 text-white hover:bg-blue-600'
-            : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+            : 'bg-background text-foreground border border-input hover:bg-muted'
         }`}
       >
         {day.isRestDay ? '✓ Rest Day' : 'Set as Rest'}
       </button>
 
       {/* Exercise count */}
-      <span className="text-sm text-gray-500 min-w-[100px] text-right">
+      <span className="text-sm text-muted-foreground min-w-[100px] text-right">
         {day.isRestDay ? '—' : `${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''}`}
       </span>
 
@@ -96,14 +96,14 @@ export function WorkoutRow({
       <div className="flex gap-1">
         <button
           onClick={onDuplicateDay}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md transition-colors"
+          className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-md transition-colors"
           title="Duplicate workout"
         >
           <Copy className="w-4 h-4" />
         </button>
         <button
           onClick={onDeleteDay}
-          className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+          className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors"
           title="Delete workout"
         >
           <Trash2 className="w-4 h-4" />

@@ -158,7 +158,7 @@ export function PlanBuilder({ plan, onUpdatePlan, appState }: PlanBuilderProps) 
 
         {/* Main Content - Exercise Editing */}
         <div className="flex-1 min-w-0">
-          <div className="bg-white rounded-lg border">
+          <div className="bg-card rounded-lg border">
             {/* Header Section */}
             <div className="border-b p-4 sm:p-6">
               <div className="flex items-center justify-between mb-3">

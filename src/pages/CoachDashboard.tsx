@@ -9,7 +9,7 @@ import { PlanTemplateCard } from '@/components/coach/plans/PlanTemplateCard';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Dumbbell, Plus, CheckCircle } from 'lucide-react';
+import { Plus, CheckCircle } from 'lucide-react';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { generatePlanStructure, deepCopyPlan } from '@/lib/plan-generator';
 
@@ -228,68 +228,74 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
 
         {currentView === 'plans' && (
           <div className="space-y-6">
-            {/* Header */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div>
-                <h2 className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Plan Templates</h2>
-                <p className="text-sm text-muted-foreground">
-                  Create and manage workout plan templates. Assign them to clients to create personalized copies.
-                </p>
-              </div>
-              <Button onClick={handleCreateNewPlan} className="shrink-0">
-                <Plus className="w-4 h-4 mr-2" />
-                New Template
-              </Button>
-            </div>
-
-            {/* Include Archived Toggle */}
-            {appState.plans.some((p) => p.isTemplate && p.archivedAt) && (
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="show-archived"
-                  checked={showArchivedTemplates}
-                  onCheckedChange={(checked) => setShowArchivedTemplates(!!checked)}
-                />
-                <label
-                  htmlFor="show-archived"
-                  className="text-sm text-muted-foreground cursor-pointer"
-                >
-                  Show archived templates
-                </label>
-              </div>
-            )}
-
-            {/* Template Cards Grid */}
-            {templates.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                {templates.map((plan) => (
-                  <PlanTemplateCard
-                    key={plan.id}
-                    plan={plan}
-                    clientCount={getClientCountForTemplate(plan.id)}
-                    onEdit={() => setEditingPlanId(plan.id)}
-                    onDuplicate={() => handleDuplicateTemplate(plan.id)}
-                    onArchive={() => handleArchiveTemplate(plan.id)}
-                    onRestore={plan.archivedAt ? () => handleRestoreTemplate(plan.id) : undefined}
-                    onDelete={() => setPlanToDelete(plan.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16 space-y-4 border rounded-lg bg-white">
-                <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground" />
-                <div className="space-y-2">
-                  <h2 className="text-xl font-semibold">No templates yet</h2>
-                  <p className="text-muted-foreground max-w-sm mx-auto">
-                    Create your first workout plan template. You can assign it to clients later.
-                  </p>
+            <section>
+              <div className="flex items-center justify-between px-1 pb-2">
+                <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                  Templates · {templates.length}
+                </span>
+                <div className="flex items-center gap-3">
+                  {appState.plans.some((p) => p.isTemplate && p.archivedAt) && (
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="show-archived"
+                        checked={showArchivedTemplates}
+                        onCheckedChange={(checked) => setShowArchivedTemplates(!!checked)}
+                      />
+                      <label
+                        htmlFor="show-archived"
+                        className="text-xs text-muted-foreground cursor-pointer"
+                      >
+                        Show archived
+                      </label>
+                    </div>
+                  )}
+                  <button
+                    onClick={handleCreateNewPlan}
+                    className="flex items-center gap-1 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors font-medium uppercase tracking-wider"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    New
+                  </button>
                 </div>
-                <Button onClick={handleCreateNewPlan} size="lg">
-                  <Plus className="w-5 h-5 mr-2" />
-                  Create Your First Template
-                </Button>
               </div>
-            )}
+
+              {/* Template cards grid */}
+              {templates.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                  {templates.map((plan, i) => (
+                    <div
+                      key={plan.id}
+                      className="animate-in fade-in slide-in-from-bottom-2"
+                      style={{ animationDelay: `${i * 75}ms`, animationFillMode: 'both' }}
+                    >
+                      <PlanTemplateCard
+                        plan={plan}
+                        clientCount={getClientCountForTemplate(plan.id)}
+                        onEdit={() => setEditingPlanId(plan.id)}
+                        onDuplicate={() => handleDuplicateTemplate(plan.id)}
+                        onArchive={() => handleArchiveTemplate(plan.id)}
+                        onRestore={plan.archivedAt ? () => handleRestoreTemplate(plan.id) : undefined}
+                        onDelete={() => setPlanToDelete(plan.id)}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed bg-muted/30 text-center py-20 space-y-5">
+                  <div className="text-5xl select-none">💪</div>
+                  <div className="space-y-1.5">
+                    <h3 className="text-base font-bold">No templates yet</h3>
+                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                      Create your first workout plan template. Assign it to clients later.
+                    </p>
+                  </div>
+                  <Button onClick={handleCreateNewPlan} size="sm">
+                    <Plus className="w-4 h-4 mr-1" />
+                    Create Your First Template
+                  </Button>
+                </div>
+              )}
+            </section>
           </div>
         )}
       </div>

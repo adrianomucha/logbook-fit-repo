@@ -19,33 +19,33 @@ export function ExerciseOnboarding({
         <div className="text-6xl">🏋️</div>
 
         {/* Title */}
-        <h2 className="text-2xl font-bold text-gray-900">Build Your Exercise Library</h2>
+        <h2 className="text-2xl font-bold text-foreground">Build Your Exercise Library</h2>
 
         {/* Description */}
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           Add exercises you commonly use. You'll reuse them across all plans.
         </p>
 
         {/* Quick Start Card */}
-        <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-6 space-y-3">
+        <div className="bg-primary/5 border-2 border-primary/20 rounded-lg p-6 space-y-3">
           <Button
             onClick={onLoadCommon}
-            className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
+            className="w-full flex items-center justify-center gap-2"
             size="lg"
           >
             <Zap className="w-5 h-5" />
             Load 44 Common Exercises
           </Button>
-          <p className="text-sm text-blue-900">
+          <p className="text-sm text-foreground">
             Pre-loads complete exercise library. Save 10 minutes.
           </p>
         </div>
 
         {/* Divider */}
         <div className="flex items-center gap-3">
-          <div className="flex-1 border-t border-gray-300" />
-          <span className="text-sm text-gray-500">or start from scratch</span>
-          <div className="flex-1 border-t border-gray-300" />
+          <div className="flex-1 border-t border-border" />
+          <span className="text-sm text-muted-foreground">or start from scratch</span>
+          <div className="flex-1 border-t border-border" />
         </div>
 
         {/* Manual Add */}
@@ -57,7 +57,7 @@ export function ExerciseOnboarding({
         {/* Skip */}
         <button
           onClick={onSkip}
-          className="text-sm text-gray-500 hover:text-gray-700 underline"
+          className="text-sm text-muted-foreground hover:text-foreground underline"
         >
           Skip for now
         </button>

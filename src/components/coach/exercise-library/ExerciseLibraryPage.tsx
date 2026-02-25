@@ -157,7 +157,7 @@ export function ExerciseLibraryPage({
           <Button variant="ghost" onClick={onBack} size="icon">
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <h2 className="text-2xl font-bold text-gray-900">My Exercise Library</h2>
+          <h2 className="text-2xl font-bold text-foreground">My Exercise Library</h2>
         </div>
         <Button onClick={() => handleOpenForm()} className="flex items-center gap-2">
           <Plus className="w-4 h-4" />
@@ -167,7 +167,7 @@ export function ExerciseLibraryPage({
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
         <Input
           placeholder="Search exercises..."
           value={searchQuery}
@@ -192,12 +192,12 @@ export function ExerciseLibraryPage({
 
       {/* Exercise List */}
       {filteredExercises.length === 0 ? (
-        <div className="text-center py-12 text-gray-500">
+        <div className="text-center py-12 text-muted-foreground">
           <p>No exercises found.</p>
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="text-blue-600 hover:underline mt-2"
+              className="text-primary hover:underline mt-2"
             >
               Clear search
             </button>
@@ -207,7 +207,7 @@ export function ExerciseLibraryPage({
         <div className="space-y-6">
           {Object.entries(groupedExercises).map(([category, exs]) => (
             <div key={category} className="space-y-3">
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-foreground">
                 {CATEGORIES.find((c) => c.value === category)?.label || category} (
                 {exs.length})
               </h3>
@@ -217,8 +217,8 @@ export function ExerciseLibraryPage({
                     <CardContent className="pt-6">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 space-y-1">
-                          <h4 className="font-medium text-gray-900">{exercise.name}</h4>
-                          <div className="flex items-center gap-3 text-sm text-gray-600">
+                          <h4 className="font-medium text-foreground">{exercise.name}</h4>
+                          <div className="flex items-center gap-3 text-sm text-muted-foreground">
                             <span>{EQUIPMENT_LABELS[exercise.equipment]}</span>
                             <span>•</span>
                             <span>
@@ -227,7 +227,7 @@ export function ExerciseLibraryPage({
                             {exercise.usageCount > 0 && (
                               <>
                                 <span>•</span>
-                                <span className="text-blue-600">
+                                <span className="text-primary">
                                   Used in {exercise.usageCount} plan
                                   {exercise.usageCount !== 1 ? 's' : ''}
                                 </span>
@@ -235,7 +235,7 @@ export function ExerciseLibraryPage({
                             )}
                           </div>
                           {exercise.notes && (
-                            <p className="text-sm text-gray-600 mt-2">💬 {exercise.notes}</p>
+                            <p className="text-sm text-muted-foreground mt-2">💬 {exercise.notes}</p>
                           )}
                         </div>
                         <div className="flex gap-2">

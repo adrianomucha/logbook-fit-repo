@@ -170,7 +170,7 @@ export function WeekCard({
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                className="px-4 py-2 text-sm font-medium text-foreground bg-background border border-input rounded-md hover:bg-muted"
               >
                 Cancel
               </button>
@@ -183,7 +183,7 @@ export function WeekCard({
             </div>
           }
         >
-          <p className="text-gray-600">
+          <p className="text-muted-foreground">
             Are you sure you want to delete Week {week.weekNumber}? This cannot be undone.
           </p>
         </Modal>

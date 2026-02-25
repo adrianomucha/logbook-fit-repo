@@ -65,7 +65,7 @@ export function InteractiveWeeklyStrip({
   if (!plan || weekDays.length === 0) {
     if (compact) {
       return (
-        <div className="flex items-center justify-between py-2 px-3 bg-muted/30 rounded-lg text-muted-foreground">
+        <div className="flex items-center justify-between py-3 px-4 bg-card border rounded-xl text-muted-foreground">
           <span className="text-sm">This Week</span>
           <span className="text-xs">No plan assigned</span>
         </div>
@@ -88,7 +88,7 @@ export function InteractiveWeeklyStrip({
   // Compact mode: single row ~60-72px height
   if (compact) {
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-2 px-3 bg-muted/20 rounded-lg">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-3 px-4 bg-card border rounded-xl">
         {/* Top row on mobile: Week indicator + Progress */}
         <div className="flex items-center justify-between sm:hidden">
           <span className="text-xs text-muted-foreground whitespace-nowrap">
@@ -113,7 +113,7 @@ export function InteractiveWeeklyStrip({
         </span>
 
         {/* 7-day compact strip */}
-        <div className="flex gap-1 sm:gap-0.5 flex-1 justify-center sm:justify-center">
+        <div className="flex gap-1.5 sm:gap-1 flex-1 justify-center sm:justify-center">
           {weekDays.map((day) => (
             <CompactDayCell key={day.dayNumber} day={day} />
           ))}
@@ -360,13 +360,13 @@ function InteractiveDayCell({ day, isExpanded, onClick }: InteractiveDayCellProp
 // Compact day cell for the condensed strip
 function CompactDayCell({ day }: { day: WeekDayInfo }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span className="text-[10px] text-muted-foreground leading-none">
+    <div className="flex flex-col items-center gap-1">
+      <span className="text-xs text-muted-foreground leading-none">
         {day.dayOfWeek}
       </span>
       <div
         className={cn(
-          'w-6 h-6 rounded-full flex items-center justify-center',
+          'w-8 h-8 rounded-full flex items-center justify-center',
           day.status === 'COMPLETED' && 'bg-green-600',
           day.status === 'TODAY' && 'border-2 border-teal-500 bg-teal-50 dark:bg-teal-950/30',
           day.status === 'MISSED' && 'bg-muted',
@@ -374,13 +374,13 @@ function CompactDayCell({ day }: { day: WeekDayInfo }) {
           day.status === 'REST' && 'opacity-50'
         )}
       >
-        {day.status === 'COMPLETED' && <Check className="w-3 h-3 text-white" />}
+        {day.status === 'COMPLETED' && <Check className="w-4 h-4 text-white" />}
         {day.status === 'TODAY' && (
-          <div className="w-1.5 h-1.5 rounded-full bg-teal-500 animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
         )}
-        {day.status === 'MISSED' && <Minus className="w-3 h-3 text-muted-foreground" />}
+        {day.status === 'MISSED' && <Minus className="w-4 h-4 text-muted-foreground" />}
         {day.status === 'REST' && (
-          <div className="w-4 border-b border-dashed border-muted-foreground/50" />
+          <div className="w-5 border-b border-dashed border-muted-foreground/50" />
         )}
       </div>
     </div>

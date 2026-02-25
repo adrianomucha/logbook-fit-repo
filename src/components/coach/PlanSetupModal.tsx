@@ -126,7 +126,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           </div>
         }
       >
-        <p className="text-gray-700">
+        <p className="text-foreground">
           Your plan hasn't been saved yet. Are you sure you want to discard your changes?
         </p>
       </Modal>
@@ -154,7 +154,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Emoji + Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Plan name*
           </label>
           <div className="flex gap-3">
@@ -176,7 +176,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
                   <p className="text-red-600 text-sm">{errors.name}</p>
                 )}
                 {formData.name.length >= 40 && (
-                  <p className="text-gray-500 text-xs ml-auto">
+                  <p className="text-muted-foreground text-xs ml-auto">
                     {formData.name.length}/50
                   </p>
                 )}
@@ -187,7 +187,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Description (optional)
           </label>
           <Textarea
@@ -204,7 +204,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               <p className="text-red-600 text-sm">{errors.description}</p>
             )}
             {formData.description.length >= 150 && (
-              <p className="text-gray-500 text-xs ml-auto">
+              <p className="text-muted-foreground text-xs ml-auto">
                 {formData.description.length}/200
               </p>
             )}
@@ -213,14 +213,14 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
 
         {/* Duration */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Duration
           </label>
           <select
             value={formData.durationWeeks}
             onChange={(e) => handleFieldChange('durationWeeks', parseInt(e.target.value))}
             onBlur={() => handleBlur('durationWeeks')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           >
             {DURATION_OPTIONS.map((weeks) => (
               <option key={weeks} value={weeks}>
@@ -235,7 +235,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
 
         {/* Workouts per week */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-foreground mb-2">
             Weekly schedule
           </label>
           <select
@@ -244,7 +244,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               handleFieldChange('workoutsPerWeek', parseInt(e.target.value))
             }
             onBlur={() => handleBlur('workoutsPerWeek')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           >
             {WORKOUTS_OPTIONS.map((count) => (
               <option key={count} value={count}>
@@ -252,7 +252,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               </option>
             ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">Rest days will be auto-calculated</p>
+          <p className="text-xs text-muted-foreground mt-1">Rest days will be auto-calculated</p>
           {errors.workoutsPerWeek && touched.workoutsPerWeek && (
             <p className="text-red-600 text-sm mt-1">{errors.workoutsPerWeek}</p>
           )}

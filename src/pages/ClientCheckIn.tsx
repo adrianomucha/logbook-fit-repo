@@ -437,7 +437,7 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
                     type="checkbox"
                     checked={planAdjustment}
                     onChange={(e) => setPlanAdjustment(e.target.checked)}
-                    className="rounded border-gray-300"
+                    className="rounded border-input"
                   />
                   <span className="text-sm">I'll adjust the plan based on this feedback</span>
                 </label>

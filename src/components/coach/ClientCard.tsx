@@ -26,21 +26,24 @@ export function ClientCard({
     navigate(`/coach/clients/${client.id}`);
   };
 
-  // Status dot color
-  const dotColor = (() => {
+  // Status badge styles
+  const badgeStyles = (() => {
     switch (status.type) {
       case 'at-risk':
       case 'overdue':
-        return 'bg-red-500';
+        return { dot: 'bg-red-500', bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400' };
       case 'pending-checkin':
       case 'unread':
-        return 'bg-blue-500';
+        return { dot: 'bg-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400' };
       case 'ok':
-        return 'bg-emerald-500';
+        return { dot: 'bg-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400' };
       default:
-        return 'bg-gray-400';
+        return { dot: 'bg-gray-400', bg: 'bg-gray-400/10', text: 'text-muted-foreground' };
     }
   })();
+
+  // Short label for the badge
+  const badgeLabel = variant === 'on-track' ? 'On Track' : status.label;
 
   // Build subtitle parts
   const subtitleParts: string[] = [];
@@ -98,10 +101,16 @@ export function ClientCard({
             {client.name}
           </h3>
           <span
-            className={cn('w-2 h-2 rounded-full flex-shrink-0', dotColor)}
+            className={cn(
+              'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0',
+              badgeStyles.bg,
+              badgeStyles.text
+            )}
             aria-label={`Status: ${status.label}`}
-            title={status.label}
-          />
+          >
+            <span className={cn('w-1.5 h-1.5 rounded-full', badgeStyles.dot)} />
+            {badgeLabel}
+          </span>
         </div>
 
         {subtitleParts.length > 0 && (
