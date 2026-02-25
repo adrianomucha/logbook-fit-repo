@@ -5,6 +5,7 @@ import { storage } from '@/lib/storage';
 import { sampleData } from '@/lib/sample-data';
 import { migratePlansToV2, needsMigration } from '@/lib/migrations/plan-migration';
 import { migratePlansToTemplateModel, needsTemplateMigration } from '@/lib/migrations/plan-template-migration';
+import { detectDueCheckIns } from '@/lib/checkin-schedule-helpers';
 import { CoachDashboard } from '@/pages/CoachDashboard';
 import { ClientDashboard } from '@/pages/ClientDashboard';
 import { ClientWorkoutExecution } from '@/pages/ClientWorkoutExecution';
@@ -173,6 +174,26 @@ function AppContent() {
         }
       }
 
+      // Migration: add checkInSchedules array
+      if (!storedData.checkInSchedules || !storedData.checkInSchedulesMigrationV1) {
+        console.log('Adding checkInSchedules...');
+        storedData.checkInSchedules = storedData.clients
+          .filter((client) => client.currentPlanId)
+          .map((client) => ({
+            id: `schedule-${client.id}`,
+            coachId: storedData!.coaches[0]?.id || 'coach-1',
+            clientId: client.id,
+            status: 'ACTIVE' as const,
+            cadence: 'WEEKLY' as const,
+            anchorDate: client.planStartDate || new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          }));
+        storedData.checkInSchedulesMigrationV1 = true;
+        storage.set(storedData);
+        console.log('checkInSchedules migration complete');
+      }
+
       // ALWAYS refresh client check-in dates on page load to keep demo data fresh
       // This ensures clients never become stale/at-risk due to time passing
       console.log('Refreshing client check-in dates for demo freshness...');
@@ -191,6 +212,20 @@ function AppContent() {
         }
       });
       storage.set(storedData);
+
+      // Auto-enrollment: detect and create due check-ins on app load ("frontend cron")
+      if (storedData.checkInSchedules?.length > 0) {
+        const dueCheckIns = detectDueCheckIns(
+          storedData.checkInSchedules,
+          storedData.clients,
+          storedData.checkIns
+        );
+        if (dueCheckIns.length > 0) {
+          console.log(`Auto-creating ${dueCheckIns.length} due check-in(s)...`);
+          storedData.checkIns = [...storedData.checkIns, ...dueCheckIns];
+          storage.set(storedData);
+        }
+      }
     }
     setAppState(storedData);
 

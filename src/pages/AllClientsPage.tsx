@@ -6,7 +6,6 @@ import { calculateNextCheckIn } from '@/lib/checkin-helpers';
 import { ClientCard } from '@/components/coach/ClientCard';
 import { EmptyStateNoClients, EmptyStateNoneNeedAttention, EmptyStateAllNeedAttention } from '@/components/coach/EmptyStates';
 import { CoachNav } from '@/components/coach/CoachNav';
-import { AlertTriangle, CheckCircle } from 'lucide-react';
 
 interface AllClientsPageProps {
   appState: AppState;
@@ -22,6 +21,13 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
     ).length;
   }, [appState.clients, appState.messages]);
 
+  // Helper: look up plan name for a client
+  const getPlanName = (clientPlanId?: string): string | undefined => {
+    if (!clientPlanId) return undefined;
+    const plan = appState.plans.find((p) => p.id === clientPlanId);
+    return plan?.name;
+  };
+
   // Compute client statuses
   const clientsWithStatus = useMemo(() => {
     return appState.clients.map(client => ({
@@ -35,16 +41,15 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
   }, [appState.clients, appState.messages, appState.checkIns, appState.completedWorkouts, appState.plans]);
 
   // Group by attention state
-  // Priority reference: 0=at-risk, 1=overdue, 2=pending-checkin, 3=unread, 4=ok
   const needsAttention = useMemo(() => {
     return clientsWithStatus
-      .filter(c => c.status.type !== 'ok')  // All non-OK statuses
+      .filter(c => c.status.type !== 'ok')
       .sort((a, b) => a.status.priority - b.status.priority);
   }, [clientsWithStatus]);
 
   const onTrack = useMemo(() => {
     return clientsWithStatus
-      .filter(c => c.status.type === 'ok')  // OK status only
+      .filter(c => c.status.type === 'ok')
       .sort((a, b) => a.client.name.localeCompare(b.client.name));
   }, [clientsWithStatus]);
 
@@ -62,20 +67,18 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="max-w-7xl mx-auto space-y-6">
         <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
 
         {/* NEEDS ATTENTION Section */}
         {needsAttention.length > 0 && (
           <section>
-            <div className="flex items-center gap-2 mb-4">
-              <AlertTriangle className="w-5 h-5 text-orange-600" />
-              <h2 className="text-xl font-semibold">
-                NEEDS ATTENTION
-              </h2>
-              <span className="text-sm text-muted-foreground">({needsAttention.length})</span>
+            <div className="px-1 sm:px-3 pb-2">
+              <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                Needs attention · {needsAttention.length}
+              </span>
             </div>
-            <div className="space-y-3">
+            <div className="bg-card rounded-xl border divide-y divide-border overflow-hidden">
               {needsAttention.map(({ client, status }) => (
                 <ClientCard
                   key={client.id}
@@ -83,6 +86,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
                   status={status}
                   variant="needs-attention"
                   snippet={getClientSnippet(client, status, appState)}
+                  planName={getPlanName(client.currentPlanId)}
                 />
               ))}
             </div>
@@ -96,15 +100,13 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
 
         {/* ON TRACK Section */}
         {onTrack.length > 0 && (
-          <section className="opacity-90">
-            <div className="flex items-center gap-2 mb-4">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <h2 className="text-lg font-medium text-muted-foreground">
-                ON TRACK
-              </h2>
-              <span className="text-sm text-muted-foreground">({onTrack.length})</span>
+          <section>
+            <div className="px-1 sm:px-3 pb-2">
+              <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                On track · {onTrack.length}
+              </span>
             </div>
-            <div className="space-y-3">
+            <div className="bg-card rounded-xl border divide-y divide-border overflow-hidden">
               {onTrack.map(({ client, status }) => (
                 <ClientCard
                   key={client.id}
@@ -112,6 +114,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
                   status={status}
                   variant="on-track"
                   nextCheckInDate={calculateNextCheckIn(client)}
+                  planName={getPlanName(client.currentPlanId)}
                 />
               ))}
             </div>

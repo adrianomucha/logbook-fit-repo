@@ -176,6 +176,20 @@ export interface Measurement {
   notes?: string;
 }
 
+// Check-in schedule types (TASK-053)
+export type CheckInScheduleStatus = 'ACTIVE' | 'PAUSED' | 'INACTIVE';
+
+export interface CheckInSchedule {
+  id: string;
+  coachId: string;
+  clientId: string;
+  status: CheckInScheduleStatus;
+  cadence: 'WEEKLY';
+  anchorDate: string;         // ISO date — reference point for 7-day cycle
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type Role = 'coach' | 'client';
 
 export interface AppState {
@@ -192,7 +206,9 @@ export interface AppState {
   workoutCompletions: WorkoutCompletion[];
   setCompletions: SetCompletion[];
   exerciseFlags: ExerciseFlag[];
+  checkInSchedules: CheckInSchedule[];
   // Migration flags
+  checkInSchedulesMigrationV1?: boolean;
   alexMigrationV4?: boolean;
   messagesMigrationV2?: boolean;
   workoutCompletionsMigrationV2?: boolean;

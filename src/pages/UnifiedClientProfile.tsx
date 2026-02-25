@@ -3,12 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { AppState, Message, PlanSetupFormData, ExerciseFlag, CheckIn, WorkoutPlan } from '@/types';
 import { getClientStatus } from '@/lib/client-status';
 import { getActiveCheckIn } from '@/lib/checkin-helpers';
+import { getScheduleForClient, upsertSchedule } from '@/lib/checkin-schedule-helpers';
 import { ContextualStatusHeader } from '@/components/coach/workspace/ContextualStatusHeader';
 import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
 import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
 import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
+import { CheckInScheduleToggle } from '@/components/coach/workspace/CheckInScheduleToggle';
 import { ChatView } from '@/components/coach/ChatView';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
@@ -109,6 +111,12 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     [appState.coaches, appState.currentUserId]
   );
 
+  // Get check-in schedule for this client
+  const clientSchedule = useMemo(
+    () => clientId ? getScheduleForClient(clientId, appState.checkInSchedules || []) : undefined,
+    [appState.checkInSchedules, clientId]
+  );
+
   // Auto-mark client messages as read when coach views their profile
   useEffect(() => {
     if (!clientId) return;
@@ -193,6 +201,11 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           ? { ...c, currentPlanId: undefined, planStartDate: undefined }
           : c
       ),
+      checkInSchedules: (state.checkInSchedules || []).map((s) =>
+        s.clientId === clientId
+          ? { ...s, status: 'INACTIVE' as const, updatedAt: new Date().toISOString() }
+          : s
+      ),
     }));
   };
 
@@ -209,6 +222,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
 
     // Fork it into a client instance
     const clientInstance = deepCopyPlan(newTemplate, { makeInstance: true });
+    const now = new Date().toISOString();
 
     onUpdateState((state) => ({
       ...state,
@@ -217,8 +231,16 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
       // Assign the instance (not the template) to the client
       clients: state.clients.map((c) =>
         c.id === clientId
-          ? { ...c, currentPlanId: clientInstance.id, planStartDate: new Date().toISOString() }
+          ? { ...c, currentPlanId: clientInstance.id, planStartDate: now }
           : c
+      ),
+      // Auto-enroll: upsert ACTIVE check-in schedule
+      checkInSchedules: upsertSchedule(
+        state.checkInSchedules || [],
+        clientId!,
+        state.currentUserId,
+        'ACTIVE',
+        now
       ),
     }));
 
@@ -232,6 +254,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
 
     // Fork the template into a client instance
     const clientInstance = deepCopyPlan(template, { makeInstance: true });
+    const now = new Date().toISOString();
 
     onUpdateState((state) => ({
       ...state,
@@ -240,8 +263,16 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
       // Assign the instance (not the template) to the client
       clients: state.clients.map((c) =>
         c.id === clientId
-          ? { ...c, currentPlanId: clientInstance.id, planStartDate: new Date().toISOString() }
+          ? { ...c, currentPlanId: clientInstance.id, planStartDate: now }
           : c
+      ),
+      // Auto-enroll: upsert ACTIVE check-in schedule
+      checkInSchedules: upsertSchedule(
+        state.checkInSchedules || [],
+        clientId!,
+        state.currentUserId,
+        'ACTIVE',
+        now
       ),
     }));
     setShowAssignPlanModal(false);
@@ -273,6 +304,35 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     const prefillMessage = `Regarding ${exerciseName}${flag.note ? `: "${flag.note}"` : ''} - `;
     setChatPrefill(prefillMessage);
     chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleToggleCheckInSchedule = (enabled: boolean) => {
+    if (!clientId) return;
+    const now = new Date().toISOString();
+
+    if (enabled) {
+      // Re-activate: set ACTIVE with anchorDate = now
+      onUpdateState((state) => ({
+        ...state,
+        checkInSchedules: upsertSchedule(
+          state.checkInSchedules || [],
+          clientId,
+          state.currentUserId,
+          'ACTIVE',
+          now
+        ),
+      }));
+    } else {
+      // Pause: set PAUSED
+      onUpdateState((state) => ({
+        ...state,
+        checkInSchedules: (state.checkInSchedules || []).map((s) =>
+          s.clientId === clientId
+            ? { ...s, status: 'PAUSED' as const, updatedAt: now }
+            : s
+        ),
+      }));
+    }
   };
 
   const handleScrollToPlanEditor = (dayId: string) => {
@@ -374,6 +434,13 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                   />
                 </div>
 
+                {/* Check-in Schedule Toggle */}
+                <CheckInScheduleToggle
+                  schedule={clientSchedule}
+                  hasPlan={!!plan}
+                  onToggle={handleToggleCheckInSchedule}
+                />
+
                 {/* History - grows to fill remaining space */}
                 <div className="flex-1 min-h-0">
                   <CheckInHistoryPanel
@@ -401,6 +468,13 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
                     exercisesCollapsed={false}
                   />
                 </div>
+
+                {/* Check-in Schedule Toggle */}
+                <CheckInScheduleToggle
+                  schedule={clientSchedule}
+                  hasPlan={!!plan}
+                  onToggle={handleToggleCheckInSchedule}
+                />
 
                 {/* History - grows to fill remaining space */}
                 <div className="flex-1 min-h-0">
