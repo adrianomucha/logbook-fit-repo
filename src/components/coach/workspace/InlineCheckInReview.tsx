@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -81,6 +81,17 @@ export function InlineCheckInReview({
   const [showSuccess, setShowSuccess] = useState(false);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
 
+  // Timer refs for cleanup on unmount
+  const sentTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const successTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => {
+      clearTimeout(sentTimerRef.current);
+      clearTimeout(successTimerRef.current);
+    };
+  }, []);
+
   // Get flagged exercises from recent workouts (past 7 days)
   const flaggedExercisesFromWeek = useMemo(() => {
     if (!client.id) return [];
@@ -144,7 +155,7 @@ export function InlineCheckInReview({
     onCreateCheckIn(newCheckIn);
     setJustSentCheckIn(true);
     // Clear the "just sent" state after 5 seconds
-    setTimeout(() => setJustSentCheckIn(false), 5000);
+    sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
   };
 
   const handleCompleteCheckIn = () => {
@@ -161,24 +172,22 @@ export function InlineCheckInReview({
     setShowSuccess(true);
 
     // Reset success message after 3 seconds
-    setTimeout(() => setShowSuccess(false), 3000);
+    successTimerRef.current = setTimeout(() => setShowSuccess(false), 3000);
   };
 
   // Success message (inline, not a separate page)
   if (showSuccess) {
     return (
-      <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
-        <CardContent className="py-6">
-          <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-8 h-8 text-green-600 shrink-0" />
-            <div>
-              <h3 className="font-semibold text-green-700 dark:text-green-400">
-                Check-in Complete!
-              </h3>
-              <p className="text-sm text-green-600 dark:text-green-500">
-                Your response has been sent to {client.name}.
-              </p>
-            </div>
+      <Card className="animate-fade-in-up">
+        <CardContent className="py-8">
+          <div className="flex flex-col items-center text-center gap-2">
+            <CheckCircle2 className="w-10 h-10 text-success" />
+            <h3 className="font-semibold text-lg">
+              Check-in complete
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Your response has been sent to {client.name.split(' ')[0]}.
+            </p>
           </div>
         </CardContent>
       </Card>
@@ -232,17 +241,17 @@ export function InlineCheckInReview({
     // Can be triggered from local button OR from parent (status header button)
     if (justSentCheckIn || justSentFromParent) {
       return (
-        <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
+        <Card>
           <CardContent className="py-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-full">
-                <SendHorizonal className="w-6 h-6 text-green-600" />
+              <div className="p-2 bg-muted rounded-full">
+                <SendHorizonal className="w-6 h-6 text-success" />
               </div>
               <div>
-                <h3 className="font-semibold text-green-700 dark:text-green-400">
+                <h3 className="font-semibold">
                   Check-in Sent!
                 </h3>
-                <p className="text-sm text-green-600 dark:text-green-500">
+                <p className="text-sm text-muted-foreground">
                   {client.name.split(' ')[0]} will be notified to share how they're doing.
                 </p>
               </div>
@@ -253,16 +262,16 @@ export function InlineCheckInReview({
     }
 
     return (
-      <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20">
+      <Card>
         <CardHeader className="pb-2">
           <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+            <Clock className="w-4 h-4 text-muted-foreground animate-pulse" />
             Waiting for {client.name.split(' ')[0]}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Status explanation */}
-          <div className="bg-white dark:bg-background rounded-lg p-3 border">
+          <div className="bg-background rounded-lg p-3 border">
             <p className="text-sm font-medium mb-1">
               Check-in sent {sentAgo}
             </p>
@@ -305,12 +314,12 @@ export function InlineCheckInReview({
     : null;
 
   return (
-    <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/10">
+    <Card>
       {!hideTitle && (
         <CardHeader className="pb-2 px-3 sm:px-6">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base flex items-center gap-2 min-w-0">
-              <ClipboardCheck className="w-4 h-4 text-blue-600 shrink-0" />
+              <ClipboardCheck className="w-4 h-4 shrink-0" />
               <span className="truncate">{client.name.split(' ')[0]}'s Check-In</span>
             </CardTitle>
             <span className="text-xs text-muted-foreground shrink-0">
@@ -325,7 +334,7 @@ export function InlineCheckInReview({
         {/* Feeling indicators - flattened, no nested borders */}
         <div className="grid grid-cols-2 gap-2 sm:gap-3">
           {workoutFeeling && (
-            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2 sm:p-2.5">
+            <div className="bg-background/60 rounded-lg p-2 sm:p-2.5">
               <p className="text-xs text-muted-foreground mb-0.5">Workouts felt</p>
               <p className="text-sm font-medium">
                 {workoutFeeling.emoji} {workoutFeeling.label}
@@ -333,7 +342,7 @@ export function InlineCheckInReview({
             </div>
           )}
           {bodyFeeling && (
-            <div className="bg-white/60 dark:bg-background/40 rounded-lg p-2 sm:p-2.5">
+            <div className="bg-background/60 rounded-lg p-2 sm:p-2.5">
               <p className="text-xs text-muted-foreground mb-0.5">Body feels</p>
               <p className="text-sm font-medium">
                 {bodyFeeling.emoji} {bodyFeeling.label}
@@ -348,7 +357,7 @@ export function InlineCheckInReview({
             <p className="text-xs text-muted-foreground mb-1">
               Notes from {client.name.split(' ')[0]}
             </p>
-            <p className="text-sm bg-white/60 dark:bg-background/40 rounded-lg p-3">
+            <p className="text-sm bg-background/60 rounded-lg p-3">
               "{activeCheckIn.clientNotes}"
             </p>
           </div>
@@ -373,24 +382,27 @@ export function InlineCheckInReview({
               rows={3}
               className="bg-background"
             />
-            <p className="text-xs text-muted-foreground mt-1 text-right">
-              {coachResponse.length}/1000
-            </p>
+            {coachResponse.length > 0 && (
+              <p className="text-xs text-muted-foreground mt-1 text-right">
+                {coachResponse.length}/1000
+              </p>
+            )}
           </div>
 
-          <label className="flex items-start gap-2 cursor-pointer min-h-[44px]">
+          <label className="flex items-center gap-3 cursor-pointer min-h-[44px] px-1 -mx-1 rounded-md hover:bg-muted/50 transition-colors">
             <Checkbox
               checked={planAdjustment}
               onCheckedChange={(checked) => setPlanAdjustment(!!checked)}
-              className="mt-0.5"
+              className="h-5 w-5"
             />
-            <span className="text-sm">I'll adjust the plan based on this feedback</span>
+            <span className="text-sm select-none">I'll adjust the plan based on this feedback</span>
           </label>
 
           <Button
             onClick={handleCompleteCheckIn}
             disabled={!coachResponse.trim()}
-            className="w-full min-h-[44px]"
+            variant={coachResponse.trim() ? 'default' : 'outline'}
+            className="w-full min-h-[44px] transition-all duration-150 active:scale-[0.98]"
             size="sm"
           >
             <Send className="w-4 h-4 mr-2" />
@@ -411,10 +423,10 @@ function FlaggedExercisesSection({
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
 }) {
   return (
-    <div className="bg-amber-50 dark:bg-amber-950/20 rounded-lg p-3 border border-amber-200">
+    <div className="bg-muted/50 rounded-lg p-3 border">
       <div className="flex items-center gap-2 mb-2">
-        <Flag className="w-4 h-4 text-amber-600" />
-        <span className="text-sm font-medium text-amber-700 dark:text-amber-400">
+        <Flag className="w-4 h-4 text-muted-foreground" />
+        <span className="text-sm font-medium">
           Flagged This Week ({flags.length})
         </span>
       </div>

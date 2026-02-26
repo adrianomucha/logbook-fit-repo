@@ -50,7 +50,7 @@ export function WorkoutHeader({
             className={cn(
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium flex-shrink-0',
               allDone
-                ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400'
+                ? 'bg-success/10 text-success'
                 : 'bg-muted text-muted-foreground'
             )}
           >
@@ -65,7 +65,7 @@ export function WorkoutHeader({
                   className={cn(
                     'w-2 h-2 rounded-full transition-colors',
                     i < exercisesDone
-                      ? 'bg-green-500'
+                      ? 'bg-success'
                       : 'bg-muted-foreground/30'
                   )}
                 />

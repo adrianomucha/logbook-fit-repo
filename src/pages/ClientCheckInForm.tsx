@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { ArrowLeft, CheckCircle2, Dumbbell, AlertTriangle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface ClientCheckInFormProps {
@@ -85,7 +86,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardContent className="text-center py-12">
-            <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-green-600" />
+            <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-success" />
             <h2 className="text-xl font-bold mb-2">Already Submitted</h2>
             <p className="text-muted-foreground mb-4">You've already responded to this check-in.</p>
             <Button onClick={() => navigate('/client')}>Back to Home</Button>
@@ -101,7 +102,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardContent className="text-center py-12">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-600" />
+            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
             <h2 className="text-2xl font-bold mb-2">Sent to your coach!</h2>
             <p className="text-muted-foreground">They'll review and get back to you soon.</p>
           </CardContent>
@@ -184,7 +185,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
               ))}
             </div>
             {errors.workoutFeeling && (
-              <p className="text-xs text-red-600 mt-2">{errors.workoutFeeling}</p>
+              <p className="text-xs text-destructive mt-2">{errors.workoutFeeling}</p>
             )}
           </CardContent>
         </Card>
@@ -209,7 +210,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
               ))}
             </div>
             {errors.bodyFeeling && (
-              <p className="text-xs text-red-600 mt-2">{errors.bodyFeeling}</p>
+              <p className="text-xs text-destructive mt-2">{errors.bodyFeeling}</p>
             )}
           </CardContent>
         </Card>
@@ -252,11 +253,12 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
                       if (flaggedWorkoutId === workout.id) setFlaggedWorkoutNote('');
                       setErrors(e => ({ ...e, flaggedWorkoutNote: '' }));
                     }}
-                    className={`w-full text-left p-3 rounded-lg border-2 transition-colors ${
+                    className={cn(
+                      'w-full text-left p-3 rounded-lg border-2 transition-colors',
                       flaggedWorkoutId === workout.id
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
-                    }`}
+                    )}
                   >
                     <p className="font-medium text-sm">{getWorkoutName(workout.dayId)}</p>
                     <p className="text-xs text-muted-foreground">
@@ -279,7 +281,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
                   />
                   <p className="text-xs text-muted-foreground mt-1 text-right">{flaggedWorkoutNote.length}/300</p>
                   {errors.flaggedWorkoutNote && (
-                    <p className="text-xs text-red-600 mt-1">{errors.flaggedWorkoutNote}</p>
+                    <p className="text-xs text-destructive mt-1">{errors.flaggedWorkoutNote}</p>
                   )}
                 </div>
               )}

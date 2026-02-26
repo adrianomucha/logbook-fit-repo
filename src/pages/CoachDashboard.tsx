@@ -160,7 +160,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
       {/* Success Toast */}
       {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 bg-green-600 text-white px-4 sm:px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top">
+        <div className="fixed top-4 right-4 z-50 bg-success text-success-foreground px-4 sm:px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top">
           <CheckCircle className="h-5 w-5 shrink-0" />
           <span className="font-medium text-sm sm:text-base">Plan created!</span>
         </div>
@@ -211,6 +211,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
 
         {currentView === 'dashboard' && (
           <div className="space-y-6">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
             <WeeklyConfidenceStrip
               clients={appState.clients}
               checkIns={appState.checkIns}
@@ -228,10 +229,11 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
 
         {currentView === 'plans' && (
           <div className="space-y-6">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Plan Templates</h1>
             <section>
               <div className="flex items-center justify-between px-1 pb-2">
                 <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                  Templates · {templates.length}
+                  {templates.length} {templates.length === 1 ? 'template' : 'templates'}
                 </span>
                 <div className="flex items-center gap-3">
                   {appState.plans.some((p) => p.isTemplate && p.archivedAt) && (

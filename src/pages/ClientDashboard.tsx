@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { Dumbbell, MessageSquare, TrendingUp, ClipboardCheck } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ClientDashboardProps {
   appState: AppState;
@@ -182,17 +183,17 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
 
   return (
     <div className="min-h-screen bg-background p-4 pb-24 sm:pb-4">
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Check-in prompt banner */}
         {pendingCheckIn && (
-          <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+          <Card className="border-info/20 bg-info/5">
             <CardContent className="py-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <ClipboardCheck className="w-6 h-6 text-blue-600 shrink-0" />
+                  <ClipboardCheck className="w-6 h-6 text-info shrink-0" />
                   <div>
-                    <p className="font-medium text-blue-900 dark:text-blue-100">Check-in waiting for you</p>
-                    <p className="text-sm text-blue-700 dark:text-blue-200">Your coach wants to hear how training is going</p>
+                    <p className="font-medium text-foreground">Check-in waiting for you</p>
+                    <p className="text-sm text-muted-foreground">Your coach wants to hear how training is going</p>
                   </div>
                 </div>
                 <Button
@@ -221,7 +222,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
           )}
 
           {/* Desktop navigation tabs - hidden on mobile */}
-          <div className={`hidden sm:flex gap-2 ${currentView === 'chat' ? 'ml-auto' : ''}`}>
+          <div className={cn('hidden sm:flex gap-2', currentView === 'chat' && 'ml-auto')}>
             <Button
               variant={currentView === 'workout' ? 'default' : 'ghost'}
               onClick={() => setCurrentView('workout')}

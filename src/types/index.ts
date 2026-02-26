@@ -5,6 +5,7 @@ export interface Exercise {
   reps?: string;
   time?: string;
   weight?: string;
+  weightUnit?: string;
   notes?: string;
   completed?: boolean;
 }

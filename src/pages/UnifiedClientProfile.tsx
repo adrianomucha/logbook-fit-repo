@@ -10,14 +10,13 @@ import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistory
 import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
-import { CheckInScheduleToggle } from '@/components/coach/workspace/CheckInScheduleToggle';
 import { ChatView } from '@/components/coach/ChatView';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { generatePlanStructure, deepCopyPlan } from '@/lib/plan-generator';
 
 interface UnifiedClientProfileProps {
@@ -33,6 +32,11 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   const [showPlanDrawer, setShowPlanDrawer] = useState(false);
   const [chatPrefill, setChatPrefill] = useState<string | undefined>(undefined);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [clientId]);
 
   // Refs for scrolling
   const checkInRef = useRef<HTMLDivElement>(null);
@@ -344,7 +348,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   if (!client) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-        <div className="max-w-7xl mx-auto space-y-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
           <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
@@ -363,14 +367,33 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-      <div className="max-w-7xl mx-auto space-y-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Top Navigation */}
         <CoachNav
           activeTab="clients"
           unreadCount={totalUnreadMessages}
-          backTo={{ label: 'Back to Clients', path: '/coach/clients' }}
-          clientInfo={{ name: client.name, avatar: client.avatar }}
         />
+
+        {/* Page title — back arrow + client avatar + name */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/coach/clients')}
+            className="h-8 w-8 p-0 shrink-0"
+            aria-label="Back to Clients"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          {client.avatar && (
+            <span className="text-2xl leading-none shrink-0" aria-hidden="true">
+              {client.avatar}
+            </span>
+          )}
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
+            {client.name}
+          </h1>
+        </div>
 
         {/* Contextual Status Header - Hidden when status is 'ok' (Mode B) or 'pending-checkin' (Fix 17) */}
         {/* For pending-checkin, the InlineCheckInReview below already shows the check-in context */}
@@ -396,102 +419,47 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           compact
         />
 
-        {/* Main Workspace Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
-          {/* Left Column - Mode-dependent content */}
-          <div className="flex flex-col gap-4">
-            {priorityMode === 'A' ? (
-              <>
-                {/* Mode A: Check-in prominent */}
-                <div ref={checkInRef}>
-                  <InlineCheckInReview
-                    client={client}
-                    activeCheckIn={activeCheckIn}
-                    plan={plan}
-                    workoutCompletions={appState.workoutCompletions}
-                    exerciseFlags={clientFlags}
-                    currentUserId={appState.currentUserId}
-                    onCompleteCheckIn={handleCompleteCheckIn}
-                    onCreateCheckIn={handleCreateCheckIn}
-                    onMessageAboutFlag={handleMessageAboutFlag}
-                    justSentFromParent={justSentCheckIn}
-                    hideTitle={activeCheckIn?.status === 'responded'}
-                  />
-                </div>
+        {/* Main Workspace Layout
+             Full-width primary card on top, 2-col grid (chat + secondary) below.
+             Mobile: single column stacking. */}
 
-                {/* Plan collapsed in Mode A */}
-                <div ref={planEditorRef}>
-                  <InlinePlanEditor
-                    client={client}
-                    plan={plan}
-                    planStartDate={client.planStartDate}
-                    onUpdatePlan={handleUpdatePlan}
-                    onEditPlan={handleEditPlan}
-                    onChangePlan={handleChangePlan}
-                    onCreatePlan={handleCreateNewPlan}
-                    onUnassignPlan={handleUnassignPlan}
-                    exercisesCollapsed={true}
-                  />
-                </div>
-
-                {/* Check-in Schedule Toggle */}
-                <CheckInScheduleToggle
-                  schedule={clientSchedule}
-                  hasPlan={!!plan}
-                  onToggle={handleToggleCheckInSchedule}
-                />
-
-                {/* History - grows to fill remaining space */}
-                <div className="flex-1 min-h-0">
-                  <CheckInHistoryPanel
-                    checkIns={appState.checkIns}
-                    clientId={client.id}
-                    clientName={client.name}
-                    initialCount={3}
-                    defaultCollapsed={false}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Mode B: Plan prominent, check-in hidden */}
-                <div ref={planEditorRef}>
-                  <InlinePlanEditor
-                    client={client}
-                    plan={plan}
-                    planStartDate={client.planStartDate}
-                    onUpdatePlan={handleUpdatePlan}
-                    onEditPlan={handleEditPlan}
-                    onChangePlan={handleChangePlan}
-                    onCreatePlan={handleCreateNewPlan}
-                    onUnassignPlan={handleUnassignPlan}
-                    exercisesCollapsed={false}
-                  />
-                </div>
-
-                {/* Check-in Schedule Toggle */}
-                <CheckInScheduleToggle
-                  schedule={clientSchedule}
-                  hasPlan={!!plan}
-                  onToggle={handleToggleCheckInSchedule}
-                />
-
-                {/* History - grows to fill remaining space */}
-                <div className="flex-1 min-h-0">
-                  <CheckInHistoryPanel
-                    checkIns={appState.checkIns}
-                    clientId={client.id}
-                    clientName={client.name}
-                    initialCount={3}
-                    defaultCollapsed={false}
-                  />
-                </div>
-              </>
-            )}
+        {/* Primary card — full width */}
+        {priorityMode === 'A' ? (
+          <div ref={checkInRef} className="animate-fade-in-up">
+            <InlineCheckInReview
+              client={client}
+              activeCheckIn={activeCheckIn}
+              plan={plan}
+              workoutCompletions={appState.workoutCompletions}
+              exerciseFlags={clientFlags}
+              currentUserId={appState.currentUserId}
+              onCompleteCheckIn={handleCompleteCheckIn}
+              onCreateCheckIn={handleCreateCheckIn}
+              onMessageAboutFlag={handleMessageAboutFlag}
+              justSentFromParent={justSentCheckIn}
+              hideTitle={activeCheckIn?.status === 'responded'}
+            />
           </div>
+        ) : (
+          <div ref={planEditorRef} className="animate-fade-in-up">
+            <InlinePlanEditor
+              client={client}
+              plan={plan}
+              planStartDate={client.planStartDate}
+              onUpdatePlan={handleUpdatePlan}
+              onEditPlan={handleEditPlan}
+              onChangePlan={handleChangePlan}
+              onCreatePlan={handleCreateNewPlan}
+              onUnassignPlan={handleUnassignPlan}
+              exercisesCollapsed={false}
+            />
+          </div>
+        )}
 
-          {/* Right Column - Chat */}
-          <div ref={chatRef} className="flex flex-col min-h-[400px] sm:min-h-[500px]">
+        {/* Bottom row: Chat + Secondary content — matched heights */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Chat */}
+          <div ref={chatRef} className="flex flex-col min-h-[300px] md:h-[500px]">
             <ChatView
               client={client}
               messages={appState.messages}
@@ -501,6 +469,38 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
               initialPrefill={chatPrefill}
               heightClass="flex-1"
             />
+          </div>
+
+          {/* Secondary content — same height as chat, scrollable */}
+          <div className="flex flex-col gap-4 md:h-[500px] md:overflow-y-auto">
+            {priorityMode === 'A' && (
+              <Card ref={planEditorRef} className="p-3 sm:p-4">
+                <InlinePlanEditor
+                  client={client}
+                  plan={plan}
+                  planStartDate={client.planStartDate}
+                  onUpdatePlan={handleUpdatePlan}
+                  onEditPlan={handleEditPlan}
+                  onChangePlan={handleChangePlan}
+                  onCreatePlan={handleCreateNewPlan}
+                  onUnassignPlan={handleUnassignPlan}
+                  exercisesCollapsed={true}
+                  variant="flat"
+                />
+              </Card>
+            )}
+
+            <Card className="p-3 sm:p-4">
+              <CheckInHistoryPanel
+                checkIns={appState.checkIns}
+                clientId={client.id}
+                clientName={client.name}
+                initialCount={3}
+                schedule={clientSchedule}
+                hasPlan={!!plan}
+                onToggleSchedule={handleToggleCheckInSchedule}
+              />
+            </Card>
           </div>
         </div>
 

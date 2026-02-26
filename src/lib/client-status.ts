@@ -46,9 +46,9 @@ export function getClientStatus(
     return {
       type: 'at-risk',
       icon: AlertCircle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 dark:bg-red-950/20',
-      borderColor: 'border-red-200 dark:border-red-900',
+      color: 'text-warning',
+      bgColor: 'bg-muted/50',
+      borderColor: 'border-border',
       label: 'At Risk',
       priority: 0,
       hasUnread: unreadMessages > 0
@@ -60,9 +60,9 @@ export function getClientStatus(
     return {
       type: 'overdue',
       icon: AlertCircle,
-      color: 'text-red-600',
-      bgColor: 'bg-red-50 dark:bg-red-950/20',
-      borderColor: 'border-red-200 dark:border-red-900',
+      color: 'text-warning',
+      bgColor: 'bg-muted/50',
+      borderColor: 'border-border',
       label: 'Check-in Overdue',
       priority: 1,
       hasUnread: unreadMessages > 0
@@ -74,9 +74,9 @@ export function getClientStatus(
     return {
       type: 'pending-checkin',
       icon: ClipboardCheck,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-950/20',
-      borderColor: 'border-blue-200 dark:border-blue-900',
+      color: 'text-info',
+      bgColor: 'bg-muted/50',
+      borderColor: 'border-border',
       label: 'Check-in Ready to Review',
       priority: 2,
       hasUnread: false,
@@ -89,9 +89,9 @@ export function getClientStatus(
     return {
       type: 'unread',
       icon: MessageSquare,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50 dark:bg-blue-950/20',
-      borderColor: 'border-blue-200 dark:border-blue-900',
+      color: 'text-info',
+      bgColor: 'bg-muted/50',
+      borderColor: 'border-border',
       label: `${unreadMessages} Unread`,
       priority: 3,
       hasUnread: true
@@ -102,7 +102,7 @@ export function getClientStatus(
   return {
     type: 'ok',
     icon: CheckCircle2,
-    color: 'text-green-600',
+    color: 'text-success',
     bgColor: 'bg-background',
     borderColor: 'border-border',
     label: 'All caught up',

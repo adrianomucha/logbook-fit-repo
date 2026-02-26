@@ -166,7 +166,7 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardContent className="text-center py-12">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-green-600" />
+            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
             <h2 className="text-2xl font-bold mb-2">Check-in Complete!</h2>
             <p className="text-muted-foreground mb-6">
               Your response has been recorded for {client.name}.
@@ -234,10 +234,10 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
             <h1 className="text-2xl sm:text-3xl font-bold">Check-in for {client.name}</h1>
           </div>
 
-          <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+          <Card className="border-warning/20 bg-warning/5">
             <CardContent className="py-8">
               <div className="text-center">
-                <Clock className="w-12 h-12 mx-auto mb-4 text-amber-600" />
+                <Clock className="w-12 h-12 mx-auto mb-4 text-warning" />
                 <h2 className="text-xl font-bold mb-2">Waiting for {client.name}</h2>
                 <p className="text-muted-foreground">
                   Check-in sent {sentAgo}. {client.name} hasn't responded yet.
@@ -290,7 +290,7 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
           {/* Main content column */}
           <div className="flex-1 space-y-4">
             {/* Client Response Card */}
-            <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/10">
+            <Card className="border-info/20 bg-info/5">
               <CardHeader>
                 <CardTitle className="text-base">
                   {client.avatar} {client.name}'s Response
@@ -331,10 +331,10 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
 
             {/* Flagged Workout Card */}
             {activeCheckIn.flaggedWorkoutId && flaggedWorkout && (
-              <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/10">
+              <Card className="border-warning/20 bg-warning/5">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-600" />
+                    <AlertTriangle className="w-4 h-4 text-warning" />
                     Flagged Workout
                   </CardTitle>
                 </CardHeader>
@@ -366,10 +366,10 @@ export function ClientCheckIn({ appState, onUpdateState }: ClientCheckInProps) {
 
             {/* Flagged Exercises from Recent Workouts */}
             {flaggedExercisesFromWeek.length > 0 && (
-              <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/10">
+              <Card className="border-warning/20 bg-warning/5">
                 <CardHeader>
                   <CardTitle className="text-base flex items-center gap-2">
-                    <Flag className="w-4 h-4 text-amber-600" />
+                    <Flag className="w-4 h-4 text-warning" />
                     Flagged Exercises This Week ({flaggedExercisesFromWeek.length})
                   </CardTitle>
                 </CardHeader>

@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useCallback, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './button';
 
@@ -11,6 +11,9 @@ interface ModalProps {
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 export function Modal({
   isOpen,
   onClose,
@@ -20,22 +23,68 @@ export function Modal({
   maxWidth = 'md',
 }: ModalProps) {
   const modalRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus trap: keep Tab cycling inside the modal
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+        return;
+      }
+
+      if (e.key !== 'Tab' || !modalRef.current) return;
+
+      const focusableEls = modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      if (focusableEls.length === 0) return;
+
+      const firstEl = focusableEls[0];
+      const lastEl = focusableEls[focusableEls.length - 1];
+
+      if (e.shiftKey) {
+        // Shift+Tab: wrap from first to last
+        if (document.activeElement === firstEl) {
+          e.preventDefault();
+          lastEl.focus();
+        }
+      } else {
+        // Tab: wrap from last to first
+        if (document.activeElement === lastEl) {
+          e.preventDefault();
+          firstEl.focus();
+        }
+      }
+    },
+    [onClose]
+  );
 
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    if (!isOpen) return;
 
-    if (isOpen) {
-      document.addEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'hidden';
-    }
+    // Store the element that had focus before the modal opened
+    previouslyFocusedRef.current = document.activeElement as HTMLElement;
+
+    // Lock body scroll, remembering previous value
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    // Add keyboard listener
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Auto-focus the close button after a frame (ensures DOM is ready)
+    requestAnimationFrame(() => {
+      closeButtonRef.current?.focus();
+    });
 
     return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = 'unset';
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+
+      // Restore focus to the element that triggered the modal
+      previouslyFocusedRef.current?.focus();
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleKeyDown]);
 
   if (!isOpen) return null;
 
@@ -54,22 +103,23 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/50 sm:p-4"
       onClick={handleBackdropClick}
     >
       <div
         ref={modalRef}
-        className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[90vh] overflow-y-auto bg-background rounded-lg shadow-xl`}
+        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[90vh] overflow-y-auto bg-background sm:rounded-lg shadow-xl`}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
       >
         {/* Header */}
-        <div className="sticky top-0 bg-background border-b border-border px-4 sm:px-8 py-4 sm:py-6 flex items-center justify-between">
+        <div className="sticky top-0 bg-background border-b border-border px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
           <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-foreground">
             {title}
           </h2>
           <Button
+            ref={closeButtonRef}
             variant="ghost"
             size="sm"
             onClick={onClose}
@@ -81,11 +131,11 @@ export function Modal({
         </div>
 
         {/* Body */}
-        <div className="px-4 sm:px-8 py-4 sm:py-6">{children}</div>
+        <div className="px-4 sm:px-8 py-4 sm:py-5">{children}</div>
 
         {/* Footer */}
         {footer && (
-          <div className="sticky bottom-0 bg-background border-t border-border px-4 sm:px-8 py-4 sm:py-6">
+          <div className="sticky bottom-0 bg-background border-t border-border px-4 sm:px-8 py-3 sm:py-4">
             {footer}
           </div>
         )}

@@ -115,7 +115,7 @@ export function PRBoard({ completions, plan }: PRBoardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="text-base flex items-center gap-2">
-            <Trophy className="w-4 h-4 text-yellow-500" />
+            <Trophy className="w-4 h-4 text-warning" />
             Personal Records
           </CardTitle>
           <span className="text-xs text-muted-foreground">
@@ -129,7 +129,7 @@ export function PRBoard({ completions, plan }: PRBoardProps) {
             key={pr.exerciseName}
             className={cn(
               'flex items-center justify-between p-2 rounded-lg',
-              idx === 0 ? 'bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800' : 'bg-muted/30'
+              idx === 0 ? 'bg-warning/5 border border-warning/20' : 'bg-muted/30'
             )}
           >
             <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -157,7 +157,7 @@ export function PRBoard({ completions, plan }: PRBoardProps) {
 
             <div className="flex items-center gap-1.5 shrink-0">
               {pr.isRecent && (
-                <span className="flex items-center gap-0.5 text-xs text-green-600 bg-green-100 dark:bg-green-900/30 px-1.5 py-0.5 rounded">
+                <span className="flex items-center gap-0.5 text-xs text-success bg-success/10 px-1.5 py-0.5 rounded">
                   <Sparkles className="w-3 h-3" />
                   NEW
                 </span>

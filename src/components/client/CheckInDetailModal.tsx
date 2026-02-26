@@ -105,7 +105,7 @@ export function CheckInDetailModal({
               </div>
             )}
             {flaggedWorkout && (
-              <div className="flex items-start gap-2 text-amber-700 dark:text-amber-400">
+              <div className="flex items-start gap-2 text-warning">
                 <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
                 <span className="text-sm">
                   Flagged: <span className="font-medium">{getWorkoutName(flaggedWorkout.dayId)}</span>
@@ -133,11 +133,11 @@ export function CheckInDetailModal({
           </h3>
           {checkIn.coachResponse ? (
             <div className="space-y-3">
-              <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-4 border border-blue-100 dark:border-blue-900">
+              <div className="bg-info/5 rounded-lg p-4 border border-info/20">
                 <p className="text-sm">{checkIn.coachResponse}</p>
               </div>
               {checkIn.planAdjustment && (
-                <div className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                <div className="flex items-center gap-2 text-success">
                   <CheckSquare className="w-4 h-4" />
                   <span className="text-sm font-medium">Your plan was updated based on this check-in</span>
                 </div>
@@ -165,7 +165,7 @@ export function CheckInDetailModal({
                   key={workout.id}
                   className="flex items-center gap-2 text-sm"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <CheckCircle2 className="w-4 h-4 text-success" />
                   <span>{getWorkoutName(workout.dayId)}</span>
                   <span className="text-muted-foreground text-xs">
                     ({format(new Date(workout.completedAt), 'MMM d')})
@@ -175,7 +175,7 @@ export function CheckInDetailModal({
               <div className="mt-3 pt-3 border-t">
                 <p className="text-sm font-medium">
                   {completed >= totalExpected ? (
-                    <span className="text-green-600">
+                    <span className="text-success">
                       You completed all {completed} workouts! Great job! 🎉
                     </span>
                   ) : (

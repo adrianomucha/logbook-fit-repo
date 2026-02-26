@@ -100,7 +100,7 @@ export function InteractiveWeeklyStrip({
             </span>
             <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-green-500 rounded-full transition-all"
+                className="h-full bg-success rounded-full transition-all"
                 style={{ width: `${progress.percentage}%` }}
               />
             </div>
@@ -126,7 +126,7 @@ export function InteractiveWeeklyStrip({
           </span>
           <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-green-500 rounded-full transition-all"
+              className="h-full bg-success rounded-full transition-all"
               style={{ width: `${progress.percentage}%` }}
             />
           </div>
@@ -236,11 +236,11 @@ export function InteractiveWeeklyStrip({
                       className={cn(
                         'font-medium',
                         expandedDayInfo.completion.effortRating === 'EASY' &&
-                          'text-green-600',
+                          'text-success',
                         expandedDayInfo.completion.effortRating === 'MEDIUM' &&
-                          'text-yellow-600',
+                          'text-muted-foreground',
                         expandedDayInfo.completion.effortRating === 'HARD' &&
-                          'text-red-600'
+                          'text-warning'
                       )}
                     >
                       {expandedDayInfo.completion.effortRating.toLowerCase()}
@@ -278,6 +278,7 @@ function InteractiveDayCell({ day, isExpanded, onClick }: InteractiveDayCellProp
       disabled={!isClickable}
       className={cn(
         'flex flex-col items-center gap-1 py-1 rounded transition-colors',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         isClickable && 'hover:bg-muted/50 cursor-pointer',
         isExpanded && 'bg-muted',
         !isClickable && 'cursor-default'
@@ -291,23 +292,23 @@ function InteractiveDayCell({ day, isExpanded, onClick }: InteractiveDayCellProp
         {day.status === 'COMPLETED' && (
           <div
             className={cn(
-              'w-8 h-8 rounded-full bg-green-600 flex items-center justify-center',
-              isExpanded && 'ring-2 ring-offset-2 ring-green-600'
+              'w-8 h-8 rounded-full bg-success flex items-center justify-center',
+              isExpanded && 'ring-2 ring-offset-2 ring-success'
             )}
           >
-            <Check className="w-4 h-4 text-white" />
+            <Check className="w-4 h-4 text-success-foreground" />
           </div>
         )}
 
         {day.status === 'TODAY' && (
           <div
             className={cn(
-              'w-8 h-8 rounded-full border-2 border-teal-500 flex items-center justify-center',
-              'bg-teal-50 dark:bg-teal-950/30',
-              isExpanded && 'ring-2 ring-offset-2 ring-teal-500'
+              'w-8 h-8 rounded-full border-2 border-info flex items-center justify-center',
+              'bg-info/10',
+              isExpanded && 'ring-2 ring-offset-2 ring-info'
             )}
           >
-            <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-info animate-pulse" />
           </div>
         )}
 
@@ -343,9 +344,9 @@ function InteractiveDayCell({ day, isExpanded, onClick }: InteractiveDayCellProp
         <div
           className={cn(
             'w-2 h-2 rounded-full',
-            effortRating === 'EASY' && 'bg-green-500',
-            effortRating === 'MEDIUM' && 'bg-yellow-500',
-            effortRating === 'HARD' && 'bg-red-500'
+            effortRating === 'EASY' && 'bg-success',
+            effortRating === 'MEDIUM' && 'bg-warning/60',
+            effortRating === 'HARD' && 'bg-warning'
           )}
           title={`Effort: ${effortRating.toLowerCase()}`}
         />
@@ -358,25 +359,43 @@ function InteractiveDayCell({ day, isExpanded, onClick }: InteractiveDayCellProp
 }
 
 // Compact day cell for the condensed strip
+const STATUS_LABELS: Record<string, string> = {
+  COMPLETED: 'Completed',
+  TODAY: 'Scheduled for today',
+  MISSED: 'Missed',
+  UPCOMING: 'Upcoming',
+  REST: 'Rest day',
+};
+
 function CompactDayCell({ day }: { day: WeekDayInfo }) {
+  // Single-letter day labels for compact strip
+  const shortLabel = day.dayOfWeek.charAt(0);
+  const statusLabel = STATUS_LABELS[day.status] || day.status;
+  const dayLabel = `${day.dayOfWeek}: ${day.workoutDay?.name || 'Rest'} — ${statusLabel}`;
+
   return (
-    <div className="flex flex-col items-center gap-1">
-      <span className="text-xs text-muted-foreground leading-none">
-        {day.dayOfWeek}
+    <div
+      className="flex flex-col items-center gap-1"
+      role="img"
+      aria-label={dayLabel}
+    >
+      <span className="text-xs text-muted-foreground leading-none" aria-hidden="true">
+        {shortLabel}
       </span>
       <div
+        aria-hidden="true"
         className={cn(
           'w-8 h-8 rounded-full flex items-center justify-center',
-          day.status === 'COMPLETED' && 'bg-green-600',
-          day.status === 'TODAY' && 'border-2 border-teal-500 bg-teal-50 dark:bg-teal-950/30',
+          day.status === 'COMPLETED' && 'bg-success',
+          day.status === 'TODAY' && 'border-2 border-info bg-info/10',
           day.status === 'MISSED' && 'bg-muted',
           day.status === 'UPCOMING' && 'border border-muted-foreground/30',
           day.status === 'REST' && 'opacity-50'
         )}
       >
-        {day.status === 'COMPLETED' && <Check className="w-4 h-4 text-white" />}
+        {day.status === 'COMPLETED' && <Check className="w-4 h-4 text-success-foreground" />}
         {day.status === 'TODAY' && (
-          <div className="w-2 h-2 rounded-full bg-teal-500 animate-pulse" />
+          <div className="w-2 h-2 rounded-full bg-info animate-pulse" />
         )}
         {day.status === 'MISSED' && <Minus className="w-4 h-4 text-muted-foreground" />}
         {day.status === 'REST' && (

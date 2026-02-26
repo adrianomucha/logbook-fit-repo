@@ -59,6 +59,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
       <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
         <div className="max-w-7xl mx-auto space-y-4">
           <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Clients</h1>
           <EmptyStateNoClients />
         </div>
       </div>
@@ -70,10 +71,12 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
       <div className="max-w-7xl mx-auto space-y-6">
         <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
 
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Clients</h1>
+
         {/* NEEDS ATTENTION Section */}
         {needsAttention.length > 0 && (
           <section>
-            <div className="px-1 sm:px-3 pb-2">
+            <div className="px-1 pb-2">
               <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
                 Needs attention · {needsAttention.length}
               </span>
@@ -101,7 +104,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
         {/* ON TRACK Section */}
         {onTrack.length > 0 && (
           <section>
-            <div className="px-1 sm:px-3 pb-2">
+            <div className="px-1 pb-2">
               <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
                 On track · {onTrack.length}
               </span>

@@ -31,14 +31,14 @@ export function ClientCard({
     switch (status.type) {
       case 'at-risk':
       case 'overdue':
-        return { dot: 'bg-red-500', bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400' };
+        return { dot: 'bg-warning', bg: 'bg-warning/10', text: 'text-warning' };
       case 'pending-checkin':
       case 'unread':
-        return { dot: 'bg-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400' };
+        return { dot: 'bg-info', bg: 'bg-info/10', text: 'text-info' };
       case 'ok':
-        return { dot: 'bg-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400' };
+        return { dot: 'bg-success', bg: 'bg-success/10', text: 'text-success' };
       default:
-        return { dot: 'bg-gray-400', bg: 'bg-gray-400/10', text: 'text-muted-foreground' };
+        return { dot: 'bg-muted-foreground', bg: 'bg-muted-foreground/10', text: 'text-muted-foreground' };
     }
   })();
 
@@ -90,7 +90,7 @@ export function ClientCard({
         </div>
         {/* Unread message indicator on avatar */}
         {status.hasUnread && status.type !== 'unread' && (
-          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-blue-500 rounded-full ring-2 ring-background" />
+          <div className="absolute -top-0.5 -right-0.5 w-3 h-3 sm:w-3.5 sm:h-3.5 bg-info rounded-full ring-2 ring-background" />
         )}
       </div>
 

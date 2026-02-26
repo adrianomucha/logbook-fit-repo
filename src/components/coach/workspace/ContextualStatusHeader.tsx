@@ -45,7 +45,7 @@ export function ContextualStatusHeader({
       case 'overdue':
         return (
           <p className="text-sm mt-1">
-            {daysSinceCheckIn} days since last check-in.
+            {daysSinceCheckIn} {daysSinceCheckIn === 1 ? 'day' : 'days'} since last check-in.
             {lastCheckIn?.clientNotes && (
               <span className="text-muted-foreground">
                 {' '}Last note: "{truncate(lastCheckIn.clientNotes, 50)}"
@@ -54,10 +54,11 @@ export function ContextualStatusHeader({
           </p>
         );
 
-      case 'at-risk':
+      case 'at-risk': {
+        const daysLeft = 7 - (daysSinceCheckIn || 0);
         return (
           <p className="text-sm mt-1">
-            {7 - (daysSinceCheckIn || 0)} days until overdue.
+            {daysLeft} {daysLeft === 1 ? 'day' : 'days'} until overdue.
             {client.lastWorkoutDate && (
               <span className="text-muted-foreground">
                 {' '}Last workout: {formatDistanceToNow(new Date(client.lastWorkoutDate), { addSuffix: true })}
@@ -65,6 +66,7 @@ export function ContextualStatusHeader({
             )}
           </p>
         );
+      }
 
       // Note: Removed 'pending-checkin' case per Fix 17.
       // The pending check-in is already visible in the InlineCheckInReview component below,
@@ -127,7 +129,7 @@ export function ContextualStatusHeader({
             <div
               className={cn(
                 'p-2 rounded-full shrink-0',
-                status.type === 'ok' ? 'bg-green-100 dark:bg-green-900/30' : ''
+                status.type === 'ok' ? 'bg-muted' : ''
               )}
             >
               <StatusIcon className={cn('w-5 h-5', status.color)} />

@@ -13,9 +13,9 @@ interface QuickEffortFeedbackProps {
 }
 
 const effortOptions: { value: EffortRating; label: string; icon: typeof Smile; color: string }[] = [
-  { value: 'EASY', label: 'Easy', icon: Smile, color: 'text-green-600 bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700' },
-  { value: 'MEDIUM', label: 'Medium', icon: Meh, color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700' },
-  { value: 'HARD', label: 'Hard', icon: Frown, color: 'text-red-600 bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700' },
+  { value: 'EASY', label: 'Easy', icon: Smile, color: 'text-success bg-success/10 border-success/30' },
+  { value: 'MEDIUM', label: 'Medium', icon: Meh, color: 'text-warning bg-warning/10 border-warning/30' },
+  { value: 'HARD', label: 'Hard', icon: Frown, color: 'text-warning bg-warning/10 border-warning/30' },
 ];
 
 export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEffortFeedbackProps) {
@@ -29,7 +29,7 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
   };
 
   return (
-    <Card className="border-slate-200 dark:border-slate-700">
+    <Card className="border-border">
       <CardContent className="p-4 sm:p-5">
         <h4 className="text-sm font-medium mb-3">How did that feel?</h4>
 

@@ -45,13 +45,13 @@ function StatCard({ icon, label, value, subtext, trend, trendText, accentColor =
             )}
             {trend && trendText && (
               <div className="flex items-center gap-1 mt-0.5">
-                {trend === 'up' && <TrendingUp className="w-3 h-3 text-green-500" />}
-                {trend === 'down' && <TrendingDown className="w-3 h-3 text-red-500" />}
+                {trend === 'up' && <TrendingUp className="w-3 h-3 text-success" />}
+                {trend === 'down' && <TrendingDown className="w-3 h-3 text-warning" />}
                 {trend === 'neutral' && <Minus className="w-3 h-3 text-muted-foreground" />}
                 <span className={cn(
                   'text-xs',
-                  trend === 'up' && 'text-green-600',
-                  trend === 'down' && 'text-red-600',
+                  trend === 'up' && 'text-success',
+                  trend === 'down' && 'text-warning',
                   trend === 'neutral' && 'text-muted-foreground'
                 )}>
                   {trendText}
@@ -175,14 +175,14 @@ export function ProgressSummaryRow({ client, plan, completions }: ProgressSummar
         subtext="workouts"
         trend={adherenceTrend}
         trendText={adherenceTrend === 'up' ? 'On track' : adherenceTrend === 'down' ? 'Behind' : 'Same pace'}
-        accentColor="text-blue-600"
+        accentColor="text-info"
       />
       <StatCard
         icon={<Flame className="w-4 h-4 sm:w-5 sm:h-5" />}
         label="Streak"
         value={`${stats.streak}`}
         subtext={stats.streak === 1 ? 'workout' : 'workouts'}
-        accentColor="text-orange-500"
+        accentColor="text-warning"
       />
       <StatCard
         icon={<Activity className="w-4 h-4 sm:w-5 sm:h-5" />}
@@ -191,7 +191,7 @@ export function ProgressSummaryRow({ client, plan, completions }: ProgressSummar
         subtext="vs last week"
         trend={volumeTrend}
         trendText={volumeTrend === 'up' ? 'Increasing' : volumeTrend === 'down' ? 'Decreasing' : 'Stable'}
-        accentColor="text-green-600"
+        accentColor="text-success"
       />
     </div>
   );

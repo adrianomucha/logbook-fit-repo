@@ -26,7 +26,7 @@ export function FinishWorkoutButton({
         className={cn(
           'w-full h-12 text-base font-semibold transition-all',
           allDone
-            ? 'bg-green-600 hover:bg-green-700'
+            ? 'bg-success hover:bg-success/90'
             : hasProgress
               ? 'bg-primary hover:bg-primary/90'
               : 'bg-primary hover:bg-primary/90'

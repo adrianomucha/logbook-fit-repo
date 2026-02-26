@@ -27,8 +27,8 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                <Dumbbell className="w-6 h-6 text-teal-600 dark:text-teal-400" />
+              <div className="w-12 h-12 rounded-full bg-info/10 flex items-center justify-center">
+                <Dumbbell className="w-6 h-6 text-info" />
               </div>
               <div>
                 <h3 className="font-semibold text-lg">{workoutName || 'Today\'s Workout'}</h3>
@@ -39,7 +39,7 @@ export function TodayActionCard({
             </div>
             <Button
               onClick={onAction}
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white"
+              className="w-full bg-info hover:bg-info/90 text-info-foreground"
               size="lg"
             >
               <Play className="w-5 h-5 mr-2" />
@@ -52,8 +52,8 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                <RotateCcw className="w-6 h-6 text-amber-600 dark:text-amber-400" />
+              <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center">
+                <RotateCcw className="w-6 h-6 text-warning" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">{workoutName || 'Today\'s Workout'}</h3>
@@ -63,7 +63,7 @@ export function TodayActionCard({
             <Progress value={completionPct} className="mb-4 h-2" />
             <Button
               onClick={onAction}
-              className="w-full bg-amber-500 hover:bg-amber-600 text-white"
+              className="w-full bg-warning hover:bg-warning/90 text-warning-foreground"
               size="lg"
             >
               <RotateCcw className="w-5 h-5 mr-2" />
@@ -76,8 +76,8 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
-                <CheckCircle2 className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
+                <CheckCircle2 className="w-6 h-6 text-success" />
               </div>
               <div>
                 <h3 className="font-semibold text-lg">Great work!</h3>
@@ -89,7 +89,7 @@ export function TodayActionCard({
             <Button
               onClick={onAction}
               variant="outline"
-              className="w-full border-emerald-300 text-emerald-700 hover:bg-emerald-50 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/30"
+              className="w-full border-success/30 text-success hover:bg-success/5"
               size="lg"
             >
               <MessageSquare className="w-5 h-5 mr-2" />
@@ -102,8 +102,8 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <Coffee className="w-6 h-6 text-slate-500 dark:text-slate-400" />
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <Coffee className="w-6 h-6 text-muted-foreground" />
               </div>
               <div>
                 <h3 className="font-semibold text-lg">Rest Day</h3>
@@ -127,10 +127,10 @@ export function TodayActionCard({
   return (
     <Card className={cn(
       'transition-all',
-      state === 'scheduled' && 'border-teal-200 dark:border-teal-800 shadow-md shadow-teal-100/50 dark:shadow-teal-900/20',
-      state === 'in-progress' && 'border-amber-200 dark:border-amber-800 shadow-md shadow-amber-100/50 dark:shadow-amber-900/20',
-      state === 'completed' && 'border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20',
-      state === 'rest' && 'border-slate-200 dark:border-slate-700'
+      state === 'scheduled' && 'border-info/20 shadow-md shadow-info/5',
+      state === 'in-progress' && 'border-warning/20 shadow-md shadow-warning/5',
+      state === 'completed' && 'border-success/20 bg-success/5',
+      state === 'rest' && 'border-border'
     )}>
       <CardContent className="p-6">
         {renderContent()}

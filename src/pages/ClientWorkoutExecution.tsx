@@ -409,15 +409,15 @@ export function ClientWorkoutExecution({
   if (showCelebration && completedWorkoutData) {
     return (
       <div
-        className="fixed inset-0 z-50 bg-green-50 dark:bg-green-950 flex flex-col items-center justify-center p-6"
+        className="fixed inset-0 z-50 bg-success/5 flex flex-col items-center justify-center p-6"
         onClick={handleCelebrationDismiss}
       >
         {/* Celebration Header */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-green-500 flex items-center justify-center animate-in zoom-in duration-300">
-            <CheckCircle2 className="w-12 h-12 text-white" />
+          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-success flex items-center justify-center animate-in zoom-in duration-300">
+            <CheckCircle2 className="w-12 h-12 text-success-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-green-800 dark:text-green-200">
+          <h1 className="text-2xl font-bold text-foreground">
             {day.name}
           </h1>
         </div>
@@ -425,20 +425,20 @@ export function ClientWorkoutExecution({
         {/* Workout Summary */}
         <div className="flex items-center justify-center gap-8 mb-10">
           <div className="text-center">
-            <p className="text-3xl font-bold text-green-800 dark:text-green-200">
+            <p className="text-3xl font-bold text-foreground">
               {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
             </p>
-            <p className="text-sm text-green-600 dark:text-green-400">exercises</p>
+            <p className="text-sm text-success">exercises</p>
           </div>
-          <div className="w-px h-12 bg-green-300 dark:bg-green-700" />
+          <div className="w-px h-12 bg-success/20" />
           <div className="text-center">
             <div className="flex items-center justify-center gap-1">
-              <Clock className="w-5 h-5 text-green-600 dark:text-green-400" />
-              <p className="text-3xl font-bold text-green-800 dark:text-green-200">
+              <Clock className="w-5 h-5 text-success" />
+              <p className="text-3xl font-bold text-foreground">
                 {completedWorkoutData.durationMin}
               </p>
             </div>
-            <p className="text-sm text-green-600 dark:text-green-400">min</p>
+            <p className="text-sm text-success">min</p>
           </div>
         </div>
 
@@ -447,32 +447,32 @@ export function ClientWorkoutExecution({
           className="text-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-green-700 dark:text-green-300 mb-4 font-medium">
+          <p className="text-foreground mb-4 font-medium">
             How did that feel?
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => handleEffortRating('EASY')}
-              className="px-6 py-3 rounded-full bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 font-medium hover:bg-green-300 dark:hover:bg-green-700 transition-colors touch-manipulation"
+              className="px-6 py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation"
             >
               Easy
             </button>
             <button
               onClick={() => handleEffortRating('MEDIUM')}
-              className="px-6 py-3 rounded-full bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 font-medium hover:bg-green-300 dark:hover:bg-green-700 transition-colors touch-manipulation"
+              className="px-6 py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation"
             >
               Medium
             </button>
             <button
               onClick={() => handleEffortRating('HARD')}
-              className="px-6 py-3 rounded-full bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200 font-medium hover:bg-green-300 dark:hover:bg-green-700 transition-colors touch-manipulation"
+              className="px-6 py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation"
             >
               Hard
             </button>
           </div>
         </div>
 
-        <p className="text-xs text-green-500 dark:text-green-600 mt-8">
+        <p className="text-xs text-muted-foreground mt-8">
           Tap anywhere to skip
         </p>
       </div>

@@ -61,9 +61,9 @@ interface WorkoutHistoryItemProps {
 }
 
 const EFFORT_LABELS: Record<EffortRating, { label: string; emoji: string; color: string }> = {
-  EASY: { label: 'Easy', emoji: '😊', color: 'text-green-600' },
-  MEDIUM: { label: 'Medium', emoji: '💪', color: 'text-yellow-600' },
-  HARD: { label: 'Hard', emoji: '🔥', color: 'text-red-600' },
+  EASY: { label: 'Easy', emoji: '😊', color: 'text-success' },
+  MEDIUM: { label: 'Medium', emoji: '💪', color: 'text-warning' },
+  HARD: { label: 'Hard', emoji: '🔥', color: 'text-warning' },
 };
 
 function formatDuration(seconds?: number): string {
@@ -94,7 +94,7 @@ function WorkoutHistoryItem({ completion, dayName, weekNumber, planName }: Worko
             <div className="flex items-center gap-2">
               <h4 className="font-medium truncate">{dayName}</h4>
               {completion.status === 'COMPLETED' && (
-                <CheckCircle2 className="w-4 h-4 text-green-500 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
               )}
             </div>
             <p className="text-sm text-muted-foreground">

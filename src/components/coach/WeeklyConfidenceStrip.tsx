@@ -57,7 +57,7 @@ export function WeeklyConfidenceStrip({ clients, checkIns }: WeeklyConfidenceStr
 
           <div className="flex gap-4 sm:gap-6 pt-2">
             <div className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 shrink-0" />
+              <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-success shrink-0" />
               <div>
                 <p className="text-xl sm:text-2xl font-bold">{checkedInThisWeek}</p>
                 <p className="text-xs text-muted-foreground">Checked In</p>
@@ -65,7 +65,7 @@ export function WeeklyConfidenceStrip({ clients, checkIns }: WeeklyConfidenceStr
             </div>
             {needsAttention > 0 && (
               <div className="flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-warning shrink-0" />
                 <div>
                   <p className="text-xl sm:text-2xl font-bold">{needsAttention}</p>
                   <p className="text-xs text-muted-foreground">Need Attention</p>
@@ -73,7 +73,7 @@ export function WeeklyConfidenceStrip({ clients, checkIns }: WeeklyConfidenceStr
               </div>
             )}
             <div className="flex items-center gap-2">
-              <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 shrink-0" />
+              <Timer className="w-4 h-4 sm:w-5 sm:h-5 text-info shrink-0" />
               <div>
                 <p className="text-xl sm:text-2xl font-bold">{avgCheckInTime ?? '—'}</p>
                 <p className="text-xs text-muted-foreground">Check-ins / 30d</p>

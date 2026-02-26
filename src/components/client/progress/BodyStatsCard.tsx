@@ -65,7 +65,7 @@ function StatItem({ label, value, unit, previousValue, desiredDirection, history
             <div
               className={cn(
                 'flex items-center gap-0.5 text-xs',
-                isGoodTrend ? 'text-green-600' : 'text-red-600'
+                isGoodTrend ? 'text-success' : 'text-warning'
               )}
             >
               {trendDirection === 'up' ? (

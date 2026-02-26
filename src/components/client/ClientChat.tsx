@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Send, Dumbbell } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface ClientChatProps {
@@ -31,7 +32,7 @@ export function ClientChat({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -46,30 +47,34 @@ export function ClientChat({
       <CardContent className="flex-1 flex flex-col p-0">
         <ScrollArea className="flex-1 px-6">
           <div className="space-y-4 pb-4">
-            {messages.map((message) => (
+            {messages.map((message) => {
+              const isCurrentUser = message.senderId === currentUserId;
+              return (
               <div
                 key={message.id}
-                className={`flex ${message.senderId === currentUserId ? 'justify-end' : 'justify-start'}`}
+                className={cn('flex', isCurrentUser ? 'justify-end' : 'justify-start')}
               >
                 <div
-                  className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 ${
-                    message.senderId === currentUserId
+                  className={cn(
+                    'max-w-[85%] sm:max-w-[70%] rounded-lg p-3',
+                    isCurrentUser
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted'
-                  }`}
+                  )}
                 >
                   {/* Exercise context card if present */}
                   {message.exerciseContext && (
-                    <div className={`rounded p-2 mb-2 text-xs ${
-                      message.senderId === currentUserId
+                    <div className={cn(
+                      'rounded p-2 mb-2 text-xs',
+                      isCurrentUser
                         ? 'bg-primary-foreground/10'
                         : 'bg-background/50'
-                    }`}>
+                    )}>
                       <div className="flex items-center gap-1">
                         <Dumbbell className="w-3 h-3" />
                         <span className="font-medium">{message.exerciseContext.exerciseName}</span>
                       </div>
-                      <p className={message.senderId === currentUserId ? 'opacity-80' : 'text-muted-foreground'}>
+                      <p className={cn(isCurrentUser ? 'opacity-80' : 'text-muted-foreground')}>
                         {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets done
                       </p>
                       {message.exerciseContext.flagNote && (
@@ -85,7 +90,7 @@ export function ClientChat({
                   </p>
                 </div>
               </div>
-            ))}
+            ); })}
             {messages.length === 0 && (
               <div className="text-center py-8 text-muted-foreground">
                 No messages yet. Start a conversation with your coach!
@@ -99,7 +104,7 @@ export function ClientChat({
               placeholder="Message your coach..."
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyDown}
             />
             <Button onClick={handleSend} size="icon" className="shrink-0 touch-manipulation">
               <Send className="w-4 h-4" />

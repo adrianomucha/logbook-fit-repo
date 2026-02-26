@@ -27,27 +27,27 @@ export function CoachFeedbackCard({ checkIn, onViewDetails }: CoachFeedbackCardP
   );
 
   return (
-    <Card className="border-blue-200 bg-blue-50 dark:bg-blue-950/20">
+    <Card className="border-info/20 bg-info/5">
       <CardContent className="py-4">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-full bg-blue-100 dark:bg-blue-900/30 shrink-0">
-            <MessageSquare className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          <div className="p-2 rounded-full bg-info/10 shrink-0">
+            <MessageSquare className="w-5 h-5 text-info" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-medium text-blue-900 dark:text-blue-100 mb-1">
+            <p className="font-medium text-foreground mb-1">
               Your Coach's Feedback
             </p>
-            <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
+            <p className="text-sm text-muted-foreground mb-2">
               "{feedbackPreview}"
             </p>
-            <p className="text-xs text-blue-600 dark:text-blue-300 mb-3">
+            <p className="text-xs text-muted-foreground mb-3">
               From check-in on {checkInDate}
             </p>
             <Button
               variant="outline"
               size="sm"
               onClick={onViewDetails}
-              className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-600 dark:text-blue-300 dark:hover:bg-blue-900/30"
+              className="border-info/30 text-info hover:bg-info/5"
             >
               View Full Check-in
             </Button>

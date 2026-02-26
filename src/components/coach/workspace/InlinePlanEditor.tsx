@@ -31,6 +31,8 @@ interface InlinePlanEditorProps {
   onUnassignPlan: () => void;
   /** Whether exercises start collapsed (default: true) */
   exercisesCollapsed?: boolean;
+  /** Visual weight: 'card' (default) with border, 'flat' borderless for secondary placement */
+  variant?: 'card' | 'flat';
 }
 
 export function InlinePlanEditor({
@@ -42,6 +44,7 @@ export function InlinePlanEditor({
   onCreatePlan,
   onUnassignPlan,
   exercisesCollapsed = true,
+  variant = 'card',
 }: InlinePlanEditorProps) {
   const [selectedDayIndex, setSelectedDayIndex] = useState(0);
   const [showExercises, setShowExercises] = useState(!exercisesCollapsed);
@@ -97,52 +100,56 @@ export function InlinePlanEditor({
     );
   }
 
-  return (
-    <Card>
-      <CardHeader className="pb-2 px-3 sm:px-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <CardTitle className="text-base flex items-center gap-2 min-w-0">
-            <span className="text-lg shrink-0">{plan.emoji || '💪'}</span>
-            <span className="truncate">{plan.name}</span>
-            <span className="text-xs text-muted-foreground font-normal shrink-0">
-              Week {currentWeekNum}
-            </span>
-          </CardTitle>
-          <div className="flex items-center gap-1 shrink-0">
-            <Button variant="outline" size="sm" onClick={onEditPlan} className="flex-1 sm:flex-none">
-              <Pencil className="w-3.5 h-3.5 mr-1.5" />
-              Edit
-            </Button>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onChangePlan}>
-                  <ArrowRightLeft className="w-4 h-4 mr-2" />
-                  Switch Plan
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onCreatePlan}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create New Plan
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={onUnassignPlan}
-                  className="text-red-600 focus:text-red-600"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Remove Plan
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </CardHeader>
+  const isFlat = variant === 'flat';
+  const Wrapper = isFlat ? 'div' : Card;
 
-      <CardContent className="space-y-3 px-3 sm:px-6">
+  return (
+    <Wrapper>
+      <div className={cn(
+        'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2',
+        isFlat ? 'pb-2' : 'px-3 sm:px-6 pt-6 pb-2'
+      )}>
+        <div className="text-base font-semibold flex items-center gap-2 min-w-0">
+          <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
+          <span className="truncate">{plan.name}</span>
+          <span className="text-xs text-muted-foreground font-normal shrink-0">
+            Week {currentWeekNum}
+          </span>
+        </div>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button variant="outline" size="sm" onClick={onEditPlan} className="flex-1 sm:flex-none">
+            <Pencil className="w-3.5 h-3.5 mr-1.5" />
+            Edit
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={onChangePlan}>
+                <ArrowRightLeft className="w-4 h-4 mr-2" />
+                Switch Plan
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onCreatePlan}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Plan
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={onUnassignPlan}
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Remove Plan
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
+
+      <div className={cn("space-y-3", isFlat ? '' : 'px-3 sm:px-6 pb-6')}>
         {/* Day selector tabs */}
         {currentWeek && (
           <div className="flex gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1">
@@ -158,10 +165,12 @@ export function InlinePlanEditor({
                     setShowExercises(true);
                   }}
                   className={cn(
-                    'shrink-0 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium transition-colors min-h-[44px] sm:min-h-0 flex items-center',
+                    'shrink-0 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium min-h-[44px] sm:min-h-0 flex items-center',
+                    'transition-all duration-150',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                     isSelected
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:-translate-y-0.5 hover:shadow-sm',
                     day.isRestDay && 'opacity-60'
                   )}
                 >
@@ -203,8 +212,8 @@ export function InlinePlanEditor({
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Wrapper>
   );
 }
 
@@ -212,17 +221,20 @@ export function InlinePlanEditor({
  * Simple read-only exercise row
  */
 function ExerciseRow({ exercise }: { exercise: Exercise }) {
-  // Build params string: "3×10 · 135 lbs"
+  // Build params string: "3×10 · 135 lbs" or "3×10-12" or "Bodyweight"
   const parts: string[] = [];
 
   if (exercise.sets && exercise.reps) {
     parts.push(`${exercise.sets}×${exercise.reps}`);
+  } else if (exercise.reps) {
+    parts.push(`${exercise.reps} reps`);
+  } else if (exercise.sets) {
+    parts.push(`${exercise.sets} sets`);
   }
 
   if (exercise.weight) {
     const weight = exercise.weight;
-    const unit = (exercise as any).weightUnit || 'lbs';
-    // Add unit only if weight is just a number
+    const unit = exercise.weightUnit || 'lbs';
     parts.push(/^\d+$/.test(weight) ? `${weight} ${unit}` : weight);
   }
 

@@ -19,24 +19,24 @@ export function DayCard({ day, onClick }: DayCardProps) {
       case 'TODAY':
         return {
           card: cn(
-            'border-teal-600 border-2',
-            'shadow-lg shadow-teal-500/20',
-            'ring-2 ring-teal-500/10',
-            'cursor-pointer hover:shadow-xl hover:shadow-teal-500/30',
+            'border-info border-2',
+            'shadow-lg shadow-info/10',
+            'ring-2 ring-info/10',
+            'cursor-pointer hover:shadow-xl hover:shadow-info/15',
             'transition-all'
           ),
-          badge: 'bg-teal-600 text-white',
+          badge: 'bg-info text-info-foreground',
           badgeText: 'Today',
         };
       case 'COMPLETED':
         return {
           card: cn(
-            'bg-emerald-50 dark:bg-emerald-950/30',
-            'border-emerald-200 dark:border-emerald-800',
-            'cursor-pointer hover:bg-emerald-100 dark:hover:bg-emerald-950/50',
+            'bg-success/5',
+            'border-success/20',
+            'cursor-pointer hover:bg-success/10',
             'transition-colors'
           ),
-          badge: 'bg-emerald-600 text-white',
+          badge: 'bg-success text-success-foreground',
           badgeText: 'Done',
         };
       case 'UPCOMING':
@@ -48,7 +48,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
       case 'MISSED':
         return {
           card: 'cursor-pointer hover:bg-muted/50 transition-colors',
-          badge: 'bg-slate-500 text-white',
+          badge: 'bg-muted-foreground text-background',
           badgeText: 'Missed',
         };
       case 'REST':
@@ -121,8 +121,8 @@ export function DayCard({ day, onClick }: DayCardProps) {
           {/* Right: Status badge or checkmark */}
           <div className="flex-shrink-0">
             {status === 'COMPLETED' ? (
-              <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center">
-                <Check className="w-4 h-4 text-white" />
+              <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center">
+                <Check className="w-4 h-4 text-success-foreground" />
               </div>
             ) : styles.badgeText ? (
               <Badge variant="secondary" className={cn('text-xs', styles.badge)}>

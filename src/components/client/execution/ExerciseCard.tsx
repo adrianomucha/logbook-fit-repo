@@ -68,8 +68,8 @@ export function ExerciseCard({
     <Card
       className={cn(
         'transition-all overflow-hidden',
-        isComplete && 'border-green-200 dark:border-green-800',
-        isFlagged && !isComplete && 'border-amber-200 dark:border-amber-800'
+        isComplete && 'border-success/20',
+        isFlagged && !isComplete && 'border-warning/20'
       )}
     >
       {/* Header - always visible, clickable */}
@@ -79,7 +79,7 @@ export function ExerciseCard({
         className={cn(
           'w-full p-4 flex items-center gap-3 text-left transition-colors',
           'hover:bg-muted/50',
-          isComplete && 'bg-green-50 dark:bg-green-950/30'
+          isComplete && 'bg-success/5'
         )}
       >
         {/* Exercise number or checkmark */}
@@ -87,7 +87,7 @@ export function ExerciseCard({
           className={cn(
             'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm',
             isComplete
-              ? 'bg-green-600 text-white'
+              ? 'bg-success text-success-foreground'
               : 'bg-muted text-muted-foreground'
           )}
         >
@@ -100,20 +100,20 @@ export function ExerciseCard({
             <p
               className={cn(
                 'font-semibold truncate',
-                isComplete && 'text-green-700 dark:text-green-400'
+                isComplete && 'text-success'
               )}
             >
               {exercise.name}
             </p>
             {/* Flag indicator when collapsed */}
             {isFlagged && !isExpanded && (
-              <div className="w-2 h-2 rounded-full bg-amber-500 flex-shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
             )}
           </div>
           <p className="text-sm text-muted-foreground">
             {getSummary()}
             {completedSets > 0 && !isComplete && (
-              <span className="ml-2 text-green-600">
+              <span className="ml-2 text-success">
                 ({completedSets}/{exercise.sets} done)
               </span>
             )}
@@ -136,7 +136,7 @@ export function ExerciseCard({
             className={cn(
               'w-4 h-4 transition-colors',
               isFlagged
-                ? 'text-amber-500 fill-amber-500'
+                ? 'text-warning fill-warning'
                 : 'text-muted-foreground/50'
             )}
           />
@@ -155,8 +155,8 @@ export function ExerciseCard({
         <CardContent className="p-4 pt-0">
           {/* Coach notes */}
           {exercise.notes && (
-            <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="mb-4 p-4 bg-info/5 rounded-lg border border-info/20">
+              <p className="text-sm text-foreground">
                 <span className="font-medium">Coach tip:</span> {exercise.notes}
               </p>
             </div>
@@ -164,10 +164,10 @@ export function ExerciseCard({
 
           {/* Flag note section - only visible when flagged */}
           {isFlagged && (
-            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-800">
+            <div className="mb-4 p-3 bg-warning/5 rounded-lg border border-warning/20">
               <div className="flex items-center gap-2 mb-2">
-                <Flag className="w-4 h-4 text-amber-600" />
-                <span className="text-sm font-medium text-amber-800 dark:text-amber-200">
+                <Flag className="w-4 h-4 text-warning" />
+                <span className="text-sm font-medium text-foreground">
                   Flagged for coach
                 </span>
               </div>
@@ -194,7 +194,7 @@ export function ExerciseCard({
                 </>
               ) : (
                 flagNote && (
-                  <p className="text-sm text-amber-800 dark:text-amber-200 italic">
+                  <p className="text-sm text-foreground italic">
                     "{flagNote}"
                   </p>
                 )

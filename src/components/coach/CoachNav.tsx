@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
-import { Home, Users, Dumbbell, ArrowLeft } from 'lucide-react';
+import { Home, Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type CoachNavTab = 'dashboard' | 'clients' | 'plans';
@@ -10,51 +10,25 @@ export type CoachNavTab = 'dashboard' | 'clients' | 'plans';
 interface CoachNavProps {
   /** Currently active tab */
   activeTab: CoachNavTab;
-  /** Title to display (defaults based on activeTab if not provided) */
-  title?: string;
   /** Number of unread messages to show as badge on Clients tab */
   unreadCount?: number;
-  /** For detail pages: show back button with this context */
-  backTo?: {
-    label: string;
-    path: string;
-  };
-  /** Client info to display next to back button (for client profile pages) */
-  clientInfo?: {
-    name: string;
-    avatar?: string;
-  };
   /** Handler for tab changes (for in-page view switching like CoachDashboard) */
   onTabChange?: (tab: CoachNavTab) => void;
 }
 
 export function CoachNav({
   activeTab,
-  title,
   unreadCount = 0,
-  backTo,
-  clientInfo,
   onTabChange,
 }: CoachNavProps) {
   const navigate = useNavigate();
 
-  // Default titles based on active tab
-  const defaultTitles: Record<CoachNavTab, string> = {
-    dashboard: 'Dashboard',
-    clients: 'Clients',
-    plans: 'Plans',
-  };
-
-  const displayTitle = title || defaultTitles[activeTab];
-
   const handleTabClick = (tab: CoachNavTab) => {
-    // If onTabChange is provided, use it (for in-page view switching)
     if (onTabChange) {
       onTabChange(tab);
       return;
     }
 
-    // Otherwise, navigate to the appropriate route
     switch (tab) {
       case 'dashboard':
         navigate('/coach');
@@ -77,39 +51,28 @@ export function CoachNav({
 
   return (
     <>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        {/* Left side: Title or Back + Client Info */}
-        <div className="flex items-center gap-3">
-          {backTo && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => navigate(backTo.path)}
-              className="shrink-0"
-              aria-label={backTo.label}
-            >
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          )}
+      <div className="flex items-center justify-between">
+        {/* Logotype */}
+        <button
+          onClick={() => navigate('/coach')}
+          className="flex items-center gap-1.5 group"
+          aria-label="Logbook Fitness home"
+        >
+          <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground group-hover:text-foreground transition-colors">
+            Logbook
+          </span>
+          <span className="text-[11px] sm:text-xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+            Fitness
+          </span>
+        </button>
 
-          {clientInfo ? (
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">{clientInfo.avatar || '👤'}</span>
-              <h1 className="text-xl sm:text-2xl font-bold truncate">
-                {clientInfo.name}
-              </h1>
-            </div>
-          ) : (
-            <h1 className="text-2xl sm:text-3xl font-bold">{displayTitle}</h1>
-          )}
-        </div>
-
-        {/* Right side: Desktop navigation tabs - hidden on mobile */}
-        <div className="hidden sm:flex gap-2">
+        {/* Desktop navigation tabs — hidden on mobile */}
+        <nav className="hidden sm:flex gap-1" aria-label="Main navigation">
           <Button
             variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
             onClick={() => handleTabClick('dashboard')}
             size="sm"
+            aria-current={activeTab === 'dashboard' ? 'page' : undefined}
           >
             <Home className="w-4 h-4 mr-2" />
             Dashboard
@@ -119,6 +82,7 @@ export function CoachNav({
             variant={activeTab === 'clients' ? 'default' : 'ghost'}
             onClick={() => handleTabClick('clients')}
             size="sm"
+            aria-current={activeTab === 'clients' ? 'page' : undefined}
           >
             <Users className="w-4 h-4 mr-2" />
             Clients
@@ -139,11 +103,12 @@ export function CoachNav({
             variant={activeTab === 'plans' ? 'default' : 'ghost'}
             onClick={() => handleTabClick('plans')}
             size="sm"
+            aria-current={activeTab === 'plans' ? 'page' : undefined}
           >
             <Dumbbell className="w-4 h-4 mr-2" />
             Plans
           </Button>
-        </div>
+        </nav>
       </div>
 
       {/* Mobile bottom navigation */}

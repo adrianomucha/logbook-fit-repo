@@ -18,12 +18,12 @@ export function EmptyStateNoClients() {
 
 export function EmptyStateNoneNeedAttention() {
   return (
-    <div className="p-6 sm:p-8 text-center bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-xl">
-      <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-green-600 dark:text-green-500 mb-2" />
-      <h3 className="text-base sm:text-lg font-semibold text-green-900 dark:text-green-100">
+    <div className="p-6 sm:p-8 text-center bg-success/5 border border-success/20 rounded-xl">
+      <CheckCircle2 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-success mb-2" />
+      <h3 className="text-base sm:text-lg font-semibold">
         All clients are on track!
       </h3>
-      <p className="text-xs sm:text-sm text-green-700 dark:text-green-400 mt-1 max-w-xs mx-auto">
+      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
         Great work staying connected with everyone.
       </p>
     </div>
@@ -32,12 +32,12 @@ export function EmptyStateNoneNeedAttention() {
 
 export function EmptyStateAllNeedAttention() {
   return (
-    <div className="p-6 sm:p-8 text-center bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-xl">
-      <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-yellow-600 dark:text-yellow-500 mb-2" />
-      <h3 className="text-base sm:text-lg font-semibold text-yellow-900 dark:text-yellow-100">
+    <div className="p-6 sm:p-8 text-center bg-warning/5 border border-warning/20 rounded-xl">
+      <AlertCircle className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-warning mb-2" />
+      <h3 className="text-base sm:text-lg font-semibold">
         All clients need attention
       </h3>
-      <p className="text-xs sm:text-sm text-yellow-700 dark:text-yellow-400 mt-1 max-w-xs mx-auto">
+      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
         Review the list above to catch up with your clients.
       </p>
     </div>

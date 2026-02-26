@@ -18,14 +18,14 @@ function statusBadgeStyles(status: ClientStatus): { dot: string; bg: string; tex
   switch (status.type) {
     case 'at-risk':
     case 'overdue':
-      return { dot: 'bg-red-500', bg: 'bg-red-500/10', text: 'text-red-600 dark:text-red-400' };
+      return { dot: 'bg-warning', bg: 'bg-warning/10', text: 'text-warning' };
     case 'pending-checkin':
     case 'unread':
-      return { dot: 'bg-blue-500', bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400' };
+      return { dot: 'bg-info', bg: 'bg-info/10', text: 'text-info' };
     case 'ok':
-      return { dot: 'bg-emerald-500', bg: 'bg-emerald-500/10', text: 'text-emerald-600 dark:text-emerald-400' };
+      return { dot: 'bg-success', bg: 'bg-success/10', text: 'text-success' };
     default:
-      return { dot: 'bg-gray-400', bg: 'bg-gray-400/10', text: 'text-muted-foreground' };
+      return { dot: 'bg-muted-foreground', bg: 'bg-muted-foreground/10', text: 'text-muted-foreground' };
   }
 }
 
@@ -144,7 +144,7 @@ export function ClientsRequiringAction({
                     {client.avatar || client.name.charAt(0)}
                   </div>
                   {status.hasUnread && status.type !== 'unread' && (
-                    <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-blue-500 rounded-full ring-2 ring-background" />
+                    <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-info rounded-full ring-2 ring-background" />
                   )}
                 </div>
 
@@ -230,8 +230,8 @@ export function ClientsRequiringAction({
                       <p className="text-sm sm:text-[15px] font-semibold truncate">
                         {client.name}
                       </p>
-                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0 bg-success/10 text-success">
+                        <span className="w-1.5 h-1.5 rounded-full bg-success" />
                         On Track
                       </span>
                     </div>
