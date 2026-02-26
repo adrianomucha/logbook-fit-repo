@@ -21,7 +21,7 @@ export function StatusHeader({ date, status }: StatusHeaderProps) {
       <p className="text-sm text-muted-foreground">
         {format(date, 'EEEE, MMMM d')}
       </p>
-      <h2 className="text-lg font-semibold mt-0.5">{statusTextMap[status]}</h2>
+      <h1 className="text-lg font-semibold tracking-tight mt-0.5">{statusTextMap[status]}</h1>
     </div>
   );
 }

@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { WorkoutCompletion, WorkoutPlan, WorkoutDay, EffortRating } from '@/types';
 import { format, parseISO, getDay } from 'date-fns';
@@ -62,7 +61,7 @@ interface WorkoutHistoryItemProps {
 
 const EFFORT_LABELS: Record<EffortRating, { label: string; emoji: string; color: string }> = {
   EASY: { label: 'Easy', emoji: '😊', color: 'text-success' },
-  MEDIUM: { label: 'Medium', emoji: '💪', color: 'text-warning' },
+  MEDIUM: { label: 'Medium', emoji: '💪', color: 'text-foreground' },
   HARD: { label: 'Hard', emoji: '🔥', color: 'text-warning' },
 };
 
@@ -87,83 +86,71 @@ function WorkoutHistoryItem({ completion, dayName, weekNumber, planName }: Worko
     <div className="border rounded-lg overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full p-3 text-left hover:bg-muted/50 transition-colors"
+        className="w-full px-4 py-3.5 min-h-[44px] text-left hover:bg-muted/50 transition-colors touch-manipulation"
+        aria-expanded={isExpanded}
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="font-medium truncate">{dayName}</h4>
-              {completion.status === 'COMPLETED' && (
-                <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {completion.completedAt
-                ? format(parseISO(completion.completedAt), 'MMM d, yyyy')
-                : 'In Progress'}
-              {' • '}Week {weekNumber}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {effortInfo && (
-              <span className={cn('text-sm', effortInfo.color)}>
-                {effortInfo.emoji}
-              </span>
-            )}
-            {isExpanded ? (
-              <ChevronUp className="w-4 h-4 text-muted-foreground" />
-            ) : (
-              <ChevronDown className="w-4 h-4 text-muted-foreground" />
+        {/* Row 1: Name + chevron */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <h4 className="text-[15px] font-semibold tracking-tight truncate">{dayName}</h4>
+            {completion.status === 'COMPLETED' && (
+              <CheckCircle2 className="w-3.5 h-3.5 text-success shrink-0" />
             )}
           </div>
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+          )}
         </div>
 
-        {/* Quick stats row */}
-        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+        {/* Row 2: Date · Week · Effort */}
+        <p className="text-xs text-muted-foreground mt-0.5">
+          {completion.completedAt
+            ? format(parseISO(completion.completedAt), 'MMM d, yyyy')
+            : 'In Progress'}
+          {' · '}Week {weekNumber}
+          {effortInfo && (
+            <span className={cn('ml-1.5', effortInfo.color)}>
+              {effortInfo.emoji}
+            </span>
+          )}
+        </p>
+
+        {/* Row 3: Quick stats — quietest tier */}
+        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground/70">
           <span className="flex items-center gap-1">
-            <Dumbbell className="w-3 h-3" />
-            {completion.exercisesDone}/{completion.exercisesTotal} exercises
+            <Dumbbell className="w-3 h-3 shrink-0" />
+            <span className="tabular-nums">{completion.exercisesDone}/{completion.exercisesTotal}</span>
           </span>
           <span className="flex items-center gap-1">
-            <Clock className="w-3 h-3" />
-            {formatDuration(completion.durationSec)}
+            <Clock className="w-3 h-3 shrink-0" />
+            <span className="tabular-nums">{formatDuration(completion.durationSec)}</span>
           </span>
           <span className="flex items-center gap-1">
-            <Flame className="w-3 h-3" />
-            ~{estimatedSets} sets
+            <Flame className="w-3 h-3 shrink-0" />
+            <span className="tabular-nums">~{estimatedSets} sets</span>
           </span>
         </div>
       </button>
 
-      {/* Expanded details */}
+      {/* Expanded details — same label ↔ value rows as Body Stats */}
       {isExpanded && (
-        <div className="px-3 pb-3 pt-1 border-t bg-muted/20">
-          <div className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <p className="text-muted-foreground text-xs">Completion</p>
-              <p className="font-medium">{completion.completionPct}%</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Duration</p>
-              <p className="font-medium">{formatDuration(completion.durationSec)}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Exercises</p>
-              <p className="font-medium">
-                {completion.exercisesDone} of {completion.exercisesTotal}
-              </p>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">Effort</p>
-              <p className={cn('font-medium', effortInfo?.color)}>
-                {effortInfo ? `${effortInfo.emoji} ${effortInfo.label}` : '—'}
-              </p>
-            </div>
+        <div className="px-4 pb-4 pt-3 border-t space-y-2.5">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Completion</span>
+            <span className="font-medium tabular-nums">{completion.completionPct}%</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">
-            Part of: {planName}
-          </p>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Effort</span>
+            <span className={cn('font-medium', effortInfo?.color)}>
+              {effortInfo ? `${effortInfo.emoji} ${effortInfo.label}` : '—'}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Plan</span>
+            <span className="font-medium truncate ml-4">{planName}</span>
+          </div>
         </div>
       )}
     </div>
@@ -210,38 +197,39 @@ export function EnrichedWorkoutHistory({
 
   if (enrichedCompletions.length === 0) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Workout History
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6 text-muted-foreground">
-            <Dumbbell className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No completed workouts yet.</p>
-            <p className="text-sm">Get started today!</p>
+      <div className="border rounded-lg">
+        <div className="flex items-center gap-2 p-3">
+          <Calendar className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Workout History</span>
+        </div>
+        <div className="text-center py-8 space-y-3 border-t">
+          <div className="w-14 h-14 mx-auto rounded-full bg-muted flex items-center justify-center">
+            <Dumbbell className="w-6 h-6 text-muted-foreground" />
           </div>
-        </CardContent>
-      </Card>
+          <div>
+            <p className="font-medium text-foreground">No workouts logged yet</p>
+            <p className="text-sm text-muted-foreground mt-0.5">Your completed sessions will appear here.</p>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Calendar className="w-4 h-4" />
-            Workout History
-          </CardTitle>
-          <span className="text-xs text-muted-foreground">
-            {enrichedCompletions.length} {enrichedCompletions.length === 1 ? 'workout' : 'workouts'}
-          </span>
+    <div className="space-y-2">
+      {/* Section header — matches Body Stats pattern */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-medium">Workout History</span>
         </div>
-      </CardHeader>
-      <CardContent className="space-y-2">
+        <span className="text-xs text-muted-foreground tabular-nums">
+          {enrichedCompletions.length} {enrichedCompletions.length === 1 ? 'workout' : 'workouts'}
+        </span>
+      </div>
+
+      {/* Workout items */}
+      <div className="space-y-2">
         {displayedCompletions.map((item) => (
           <WorkoutHistoryItem
             key={item.completion.id}
@@ -272,7 +260,7 @@ export function EnrichedWorkoutHistory({
             )}
           </Button>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

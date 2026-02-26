@@ -126,13 +126,13 @@ export function TodayActionCard({
 
   return (
     <Card className={cn(
-      'transition-all',
+      'transition-[color,background-color,border-color,box-shadow]',
       state === 'scheduled' && 'border-info/20 shadow-md shadow-info/5',
       state === 'in-progress' && 'border-warning/20 shadow-md shadow-warning/5',
       state === 'completed' && 'border-success/20 bg-success/5',
       state === 'rest' && 'border-border'
     )}>
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         {renderContent()}
       </CardContent>
     </Card>

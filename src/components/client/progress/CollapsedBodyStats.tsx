@@ -1,12 +1,20 @@
 import { useState } from 'react';
 import { Measurement } from '@/types';
-import { ChevronDown, ChevronUp, Scale } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
-import { cn } from '@/lib/utils';
 
 interface CollapsedBodyStatsProps {
   measurements: Measurement[];
   clientId: string;
+}
+
+function StatRow({ label, value, unit }: { label: string; value: number; unit: string }) {
+  return (
+    <div className="flex justify-between text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="font-medium tabular-nums">{value}{unit && ` ${unit}`}</span>
+    </div>
+  );
 }
 
 export function CollapsedBodyStats({ measurements, clientId }: CollapsedBodyStatsProps) {
@@ -24,84 +32,49 @@ export function CollapsedBodyStats({ measurements, clientId }: CollapsedBodyStat
   const latest = clientMeasurements[0];
   const latestDate = format(parseISO(latest.date), 'MMM d');
 
-  // Count how many measurements are tracked
-  const trackedCount = [
-    latest.weight,
-    latest.bodyFat,
-    latest.chest,
-    latest.waist,
-    latest.hips,
-    latest.biceps,
-    latest.thighs,
-  ].filter(Boolean).length;
+  // Build rows from available data
+  const rows: { label: string; value: number; unit: string }[] = [];
+  if (latest.weight !== undefined) rows.push({ label: 'Weight', value: latest.weight, unit: 'lbs' });
+  if (latest.bodyFat !== undefined) rows.push({ label: 'Body Fat', value: latest.bodyFat, unit: '%' });
+  if (latest.chest !== undefined) rows.push({ label: 'Chest', value: latest.chest, unit: 'in' });
+  if (latest.waist !== undefined) rows.push({ label: 'Waist', value: latest.waist, unit: 'in' });
+  if (latest.hips !== undefined) rows.push({ label: 'Hips', value: latest.hips, unit: 'in' });
+  if (latest.biceps !== undefined) rows.push({ label: 'Biceps', value: latest.biceps, unit: 'in' });
+  if (latest.thighs !== undefined) rows.push({ label: 'Thighs', value: latest.thighs, unit: 'in' });
 
   return (
-    <div className="border rounded-lg">
+    <div className="border rounded-lg overflow-hidden">
       {/* Collapsed row */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+        className="w-full px-4 py-3.5 min-h-[44px] text-left hover:bg-muted/50 transition-colors touch-manipulation"
+        aria-expanded={isExpanded}
       >
-        <div className="flex items-center gap-2">
-          <Scale className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Body Stats</span>
-          <span className="text-xs text-muted-foreground">· Updated {latestDate}</span>
+        {/* Row 1: Title + chevron */}
+        <div className="flex items-center justify-between gap-2">
+          <h4 className="text-[15px] font-semibold tracking-tight">Body Stats</h4>
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+          )}
         </div>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground" />
-        )}
+
+        {/* Row 2: Date metadata */}
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Updated {latestDate} · {rows.length} {rows.length === 1 ? 'measurement' : 'measurements'}
+        </p>
       </button>
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="px-3 pb-3 pt-1 border-t space-y-2">
-          {latest.weight !== undefined && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Weight</span>
-              <span className="font-medium">{latest.weight} lbs</span>
-            </div>
-          )}
-          {latest.bodyFat !== undefined && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Body Fat</span>
-              <span className="font-medium">{latest.bodyFat}%</span>
-            </div>
-          )}
-          {latest.chest !== undefined && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Chest</span>
-              <span className="font-medium">{latest.chest} in</span>
-            </div>
-          )}
-          {latest.waist !== undefined && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Waist</span>
-              <span className="font-medium">{latest.waist} in</span>
-            </div>
-          )}
-          {latest.hips !== undefined && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Hips</span>
-              <span className="font-medium">{latest.hips} in</span>
-            </div>
-          )}
-          {latest.biceps !== undefined && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Biceps</span>
-              <span className="font-medium">{latest.biceps} in</span>
-            </div>
-          )}
-          {latest.thighs !== undefined && (
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Thighs</span>
-              <span className="font-medium">{latest.thighs} in</span>
-            </div>
-          )}
+        <div className="px-4 pb-4 pt-3 border-t space-y-2.5">
+          {rows.map((row) => (
+            <StatRow key={row.label} label={row.label} value={row.value} unit={row.unit} />
+          ))}
           {latest.notes && (
-            <p className="text-xs text-muted-foreground italic pt-1 border-t">
-              "{latest.notes}"
+            <p className="text-xs text-muted-foreground italic pt-2.5 mt-2.5 border-t border-border/50">
+              &ldquo;{latest.notes}&rdquo;
             </p>
           )}
         </div>

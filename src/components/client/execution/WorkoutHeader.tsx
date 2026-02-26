@@ -23,7 +23,7 @@ export function WorkoutHeader({
 
   return (
     <div className="sticky top-0 z-10 bg-background border-b">
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <div className="flex items-center gap-3">
           {/* Back button */}
           <Button
@@ -57,20 +57,22 @@ export function WorkoutHeader({
             <span>
               {exercisesDone}/{exercisesTotal}
             </span>
-            {/* Progress dots */}
-            <div className="flex gap-0.5 ml-1">
-              {Array.from({ length: exercisesTotal }, (_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    'w-2 h-2 rounded-full transition-colors',
-                    i < exercisesDone
-                      ? 'bg-success'
-                      : 'bg-muted-foreground/30'
-                  )}
-                />
-              ))}
-            </div>
+            {/* Progress dots — hide when too many to prevent overflow */}
+            {exercisesTotal <= 8 && (
+              <div className="hidden sm:flex gap-0.5 ml-1">
+                {Array.from({ length: exercisesTotal }, (_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'w-2 h-2 rounded-full transition-colors',
+                      i < exercisesDone
+                        ? 'bg-success'
+                        : 'bg-muted-foreground/30'
+                    )}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

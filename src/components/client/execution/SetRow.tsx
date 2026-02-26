@@ -32,7 +32,7 @@ export function SetRow({
       type="button"
       onClick={onToggle}
       className={cn(
-        'w-full flex items-center gap-3 p-3 rounded-lg transition-all',
+        'w-full flex items-center gap-3 p-3 rounded-lg transition-all min-h-[44px] touch-manipulation',
         'hover:bg-muted/50 active:scale-[0.99]',
         completed && 'bg-success/5'
       )}

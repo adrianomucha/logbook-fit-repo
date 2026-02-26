@@ -27,7 +27,7 @@ export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavPr
               key={item.id}
               onClick={() => onSelect(item.id)}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 min-w-[64px] py-1.5 px-3 transition-colors',
+                'flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[48px] py-2 px-3 transition-colors touch-manipulation',
                 isActive
                   ? 'text-foreground'
                   : 'text-muted-foreground/60 hover:text-muted-foreground'
@@ -42,12 +42,12 @@ export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavPr
                   )}
                 />
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-orange-500 rounded-full" />
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 bg-warning rounded-full" />
                 )}
               </div>
               <span
                 className={cn(
-                  'text-[10px] leading-tight',
+                  'text-[11px] leading-tight',
                   isActive ? 'font-semibold' : 'font-normal'
                 )}
               >

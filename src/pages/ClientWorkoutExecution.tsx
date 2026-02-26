@@ -375,7 +375,7 @@ export function ClientWorkoutExecution({
   // Error states
   if (!currentClient || !currentPlan) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <Card>
           <CardContent className="py-8 text-center">
             <p className="text-muted-foreground">No workout plan found.</p>
@@ -390,7 +390,7 @@ export function ClientWorkoutExecution({
 
   if (!day) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <Card>
           <CardContent className="py-8 text-center">
             <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
@@ -423,7 +423,7 @@ export function ClientWorkoutExecution({
         </div>
 
         {/* Workout Summary */}
-        <div className="flex items-center justify-center gap-8 mb-10">
+        <div className="flex items-center justify-center gap-6 sm:gap-8 mb-8 sm:mb-10">
           <div className="text-center">
             <p className="text-3xl font-bold text-foreground">
               {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
@@ -450,22 +450,22 @@ export function ClientWorkoutExecution({
           <p className="text-foreground mb-4 font-medium">
             How did that feel?
           </p>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <button
               onClick={() => handleEffortRating('EASY')}
-              className="px-6 py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation"
+              className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px]"
             >
               Easy
             </button>
             <button
               onClick={() => handleEffortRating('MEDIUM')}
-              className="px-6 py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation"
+              className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px]"
             >
               Medium
             </button>
             <button
               onClick={() => handleEffortRating('HARD')}
-              className="px-6 py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation"
+              className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px]"
             >
               Hard
             </button>
@@ -527,7 +527,7 @@ export function ClientWorkoutExecution({
       />
 
       {/* Exercise list */}
-      <div className="flex-1 p-4 space-y-3">
+      <div className="flex-1 p-3 sm:p-4 space-y-3 max-w-3xl mx-auto w-full">
         {exercises.map((exercise, index) => (
           <ExerciseCard
             key={exercise.id}

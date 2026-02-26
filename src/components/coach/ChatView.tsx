@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send } from 'lucide-react';
+import { Send, Dumbbell } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -18,6 +18,10 @@ interface ChatViewProps {
   initialPrefill?: string;
   /** Optional: custom height class (default: h-[600px]) */
   heightClass?: string;
+  /** Optional: name of the person on the other end (shown in empty state) */
+  peerName?: string;
+  /** Optional: tappable conversation starter chips for the empty state */
+  conversationStarters?: string[];
 }
 
 export function ChatView({
@@ -28,6 +32,8 @@ export function ChatView({
   onSendMessage,
   initialPrefill,
   heightClass = 'h-[600px]',
+  peerName,
+  conversationStarters,
 }: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
@@ -74,10 +80,10 @@ export function ChatView({
   const chatLabel = `Chat with ${client.name}`;
 
   return (
-    <section aria-label={chatLabel} className="h-full flex flex-col">
-      <Card className={cn('flex flex-col min-h-0 h-full', heightClass)}>
-        <CardContent className="flex-1 flex flex-col p-0">
-          <ScrollArea className="flex-1 px-3 sm:px-6">
+    <section aria-label={chatLabel} className="h-full flex flex-col min-h-0">
+      <Card className={cn('flex flex-col min-h-0 overflow-hidden', heightClass)}>
+        <CardContent className="flex-1 flex flex-col min-h-0 p-0">
+          <ScrollArea className="flex-1 min-h-0 px-3 sm:px-6">
             <div className="flex flex-col justify-end min-h-full">
               <div
                 role="log"
@@ -86,27 +92,73 @@ export function ChatView({
                 className="space-y-3 sm:space-y-4 pb-4 pt-4"
               >
                 {clientMessages.length === 0 && (
-                  <div className="text-center py-8 text-sm text-muted-foreground space-y-1">
-                    <p className="text-base">💬</p>
-                    <p>No messages with {client.name.split(' ')[0]} yet</p>
-                    <p className="text-xs">Send a message to get started</p>
+                  <div className="text-center py-8 text-sm text-muted-foreground space-y-3">
+                    <div className="w-10 h-10 mx-auto rounded-full bg-muted flex items-center justify-center">
+                      <Send className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-1">
+                      <p>
+                        {peerName
+                          ? `Start a conversation with ${peerName.split(' ')[0]}`
+                          : `No messages with ${client.name.split(' ')[0]} yet`}
+                      </p>
+                      <p className="text-xs">Send a message to get started</p>
+                    </div>
+                    {conversationStarters && conversationStarters.length > 0 && (
+                      <div className="flex flex-wrap justify-center gap-2 pt-1">
+                        {conversationStarters.map((starter) => (
+                          <button
+                            key={starter}
+                            onClick={() => {
+                              setNewMessage(starter);
+                              inputRef.current?.focus();
+                            }}
+                            className="text-xs px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors touch-manipulation"
+                          >
+                            {starter}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
                 {clientMessages.map((message) => {
-                  const isCoach = message.senderId === currentUserId;
+                  const isCurrentUser = message.senderId === currentUserId;
                   return (
                   <div
                     key={message.id}
-                    className={cn('flex', isCoach ? 'justify-end' : 'justify-start')}
+                    className={cn('flex', isCurrentUser ? 'justify-end' : 'justify-start')}
                   >
                     <div
                       className={cn(
                         'max-w-[85%] sm:max-w-[70%] rounded-lg p-2.5 sm:p-3',
-                        isCoach
+                        isCurrentUser
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted'
                       )}
                     >
+                      {/* Exercise context card (attached when client flags an exercise) */}
+                      {message.exerciseContext && (
+                        <div className={cn(
+                          'rounded p-2 mb-2 text-xs',
+                          isCurrentUser
+                            ? 'bg-primary-foreground/10'
+                            : 'bg-background/50'
+                        )}>
+                          <div className="flex items-center gap-1">
+                            <Dumbbell className="w-3 h-3" />
+                            <span className="font-medium">{message.exerciseContext.exerciseName}</span>
+                          </div>
+                          <p className={cn(isCurrentUser ? 'opacity-80' : 'text-muted-foreground')}>
+                            {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets done
+                          </p>
+                          {message.exerciseContext.flagNote && (
+                            <p className="italic mt-1">
+                              Note: &ldquo;{message.exerciseContext.flagNote}&rdquo;
+                            </p>
+                          )}
+                        </div>
+                      )}
                       <p className="text-sm">{message.content}</p>
                       <p className="text-xs mt-1 opacity-70">
                         {format(new Date(message.timestamp), 'MMM d, h:mm a')}
@@ -135,7 +187,7 @@ export function ChatView({
               <Button
                 onClick={handleSend}
                 size="icon"
-                className="shrink-0 min-h-[44px] min-w-[44px]"
+                className="shrink-0 min-h-[44px] min-w-[44px] touch-manipulation"
                 aria-label="Send message"
               >
                 <Send className="w-4 h-4" />

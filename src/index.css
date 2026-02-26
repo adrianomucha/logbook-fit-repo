@@ -81,7 +81,7 @@
 
   /* Subtle fade-in + slide-up for content entrance */
   .animate-fade-in-up {
-    animation: fadeInUp 0.3s ease-out both;
+    animation: fadeInUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) both;
   }
   @keyframes fadeInUp {
     from {

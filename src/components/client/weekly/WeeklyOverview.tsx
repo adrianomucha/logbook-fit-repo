@@ -61,7 +61,12 @@ export function WeeklyOverview({
 
   // Calculate progress
   const progress = useMemo(() => {
-    return getWeekProgress(weekDays);
+    const base = getWeekProgress(weekDays);
+    // Count upcoming workouts (remaining to do)
+    const remaining = weekDays.filter(
+      (d) => d.status === 'TODAY' || d.status === 'UPCOMING'
+    ).length;
+    return { ...base, remaining };
   }, [weekDays]);
 
   // Handle day card click
@@ -97,6 +102,7 @@ export function WeeklyOverview({
       <WeekProgressStrip
         completed={progress.completed}
         total={progress.total}
+        remaining={progress.remaining}
         percentage={progress.percentage}
       />
 

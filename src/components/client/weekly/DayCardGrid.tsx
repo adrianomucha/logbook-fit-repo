@@ -8,7 +8,7 @@ interface DayCardGridProps {
 
 export function DayCardGrid({ days, onDayClick }: DayCardGridProps) {
   return (
-    <div className="grid gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
       {days.map((day) => (
         <DayCard
           key={day.dayNumber}

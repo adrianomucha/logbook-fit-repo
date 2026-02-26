@@ -23,7 +23,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
             'shadow-lg shadow-info/10',
             'ring-2 ring-info/10',
             'cursor-pointer hover:shadow-xl hover:shadow-info/15',
-            'transition-all'
+            'transition-[color,background-color,border-color,box-shadow,opacity]'
           ),
           badge: 'bg-info text-info-foreground',
           badgeText: 'Today',
@@ -41,21 +41,21 @@ export function DayCard({ day, onClick }: DayCardProps) {
         };
       case 'UPCOMING':
         return {
-          card: 'opacity-55 pointer-events-none',
+          card: 'opacity-45 pointer-events-none',
           badge: null,
           badgeText: null,
         };
       case 'MISSED':
         return {
-          card: 'cursor-pointer hover:bg-muted/50 transition-colors',
-          badge: 'bg-muted-foreground text-background',
+          card: 'opacity-50 cursor-pointer hover:opacity-70 transition-[opacity]',
+          badge: 'bg-muted text-muted-foreground',
           badgeText: 'Missed',
         };
       case 'REST':
         return {
-          card: 'border-dashed border-muted-foreground/30 opacity-60',
-          badge: 'bg-muted text-muted-foreground',
-          badgeText: 'Rest',
+          card: 'border-dashed border-muted-foreground/20 opacity-40',
+          badge: null,
+          badgeText: null,
         };
       default:
         return {
@@ -77,10 +77,15 @@ export function DayCard({ day, onClick }: DayCardProps) {
 
   return (
     <Card
-      className={cn('transition-all', styles.card)}
+      className={cn('transition-[color,background-color,border-color,box-shadow,opacity]', styles.card)}
       onClick={handleClick}
       role={isInteractive ? 'button' : undefined}
       tabIndex={isInteractive ? 0 : undefined}
+      aria-label={
+        isInteractive
+          ? `${dayOfWeek} – ${workoutDay?.name || 'Workout'}${styles.badgeText ? `, ${styles.badgeText}` : ''}`
+          : undefined
+      }
       onKeyDown={
         isInteractive
           ? (e) => {
@@ -92,7 +97,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
           : undefined
       }
     >
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2">
           {/* Left: Day info */}
           <div className="flex-1 min-w-0">

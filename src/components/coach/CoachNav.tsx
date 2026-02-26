@@ -55,7 +55,7 @@ export function CoachNav({
         {/* Logotype */}
         <button
           onClick={() => navigate('/coach')}
-          className="flex items-center gap-1.5 group"
+          className="flex items-center gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label="Logbook Fitness home"
         >
           <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground group-hover:text-foreground transition-colors">

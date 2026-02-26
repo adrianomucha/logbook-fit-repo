@@ -263,23 +263,248 @@ export const sampleData: AppState = {
     }
   ],
   messages: [
-    // Mike Chen (client-1) conversation
+    // Mike Chen (client-1) conversation — long history
     {
-      id: 'msg-1',
+      id: 'msg-m01',
       senderId: 'client-1',
       senderName: 'Mike Chen',
-      content: 'Hey Sarah! Had a great session today. The bench press felt much stronger.',
+      content: 'Hey Sarah, just finished setting up my home gym. Got a rack, barbell, adjustable dumbbells, and a bench. Ready to go!',
+      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 8 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m02',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'That\'s a solid setup Mike. More than enough for everything in your plan. Do you have a pull-up bar too?',
+      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 7 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m03',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Yep, got one that mounts on the rack. Also grabbed some bands for warm-ups.',
+      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 6.5 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m04',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Perfect. Bands are great for shoulder warm-ups before pressing days. Use the light one for pull-aparts, 2 sets of 15 before every upper body session.',
+      timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 6 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m05',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Quick question about squats — I feel like I lean forward too much at the bottom. Any cues?',
+      timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000 - 3 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m06',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Try "chest up, elbows under the bar." Also experiment with a slightly wider stance and turning your toes out 15-20°. Film a set from the side and send it to me if you want a form check.',
+      timestamp: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m07',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Tried the wider stance today, felt way more stable. I\'ll film next session.',
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 - 10 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m08',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Also, the Romanian deadlifts are killing my hamstrings in the best way. Never done them before this program.',
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 - 9.5 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m09',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'RDLs are one of the best posterior chain builders. Key cue: think about pushing your hips back like you\'re closing a car door with your butt. Keep the bar close to your legs.',
+      timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 - 8 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m10',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Had to skip Wednesday\'s session — work ran super late. Can I double up tomorrow?',
+      timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m11',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Don\'t double up — two full sessions in one day is a recipe for garbage volume. Just pick up where you left off tomorrow and shift the week by a day. Consistency > perfection.',
+      timestamp: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000 - 1 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m12',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Makes sense. Shifted it. Hit everything today and it went well.',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 - 11 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m13',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'What should I eat before a morning workout? I\'ve been training fasted but feeling a bit flat.',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 - 5 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m14',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Something light 30-45 min before: banana + a handful of almonds, or toast with peanut butter. You want easy carbs and a bit of fat. If you train really early, even a glass of juice helps.',
+      timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000 - 4 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m15',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Tried the banana + almonds this morning. Night and day difference, had way more energy during the pressing sets.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 - 9 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m16',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Glad it helped! Nutrition is the easiest performance lever. Small changes, big impact.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 - 8 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m17',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Bit of a problem — my left shoulder is feeling a little tweaky on overhead press. Not painful, just tight.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 - 3 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m18',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Thanks for flagging that early. Swap the barbell OHP for seated dumbbell press this week — less shoulder stress, same stimulus. If it gets worse or you feel sharp pain, stop pressing completely and let me know.',
+      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000 - 2 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m19',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Did the seated DB press today — no issues at all. Shoulder feels fine with dumbbells.',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 - 10 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m20',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Good sign. Let\'s keep the DB variation for the rest of this training block. We\'ll reintroduce barbell OHP next month.',
+      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000 - 9 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m21',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Bench day was amazing today. Hit 155 for 3x8, which is a 10 lb PR from when I started the program!',
+      timestamp: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m22',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Let\'s go! 10 lbs in 4 weeks is great progress. Your consistency is paying off. How did the last set feel — did you have another rep in you?',
+      timestamp: new Date(Date.now() - 7 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m23',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Maybe one more on the last set, but it would\'ve been a grinder. Felt like RPE 8-9.',
+      timestamp: new Date(Date.now() - 6.5 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m24',
+      senderId: 'coach-1',
+      senderName: 'Sarah Johnson',
+      content: 'Perfect RPE range. We\'ll sit at 155 for one more week to own the weight, then bump to 160. No rush.',
+      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+      read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m25',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Sounds good. Also — sleep has been rough this week, maybe 5-6 hours. Should I adjust anything?',
       timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
       read: true,
       clientId: 'client-1'
     },
     {
-      id: 'msg-2',
+      id: 'msg-m26',
       senderId: 'coach-1',
       senderName: 'Sarah Johnson',
-      content: 'That\'s awesome Mike! Let\'s bump up the weight by 5 lbs next week.',
+      content: 'If sleep stays bad, drop the top sets by one rep so you\'re not digging into recovery you don\'t have. And try to get one good 8-hour night before your next heavy session.',
       timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
       read: true,
+      clientId: 'client-1'
+    },
+    {
+      id: 'msg-m27',
+      senderId: 'client-1',
+      senderName: 'Mike Chen',
+      content: 'Will do. Thanks for staying on top of everything Sarah, this is the most structured I\'ve ever been with training.',
+      timestamp: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
+      read: false,
       clientId: 'client-1'
     },
     // Emma Wilson (client-2) conversation

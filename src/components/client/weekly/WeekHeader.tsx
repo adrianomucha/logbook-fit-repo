@@ -12,12 +12,12 @@ export function WeekHeader({ plan, currentWeek }: WeekHeaderProps) {
     <div className="flex items-center justify-between">
       <div className="flex items-center gap-3">
         {plan.emoji && (
-          <span className="text-3xl" role="img" aria-label="plan icon">
+          <span className="text-3xl" role="img" aria-label={`${plan.name} icon`}>
             {plan.emoji}
           </span>
         )}
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">{plan.name}</h1>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{plan.name}</h2>
           <p className="text-sm text-muted-foreground">
             Week {currentWeek} of {totalWeeks}
           </p>

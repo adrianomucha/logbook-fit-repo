@@ -459,7 +459,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
         {/* Bottom row: Chat + Secondary content — matched heights */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Chat */}
-          <div ref={chatRef} className="flex flex-col min-h-[300px] md:h-[500px]">
+          <div ref={chatRef} className="flex flex-col h-[450px] md:h-[500px]">
             <ChatView
               client={client}
               messages={appState.messages}
@@ -467,7 +467,7 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
               currentUserName={currentCoach?.name || 'Coach'}
               onSendMessage={handleSendMessage}
               initialPrefill={chatPrefill}
-              heightClass="flex-1"
+              heightClass="h-full"
             />
           </div>
 

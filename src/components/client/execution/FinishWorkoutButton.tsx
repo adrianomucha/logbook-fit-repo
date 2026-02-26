@@ -16,20 +16,17 @@ export function FinishWorkoutButton({
   disabled,
 }: FinishWorkoutButtonProps) {
   const allDone = exercisesDone === exercisesTotal;
-  const hasProgress = exercisesDone > 0;
 
   return (
-    <div className="sticky bottom-0 z-10 bg-background border-t p-4">
+    <div className="sticky bottom-0 z-10 bg-background border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <Button
         onClick={onFinish}
         disabled={disabled}
         className={cn(
-          'w-full h-12 text-base font-semibold transition-all',
+          'w-full h-12 text-base font-semibold transition-all touch-manipulation',
           allDone
             ? 'bg-success hover:bg-success/90'
-            : hasProgress
-              ? 'bg-primary hover:bg-primary/90'
-              : 'bg-primary hover:bg-primary/90'
+            : 'bg-primary hover:bg-primary/90'
         )}
       >
         {allDone ? (

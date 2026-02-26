@@ -5,15 +5,14 @@ import { getThisWeekCompletedCheckIn } from '@/lib/checkin-context-helpers';
 import { getCurrentWeekNumber, getWeekDays, getTodayWorkout } from '@/lib/workout-week-helpers';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
 import { TodayFocusView } from '@/components/client/today/TodayFocusView';
-import { ClientChat } from '@/components/client/ClientChat';
+import { ChatView } from '@/components/coach/ChatView';
 import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
+import { ClientNav } from '@/components/client/ClientNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
-import { Dumbbell, MessageSquare, TrendingUp, ClipboardCheck } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ClipboardCheck } from 'lucide-react';
 
 interface ClientDashboardProps {
   appState: AppState;
@@ -45,11 +44,6 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     : undefined;
 
   const coach = appState.coaches.find((c) => c.clients.includes(appState.currentUserId));
-
-  // Filter messages for this client only (using clientId for proper data isolation)
-  const clientMessages = appState.messages.filter(
-    (msg) => msg.clientId === appState.currentUserId
-  );
 
   const clientWorkouts = appState.completedWorkouts.filter(
     (w) => w.clientId === appState.currentUserId
@@ -163,7 +157,7 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
 
   if (!currentClient || !currentPlan) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">No Workout Plan Assigned</h1>
           <p className="text-muted-foreground">
@@ -174,81 +168,38 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     );
   }
 
-  // Mobile bottom nav items
-  const mobileNavItems = [
-    { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-    { id: 'chat' as const, label: 'Chat', icon: MessageSquare },
-    { id: 'progress' as const, label: 'Progress', icon: TrendingUp },
-  ];
-
   return (
-    <div className="min-h-screen bg-background p-4 pb-24 sm:pb-4">
-      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-background p-3 sm:p-4 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:pb-4">
+      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+        <ClientNav
+          activeTab={currentView}
+          onTabChange={(tab) => setCurrentView(tab)}
+        />
+
         {/* Check-in prompt banner */}
         {pendingCheckIn && (
-          <Card className="border-info/20 bg-info/5">
-            <CardContent className="py-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <ClipboardCheck className="w-6 h-6 text-info shrink-0" />
-                  <div>
-                    <p className="font-medium text-foreground">Check-in waiting for you</p>
-                    <p className="text-sm text-muted-foreground">Your coach wants to hear how training is going</p>
+          <section aria-label="Pending check-in">
+            <Card className="border-info/20 bg-info/5">
+              <CardContent className="py-3 sm:py-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6 text-info shrink-0" />
+                    <div>
+                      <p className="font-medium text-foreground">Check-in waiting for you</p>
+                      <p className="text-sm text-muted-foreground">Your coach wants to hear how training is going</p>
+                    </div>
                   </div>
+                  <Button
+                    onClick={() => navigate(`/client/checkin/${pendingCheckIn.id}`)}
+                    className="w-full sm:w-auto"
+                  >
+                    Complete Check-in
+                  </Button>
                 </div>
-                <Button
-                  onClick={() => navigate(`/client/checkin/${pendingCheckIn.id}`)}
-                  className="w-full sm:w-auto"
-                >
-                  Complete Check-in
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </section>
         )}
-
-        {/* Contextual header per tab */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          {/* Header text - hidden on Chat tab */}
-          {currentView !== 'chat' && (
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold">
-                {currentView === 'workout' ? 'My Workouts' : 'My Progress'}
-              </h1>
-              {currentView === 'workout' && (
-                <p className="text-muted-foreground text-sm">Welcome back, {currentClient.name}</p>
-              )}
-            </div>
-          )}
-
-          {/* Desktop navigation tabs - hidden on mobile */}
-          <div className={cn('hidden sm:flex gap-2', currentView === 'chat' && 'ml-auto')}>
-            <Button
-              variant={currentView === 'workout' ? 'default' : 'ghost'}
-              onClick={() => setCurrentView('workout')}
-              size="sm"
-            >
-              <Dumbbell className="w-4 h-4 mr-2" />
-              Workout
-            </Button>
-            <Button
-              variant={currentView === 'chat' ? 'default' : 'ghost'}
-              onClick={() => setCurrentView('chat')}
-              size="sm"
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Chat
-            </Button>
-            <Button
-              variant={currentView === 'progress' ? 'default' : 'ghost'}
-              onClick={() => setCurrentView('progress')}
-              size="sm"
-            >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Progress
-            </Button>
-          </div>
-        </div>
 
         {/* Coach feedback card (shows if coach responded to this week's check-in) */}
         {thisWeekCheckIn && currentView === 'workout' && workoutViewMode === 'weekly' && (
@@ -279,7 +230,8 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
 
         {currentView === 'workout' && workoutViewMode === 'weekly' && (
           <>
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between">
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Workouts</h1>
               <Button
                 variant="ghost"
                 size="sm"
@@ -298,24 +250,37 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
         )}
 
         {currentView === 'chat' && coach && (
-          <ClientChat
-            messages={clientMessages}
-            currentUserId={appState.currentUserId}
-            currentUserName={currentClient.name}
-            coachName={coach.name}
-            onSendMessage={handleSendMessage}
-          />
+          <>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Chat</h1>
+            <ChatView
+              client={currentClient}
+              messages={appState.messages}
+              currentUserId={appState.currentUserId}
+              currentUserName={currentClient.name}
+              onSendMessage={handleSendMessage}
+              heightClass="h-[calc(100vh-14rem)] sm:h-[600px]"
+              peerName={coach.name}
+              conversationStarters={[
+                'How should I warm up?',
+                'Feeling sore today',
+                'Can we adjust my plan?',
+              ]}
+            />
+          </>
         )}
 
         {currentView === 'progress' && (
-          <ProgressHistory
-            completedWorkouts={clientWorkouts}
-            plans={appState.plans}
-            client={currentClient}
-            plan={currentPlan}
-            workoutCompletions={clientWorkoutCompletions}
-            measurements={appState.measurements.filter((m) => m.clientId === currentClient.id)}
-          />
+          <>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Progress</h1>
+            <ProgressHistory
+              completedWorkouts={clientWorkouts}
+              plans={appState.plans}
+              client={currentClient}
+              plan={currentPlan}
+              workoutCompletions={clientWorkoutCompletions}
+              measurements={appState.measurements.filter((m) => m.clientId === currentClient.id)}
+            />
+          </>
         )}
       </div>
 
@@ -328,12 +293,6 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
         plan={currentPlan}
       />
 
-      {/* Mobile bottom navigation */}
-      <MobileBottomNav
-        items={mobileNavItems}
-        activeId={currentView}
-        onSelect={(id) => setCurrentView(id as View)}
-      />
     </div>
   );
 }

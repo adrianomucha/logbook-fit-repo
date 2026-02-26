@@ -14,7 +14,7 @@ interface QuickEffortFeedbackProps {
 
 const effortOptions: { value: EffortRating; label: string; icon: typeof Smile; color: string }[] = [
   { value: 'EASY', label: 'Easy', icon: Smile, color: 'text-success bg-success/10 border-success/30' },
-  { value: 'MEDIUM', label: 'Medium', icon: Meh, color: 'text-warning bg-warning/10 border-warning/30' },
+  { value: 'MEDIUM', label: 'Medium', icon: Meh, color: 'text-foreground bg-muted border-foreground/20' },
   { value: 'HARD', label: 'Hard', icon: Frown, color: 'text-warning bg-warning/10 border-warning/30' },
 ];
 
@@ -42,7 +42,7 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
                 key={option.value}
                 onClick={() => setSelectedRating(option.value)}
                 className={cn(
-                  'flex-1 flex flex-col items-center gap-1 py-3 px-2 rounded-lg border-2 transition-all',
+                  'flex-1 flex flex-col items-center gap-1 py-3 px-2 rounded-lg border-2 transition-all min-h-[44px] touch-manipulation',
                   isSelected
                     ? option.color
                     : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted'
@@ -58,7 +58,7 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
         {selectedRating && !showNotes && (
           <button
             onClick={() => setShowNotes(true)}
-            className="text-xs text-muted-foreground hover:text-foreground underline mb-3"
+            className="text-xs text-muted-foreground hover:text-foreground underline mb-3 min-h-[44px] flex items-center touch-manipulation"
           >
             Add a note (optional)
           </button>

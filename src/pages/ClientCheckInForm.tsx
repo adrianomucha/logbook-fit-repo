@@ -68,7 +68,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
   // Invalid states
   if (!checkIn) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardContent className="text-center py-12">
             <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
@@ -83,7 +83,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
 
   if (checkIn.status !== 'pending') {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardContent className="text-center py-12">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-success" />
@@ -99,7 +99,7 @@ export function ClientCheckInForm({ appState, onUpdateState }: ClientCheckInForm
   // Success screen
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardContent className="text-center py-12">
             <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />

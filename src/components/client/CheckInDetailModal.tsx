@@ -1,6 +1,6 @@
 import { CheckIn, CompletedWorkout, WorkoutPlan } from '@/types';
 import { Modal } from '@/components/ui/Modal';
-import { CheckCircle2, XCircle, AlertTriangle, CheckSquare } from 'lucide-react';
+import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FEELING_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -110,14 +110,14 @@ export function CheckInDetailModal({
                 <span className="text-sm">
                   Flagged: <span className="font-medium">{getWorkoutName(flaggedWorkout.dayId)}</span>
                   {checkIn.flaggedWorkoutNote && (
-                    <p className="mt-1 text-muted-foreground">"{checkIn.flaggedWorkoutNote}"</p>
+                    <p className="mt-1 text-muted-foreground">&ldquo;{checkIn.flaggedWorkoutNote}&rdquo;</p>
                   )}
                 </span>
               </div>
             )}
             {checkIn.clientNotes && (
               <div className="bg-muted/50 rounded-lg p-3">
-                <p className="text-sm italic">"{checkIn.clientNotes}"</p>
+                <p className="text-sm italic">&ldquo;{checkIn.clientNotes}&rdquo;</p>
               </div>
             )}
           </div>

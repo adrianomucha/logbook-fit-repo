@@ -67,66 +67,82 @@ export function ExerciseCard({
   return (
     <Card
       className={cn(
-        'transition-all overflow-hidden',
+        'transition-[border-color] overflow-hidden',
         isComplete && 'border-success/20',
         isFlagged && !isComplete && 'border-warning/20'
       )}
     >
-      {/* Header - always visible, clickable */}
-      <button
-        type="button"
-        onClick={onToggleExpand}
+      {/* Header - always visible */}
+      <div
         className={cn(
-          'w-full p-4 flex items-center gap-3 text-left transition-colors',
-          'hover:bg-muted/50',
+          'flex items-center transition-colors',
           isComplete && 'bg-success/5'
         )}
       >
-        {/* Exercise number or checkmark */}
-        <div
+        {/* Expand toggle — semantic button */}
+        <button
+          type="button"
+          onClick={onToggleExpand}
           className={cn(
-            'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm',
-            isComplete
-              ? 'bg-success text-success-foreground'
-              : 'bg-muted text-muted-foreground'
+            'flex-1 min-w-0 p-3 sm:p-4 flex items-center gap-3 text-left transition-colors cursor-pointer',
+            'hover:bg-muted/50'
           )}
+          aria-expanded={isExpanded}
+          aria-label={`${exercise.name}, ${getSummary()}`}
         >
-          {isComplete ? <Check className="w-5 h-5" /> : exerciseNumber}
-        </div>
-
-        {/* Exercise info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p
-              className={cn(
-                'font-semibold truncate',
-                isComplete && 'text-success'
-              )}
-            >
-              {exercise.name}
-            </p>
-            {/* Flag indicator when collapsed */}
-            {isFlagged && !isExpanded && (
-              <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
+          {/* Exercise number or checkmark */}
+          <div
+            className={cn(
+              'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm',
+              isComplete
+                ? 'bg-success text-success-foreground'
+                : 'bg-muted text-muted-foreground'
             )}
+          >
+            {isComplete ? <Check className="w-5 h-5" /> : exerciseNumber}
           </div>
-          <p className="text-sm text-muted-foreground">
-            {getSummary()}
-            {completedSets > 0 && !isComplete && (
-              <span className="ml-2 text-success">
-                ({completedSets}/{exercise.sets} done)
-              </span>
-            )}
-          </p>
-        </div>
 
-        {/* Flag icon */}
+          {/* Exercise info */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p
+                className={cn(
+                  'font-semibold truncate',
+                  isComplete && 'text-success'
+                )}
+              >
+                {exercise.name}
+              </p>
+              {/* Flag indicator when collapsed */}
+              {isFlagged && !isExpanded && (
+                <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {getSummary()}
+              {completedSets > 0 && !isComplete && (
+                <span className="ml-2 text-success">
+                  ({completedSets}/{exercise.sets} done)
+                </span>
+              )}
+            </p>
+          </div>
+
+          {/* Chevron */}
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+          )}
+        </button>
+
+        {/* Flag icon — sibling button, not nested */}
         <button
           type="button"
           onClick={handleFlagClick}
           disabled={isReadOnly}
           className={cn(
-            'p-2 rounded-full transition-colors flex-shrink-0',
+            'p-2 mr-2 rounded-full transition-colors flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center touch-manipulation',
             !isReadOnly && 'hover:bg-muted active:bg-muted/80',
             isReadOnly && 'opacity-50 cursor-default'
           )}
@@ -141,21 +157,14 @@ export function ExerciseCard({
             )}
           />
         </button>
-
-        {/* Chevron */}
-        {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-        ) : (
-          <ChevronDown className="w-5 h-5 text-muted-foreground flex-shrink-0" />
-        )}
-      </button>
+      </div>
 
       {/* Expanded content */}
       {isExpanded && (
-        <CardContent className="p-4 pt-0">
+        <CardContent className="p-3 sm:p-4 pt-0">
           {/* Coach notes */}
           {exercise.notes && (
-            <div className="mb-4 p-4 bg-info/5 rounded-lg border border-info/20">
+            <div className="mb-4 p-3 sm:p-4 bg-info/5 rounded-lg border border-info/20">
               <p className="text-sm text-foreground">
                 <span className="font-medium">Coach tip:</span> {exercise.notes}
               </p>
@@ -186,7 +195,7 @@ export function ExerciseCard({
                     <button
                       type="button"
                       onClick={onMessageCoach}
-                      className="text-sm text-primary hover:underline min-h-[44px] flex items-center"
+                      className="text-sm text-primary hover:underline min-h-[44px] flex items-center touch-manipulation"
                     >
                       Message coach about this →
                     </button>
@@ -195,7 +204,7 @@ export function ExerciseCard({
               ) : (
                 flagNote && (
                   <p className="text-sm text-foreground italic">
-                    "{flagNote}"
+                    &ldquo;{flagNote}&rdquo;
                   </p>
                 )
               )}
