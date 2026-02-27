@@ -1,6 +1,6 @@
 import { Client } from '@/types';
 import { ClientStatus } from '@/lib/client-status';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 interface ClientCardProps {
@@ -20,10 +20,10 @@ export function ClientCard({
   nextCheckInDate,
   planName,
 }: ClientCardProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleClick = () => {
-    navigate(`/coach/clients/${client.id}`);
+    router.push(`/coach/clients/${client.id}`);
   };
 
   // Status badge styles

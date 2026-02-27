@@ -23,3 +23,13 @@ dist-ssr
 *.sln
 *.sw?
 .vercel
+
+# Next.js
+.next
+next-env.d.ts
+
+# Environment
+.env
+
+/generated/prisma
+tsconfig.tsbuildinfo

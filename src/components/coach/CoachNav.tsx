@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
@@ -21,7 +21,7 @@ export function CoachNav({
   unreadCount = 0,
   onTabChange,
 }: CoachNavProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleTabClick = (tab: CoachNavTab) => {
     if (onTabChange) {
@@ -31,13 +31,13 @@ export function CoachNav({
 
     switch (tab) {
       case 'dashboard':
-        navigate('/coach');
+        router.push('/coach');
         break;
       case 'clients':
-        navigate('/coach/clients');
+        router.push('/coach/clients');
         break;
       case 'plans':
-        navigate('/coach?view=plans');
+        router.push('/coach?view=plans');
         break;
     }
   };
@@ -54,7 +54,7 @@ export function CoachNav({
       <div className="flex items-center justify-between">
         {/* Logotype */}
         <button
-          onClick={() => navigate('/coach')}
+          onClick={() => router.push('/coach')}
           className="flex items-center gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
           aria-label="Logbook Fitness home"
         >

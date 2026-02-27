@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
 import {
   getCurrentWeekNumber,
@@ -24,7 +24,7 @@ export function WeeklyOverview({
   plan,
   completions,
 }: WeeklyOverviewProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // Calculate current week number
   const currentWeekNumber = useMemo(() => {
@@ -72,7 +72,7 @@ export function WeeklyOverview({
   // Handle day card click
   const handleDayClick = (day: WeekDayInfo) => {
     if (day.isInteractive && day.workoutDay) {
-      navigate(`/client/workout/${currentWeek.id}/${day.workoutDay.id}`);
+      router.push(`/client/workout/${currentWeek.id}/${day.workoutDay.id}`);
     }
   };
 

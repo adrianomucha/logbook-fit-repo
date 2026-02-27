@@ -1,0 +1,417 @@
+// prisma/schema.prisma
+// LogBook.fit — Database Schema
+// Source: logbook_db_backend_v3_FINAL.md §2.1
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ──────────────────────────────────────
+// ENUMS
+// ──────────────────────────────────────
+
+enum UserRole {
+  COACH
+  CLIENT
+}
+
+enum WorkoutStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum CheckInStatus {
+  PENDING
+  CLIENT_RESPONDED
+  COMPLETED
+}
+
+enum EffortRating {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum ClientStatus {
+  ACTIVE
+  INACTIVE
+  INVITED
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum ExerciseCategory {
+  CHEST
+  BACK
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  LEGS
+  GLUTES
+  CORE
+  CARDIO
+  FULL_BODY
+  OTHER
+}
+
+// ──────────────────────────────────────
+// AUTH & USERS
+// ──────────────────────────────────────
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    // Uniqueness enforced via partial index (see migrations)
+  passwordHash String
+  name         String
+  role         UserRole
+  avatarUrl    String?
+  timezone     String    @default("UTC")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  // Role-specific profiles
+  coachProfile  CoachProfile?
+  clientProfile ClientProfile?
+
+  // Messages (both roles send and receive)
+  sentMessages     Message[] @relation("sender")
+  receivedMessages Message[] @relation("recipient")
+
+  @@index([email])
+  @@index([role])
+  @@map("users")
+}
+
+model CoachProfile {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Owned resources
+  exercises Exercise[]
+  plans     Plan[]
+  clients   CoachClientRelationship[]
+  invites   ClientInvite[]
+  checkIns  CheckIn[]
+
+  @@map("coach_profiles")
+}
+
+model ClientProfile {
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  activePlanId  String?
+  planStartDate DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user       User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activePlan Plan? @relation("activePlan", fields: [activePlanId], references: [id])
+
+  // Relationships
+  coachRelationship CoachClientRelationship?
+  completions       WorkoutCompletion[]
+  checkIns          CheckIn[]
+
+  @@index([activePlanId])
+  @@map("client_profiles")
+}
+
+// ──────────────────────────────────────
+// COACH-CLIENT RELATIONSHIP
+// ──────────────────────────────────────
+
+model CoachClientRelationship {
+  id        String       @id @default(uuid())
+  coachId   String
+  clientId  String       @unique // MVP: one coach per client
+  status    ClientStatus @default(ACTIVE)
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  coach  CoachProfile  @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  client ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@unique([coachId, clientId])
+  @@index([coachId])
+  @@index([clientId])
+  @@map("coach_client_relationships")
+}
+
+model ClientInvite {
+  id        String       @id @default(uuid())
+  coachId   String
+  token     String       @unique @default(uuid())
+  email     String?
+  status    InviteStatus @default(PENDING)
+  expiresAt DateTime     // 7 days from creation
+  createdAt DateTime     @default(now())
+
+  coach CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)
+
+  @@index([token])
+  @@index([coachId])
+  @@map("client_invites")
+}
+
+// ──────────────────────────────────────
+// EXERCISE LIBRARY
+// ──────────────────────────────────────
+
+model Exercise {
+  id            String           @id @default(uuid())
+  coachId       String
+  name          String
+  category      ExerciseCategory @default(OTHER)
+  defaultSets   Int?             @default(3)
+  defaultReps   Int?             @default(10)
+  defaultWeight Float?
+  defaultRest   Int?             // seconds
+  instructions  String?          // Coach's cue notes
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  deletedAt     DateTime?
+
+  coach            CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  workoutExercises WorkoutExercise[]
+
+  // Uniqueness enforced via partial index (see migrations)
+  @@index([coachId])
+  @@index([coachId, category])
+  @@map("exercises")
+}
+
+// ──────────────────────────────────────
+// PLAN STRUCTURE
+// ──────────────────────────────────────
+
+model Plan {
+  id            String    @id @default(uuid())
+  coachId       String
+  name          String
+  description   String?
+  durationWeeks Int       @default(4)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  editedAt      DateTime? // Last mid-cycle edit timestamp
+  deletedAt     DateTime?
+
+  coach       CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  weeks       Week[]
+  assignedTo  ClientProfile[] @relation("activePlan")
+  completions WorkoutCompletion[]
+
+  @@index([coachId])
+  @@map("plans")
+}
+
+model Week {
+  id         String   @id @default(uuid())
+  planId     String
+  weekNumber Int      // 1-indexed
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  plan Plan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  days Day[]
+
+  @@unique([planId, weekNumber])
+  @@index([planId])
+  @@map("weeks")
+}
+
+model Day {
+  id        String  @id @default(uuid())
+  weekId    String
+  dayNumber Int     // 1-7 (Monday=1, Sunday=7)
+  name      String? // e.g., "Upper Body Push", null = rest day
+  isRestDay Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  week        Week              @relation(fields: [weekId], references: [id], onDelete: Cascade)
+  exercises   WorkoutExercise[]
+  completions WorkoutCompletion[]
+
+  @@unique([weekId, dayNumber])
+  @@index([weekId])
+  @@map("days")
+}
+
+// ──────────────────────────────────────
+// WORKOUT EXERCISES (Join table with data)
+// ──────────────────────────────────────
+
+model WorkoutExercise {
+  id          String  @id @default(uuid())
+  dayId       String
+  exerciseId  String
+  orderIndex  Int     // Sort order within the day — unique per day
+  sets        Int     @default(3)
+  reps        Int     @default(10)
+  weight      Float?  // kg or lbs (user preference)
+  restSeconds Int?    // Rest between sets
+  coachNotes  String? // Per-workout coaching notes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  day            Day             @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  exercise       Exercise        @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  setCompletions SetCompletion[]
+  flags          ExerciseFlag[]
+  messages       Message[]       @relation("exerciseReference")
+
+  @@unique([dayId, orderIndex])
+  @@index([dayId])
+  @@index([exerciseId])
+  @@map("workout_exercises")
+}
+
+// ──────────────────────────────────────
+// WORKOUT TRACKING
+// ──────────────────────────────────────
+
+model WorkoutCompletion {
+  id             String        @id @default(uuid())
+  clientId       String
+  planId         String        // Denormalized for query performance; validated by trigger
+  dayId          String
+  status         WorkoutStatus @default(NOT_STARTED)
+  startedAt      DateTime?
+  completedAt    DateTime?
+  completionPct  Float?        // 0.0 to 1.0
+  exercisesDone  Int?
+  exercisesTotal Int?
+  durationSec    Int?
+  effortRating   EffortRating?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  client   ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  plan     Plan          @relation(fields: [planId], references: [id], onDelete: Cascade)
+  day      Day           @relation(fields: [dayId], references: [id], onDelete: Cascade)
+  sets     SetCompletion[]
+  flags    ExerciseFlag[]
+  messages Message[]     @relation("workoutReference")
+
+  @@unique([clientId, planId, dayId]) // One completion per client per day
+  @@index([clientId, status])         // Coach dashboard: find in-progress/missed
+  @@index([clientId, completedAt])    // Recent workouts query
+  @@map("workout_completions")
+}
+
+model SetCompletion {
+  id                  String    @id @default(uuid())
+  workoutCompletionId String
+  workoutExerciseId   String    // References WorkoutExercise, not Exercise
+  setNumber           Int       // 1-indexed
+  completed           Boolean   @default(false)
+  actualWeight        Float?    // Client override
+  actualReps          Int?      // Client override
+  completedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  workoutCompletion WorkoutCompletion @relation(fields: [workoutCompletionId], references: [id], onDelete: Cascade)
+  workoutExercise   WorkoutExercise   @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([workoutCompletionId, workoutExerciseId, setNumber]) // Upsert support
+  @@index([workoutCompletionId])
+  @@map("set_completions")
+}
+
+model ExerciseFlag {
+  id                  String   @id @default(uuid())
+  workoutCompletionId String
+  workoutExerciseId   String   // Consistent with SetCompletion
+  note                String?  @db.VarChar(200) // 200 char max
+  chatMessageId       String?  // If client opened chat about this
+  createdAt           DateTime @default(now())
+
+  workoutCompletion WorkoutCompletion @relation(fields: [workoutCompletionId], references: [id], onDelete: Cascade)
+  workoutExercise   WorkoutExercise   @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+  chatMessage       Message?          @relation(fields: [chatMessageId], references: [id], onDelete: SetNull)
+
+  @@unique([workoutCompletionId, workoutExerciseId]) // One flag per exercise per workout
+  @@map("exercise_flags")
+}
+
+// ──────────────────────────────────────
+// CHECK-INS (North Star Feature)
+// ──────────────────────────────────────
+
+model CheckIn {
+  id           String        @id @default(uuid())
+  coachId      String
+  clientId     String
+  status       CheckInStatus @default(PENDING)
+
+  // Client response
+  effortRating    EffortRating?
+  painBlockers    String?       @db.VarChar(500)
+  clientFeeling   String?       @db.VarChar(500)
+  clientRespondedAt DateTime?
+
+  // Coach response
+  coachFeedback   String?
+  planAdjustment  Boolean       @default(false)
+  coachRespondedAt DateTime?
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+
+  coach  CoachProfile  @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  client ClientProfile @relation(fields: [clientId], references: [id], onDelete: Cascade)
+
+  @@index([coachId])
+  @@index([clientId])
+  @@index([clientId, status])      // Find pending check-ins for client
+  @@index([coachId, status])       // Coach dashboard: pending reviews
+  @@index([clientId, completedAt]) // Check-in history
+  @@map("check_ins")
+}
+
+// ──────────────────────────────────────
+// MESSAGING
+// ──────────────────────────────────────
+
+model Message {
+  id                  String    @id @default(uuid())
+  senderId            String
+  recipientId         String
+  content             String
+  workoutReferenceId  String?   // Optional: references a WorkoutCompletion
+  exerciseReferenceId String?   // Optional: references a WorkoutExercise
+  readAt              DateTime?
+  createdAt           DateTime  @default(now())
+
+  sender            User               @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  recipient         User               @relation("recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  workoutReference  WorkoutCompletion?  @relation("workoutReference", fields: [workoutReferenceId], references: [id], onDelete: SetNull)
+  exerciseReference WorkoutExercise?    @relation("exerciseReference", fields: [exerciseReferenceId], references: [id], onDelete: SetNull)
+  exerciseFlags     ExerciseFlag[]
+
+  @@index([senderId, recipientId, createdAt])    // Chat thread (sender's view)
+  @@index([recipientId, senderId, createdAt])    // Chat thread (recipient's view)
+  @@index([recipientId, readAt])                  // Unread count
+  @@map("messages")
+}

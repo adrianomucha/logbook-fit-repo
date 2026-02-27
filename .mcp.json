@@ -6,6 +6,10 @@
         "shadcn@latest",
         "mcp"
       ]
+    },
+    "framer": {
+      "type": "sse",
+      "url": "https://mcp.unframer.co/sse?id=92ec51e4739212bd77da254d448222b470d6451961b9c00b7113db2f89000327&secret=gII5qa3ZLIGhlZqJHO8KBv1LD5r24kut"
     }
   }
 }

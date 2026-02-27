@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Client, Message, CheckIn, CompletedWorkout, WorkoutPlan } from '@/types';
 import { getClientStatus, ClientStatus } from '@/lib/client-status';
 import { calculateNextCheckIn } from '@/lib/checkin-helpers';
@@ -79,7 +79,7 @@ export function ClientsRequiringAction({
   plans,
   onSelectClient
 }: ClientsRequiringActionProps) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   // Helper: look up plan name for a client
   const getPlanName = (clientPlanId?: string): string | undefined => {
@@ -110,11 +110,11 @@ export function ClientsRequiringAction({
 
   const handleClientAction = (clientId: string, statusType: string) => {
     if (statusType === 'pending-checkin') {
-      navigate(`/coach/client/${clientId}/check-in`);
+      router.push(`/coach/clients/${clientId}/check-in`);
       return;
     }
     const tab = statusType === 'unread' ? 'messages' : 'overview';
-    navigate(`/coach/clients/${clientId}?tab=${tab}`);
+    router.push(`/coach/clients/${clientId}?tab=${tab}`);
   };
 
   // When nobody needs action, render nothing — WeeklyConfidenceStrip shows the all-clear
@@ -154,7 +154,7 @@ export function ClientsRequiringAction({
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        navigate(`/coach/clients/${client.id}`);
+                        router.push(`/coach/clients/${client.id}`);
                       }}
                       className="text-sm sm:text-[15px] font-semibold truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer"
                     >
@@ -209,13 +209,13 @@ export function ClientsRequiringAction({
                 <div
                   key={client.id}
                   className="flex items-center gap-3 sm:gap-4 py-3 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/coach/clients/${client.id}`)}
+                  onClick={() => router.push(`/coach/clients/${client.id}`)}
                   role="link"
                   tabIndex={0}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      navigate(`/coach/clients/${client.id}`);
+                      router.push(`/coach/clients/${client.id}`);
                     }
                   }}
                 >
