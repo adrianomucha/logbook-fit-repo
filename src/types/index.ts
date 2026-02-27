@@ -193,29 +193,6 @@ export interface CheckInSchedule {
 
 export type Role = 'coach' | 'client';
 
-export interface AppState {
-  currentRole: Role;
-  currentUserId: string;
-  coaches: Coach[];
-  clients: Client[];
-  plans: WorkoutPlan[];
-  messages: Message[];
-  completedWorkouts: CompletedWorkout[];
-  measurements: Measurement[];
-  checkIns: CheckIn[];
-  coachExercises: CoachExercise[];
-  workoutCompletions: WorkoutCompletion[];
-  setCompletions: SetCompletion[];
-  exerciseFlags: ExerciseFlag[];
-  checkInSchedules: CheckInSchedule[];
-  // Migration flags
-  checkInSchedulesMigrationV1?: boolean;
-  alexMigrationV4?: boolean;
-  messagesMigrationV2?: boolean;
-  workoutCompletionsMigrationV2?: boolean;
-  mikeWorkoutTodayMigration?: boolean;
-}
-
 // Plan Setup Form Types
 export interface PlanSetupFormData {
   name: string;
