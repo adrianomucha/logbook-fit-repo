@@ -28,6 +28,17 @@ export async function GET() {
           id: true,
           activePlanId: true,
           planStartDate: true,
+          coachRelationship: {
+            select: {
+              status: true,
+              coach: {
+                select: {
+                  id: true,
+                  user: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
         },
       },
     },

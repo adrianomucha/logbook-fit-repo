@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Mono } from 'next/font/google';
-import { AppStateProvider } from '@/providers/AppStateProvider';
-import { SwitchRoleButton } from '@/components/SwitchRoleButton';
+import { SessionProvider } from '@/providers/SessionProvider';
+import { SWRProvider } from '@/providers/SWRProvider';
+import { LogoutButton } from '@/components/LogoutButton';
 import '@/app/globals.css';
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -19,10 +20,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={ibmPlexMono.variable}>
       <body>
-        <AppStateProvider>
-          {children}
-          <SwitchRoleButton />
-        </AppStateProvider>
+        <SessionProvider>
+          <SWRProvider>
+              {children}
+              <LogoutButton />
+          </SWRProvider>
+        </SessionProvider>
       </body>
     </html>
   );
