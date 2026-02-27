@@ -15,7 +15,7 @@ import {
   Dumbbell,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { WorkoutPlan, Exercise, AppState } from '@/types';
+import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseEditorDrawer } from './ExerciseEditorDrawer';
 
@@ -28,7 +28,6 @@ interface PlanEditorDrawerProps {
   initialWeekIndex?: number;
   /** Initial day to show (0-indexed) */
   initialDayIndex?: number;
-  appState?: AppState;
 }
 
 export function PlanEditorDrawer({

@@ -14,8 +14,8 @@ interface PlanTemplateCardProps {
   plan: WorkoutPlan;
   clientCount: number;
   onEdit: () => void;
-  onDuplicate: () => void;
-  onArchive: () => void;
+  onDuplicate?: () => void;
+  onArchive?: () => void;
   onRestore?: () => void;
   onDelete: () => void;
 }
@@ -74,22 +74,24 @@ export function PlanTemplateCard({
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Template
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(); }}>
-                <Copy className="w-4 h-4 mr-2" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              {onDuplicate && (
+                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(); }}>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Duplicate
+                </DropdownMenuItem>
+              )}
+              {(onDuplicate || onArchive || onRestore) && <DropdownMenuSeparator />}
               {isArchived && onRestore ? (
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRestore(); }}>
                   <RotateCcw className="w-4 h-4 mr-2" />
                   Restore
                 </DropdownMenuItem>
-              ) : (
+              ) : onArchive ? (
                 <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(); }}>
                   <Archive className="w-4 h-4 mr-2" />
                   Archive
                 </DropdownMenuItem>
-              )}
+              ) : null}
               <DropdownMenuItem
                 onClick={(e) => { e.stopPropagation(); onDelete(); }}
                 className="text-destructive focus:text-destructive"

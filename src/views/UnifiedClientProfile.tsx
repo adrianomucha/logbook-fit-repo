@@ -1,9 +1,16 @@
+'use client';
+
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { AppState, Message, PlanSetupFormData, ExerciseFlag, CheckIn, WorkoutPlan } from '@/types';
-import { getClientStatus } from '@/lib/client-status';
-import { getActiveCheckIn } from '@/lib/checkin-helpers';
-import { getScheduleForClient, upsertSchedule } from '@/lib/checkin-schedule-helpers';
+import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, ExerciseFlag, Message, WorkoutDay, Exercise, WorkoutWeek } from '@/types';
+import { useClientProfile } from '@/hooks/api/useClientProfile';
+import { usePlanDetail } from '@/hooks/api/usePlanDetail';
+import type { PlanDetail } from '@/hooks/api/usePlanDetail';
+import { useMessages } from '@/hooks/api/useMessages';
+import { useCoachPlans } from '@/hooks/api/useCoachPlans';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { createCheckInForClient, useCheckIn } from '@/hooks/api/useCheckIn';
+import { apiFetch } from '@/lib/api-client';
 import { ContextualStatusHeader } from '@/components/coach/workspace/ContextualStatusHeader';
 import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
 import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
@@ -16,18 +23,135 @@ import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { generatePlanStructure, deepCopyPlan } from '@/lib/plan-generator';
+import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { getClientStatus } from '@/lib/client-status';
 
-interface UnifiedClientProfileProps {
-  appState: AppState;
-  onUpdateState: (updater: (state: AppState) => AppState) => void;
+// ---- Data Adapters ----
+// Map API responses → localStorage types for existing sub-components
+
+function apiClientToClient(
+  detail: NonNullable<ReturnType<typeof useClientProfile>['client']>
+): Client {
+  return {
+    id: detail.id,
+    name: detail.user.name ?? 'Unknown',
+    email: detail.user.email,
+    currentPlanId: detail.activePlan?.id,
+    status: detail.relationshipStatus === 'ACTIVE' ? 'active' : 'inactive',
+    avatar: undefined,
+    planStartDate: detail.planStartDate ?? undefined,
+    lastCheckInDate: detail.checkIns[0]?.completedAt ?? undefined,
+  };
 }
 
-export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientProfileProps) {
+function apiCheckInsToCheckIns(
+  checkIns: NonNullable<ReturnType<typeof useClientProfile>['client']>['checkIns'],
+  clientProfileId: string,
+  coachUserId: string
+): CheckIn[] {
+  return checkIns.map((ci) => ({
+    id: ci.id,
+    clientId: clientProfileId,
+    coachId: coachUserId,
+    date: ci.createdAt,
+    status: ci.status === 'PENDING'
+      ? 'pending' as const
+      : ci.status === 'CLIENT_RESPONDED'
+        ? 'responded' as const
+        : 'completed' as const,
+    completedAt: ci.completedAt ?? undefined,
+    effortRating: ci.effortRating ?? undefined,
+  }));
+}
+
+function apiPlanToPlan(detail: PlanDetail): WorkoutPlan {
+  return {
+    id: detail.id,
+    name: detail.name,
+    description: detail.description ?? undefined,
+    durationWeeks: detail.durationWeeks,
+    weeks: detail.weeks.map((w): WorkoutWeek => ({
+      id: w.id,
+      weekNumber: w.weekNumber,
+      days: w.days.map((d): WorkoutDay => ({
+        id: d.id,
+        name: d.name ?? `Day ${d.dayNumber}`,
+        isRestDay: d.isRestDay,
+        exercises: d.exercises.map((we): Exercise => ({
+          id: we.id, // workoutExercise.id as the Exercise id (sub-components use this)
+          name: we.exercise.name,
+          sets: we.sets,
+          reps: we.reps ?? undefined,
+          weight: we.weight ?? undefined,
+          notes: we.coachNotes ?? undefined,
+        })),
+      })),
+    })),
+    createdAt: detail.createdAt,
+    updatedAt: detail.updatedAt,
+  };
+}
+
+function apiCompletionsToWorkoutCompletions(
+  completions: NonNullable<ReturnType<typeof useClientProfile>['client']>['completions'],
+  clientProfileId: string,
+  planId: string
+): WorkoutCompletion[] {
+  return completions.map((c) => ({
+    id: c.id,
+    clientId: clientProfileId,
+    planId,
+    weekId: '', // Not available from API, but not critical for display
+    dayId: c.dayId,
+    status: 'COMPLETED' as const,
+    completedAt: c.completedAt ?? undefined,
+    completionPct: (c.completionPct ?? 0) * 100,
+    exercisesDone: 0,
+    exercisesTotal: 0,
+    durationSec: c.durationSec ?? undefined,
+    effortRating: (c.effortRating as WorkoutCompletion['effortRating']) ?? undefined,
+  }));
+}
+
+function apiMessagesToMessages(
+  messages: ReturnType<typeof useMessages>['messages'],
+  clientProfileId: string
+): Message[] {
+  return messages.map((m) => ({
+    id: m.id,
+    senderId: m.senderId,
+    senderName: m.sender.name ?? 'Unknown',
+    content: m.content,
+    timestamp: m.createdAt,
+    read: m.readAt !== null,
+    clientId: clientProfileId,
+  })).reverse(); // API returns newest first, localStorage expects oldest first
+}
+
+export function UnifiedClientProfile() {
   const params = useParams<{ clientId: string }>();
-  const clientId = params?.clientId;
+  const clientId = params?.clientId ?? null;
   const router = useRouter();
+  const { user } = useCurrentUser();
+
+  // API hooks
+  const { client: apiClient, isLoading: isLoadingClient, refresh: refreshClient } = useClientProfile(clientId);
+  const { plan: apiPlan, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
+  const { messages: apiMessages, sendMessage } = useMessages(apiClient?.user.id ?? null);
+  const { plans: coachPlans } = useCoachPlans();
+
+  // Find active check-in from client's check-ins list
+  const activeCheckInId = useMemo(() => {
+    if (!apiClient) return null;
+    const active = apiClient.checkIns.find(
+      (ci) => ci.status === 'PENDING' || ci.status === 'CLIENT_RESPONDED'
+    );
+    return active?.id ?? null;
+  }, [apiClient]);
+
+  const { checkIn: activeCheckInDetail } = useCheckIn(activeCheckInId);
+
+  // Local UI state
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
   const [showAssignPlanModal, setShowAssignPlanModal] = useState(false);
   const [showPlanDrawer, setShowPlanDrawer] = useState(false);
@@ -44,146 +168,160 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
   const planEditorRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
 
-  // Derived state from AppState
-  const client = useMemo(
-    () => appState.clients.find((c) => c.id === clientId),
-    [appState.clients, clientId]
+  // ---- Adapted data for sub-components ----
+  const client: Client | null = useMemo(
+    () => (apiClient ? apiClientToClient(apiClient) : null),
+    [apiClient]
   );
 
-  // Calculate total unread messages from all clients (needed for nav badge)
-  const totalUnreadMessages = useMemo(() => {
-    const coachClientIds = appState.clients.map((c) => c.id);
-    return appState.messages.filter(
-      (m) => coachClientIds.includes(m.senderId) && !m.read
-    ).length;
-  }, [appState.clients, appState.messages]);
-
-  const plan = useMemo(
-    () => appState.plans.find((p) => p.id === client?.currentPlanId),
-    [appState.plans, client?.currentPlanId]
+  const checkIns: CheckIn[] = useMemo(
+    () =>
+      apiClient && user
+        ? apiCheckInsToCheckIns(apiClient.checkIns, apiClient.id, user.id)
+        : [],
+    [apiClient, user]
   );
 
-  const status = useMemo(
-    () => client ? getClientStatus(client, appState.messages, appState.checkIns) : null,
-    [client, appState.messages, appState.checkIns]
+  const plan: WorkoutPlan | undefined = useMemo(
+    () => (apiPlan ? apiPlanToPlan(apiPlan) : undefined),
+    [apiPlan]
   );
 
-  // Get active check-in (pending or responded)
-  const activeCheckIn = useMemo(() => {
-    if (!clientId) return null;
-    return getActiveCheckIn(clientId, appState.checkIns) || null;
-  }, [appState.checkIns, clientId]);
+  const workoutCompletions: WorkoutCompletion[] = useMemo(
+    () =>
+      apiClient
+        ? apiCompletionsToWorkoutCompletions(
+            apiClient.completions,
+            apiClient.id,
+            apiClient.activePlan?.id ?? ''
+          )
+        : [],
+    [apiClient]
+  );
 
-  // Priority Mode: A = check-in active (coach should respond), B = no check-in (routine visit)
+  const messages: Message[] = useMemo(
+    () => (apiClient ? apiMessagesToMessages(apiMessages, apiClient.id) : []),
+    [apiMessages, apiClient]
+  );
+
+  // Adapted plan list for AssignPlanModal
+  const plansList: WorkoutPlan[] = useMemo(
+    () =>
+      coachPlans.map((p) => ({
+        id: p.id,
+        name: p.name,
+        description: p.description ?? undefined,
+        durationWeeks: p.durationWeeks,
+        weeks: p.weeks.map((w) => ({
+          id: w.id,
+          weekNumber: w.weekNumber,
+          days: [],
+        })),
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+        isTemplate: true,
+      })),
+    [coachPlans]
+  );
+
+  const activeCheckIn: CheckIn | null = useMemo(() => {
+    if (!activeCheckInDetail || !apiClient || !user) return null;
+    return {
+      id: activeCheckInDetail.id,
+      clientId: apiClient.id,
+      coachId: user.id,
+      date: activeCheckInDetail.createdAt,
+      status:
+        activeCheckInDetail.status === 'PENDING'
+          ? ('pending' as const)
+          : activeCheckInDetail.status === 'CLIENT_RESPONDED'
+            ? ('responded' as const)
+            : ('completed' as const),
+      workoutFeeling: (activeCheckInDetail.effortRating as CheckIn['workoutFeeling']) ?? undefined,
+      bodyFeeling: (activeCheckInDetail.clientFeeling as CheckIn['bodyFeeling']) ?? undefined,
+      clientNotes: activeCheckInDetail.painBlockers ?? undefined,
+      clientRespondedAt: activeCheckInDetail.clientRespondedAt ?? undefined,
+      coachResponse: activeCheckInDetail.coachFeedback ?? undefined,
+      planAdjustment: activeCheckInDetail.planAdjustment || undefined,
+      completedAt: activeCheckInDetail.completedAt ?? undefined,
+    };
+  }, [activeCheckInDetail, apiClient, user]);
+
   const priorityMode: 'A' | 'B' = activeCheckIn ? 'A' : 'B';
 
-  // Get last completed check-in for status header
   const lastCompletedCheckIn = useMemo(() => {
-    if (!clientId) return null;
-    return appState.checkIns
-      .filter((c) => c.clientId === clientId && c.status === 'completed')
-      .sort((a, b) =>
-        new Date(b.completedAt || b.date).getTime() -
-        new Date(a.completedAt || a.date).getTime()
-      )[0] || null;
-  }, [appState.checkIns, clientId]);
+    return (
+      checkIns
+        .filter((c) => c.status === 'completed')
+        .sort(
+          (a, b) =>
+            new Date(b.completedAt || b.date).getTime() -
+            new Date(a.completedAt || a.date).getTime()
+        )[0] ?? null
+    );
+  }, [checkIns]);
 
-  // Get responded check-in (for status header context)
   const respondedCheckIn = useMemo(() => {
-    if (!clientId) return null;
-    return appState.checkIns
-      .filter((c) => c.clientId === clientId && c.status === 'responded')
-      .sort((a, b) =>
-        new Date(b.clientRespondedAt || b.date).getTime() -
-        new Date(a.clientRespondedAt || a.date).getTime()
-      )[0] || null;
-  }, [appState.checkIns, clientId]);
-
-  // Get client's exercise flags
-  const clientFlags = useMemo(() => {
-    if (!clientId) return [];
-    const clientCompletionIds = appState.workoutCompletions
-      .filter((wc) => wc.clientId === clientId)
-      .map((wc) => wc.id);
-    return appState.exerciseFlags.filter((flag) =>
-      clientCompletionIds.includes(flag.workoutCompletionId)
+    return (
+      checkIns
+        .filter((c) => c.status === 'responded')
+        .sort(
+          (a, b) =>
+            new Date(b.clientRespondedAt || b.date).getTime() -
+            new Date(a.clientRespondedAt || a.date).getTime()
+        )[0] ?? null
     );
-  }, [appState.exerciseFlags, appState.workoutCompletions, clientId]);
+  }, [checkIns]);
 
-  // Get coach info
-  const currentCoach = useMemo(
-    () => appState.coaches.find((c) => c.id === appState.currentUserId),
-    [appState.coaches, appState.currentUserId]
-  );
+  // Status computation — uses full getClientStatus for ContextualStatusHeader
+  const status = useMemo(() => {
+    if (!client) return null;
+    return getClientStatus(client, messages, checkIns);
+  }, [client, messages, checkIns]);
 
-  // Get check-in schedule for this client
-  const clientSchedule = useMemo(
-    () => clientId ? getScheduleForClient(clientId, appState.checkInSchedules || []) : undefined,
-    [appState.checkInSchedules, clientId]
-  );
-
-  // Auto-mark client messages as read when coach views their profile
-  useEffect(() => {
-    if (!clientId) return;
-    const hasUnread = appState.messages.some(
-      (m) => m.senderId === clientId && !m.read
-    );
-    if (hasUnread) {
-      onUpdateState((state) => ({
-        ...state,
-        messages: state.messages.map((m) =>
-          m.senderId === clientId && !m.read ? { ...m, read: true } : m
-        ),
-      }));
-    }
-  }, [clientId]); // Only run when navigating to a new client profile
-
-  // Handlers
+  // ---- Handlers ----
   const handleScrollToCheckIn = () => {
     checkInRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleStartCheckIn = () => {
-    // If no active check-in, create one
-    if (!activeCheckIn) {
-      const newCheckIn: CheckIn = {
-        id: `checkin-${Date.now()}`,
-        clientId: client?.id || '',
-        coachId: appState.currentUserId,
-        date: new Date().toISOString(),
-        status: 'pending',
-      };
-      onUpdateState((state) => ({
-        ...state,
-        checkIns: [...state.checkIns, newCheckIn],
-      }));
-      // Show "just sent" confirmation
+  const handleStartCheckIn = async () => {
+    if (!clientId || activeCheckIn) return;
+    try {
+      await createCheckInForClient(clientId);
+      refreshClient();
       setJustSentCheckIn(true);
       setTimeout(() => setJustSentCheckIn(false), 5000);
+      handleScrollToCheckIn();
+    } catch {
+      // Failed to create check-in
     }
-    // Scroll to the check-in section
-    handleScrollToCheckIn();
   };
 
-  const handleCompleteCheckIn = (completedCheckIn: CheckIn) => {
-    onUpdateState((state) => ({
-      ...state,
-      checkIns: state.checkIns.map((c) =>
-        c.id === completedCheckIn.id ? completedCheckIn : c
-      ),
-      clients: state.clients.map((c) =>
-        c.id === clientId
-          ? { ...c, lastCheckInDate: new Date().toISOString() }
-          : c
-      ),
-    }));
+  const handleCompleteCheckIn = async (completedCheckIn: CheckIn) => {
+    // Submit coach response via API
+    if (!activeCheckInId) return;
+    try {
+      await apiFetch(`/api/check-ins/${activeCheckInId}/coach-respond`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          coachFeedback: completedCheckIn.coachResponse,
+          planAdjustment: completedCheckIn.planAdjustment,
+        }),
+      });
+      refreshClient();
+    } catch {
+      // Failed to complete check-in
+    }
   };
 
-  const handleCreateCheckIn = (newCheckIn: CheckIn) => {
-    onUpdateState((state) => ({
-      ...state,
-      checkIns: [...state.checkIns, newCheckIn],
-    }));
+  const handleCreateCheckIn = async () => {
+    if (!clientId) return;
+    try {
+      await createCheckInForClient(clientId);
+      refreshClient();
+    } catch {
+      // Failed to create
+    }
   };
 
   const handleCreateNewPlan = () => {
@@ -198,110 +336,39 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     setShowPlanDrawer(true);
   };
 
-  const handleUnassignPlan = () => {
-    onUpdateState((state) => ({
-      ...state,
-      clients: state.clients.map((c) =>
-        c.id === clientId
-          ? { ...c, currentPlanId: undefined, planStartDate: undefined }
-          : c
-      ),
-      checkInSchedules: (state.checkInSchedules || []).map((s) =>
-        s.clientId === clientId
-          ? { ...s, status: 'INACTIVE' as const, updatedAt: new Date().toISOString() }
-          : s
-      ),
-    }));
+  const handleUnassignPlan = async () => {
+    // TODO: Implement plan unassignment via API when endpoint exists
   };
 
-  const handleUpdatePlan = (updatedPlan: WorkoutPlan) => {
-    onUpdateState((state) => ({
-      ...state,
-      plans: state.plans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p)),
-    }));
+  const handleUpdatePlan = async (updatedPlan: WorkoutPlan) => {
+    // TODO: Implement plan update via API when endpoint exists
+    refreshPlan();
   };
 
-  const handlePlanCreated = (formData: PlanSetupFormData) => {
-    // Create the template
-    const newTemplate = generatePlanStructure(formData);
-
-    // Fork it into a client instance
-    const clientInstance = deepCopyPlan(newTemplate, { makeInstance: true });
-    const now = new Date().toISOString();
-
-    onUpdateState((state) => ({
-      ...state,
-      // Add both the template and the instance
-      plans: [...state.plans, newTemplate, clientInstance],
-      // Assign the instance (not the template) to the client
-      clients: state.clients.map((c) =>
-        c.id === clientId
-          ? { ...c, currentPlanId: clientInstance.id, planStartDate: now }
-          : c
-      ),
-      // Auto-enroll: upsert ACTIVE check-in schedule
-      checkInSchedules: upsertSchedule(
-        state.checkInSchedules || [],
-        clientId!,
-        state.currentUserId,
-        'ACTIVE',
-        now
-      ),
-    }));
-
+  const handlePlanCreated = async () => {
+    // TODO: Implement plan creation + assignment via API
     setShowPlanSetupModal(false);
+    refreshClient();
   };
 
-  const handleAssignPlan = (templateId: string) => {
-    // Find the template
-    const template = appState.plans.find((p) => p.id === templateId);
-    if (!template) return;
-
-    // Fork the template into a client instance
-    const clientInstance = deepCopyPlan(template, { makeInstance: true });
-    const now = new Date().toISOString();
-
-    onUpdateState((state) => ({
-      ...state,
-      // Add the new instance to plans array
-      plans: [...state.plans, clientInstance],
-      // Assign the instance (not the template) to the client
-      clients: state.clients.map((c) =>
-        c.id === clientId
-          ? { ...c, currentPlanId: clientInstance.id, planStartDate: now }
-          : c
-      ),
-      // Auto-enroll: upsert ACTIVE check-in schedule
-      checkInSchedules: upsertSchedule(
-        state.checkInSchedules || [],
-        clientId!,
-        state.currentUserId,
-        'ACTIVE',
-        now
-      ),
-    }));
+  const handleAssignPlan = async (templateId: string) => {
+    if (!clientId) return;
+    try {
+      await apiFetch(`/api/plans/${templateId}/assign`, {
+        method: 'POST',
+        body: JSON.stringify({ clientProfileId: clientId }),
+      });
+      refreshClient();
+      refreshPlan();
+    } catch {
+      // Failed to assign
+    }
     setShowAssignPlanModal(false);
   };
 
-  const handleSendMessage = (content: string) => {
-    if (!client) return;  // Guard for TypeScript
-
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      senderId: appState.currentUserId,
-      senderName: currentCoach?.name || 'Coach',
-      content,
-      timestamp: new Date().toISOString(),
-      read: false,
-      clientId: client.id,  // Add clientId for proper data isolation
-    };
-
-    onUpdateState((state) => ({
-      ...state,
-      messages: [...state.messages, newMessage],
-    }));
-
-    // Clear prefill after sending
+  const handleSendMessage = async (content: string) => {
+    if (!apiClient) return;
+    await sendMessage(content);
     setChatPrefill(undefined);
   };
 
@@ -311,52 +378,35 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleToggleCheckInSchedule = (enabled: boolean) => {
-    if (!clientId) return;
-    const now = new Date().toISOString();
-
-    if (enabled) {
-      // Re-activate: set ACTIVE with anchorDate = now
-      onUpdateState((state) => ({
-        ...state,
-        checkInSchedules: upsertSchedule(
-          state.checkInSchedules || [],
-          clientId,
-          state.currentUserId,
-          'ACTIVE',
-          now
-        ),
-      }));
-    } else {
-      // Pause: set PAUSED
-      onUpdateState((state) => ({
-        ...state,
-        checkInSchedules: (state.checkInSchedules || []).map((s) =>
-          s.clientId === clientId
-            ? { ...s, status: 'PAUSED' as const, updatedAt: now }
-            : s
-        ),
-      }));
-    }
+  const handleToggleCheckInSchedule = () => {
+    // TODO: Implement schedule toggle via API when endpoint exists
   };
 
-  const handleScrollToPlanEditor = (dayId: string) => {
+  const handleScrollToPlanEditor = () => {
     planEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    // Could also set the selected day in the editor here if we add that prop
   };
 
-  // Client not found error state
-  if (!client) {
+  // ---- Loading State ----
+  if (isLoadingClient) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  // Client not found
+  if (!client || !apiClient) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-          <CoachNav activeTab="clients" unreadCount={totalUnreadMessages} />
+          <CoachNav activeTab="clients" />
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
               <p className="text-muted-foreground mb-4">
-                The client you're looking for doesn't exist or has been removed.
+                The client you&apos;re looking for doesn&apos;t exist or has been removed.
               </p>
               <Button onClick={() => router.push('/coach/clients')}>Back to Clients</Button>
             </CardContent>
@@ -370,12 +420,9 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* Top Navigation */}
-        <CoachNav
-          activeTab="clients"
-          unreadCount={totalUnreadMessages}
-        />
+        <CoachNav activeTab="clients" />
 
-        {/* Page title — back arrow + client avatar + name */}
+        {/* Page title */}
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
@@ -386,18 +433,12 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          {client.avatar && (
-            <span className="text-2xl leading-none shrink-0" aria-hidden="true">
-              {client.avatar}
-            </span>
-          )}
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
             {client.name}
           </h1>
         </div>
 
-        {/* Contextual Status Header - Hidden when status is 'ok' (Mode B) or 'pending-checkin' (Fix 17) */}
-        {/* For pending-checkin, the InlineCheckInReview below already shows the check-in context */}
+        {/* Contextual Status Header */}
         {status && !(priorityMode === 'B' && status.type === 'ok') && status.type !== 'pending-checkin' && (
           <ContextualStatusHeader
             client={client}
@@ -410,19 +451,15 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           />
         )}
 
-        {/* Compact Weekly Strip - Moved to top for quick orientation */}
+        {/* Compact Weekly Strip */}
         <InteractiveWeeklyStrip
           client={client}
           plan={plan}
           planStartDate={client.planStartDate}
-          workoutCompletions={appState.workoutCompletions}
+          workoutCompletions={workoutCompletions}
           onScrollToPlanEditor={handleScrollToPlanEditor}
           compact
         />
-
-        {/* Main Workspace Layout
-             Full-width primary card on top, 2-col grid (chat + secondary) below.
-             Mobile: single column stacking. */}
 
         {/* Primary card — full width */}
         {priorityMode === 'A' ? (
@@ -431,9 +468,9 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
               client={client}
               activeCheckIn={activeCheckIn}
               plan={plan}
-              workoutCompletions={appState.workoutCompletions}
-              exerciseFlags={clientFlags}
-              currentUserId={appState.currentUserId}
+              workoutCompletions={workoutCompletions}
+              exerciseFlags={[]}
+              currentUserId={user?.id ?? ''}
               onCompleteCheckIn={handleCompleteCheckIn}
               onCreateCheckIn={handleCreateCheckIn}
               onMessageAboutFlag={handleMessageAboutFlag}
@@ -457,22 +494,22 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           </div>
         )}
 
-        {/* Bottom row: Chat + Secondary content — matched heights */}
+        {/* Bottom row: Chat + Secondary content */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Chat */}
           <div ref={chatRef} className="flex flex-col h-[450px] md:h-[500px]">
             <ChatView
               client={client}
-              messages={appState.messages}
-              currentUserId={appState.currentUserId}
-              currentUserName={currentCoach?.name || 'Coach'}
+              messages={messages}
+              currentUserId={user?.id ?? ''}
+              currentUserName={user?.name ?? 'Coach'}
               onSendMessage={handleSendMessage}
               initialPrefill={chatPrefill}
               heightClass="h-full"
             />
           </div>
 
-          {/* Secondary content — same height as chat, scrollable */}
+          {/* Secondary content */}
           <div className="flex flex-col gap-4 md:h-[500px] md:overflow-y-auto">
             {priorityMode === 'A' && (
               <Card ref={planEditorRef} className="p-3 sm:p-4">
@@ -493,11 +530,10 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
 
             <Card className="p-3 sm:p-4">
               <CheckInHistoryPanel
-                checkIns={appState.checkIns}
+                checkIns={checkIns}
                 clientId={client.id}
                 clientName={client.name}
                 initialCount={3}
-                schedule={clientSchedule}
                 hasPlan={!!plan}
                 onToggleSchedule={handleToggleCheckInSchedule}
               />
@@ -505,19 +541,19 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
           </div>
         </div>
 
-        {/* Plan Setup Modal (for creating new plan) */}
+        {/* Plan Setup Modal */}
         <PlanSetupModal
           isOpen={showPlanSetupModal}
           onSubmit={handlePlanCreated}
           onClose={() => setShowPlanSetupModal(false)}
         />
 
-        {/* Assign Plan Modal (for selecting existing plan) */}
+        {/* Assign Plan Modal */}
         <AssignPlanModal
           isOpen={showAssignPlanModal}
           onClose={() => setShowAssignPlanModal(false)}
           onAssign={handleAssignPlan}
-          plans={appState.plans}
+          plans={plansList}
           currentPlanId={plan?.id}
         />
 
@@ -528,7 +564,6 @@ export function UnifiedClientProfile({ appState, onUpdateState }: UnifiedClientP
             onOpenChange={setShowPlanDrawer}
             plan={plan}
             onUpdatePlan={handleUpdatePlan}
-            appState={appState}
           />
         )}
       </div>

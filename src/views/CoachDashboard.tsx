@@ -1,6 +1,8 @@
+'use client';
+
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AppState, PlanSetupFormData, WorkoutPlan } from '@/types';
+import { PlanSetupFormData } from '@/types';
 import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip';
 import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
@@ -8,73 +10,98 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateCard } from '@/components/coach/plans/PlanTemplateCard';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, CheckCircle } from 'lucide-react';
+import { Plus, CheckCircle, Loader2 } from 'lucide-react';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
-import { generatePlanStructure, deepCopyPlan } from '@/lib/plan-generator';
-
-interface CoachDashboardProps {
-  appState: AppState;
-  onUpdateState: (updater: (state: AppState) => AppState) => void;
-}
+import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
+import { useCoachPlans } from '@/hooks/api/useCoachPlans';
+import { usePlanDetail } from '@/hooks/api/usePlanDetail';
+import type { PlanDetail } from '@/hooks/api/usePlanDetail';
+import type { WorkoutPlan } from '@/types';
 
 type View = 'dashboard' | 'plans';
 
-// Map View to CoachNavTab (clients is separate page)
 const viewToNavTab = (view: View): CoachNavTab => view;
 
-export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps) {
+// Adapt PlanSummary → WorkoutPlan for sub-components
+function planSummaryToWorkoutPlan(p: { id: string; name: string; description: string | null; durationWeeks: number; createdAt: string; updatedAt: string; deletedAt: string | null; weeks: { id: string; weekNumber: number }[]; assignedTo: { id: string; user: { name: string | null } }[] }): WorkoutPlan {
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description ?? undefined,
+    durationWeeks: p.durationWeeks,
+    weeks: p.weeks.map((w) => ({ id: w.id, weekNumber: w.weekNumber, days: [] })),
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
+    isTemplate: true,
+  };
+}
+
+function planDetailToWorkoutPlan(p: PlanDetail): WorkoutPlan {
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description ?? undefined,
+    durationWeeks: p.durationWeeks,
+    weeks: p.weeks.map((w) => ({
+      id: w.id,
+      weekNumber: w.weekNumber,
+      days: w.days.map((d) => ({
+        id: d.id,
+        name: d.name ?? `Day ${d.dayNumber}`,
+        isRestDay: d.isRestDay,
+        exercises: d.exercises.map((e) => ({
+          id: e.id,
+          name: e.exercise.name,
+          sets: e.sets,
+          reps: e.reps ?? undefined,
+          weight: e.weight ?? undefined,
+          notes: e.coachNotes ?? undefined,
+        })),
+      })),
+    })),
+    createdAt: p.createdAt,
+    updatedAt: p.updatedAt,
+    isTemplate: true,
+  };
+}
+
+export function CoachDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
-  const [showArchivedTemplates, setShowArchivedTemplates] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
 
-  // Get plan being edited
-  const editingPlan = appState.plans.find((p) => p.id === editingPlanId);
+  // --- API hooks ---
+  const { clients: dashboardClients, isLoading: isDashboardLoading } = useCoachDashboard();
+  const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
+  const { plan: editingPlanDetail } = usePlanDetail(editingPlanId);
 
-  // Filter templates (not instances, optionally include archived)
-  const templates = useMemo(() => {
-    return appState.plans.filter((p) => {
-      if (!p.isTemplate) return false;
-      if (!showArchivedTemplates && p.archivedAt) return false;
-      return true;
-    });
-  }, [appState.plans, showArchivedTemplates]);
+  // Adapt plans for display
+  const templates = useMemo(
+    () => apiPlans.map(planSummaryToWorkoutPlan),
+    [apiPlans]
+  );
 
-  // Count clients using each template
-  // First check for plan instances forked from this template, then also count
-  // clients directly assigned to this template (for backward compatibility)
-  const getClientCountForTemplate = (templateId: string) => {
-    // Count plan instances forked from this template
-    const instanceCount = appState.plans.filter(
-      (p) => !p.isTemplate && p.sourceTemplateId === templateId && !p.archivedAt
-    ).length;
+  // Editing plan adapted from full detail
+  const editingPlan: WorkoutPlan | undefined = useMemo(
+    () => (editingPlanDetail ? planDetailToWorkoutPlan(editingPlanDetail) : undefined),
+    [editingPlanDetail]
+  );
 
-    // Also count clients directly assigned to this template (legacy/demo data)
-    const directlyAssignedCount = appState.clients.filter(
-      (c) => c.currentPlanId === templateId
-    ).length;
-
-    return instanceCount + directlyAssignedCount;
+  // Count clients using each plan
+  const getClientCountForTemplate = (planId: string) => {
+    const plan = apiPlans.find((p) => p.id === planId);
+    return plan?.assignedTo.length ?? 0;
   };
 
-  // Get plan name for delete confirmation
+  // Plan name for delete confirmation
   const planToDeleteName = useMemo(() => {
     if (!planToDelete) return '';
-    return appState.plans.find((p) => p.id === planToDelete)?.name || '';
-  }, [appState.plans, planToDelete]);
-
-  // Calculate total unread messages from all clients
-  const totalUnreadMessages = useMemo(() => {
-    const coachClientIds = appState.clients.map((c) => c.id);
-    return appState.messages.filter(
-      (m) => coachClientIds.includes(m.senderId) && !m.read
-    ).length;
-  }, [appState.clients, appState.messages]);
+    return apiPlans.find((p) => p.id === planToDelete)?.name || '';
+  }, [apiPlans, planToDelete]);
 
   // Handle view query parameter
   useEffect(() => {
@@ -84,76 +111,37 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
     }
   }, [searchParams]);
 
-  const handleUpdatePlan = (updatedPlan: WorkoutPlan) => {
-    onUpdateState((state) => ({
-      ...state,
-      plans: state.plans.map((p) => (p.id === updatedPlan.id ? updatedPlan : p))
-    }));
+  const handleUpdatePlan = (_updatedPlan: WorkoutPlan) => {
+    refreshPlans();
   };
 
   const handleCreateNewPlan = () => {
     setShowPlanSetupModal(true);
   };
 
-  const handlePlanCreated = (formData: PlanSetupFormData) => {
-    const newPlan = generatePlanStructure(formData);
-
-    onUpdateState((state) => ({
-      ...state,
-      plans: [...state.plans, newPlan],
-    }));
-
-    setShowPlanSetupModal(false);
-
-    // Show success toast
-    setShowSuccessToast(true);
-    setTimeout(() => setShowSuccessToast(false), 3000);
+  const handlePlanCreated = async (formData: PlanSetupFormData) => {
+    try {
+      await createPlan({
+        name: formData.name,
+        description: formData.description,
+        durationWeeks: formData.durationWeeks,
+      });
+      setShowPlanSetupModal(false);
+      setShowSuccessToast(true);
+      setTimeout(() => setShowSuccessToast(false), 3000);
+    } catch {
+      // Error handled by apiFetch
+    }
   };
 
-  const handleDuplicateTemplate = (templateId: string) => {
-    const source = appState.plans.find((p) => p.id === templateId);
-    if (!source) return;
-
-    const newTemplate = deepCopyPlan(source, { makeInstance: false });
-    onUpdateState((state) => ({
-      ...state,
-      plans: [...state.plans, newTemplate],
-    }));
-
-    // Show success toast
-    setShowSuccessToast(true);
-    setTimeout(() => setShowSuccessToast(false), 3000);
-  };
-
-  const handleArchiveTemplate = (templateId: string) => {
-    onUpdateState((state) => ({
-      ...state,
-      plans: state.plans.map((p) =>
-        p.id === templateId
-          ? { ...p, archivedAt: new Date().toISOString(), updatedAt: new Date().toISOString() }
-          : p
-      ),
-    }));
-  };
-
-  const handleRestoreTemplate = (templateId: string) => {
-    onUpdateState((state) => ({
-      ...state,
-      plans: state.plans.map((p) =>
-        p.id === templateId
-          ? { ...p, archivedAt: undefined, updatedAt: new Date().toISOString() }
-          : p
-      ),
-    }));
-  };
-
-  const handleDeleteTemplate = () => {
+  const handleDeleteTemplate = async () => {
     if (!planToDelete) return;
-    onUpdateState((state) => ({
-      ...state,
-      plans: state.plans.filter((p) => p.id !== planToDelete),
-    }));
-    setPlanToDelete(null);
+    try {
+      await deletePlan(planToDelete);
+      setPlanToDelete(null);
+    } catch {
+      // Error handled by apiFetch
+    }
   };
 
   return (
@@ -178,7 +166,7 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         isOpen={!!planToDelete}
         onClose={() => setPlanToDelete(null)}
         onConfirm={handleDeleteTemplate}
-        title="Delete Template"
+        title="Delete Plan"
         message={`Are you sure you want to delete "${planToDeleteName}"?`}
         warningMessage="This action cannot be undone. Client plans created from this template will not be affected."
         confirmLabel="Delete"
@@ -192,14 +180,12 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
           onOpenChange={(open) => !open && setEditingPlanId(null)}
           plan={editingPlan}
           onUpdatePlan={handleUpdatePlan}
-          appState={appState}
         />
       )}
 
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav
           activeTab={viewToNavTab(currentView)}
-          unreadCount={totalUnreadMessages}
           onTabChange={(tab) => {
             if (tab === 'clients') {
               router.push('/coach/clients');
@@ -212,18 +198,16 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
         {currentView === 'dashboard' && (
           <div className="space-y-6">
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
-            <WeeklyConfidenceStrip
-              clients={appState.clients}
-              checkIns={appState.checkIns}
-            />
-            <ClientsRequiringAction
-              clients={appState.clients}
-              messages={appState.messages}
-              checkIns={appState.checkIns}
-              completedWorkouts={appState.completedWorkouts}
-              plans={appState.plans}
-              onSelectClient={() => {}}
-            />
+            {isDashboardLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <WeeklyConfidenceStrip clients={dashboardClients} />
+                <ClientsRequiringAction clients={dashboardClients} />
+              </>
+            )}
           </div>
         )}
 
@@ -235,34 +219,20 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
                 <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
                   {templates.length} {templates.length === 1 ? 'template' : 'templates'}
                 </span>
-                <div className="flex items-center gap-3">
-                  {appState.plans.some((p) => p.isTemplate && p.archivedAt) && (
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="show-archived"
-                        checked={showArchivedTemplates}
-                        onCheckedChange={(checked) => setShowArchivedTemplates(!!checked)}
-                      />
-                      <label
-                        htmlFor="show-archived"
-                        className="text-xs text-muted-foreground cursor-pointer"
-                      >
-                        Show archived
-                      </label>
-                    </div>
-                  )}
-                  <button
-                    onClick={handleCreateNewPlan}
-                    className="flex items-center gap-1 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors font-medium uppercase tracking-wider"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    New
-                  </button>
-                </div>
+                <button
+                  onClick={handleCreateNewPlan}
+                  className="flex items-center gap-1 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors font-medium uppercase tracking-wider"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  New
+                </button>
               </div>
 
-              {/* Template cards grid */}
-              {templates.length > 0 ? (
+              {isPlansLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : templates.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {templates.map((plan, i) => (
                     <div
@@ -274,9 +244,6 @@ export function CoachDashboard({ appState, onUpdateState }: CoachDashboardProps)
                         plan={plan}
                         clientCount={getClientCountForTemplate(plan.id)}
                         onEdit={() => setEditingPlanId(plan.id)}
-                        onDuplicate={() => handleDuplicateTemplate(plan.id)}
-                        onArchive={() => handleArchiveTemplate(plan.id)}
-                        onRestore={plan.archivedAt ? () => handleRestoreTemplate(plan.id) : undefined}
                         onDelete={() => setPlanToDelete(plan.id)}
                       />
                     </div>
