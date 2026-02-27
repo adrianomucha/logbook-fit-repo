@@ -118,9 +118,9 @@ export function RecentContextPanel({
                 <p className="text-muted-foreground">
                   Workouts: {workoutCompletion.completed}/{workoutCompletion.total}
                   {workoutCompletion.completed >= workoutCompletion.total ? (
-                    <span className="text-green-600 ml-1">✓</span>
+                    <span className="text-success ml-1">✓</span>
                   ) : (
-                    <span className="text-amber-600 ml-1">⚠</span>
+                    <span className="text-warning ml-1">⚠</span>
                   )}
                 </p>
 
@@ -133,7 +133,7 @@ export function RecentContextPanel({
 
                 {/* Plan adjusted */}
                 {checkIn.planAdjustment && (
-                  <p className="text-green-600 flex items-center gap-1 text-xs">
+                  <p className="text-success flex items-center gap-1 text-xs">
                     <CheckCircle2 className="w-3 h-3" />
                     Plan adjusted
                   </p>
@@ -242,9 +242,9 @@ export function RecentContextPanelMobile({
                 <p className="text-muted-foreground">
                   Workouts: {workoutCompletion.completed}/{workoutCompletion.total}
                   {workoutCompletion.completed >= workoutCompletion.total ? (
-                    <span className="text-green-600 ml-1">✓</span>
+                    <span className="text-success ml-1">✓</span>
                   ) : (
-                    <span className="text-amber-600 ml-1">⚠</span>
+                    <span className="text-warning ml-1">⚠</span>
                   )}
                 </p>
                 {checkIn.coachResponse && (
@@ -253,7 +253,7 @@ export function RecentContextPanelMobile({
                   </p>
                 )}
                 {checkIn.planAdjustment && (
-                  <p className="text-green-600 flex items-center gap-1 text-xs">
+                  <p className="text-success flex items-center gap-1 text-xs">
                     <CheckCircle2 className="w-3 h-3" />
                     Plan adjusted
                   </p>

@@ -1,20 +1,13 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono, DM_Sans } from 'next/font/google';
+import { IBM_Plex_Mono } from 'next/font/google';
 import { AppStateProvider } from '@/providers/AppStateProvider';
 import { SwitchRoleButton } from '@/components/SwitchRoleButton';
 import '@/app/globals.css';
 
-const jetbrainsMono = JetBrains_Mono({
+const ibmPlexMono = IBM_Plex_Mono({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  variable: '--font-jetbrains-mono',
-  display: 'swap',
-});
-
-const dmSans = DM_Sans({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-dm-sans',
+  variable: '--font-ibm-plex-mono',
   display: 'swap',
 });
 
@@ -24,7 +17,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${jetbrainsMono.variable} ${dmSans.variable}`}>
+    <html lang="en" className={ibmPlexMono.variable}>
       <body>
         <AppStateProvider>
           {children}

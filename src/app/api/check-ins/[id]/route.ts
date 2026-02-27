@@ -10,14 +10,14 @@ import prisma from "@/lib/prisma";
  */
 export async function GET(
   _req: Request,
-  ctx: { params: Record<string, string> }
+  ctx: { params: Promise<Record<string, string>> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const checkInId = ctx.params.id;
+  const { id: checkInId } = await ctx.params;
 
   const checkIn = await prisma.checkIn.findUnique({
     where: { id: checkInId },

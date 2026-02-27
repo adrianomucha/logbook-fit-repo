@@ -181,13 +181,13 @@ export function ExerciseForm({
             value={formData.name}
             onChange={(e) => handleFieldChange('name', e.target.value)}
             onBlur={() => handleBlur('name')}
-            className={errors.name && touched.name ? 'border-red-500' : ''}
+            className={errors.name && touched.name ? 'border-destructive' : ''}
             maxLength={50}
             autoFocus
           />
           <div className="flex justify-between mt-1">
             {errors.name && touched.name && (
-              <p className="text-red-600 text-sm">{errors.name}</p>
+              <p className="text-destructive text-sm">{errors.name}</p>
             )}
             {formData.name.length >= 40 && (
               <p className="text-muted-foreground text-xs ml-auto">{formData.name.length}/50</p>
@@ -213,7 +213,7 @@ export function ExerciseForm({
             ))}
           </select>
           {errors.category && touched.category && (
-            <p className="text-red-600 text-sm mt-1">{errors.category}</p>
+            <p className="text-destructive text-sm mt-1">{errors.category}</p>
           )}
         </div>
 
@@ -235,7 +235,7 @@ export function ExerciseForm({
             ))}
           </select>
           {errors.equipment && touched.equipment && (
-            <p className="text-red-600 text-sm mt-1">{errors.equipment}</p>
+            <p className="text-destructive text-sm mt-1">{errors.equipment}</p>
           )}
         </div>
 
@@ -251,10 +251,10 @@ export function ExerciseForm({
             value={formData.defaultSets}
             onChange={(e) => handleFieldChange('defaultSets', parseInt(e.target.value))}
             onBlur={() => handleBlur('defaultSets')}
-            className={errors.defaultSets && touched.defaultSets ? 'border-red-500' : ''}
+            className={errors.defaultSets && touched.defaultSets ? 'border-destructive' : ''}
           />
           {errors.defaultSets && touched.defaultSets && (
-            <p className="text-red-600 text-sm mt-1">{errors.defaultSets}</p>
+            <p className="text-destructive text-sm mt-1">{errors.defaultSets}</p>
           )}
         </div>
 
@@ -268,13 +268,13 @@ export function ExerciseForm({
             value={formData.notes}
             onChange={(e) => handleFieldChange('notes', e.target.value)}
             onBlur={() => handleBlur('notes')}
-            className={errors.notes && touched.notes ? 'border-red-500' : ''}
+            className={errors.notes && touched.notes ? 'border-destructive' : ''}
             maxLength={200}
             rows={3}
           />
           <div className="flex justify-between mt-1">
             {errors.notes && touched.notes && (
-              <p className="text-red-600 text-sm">{errors.notes}</p>
+              <p className="text-destructive text-sm">{errors.notes}</p>
             )}
             {formData.notes.length >= 150 && (
               <p className="text-muted-foreground text-xs ml-auto">{formData.notes.length}/200</p>

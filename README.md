@@ -4,12 +4,12 @@ A coach-first platform to plan workouts, track progress, and stay connected with
 
 ## Tech Stack
 
-- **Framework:** Next.js 14 (App Router) + React + TypeScript
+- **Framework:** Next.js 15 (App Router) + React + TypeScript
 - **Database:** PostgreSQL (Supabase) via Prisma v6
 - **Auth:** NextAuth.js with Credentials provider + JWT sessions
 - **UI Components:** shadcn/ui (Neutral theme)
 - **Styling:** Tailwind CSS
-- **Fonts:** JetBrains Mono (headings) + DM Sans (body)
+- **Fonts:** IBM Plex Mono
 - **Icons:** Lucide React
 
 ## Getting Started
@@ -184,8 +184,7 @@ prisma/
 ## Design System
 
 - **Theme:** Neutral with 0.625rem border radius
-- **Headings:** JetBrains Mono (font-heading)
-- **Body:** DM Sans (font-sans)
+- **Font:** IBM Plex Mono (font-sans / font-heading)
 - **Colors:** Neutral palette + semantic tokens (success, warning, info, destructive)
 - **Components:** shadcn/ui + Tailwind CSS
 

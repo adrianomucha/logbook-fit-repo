@@ -253,7 +253,7 @@ export function ExerciseLibraryPage({
                             onClick={() => handleDeleteExercise(exercise.id)}
                             title="Delete exercise"
                           >
-                            <Trash2 className="w-4 h-4 text-red-600" />
+                            <Trash2 className="w-4 h-4 text-destructive" />
                           </Button>
                         </div>
                       </div>

@@ -291,7 +291,7 @@ export function EnhancedExercisePicker({
 
           {/* Selection warning */}
           {selectedIds.size >= MAX_SELECTION && (
-            <div className="mt-3 text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-md p-2">
+            <div className="mt-3 text-sm text-warning bg-warning/10 border border-warning/20 rounded-md p-2">
               Maximum {MAX_SELECTION} exercises per selection. Add these first, then add more.
             </div>
           )}

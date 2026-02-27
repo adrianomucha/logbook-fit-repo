@@ -34,16 +34,16 @@ export function CheckInStatusCard({
     const sentAgo = formatDistanceToNow(new Date(pendingCheckIn.date), { addSuffix: true });
 
     return (
-      <Card className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+      <Card className="border-warning/30 bg-warning/5">
         <CardContent className="py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <Clock className="w-10 h-10 text-amber-600 flex-shrink-0" />
+              <Clock className="w-10 h-10 text-warning flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-bold text-amber-900 dark:text-amber-100">
+                <h3 className="text-lg font-bold">
                   Check-in Sent
                 </h3>
-                <p className="text-sm text-amber-700 dark:text-amber-200">
+                <p className="text-sm text-muted-foreground">
                   Sent {sentAgo} · Waiting for {client.name} to respond
                 </p>
               </div>
@@ -60,16 +60,16 @@ export function CheckInStatusCard({
   // Variant 1: Overdue (Red)
   if (status.type === 'overdue') {
     return (
-      <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+      <Card className="border-destructive/30 bg-destructive/5">
         <CardContent className="py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-10 h-10 text-red-600 flex-shrink-0" />
+              <AlertCircle className="w-10 h-10 text-destructive flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-bold text-red-900 dark:text-red-100">
+                <h3 className="text-lg font-bold">
                   Check-in Overdue
                 </h3>
-                <p className="text-sm text-red-700 dark:text-red-200">
+                <p className="text-sm text-muted-foreground">
                   {daysSinceCheckIn} days since last check-in · 7-day cadence · {daysSinceCheckIn - 7} {daysSinceCheckIn - 7 === 1 ? 'day' : 'days'} overdue
                 </p>
               </div>
@@ -94,16 +94,16 @@ export function CheckInStatusCard({
     const daysUntilOverdue = 7 - daysSinceCheckIn;
 
     return (
-      <Card className="border-red-200 bg-red-50 dark:bg-red-950/20">
+      <Card className="border-destructive/30 bg-destructive/5">
         <CardContent className="py-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-3">
-              <AlertCircle className="w-10 h-10 text-red-600 flex-shrink-0" />
+              <AlertCircle className="w-10 h-10 text-destructive flex-shrink-0" />
               <div>
-                <h3 className="text-lg font-bold text-red-900 dark:text-red-100">
+                <h3 className="text-lg font-bold">
                   At Risk
                 </h3>
-                <p className="text-sm text-red-700 dark:text-red-200">
+                <p className="text-sm text-muted-foreground">
                   {daysSinceCheckIn} days since last check-in · 7-day cadence · {daysUntilOverdue} {daysUntilOverdue === 1 ? 'day' : 'days'} until overdue
                 </p>
               </div>
@@ -126,16 +126,16 @@ export function CheckInStatusCard({
   const daysUntilNextCheckIn = Math.max(0, 7 - daysSinceCheckIn);
 
   return (
-    <Card className="border-green-200 bg-green-50 dark:bg-green-950/20">
+    <Card className="border-success/30 bg-success/5">
       <CardContent className="py-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-10 h-10 text-green-600 flex-shrink-0" />
+            <CheckCircle2 className="w-10 h-10 text-success flex-shrink-0" />
             <div>
-              <h3 className="text-lg font-bold text-green-900 dark:text-green-100">
+              <h3 className="text-lg font-bold">
                 All Caught Up
               </h3>
-              <p className="text-sm text-green-700 dark:text-green-200">
+              <p className="text-sm text-muted-foreground">
                 Checked in {daysSinceCheckIn} {daysSinceCheckIn === 1 ? 'day' : 'days'} ago · 7-day cadence · next due in {daysUntilNextCheckIn} {daysUntilNextCheckIn === 1 ? 'day' : 'days'}
               </p>
             </div>

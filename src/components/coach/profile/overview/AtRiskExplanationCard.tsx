@@ -12,7 +12,7 @@ export function AtRiskExplanationCard({ client, daysSinceCheckIn }: AtRiskExplan
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
-          <AlertTriangle className="w-4 h-4 text-yellow-600" />
+          <AlertTriangle className="w-4 h-4 text-warning" />
           Why is {client.name} at risk?
         </CardTitle>
       </CardHeader>

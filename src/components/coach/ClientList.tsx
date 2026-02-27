@@ -11,10 +11,10 @@ interface ClientListProps {
 
 export function ClientList({ clients, onSelectClient, selectedClientId }: ClientListProps) {
   const getAdherenceColor = (rate?: number) => {
-    if (!rate) return 'bg-gray-200';
-    if (rate >= 80) return 'bg-green-500';
-    if (rate >= 60) return 'bg-yellow-500';
-    return 'bg-red-500';
+    if (!rate) return 'bg-muted';
+    if (rate >= 80) return 'bg-success';
+    if (rate >= 60) return 'bg-warning';
+    return 'bg-destructive';
   };
 
   return (

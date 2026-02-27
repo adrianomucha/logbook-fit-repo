@@ -92,8 +92,8 @@ export function AssignPlanModal({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-2xl">{plan.emoji || '💪'}</span>
-                  <div>
-                    <div className="font-medium">{plan.name}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-medium truncate">{plan.name}</div>
                     <div className="text-sm text-muted-foreground">
                       {plan.durationWeeks} {plan.durationWeeks === 1 ? 'week' : 'weeks'} · {plan.workoutsPerWeek} workouts/week
                     </div>

@@ -94,19 +94,19 @@ function DayCell({ day, completions }: DayCellProps) {
       {/* Status indicator */}
       <div className="relative">
         {day.status === 'COMPLETED' && (
-          <div className="w-8 h-8 rounded-full bg-green-600 flex items-center justify-center">
-            <Check className="w-4 h-4 text-white" />
+          <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
+            <Check className="w-4 h-4 text-success-foreground" />
           </div>
         )}
 
         {day.status === 'TODAY' && (
           <div
             className={cn(
-              'w-8 h-8 rounded-full border-2 border-teal-500 flex items-center justify-center',
-              'animate-pulse bg-teal-50 dark:bg-teal-950/30'
+              'w-8 h-8 rounded-full border-2 border-info flex items-center justify-center',
+              'animate-pulse bg-info/10'
             )}
           >
-            <div className="w-2 h-2 rounded-full bg-teal-500" />
+            <div className="w-2 h-2 rounded-full bg-info" />
           </div>
         )}
 
@@ -132,9 +132,9 @@ function DayCell({ day, completions }: DayCellProps) {
         <div
           className={cn(
             'w-2 h-2 rounded-full',
-            effortRating === 'EASY' && 'bg-green-500',
-            effortRating === 'MEDIUM' && 'bg-yellow-500',
-            effortRating === 'HARD' && 'bg-red-500'
+            effortRating === 'EASY' && 'bg-success',
+            effortRating === 'MEDIUM' && 'bg-warning',
+            effortRating === 'HARD' && 'bg-destructive'
           )}
           title={`Effort: ${effortRating.toLowerCase()}`}
         />

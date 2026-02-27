@@ -57,8 +57,8 @@ export function WorkoutsModal({ workouts, plan, clientName, onClose }: WorkoutsM
                     <CardContent>
                       <div className="space-y-2">
                         {workout.exercises.map((exercise, idx) => (
-                          <div key={idx} className="flex items-center justify-between text-sm">
-                            <span className="font-medium">{exercise.name}</span>
+                          <div key={idx} className="flex items-center justify-between text-sm gap-3">
+                            <span className="font-medium truncate min-w-0 flex-1">{exercise.name}</span>
                             <div className="flex gap-2 text-muted-foreground">
                               <span>{exercise.sets} sets</span>
                               {exercise.reps && <span>× {exercise.reps}</span>}

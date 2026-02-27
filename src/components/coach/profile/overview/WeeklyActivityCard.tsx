@@ -12,7 +12,7 @@ interface WeeklyActivityCardProps {
 
 function getProgressLabel(completed: number, scheduled: number): { text: string; color: string } {
   if (scheduled === 0) return { text: 'No plan assigned', color: 'text-muted-foreground' };
-  if (completed >= scheduled) return { text: 'Week complete', color: 'text-green-600' };
+  if (completed >= scheduled) return { text: 'Week complete', color: 'text-success' };
 
   const remaining = scheduled - completed;
   // 0=Sun, 1=Mon ... 6=Sat
@@ -21,7 +21,7 @@ function getProgressLabel(completed: number, scheduled: number): { text: string;
   const daysLeftInWeek = 6 - dayOfWeek;
 
   if (remaining > daysLeftInWeek) {
-    return { text: `${remaining} remaining · Behind schedule`, color: 'text-yellow-600' };
+    return { text: `${remaining} remaining · Behind schedule`, color: 'text-warning' };
   }
   return { text: `${remaining} remaining this week`, color: 'text-muted-foreground' };
 }

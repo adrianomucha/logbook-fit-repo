@@ -7,9 +7,6 @@ import { MeasurementsModal } from './MeasurementsModal';
 import { MessagesModal } from './MessagesModal';
 import { WorkoutsModal } from './WorkoutsModal';
 import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Dumbbell,
   MessageSquare,
   Ruler,
@@ -18,6 +15,8 @@ import {
   Flame
 } from 'lucide-react';
 import { format, formatDistanceToNow } from 'date-fns';
+import { getTrend } from '@/lib/status-helpers';
+import { TrendIndicator } from './shared/TrendIndicator';
 
 interface ClientOverviewProps {
   client: Client;
@@ -59,14 +58,6 @@ export function ClientOverview({
 
   const latestMeasurement = clientMeasurements[0];
   const previousMeasurement = clientMeasurements[1];
-
-  const getTrend = (current?: number, prev?: number) => {
-    if (!current || !prev) return null;
-    const diff = current - prev;
-    if (Math.abs(diff) < 0.1) return { icon: Minus, text: 'No change', color: 'text-muted-foreground' };
-    if (diff > 0) return { icon: TrendingUp, text: `+${diff.toFixed(1)}`, color: 'text-green-600' };
-    return { icon: TrendingDown, text: diff.toFixed(1), color: 'text-red-600' };
-  };
 
   const weightTrend = getTrend(latestMeasurement?.weight, previousMeasurement?.weight);
   const bodyFatTrend = getTrend(latestMeasurement?.bodyFat, previousMeasurement?.bodyFat);
@@ -120,7 +111,7 @@ export function ClientOverview({
               <Flame className="w-4 h-4 text-muted-foreground" />
               <div>
                 <p className="text-xs text-muted-foreground">Current Plan</p>
-                <p className="text-sm font-medium">{plan?.name || 'No plan'}</p>
+                <p className="text-sm font-medium truncate">{plan?.name || 'No plan'}</p>
               </div>
             </div>
           </div>
@@ -150,12 +141,7 @@ export function ClientOverview({
                     <span className="text-sm">Weight</span>
                     <div className="flex items-center gap-2">
                       <span className="font-bold">{latestMeasurement.weight} lbs</span>
-                      {weightTrend && (
-                        <div className={`flex items-center gap-1 text-xs ${weightTrend.color}`}>
-                          <weightTrend.icon className="w-3 h-3" />
-                          <span>{weightTrend.text}</span>
-                        </div>
-                      )}
+                      <TrendIndicator trend={weightTrend} />
                     </div>
                   </div>
                 )}
@@ -164,12 +150,7 @@ export function ClientOverview({
                     <span className="text-sm">Body Fat</span>
                     <div className="flex items-center gap-2">
                       <span className="font-bold">{latestMeasurement.bodyFat}%</span>
-                      {bodyFatTrend && (
-                        <div className={`flex items-center gap-1 text-xs ${bodyFatTrend.color}`}>
-                          <bodyFatTrend.icon className="w-3 h-3" />
-                          <span>{bodyFatTrend.text}</span>
-                        </div>
-                      )}
+                      <TrendIndicator trend={bodyFatTrend} />
                     </div>
                   </div>
                 )}
@@ -244,8 +225,8 @@ export function ClientOverview({
 
                 return (
                   <div key={workout.id} className="flex items-center justify-between p-2 border rounded-md">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">{day?.name || 'Workout'}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{day?.name || 'Workout'}</p>
                       <p className="text-xs text-muted-foreground">
                         {workout.exercises.length} exercises completed
                       </p>

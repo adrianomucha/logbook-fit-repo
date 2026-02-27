@@ -1,11 +1,12 @@
+import { useState, useCallback } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
   title: string;
   message: string;
   warningMessage?: string;
@@ -23,18 +24,35 @@ export function ConfirmationModal({
   confirmLabel,
   confirmVariant = 'default',
 }: ConfirmationModalProps) {
+  const [isPending, setIsPending] = useState(false);
+
+  const handleConfirm = useCallback(async () => {
+    if (isPending) return; // double-click guard
+    setIsPending(true);
+    try {
+      await onConfirm();
+    } finally {
+      setIsPending(false);
+    }
+  }, [onConfirm, isPending]);
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={isPending ? () => {} : onClose}
       title={title}
       maxWidth="sm"
       footer={
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isPending}>
             Cancel
           </Button>
-          <Button variant={confirmVariant} onClick={onConfirm}>
+          <Button
+            variant={confirmVariant}
+            onClick={handleConfirm}
+            disabled={isPending}
+          >
+            {isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             {confirmLabel}
           </Button>
         </div>
@@ -43,9 +61,9 @@ export function ConfirmationModal({
       <div className="space-y-3">
         <p className="text-muted-foreground">{message}</p>
         {warningMessage && (
-          <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md">
-            <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
-            <p className="text-sm text-amber-800">{warningMessage}</p>
+          <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/20 rounded-md">
+            <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+            <p className="text-sm text-warning">{warningMessage}</p>
           </div>
         )}
       </div>

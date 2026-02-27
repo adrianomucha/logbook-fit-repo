@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -14,7 +14,7 @@ import {
 interface PlanSetupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (formData: PlanSetupFormData) => void;
+  onSubmit: (formData: PlanSetupFormData) => void | Promise<void>;
 }
 
 const DURATION_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
@@ -32,6 +32,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
   const [errors, setErrors] = useState<PlanSetupFormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Reset form when modal opens
   useEffect(() => {
@@ -46,6 +47,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
       setErrors({});
       setTouched({});
       setShowCancelConfirm(false);
+      setIsSubmitting(false);
     }
   }, [isOpen]);
 
@@ -71,8 +73,9 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
     setErrors(validationErrors);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // double-click guard
 
     // Mark all fields as touched
     setTouched({
@@ -87,7 +90,12 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
     setErrors(validationErrors);
 
     if (!hasValidationErrors(validationErrors)) {
-      onSubmit(formData);
+      setIsSubmitting(true);
+      try {
+        await onSubmit(formData);
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -136,17 +144,18 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleCancel}
+      onClose={isSubmitting ? () => {} : handleCancel}
       title="Create New Plan"
       maxWidth="md"
       footer={
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={handleCancel}>
+          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="flex items-center gap-2">
+          <Button onClick={handleSubmit} disabled={isSubmitting} className="flex items-center gap-2">
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Create Plan
-            <ArrowRight className="h-4 w-4" />
+            {!isSubmitting && <ArrowRight className="h-4 w-4" />}
           </Button>
         </div>
       }
@@ -168,12 +177,12 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
                 value={formData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
                 onBlur={() => handleBlur('name')}
-                className={errors.name && touched.name ? 'border-red-500' : ''}
+                className={errors.name && touched.name ? 'border-destructive' : ''}
                 maxLength={50}
               />
               <div className="flex justify-between mt-1">
                 {errors.name && touched.name && (
-                  <p className="text-red-600 text-sm">{errors.name}</p>
+                  <p className="text-destructive text-sm">{errors.name}</p>
                 )}
                 {formData.name.length >= 40 && (
                   <p className="text-muted-foreground text-xs ml-auto">
@@ -195,13 +204,13 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             value={formData.description}
             onChange={(e) => handleFieldChange('description', e.target.value)}
             onBlur={() => handleBlur('description')}
-            className={errors.description && touched.description ? 'border-red-500' : ''}
+            className={errors.description && touched.description ? 'border-destructive' : ''}
             maxLength={200}
             rows={2}
           />
           <div className="flex justify-between mt-1">
             {errors.description && touched.description && (
-              <p className="text-red-600 text-sm">{errors.description}</p>
+              <p className="text-destructive text-sm">{errors.description}</p>
             )}
             {formData.description.length >= 150 && (
               <p className="text-muted-foreground text-xs ml-auto">
@@ -229,7 +238,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             ))}
           </select>
           {errors.durationWeeks && touched.durationWeeks && (
-            <p className="text-red-600 text-sm mt-1">{errors.durationWeeks}</p>
+            <p className="text-destructive text-sm mt-1">{errors.durationWeeks}</p>
           )}
         </div>
 
@@ -254,7 +263,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           </select>
           <p className="text-xs text-muted-foreground mt-1">Rest days will be auto-calculated</p>
           {errors.workoutsPerWeek && touched.workoutsPerWeek && (
-            <p className="text-red-600 text-sm mt-1">{errors.workoutsPerWeek}</p>
+            <p className="text-destructive text-sm mt-1">{errors.workoutsPerWeek}</p>
           )}
         </div>
       </form>

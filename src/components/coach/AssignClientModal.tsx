@@ -92,15 +92,15 @@ export function AssignClientModal({
               }`}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">{client.avatar || '👤'}</span>
-                  <div>
-                    <div className="font-medium">{client.name}</div>
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <span className="text-2xl shrink-0">{client.avatar || '👤'}</span>
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{client.name}</div>
                     {isOnThisPlan && (
                       <div className="text-sm text-muted-foreground">Already on this plan</div>
                     )}
                     {isOnAnotherPlan && (
-                      <div className="text-sm text-amber-600">
+                      <div className="text-sm text-warning">
                         Currently on: {getPlanName(client.currentPlanId!)}
                       </div>
                     )}

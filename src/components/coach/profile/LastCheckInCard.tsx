@@ -130,8 +130,8 @@ export function LastCheckInCard({
 
   // Color coding for days ago
   const getDaysAgoColor = () => {
-    if (daysAgo >= 14) return 'text-red-600';
-    if (daysAgo >= 7) return 'text-orange-600';
+    if (daysAgo >= 14) return 'text-destructive';
+    if (daysAgo >= 7) return 'text-warning';
     return 'text-muted-foreground';
   };
 
@@ -278,8 +278,8 @@ function FlaggedExercisesSubsection({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <AlertTriangle className="w-4 h-4 text-amber-600" />
-        <span className="text-sm font-medium text-amber-600">
+        <AlertTriangle className="w-4 h-4 text-warning" />
+        <span className="text-sm font-medium text-warning">
           {flaggedExercises.length} Flagged Exercise{flaggedExercises.length > 1 ? 's' : ''}
         </span>
       </div>
@@ -288,12 +288,12 @@ function FlaggedExercisesSubsection({
         {flaggedExercises.slice(0, 3).map(({ flag, exerciseName, exerciseDetails, date }) => (
           <div
             key={flag.id}
-            className="border-l-2 border-amber-400 pl-3 py-1"
+            className="border-l-2 border-warning pl-3 py-1"
           >
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{exerciseName}</span>
+                  <span className="text-sm font-medium truncate">{exerciseName}</span>
                   <span className="text-xs text-muted-foreground">
                     {format(date, 'MMM d')}
                   </span>

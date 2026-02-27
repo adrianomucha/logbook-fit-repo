@@ -110,7 +110,7 @@ export function PlanSummaryCard({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={onUnassignPlan}
-                className="text-red-600 focus:text-red-600"
+                className="text-destructive focus:text-destructive"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Remove Plan

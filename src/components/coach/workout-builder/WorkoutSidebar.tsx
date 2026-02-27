@@ -36,9 +36,9 @@ function StatusIcon({ status }: { status: WorkoutStatus }) {
     case 'rest':
       return <MinusCircle className="w-4 h-4 text-muted-foreground" />;
     case 'empty':
-      return <AlertCircle className="w-4 h-4 text-amber-500" />;
+      return <AlertCircle className="w-4 h-4 text-warning" />;
     case 'complete':
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
+      return <CheckCircle className="w-4 h-4 text-success" />;
   }
 }
 
@@ -249,11 +249,11 @@ export function WorkoutSidebar({
         {/* Legend */}
         <div className="flex gap-3 text-xs text-muted-foreground">
           <div className="flex items-center gap-1">
-            <CheckCircle className="w-3 h-3 text-green-500" />
+            <CheckCircle className="w-3 h-3 text-success" />
             <span>Has exercises</span>
           </div>
           <div className="flex items-center gap-1">
-            <AlertCircle className="w-3 h-3 text-amber-500" />
+            <AlertCircle className="w-3 h-3 text-warning" />
             <span>Empty</span>
           </div>
           <div className="flex items-center gap-1">

@@ -10,14 +10,14 @@ import prisma from "@/lib/prisma";
  */
 export async function GET(
   req: Request,
-  ctx: { params: Record<string, string> }
+  ctx: { params: Promise<Record<string, string>> }
 ) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const otherUserId = ctx.params.userId;
+  const { userId: otherUserId } = await ctx.params;
   const currentUserId = session.user.id;
 
   if (otherUserId === currentUserId) {

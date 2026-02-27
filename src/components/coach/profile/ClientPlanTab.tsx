@@ -81,9 +81,9 @@ export function ClientPlanTab({
       <div className="space-y-4">
         {/* Plan management header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{plan.emoji || '💪'}</span>
-            <h3 className="text-lg font-semibold">{plan.name}</h3>
+          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+            <span className="text-xl shrink-0">{plan.emoji || '💪'}</span>
+            <h3 className="text-lg font-semibold truncate">{plan.name}</h3>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -100,7 +100,7 @@ export function ClientPlanTab({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setShowRemoveConfirm(true)}
-                className="text-red-600 hover:text-red-600"
+                className="text-destructive hover:text-destructive"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Remove Plan from Client

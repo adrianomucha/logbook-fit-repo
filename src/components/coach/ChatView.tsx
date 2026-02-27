@@ -104,8 +104,8 @@ export function ChatView({
                     <div className="space-y-1">
                       <p>
                         {peerName
-                          ? `Start a conversation with ${peerName.split(' ')[0]}`
-                          : `No messages with ${client.name.split(' ')[0]} yet`}
+                          ? `Start a conversation with ${peerName.split(' ')[0] || peerName}`
+                          : `No messages with ${client.name?.split(' ')[0] || 'this client'} yet`}
                       </p>
                       <p className="text-xs">Send a message to get started</p>
                     </div>
@@ -150,11 +150,11 @@ export function ChatView({
                             ? 'bg-primary-foreground/10'
                             : 'bg-background/50'
                         )}>
-                          <div className="flex items-center gap-1">
-                            <Dumbbell className="w-3 h-3" />
-                            <span className="font-medium">{message.exerciseContext.exerciseName}</span>
+                          <div className="flex items-center gap-1 min-w-0">
+                            <Dumbbell className="w-3 h-3 shrink-0" />
+                            <span className="font-medium truncate">{message.exerciseContext.exerciseName}</span>
                           </div>
-                          <p className={cn(isCurrentUser ? 'opacity-80' : 'text-muted-foreground')}>
+                          <p className={cn('truncate', isCurrentUser ? 'opacity-80' : 'text-muted-foreground')}>
                             {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets done
                           </p>
                           {message.exerciseContext.flagNote && (
@@ -192,6 +192,7 @@ export function ChatView({
               <Button
                 onClick={handleSend}
                 size="icon"
+                disabled={!newMessage.trim()}
                 className="shrink-0 min-h-[44px] min-w-[44px] touch-manipulation"
                 aria-label="Send message"
               >

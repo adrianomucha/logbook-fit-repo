@@ -10,8 +10,9 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
-import { Plus, TrendingDown, TrendingUp, Minus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { MeasurementRow } from './shared/MeasurementRow';
 
 interface MeasurementsViewProps {
   client: Client;
@@ -47,34 +48,6 @@ export function MeasurementsView({ client, measurements, onAddMeasurement }: Mea
     });
     setNewMeasurement({ date: new Date().toISOString().split('T')[0] });
     setIsAdding(false);
-  };
-
-  const getTrend = (current?: number, prev?: number) => {
-    if (!current || !prev) return null;
-    const diff = current - prev;
-    if (Math.abs(diff) < 0.1) return { icon: Minus, text: 'No change', color: 'text-muted-foreground' };
-    if (diff > 0) return { icon: TrendingUp, text: `+${diff.toFixed(1)}`, color: 'text-green-600' };
-    return { icon: TrendingDown, text: diff.toFixed(1), color: 'text-red-600' };
-  };
-
-  const MeasurementRow = ({ label, current, previous, unit = '' }: any) => {
-    const trend = getTrend(current, previous);
-    if (!current) return null;
-
-    return (
-      <div className="flex items-center justify-between py-2 border-b last:border-0">
-        <span className="text-sm font-medium">{label}</span>
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold">{current}{unit}</span>
-          {trend && (
-            <div className={`flex items-center gap-1 text-xs ${trend.color}`}>
-              <trend.icon className="w-3 h-3" />
-              <span>{trend.text}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
   };
 
   return (

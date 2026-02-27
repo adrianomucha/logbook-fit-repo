@@ -1,9 +1,9 @@
 import { Measurement } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { X, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { X } from 'lucide-react';
 import { format } from 'date-fns';
+import { MeasurementRow } from './shared/MeasurementRow';
 
 interface MeasurementsModalProps {
   measurements: Measurement[];
@@ -17,34 +17,6 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
 
   const latest = sortedMeasurements[sortedMeasurements.length - 1];
   const previous = sortedMeasurements[sortedMeasurements.length - 2];
-
-  const getTrend = (current?: number, prev?: number) => {
-    if (!current || !prev) return null;
-    const diff = current - prev;
-    if (Math.abs(diff) < 0.1) return { icon: Minus, text: 'No change', color: 'text-muted-foreground' };
-    if (diff > 0) return { icon: TrendingUp, text: `+${diff.toFixed(1)}`, color: 'text-green-600' };
-    return { icon: TrendingDown, text: diff.toFixed(1), color: 'text-red-600' };
-  };
-
-  const MeasurementRow = ({ label, current, previous, unit = '' }: any) => {
-    const trend = getTrend(current, previous);
-    if (!current) return null;
-
-    return (
-      <div className="flex items-center justify-between py-2 border-b last:border-0">
-        <span className="text-sm font-medium">{label}</span>
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold">{current}{unit}</span>
-          {trend && (
-            <div className={`flex items-center gap-1 text-xs ${trend.color}`}>
-              <trend.icon className="w-3 h-3" />
-              <span>{trend.text}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   // Simple trend chart
   const renderTrendChart = () => {
@@ -94,13 +66,13 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
         <div className="flex gap-4 justify-center text-xs">
           {weights.length >= 2 && (
             <div className="flex items-center gap-2">
-              <div className="w-3 h-0.5 bg-blue-500"></div>
+              <div className="w-3 h-0.5 bg-info"></div>
               <span>Weight</span>
             </div>
           )}
           {bodyFats.length >= 2 && (
             <div className="flex items-center gap-2">
-              <div className="w-3 h-0.5 bg-orange-500"></div>
+              <div className="w-3 h-0.5 bg-warning"></div>
               <span>Body Fat</span>
             </div>
           )}
@@ -116,7 +88,7 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
             <polyline
               points={weightPoints}
               fill="none"
-              stroke="rgb(59, 130, 246)"
+              stroke="hsl(var(--info))"
               strokeWidth="2"
             />
           )}
@@ -126,7 +98,7 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
             <polyline
               points={bodyFatPoints}
               fill="none"
-              stroke="rgb(249, 115, 22)"
+              stroke="hsl(var(--warning))"
               strokeWidth="2"
             />
           )}
@@ -135,14 +107,14 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
           {weights.map((w, i) => {
             const x = (i / (weights.length - 1)) * chartWidth;
             const y = normalizeWeight(w);
-            return <circle key={`w-${i}`} cx={x} cy={y} r="2" fill="rgb(59, 130, 246)" />;
+            return <circle key={`w-${i}`} cx={x} cy={y} r="2" fill="hsl(var(--info))" />;
           })}
 
           {/* Body Fat points */}
           {bodyFats.map((bf, i) => {
             const x = (i / (bodyFats.length - 1)) * chartWidth;
             const y = normalizeBodyFat(bf);
-            return <circle key={`bf-${i}`} cx={x} cy={y} r="2" fill="rgb(249, 115, 22)" />;
+            return <circle key={`bf-${i}`} cx={x} cy={y} r="2" fill="hsl(var(--warning))" />;
           })}
         </svg>
         <div className="flex justify-between text-xs text-muted-foreground px-2">

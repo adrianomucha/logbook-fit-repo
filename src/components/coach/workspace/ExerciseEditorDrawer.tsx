@@ -223,8 +223,8 @@ export function ExerciseEditorDrawer({
                     )}
                   >
                     <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <p className="font-medium">{ex.name}</p>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{ex.name}</p>
                         <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
                           <Badge variant="secondary" className="text-xs capitalize">
                             {ex.category}
