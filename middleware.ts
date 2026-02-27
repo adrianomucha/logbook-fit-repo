@@ -14,12 +14,12 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Role-based route protection
-  if (path.startsWith("/coach") && token.role !== "coach") {
+  // Role-based route protection (roles stored as uppercase in DB: "COACH", "CLIENT")
+  if (path.startsWith("/coach") && token.role !== "COACH") {
     return NextResponse.redirect(new URL("/client", request.url));
   }
 
-  if (path.startsWith("/client") && token.role !== "client") {
+  if (path.startsWith("/client") && token.role !== "CLIENT") {
     return NextResponse.redirect(new URL("/coach", request.url));
   }
 
