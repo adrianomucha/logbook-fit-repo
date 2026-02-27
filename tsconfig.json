@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["DOM", "DOM.Iterable", "ES2020"],
+    "lib": [
+      "DOM",
+      "DOM.Iterable",
+      "ES2020"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -15,14 +19,30 @@
     "incremental": true,
     "noFallthroughCasesInSwitch": true,
     "plugins": [
-      { "name": "next" }
+      {
+        "name": "next"
+      }
     ],
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
-      "@prisma/*": ["./generated/prisma/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@prisma/*": [
+        "./generated/prisma/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "prisma/seed.ts", "prisma.config.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    "/tmp/logbook-next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "prisma/seed.ts",
+    "prisma.config.ts"
+  ]
 }

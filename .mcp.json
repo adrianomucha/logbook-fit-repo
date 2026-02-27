@@ -12,8 +12,15 @@
       "url": "https://mcp.unframer.co/sse?id=92ec51e4739212bd77da254d448222b470d6451961b9c00b7113db2f89000327&secret=gII5qa3ZLIGhlZqJHO8KBv1LD5r24kut"
     },
     "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp?project_ref=lbpuqjwmvwzdfzykxlci"
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest"
+      ],
+      "env": {
+        "SUPABASE_ACCESS_TOKEN": "sbp_b584bed2388938b6a7603dd731e8e354cd74960b",
+        "SUPABASE_PROJECT_REF": "lbpuqjwmvwzdfzykxlci"
+      }
     }
   }
 }
