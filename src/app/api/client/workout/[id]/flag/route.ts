@@ -38,6 +38,18 @@ export const POST = withClient(
       );
     }
 
+    // Validate workoutExerciseId belongs to the completion's day
+    const exerciseBelongsToDay = await prisma.workoutExercise.findFirst({
+      where: { id: workoutExerciseId, dayId: completion.dayId },
+      select: { id: true },
+    });
+    if (!exerciseBelongsToDay) {
+      return NextResponse.json(
+        { error: "workoutExerciseId does not belong to this workout day" },
+        { status: 400 }
+      );
+    }
+
     // Check if already flagged (unique constraint)
     const existingFlag = await prisma.exerciseFlag.findUnique({
       where: {

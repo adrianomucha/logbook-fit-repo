@@ -25,6 +25,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Idempotent: drop then create (CREATE OR REPLACE not available for triggers)
+DROP TRIGGER IF EXISTS trg_workout_completion_plan_check ON "workout_completions";
 CREATE TRIGGER trg_workout_completion_plan_check
   BEFORE INSERT OR UPDATE ON "workout_completions"
   FOR EACH ROW

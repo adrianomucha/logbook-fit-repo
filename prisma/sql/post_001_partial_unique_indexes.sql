@@ -2,9 +2,11 @@
 -- Without these, soft-deleted users can't re-register emails
 -- and coaches can't recreate retired exercise names.
 
--- Users: email uniqueness only for active rows
+-- Users: case-insensitive email uniqueness only for active rows
+-- Drop the old case-sensitive index if it exists, then create the new one.
+DROP INDEX IF EXISTS "users_email_active_unique";
 CREATE UNIQUE INDEX IF NOT EXISTS "users_email_active_unique"
-  ON "users" ("email")
+  ON "users" (LOWER("email"))
   WHERE "deletedAt" IS NULL;
 
 -- Exercises: name uniqueness per coach only for active rows

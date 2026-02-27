@@ -86,6 +86,46 @@ export async function POST(req: Request) {
     );
   }
 
+  // Validate optional reference IDs belong to the relationship context
+  if (workoutReferenceId) {
+    // The referenced workout must belong to the client in this relationship
+    const clientProfileId =
+      senderProfile.clientProfile?.id ?? recipientProfile.clientProfile?.id;
+    const workoutRef = await prisma.workoutCompletion.findFirst({
+      where: { id: workoutReferenceId, clientId: clientProfileId! },
+      select: { id: true },
+    });
+    if (!workoutRef) {
+      return NextResponse.json(
+        { error: "workoutReferenceId not found in relationship context" },
+        { status: 400 }
+      );
+    }
+  }
+
+  if (exerciseReferenceId) {
+    // The referenced exercise must belong to a plan assigned to the client
+    const clientProfileId =
+      senderProfile.clientProfile?.id ?? recipientProfile.clientProfile?.id;
+    const exerciseRef = await prisma.workoutExercise.findFirst({
+      where: {
+        id: exerciseReferenceId,
+        day: {
+          week: {
+            plan: { assignedTo: { some: { id: clientProfileId! } } },
+          },
+        },
+      },
+      select: { id: true },
+    });
+    if (!exerciseRef) {
+      return NextResponse.json(
+        { error: "exerciseReferenceId not found in relationship context" },
+        { status: 400 }
+      );
+    }
+  }
+
   const message = await prisma.message.create({
     data: {
       senderId,

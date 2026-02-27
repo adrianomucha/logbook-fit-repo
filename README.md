@@ -44,33 +44,30 @@ NEXTAUTH_SECRET="<run: openssl rand -base64 32>"
 NEXTAUTH_URL="http://localhost:3000"
 ```
 
-3. Run the database migration:
+3. Run database migrations (includes schema + DB hardening: indexes, triggers, constraints):
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate dev
 ```
 
-4. Apply post-migration SQL (partial indexes, triggers, constraints):
+> **Note:** The `20260227_db_hardening` migration applies partial unique indexes,
+> the workout-completion trigger, and check constraints. All statements are
+> idempotent and safe to re-run. The individual SQL files in `prisma/sql/`
+> are kept for reference but no longer need to be applied manually.
 
-```bash
-npx prisma db execute --file prisma/sql/post_001_partial_unique_indexes.sql
-npx prisma db execute --file prisma/sql/post_002_workout_completion_trigger.sql
-npx prisma db execute --file prisma/sql/post_003_check_constraints.sql
-```
-
-5. Seed the database with demo data:
+4. Seed the database with demo data:
 
 ```bash
 npx prisma db seed
 ```
 
-6. Start the development server:
+5. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-7. Open `http://localhost:3000`
+6. Open `http://localhost:3000`
 
 ## Demo Accounts (after seeding)
 

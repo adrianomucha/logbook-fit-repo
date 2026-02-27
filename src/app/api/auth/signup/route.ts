@@ -6,7 +6,7 @@ import { QUICK_START_EXERCISES } from "@/lib/quick-start-exercises";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, password, name, role } = body as {
+    const { email: rawEmail, password, name, role } = body as {
       email?: string;
       password?: string;
       name?: string;
@@ -14,12 +14,15 @@ export async function POST(req: Request) {
     };
 
     // Validate required fields
-    if (!email || !password || !name || !role) {
+    if (!rawEmail || !password || !name || !role) {
       return NextResponse.json(
         { error: "Missing required fields: email, password, name, role" },
         { status: 400 }
       );
     }
+
+    // Normalize email to lowercase for case-insensitive uniqueness
+    const email = rawEmail.trim().toLowerCase();
 
     // Validate role
     if (role !== "COACH" && role !== "CLIENT") {

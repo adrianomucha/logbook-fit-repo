@@ -36,9 +36,24 @@ export const PUT = withClient(
       }[];
     };
 
-    if (!sets || !Array.isArray(sets)) {
+    if (!sets || !Array.isArray(sets) || sets.length === 0) {
       return NextResponse.json(
         { error: "sets array is required" },
+        { status: 400 }
+      );
+    }
+
+    // Validate all workoutExerciseIds belong to the completion's day
+    const uniqueWeIds = [...new Set(sets.map((s) => s.workoutExerciseId))];
+    const validExercises = await prisma.workoutExercise.findMany({
+      where: { id: { in: uniqueWeIds }, dayId: completion.dayId },
+      select: { id: true },
+    });
+    const validIds = new Set(validExercises.map((e) => e.id));
+    const invalidIds = uniqueWeIds.filter((id) => !validIds.has(id));
+    if (invalidIds.length > 0) {
+      return NextResponse.json(
+        { error: "workoutExerciseId(s) do not belong to this workout day" },
         { status: 400 }
       );
     }
