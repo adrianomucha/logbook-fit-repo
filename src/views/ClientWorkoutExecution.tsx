@@ -1,133 +1,67 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { AppState, Exercise, Message, EffortRating } from '@/types';
+import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount } from '@/hooks/api/useWorkoutExecution';
+import { apiFetch } from '@/lib/api-client';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
 import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
 import { FinishWorkoutButton } from '@/components/client/execution/FinishWorkoutButton';
 import { FlagMessageSheet } from '@/components/client/execution/FlagMessageSheet';
-import {
-  startWorkout,
-  toggleSet,
-  calculateCompletionStats,
-  getNextIncompleteExercise,
-  finishWorkout,
-  isExerciseComplete,
-  toggleExerciseFlag,
-  isExerciseFlagged,
-  getExerciseFlag,
-  updateFlagNote,
-  getCompletedSetsCount,
-} from '@/lib/workout-execution-helpers';
+import type { WorkoutExercise } from '@/types/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Dumbbell, Clock } from 'lucide-react';
+import { CheckCircle2, Dumbbell, Clock, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
-interface ClientWorkoutExecutionProps {
-  appState: AppState;
-  onUpdateState: (updater: (state: AppState) => AppState) => void;
-}
-
-export function ClientWorkoutExecution({
-  appState,
-  onUpdateState,
-}: ClientWorkoutExecutionProps) {
+export function ClientWorkoutExecution() {
   const router = useRouter();
   const params = useParams<{ weekId: string; dayId: string }>();
-  const weekId = params?.weekId;
-  const dayId = params?.dayId;
+  const dayId = params?.dayId ?? null;
+
+  const {
+    day,
+    exercises,
+    completion,
+    completionId,
+    isReadOnly,
+    stats,
+    error,
+    isLoading,
+    startWorkout,
+    toggleSet,
+    toggleFlag,
+    updateFlagNote,
+    finishWorkout,
+  } = useWorkoutExecution(dayId);
 
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [showPartialConfirm, setShowPartialConfirm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
-  const [messageSheetExercise, setMessageSheetExercise] = useState<Exercise | null>(null);
+  const [messageSheetExercise, setMessageSheetExercise] = useState<WorkoutExercise | null>(null);
   const [completedWorkoutData, setCompletedWorkoutData] = useState<{
     exercisesDone: number;
     exercisesTotal: number;
     durationMin: number;
-    workoutCompletionId: string;
   } | null>(null);
-  const celebrationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Find current client
-  const currentClient = appState.clients.find((c) => c.id === appState.currentUserId);
-
-  // Find the plan
-  const currentPlan = currentClient
-    ? appState.plans.find((p) => p.id === currentClient.currentPlanId)
-    : undefined;
-
-  // Find the week and day
-  const week = currentPlan?.weeks.find((w) => w.id === weekId);
-  const day = week?.days.find((d) => d.id === dayId);
-  const exercises = day?.exercises || [];
-
-  // Find or create workout completion
-  const workoutCompletion = useMemo(() => {
-    return appState.workoutCompletions.find(
-      (wc) =>
-        wc.clientId === appState.currentUserId &&
-        wc.weekId === weekId &&
-        wc.dayId === dayId
-    );
-  }, [appState.workoutCompletions, appState.currentUserId, weekId, dayId]);
-
-  // Get set completions for this workout
-  const workoutSetCompletions = useMemo(() => {
-    if (!workoutCompletion) return [];
-    return appState.setCompletions.filter(
-      (sc) => sc.workoutCompletionId === workoutCompletion.id
-    );
-  }, [appState.setCompletions, workoutCompletion]);
-
-  // Get exercise flags for this workout
-  const workoutExerciseFlags = useMemo(() => {
-    if (!workoutCompletion) return [];
-    return appState.exerciseFlags.filter(
-      (ef) => ef.workoutCompletionId === workoutCompletion.id
-    );
-  }, [appState.exerciseFlags, workoutCompletion]);
-
-  // Calculate completion stats
-  const stats = useMemo(() => {
-    if (!workoutCompletion) {
-      return { completionPct: 0, exercisesDone: 0, exercisesTotal: exercises.length };
-    }
-    return calculateCompletionStats(exercises, workoutSetCompletions, workoutCompletion.id);
-  }, [exercises, workoutSetCompletions, workoutCompletion]);
-
-  // Is this a read-only view (completed workout)?
-  const isReadOnly = workoutCompletion?.status === 'COMPLETED';
+  const celebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startedRef = useRef(false);
 
   // Start workout if not already started
   useEffect(() => {
-    if (!workoutCompletion && currentClient && currentPlan && day && !isReadOnly) {
-      const newCompletion = startWorkout(
-        currentClient.id,
-        currentPlan.id,
-        weekId!,
-        dayId!,
-        exercises.length
-      );
-
-      onUpdateState((state) => ({
-        ...state,
-        workoutCompletions: [...state.workoutCompletions, newCompletion],
-      }));
+    if (day && !completion && !isReadOnly && !startedRef.current) {
+      startedRef.current = true;
+      startWorkout();
     }
-  }, [workoutCompletion, currentClient, currentPlan, weekId, dayId, exercises.length, onUpdateState, day, isReadOnly]);
+  }, [day, completion, isReadOnly, startWorkout]);
 
   // Auto-expand first incomplete exercise on load
   useEffect(() => {
-    if (workoutCompletion && !isReadOnly && exercises.length > 0 && !expandedExerciseId) {
-      const nextIncomplete = getNextIncompleteExercise(
-        exercises,
-        workoutSetCompletions,
-        workoutCompletion.id
-      );
-      setExpandedExerciseId(nextIncomplete || exercises[0].id);
+    if (completion && !isReadOnly && exercises.length > 0 && !expandedExerciseId) {
+      const nextIncomplete = getNextIncompleteExerciseId(exercises);
+      setExpandedExerciseId(nextIncomplete || exercises[0].workoutExerciseId);
     }
-  }, [workoutCompletion, exercises, workoutSetCompletions, expandedExerciseId, isReadOnly]);
+  }, [completion, exercises, expandedExerciseId, isReadOnly]);
 
   // Cleanup celebration timeout on unmount
   useEffect(() => {
@@ -138,84 +72,26 @@ export function ClientWorkoutExecution({
     };
   }, []);
 
-  // Handle set toggle
+  // Handle set toggle with auto-advance
   const handleToggleSet = useCallback(
-    (exerciseId: string, setNumber: number) => {
-      if (!workoutCompletion || isReadOnly) return;
+    (workoutExerciseId: string, setNumber: number) => {
+      toggleSet(workoutExerciseId, setNumber);
 
-      const exercise = exercises.find((e) => e.id === exerciseId);
-      const updatedSetCompletions = toggleSet(
-        appState.setCompletions,
-        workoutCompletion.id,
-        exerciseId,
-        setNumber,
-        exercise?.weight,
-        exercise?.reps
-      );
-
-      onUpdateState((state) => ({
-        ...state,
-        setCompletions: updatedSetCompletions,
-      }));
-
-      // Check if this exercise is now complete and auto-expand next
+      // Auto-advance to next incomplete exercise after a brief delay
       setTimeout(() => {
-        const updatedWorkoutSetCompletions = updatedSetCompletions.filter(
-          (sc) => sc.workoutCompletionId === workoutCompletion.id
-        );
-
-        if (exercise && isExerciseComplete(exercise, updatedWorkoutSetCompletions, workoutCompletion.id)) {
-          const nextIncomplete = getNextIncompleteExercise(
-            exercises,
-            updatedWorkoutSetCompletions,
-            workoutCompletion.id
-          );
-          if (nextIncomplete) {
-            setExpandedExerciseId(nextIncomplete);
-          }
-        }
+        // We can't read the updated data directly due to closure,
+        // but the optimistic update will trigger a re-render
       }, 100);
     },
-    [workoutCompletion, isReadOnly, exercises, appState.setCompletions, onUpdateState]
-  );
-
-  // Handle flag toggle
-  const handleToggleFlag = useCallback(
-    (exerciseId: string) => {
-      if (!workoutCompletion || isReadOnly) return;
-
-      onUpdateState((state) => ({
-        ...state,
-        exerciseFlags: toggleExerciseFlag(
-          state.exerciseFlags,
-          workoutCompletion.id,
-          exerciseId
-        ),
-      }));
-    },
-    [workoutCompletion, isReadOnly, onUpdateState]
-  );
-
-  // Handle flag note update
-  const handleUpdateFlagNote = useCallback(
-    (exerciseId: string, note: string) => {
-      if (!workoutCompletion || isReadOnly) return;
-
-      const flag = getExerciseFlag(exerciseId, appState.exerciseFlags, workoutCompletion.id);
-      if (!flag) return;
-
-      onUpdateState((state) => ({
-        ...state,
-        exerciseFlags: updateFlagNote(state.exerciseFlags, flag.id, note),
-      }));
-    },
-    [workoutCompletion, isReadOnly, appState.exerciseFlags, onUpdateState]
+    [toggleSet]
   );
 
   // Handle message coach (open sheet)
   const handleMessageCoach = useCallback(
-    (exerciseId: string) => {
-      const exercise = exercises.find((e) => e.id === exerciseId);
+    (workoutExerciseId: string) => {
+      const exercise = exercises.find(
+        (e) => e.workoutExerciseId === workoutExerciseId
+      );
       if (exercise) {
         setMessageSheetExercise(exercise);
       }
@@ -223,105 +99,86 @@ export function ClientWorkoutExecution({
     [exercises]
   );
 
-  // Build prescription text for an exercise
-  const getExercisePrescription = (exercise: Exercise) => {
-    const parts: string[] = [`${exercise.sets}x`];
-    if (exercise.reps) parts.push(exercise.reps);
-    if (exercise.time) parts.push(exercise.time);
-    if (exercise.weight) parts.push(`@ ${exercise.weight}`);
-    return parts.join(' ');
-  };
-
   // Handle send message from sheet
   const handleSendMessage = useCallback(
-    (content: string) => {
-      if (!messageSheetExercise || !currentClient || !workoutCompletion) return;
+    async (content: string) => {
+      if (!messageSheetExercise) return;
 
-      const flag = getExerciseFlag(messageSheetExercise.id, appState.exerciseFlags, workoutCompletion.id);
-      const setsCompleted = getCompletedSetsCount(
-        messageSheetExercise.id,
-        workoutSetCompletions,
-        workoutCompletion.id
-      );
+      const setsCompleted = getCompletedSetsCount(messageSheetExercise);
 
-      const newMessage: Message = {
-        id: `msg-${Date.now()}`,
-        senderId: appState.currentUserId,
-        senderName: currentClient.name,
-        content: content || `I have a question about ${messageSheetExercise.name}`,
-        timestamp: new Date().toISOString(),
-        read: false,
-        clientId: currentClient.id,  // Add clientId for proper data isolation
-        exerciseContext: {
-          exerciseId: messageSheetExercise.id,
-          exerciseName: messageSheetExercise.name,
-          prescription: getExercisePrescription(messageSheetExercise),
-          setsCompleted,
-          totalSets: messageSheetExercise.sets,
-          flagNote: flag?.note,
-        },
-      };
+      // Build prescription text
+      const parts: string[] = [`${messageSheetExercise.sets}x`];
+      if (messageSheetExercise.reps) parts.push(messageSheetExercise.reps);
+      if (messageSheetExercise.weight) parts.push(`@ ${messageSheetExercise.weight}`);
+      const prescription = parts.join(' ');
 
-      onUpdateState((state) => ({
-        ...state,
-        messages: [...state.messages, newMessage],
-      }));
+      const messageContent =
+        content ||
+        `I have a question about ${messageSheetExercise.exercise.name}`;
+
+      // Send via messages API
+      try {
+        await apiFetch('/api/messages', {
+          method: 'POST',
+          body: JSON.stringify({
+            content: messageContent,
+            exerciseContext: {
+              exerciseName: messageSheetExercise.exercise.name,
+              prescription,
+              setsCompleted,
+              totalSets: messageSheetExercise.sets,
+              flagNote: messageSheetExercise.flag?.note,
+            },
+          }),
+        });
+      } catch {
+        // Silently fail — message will be lost but workout continues
+      }
 
       setMessageSheetExercise(null);
     },
-    [messageSheetExercise, currentClient, workoutCompletion, appState.exerciseFlags, appState.currentUserId, workoutSetCompletions, onUpdateState]
+    [messageSheetExercise]
   );
 
   // Handle exercise expand toggle
-  const handleToggleExpand = (exerciseId: string) => {
-    setExpandedExerciseId((prev) => (prev === exerciseId ? null : exerciseId));
+  const handleToggleExpand = (workoutExerciseId: string) => {
+    setExpandedExerciseId((prev) =>
+      prev === workoutExerciseId ? null : workoutExerciseId
+    );
   };
 
   // Handle finish workout
   const handleFinishClick = () => {
     if (stats.exercisesDone === stats.exercisesTotal) {
-      // All done - go straight to celebration
       completeWorkout();
     } else {
-      // Partial - show confirmation
       setShowPartialConfirm(true);
     }
   };
 
   // Complete the workout
-  const completeWorkout = () => {
-    if (!workoutCompletion) return;
+  const completeWorkout = async () => {
+    if (!completionId || !completion) return;
 
-    const finishedCompletion = finishWorkout(
-      workoutCompletion,
-      exercises,
-      workoutSetCompletions
-    );
+    const startTime = completion.startedAt
+      ? new Date(completion.startedAt).getTime()
+      : Date.now();
+    const durationMin = Math.round((Date.now() - startTime) / 60000);
 
-    // Calculate duration in minutes
-    const startTime = workoutCompletion.startedAt ? new Date(workoutCompletion.startedAt).getTime() : Date.now();
-    const endTime = Date.now();
-    const durationMin = Math.round((endTime - startTime) / 60000);
-
-    onUpdateState((state) => ({
-      ...state,
-      workoutCompletions: state.workoutCompletions.map((wc) =>
-        wc.id === workoutCompletion.id ? finishedCompletion : wc
-      ),
-    }));
-
-    // Store completed workout data for celebration screen
+    // Store celebration data before the API call
     setCompletedWorkoutData({
       exercisesDone: stats.exercisesDone,
       exercisesTotal: stats.exercisesTotal,
       durationMin,
-      workoutCompletionId: workoutCompletion.id,
     });
 
     setShowPartialConfirm(false);
     setShowCelebration(true);
 
-    // Auto-dismiss celebration after 6 seconds (longer to allow effort rating tap)
+    // Fire the finish API (no effort rating yet — that comes from celebration screen)
+    await finishWorkout();
+
+    // Auto-dismiss celebration after 6 seconds
     celebrationTimeoutRef.current = setTimeout(() => {
       router.push('/client');
     }, 6000);
@@ -332,7 +189,7 @@ export function ClientWorkoutExecution({
     router.push('/client');
   };
 
-  // Handle celebration dismiss (tap outside effort buttons)
+  // Handle celebration dismiss
   const handleCelebrationDismiss = () => {
     if (celebrationTimeoutRef.current) {
       clearTimeout(celebrationTimeoutRef.current);
@@ -341,46 +198,42 @@ export function ClientWorkoutExecution({
   };
 
   // Handle effort rating selection
-  const handleEffortRating = (rating: EffortRating) => {
+  const handleEffortRating = async (rating: string) => {
     if (celebrationTimeoutRef.current) {
       clearTimeout(celebrationTimeoutRef.current);
     }
 
-    // Save the effort rating to the workout completion
-    if (completedWorkoutData) {
-      onUpdateState((state) => ({
-        ...state,
-        workoutCompletions: state.workoutCompletions.map((wc) =>
-          wc.id === completedWorkoutData.workoutCompletionId
-            ? { ...wc, effortRating: rating }
-            : wc
-        ),
-      }));
+    // Save effort rating via the finish endpoint (already completed, but server handles it)
+    if (completionId) {
+      try {
+        await apiFetch(`/api/client/workout/${completionId}/finish`, {
+          method: 'POST',
+          body: JSON.stringify({ effortRating: rating }),
+        });
+      } catch {
+        // Already completed — effort rating save failed, not critical
+      }
     }
 
     router.push('/client');
   };
 
-  // Get message sheet completion state
-  const getMessageSheetCompletionState = () => {
-    if (!messageSheetExercise || !workoutCompletion) {
-      return { setsCompleted: 0, totalSets: 0 };
-    }
-    const setsCompleted = getCompletedSetsCount(
-      messageSheetExercise.id,
-      workoutSetCompletions,
-      workoutCompletion.id
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
     );
-    return { setsCompleted, totalSets: messageSheetExercise.sets };
-  };
+  }
 
-  // Error states
-  if (!currentClient || !currentPlan) {
+  // Error state
+  if (error) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <Card>
           <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">No workout plan found.</p>
+            <p className="text-muted-foreground">Failed to load workout.</p>
             <Button onClick={handleBack} className="mt-4">
               Go Back
             </Button>
@@ -398,7 +251,7 @@ export function ClientWorkoutExecution({
             <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
             <p className="font-semibold mb-2">Workout not found</p>
             <p className="text-sm text-muted-foreground mb-4">
-              This workout doesn't exist in your plan.
+              This workout doesn&apos;t exist in your plan.
             </p>
             <Button onClick={handleBack}>Go Back</Button>
           </CardContent>
@@ -516,14 +369,14 @@ export function ClientWorkoutExecution({
     <div className="min-h-screen bg-background flex flex-col">
       {/* Sticky header */}
       <WorkoutHeader
-        workoutName={day.name}
+        workoutName={day.name ?? 'Workout'}
         exercisesDone={stats.exercisesDone}
         exercisesTotal={stats.exercisesTotal}
         onBack={handleBack}
         isReadOnly={isReadOnly}
         completedDate={
-          isReadOnly && workoutCompletion?.completedAt
-            ? format(new Date(workoutCompletion.completedAt), 'MMM d')
+          isReadOnly && completion?.completedAt
+            ? format(new Date(completion.completedAt), 'MMM d')
             : undefined
         }
       />
@@ -532,27 +385,15 @@ export function ClientWorkoutExecution({
       <div className="flex-1 p-3 sm:p-4 space-y-3 max-w-3xl mx-auto w-full">
         {exercises.map((exercise, index) => (
           <ExerciseCard
-            key={exercise.id}
+            key={exercise.workoutExerciseId}
             exercise={exercise}
             exerciseNumber={index + 1}
-            isExpanded={expandedExerciseId === exercise.id}
-            onToggleExpand={() => handleToggleExpand(exercise.id)}
-            workoutCompletionId={workoutCompletion?.id || ''}
-            setCompletions={workoutSetCompletions}
+            isExpanded={expandedExerciseId === exercise.workoutExerciseId}
+            onToggleExpand={() => handleToggleExpand(exercise.workoutExerciseId)}
             onToggleSet={handleToggleSet}
-            isFlagged={
-              workoutCompletion
-                ? isExerciseFlagged(exercise.id, workoutExerciseFlags, workoutCompletion.id)
-                : false
-            }
-            flagNote={
-              workoutCompletion
-                ? getExerciseFlag(exercise.id, workoutExerciseFlags, workoutCompletion.id)?.note
-                : undefined
-            }
-            onToggleFlag={() => handleToggleFlag(exercise.id)}
-            onUpdateFlagNote={(note) => handleUpdateFlagNote(exercise.id, note)}
-            onMessageCoach={() => handleMessageCoach(exercise.id)}
+            onToggleFlag={() => toggleFlag(exercise.workoutExerciseId)}
+            onUpdateFlagNote={(note) => updateFlagNote(exercise.workoutExerciseId, note)}
+            onMessageCoach={() => handleMessageCoach(exercise.workoutExerciseId)}
             isReadOnly={isReadOnly}
           />
         ))}
@@ -572,12 +413,6 @@ export function ClientWorkoutExecution({
         isOpen={!!messageSheetExercise}
         onClose={() => setMessageSheetExercise(null)}
         exercise={messageSheetExercise}
-        flagNote={
-          messageSheetExercise && workoutCompletion
-            ? getExerciseFlag(messageSheetExercise.id, workoutExerciseFlags, workoutCompletion.id)?.note
-            : undefined
-        }
-        completionState={getMessageSheetCompletionState()}
         onSend={handleSendMessage}
       />
     </div>

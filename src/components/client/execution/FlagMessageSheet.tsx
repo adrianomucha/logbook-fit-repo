@@ -9,14 +9,13 @@ import {
   SheetDescription,
 } from '@/components/ui/sheet';
 import { Dumbbell, Send } from 'lucide-react';
-import { Exercise } from '@/types';
+import type { WorkoutExercise } from '@/types/api';
+import { getCompletedSetsCount } from '@/hooks/api/useWorkoutExecution';
 
 interface FlagMessageSheetProps {
   isOpen: boolean;
   onClose: () => void;
-  exercise: Exercise | null;
-  flagNote?: string;
-  completionState: { setsCompleted: number; totalSets: number };
+  exercise: WorkoutExercise | null;
   onSend: (message: string) => void;
 }
 
@@ -24,8 +23,6 @@ export function FlagMessageSheet({
   isOpen,
   onClose,
   exercise,
-  flagNote,
-  completionState,
   onSend,
 }: FlagMessageSheetProps) {
   const [message, setMessage] = useState('');
@@ -35,7 +32,6 @@ export function FlagMessageSheet({
     if (!exercise) return '';
     const parts: string[] = [`${exercise.sets}x`];
     if (exercise.reps) parts.push(exercise.reps);
-    if (exercise.time) parts.push(exercise.time);
     if (exercise.weight) parts.push(`@ ${exercise.weight}`);
     return parts.join(' ');
   };
@@ -52,6 +48,10 @@ export function FlagMessageSheet({
     setMessage('');
   };
 
+  const setsCompleted = exercise ? getCompletedSetsCount(exercise) : 0;
+  const totalSets = exercise?.sets ?? 0;
+  const flagNote = exercise?.flag?.note;
+
   return (
     <Sheet open={isOpen && !!exercise} onOpenChange={(open) => !open && onClose()}>
       <SheetContent side="bottom" className="rounded-t-2xl p-0 max-h-[70vh]">
@@ -64,7 +64,7 @@ export function FlagMessageSheet({
         <SheetHeader className="px-4 pb-3 border-b text-left">
           <SheetTitle>Message Coach</SheetTitle>
           <SheetDescription className="sr-only">
-            Send a message to your coach about {exercise?.name}
+            Send a message to your coach about {exercise?.exercise.name}
           </SheetDescription>
         </SheetHeader>
 
@@ -74,13 +74,13 @@ export function FlagMessageSheet({
           <div className="bg-muted rounded-lg p-3">
             <div className="flex items-center gap-2">
               <Dumbbell className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">{exercise?.name}</span>
+              <span className="font-medium">{exercise?.exercise.name}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               {getPrescription()}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              Progress: {completionState.setsCompleted}/{completionState.totalSets} sets done
+              Progress: {setsCompleted}/{totalSets} sets done
             </p>
             {flagNote && (
               <p className="text-sm mt-2 italic text-muted-foreground">

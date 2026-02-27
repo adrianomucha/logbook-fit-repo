@@ -2,25 +2,20 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Check, ChevronDown, ChevronUp, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Exercise, SetCompletion } from '@/types';
+import type { WorkoutExercise } from '@/types/api';
 import { SetRow } from './SetRow';
 import {
   isExerciseComplete,
   getCompletedSetsCount,
   isSetCompleted,
-} from '@/lib/workout-execution-helpers';
+} from '@/hooks/api/useWorkoutExecution';
 
 interface ExerciseCardProps {
-  exercise: Exercise;
+  exercise: WorkoutExercise;
   exerciseNumber: number;
   isExpanded: boolean;
   onToggleExpand: () => void;
-  workoutCompletionId: string;
-  setCompletions: SetCompletion[];
-  onToggleSet: (exerciseId: string, setNumber: number) => void;
-  // Flagging props
-  isFlagged?: boolean;
-  flagNote?: string;
+  onToggleSet: (workoutExerciseId: string, setNumber: number) => void;
   onToggleFlag?: () => void;
   onUpdateFlagNote?: (note: string) => void;
   onMessageCoach?: () => void;
@@ -32,24 +27,21 @@ export function ExerciseCard({
   exerciseNumber,
   isExpanded,
   onToggleExpand,
-  workoutCompletionId,
-  setCompletions,
   onToggleSet,
-  isFlagged = false,
-  flagNote,
   onToggleFlag,
   onUpdateFlagNote,
   onMessageCoach,
   isReadOnly = false,
 }: ExerciseCardProps) {
-  const isComplete = isExerciseComplete(exercise, setCompletions, workoutCompletionId);
-  const completedSets = getCompletedSetsCount(exercise.id, setCompletions, workoutCompletionId);
+  const isComplete = isExerciseComplete(exercise);
+  const completedSets = getCompletedSetsCount(exercise);
+  const isFlagged = !!exercise.flag;
+  const flagNote = exercise.flag?.note;
 
   // Build summary text: "4 x 8-10 @ 135 lbs"
   const getSummary = () => {
     const parts: string[] = [`${exercise.sets}x`];
     if (exercise.reps) parts.push(exercise.reps);
-    if (exercise.time) parts.push(exercise.time);
     if (exercise.weight) parts.push(`@ ${exercise.weight}`);
     return parts.join(' ');
   };
@@ -88,7 +80,7 @@ export function ExerciseCard({
             'hover:bg-muted/50'
           )}
           aria-expanded={isExpanded}
-          aria-label={`${exercise.name}, ${getSummary()}`}
+          aria-label={`${exercise.exercise.name}, ${getSummary()}`}
         >
           {/* Exercise number or checkmark */}
           <div
@@ -111,7 +103,7 @@ export function ExerciseCard({
                   isComplete && 'text-success'
                 )}
               >
-                {exercise.name}
+                {exercise.exercise.name}
               </p>
               {/* Flag indicator when collapsed */}
               {isFlagged && !isExpanded && (
@@ -163,10 +155,10 @@ export function ExerciseCard({
       {isExpanded && (
         <CardContent className="p-3 sm:p-4 pt-0">
           {/* Coach notes */}
-          {exercise.notes && (
+          {exercise.coachNotes && (
             <div className="mb-4 p-3 sm:p-4 bg-info/5 rounded-lg border border-info/20">
               <p className="text-sm text-foreground">
-                <span className="font-medium">Coach tip:</span> {exercise.notes}
+                <span className="font-medium">Coach tip:</span> {exercise.coachNotes}
               </p>
             </div>
           )}
@@ -217,16 +209,13 @@ export function ExerciseCard({
               <SetRow
                 key={setNumber}
                 setNumber={setNumber}
-                reps={exercise.reps}
-                weight={exercise.weight}
-                time={exercise.time}
+                reps={exercise.reps ?? undefined}
+                weight={exercise.weight ?? undefined}
                 completed={isSetCompleted(
-                  workoutCompletionId,
-                  exercise.id,
-                  setNumber,
-                  setCompletions
+                  exercise.setCompletions,
+                  setNumber
                 )}
-                onToggle={() => onToggleSet(exercise.id, setNumber)}
+                onToggle={() => onToggleSet(exercise.workoutExerciseId, setNumber)}
               />
             ))}
           </div>

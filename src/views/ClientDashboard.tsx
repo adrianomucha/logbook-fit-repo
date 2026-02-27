@@ -1,8 +1,17 @@
+'use client';
+
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AppState, Message } from '@/types';
-import { getThisWeekCompletedCheckIn } from '@/lib/checkin-context-helpers';
+import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
 import { getCurrentWeekNumber, getWeekDays, getTodayWorkout } from '@/lib/workout-week-helpers';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
+import { useClientProgress } from '@/hooks/api/useClientProgress';
+import { useClientCheckIns } from '@/hooks/api/useClientCheckIns';
+import { useMessages } from '@/hooks/api/useMessages';
+import { usePlanDetail } from '@/hooks/api/usePlanDetail';
+import type { PlanDetail } from '@/hooks/api/usePlanDetail';
+import { apiFetch } from '@/lib/api-client';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
 import { TodayFocusView } from '@/components/client/today/TodayFocusView';
 import { ChatView } from '@/components/coach/ChatView';
@@ -12,23 +21,82 @@ import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck } from 'lucide-react';
+import { ClipboardCheck, Loader2 } from 'lucide-react';
 
-interface ClientDashboardProps {
-  appState: AppState;
-  onUpdateState: (updater: (state: AppState) => AppState) => void;
+// ---- Data Adapters ----
+
+function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
+  return {
+    id: plan.id,
+    name: plan.name,
+    description: plan.description ?? undefined,
+    durationWeeks: plan.durationWeeks,
+    weeks: plan.weeks.map((w) => ({
+      id: w.id,
+      weekNumber: w.weekNumber,
+      days: w.days.map((d) => ({
+        id: d.id,
+        name: d.name ?? `Day ${d.dayNumber}`,
+        isRestDay: d.isRestDay,
+        exercises: d.exercises.map((e) => ({
+          id: e.id,
+          name: e.exercise.name,
+          sets: e.sets,
+          reps: e.reps ?? undefined,
+          weight: e.weight ?? undefined,
+          notes: e.coachNotes ?? undefined,
+        })),
+      })),
+    })),
+    createdAt: plan.createdAt,
+    updatedAt: plan.updatedAt,
+  };
 }
 
-type View = 'workout' | 'chat' | 'progress';
+function apiCheckInToLocalCheckIn(
+  ci: { id: string; status: string; createdAt: string; effortRating: string | null; painBlockers: string | null; clientFeeling: string | null; clientRespondedAt: string | null; coachFeedback: string | null; planAdjustment: boolean | null; completedAt: string | null },
+  clientProfileId: string,
+  coachUserId: string
+): CheckIn {
+  return {
+    id: ci.id,
+    clientId: clientProfileId,
+    coachId: coachUserId,
+    date: ci.createdAt,
+    status: ci.status === 'PENDING' ? 'pending' : ci.status === 'CLIENT_RESPONDED' ? 'responded' : 'completed',
+    workoutFeeling: (ci.effortRating as CheckIn['workoutFeeling']) ?? undefined,
+    bodyFeeling: (ci.clientFeeling as CheckIn['bodyFeeling']) ?? undefined,
+    clientNotes: ci.painBlockers ?? undefined,
+    clientRespondedAt: ci.clientRespondedAt ?? undefined,
+    coachResponse: ci.coachFeedback ?? undefined,
+    planAdjustment: ci.planAdjustment || undefined,
+    completedAt: ci.completedAt ?? undefined,
+  };
+}
 
+// ---- Component ----
+
+type View = 'workout' | 'chat' | 'progress';
 type WorkoutViewMode = 'today' | 'weekly';
 
-export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProps) {
+export function ClientDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('workout');
   const [workoutViewMode, setWorkoutViewMode] = useState<WorkoutViewMode>('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
+
+  // ---- API Hooks ----
+  const { user, coach, isLoading: isLoadingUser } = useCurrentUser();
+  const { weekOverview, isLoading: isLoadingWeek } = useClientWeekOverview();
+  const { progress } = useClientProgress();
+  const { checkIns: apiCheckIns } = useClientCheckIns();
+  const coachUserId = coach?.user.id ?? null;
+  const { messages: apiMessages, sendMessage } = useMessages(coachUserId);
+
+  // Fetch full plan detail for sub-components that need the full plan structure
+  const planId = weekOverview?.plan.id ?? null;
+  const { plan: planDetail } = usePlanDetail(planId);
 
   // Handle URL tab parameter
   useEffect(() => {
@@ -38,60 +106,96 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     else if (tab === 'workout') setCurrentView('workout');
   }, [searchParams]);
 
-  const currentClient = appState.clients.find((c) => c.id === appState.currentUserId);
-  const currentPlan = currentClient
-    ? appState.plans.find((p) => p.id === currentClient.currentPlanId)
-    : undefined;
+  // ---- Adapted Data ----
 
-  const coach = appState.coaches.find((c) => c.clients.includes(appState.currentUserId));
+  const client: Client | null = useMemo(() => {
+    if (!user?.clientProfile) return null;
+    return {
+      id: user.clientProfile.id,
+      name: user.name ?? 'Unknown',
+      email: user.email,
+      currentPlanId: user.clientProfile.activePlanId ?? undefined,
+      status: 'active' as const,
+      planStartDate: user.clientProfile.planStartDate ?? undefined,
+    };
+  }, [user]);
 
-  const clientWorkouts = appState.completedWorkouts.filter(
-    (w) => w.clientId === appState.currentUserId
+  const plan: WorkoutPlan | null = useMemo(
+    () => (planDetail ? apiPlanToWorkoutPlan(planDetail) : null),
+    [planDetail]
   );
 
-  // Get workout completions for this client (new granular tracking)
-  const clientWorkoutCompletions = useMemo(
-    () => appState.workoutCompletions.filter((w) => w.clientId === appState.currentUserId),
-    [appState.workoutCompletions, appState.currentUserId]
+  const checkIns: CheckIn[] = useMemo(
+    () =>
+      apiCheckIns.map((ci) =>
+        apiCheckInToLocalCheckIn(ci, client?.id ?? '', coachUserId ?? '')
+      ),
+    [apiCheckIns, client, coachUserId]
   );
 
   const pendingCheckIn = useMemo(
-    () => appState.checkIns.find(c => c.clientId === appState.currentUserId && c.status === 'pending'),
-    [appState.checkIns, appState.currentUserId]
+    () => checkIns.find((c) => c.status === 'pending'),
+    [checkIns]
   );
 
-  // Get the most recent completed check-in from this week (for coach feedback card)
-  const thisWeekCheckIn = useMemo(
-    () => getThisWeekCompletedCheckIn(appState.currentUserId, appState.checkIns),
-    [appState.checkIns, appState.currentUserId]
-  );
+  // Most recent completed check-in from this week (for coach feedback card)
+  const thisWeekCheckIn = useMemo(() => {
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    return (
+      checkIns
+        .filter((c) => c.status === 'completed' && c.completedAt)
+        .filter((c) => new Date(c.completedAt!) >= weekAgo)
+        .sort(
+          (a, b) =>
+            new Date(b.completedAt!).getTime() -
+            new Date(a.completedAt!).getTime()
+        )[0] ?? null
+    );
+  }, [checkIns]);
 
-  // Get today's workout data for Clarity Mode
+  // Build adapted workout completions from week overview
+  const clientWorkoutCompletions: WorkoutCompletion[] = useMemo(() => {
+    if (!weekOverview || !client) return [];
+    return weekOverview.days
+      .filter((d) => d.status !== 'NOT_STARTED')
+      .map((d) => ({
+        id: d.completionId ?? `wc-${d.dayId}`,
+        clientId: client.id,
+        planId: weekOverview.plan.id,
+        weekId: weekOverview.weekId,
+        dayId: d.dayId,
+        status: d.status as WorkoutCompletion['status'],
+        completionPct: d.completionPct ?? 0,
+        exercisesDone: 0,
+        exercisesTotal: d.exerciseCount,
+      }));
+  }, [weekOverview, client]);
+
+  // Today's workout data for TodayFocusView
   const { todayWorkout, todayCompletion, todayCoachNote, currentWeek } = useMemo(() => {
-    if (!currentClient?.planStartDate || !currentPlan) {
+    if (!client?.planStartDate || !plan || !weekOverview) {
       return { todayWorkout: null, todayCompletion: null, todayCoachNote: undefined, currentWeek: null };
     }
 
-    const durationWeeks = currentPlan.durationWeeks || currentPlan.weeks.length;
-    const weekNumber = getCurrentWeekNumber(currentClient.planStartDate, durationWeeks);
-    const currentWeek = currentPlan.weeks.find((w) => w.weekNumber === weekNumber);
+    const durationWeeks = plan.durationWeeks || plan.weeks.length;
+    const weekNumber = getCurrentWeekNumber(client.planStartDate, durationWeeks);
+    const currentWeek = plan.weeks.find((w) => w.weekNumber === weekNumber);
 
     if (!currentWeek) {
       return { todayWorkout: null, todayCompletion: null, todayCoachNote: undefined, currentWeek: null };
     }
 
     const weekDays = getWeekDays(
-      currentClient.planStartDate,
+      client.planStartDate,
       currentWeek,
       clientWorkoutCompletions,
-      currentClient.id
+      client.id
     );
 
     const today = getTodayWorkout(weekDays);
     const completion = today?.completion || null;
 
-    // Get first non-empty coach note from today's workout exercises
-    // This is forward-looking instruction, not backward-looking chat
     const exercises = today?.workoutDay?.exercises || [];
     const firstNote = exercises.find((e) => e.notes?.trim())?.notes;
 
@@ -101,26 +205,28 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
       todayCoachNote: firstNote,
       currentWeek,
     };
-  }, [currentClient, currentPlan, clientWorkoutCompletions]);
+  }, [client, plan, weekOverview, clientWorkoutCompletions]);
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      senderId: appState.currentUserId,
-      senderName: currentClient?.name || 'Client',
-      content,
-      timestamp: new Date().toISOString(),
-      read: false,
-      clientId: appState.currentUserId  // Add clientId for proper data isolation
-    };
+  // Messages adapted for ChatView
+  const messages: Message[] = useMemo(
+    () =>
+      apiMessages.map((m) => ({
+        id: m.id,
+        senderId: m.senderId,
+        senderName: m.sender?.name ?? 'Unknown',
+        content: m.content,
+        timestamp: m.createdAt,
+        read: m.readAt !== null,
+        clientId: client?.id ?? '',
+      })).reverse(),
+    [apiMessages, client]
+  );
 
-    onUpdateState((state) => ({
-      ...state,
-      messages: [...state.messages, newMessage]
-    }));
+  // ---- Handlers ----
+  const handleSendMessage = async (content: string) => {
+    await sendMessage(content);
   };
 
-  // Handlers for TodayFocusView
   const handleStartWorkout = () => {
     if (todayWorkout?.workoutDay && currentWeek) {
       router.push(`/client/workout/${currentWeek.id}/${todayWorkout.workoutDay.id}`);
@@ -133,21 +239,18 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     }
   };
 
-  const handleSendFeedback = (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => {
-    if (!todayCompletion) return;
-
-    onUpdateState((state) => ({
-      ...state,
-      workoutCompletions: state.workoutCompletions.map((c) =>
-        c.id === todayCompletion.id
-          ? { ...c, effortRating: rating }
-          : c
-      ),
-    }));
-
-    // Optionally send a message to coach with the feedback
+  const handleSendFeedback = async (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => {
+    if (!todayCompletion?.id) return;
+    try {
+      await apiFetch(`/api/client/workout/${todayCompletion.id}/finish`, {
+        method: 'POST',
+        body: JSON.stringify({ effortRating: rating }),
+      });
+    } catch {
+      // Feedback save failed silently
+    }
     if (notes) {
-      handleSendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
+      await handleSendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
     }
   };
 
@@ -155,7 +258,16 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
     setCurrentView('chat');
   };
 
-  if (!currentClient || !currentPlan) {
+  // ---- Loading/Empty States ----
+  if (isLoadingUser || isLoadingWeek) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!client || !plan) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="text-center">
@@ -212,12 +324,12 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
         {/* Workout Views */}
         {currentView === 'workout' && workoutViewMode === 'today' && (
           <TodayFocusView
-            client={currentClient}
-            plan={currentPlan}
+            client={client}
+            plan={plan}
             todayWorkout={todayWorkout}
             todayCompletion={todayCompletion}
             coachNote={todayCoachNote}
-            coachName={coach?.name}
+            coachName={coach?.user.name ?? undefined}
             coachAvatar={undefined}
             feedbackSubmitted={!!todayCompletion?.effortRating}
             onStartWorkout={handleStartWorkout}
@@ -242,24 +354,24 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
               </Button>
             </div>
             <WeeklyOverview
-              client={currentClient}
-              plan={currentPlan}
+              client={client}
+              plan={plan}
               completions={clientWorkoutCompletions}
             />
           </>
         )}
 
-        {currentView === 'chat' && coach && (
+        {currentView === 'chat' && coachUserId && (
           <>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Chat</h1>
             <ChatView
-              client={currentClient}
-              messages={appState.messages}
-              currentUserId={appState.currentUserId}
-              currentUserName={currentClient.name}
+              client={client}
+              messages={messages}
+              currentUserId={user?.id ?? ''}
+              currentUserName={client.name}
               onSendMessage={handleSendMessage}
               heightClass="h-[calc(100vh-14rem)] sm:h-[600px]"
-              peerName={coach.name}
+              peerName={coach?.user.name ?? 'Coach'}
               conversationStarters={[
                 'How should I warm up?',
                 'Feeling sore today',
@@ -273,12 +385,12 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
           <>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Progress</h1>
             <ProgressHistory
-              completedWorkouts={clientWorkouts}
-              plans={appState.plans}
-              client={currentClient}
-              plan={currentPlan}
+              completedWorkouts={[]}
+              plans={plan ? [plan] : []}
+              client={client}
+              plan={plan}
               workoutCompletions={clientWorkoutCompletions}
-              measurements={appState.measurements.filter((m) => m.clientId === currentClient.id)}
+              measurements={[]}
             />
           </>
         )}
@@ -289,10 +401,9 @@ export function ClientDashboard({ appState, onUpdateState }: ClientDashboardProp
         isOpen={showCheckInModal}
         onClose={() => setShowCheckInModal(false)}
         checkIn={thisWeekCheckIn}
-        completedWorkouts={clientWorkouts}
-        plan={currentPlan}
+        completedWorkouts={[]}
+        plan={plan}
       />
-
     </div>
   );
 }
