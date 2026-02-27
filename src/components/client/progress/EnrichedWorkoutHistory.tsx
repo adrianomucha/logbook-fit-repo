@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { memo, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { WorkoutCompletion, WorkoutPlan, WorkoutDay, EffortRating } from '@/types';
 import { format, parseISO, getDay } from 'date-fns';
@@ -74,7 +74,7 @@ function formatDuration(seconds?: number): string {
   return `${hours}h ${remainingMins}m`;
 }
 
-function WorkoutHistoryItem({ completion, dayName, weekNumber, planName }: WorkoutHistoryItemProps) {
+const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ completion, dayName, weekNumber, planName }: WorkoutHistoryItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
   const effortInfo = completion.effortRating ? EFFORT_LABELS[completion.effortRating] : null;
@@ -155,7 +155,9 @@ function WorkoutHistoryItem({ completion, dayName, weekNumber, planName }: Worko
       )}
     </div>
   );
-}
+});
+
+WorkoutHistoryItem.displayName = 'WorkoutHistoryItem';
 
 export function EnrichedWorkoutHistory({
   completions,

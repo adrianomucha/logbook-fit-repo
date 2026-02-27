@@ -1,104 +1,103 @@
 # Quick Start Guide
 
-## Installation
+## 1. Install Dependencies
 
 ```bash
 npm install
+```
+
+## 2. Set Up Your Database
+
+Create a free PostgreSQL database on [Supabase](https://supabase.com):
+
+1. Sign up at supabase.com and create a new project
+2. Go to **Settings > Database** and copy the connection strings
+3. Copy `.env.example` to `.env` and fill in:
+
+```bash
+cp .env.example .env
+```
+
+```env
+DATABASE_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.co:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres.[project-ref]:[password]@aws-0-[region].supabase.co:5432/postgres"
+NEXTAUTH_SECRET="paste-a-random-string-here"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+To generate NEXTAUTH_SECRET, run:
+```bash
+openssl rand -base64 32
+```
+
+## 3. Run Database Migration
+
+```bash
+npx prisma migrate dev --name init
+```
+
+This creates all 16 tables. Then apply the extra SQL:
+
+```bash
+npx prisma db execute --file prisma/sql/post_001_partial_unique_indexes.sql
+npx prisma db execute --file prisma/sql/post_002_workout_completion_trigger.sql
+npx prisma db execute --file prisma/sql/post_003_check_constraints.sql
+```
+
+## 4. Seed Demo Data
+
+```bash
+npx prisma db seed
+```
+
+Creates: 1 coach, 1 client, 25 exercises, and a sample 4-week plan.
+
+## 5. Start the App
+
+```bash
 npm run dev
 ```
 
-Open http://localhost:5173 in your browser.
+Open http://localhost:3000
 
-## What You'll See
+## 6. Verify Everything Works
 
-1. **Role Selector Screen**: Choose to login as a coach or client
-2. **Pre-loaded Demo Data**: 1 coach (Sarah Johnson) and 3 clients with workout plans
-3. **Switch Role Button**: Top-right corner to switch between views anytime
-
-## Testing the Demo
-
-### As Coach (Sarah Johnson):
-
-1. Click "Login as Sarah Johnson"
-2. View the **Clients** tab to see all 3 clients with adherence rates
-3. Click on a client, then switch to **Plans** tab to:
-   - View and edit their workout plan
-   - Add new exercises
-   - Modify sets, reps, weights
-4. Switch to **Chat** tab to message the client
-
-### As Client (Mike Chen):
-
-1. Return to role selector and click "Login as Mike Chen"
-2. View today's workout in the **Workout** tab:
-   - See all exercises with sets/reps/weights
-   - Tap the circle icon to mark exercises complete
-   - Add custom weights before completing
-3. Switch to **Chat** tab to message your coach
-4. Switch to **Progress** tab to see workout history
-
-## Key Features to Showcase
-
-### Coach Experience
-- Clean client list with status indicators (green/yellow/red adherence)
-- Intuitive plan builder with day tabs
-- Inline exercise editing
-- Real-time chat
-
-### Client Experience
-- Today-focused workout view
-- Progress bar showing completion
-- Simple tap-to-complete interaction
-- Exercise details (sets, reps, weight, notes)
-- Workout history
-
-## Data Persistence
-
-- All changes are saved to localStorage automatically
-- Refresh the page - your data persists
-- To reset: Clear browser localStorage in DevTools
-
-## File Structure
-
-```
-logbook-fit/
-├── src/
-│   ├── components/
-│   │   ├── ui/           - shadcn components (button, card, input, etc.)
-│   │   ├── coach/        - Coach views (ClientList, PlanBuilder, ChatView)
-│   │   └── client/       - Client views (WorkoutView, ClientChat, ProgressHistory)
-│   ├── pages/
-│   │   ├── CoachDashboard.tsx
-│   │   └── ClientDashboard.tsx
-│   ├── lib/
-│   │   ├── storage.ts    - localStorage helpers
-│   │   ├── sample-data.ts - Demo data
-│   │   └── utils.ts      - Utility functions
-│   ├── types/
-│   │   └── index.ts      - TypeScript definitions
-│   └── App.tsx           - Main app with role switcher
-├── package.json
-├── vite.config.ts
-└── tailwind.config.js
+Open the database GUI to see your data:
+```bash
+npx prisma studio
 ```
 
-## Next Steps
+This opens a browser at http://localhost:5555 where you can browse all tables.
 
-After user testing, priority features to add:
+## Demo Accounts
 
-1. **Authentication** - Real login system
-2. **Backend API** - Replace localStorage with database
-3. **Exercise Library** - Pre-built exercise templates
-4. **Notifications** - Push notifications for workouts
-5. **Analytics** - Progress charts and insights
+| Role   | Email               | Password  |
+|--------|---------------------|-----------|
+| Coach  | coach@logbook.fit   | demo1234  |
+| Client | client@logbook.fit  | demo1234  |
 
-## Customization
+## Current State
 
-### Adding New Exercises
-Login as coach → Select client → Plans tab → Click "Add Exercise"
+The app currently has two layers:
 
-### Creating New Clients
-Currently demo only - edit `src/lib/sample-data.ts` to add more
+1. **Demo mode (active):** localStorage-based UI that works without a database. Switch between Coach/Client views using the button in the top-right corner.
 
-### Modifying Plans
-All plans are editable in real-time through the coach interface
+2. **API layer (built, not wired to frontend):** 33 API endpoints backed by Prisma/PostgreSQL. These will replace the demo mode page-by-page in the next phase.
+
+## Troubleshooting
+
+### "Can't reach database server"
+- Double-check your `DATABASE_URL` and `DIRECT_URL` in `.env`
+- Make sure the Supabase project is running (not paused)
+
+### "prisma migrate dev fails"
+- Ensure you have the `DIRECT_URL` set (not the pooler URL) — Prisma migrations need a direct connection
+
+### "Module not found: generated/prisma"
+- Run `npx prisma generate` to regenerate the Prisma client
+
+### Reset everything
+```bash
+npx prisma migrate reset    # Drops all tables and re-migrates
+npx prisma db seed           # Re-seeds demo data
+```

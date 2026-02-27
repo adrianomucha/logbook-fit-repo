@@ -29,10 +29,11 @@ export async function getClientProfileId(session: Session): Promise<string> {
 
 /**
  * Prisma where-clause fragment that scopes to the authenticated coach.
+ * Includes deletedAt: null to filter out soft-deleted resources.
  * Usage: prisma.plan.findMany({ where: { ...coachScope(coachProfileId) } })
  */
 export function coachScope(coachProfileId: string) {
-  return { coachId: coachProfileId };
+  return { coachId: coachProfileId, deletedAt: null };
 }
 
 /**

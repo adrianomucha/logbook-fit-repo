@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { getClientStatus } from '@/lib/client-status';
 import { getClientSnippet } from '@/lib/snippet-helpers';
 import { calculateNextCheckIn } from '@/lib/checkin-helpers';
+import { getPlanName } from '@/lib/status-helpers';
 import { ClientCard } from '@/components/coach/ClientCard';
 import { EmptyStateNoClients, EmptyStateNoneNeedAttention, EmptyStateAllNeedAttention } from '@/components/coach/EmptyStates';
 import { CoachNav } from '@/components/coach/CoachNav';
@@ -20,13 +21,6 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
       (m) => coachClientIds.includes(m.senderId) && !m.read
     ).length;
   }, [appState.clients, appState.messages]);
-
-  // Helper: look up plan name for a client
-  const getPlanName = (clientPlanId?: string): string | undefined => {
-    if (!clientPlanId) return undefined;
-    const plan = appState.plans.find((p) => p.id === clientPlanId);
-    return plan?.name;
-  };
 
   // Compute client statuses
   const clientsWithStatus = useMemo(() => {
@@ -89,7 +83,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
                   status={status}
                   variant="needs-attention"
                   snippet={getClientSnippet(client, status, appState)}
-                  planName={getPlanName(client.currentPlanId)}
+                  planName={getPlanName(appState.plans, client.currentPlanId)}
                 />
               ))}
             </div>
@@ -117,7 +111,7 @@ export function AllClientsPage({ appState, onUpdateState }: AllClientsPageProps)
                   status={status}
                   variant="on-track"
                   nextCheckInDate={calculateNextCheckIn(client)}
-                  planName={getPlanName(client.currentPlanId)}
+                  planName={getPlanName(appState.plans, client.currentPlanId)}
                 />
               ))}
             </div>

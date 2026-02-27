@@ -1,145 +1,193 @@
 # LogBook.fit
 
-A simple coach-first platform to plan workouts, track progress, and stay connected with clients.
-
-## Demo Version
-
-This is a lightweight demo built to quickly test concepts with users. Features:
-
-- No authentication required
-- LocalStorage for data persistence
-- Pre-populated sample data
-- Switch between Coach and Client views
+A coach-first platform to plan workouts, track progress, and stay connected with clients.
 
 ## Tech Stack
 
-- **Framework:** Vite + React + TypeScript
+- **Framework:** Next.js 14 (App Router) + React + TypeScript
+- **Database:** PostgreSQL (Supabase) via Prisma v6
+- **Auth:** NextAuth.js with Credentials provider + JWT sessions
 - **UI Components:** shadcn/ui (Neutral theme)
 - **Styling:** Tailwind CSS
-- **Font:** JetBrains Mono
+- **Fonts:** JetBrains Mono (headings) + DM Sans (body)
 - **Icons:** Lucide React
-- **Storage:** LocalStorage (no database)
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
+- Node.js 20+ and npm
+- PostgreSQL database (Supabase recommended)
 
 ### Installation
 
-1. Install dependencies:
+1. Clone the repo and install dependencies:
 
 ```bash
+git clone git@github.com:adrianomucha/logbook-fit-repo.git
+cd logbook-fit-repo
 npm install
 ```
 
-2. Start the development server:
+2. Copy the environment template and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your Supabase database URLs and NextAuth secret:
+
+```env
+DATABASE_URL="postgresql://...@...pooler.supabase.co:6543/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://...@...supabase.co:5432/postgres"
+NEXTAUTH_SECRET="<run: openssl rand -base64 32>"
+NEXTAUTH_URL="http://localhost:3000"
+```
+
+3. Run the database migration:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+4. Apply post-migration SQL (partial indexes, triggers, constraints):
+
+```bash
+npx prisma db execute --file prisma/sql/post_001_partial_unique_indexes.sql
+npx prisma db execute --file prisma/sql/post_002_workout_completion_trigger.sql
+npx prisma db execute --file prisma/sql/post_003_check_constraints.sql
+```
+
+5. Seed the database with demo data:
+
+```bash
+npx prisma db seed
+```
+
+6. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-3. Open your browser to `http://localhost:5173`
+7. Open `http://localhost:3000`
 
-### Build for Production
+## Demo Accounts (after seeding)
 
-```bash
-npm run build
-npm run preview
-```
+| Role   | Email               | Password  |
+|--------|---------------------|-----------|
+| Coach  | coach@logbook.fit   | demo1234  |
+| Client | client@logbook.fit  | demo1234  |
 
-## Features
+## API Endpoints (33 total)
 
-### Coach View
+### Auth (3)
+- `POST /api/auth/signup` - Create account
+- `POST /api/auth/[...nextauth]` - NextAuth login/logout
+- `GET /api/me` - Current user profile
 
-- **Client Management:** View all clients with adherence rates and status
-- **Workout Plan Builder:** Create and edit workout plans with weeks, days, and exercises
-- **Chat:** Direct messaging with clients
-- **Progress Tracking:** Monitor client completion rates
+### Coach (18)
+- `GET /api/coach/dashboard` - Dashboard with urgency-sorted clients
+- `GET /api/coach/clients` - All clients
+- `GET /api/coach/clients/[id]` - Client detail
+- `GET/POST /api/plans` - List/create plans
+- `GET/PUT/DELETE /api/plans/[id]` - Plan CRUD
+- `POST /api/plans/[id]/weeks` - Add week to plan
+- `POST /api/plans/[id]/assign` - Assign plan to client
+- `GET/POST /api/exercises` - Exercise library
+- `PUT /api/exercises/[id]` - Update exercise
+- `POST /api/days/[id]/exercises` - Add exercise to day
+- `PUT/DELETE /api/workout-exercises/[id]` - Manage workout exercises
+- `POST /api/invites` - Create client invite
+- `POST /api/check-ins` - Initiate check-in
 
-### Client View
+### Client (8)
+- `GET /api/client/week-overview` - Current week
+- `GET /api/client/workout/day/[id]` - Day's exercises
+- `POST /api/client/workout/start` - Start workout
+- `PUT /api/client/workout/[id]/sets` - Log sets (batch)
+- `POST /api/client/workout/[id]/finish` - Complete workout
+- `POST /api/client/workout/[id]/flag` - Flag exercise
+- `GET /api/client/progress` - Progress stats
+- `PUT /api/check-ins/[id]/client-respond` - Respond to check-in
 
-- **Today's Workout:** Clean, focused view of the current day's exercises
-- **Exercise Tracking:** Mark exercises as complete and log weights
-- **Chat:** Message your coach directly
-- **Progress History:** View past completed workouts
-
-## Demo Users
-
-### Coach Account
-- Sarah Johnson (sarah@coach.com)
-
-### Client Accounts
-- Mike Chen (mike@example.com)
-- Emma Wilson (emma@example.com)
-- Alex Rodriguez (alex@example.com)
+### Shared (4)
+- `GET /api/check-ins/[id]` - Check-in detail
+- `PUT /api/check-ins/[id]/coach-respond` - Coach reviews check-in
+- `GET /api/messages/[userId]` - Message thread
+- `POST /api/messages` - Send message
 
 ## Project Structure
 
 ```
 src/
+├── app/
+│   ├── api/                # 33 API route handlers
+│   │   ├── auth/           # Signup, NextAuth
+│   │   ├── coach/          # Dashboard, clients
+│   │   ├── client/         # Week overview, workout execution
+│   │   ├── plans/          # Plan CRUD
+│   │   ├── exercises/      # Exercise library
+│   │   ├── check-ins/      # Check-in flow
+│   │   ├── messages/       # Messaging
+│   │   └── me/             # Current user
+│   ├── coach/              # Coach pages (App Router)
+│   ├── client/             # Client pages (App Router)
+│   └── globals.css         # Tailwind + design tokens
 ├── components/
-│   ├── ui/              # shadcn/ui components
-│   ├── coach/           # Coach-specific components
-│   └── client/          # Client-specific components
-├── pages/
-│   ├── CoachDashboard.tsx
-│   └── ClientDashboard.tsx
+│   ├── ui/                 # shadcn/ui components
+│   ├── coach/              # Coach-specific components
+│   └── client/             # Client-specific components
+├── views/                  # Page-level view components
 ├── lib/
-│   ├── storage.ts       # LocalStorage utilities
-│   ├── sample-data.ts   # Pre-populated demo data
-│   └── utils.ts         # Helper functions
+│   ├── auth.ts             # NextAuth config
+│   ├── prisma.ts           # Prisma singleton
+│   ├── scoping.ts          # RBAC scoping utilities
+│   ├── middleware/          # withCoach / withClient RBAC
+│   └── utils.ts            # Helpers
+├── providers/
+│   └── AppStateProvider.tsx # Demo mode (localStorage)
 ├── types/
-│   └── index.ts         # TypeScript type definitions
-├── App.tsx              # Main app with role switcher
-└── main.tsx             # Entry point
+│   └── next-auth.d.ts      # Session type augmentation
+prisma/
+├── schema.prisma           # 16 models, 7 enums
+├── seed.ts                 # Demo data seeder
+├── sql/                    # Post-migration SQL
+│   ├── post_001_partial_unique_indexes.sql
+│   ├── post_002_workout_completion_trigger.sql
+│   └── post_003_check_constraints.sql
+└── migrations/
+    └── migration_lock.toml
 ```
 
-## Data Models
+## Database Schema
 
-### Core Types
+16 models across 4 domains:
 
-- **Exercise:** Individual exercise with sets, reps, weight, and notes
-- **WorkoutDay:** Collection of exercises for a specific day
-- **WorkoutWeek:** Collection of workout days
-- **WorkoutPlan:** Complete plan with multiple weeks
-- **Client:** Client profile with assigned plan and progress
-- **Coach:** Coach profile with list of clients
-- **Message:** Chat messages between coach and client
-- **CompletedWorkout:** Record of completed exercises
+- **Auth:** User, CoachProfile, ClientProfile
+- **Relationships:** CoachClientRelationship, ClientInvite
+- **Training:** Exercise, Plan, Week, Day, WorkoutExercise
+- **Tracking:** WorkoutCompletion, SetCompletion, ExerciseFlag
+- **Communication:** CheckIn, Message
 
-## Storage
+## Scripts
 
-All data is stored in localStorage under the key `logbook_fit_data`. The app automatically initializes with sample data on first load.
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start dev server (port 3000) |
+| `npm run build` | Production build |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npx prisma studio` | Open database GUI |
+| `npx prisma db seed` | Seed demo data |
 
-To reset data: Clear browser localStorage or open DevTools → Application → LocalStorage → Clear
+## Design System
 
-## Next Steps (Post-MVP)
-
-- Real authentication
-- Backend API and database
-- Exercise library and templates
-- Push notifications
-- Media support (videos, images)
-- Advanced analytics
-- Mobile apps
-
-## Development
-
-### Scripts
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-### Design System
-
-- **Theme:** Neutral with small border radius
-- **Font:** JetBrains Mono (monospace)
-- **Colors:** Neutral palette with semantic color tokens
-- **Components:** Built with shadcn/ui and Tailwind CSS
+- **Theme:** Neutral with 0.625rem border radius
+- **Headings:** JetBrains Mono (font-heading)
+- **Body:** DM Sans (font-sans)
+- **Colors:** Neutral palette + semantic tokens (success, warning, info, destructive)
+- **Components:** shadcn/ui + Tailwind CSS
 
 ## License
 

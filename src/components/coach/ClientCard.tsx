@@ -1,5 +1,7 @@
+import { memo, useCallback } from 'react';
 import { Client } from '@/types';
 import { ClientStatus } from '@/lib/client-status';
+import { statusBadgeStyles } from '@/lib/status-helpers';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
@@ -12,7 +14,7 @@ interface ClientCardProps {
   planName?: string;
 }
 
-export function ClientCard({
+export const ClientCard = memo(function ClientCard({
   client,
   status,
   variant,
@@ -22,25 +24,11 @@ export function ClientCard({
 }: ClientCardProps) {
   const router = useRouter();
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     router.push(`/coach/clients/${client.id}`);
-  };
+  }, [router, client.id]);
 
-  // Status badge styles
-  const badgeStyles = (() => {
-    switch (status.type) {
-      case 'at-risk':
-      case 'overdue':
-        return { dot: 'bg-warning', bg: 'bg-warning/10', text: 'text-warning' };
-      case 'pending-checkin':
-      case 'unread':
-        return { dot: 'bg-info', bg: 'bg-info/10', text: 'text-info' };
-      case 'ok':
-        return { dot: 'bg-success', bg: 'bg-success/10', text: 'text-success' };
-      default:
-        return { dot: 'bg-muted-foreground', bg: 'bg-muted-foreground/10', text: 'text-muted-foreground' };
-    }
-  })();
+  const badgeStyles = statusBadgeStyles(status);
 
   // Short label for the badge
   const badgeLabel = variant === 'on-track' ? 'On Track' : status.label;
@@ -139,4 +127,6 @@ export function ClientCard({
       </div>
     </div>
   );
-}
+});
+
+ClientCard.displayName = 'ClientCard';

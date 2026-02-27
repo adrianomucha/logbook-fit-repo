@@ -1,5 +1,6 @@
 import { Client, AppState } from '@/types';
 import { ClientStatus } from '@/lib/client-status';
+import { truncate } from '@/lib/status-helpers';
 
 export function getClientSnippet(
   client: Client,
@@ -32,8 +33,4 @@ export function getClientSnippet(
     default:
       return undefined;
   }
-}
-
-function truncate(str: string, maxLength: number): string {
-  return str.length > maxLength ? str.slice(0, maxLength) + '...' : str;
 }

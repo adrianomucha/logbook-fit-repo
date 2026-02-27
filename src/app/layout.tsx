@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { JetBrains_Mono } from 'next/font/google';
+import { JetBrains_Mono, DM_Sans } from 'next/font/google';
 import { AppStateProvider } from '@/providers/AppStateProvider';
 import { SwitchRoleButton } from '@/components/SwitchRoleButton';
 import '@/app/globals.css';
@@ -11,13 +11,20 @@ const jetbrainsMono = JetBrains_Mono({
   display: 'swap',
 });
 
+const dmSans = DM_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-dm-sans',
+  display: 'swap',
+});
+
 export const metadata: Metadata = {
   title: 'LogBook.fit',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={jetbrainsMono.variable}>
+    <html lang="en" className={`${jetbrainsMono.variable} ${dmSans.variable}`}>
       <body>
         <AppStateProvider>
           {children}

@@ -23,7 +23,6 @@ export const POST = withCoach(
       where: {
         id: planId,
         ...coachScope(coachProfileId),
-        deletedAt: null,
       },
     });
     if (!plan) {

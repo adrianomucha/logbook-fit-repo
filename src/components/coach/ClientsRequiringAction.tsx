@@ -2,6 +2,7 @@ import { useRouter } from 'next/navigation';
 import { Client, Message, CheckIn, CompletedWorkout, WorkoutPlan } from '@/types';
 import { getClientStatus, ClientStatus } from '@/lib/client-status';
 import { calculateNextCheckIn } from '@/lib/checkin-helpers';
+import { statusBadgeStyles, truncate, getPlanName } from '@/lib/status-helpers';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -12,25 +13,6 @@ interface ClientsRequiringActionProps {
   completedWorkouts: CompletedWorkout[];
   plans: WorkoutPlan[];
   onSelectClient: (clientId: string) => void;
-}
-
-function statusBadgeStyles(status: ClientStatus): { dot: string; bg: string; text: string } {
-  switch (status.type) {
-    case 'at-risk':
-    case 'overdue':
-      return { dot: 'bg-warning', bg: 'bg-warning/10', text: 'text-warning' };
-    case 'pending-checkin':
-    case 'unread':
-      return { dot: 'bg-info', bg: 'bg-info/10', text: 'text-info' };
-    case 'ok':
-      return { dot: 'bg-success', bg: 'bg-success/10', text: 'text-success' };
-    default:
-      return { dot: 'bg-muted-foreground', bg: 'bg-muted-foreground/10', text: 'text-muted-foreground' };
-  }
-}
-
-function truncate(str: string, maxLength: number): string {
-  return str.length > maxLength ? str.slice(0, maxLength) + '...' : str;
 }
 
 function getSnippet(client: Client, status: ClientStatus, messages: Message[]): string | undefined {
@@ -81,19 +63,12 @@ export function ClientsRequiringAction({
 }: ClientsRequiringActionProps) {
   const router = useRouter();
 
-  // Helper: look up plan name for a client
-  const getPlanName = (clientPlanId?: string): string | undefined => {
-    if (!clientPlanId) return undefined;
-    const plan = plans.find((p) => p.id === clientPlanId);
-    return plan?.name;
-  };
-
   const clientsWithStatus = clients.map((client) => {
     const status = getClientStatus(client, messages, checkIns);
     return {
       client,
       status,
-      planName: getPlanName(client.currentPlanId),
+      planName: getPlanName(plans, client.currentPlanId),
       snippet: getSnippet(client, status, messages)
     };
   });

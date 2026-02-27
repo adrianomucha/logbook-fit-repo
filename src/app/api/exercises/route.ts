@@ -23,7 +23,6 @@ export const GET = withCoach(
     const exercises = await prisma.exercise.findMany({
       where: {
         ...coachScope(coachProfileId),
-        deletedAt: null,
         ...(category ? { category: category as never } : {}),
         ...(search
           ? { name: { contains: search, mode: "insensitive" as const } }
@@ -71,7 +70,6 @@ export const POST = withCoach(
       where: {
         ...coachScope(coachProfileId),
         name,
-        deletedAt: null,
       },
     });
     if (existing) {

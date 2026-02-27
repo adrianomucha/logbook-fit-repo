@@ -21,7 +21,6 @@ export const GET = withCoach(
       where: {
         id: planId,
         ...coachScope(coachProfileId),
-        deletedAt: null,
       },
       include: {
         weeks: {
@@ -83,7 +82,6 @@ export const PUT = withCoach(
       where: {
         id: planId,
         ...coachScope(coachProfileId),
-        deletedAt: null,
       },
     });
     if (!existing) {
@@ -103,7 +101,6 @@ export const PUT = withCoach(
         where: {
           ...coachScope(coachProfileId),
           name,
-          deletedAt: null,
           NOT: { id: planId },
         },
       });
@@ -146,7 +143,6 @@ export const DELETE = withCoach(
       where: {
         id: planId,
         ...coachScope(coachProfileId),
-        deletedAt: null,
       },
     });
     if (!existing) {

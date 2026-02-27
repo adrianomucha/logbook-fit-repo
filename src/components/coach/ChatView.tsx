@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Message, Client } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -54,28 +54,33 @@ export function ChatView({
     }
   }, [initialPrefill]);
 
-  // Auto-scroll to bottom on new messages or initial load
-  const clientMessages = messages.filter(
-    (msg) => msg.clientId === client.id
+  // Memoize message filtering to avoid re-computing on every render
+  const clientMessages = useMemo(
+    () => messages.filter((msg) => msg.clientId === client.id),
+    [messages, client.id]
   );
 
+  // Auto-scroll to bottom on new messages or initial load
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [clientMessages.length]);
 
-  const handleSend = () => {
+  const handleSend = useCallback(() => {
     if (newMessage.trim()) {
       onSendMessage(newMessage);
       setNewMessage('');
     }
-  };
+  }, [newMessage, onSendMessage]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
-  };
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend]
+  );
 
   const chatLabel = `Chat with ${client.name}`;
 

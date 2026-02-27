@@ -16,7 +16,7 @@ export const GET = withCoach(
     coachProfileId: string
   ) => {
     const plans = await prisma.plan.findMany({
-      where: { ...coachScope(coachProfileId), deletedAt: null },
+      where: { ...coachScope(coachProfileId) },
       include: {
         weeks: {
           select: { id: true, weekNumber: true },
@@ -66,7 +66,6 @@ export const POST = withCoach(
       where: {
         ...coachScope(coachProfileId),
         name,
-        deletedAt: null,
       },
     });
     if (existing) {

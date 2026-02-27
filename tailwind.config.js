@@ -66,7 +66,8 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        mono: ['var(--font-jetbrains-mono)', 'JetBrains Mono', 'monospace'],
+        sans: ['var(--font-dm-sans)', 'DM Sans', 'system-ui', 'sans-serif'],
+        heading: ['var(--font-jetbrains-mono)', 'JetBrains Mono', 'monospace'],
       },
       keyframes: {
         "accordion-down": {

@@ -22,7 +22,6 @@ export const POST = withCoach(
       where: {
         id: planId,
         ...coachScope(coachProfileId),
-        deletedAt: null,
       },
       include: {
         weeks: { select: { weekNumber: true }, orderBy: { weekNumber: "desc" }, take: 1 },
