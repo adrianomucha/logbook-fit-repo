@@ -88,7 +88,7 @@ export function TodayFocusView({
   return (
     <div className="space-y-4">
       {/* Status Header */}
-      <StatusHeader date={new Date()} status={statusType} />
+      <StatusHeader status={statusType} />
 
       {/* Primary Action Card */}
       <TodayActionCard

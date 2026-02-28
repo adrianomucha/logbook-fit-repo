@@ -9,7 +9,7 @@ import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
 import { useClientProgress } from '@/hooks/api/useClientProgress';
 import { useClientCheckIns } from '@/hooks/api/useClientCheckIns';
 import { useMessages } from '@/hooks/api/useMessages';
-import { usePlanDetail } from '@/hooks/api/usePlanDetail';
+import { useClientPlan } from '@/hooks/api/useClientPlan';
 import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import { apiFetch } from '@/lib/api-client';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
@@ -95,8 +95,7 @@ export function ClientDashboard() {
   const { messages: apiMessages, sendMessage } = useMessages(coachUserId);
 
   // Fetch full plan detail for sub-components that need the full plan structure
-  const planId = weekOverview?.plan.id ?? null;
-  const { plan: planDetail } = usePlanDetail(planId);
+  const { plan: planDetail } = useClientPlan();
 
   // Handle URL tab parameter
   useEffect(() => {
