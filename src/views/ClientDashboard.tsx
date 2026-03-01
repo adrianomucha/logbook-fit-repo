@@ -280,7 +280,7 @@ export function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:pb-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4">
       <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
         <ClientNav
           activeTab={currentView}
@@ -369,7 +369,7 @@ export function ClientDashboard() {
               currentUserId={user?.id ?? ''}
               currentUserName={client.name}
               onSendMessage={handleSendMessage}
-              heightClass="h-[calc(100vh-14rem)] sm:h-[600px]"
+              heightClass="h-[calc(100dvh-12rem)] sm:h-[600px]"
               peerName={coach?.user.name ?? 'Coach'}
               conversationStarters={[
                 'How should I warm up?',

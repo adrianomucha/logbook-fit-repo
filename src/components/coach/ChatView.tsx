@@ -31,7 +31,7 @@ export function ChatView({
   currentUserName,
   onSendMessage,
   initialPrefill,
-  heightClass = 'h-[600px]',
+  heightClass = 'h-[350px] sm:h-[600px]',
   peerName,
   conversationStarters,
 }: ChatViewProps) {
@@ -164,8 +164,8 @@ export function ChatView({
                           )}
                         </div>
                       )}
-                      <p className="text-sm">{message.content}</p>
-                      <p className="text-xs mt-1 opacity-70">
+                      <p className="text-[13px] sm:text-sm leading-relaxed">{message.content}</p>
+                      <p className="text-[10px] sm:text-xs mt-1 opacity-70">
                         {format(new Date(message.timestamp), 'MMM d, h:mm a')}
                       </p>
                     </div>

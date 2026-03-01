@@ -17,7 +17,7 @@ export function MessagesPanel({
   onSendMessage
 }: MessagesPanelProps) {
   return (
-    <div className="sticky top-4">
+    <div className="md:sticky md:top-4">
       <ChatView
         client={client}
         messages={messages}
