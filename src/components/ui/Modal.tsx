@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, type ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './button';
 
@@ -25,12 +25,20 @@ export function Modal({
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const onCloseRef = useRef(onClose);
 
-  // Focus trap: keep Tab cycling inside the modal
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
+  // Keep onClose ref current without triggering re-renders
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  // Scroll lock + keyboard listener (stable — no dependency on onClose)
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onClose();
+        onCloseRef.current();
         return;
       }
 
@@ -43,36 +51,26 @@ export function Modal({
       const lastEl = focusableEls[focusableEls.length - 1];
 
       if (e.shiftKey) {
-        // Shift+Tab: wrap from first to last
         if (document.activeElement === firstEl) {
           e.preventDefault();
           lastEl.focus();
         }
       } else {
-        // Tab: wrap from last to first
         if (document.activeElement === lastEl) {
           e.preventDefault();
           firstEl.focus();
         }
       }
-    },
-    [onClose]
-  );
+    };
 
-  useEffect(() => {
-    if (!isOpen) return;
-
-    // Store the element that had focus before the modal opened
     previouslyFocusedRef.current = document.activeElement as HTMLElement;
 
-    // Lock body scroll, remembering previous value
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
-    // Add keyboard listener
     document.addEventListener('keydown', handleKeyDown);
 
-    // Auto-focus the close button after a frame (ensures DOM is ready)
+    // Auto-focus close button only on initial open
     requestAnimationFrame(() => {
       closeButtonRef.current?.focus();
     });
@@ -80,11 +78,9 @@ export function Modal({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = previousOverflow;
-
-      // Restore focus to the element that triggered the modal
       previouslyFocusedRef.current?.focus();
     };
-  }, [isOpen, handleKeyDown]);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

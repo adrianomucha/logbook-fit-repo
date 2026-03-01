@@ -82,22 +82,25 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
               return (
                 <div
                   key={client.clientProfileId}
-                  className="flex items-center gap-3 sm:gap-4 py-3 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-3 sm:gap-4 py-3 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer"
+                  onClick={() => handleClientAction(client)}
+                  role="link"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleClientAction(client);
+                    }
+                  }}
                 >
                   <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-muted to-muted/60 flex items-center justify-center select-none text-lg sm:text-xl flex-shrink-0">
                     {displayName.charAt(0)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          router.push(`/coach/clients/${client.clientProfileId}`);
-                        }}
-                        className="text-sm sm:text-[15px] font-semibold truncate text-left hover:underline hover:text-primary transition-colors cursor-pointer"
-                      >
+                      <span className="text-sm sm:text-[15px] font-semibold truncate leading-tight">
                         {displayName}
-                      </button>
+                      </span>
                       <span className={cn(
                         'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0',
                         badge.bg, badge.text
@@ -114,10 +117,18 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                     variant={cta.variant}
                     size="sm"
                     className="shrink-0 hidden sm:inline-flex"
-                    onClick={() => handleClientAction(client)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClientAction(client);
+                    }}
                   >
                     {cta.label}
                   </Button>
+                  <div className="flex-shrink-0 pl-1 sm:hidden">
+                    <svg className="w-4 h-4 text-muted-foreground/40" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </div>
                 </div>
               );
             })}

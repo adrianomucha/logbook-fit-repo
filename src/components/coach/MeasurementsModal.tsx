@@ -1,7 +1,6 @@
 import { Measurement } from '@/types';
+import { Modal } from '@/components/ui/Modal';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 import { format } from 'date-fns';
 import { MeasurementRow } from './shared/MeasurementRow';
 
@@ -77,7 +76,12 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
             </div>
           )}
         </div>
-        <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-32">
+        <svg
+          viewBox={`0 0 ${chartWidth} ${chartHeight}`}
+          className="w-full h-32"
+          role="img"
+          aria-label={`Progress chart showing ${weights.length >= 2 ? `weight from ${weights[0]} to ${weights[weights.length - 1]} lbs` : ''}${weights.length >= 2 && bodyFats.length >= 2 ? ' and ' : ''}${bodyFats.length >= 2 ? `body fat from ${bodyFats[0]} to ${bodyFats[bodyFats.length - 1]}%` : ''}`}
+        >
           {/* Grid lines */}
           <line x1="0" y1="0" x2={chartWidth} y2="0" stroke="currentColor" strokeOpacity="0.1" />
           <line x1="0" y1={chartHeight/2} x2={chartWidth} y2={chartHeight/2} stroke="currentColor" strokeOpacity="0.1" />
@@ -125,86 +129,78 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
     );
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={onClose}>
-      <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Measurements Progress</CardTitle>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Trend Chart */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Progress Trends</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {renderTrendChart()}
-            </CardContent>
-          </Card>
+  const reversedMeasurements = [...sortedMeasurements].reverse();
 
-          {/* Latest Measurements */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Latest Measurements</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {latest ? (
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Recorded on {format(new Date(latest.date), 'MMM d, yyyy')}
-                  </p>
-                  <MeasurementRow label="Weight" current={latest.weight} previous={previous?.weight} unit=" lbs" />
-                  <MeasurementRow label="Body Fat" current={latest.bodyFat} previous={previous?.bodyFat} unit="%" />
-                  <MeasurementRow label="Chest" current={latest.chest} previous={previous?.chest} unit='"' />
-                  <MeasurementRow label="Waist" current={latest.waist} previous={previous?.waist} unit='"' />
-                  <MeasurementRow label="Hips" current={latest.hips} previous={previous?.hips} unit='"' />
-                  <MeasurementRow label="Biceps" current={latest.biceps} previous={previous?.biceps} unit='"' />
-                  <MeasurementRow label="Thighs" current={latest.thighs} previous={previous?.thighs} unit='"' />
-                  {latest.notes && (
-                    <div className="pt-2 mt-2 border-t">
-                      <p className="text-sm text-muted-foreground">{latest.notes}</p>
-                    </div>
+  return (
+    <Modal isOpen onClose={onClose} title="Measurements Progress" maxWidth="lg">
+      <div className="space-y-6">
+        {/* Trend Chart */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Progress Trends</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {renderTrendChart()}
+          </CardContent>
+        </Card>
+
+        {/* Latest Measurements */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Latest Measurements</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {latest ? (
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground mb-3">
+                  Recorded on {format(new Date(latest.date), 'MMM d, yyyy')}
+                </p>
+                <MeasurementRow label="Weight" current={latest.weight} previous={previous?.weight} unit=" lbs" />
+                <MeasurementRow label="Body Fat" current={latest.bodyFat} previous={previous?.bodyFat} unit="%" />
+                <MeasurementRow label="Chest" current={latest.chest} previous={previous?.chest} unit='"' />
+                <MeasurementRow label="Waist" current={latest.waist} previous={previous?.waist} unit='"' />
+                <MeasurementRow label="Hips" current={latest.hips} previous={previous?.hips} unit='"' />
+                <MeasurementRow label="Biceps" current={latest.biceps} previous={previous?.biceps} unit='"' />
+                <MeasurementRow label="Thighs" current={latest.thighs} previous={previous?.thighs} unit='"' />
+                {latest.notes && (
+                  <div className="pt-2 mt-2 border-t">
+                    <p className="text-sm text-muted-foreground">{latest.notes}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-center text-muted-foreground py-4">No measurements recorded yet</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Measurement History */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Measurement History</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {reversedMeasurements.map((measurement) => (
+                <div key={measurement.id} className="border-b pb-3 last:border-0">
+                  <p className="text-sm font-medium mb-2">{format(new Date(measurement.date), 'MMM d, yyyy')}</p>
+                  <div className="grid grid-cols-3 gap-2 text-xs">
+                    {measurement.weight && <div>Weight: {measurement.weight} lbs</div>}
+                    {measurement.bodyFat && <div>BF: {measurement.bodyFat}%</div>}
+                    {measurement.waist && <div>Waist: {measurement.waist}&quot;</div>}
+                    {measurement.chest && <div>Chest: {measurement.chest}&quot;</div>}
+                    {measurement.hips && <div>Hips: {measurement.hips}&quot;</div>}
+                    {measurement.biceps && <div>Biceps: {measurement.biceps}&quot;</div>}
+                  </div>
+                  {measurement.notes && (
+                    <p className="text-xs text-muted-foreground mt-1">{measurement.notes}</p>
                   )}
                 </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-4">No measurements recorded yet</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Measurement History */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Measurement History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {sortedMeasurements.reverse().map((measurement) => (
-                  <div key={measurement.id} className="border-b pb-3 last:border-0">
-                    <p className="text-sm font-medium mb-2">{format(new Date(measurement.date), 'MMM d, yyyy')}</p>
-                    <div className="grid grid-cols-3 gap-2 text-xs">
-                      {measurement.weight && <div>Weight: {measurement.weight} lbs</div>}
-                      {measurement.bodyFat && <div>BF: {measurement.bodyFat}%</div>}
-                      {measurement.waist && <div>Waist: {measurement.waist}"</div>}
-                      {measurement.chest && <div>Chest: {measurement.chest}"</div>}
-                      {measurement.hips && <div>Hips: {measurement.hips}"</div>}
-                      {measurement.biceps && <div>Biceps: {measurement.biceps}"</div>}
-                    </div>
-                    {measurement.notes && (
-                      <p className="text-xs text-muted-foreground mt-1">{measurement.notes}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Card>
-    </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </Modal>
   );
 }

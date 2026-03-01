@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { cn } from '@/lib/utils';
 
 const FITNESS_EMOJIS = ['💪', '🏋️', '🏃', '🚴', '🧘', '⚡', '🔥', '🎯'];
 
@@ -12,19 +13,16 @@ export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
 
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
   const handleEmojiSelect = (emoji: string) => {
@@ -33,77 +31,47 @@ export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative' }}>
+    <div ref={containerRef} className="relative">
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        style={{
-          width: '40px',
-          height: '40px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: '24px',
-          backgroundColor: '#f3f4f6',
-          border: '1px solid #d1d5db',
-          borderRadius: '8px',
-          cursor: 'pointer',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = '#e5e7eb';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = '#f3f4f6';
-        }}
+        className={cn(
+          'w-10 h-10 flex items-center justify-center text-2xl',
+          'bg-muted border border-border rounded-lg cursor-pointer',
+          'hover:bg-accent transition-colors',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        )}
         aria-label="Select emoji"
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
       >
         {value}
       </button>
 
       {isOpen && (
         <div
-          style={{
-            position: 'absolute',
-            top: '48px',
-            left: '0',
-            zIndex: 1000,
-            backgroundColor: 'white',
-            border: '2px solid #1f2937',
-            borderRadius: '8px',
-            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-            padding: '12px',
-          }}
+          className={cn(
+            'absolute top-12 left-0 z-50 w-[232px]',
+            'bg-popover border-2 border-border rounded-lg shadow-lg p-3'
+          )}
+          role="listbox"
+          aria-label="Fitness emojis"
         >
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: '8px',
-            }}
-          >
+          <div className="grid grid-cols-4 gap-2">
             {FITNESS_EMOJIS.map((emoji) => (
               <button
                 key={emoji}
                 type="button"
+                role="option"
+                aria-selected={emoji === value}
                 onClick={() => handleEmojiSelect(emoji)}
-                style={{
-                  width: '48px',
-                  height: '48px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '28px',
-                  backgroundColor: emoji === value ? '#e5e7eb' : 'white',
-                  border: emoji === value ? '2px solid #3b82f6' : '1px solid #d1d5db',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = '#f3f4f6';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = emoji === value ? '#e5e7eb' : 'white';
-                }}
+                className={cn(
+                  'w-12 h-12 flex items-center justify-center text-[28px] rounded-md cursor-pointer',
+                  'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  emoji === value
+                    ? 'bg-accent border-2 border-primary'
+                    : 'bg-background border border-border hover:bg-accent'
+                )}
                 aria-label={`Select ${emoji}`}
               >
                 {emoji}

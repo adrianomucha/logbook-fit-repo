@@ -6,6 +6,7 @@ export interface Exercise {
   time?: string;
   weight?: string;
   weightUnit?: string;
+  restSeconds?: number;
   notes?: string;
   completed?: boolean;
 }

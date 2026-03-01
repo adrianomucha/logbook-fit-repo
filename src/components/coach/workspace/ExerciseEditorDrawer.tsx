@@ -59,8 +59,8 @@ export function ExerciseEditorDrawer({
   const [sets, setSets] = useState(exercise?.sets?.toString() || '3');
   const [reps, setReps] = useState(exercise?.reps || '10');
   const [weight, setWeight] = useState(exercise?.weight || '');
-  const [weightUnit, setWeightUnit] = useState((exercise as any)?.weightUnit || 'lbs');
-  const [restSeconds, setRestSeconds] = useState((exercise as any)?.restSeconds?.toString() || '');
+  const [weightUnit, setWeightUnit] = useState(exercise?.weightUnit || 'lbs');
+  const [restSeconds, setRestSeconds] = useState(exercise?.restSeconds?.toString() || '');
   const [notes, setNotes] = useState(exercise?.notes || '');
 
   // Reset form when exercise changes
@@ -70,8 +70,8 @@ export function ExerciseEditorDrawer({
       setSets(exercise.sets?.toString() || '3');
       setReps(exercise.reps || '10');
       setWeight(exercise.weight || '');
-      setWeightUnit((exercise as any)?.weightUnit || 'lbs');
-      setRestSeconds((exercise as any)?.restSeconds?.toString() || '');
+      setWeightUnit(exercise.weightUnit || 'lbs');
+      setRestSeconds(exercise.restSeconds?.toString() || '');
       setNotes(exercise.notes || '');
       setMode('custom'); // Start on form when editing
     } else {
@@ -125,13 +125,10 @@ export function ExerciseEditorDrawer({
       sets: parseInt(sets) || 3,
       reps,
       weight: weight || undefined,
+      weightUnit,
+      restSeconds: restSeconds ? parseInt(restSeconds) : undefined,
       notes: notes || undefined,
     };
-    // Add extended properties
-    (savedExercise as any).weightUnit = weightUnit;
-    if (restSeconds) {
-      (savedExercise as any).restSeconds = parseInt(restSeconds);
-    }
     onSave(savedExercise);
     onOpenChange(false);
   };

@@ -81,11 +81,7 @@ export function WorkoutSidebar({
   };
 
   const handleDeleteWeek = (weekIdx: number) => {
-    if (!onUpdatePlan) return;
-    if (plan.weeks.length <= 1) {
-      alert('Cannot delete the last week. Plans must have at least one week.');
-      return;
-    }
+    if (!onUpdatePlan || plan.weeks.length <= 1) return;
 
     const updatedWeeks = plan.weeks.filter((_, idx) => idx !== weekIdx);
     const renumberedWeeks = updatedWeeks.map((week, idx) => ({
@@ -142,10 +138,7 @@ export function WorkoutSidebar({
     if (!onUpdatePlan) return;
 
     const week = plan.weeks[weekIdx];
-    if (week.days.length <= 1) {
-      alert('Cannot delete the last day. Weeks must have at least one day.');
-      return;
-    }
+    if (week.days.length <= 1) return;
 
     const updatedPlan: WorkoutPlan = {
       ...plan,
