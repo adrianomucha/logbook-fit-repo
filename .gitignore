@@ -31,5 +31,4 @@ next-env.d.ts
 # Environment
 .env
 
-/generated/prisma
 tsconfig.tsbuildinfo
