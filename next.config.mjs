@@ -1,4 +1,4 @@
-import { dirname } from "path";
+import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -11,6 +11,10 @@ const nextConfig = {
   // (Documents folder is iCloud-synced, which deletes temp files mid-compilation)
   ...(isVercel ? {} : { distDir: "/tmp/logbook-next" }),
   outputFileTracingRoot: __dirname,
+  outputFileTracingIncludes: {
+    "/api/**/*": [join(__dirname, "generated/prisma/**/*")],
+  },
+  serverExternalPackages: ["@prisma/client"],
   eslint: {
     // Pre-existing ESLint errors (unescaped entities, unused vars) from the Vite era.
     // Allow build to succeed while we clean these up separately.
