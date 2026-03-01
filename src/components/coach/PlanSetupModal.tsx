@@ -229,7 +229,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             value={formData.durationWeeks}
             onChange={(e) => handleFieldChange('durationWeeks', parseInt(e.target.value))}
             onBlur={() => handleBlur('durationWeeks')}
-            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            className="w-full px-3 py-2 min-h-[44px] border border-input bg-background rounded-md text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           >
             {DURATION_OPTIONS.map((weeks) => (
               <option key={weeks} value={weeks}>
@@ -253,7 +253,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               handleFieldChange('workoutsPerWeek', parseInt(e.target.value))
             }
             onBlur={() => handleBlur('workoutsPerWeek')}
-            className="w-full px-3 py-2 border border-input bg-background rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+            className="w-full px-3 py-2 min-h-[44px] border border-input bg-background rounded-md text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
           >
             {WORKOUTS_OPTIONS.map((count) => (
               <option key={count} value={count}>

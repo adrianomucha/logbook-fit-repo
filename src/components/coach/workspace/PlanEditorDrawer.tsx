@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -47,6 +47,17 @@ export function PlanEditorDrawer({
 
   const currentWeek = plan.weeks[selectedWeek];
   const currentDay = currentWeek?.days[selectedDay];
+
+  // Local state for day name input to prevent keyboard dismissal on each keystroke.
+  // The parent's onUpdatePlan triggers an API refresh which would otherwise
+  // overwrite the input value and cause focus loss on mobile.
+  const [localDayName, setLocalDayName] = useState(currentDay?.name || '');
+  const dayNameInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync local day name when navigating to a different day/week or when plan changes externally
+  useEffect(() => {
+    setLocalDayName(currentDay?.name || '');
+  }, [selectedWeek, selectedDay, currentDay?.name]);
 
   // Navigate weeks
   const goToPrevWeek = () => {
@@ -101,11 +112,14 @@ export function PlanEditorDrawer({
     onUpdatePlan(updatedPlan);
   };
 
-  const updateDayName = (name: string) => {
-    const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].name = name;
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
+  // Commit the day name to the parent only on blur (not on every keystroke)
+  const commitDayName = () => {
+    if (localDayName !== currentDay?.name) {
+      const updatedPlan = { ...plan };
+      updatedPlan.weeks[selectedWeek].days[selectedDay].name = localDayName;
+      updatedPlan.updatedAt = new Date().toISOString();
+      onUpdatePlan(updatedPlan);
+    }
   };
 
   // Get the exercise being edited (if any)
@@ -189,8 +203,10 @@ export function PlanEditorDrawer({
                 Workout Name
               </label>
               <Input
-                value={currentDay.name}
-                onChange={(e) => updateDayName(e.target.value)}
+                ref={dayNameInputRef}
+                value={localDayName}
+                onChange={(e) => setLocalDayName(e.target.value)}
+                onBlur={commitDayName}
                 placeholder="e.g., Push Day, Upper Body"
                 className="font-medium"
               />
