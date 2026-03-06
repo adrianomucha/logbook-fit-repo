@@ -510,18 +510,19 @@ async function seed() {
     });
   }
 
-  // Week 2 — days 1 and 2 done
-  for (const dayNum of [1, 2]) {
+  // Week 2 — days 1, 2, and 4 done (day 4 was yesterday)
+  for (const dayNum of [1, 2, 4]) {
     const dayInfo = hw2.days.find((d) => d.dayNumber === dayNum)!;
+    const daysMap: Record<number, number> = { 1: 3, 2: 2, 4: 1 };
     await createCompletion(emmaId, hiitPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
-      completedDaysAgo: 3 - dayNum + 1,
+      completedDaysAgo: daysMap[dayNum],
       durationMin: 38,
       effort: "MEDIUM",
       setsPerExercise: 4,
     });
   }
 
-  console.log(`✓ Emma: 6 workout completions`);
+  console.log(`✓ Emma: 7 workout completions`);
 
   // Alex's completions — Week 1 full, Week 2 only 3 days (missed one)
   const alexId = alexUser.clientProfile!.id;
@@ -651,7 +652,7 @@ async function seed() {
 
   console.log(`✓ Mike: 4 check-ins (3 completed, 1 awaiting coach review)`);
 
-  // Emma — 1 completed
+  // Emma — 1 completed (recent — keeps her on-track)
   await prisma.checkIn.create({
     data: {
       coachId: coachProfileId,
@@ -660,12 +661,12 @@ async function seed() {
       effortRating: "MEDIUM",
       clientFeeling: "Really enjoying the HIIT circuits! Could I add an extra session on Saturdays?",
       painBlockers: null,
-      clientRespondedAt: daysAgo(5),
+      clientRespondedAt: daysAgo(2),
       coachFeedback: "I love the enthusiasm! Let's hold off on adding a 5th day for now — your body needs time to adapt. We'll reassess after week 4.",
       planAdjustment: false,
-      coachRespondedAt: daysAgo(4),
-      completedAt: daysAgo(4),
-      createdAt: daysAgo(6),
+      coachRespondedAt: daysAgo(1),
+      completedAt: daysAgo(1),
+      createdAt: daysAgo(3),
     },
   });
 
@@ -746,7 +747,7 @@ async function seed() {
     { from: "coach", content: "Let's swap OHP for seated dumbbell press for the next 2 weeks. DBs let your shoulders find their natural groove. Also add band pull-aparts to warm up — 2x15.", daysAgo: 5 },
     { from: "client", content: "Did DB press today — felt much better on the shoulders. Also hit a bench PR at 155! That's a 10 lb jump since we started!", daysAgo: 2 },
     { from: "coach", content: "155! That's incredible progress in 3 weeks. Your consistency is paying off big time. Let's keep the DB press for now and reassess the shoulder next week.", daysAgo: 2 },
-    { from: "client", content: "Thanks Sarah! Honestly this is the most structured I've ever been with training. Having a coach makes a huge difference.", daysAgo: 1, unread: true },
+    { from: "client", content: "Thanks Sarah! Honestly this is the most structured I've ever been with training. Having a coach makes a huge difference.", daysAgo: 1 },
   ];
 
   for (const msg of mikeMessages) {
@@ -764,7 +765,7 @@ async function seed() {
     });
   }
 
-  console.log(`✓ Mike: ${mikeMessages.length} messages (1 unread)`);
+  console.log(`✓ Mike: ${mikeMessages.length} messages`);
 
   // Emma <-> Coach
   const emmaMessages = [
