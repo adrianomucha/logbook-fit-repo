@@ -111,11 +111,6 @@ export function ClientDashboard() {
     else if (tab === 'workout') setCurrentView('workout');
   }, [searchParams]);
 
-  // Scroll to top on mount (fixes mobile starting at bottom)
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   // ---- Adapted Data ----
 
   const client: Client | null = useMemo(() => {

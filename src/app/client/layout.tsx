@@ -1,3 +1,7 @@
+'use client';
+
+import { useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { Toaster } from 'sonner';
 
 /**
@@ -6,6 +10,13 @@ import { Toaster } from 'sonner';
  * that individual views render via ClientNav.
  */
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  // Scroll to top on every page navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   return (
     <div className="min-h-screen bg-background pb-20 sm:pb-0">
       {children}
