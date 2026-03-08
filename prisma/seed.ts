@@ -158,11 +158,26 @@ async function seed() {
     },
   });
 
-  const strengthDays = [
+  // Dynamic workout schedule: ensure today always has a workout
+  // dayNumber 1=Mon, 7=Sun (matches plan calendar mapping)
+  const jsDow = new Date().getDay(); // JS: 0=Sun, 1=Mon, ..., 6=Sat
+  const todayDayNumber = jsDow === 0 ? 7 : jsDow;
+
+  // Default workout days: [1, 2, 4, 6] (Mon, Tue, Thu, Sat)
+  // If today is a rest day, swap it in for the nearest workout day
+  let workoutDayNums = [1, 2, 4, 6];
+  if (!workoutDayNums.includes(todayDayNumber)) {
+    const swapTarget = workoutDayNums.reduce((nearest, d) =>
+      Math.abs(d - todayDayNumber) < Math.abs(nearest - todayDayNumber) ? d : nearest
+    );
+    workoutDayNums = workoutDayNums.map(d => d === swapTarget ? todayDayNumber : d).sort((a, b) => a - b);
+  }
+  console.log(`  Today is day ${todayDayNumber}, workout days: [${workoutDayNums.join(', ')}]`);
+
+  type ExTemplate = { name: string; sets: number; reps: number; weight?: number };
+  const workoutTemplates: { name: string; exercises: ExTemplate[] }[] = [
     {
-      dayNumber: 1,
       name: "Upper Body Push",
-      isRestDay: false,
       exercises: [
         { name: "Barbell Bench Press", sets: 4, reps: 8, weight: 135 },
         { name: "Overhead Press", sets: 3, reps: 8, weight: 95 },
@@ -171,9 +186,7 @@ async function seed() {
       ],
     },
     {
-      dayNumber: 2,
       name: "Lower Body",
-      isRestDay: false,
       exercises: [
         { name: "Barbell Back Squat", sets: 4, reps: 6, weight: 185 },
         { name: "Romanian Deadlift", sets: 3, reps: 10, weight: 135 },
@@ -181,11 +194,8 @@ async function seed() {
         { name: "Calf Raise", sets: 4, reps: 15 },
       ],
     },
-    { dayNumber: 3, name: null, isRestDay: true, exercises: [] as { name: string; sets: number; reps: number; weight?: number }[] },
     {
-      dayNumber: 4,
       name: "Upper Body Pull",
-      isRestDay: false,
       exercises: [
         { name: "Barbell Row", sets: 4, reps: 8, weight: 135 },
         { name: "Pull-Up", sets: 3, reps: 8 },
@@ -193,11 +203,8 @@ async function seed() {
         { name: "Barbell Curl", sets: 3, reps: 10, weight: 65 },
       ],
     },
-    { dayNumber: 5, name: null, isRestDay: true, exercises: [] as { name: string; sets: number; reps: number; weight?: number }[] },
     {
-      dayNumber: 6,
       name: "Lower Body Power",
-      isRestDay: false,
       exercises: [
         { name: "Conventional Deadlift", sets: 3, reps: 5, weight: 225 },
         { name: "Bulgarian Split Squat", sets: 3, reps: 10 },
@@ -205,8 +212,18 @@ async function seed() {
         { name: "Hip Thrust", sets: 3, reps: 10, weight: 135 },
       ],
     },
-    { dayNumber: 7, name: null, isRestDay: true, exercises: [] as { name: string; sets: number; reps: number; weight?: number }[] },
   ];
+
+  // Build 7-day template dynamically
+  const strengthDays: { dayNumber: number; name: string | null; isRestDay: boolean; exercises: ExTemplate[] }[] = [];
+  for (let d = 1; d <= 7; d++) {
+    const workoutIdx = workoutDayNums.indexOf(d);
+    if (workoutIdx >= 0) {
+      strengthDays.push({ dayNumber: d, name: workoutTemplates[workoutIdx].name, isRestDay: false, exercises: workoutTemplates[workoutIdx].exercises });
+    } else {
+      strengthDays.push({ dayNumber: d, name: null, isRestDay: true, exercises: [] });
+    }
+  }
 
   // Store week/day IDs for later use
   const strengthWeeks: { weekId: string; days: { dayId: string; dayNumber: number; exerciseIds: string[] }[] }[] = [];
@@ -452,7 +469,7 @@ async function seed() {
   const sw4 = strengthWeeks[3];
 
   // Week 1 — all 4 workout days
-  for (const dayNum of [1, 2, 4, 6]) {
+  for (const dayNum of workoutDayNums) {
     const dayInfo = sw1.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(mikeId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 21 - dayNum + 1,
@@ -463,7 +480,7 @@ async function seed() {
   }
 
   // Week 2 — all 4 workout days
-  for (const dayNum of [1, 2, 4, 6]) {
+  for (const dayNum of workoutDayNums) {
     const dayInfo = sw2.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(mikeId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 14 - dayNum + 1,
@@ -474,18 +491,18 @@ async function seed() {
   }
 
   // Week 3 — all 4 workout days
-  for (const dayNum of [1, 2, 4, 6]) {
+  for (const dayNum of workoutDayNums) {
     const dayInfo = sw3.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(mikeId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 7 - dayNum + 1,
       durationMin: 45 + Math.floor(Math.random() * 10),
-      effort: dayNum === 6 ? "HARD" : "MEDIUM",
+      effort: dayNum === workoutDayNums[workoutDayNums.length - 1] ? "HARD" : "MEDIUM",
       setsPerExercise: 4,
     });
   }
 
-  // Week 4 — Day 1 done yesterday
-  const mikeW4D1 = sw4.days.find((d) => d.dayNumber === 1)!;
+  // Week 4 — first workout day done yesterday
+  const mikeW4D1 = sw4.days.find((d) => d.dayNumber === workoutDayNums[0])!;
   await createCompletion(mikeId, strengthPlan.id, mikeW4D1.dayId, mikeW4D1.exerciseIds, {
     completedDaysAgo: 1,
     durationMin: 42,
@@ -526,7 +543,7 @@ async function seed() {
   // Alex's completions — Week 1 full, Week 2 only 3 days (missed one)
   const alexId = alexUser.clientProfile!.id;
 
-  for (const dayNum of [1, 2, 4, 6]) {
+  for (const dayNum of workoutDayNums) {
     const dayInfo = sw1.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(alexId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 14 - dayNum + 1,
@@ -536,18 +553,19 @@ async function seed() {
     });
   }
 
-  for (const dayNum of [1, 2, 4]) {
+  // Week 2 — missed last workout day
+  for (const dayNum of workoutDayNums.slice(0, 3)) {
     const dayInfo = sw2.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(alexId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 7 - dayNum + 1,
       durationMin: 48,
-      effort: dayNum === 4 ? "HARD" : "MEDIUM",
+      effort: dayNum === workoutDayNums[2] ? "HARD" : "MEDIUM",
       setsPerExercise: 4,
     });
   }
 
   // Most recent — yesterday
-  const alexRecent = sw3.days.find((d) => d.dayNumber === 1)!;
+  const alexRecent = sw3.days.find((d) => d.dayNumber === workoutDayNums[0])!;
   await createCompletion(alexId, strengthPlan.id, alexRecent.dayId, alexRecent.exerciseIds, {
     completedDaysAgo: 1,
     durationMin: 55,
@@ -560,8 +578,8 @@ async function seed() {
   // Jordan — only 2 completions, last one 9 days ago (at-risk — triggers >7 day threshold)
   const jordanId = jordanUser.clientProfile!.id;
 
-  const jordanD1 = sw1.days.find((d) => d.dayNumber === 1)!;
-  const jordanD2 = sw1.days.find((d) => d.dayNumber === 2)!;
+  const jordanD1 = sw1.days.find((d) => d.dayNumber === workoutDayNums[0])!;
+  const jordanD2 = sw1.days.find((d) => d.dayNumber === workoutDayNums[1])!;
 
   await createCompletion(jordanId, strengthPlan.id, jordanD1.dayId, jordanD1.exerciseIds, {
     completedDaysAgo: 12,
@@ -865,7 +883,7 @@ async function seed() {
   // ─────────────────────────────────────────────
 
   // Mike flagged OHP during a workout (shoulder pinch)
-  const mikeW3D1 = sw3.days.find((d) => d.dayNumber === 1)!;
+  const mikeW3D1 = sw3.days.find((d) => d.dayNumber === workoutDayNums[0])!;
   const mikeW3D1Completion = await prisma.workoutCompletion.findFirst({
     where: { clientId: mikeId, dayId: mikeW3D1.dayId },
   });
