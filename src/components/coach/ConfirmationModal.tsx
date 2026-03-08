@@ -63,7 +63,7 @@ export function ConfirmationModal({
         {warningMessage && (
           <div className="flex items-start gap-2 p-3 bg-warning/10 border border-warning/20 rounded-md">
             <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
-            <p className="text-sm text-warning">{warningMessage}</p>
+            <p className="text-sm text-foreground">{warningMessage}</p>
           </div>
         )}
       </div>

@@ -2,13 +2,13 @@ import { useState, useMemo } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Dumbbell } from 'lucide-react';
+import { Dumbbell, Loader2 } from 'lucide-react';
 import type { WorkoutPlan } from '@/types';
 
 interface AssignPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAssign: (planId: string) => void;
+  onAssign: (planId: string) => void | Promise<void>;
   plans: WorkoutPlan[];
   currentPlanId?: string;
 }
@@ -21,6 +21,7 @@ export function AssignPlanModal({
   currentPlanId,
 }: AssignPlanModalProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter to only show templates (not archived)
   const templatePlans = useMemo(() =>
@@ -29,14 +30,19 @@ export function AssignPlanModal({
   );
 
   const handleClose = () => {
+    if (isSubmitting) return;
     setSelectedPlanId(null);
     onClose();
   };
 
-  const handleAssign = () => {
-    if (selectedPlanId) {
-      onAssign(selectedPlanId);
+  const handleAssign = async () => {
+    if (!selectedPlanId || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onAssign(selectedPlanId);
       setSelectedPlanId(null);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -62,10 +68,11 @@ export function AssignPlanModal({
       maxWidth="md"
       footer={
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleAssign} disabled={!selectedPlanId}>
+          <Button onClick={handleAssign} disabled={!selectedPlanId || isSubmitting} className="flex items-center gap-2">
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Assign Plan
           </Button>
         </div>
@@ -81,7 +88,7 @@ export function AssignPlanModal({
               key={plan.id}
               disabled={isCurrent}
               onClick={() => setSelectedPlanId(plan.id)}
-              className={`w-full text-left p-3 rounded-lg border transition-colors ${
+              className={`w-full text-left p-3 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 isCurrent
                   ? 'bg-muted border-border opacity-60 cursor-not-allowed'
                   : isSelected

@@ -203,15 +203,17 @@ model Exercise {
 // ──────────────────────────────────────
 
 model Plan {
-  id            String    @id @default(uuid())
-  coachId       String
-  name          String
-  description   String?
-  durationWeeks Int       @default(4)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  editedAt      DateTime? // Last mid-cycle edit timestamp
-  deletedAt     DateTime?
+  id              String    @id @default(uuid())
+  coachId         String
+  name            String
+  description     String?
+  emoji           String    @default("💪")
+  durationWeeks   Int       @default(4)
+  workoutsPerWeek Int       @default(4)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  editedAt        DateTime? // Last mid-cycle edit timestamp
+  deletedAt       DateTime?
 
   coach       CoachProfile    @relation(fields: [coachId], references: [id], onDelete: Cascade)
   weeks       Week[]

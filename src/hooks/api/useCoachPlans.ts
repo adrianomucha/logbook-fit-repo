@@ -8,7 +8,9 @@ export function useCoachPlans() {
   const createPlan = async (planData: {
     name: string;
     description?: string;
+    emoji?: string;
     durationWeeks?: number;
+    workoutsPerWeek?: number;
   }) => {
     const newPlan = await apiFetch<PlanSummary>('/api/plans', {
       method: 'POST',

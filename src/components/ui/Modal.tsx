@@ -1,4 +1,4 @@
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useId, useRef, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { Button } from './button';
 
@@ -9,6 +9,8 @@ interface ModalProps {
   children: ReactNode;
   footer?: ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
+  /** Optional description for aria-describedby. When provided, wraps body in a described region. */
+  description?: string;
 }
 
 const FOCUSABLE_SELECTOR =
@@ -21,7 +23,10 @@ export function Modal({
   children,
   footer,
   maxWidth = 'md',
+  description,
 }: ModalProps) {
+  const titleId = useId();
+  const descriptionId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -99,19 +104,20 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/50 sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/50 sm:p-4 animate-in fade-in-0 duration-200"
       onClick={handleBackdropClick}
     >
       <div
         ref={modalRef}
-        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[90vh] overflow-y-auto bg-background sm:rounded-lg shadow-xl`}
+        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[90vh] overflow-y-auto bg-background sm:rounded-lg shadow-xl animate-in fade-in-0 sm:zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200`}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="modal-title"
+        aria-labelledby={titleId}
+        aria-describedby={description ? descriptionId : undefined}
       >
         {/* Header */}
         <div className="sticky top-0 bg-background border-b border-border px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
-          <h2 id="modal-title" className="text-lg sm:text-xl font-semibold text-foreground">
+          <h2 id={titleId} className="text-lg sm:text-xl font-semibold text-foreground">
             {title}
           </h2>
           <Button
@@ -127,7 +133,12 @@ export function Modal({
         </div>
 
         {/* Body */}
-        <div className="px-4 sm:px-8 py-4 sm:py-5">{children}</div>
+        <div className="px-4 sm:px-8 py-4 sm:py-5">
+          {description && (
+            <p id={descriptionId} className="sr-only">{description}</p>
+          )}
+          {children}
+        </div>
 
         {/* Footer */}
         {footer && (

@@ -54,6 +54,8 @@ export function ExerciseEditorDrawer({
     []
   );
 
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
   // Form state
   const [name, setName] = useState(exercise?.name || '');
   const [sets, setSets] = useState(exercise?.sets?.toString() || '3');
@@ -87,6 +89,7 @@ export function ExerciseEditorDrawer({
     }
     setSearchQuery('');
     setSelectedCategory(null);
+    setShowDeleteConfirm(false);
   }, [exercise, open]);
 
   // Filter exercises from library
@@ -364,16 +367,36 @@ export function ExerciseEditorDrawer({
 
               {/* Delete option for existing exercises */}
               {!isNew && onDelete && (
-                <button
-                  onClick={() => {
-                    onDelete();
-                    onOpenChange(false);
-                  }}
-                  className="w-full text-center text-sm text-destructive hover:text-destructive/80 transition-colors py-2"
-                >
-                  <Trash2 className="w-4 h-4 inline mr-1.5" />
-                  Remove Exercise
-                </button>
+                showDeleteConfirm ? (
+                  <div className="flex items-center justify-center gap-3 py-2">
+                    <span className="text-sm text-muted-foreground">Remove this exercise?</span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        onDelete();
+                        onOpenChange(false);
+                      }}
+                    >
+                      Remove
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowDeleteConfirm(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowDeleteConfirm(true)}
+                    className="w-full text-center text-sm text-destructive hover:text-destructive/80 transition-colors py-2"
+                  >
+                    <Trash2 className="w-4 h-4 inline mr-1.5" />
+                    Remove Exercise
+                  </button>
+                )
               )}
             </div>
           ) : (

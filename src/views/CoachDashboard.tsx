@@ -17,18 +17,21 @@ import { useCoachPlans } from '@/hooks/api/useCoachPlans';
 import { usePlanDetail } from '@/hooks/api/usePlanDetail';
 import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import type { WorkoutPlan } from '@/types';
+import type { PlanSummary } from '@/types/api';
 
 type View = 'dashboard' | 'plans';
 
 const viewToNavTab = (view: View): CoachNavTab => view;
 
 // Adapt PlanSummary → WorkoutPlan for sub-components
-function planSummaryToWorkoutPlan(p: { id: string; name: string; description: string | null; durationWeeks: number; createdAt: string; updatedAt: string; deletedAt: string | null; weeks: { id: string; weekNumber: number }[]; assignedTo: { id: string; user: { name: string | null } }[] }): WorkoutPlan {
+function planSummaryToWorkoutPlan(p: PlanSummary): WorkoutPlan {
   return {
     id: p.id,
     name: p.name,
     description: p.description ?? undefined,
+    emoji: p.emoji,
     durationWeeks: p.durationWeeks,
+    workoutsPerWeek: p.workoutsPerWeek,
     weeks: p.weeks.map((w) => ({ id: w.id, weekNumber: w.weekNumber, days: [] })),
     createdAt: p.createdAt,
     updatedAt: p.updatedAt,
@@ -41,7 +44,9 @@ function planDetailToWorkoutPlan(p: PlanDetail): WorkoutPlan {
     id: p.id,
     name: p.name,
     description: p.description ?? undefined,
+    emoji: p.emoji,
     durationWeeks: p.durationWeeks,
+    workoutsPerWeek: p.workoutsPerWeek,
     weeks: p.weeks.map((w) => ({
       id: w.id,
       weekNumber: w.weekNumber,
@@ -124,7 +129,9 @@ export function CoachDashboard() {
       await createPlan({
         name: formData.name,
         description: formData.description,
+        emoji: formData.emoji,
         durationWeeks: formData.durationWeeks,
+        workoutsPerWeek: formData.workoutsPerWeek,
       });
       setShowPlanSetupModal(false);
       setShowSuccessToast(true);

@@ -69,7 +69,9 @@ function apiPlanToPlan(detail: PlanDetail): WorkoutPlan {
     id: detail.id,
     name: detail.name,
     description: detail.description ?? undefined,
+    emoji: detail.emoji,
     durationWeeks: detail.durationWeeks,
+    workoutsPerWeek: detail.workoutsPerWeek,
     weeks: detail.weeks.map((w): WorkoutWeek => ({
       id: w.id,
       weekNumber: w.weekNumber,
@@ -138,7 +140,7 @@ export function UnifiedClientProfile() {
   const { client: apiClient, isLoading: isLoadingClient, refresh: refreshClient } = useClientProfile(clientId);
   const { plan: apiPlan, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
   const { messages: apiMessages, sendMessage } = useMessages(apiClient?.user.id ?? null);
-  const { plans: coachPlans } = useCoachPlans();
+  const { plans: coachPlans, createPlan, refresh: refreshCoachPlans } = useCoachPlans();
 
   // Find active check-in from client's check-ins list
   const activeCheckInId = useMemo(() => {
@@ -211,7 +213,9 @@ export function UnifiedClientProfile() {
         id: p.id,
         name: p.name,
         description: p.description ?? undefined,
+        emoji: p.emoji,
         durationWeeks: p.durationWeeks,
+        workoutsPerWeek: p.workoutsPerWeek,
         weeks: p.weeks.map((w) => ({
           id: w.id,
           weekNumber: w.weekNumber,
@@ -345,10 +349,28 @@ export function UnifiedClientProfile() {
     refreshPlan();
   };
 
-  const handlePlanCreated = async () => {
-    // TODO: Implement plan creation + assignment via API
-    setShowPlanSetupModal(false);
-    refreshClient();
+  const handlePlanCreated = async (formData: import('@/types').PlanSetupFormData) => {
+    if (!clientId) return;
+    try {
+      const newPlan = await createPlan({
+        name: formData.name,
+        description: formData.description,
+        emoji: formData.emoji,
+        durationWeeks: formData.durationWeeks,
+        workoutsPerWeek: formData.workoutsPerWeek,
+      });
+      // Auto-assign the new plan to this client
+      await apiFetch(`/api/plans/${newPlan.id}/assign`, {
+        method: 'POST',
+        body: JSON.stringify({ clientProfileId: clientId }),
+      });
+      setShowPlanSetupModal(false);
+      refreshClient();
+      refreshPlan();
+      refreshCoachPlans();
+    } catch {
+      // Error handled by apiFetch
+    }
   };
 
   const handleAssignPlan = async (templateId: string) => {

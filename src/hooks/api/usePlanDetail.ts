@@ -6,7 +6,9 @@ export interface PlanDetail {
   coachId: string;
   name: string;
   description: string | null;
+  emoji: string;
   durationWeeks: number;
+  workoutsPerWeek: number;
   createdAt: string;
   updatedAt: string;
   editedAt: string | null;

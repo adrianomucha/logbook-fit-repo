@@ -2,13 +2,13 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Users } from 'lucide-react';
+import { Users, Loader2 } from 'lucide-react';
 import type { Client, WorkoutPlan } from '@/types';
 
 interface AssignClientModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAssign: (clientId: string) => void;
+  onAssign: (clientId: string) => void | Promise<void>;
   clients: Client[];
   plans: WorkoutPlan[];
   currentPlanId: string;
@@ -23,16 +23,22 @@ export function AssignClientModal({
   currentPlanId,
 }: AssignClientModalProps) {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleClose = () => {
+    if (isSubmitting) return;
     setSelectedClientId(null);
     onClose();
   };
 
-  const handleAssign = () => {
-    if (selectedClientId) {
-      onAssign(selectedClientId);
+  const handleAssign = async () => {
+    if (!selectedClientId || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onAssign(selectedClientId);
       setSelectedClientId(null);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -63,10 +69,11 @@ export function AssignClientModal({
       maxWidth="md"
       footer={
         <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={handleClose}>
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
             Cancel
           </Button>
-          <Button onClick={handleAssign} disabled={!selectedClientId}>
+          <Button onClick={handleAssign} disabled={!selectedClientId || isSubmitting} className="flex items-center gap-2">
+            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             Assign Client
           </Button>
         </div>
@@ -83,7 +90,7 @@ export function AssignClientModal({
               key={client.id}
               disabled={isOnThisPlan}
               onClick={() => setSelectedClientId(client.id)}
-              className={`w-full text-left p-3 rounded-lg border transition-colors ${
+              className={`w-full text-left p-3 rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                 isOnThisPlan
                   ? 'bg-muted border-border opacity-60 cursor-not-allowed'
                   : isSelected

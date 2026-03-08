@@ -1,9 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useId } from 'react';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
 import { EmojiPicker } from './EmojiPicker';
 import type { PlanSetupFormData, PlanSetupFormErrors } from '../../types';
 import {
@@ -33,6 +40,13 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const baseId = useId();
+  const errorIds = {
+    name: `${baseId}-name-error`,
+    description: `${baseId}-desc-error`,
+    durationWeeks: `${baseId}-duration-error`,
+    workoutsPerWeek: `${baseId}-workouts-error`,
+  };
 
   // Reset form when modal opens
   useEffect(() => {
@@ -122,6 +136,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
         isOpen={isOpen}
         onClose={handleCancelDiscard}
         title="Discard changes?"
+        description="Confirm whether to discard unsaved plan changes"
         maxWidth="sm"
         footer={
           <div className="flex gap-3 justify-end">
@@ -179,10 +194,12 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
                 onBlur={() => handleBlur('name')}
                 className={errors.name && touched.name ? 'border-destructive' : ''}
                 maxLength={50}
+                aria-describedby={errors.name && touched.name ? errorIds.name : undefined}
+                aria-invalid={errors.name && touched.name ? true : undefined}
               />
               <div className="flex justify-between mt-1">
                 {errors.name && touched.name && (
-                  <p className="text-destructive text-sm">{errors.name}</p>
+                  <p id={errorIds.name} className="text-destructive text-sm" role="alert">{errors.name}</p>
                 )}
                 {formData.name.length >= 40 && (
                   <p className="text-muted-foreground text-xs ml-auto">
@@ -207,10 +224,12 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             className={errors.description && touched.description ? 'border-destructive' : ''}
             maxLength={200}
             rows={2}
+            aria-describedby={errors.description && touched.description ? errorIds.description : undefined}
+            aria-invalid={errors.description && touched.description ? true : undefined}
           />
           <div className="flex justify-between mt-1">
             {errors.description && touched.description && (
-              <p className="text-destructive text-sm">{errors.description}</p>
+              <p id={errorIds.description} className="text-destructive text-sm" role="alert">{errors.description}</p>
             )}
             {formData.description.length >= 150 && (
               <p className="text-muted-foreground text-xs ml-auto">
@@ -225,20 +244,23 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           <label className="block text-sm font-medium text-foreground mb-2">
             Duration
           </label>
-          <select
-            value={formData.durationWeeks}
-            onChange={(e) => handleFieldChange('durationWeeks', parseInt(e.target.value))}
-            onBlur={() => handleBlur('durationWeeks')}
-            className="w-full px-3 py-2 min-h-[44px] border border-input bg-background rounded-md text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+          <Select
+            value={formData.durationWeeks.toString()}
+            onValueChange={(val) => handleFieldChange('durationWeeks', parseInt(val))}
           >
-            {DURATION_OPTIONS.map((weeks) => (
-              <option key={weeks} value={weeks}>
-                {weeks} {weeks === 1 ? 'week' : 'weeks'}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full min-h-[44px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DURATION_OPTIONS.map((weeks) => (
+                <SelectItem key={weeks} value={weeks.toString()}>
+                  {weeks} {weeks === 1 ? 'week' : 'weeks'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.durationWeeks && touched.durationWeeks && (
-            <p className="text-destructive text-sm mt-1">{errors.durationWeeks}</p>
+            <p id={errorIds.durationWeeks} className="text-destructive text-sm mt-1" role="alert">{errors.durationWeeks}</p>
           )}
         </div>
 
@@ -247,23 +269,24 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           <label className="block text-sm font-medium text-foreground mb-2">
             Weekly schedule
           </label>
-          <select
-            value={formData.workoutsPerWeek}
-            onChange={(e) =>
-              handleFieldChange('workoutsPerWeek', parseInt(e.target.value))
-            }
-            onBlur={() => handleBlur('workoutsPerWeek')}
-            className="w-full px-3 py-2 min-h-[44px] border border-input bg-background rounded-md text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+          <Select
+            value={formData.workoutsPerWeek.toString()}
+            onValueChange={(val) => handleFieldChange('workoutsPerWeek', parseInt(val))}
           >
-            {WORKOUTS_OPTIONS.map((count) => (
-              <option key={count} value={count}>
-                {count} {count === 1 ? 'workout' : 'workouts'} per week
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="w-full min-h-[44px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {WORKOUTS_OPTIONS.map((count) => (
+                <SelectItem key={count} value={count.toString()}>
+                  {count} {count === 1 ? 'workout' : 'workouts'} per week
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground mt-1">Rest days will be auto-calculated</p>
           {errors.workoutsPerWeek && touched.workoutsPerWeek && (
-            <p className="text-destructive text-sm mt-1">{errors.workoutsPerWeek}</p>
+            <p id={errorIds.workoutsPerWeek} className="text-destructive text-sm mt-1" role="alert">{errors.workoutsPerWeek}</p>
           )}
         </div>
       </form>

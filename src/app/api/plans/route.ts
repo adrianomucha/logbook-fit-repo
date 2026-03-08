@@ -48,10 +48,12 @@ export const POST = withCoach(
     coachProfileId: string
   ) => {
     const body = await req.json();
-    const { name, description, durationWeeks } = body as {
+    const { name, description, emoji, durationWeeks, workoutsPerWeek } = body as {
       name?: string;
       description?: string;
+      emoji?: string;
       durationWeeks?: number;
+      workoutsPerWeek?: number;
     };
 
     if (!name) {
@@ -75,17 +77,50 @@ export const POST = withCoach(
       );
     }
 
-    const plan = await prisma.plan.create({
-      data: {
-        coachId: coachProfileId,
-        name,
-        description,
-        durationWeeks: durationWeeks ?? 4,
-      },
-      include: {
-        weeks: true,
-      },
-    });
+    const weeks = durationWeeks ?? 4;
+    const wpw = workoutsPerWeek ?? 4;
+
+    const plan = await prisma.$transaction(async (tx) => {
+      const created = await tx.plan.create({
+        data: {
+          coachId: coachProfileId,
+          name,
+          description,
+          emoji: emoji ?? "💪",
+          durationWeeks: weeks,
+          workoutsPerWeek: wpw,
+        },
+      });
+
+      // Scaffold weeks and days using createMany to minimize round-trips
+      for (let w = 1; w <= weeks; w++) {
+        const week = await tx.week.create({
+          data: { planId: created.id, weekNumber: w },
+        });
+        await tx.day.createMany({
+          data: Array.from({ length: 7 }, (_, i) => {
+            const d = i + 1;
+            const isRestDay = d > wpw;
+            return {
+              weekId: week.id,
+              dayNumber: d,
+              name: isRestDay ? null : `Day ${d}`,
+              isRestDay,
+            };
+          }),
+        });
+      }
+
+      return tx.plan.findUniqueOrThrow({
+        where: { id: created.id },
+        include: {
+          weeks: {
+            orderBy: { weekNumber: "asc" },
+            select: { id: true, weekNumber: true },
+          },
+        },
+      });
+    }, { timeout: 15000 });
 
     return NextResponse.json(plan, { status: 201 });
   }
