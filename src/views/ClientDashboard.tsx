@@ -86,10 +86,11 @@ export function ClientDashboard() {
   const [currentView, setCurrentView] = useState<View>('workout');
   const [workoutViewMode, setWorkoutViewMode] = useState<WorkoutViewMode>('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
 
   // ---- API Hooks ----
   const { user, coach, isLoading: isLoadingUser } = useCurrentUser();
-  const { weekOverview, isLoading: isLoadingWeek } = useClientWeekOverview();
+  const { weekOverview, isLoading: isLoadingWeek, refresh: refreshWeek } = useClientWeekOverview();
   const { progress } = useClientProgress();
   const { checkIns: apiCheckIns } = useClientCheckIns();
   const coachUserId = coach?.user.id ?? null;
@@ -241,21 +242,26 @@ export function ClientDashboard() {
 
   const handleSendFeedback = async (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => {
     if (!todayCompletion?.id) return;
+    setIsSendingFeedback(true);
     try {
       await apiFetch(`/api/client/workout/${todayCompletion.id}/finish`, {
         method: 'POST',
         body: JSON.stringify({ effortRating: rating }),
       });
+      if (notes) {
+        await handleSendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
+      }
+      await refreshWeek();
     } catch {
       // Feedback save failed silently
-    }
-    if (notes) {
-      await handleSendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
+    } finally {
+      setIsSendingFeedback(false);
     }
   };
 
   const handleMessageCoach = () => {
     setCurrentView('chat');
+    requestAnimationFrame(() => window.scrollTo(0, 0));
   };
 
   // ---- Loading/Empty States ----
@@ -332,6 +338,7 @@ export function ClientDashboard() {
             coachName={coach?.user.name ?? undefined}
             coachAvatar={undefined}
             feedbackSubmitted={!!todayCompletion?.effortRating}
+            isSendingFeedback={isSendingFeedback}
             onStartWorkout={handleStartWorkout}
             onResumeWorkout={handleResumeWorkout}
             onSendFeedback={handleSendFeedback}

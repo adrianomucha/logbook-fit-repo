@@ -17,6 +17,7 @@ interface TodayFocusViewProps {
   coachName?: string;
   coachAvatar?: string;
   feedbackSubmitted?: boolean;
+  isSendingFeedback?: boolean;
   onStartWorkout: () => void;
   onResumeWorkout: () => void;
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
@@ -52,6 +53,7 @@ export function TodayFocusView({
   coachName,
   coachAvatar,
   feedbackSubmitted,
+  isSendingFeedback,
   onStartWorkout,
   onResumeWorkout,
   onSendFeedback,
@@ -110,7 +112,7 @@ export function TodayFocusView({
 
       {/* Quick Effort Feedback (only if workout completed and no rating yet) */}
       {showFeedbackPrompt && (
-        <QuickEffortFeedback onSubmit={onSendFeedback} />
+        <QuickEffortFeedback onSubmit={onSendFeedback} isSubmitting={isSendingFeedback} />
       )}
 
       {/* View Week Link */}

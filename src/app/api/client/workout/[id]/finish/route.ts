@@ -32,15 +32,23 @@ export const POST = withClient(
       return NextResponse.json({ error: "Workout not found" }, { status: 404 });
     }
 
+    const body = await req.json().catch(() => ({}));
+    const { effortRating } = body as { effortRating?: string };
+
+    // Allow updating effort rating on already-completed workouts
     if (completion.status === "COMPLETED") {
+      if (effortRating) {
+        const updated = await prisma.workoutCompletion.update({
+          where: { id: completionId },
+          data: { effortRating: effortRating as never },
+        });
+        return NextResponse.json(updated);
+      }
       return NextResponse.json(
         { error: "Workout already completed" },
         { status: 400 }
       );
     }
-
-    const body = await req.json().catch(() => ({}));
-    const { effortRating } = body as { effortRating?: string };
 
     // Calculate completion stats
     const totalSets = completion.day.exercises.reduce(
