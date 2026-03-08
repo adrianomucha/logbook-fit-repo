@@ -60,9 +60,18 @@ export function ChatView({
     [messages, client.id]
   );
 
-  // Auto-scroll to bottom on new messages or initial load
+  // Auto-scroll to bottom on new messages or initial load.
+  // We scroll the nearest ScrollArea viewport rather than using
+  // scrollIntoView, which would scroll the entire page.
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const el = messagesEndRef.current;
+    if (!el) return;
+    const viewport = el.closest('[data-radix-scroll-area-viewport]');
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    } else {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [clientMessages.length]);
 
   const handleSend = useCallback(() => {
