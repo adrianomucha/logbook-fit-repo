@@ -27,6 +27,8 @@ interface PlanEditorDrawerProps {
   onOpenChange: (open: boolean) => void;
   plan: WorkoutPlan | null;
   onUpdatePlan: (plan: WorkoutPlan) => void;
+  /** Re-fetch plan detail from the API after mutations */
+  onRefresh?: () => void;
   /** Show a loading spinner while the plan detail is being fetched */
   isLoading?: boolean;
   /** Error message to display if plan failed to load */
@@ -42,6 +44,7 @@ export function PlanEditorDrawer({
   onOpenChange,
   plan,
   onUpdatePlan,
+  onRefresh,
   isLoading,
   error,
   initialWeekIndex = 0,
@@ -110,31 +113,81 @@ export function PlanEditorDrawer({
     setExerciseDrawerOpen(true);
   };
 
-  // Save exercise (new or update)
-  const handleSaveExercise = (exercise: Exercise) => {
-    if (!plan) return;
-    const updatedPlan = { ...plan };
+  // Save exercise (new or update) — persists via API
+  const handleSaveExercise = async (exercise: Exercise) => {
+    if (!plan || !currentDay) return;
+    const dayId = currentDay.id;
 
-    if (editingExerciseIndex !== null) {
-      // Update existing
-      updatedPlan.weeks[selectedWeek].days[selectedDay].exercises[editingExerciseIndex] = exercise;
-    } else {
-      // Add new at top
-      updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.unshift(exercise);
+    try {
+      if (editingExerciseIndex !== null) {
+        // Update existing workout exercise
+        const existingExercise = currentDay.exercises[editingExerciseIndex];
+        await apiFetch(`/api/workout-exercises/${existingExercise.id}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            sets: exercise.sets,
+            reps: parseInt(exercise.reps || '0') || null,
+            weight: exercise.weight ? parseFloat(exercise.weight) : null,
+            restSeconds: exercise.restSeconds || null,
+            coachNotes: exercise.notes || null,
+          }),
+        });
+      } else {
+        // New exercise: find-or-create in the library, then add to day
+        let libraryExerciseId: string;
+        try {
+          const created = await apiFetch<{ id: string }>('/api/exercises', {
+            method: 'POST',
+            body: JSON.stringify({ name: exercise.name }),
+          });
+          libraryExerciseId = created.id;
+        } catch {
+          // 409 = already exists — search for it
+          const results = await apiFetch<{ id: string; name: string }[]>(
+            `/api/exercises?search=${encodeURIComponent(exercise.name)}`
+          );
+          const match = results.find(
+            (e) => e.name.toLowerCase() === exercise.name.toLowerCase()
+          );
+          if (!match) throw new Error('Could not find or create exercise');
+          libraryExerciseId = match.id;
+        }
+
+        await apiFetch(`/api/days/${dayId}/exercises`, {
+          method: 'POST',
+          body: JSON.stringify({
+            exerciseId: libraryExerciseId,
+            sets: exercise.sets,
+            reps: parseInt(exercise.reps || '0') || undefined,
+            weight: exercise.weight ? parseFloat(exercise.weight) : undefined,
+            restSeconds: exercise.restSeconds || undefined,
+            coachNotes: exercise.notes || undefined,
+          }),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to save exercise:', err);
+      return; // Don't refresh on error
     }
 
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
+    onRefresh?.();
   };
 
-  // Delete exercise
-  const handleDeleteExercise = () => {
-    if (!plan || editingExerciseIndex === null) return;
+  // Delete exercise — persists via API
+  const handleDeleteExercise = async () => {
+    if (!plan || editingExerciseIndex === null || !currentDay) return;
+    const exerciseToDelete = currentDay.exercises[editingExerciseIndex];
 
-    const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(editingExerciseIndex, 1);
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
+    try {
+      await apiFetch(`/api/workout-exercises/${exerciseToDelete.id}`, {
+        method: 'DELETE',
+      });
+    } catch (err) {
+      console.error('Failed to delete exercise:', err);
+      return;
+    }
+
+    onRefresh?.();
   };
 
   // Commit the plan name to the API on blur
@@ -154,13 +207,19 @@ export function PlanEditorDrawer({
     }
   };
 
-  // Commit the day name to the parent only on blur (not on every keystroke)
-  const commitDayName = () => {
-    if (!plan || localDayName === currentDay?.name) return;
-    const updatedPlan = { ...plan };
-    updatedPlan.weeks[selectedWeek].days[selectedDay].name = localDayName;
-    updatedPlan.updatedAt = new Date().toISOString();
-    onUpdatePlan(updatedPlan);
+  // Commit the day name to the API on blur
+  const commitDayName = async () => {
+    if (!plan || !currentDay || localDayName === currentDay.name) return;
+    try {
+      await apiFetch(`/api/days/${currentDay.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: localDayName }),
+      });
+      onRefresh?.();
+    } catch {
+      // Revert on error
+      setLocalDayName(currentDay.name || '');
+    }
   };
 
   // Get the exercise being edited (if any)

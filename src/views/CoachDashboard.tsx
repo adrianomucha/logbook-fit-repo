@@ -82,7 +82,7 @@ export function CoachDashboard() {
   // --- API hooks ---
   const { clients: dashboardClients, isLoading: isDashboardLoading } = useCoachDashboard();
   const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
-  const { plan: editingPlanDetail, isLoading: isEditingPlanLoading, error: editingPlanError } = usePlanDetail(editingPlanId);
+  const { plan: editingPlanDetail, isLoading: isEditingPlanLoading, error: editingPlanError, refresh: refreshEditingPlan } = usePlanDetail(editingPlanId);
 
   // Adapt plans for display
   const templates = useMemo(
@@ -188,6 +188,7 @@ export function CoachDashboard() {
         isLoading={isEditingPlanLoading}
         error={editingPlanError ? 'Failed to load plan' : undefined}
         onUpdatePlan={handleUpdatePlan}
+        onRefresh={() => { refreshEditingPlan(); refreshPlans(); }}
       />
 
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">

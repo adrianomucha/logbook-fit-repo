@@ -580,14 +580,13 @@ export function UnifiedClientProfile() {
         />
 
         {/* Plan Editor Drawer */}
-        {plan && (
-          <PlanEditorDrawer
-            open={showPlanDrawer}
-            onOpenChange={setShowPlanDrawer}
-            plan={plan}
-            onUpdatePlan={handleUpdatePlan}
-          />
-        )}
+        <PlanEditorDrawer
+          open={showPlanDrawer}
+          onOpenChange={setShowPlanDrawer}
+          plan={plan ?? null}
+          onUpdatePlan={handleUpdatePlan}
+          onRefresh={() => { refreshPlan(); refreshCoachPlans(); }}
+        />
       </div>
     </div>
   );
