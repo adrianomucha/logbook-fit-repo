@@ -51,6 +51,11 @@ export function ClientWorkoutExecution() {
   const celebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startedRef = useRef(false);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Start workout if not already started
   useEffect(() => {
     if (day && !completion && !isReadOnly && !startedRef.current) {
