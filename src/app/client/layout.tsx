@@ -12,9 +12,12 @@ import { Toaster } from 'sonner';
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  // Scroll to top on every page navigation
+  // Scroll to top on every page navigation.
+  // The immediate call handles normal cases; the rAF call
+  // beats browser scroll-restoration on real devices.
   useEffect(() => {
     window.scrollTo(0, 0);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
   }, [pathname]);
 
   return (

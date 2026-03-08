@@ -320,7 +320,7 @@ export function ClientDashboard() {
     <div className={cn(
       'bg-background p-3 sm:p-4',
       currentView === 'chat'
-        ? 'fixed inset-0 flex flex-col overflow-hidden sm:relative sm:min-h-screen'
+        ? 'fixed inset-0 pb-20 flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-screen'
         : 'min-h-screen'
     )}>
       <div className={cn(
