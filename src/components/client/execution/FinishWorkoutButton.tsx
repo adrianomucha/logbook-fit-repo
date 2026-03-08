@@ -18,7 +18,7 @@ export function FinishWorkoutButton({
   const allDone = exercisesDone === exercisesTotal;
 
   return (
-    <div className="sticky bottom-0 z-10 bg-background border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="fixed bottom-0 left-0 right-0 z-10 bg-background border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <Button
         onClick={onFinish}
         disabled={disabled}

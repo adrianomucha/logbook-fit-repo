@@ -9,6 +9,7 @@ import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
 import { FinishWorkoutButton } from '@/components/client/execution/FinishWorkoutButton';
 import { FlagMessageSheet } from '@/components/client/execution/FlagMessageSheet';
 import type { WorkoutExercise } from '@/types/api';
+import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Dumbbell, Clock, Loader2 } from 'lucide-react';
@@ -382,7 +383,7 @@ export function ClientWorkoutExecution() {
       />
 
       {/* Exercise list */}
-      <div className="flex-1 p-3 sm:p-4 space-y-3 max-w-3xl mx-auto w-full">
+      <div className={cn("flex-1 p-3 sm:p-4 space-y-3 max-w-3xl mx-auto w-full", !isReadOnly && "pb-20")}>
         {exercises.map((exercise, index) => (
           <ExerciseCard
             key={exercise.workoutExerciseId}
