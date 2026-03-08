@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { Dumbbell, Send } from 'lucide-react';
+import { Dumbbell, Send, Loader2 } from 'lucide-react';
 import type { WorkoutExercise } from '@/types/api';
 import { getCompletedSetsCount } from '@/hooks/api/useWorkoutExecution';
 
@@ -16,7 +16,7 @@ interface FlagMessageSheetProps {
   isOpen: boolean;
   onClose: () => void;
   exercise: WorkoutExercise | null;
-  onSend: (message: string) => void;
+  onSend: (message: string) => Promise<void> | void;
 }
 
 export function FlagMessageSheet({
@@ -26,6 +26,7 @@ export function FlagMessageSheet({
   onSend,
 }: FlagMessageSheetProps) {
   const [message, setMessage] = useState('');
+  const [isSending, setIsSending] = useState(false);
 
   // Build prescription text
   const getPrescription = () => {
@@ -36,16 +37,23 @@ export function FlagMessageSheet({
     return parts.join(' ');
   };
 
-  // Reset message when sheet opens
+  // Reset state when sheet opens
   useEffect(() => {
     if (isOpen) {
       setMessage('');
+      setIsSending(false);
     }
   }, [isOpen]);
 
-  const handleSend = () => {
-    onSend(message);
-    setMessage('');
+  const handleSend = async () => {
+    if (isSending) return;
+    setIsSending(true);
+    try {
+      await onSend(message);
+      setMessage('');
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const setsCompleted = exercise ? getCompletedSetsCount(exercise) : 0;
@@ -72,9 +80,9 @@ export function FlagMessageSheet({
         <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(70vh-10rem)]">
           {/* Exercise context card - auto-attached */}
           <div className="bg-muted rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <Dumbbell className="w-4 h-4 text-muted-foreground" />
-              <span className="font-medium">{exercise?.exercise.name}</span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Dumbbell className="w-4 h-4 text-muted-foreground shrink-0" />
+              <span className="font-medium truncate">{exercise?.exercise.name}</span>
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               {getPrescription()}
@@ -101,12 +109,16 @@ export function FlagMessageSheet({
 
         {/* Footer */}
         <div className="p-4 border-t flex gap-3">
-          <Button variant="outline" onClick={onClose} className="flex-1 min-h-[44px]">
+          <Button variant="outline" onClick={onClose} disabled={isSending} className="flex-1 min-h-[44px]">
             Cancel
           </Button>
-          <Button onClick={handleSend} className="flex-1 min-h-[44px]">
-            <Send className="w-4 h-4 mr-2" />
-            Send Message
+          <Button onClick={handleSend} disabled={isSending} className="flex-1 min-h-[44px]">
+            {isSending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
+            {isSending ? 'Sending...' : 'Send Message'}
           </Button>
         </div>
       </SheetContent>

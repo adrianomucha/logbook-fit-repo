@@ -4,8 +4,9 @@ import { StatusHeader, StatusType } from './StatusHeader';
 import { TodayActionCard, ActionState } from './TodayActionCard';
 import { CoachContextStrip } from './CoachContextStrip';
 import { QuickEffortFeedback } from './QuickEffortFeedback';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar } from 'lucide-react';
+import { Calendar, CheckCircle2 } from 'lucide-react';
 
 interface TodayFocusViewProps {
   client: Client;
@@ -86,6 +87,7 @@ export function TodayFocusView({
 
   // Show feedback prompt only if workout completed and not yet submitted feedback
   const showFeedbackPrompt = actionState === 'completed' && !feedbackSubmitted && !todayCompletion?.effortRating;
+  const showFeedbackSent = actionState === 'completed' && (feedbackSubmitted || !!todayCompletion?.effortRating);
 
   return (
     <div className="space-y-4">
@@ -113,6 +115,18 @@ export function TodayFocusView({
       {/* Quick Effort Feedback (only if workout completed and no rating yet) */}
       {showFeedbackPrompt && (
         <QuickEffortFeedback onSubmit={onSendFeedback} isSubmitting={isSendingFeedback} />
+      )}
+
+      {/* Feedback sent confirmation */}
+      {showFeedbackSent && (
+        <Card className="border-success/20 bg-success/5">
+          <CardContent className="py-3 px-4">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
+              <p className="text-sm font-medium text-success">Feedback sent to your coach</p>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* View Week Link */}

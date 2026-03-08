@@ -10,6 +10,7 @@ import { FinishWorkoutButton } from '@/components/client/execution/FinishWorkout
 import { FlagMessageSheet } from '@/components/client/execution/FlagMessageSheet';
 import type { WorkoutExercise } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Dumbbell, Clock, Loader2 } from 'lucide-react';
@@ -37,8 +38,10 @@ export function ClientWorkoutExecution() {
   } = useWorkoutExecution(dayId);
 
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
+  const [isFinishing, setIsFinishing] = useState(false);
   const [showPartialConfirm, setShowPartialConfirm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isSavingRating, setIsSavingRating] = useState(false);
   const [messageSheetExercise, setMessageSheetExercise] = useState<WorkoutExercise | null>(null);
   const [completedWorkoutData, setCompletedWorkoutData] = useState<{
     exercisesDone: number;
@@ -52,7 +55,9 @@ export function ClientWorkoutExecution() {
   useEffect(() => {
     if (day && !completion && !isReadOnly && !startedRef.current) {
       startedRef.current = true;
-      startWorkout();
+      startWorkout().catch(() => {
+        toast.error('Failed to start workout. Please go back and try again.');
+      });
     }
   }, [day, completion, isReadOnly, startWorkout]);
 
@@ -133,7 +138,7 @@ export function ClientWorkoutExecution() {
           }),
         });
       } catch {
-        // Silently fail — message will be lost but workout continues
+        toast.error('Message failed to send. You can try again from the chat tab.');
       }
 
       setMessageSheetExercise(null);
@@ -159,7 +164,8 @@ export function ClientWorkoutExecution() {
 
   // Complete the workout
   const completeWorkout = async () => {
-    if (!completionId || !completion) return;
+    if (!completionId || !completion || isFinishing) return;
+    setIsFinishing(true);
 
     const startTime = completion.startedAt
       ? new Date(completion.startedAt).getTime()
@@ -174,15 +180,20 @@ export function ClientWorkoutExecution() {
     });
 
     setShowPartialConfirm(false);
-    setShowCelebration(true);
 
-    // Fire the finish API (no effort rating yet — that comes from celebration screen)
-    await finishWorkout();
+    try {
+      await finishWorkout();
+      setShowCelebration(true);
 
-    // Auto-dismiss celebration after 6 seconds
-    celebrationTimeoutRef.current = setTimeout(() => {
-      router.push('/client');
-    }, 6000);
+      // Auto-dismiss celebration after 6 seconds
+      celebrationTimeoutRef.current = setTimeout(() => {
+        router.push('/client');
+      }, 6000);
+    } catch {
+      setCompletedWorkoutData(null);
+      setIsFinishing(false);
+      toast.error('Failed to finish workout. Please try again.');
+    }
   };
 
   // Handle back navigation
@@ -200,6 +211,9 @@ export function ClientWorkoutExecution() {
 
   // Handle effort rating selection
   const handleEffortRating = async (rating: string) => {
+    if (isSavingRating) return;
+    setIsSavingRating(true);
+
     if (celebrationTimeoutRef.current) {
       clearTimeout(celebrationTimeoutRef.current);
     }
@@ -212,7 +226,7 @@ export function ClientWorkoutExecution() {
           body: JSON.stringify({ effortRating: rating }),
         });
       } catch {
-        // Already completed — effort rating save failed, not critical
+        // Non-critical — effort rating can be given from dashboard later
       }
     }
 
@@ -307,24 +321,16 @@ export function ClientWorkoutExecution() {
             How did that feel?
           </p>
           <div className="flex gap-2 sm:gap-3">
-            <button
-              onClick={() => handleEffortRating('EASY')}
-              className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px]"
-            >
-              Easy
-            </button>
-            <button
-              onClick={() => handleEffortRating('MEDIUM')}
-              className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px]"
-            >
-              Medium
-            </button>
-            <button
-              onClick={() => handleEffortRating('HARD')}
-              className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px]"
-            >
-              Hard
-            </button>
+            {(['EASY', 'MEDIUM', 'HARD'] as const).map((level) => (
+              <button
+                key={level}
+                onClick={() => handleEffortRating(level)}
+                disabled={isSavingRating}
+                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px] disabled:opacity-50"
+              >
+                {level === 'EASY' ? 'Easy' : level === 'MEDIUM' ? 'Medium' : 'Hard'}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -356,8 +362,8 @@ export function ClientWorkoutExecution() {
               >
                 Keep Going
               </Button>
-              <Button className="flex-1" onClick={completeWorkout}>
-                Finish Workout
+              <Button className="flex-1" onClick={completeWorkout} disabled={isFinishing}>
+                {isFinishing ? 'Finishing...' : 'Finish Workout'}
               </Button>
             </div>
           </CardContent>
@@ -406,6 +412,7 @@ export function ClientWorkoutExecution() {
           exercisesDone={stats.exercisesDone}
           exercisesTotal={stats.exercisesTotal}
           onFinish={handleFinishClick}
+          disabled={isFinishing}
         />
       )}
 

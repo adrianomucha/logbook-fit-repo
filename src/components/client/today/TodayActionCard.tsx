@@ -27,11 +27,11 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-info/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-info/10 flex items-center justify-center shrink-0">
                 <Dumbbell className="w-6 h-6 text-info" />
               </div>
-              <div>
-                <h3 className="font-semibold text-lg">{workoutName || 'Today\'s Workout'}</h3>
+              <div className="min-w-0">
+                <h3 className="font-semibold text-lg truncate">{workoutName || 'Today\'s Workout'}</h3>
                 {exerciseCount !== undefined && (
                   <p className="text-sm text-muted-foreground">{exerciseCount} exercises</p>
                 )}
@@ -52,11 +52,11 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center shrink-0">
                 <RotateCcw className="w-6 h-6 text-warning" />
               </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-lg">{workoutName || 'Today\'s Workout'}</h3>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold text-lg truncate">{workoutName || 'Today\'s Workout'}</h3>
                 <p className="text-sm text-muted-foreground">{completionPct}% complete</p>
               </div>
             </div>
@@ -76,12 +76,12 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-6 h-6 text-success" />
               </div>
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-semibold text-lg">Great work!</h3>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground truncate">
                   {workoutName ? `${workoutName} completed` : 'Workout completed'}
                 </p>
               </div>

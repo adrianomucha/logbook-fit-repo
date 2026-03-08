@@ -22,14 +22,19 @@ export function useWorkoutExecution(dayId: string | null) {
 
   /** Start the workout (creates WorkoutCompletion + pre-creates SetCompletion rows) */
   const startWorkout = useCallback(async () => {
-    if (!dayId || completionId) return;
-    const result = await apiFetch<{ id: string; status: string }>(
-      '/api/client/workout/start',
-      { method: 'POST', body: JSON.stringify({ dayId }) }
-    );
-    // Refetch to get full day detail with new completion + set rows
-    await mutate();
-    return result;
+    if (!dayId || completionId) return null;
+    try {
+      const result = await apiFetch<{ id: string; status: string }>(
+        '/api/client/workout/start',
+        { method: 'POST', body: JSON.stringify({ dayId }) }
+      );
+      await mutate();
+      return result;
+    } catch (err) {
+      // Revalidate to check if workout was actually started (race condition)
+      await mutate();
+      throw err;
+    }
   }, [dayId, completionId, mutate]);
 
   /** Toggle a set — optimistic update + debounced API save */
@@ -130,10 +135,14 @@ export function useWorkoutExecution(dayId: string | null) {
         { revalidate: false }
       );
 
-      await apiFetch(`/api/client/workout/${completionId}/flag`, {
-        method: 'POST',
-        body: JSON.stringify({ workoutExerciseId, note }),
-      });
+      try {
+        await apiFetch(`/api/client/workout/${completionId}/flag`, {
+          method: 'POST',
+          body: JSON.stringify({ workoutExerciseId, note }),
+        });
+      } catch {
+        // Revert optimistic update on failure
+      }
       mutate();
     },
     [completionId, isReadOnly, mutate]
@@ -205,7 +214,7 @@ export function useWorkoutExecution(dayId: string | null) {
     [completionId, isReadOnly, mutate, flagExercise]
   );
 
-  /** Finish the workout */
+  /** Finish the workout — throws on failure so callers can handle */
   const finishWorkout = useCallback(
     async (effortRating?: string) => {
       if (!completionId || isReadOnly) return null;
@@ -213,20 +222,25 @@ export function useWorkoutExecution(dayId: string | null) {
       // Flush any pending sets first
       await flushSets();
 
-      const result = await apiFetch<{
-        id: string;
-        status: string;
-        completedAt: string;
-        completionPct: number;
-        exercisesDone: number;
-        exercisesTotal: number;
-        durationSec: number | null;
-      }>(`/api/client/workout/${completionId}/finish`, {
-        method: 'POST',
-        body: JSON.stringify(effortRating ? { effortRating } : {}),
-      });
-      mutate();
-      return result;
+      try {
+        const result = await apiFetch<{
+          id: string;
+          status: string;
+          completedAt: string;
+          completionPct: number;
+          exercisesDone: number;
+          exercisesTotal: number;
+          durationSec: number | null;
+        }>(`/api/client/workout/${completionId}/finish`, {
+          method: 'POST',
+          body: JSON.stringify(effortRating ? { effortRating } : {}),
+        });
+        mutate();
+        return result;
+      } catch (err) {
+        mutate(); // Revalidate to get server truth
+        throw err;
+      }
     },
     [completionId, isReadOnly, flushSets, mutate]
   );

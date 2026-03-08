@@ -61,6 +61,7 @@ export const GET = withClient(
                 status: true,
                 completionPct: true,
                 completedAt: true,
+                effortRating: true,
               },
             },
           },
@@ -87,6 +88,7 @@ export const GET = withClient(
         status: completion?.status ?? "NOT_STARTED",
         completionPct: completion?.completionPct ?? null,
         completionId: completion?.id ?? null,
+        effortRating: completion?.effortRating ?? null,
       };
     });
 

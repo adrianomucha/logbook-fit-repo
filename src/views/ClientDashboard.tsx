@@ -12,6 +12,7 @@ import { useMessages } from '@/hooks/api/useMessages';
 import { useClientPlan } from '@/hooks/api/useClientPlan';
 import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import { apiFetch } from '@/lib/api-client';
+import { toast } from 'sonner';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
 import { TodayFocusView } from '@/components/client/today/TodayFocusView';
 import { ChatView } from '@/components/coach/ChatView';
@@ -21,7 +22,7 @@ import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, Loader2 } from 'lucide-react';
+import { ClipboardCheck, Loader2, AlertCircle } from 'lucide-react';
 
 // ---- Data Adapters ----
 
@@ -87,17 +88,20 @@ export function ClientDashboard() {
   const [workoutViewMode, setWorkoutViewMode] = useState<WorkoutViewMode>('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
 
   // ---- API Hooks ----
-  const { user, coach, isLoading: isLoadingUser } = useCurrentUser();
-  const { weekOverview, isLoading: isLoadingWeek, refresh: refreshWeek } = useClientWeekOverview();
+  const { user, coach, isLoading: isLoadingUser, error: userError } = useCurrentUser();
+  const { weekOverview, isLoading: isLoadingWeek, refresh: refreshWeek, error: weekError } = useClientWeekOverview();
   const { progress } = useClientProgress();
   const { checkIns: apiCheckIns } = useClientCheckIns();
   const coachUserId = coach?.user.id ?? null;
   const { messages: apiMessages, sendMessage } = useMessages(coachUserId);
 
   // Fetch full plan detail for sub-components that need the full plan structure
-  const { plan: planDetail } = useClientPlan();
+  const { plan: planDetail, error: planError } = useClientPlan();
+
+  const hasDataError = !!(userError || weekError || planError);
 
   // Handle URL tab parameter
   useEffect(() => {
@@ -170,6 +174,7 @@ export function ClientDashboard() {
         completionPct: d.completionPct ?? 0,
         exercisesDone: 0,
         exercisesTotal: d.exerciseCount,
+        effortRating: (d.effortRating as WorkoutCompletion['effortRating']) ?? undefined,
       }));
   }, [weekOverview, client]);
 
@@ -225,7 +230,11 @@ export function ClientDashboard() {
 
   // ---- Handlers ----
   const handleSendMessage = async (content: string) => {
-    await sendMessage(content);
+    try {
+      await sendMessage(content);
+    } catch {
+      toast.error('Failed to send message. Please try again.');
+    }
   };
 
   const handleStartWorkout = () => {
@@ -251,9 +260,10 @@ export function ClientDashboard() {
       if (notes) {
         await handleSendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
       }
+      setFeedbackSent(true);
       await refreshWeek();
     } catch {
-      // Feedback save failed silently
+      toast.error('Failed to send feedback. Please try again.');
     } finally {
       setIsSendingFeedback(false);
     }
@@ -269,6 +279,25 @@ export function ClientDashboard() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (hasDataError && !client && !plan) {
+    return (
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+        <Card>
+          <CardContent className="py-8 text-center">
+            <AlertCircle className="w-10 h-10 mx-auto text-destructive mb-3" />
+            <h2 className="text-lg font-semibold mb-1">Couldn&apos;t load your data</h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Check your connection and try again.
+            </p>
+            <Button onClick={() => window.location.reload()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -337,7 +366,7 @@ export function ClientDashboard() {
             coachNote={todayCoachNote}
             coachName={coach?.user.name ?? undefined}
             coachAvatar={undefined}
-            feedbackSubmitted={!!todayCompletion?.effortRating}
+            feedbackSubmitted={feedbackSent || !!todayCompletion?.effortRating}
             isSendingFeedback={isSendingFeedback}
             onStartWorkout={handleStartWorkout}
             onResumeWorkout={handleResumeWorkout}
