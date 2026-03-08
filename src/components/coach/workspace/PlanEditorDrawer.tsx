@@ -17,6 +17,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/api-client';
 import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseEditorDrawer } from './ExerciseEditorDrawer';
@@ -55,6 +56,15 @@ export function PlanEditorDrawer({
 
   const currentWeek = plan?.weeks[selectedWeek];
   const currentDay = currentWeek?.days[selectedDay];
+
+  // Local state for plan name input — same pattern as day name below.
+  const [localPlanName, setLocalPlanName] = useState(plan?.name || '');
+  const planNameInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync local plan name when a different plan is loaded
+  useEffect(() => {
+    setLocalPlanName(plan?.name || '');
+  }, [plan?.id, plan?.name]);
 
   // Local state for day name input to prevent keyboard dismissal on each keystroke.
   // The parent's onUpdatePlan triggers an API refresh which would otherwise
@@ -125,6 +135,23 @@ export function PlanEditorDrawer({
     updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(editingExerciseIndex, 1);
     updatedPlan.updatedAt = new Date().toISOString();
     onUpdatePlan(updatedPlan);
+  };
+
+  // Commit the plan name to the API on blur
+  const commitPlanName = async () => {
+    const trimmed = localPlanName.trim();
+    if (!plan || !trimmed || trimmed === plan.name) return;
+    try {
+      await apiFetch(`/api/plans/${plan.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: trimmed }),
+      });
+      // Refresh parent list so card title updates too
+      onUpdatePlan({ ...plan, name: trimmed, updatedAt: new Date().toISOString() });
+    } catch {
+      // Revert on error
+      setLocalPlanName(plan.name);
+    }
   };
 
   // Commit the day name to the parent only on blur (not on every keystroke)
@@ -215,7 +242,17 @@ export function PlanEditorDrawer({
                 <SheetHeader>
                   <SheetTitle className="flex items-center gap-2">
                     <span className="text-xl">{plan.emoji || '💪'}</span>
-                    <span className="truncate">{plan.name}</span>
+                    <Input
+                      ref={planNameInputRef}
+                      value={localPlanName}
+                      onChange={(e) => setLocalPlanName(e.target.value)}
+                      onBlur={commitPlanName}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') planNameInputRef.current?.blur();
+                      }}
+                      placeholder="Plan name"
+                      className="font-semibold text-lg h-auto py-1 px-2 border-transparent hover:border-input focus:border-input transition-colors"
+                    />
                   </SheetTitle>
                   <SheetDescription>
                     Tap an exercise to edit
