@@ -12,6 +12,7 @@ import { useMessages } from '@/hooks/api/useMessages';
 import { useClientPlan } from '@/hooks/api/useClientPlan';
 import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import { apiFetch } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
 import { TodayFocusView } from '@/components/client/today/TodayFocusView';
@@ -316,11 +317,24 @@ export function ClientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4">
-      <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
+    <div className={cn(
+      'bg-background p-3 sm:p-4',
+      currentView === 'chat'
+        ? 'fixed inset-0 flex flex-col overflow-hidden sm:relative sm:min-h-screen'
+        : 'min-h-screen'
+    )}>
+      <div className={cn(
+        'max-w-2xl mx-auto',
+        currentView === 'chat'
+          ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
+          : 'space-y-4 sm:space-y-6'
+      )}>
         <ClientNav
           activeTab={currentView}
-          onTabChange={(tab) => setCurrentView(tab)}
+          onTabChange={(tab) => {
+            setCurrentView(tab);
+            window.scrollTo(0, 0);
+          }}
         />
 
         {/* Check-in prompt banner */}
@@ -399,14 +413,14 @@ export function ClientDashboard() {
 
         {currentView === 'chat' && coachUserId && (
           <>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Chat</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight shrink-0">My Chat</h1>
             <ChatView
               client={client}
               messages={messages}
               currentUserId={user?.id ?? ''}
               currentUserName={client.name}
               onSendMessage={handleSendMessage}
-              heightClass="h-[calc(100dvh-12rem)] sm:h-[600px]"
+              heightClass="flex-1 min-h-0 sm:h-[600px] sm:flex-none"
               peerName={coach?.user.name ?? 'Coach'}
               conversationStarters={[
                 'How should I warm up?',
