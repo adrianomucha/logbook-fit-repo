@@ -125,9 +125,6 @@ export function getWeekDays(
   // Calculate the Monday of the target week
   const weekMonday = addDays(planStartMonday, (currentWeekNumber - 1) * 7);
 
-  // Filter workout days (non-rest days)
-  const workoutDays = week.days.filter((d) => !d.isRestDay);
-
   // Build the 7-day array
   const days: WeekDayInfo[] = [];
 
@@ -136,9 +133,19 @@ export function getWeekDays(
     const dayOfWeek = format(date, 'EEE'); // Mon, Tue, etc.
     const dayNumber = i + 1; // 1 = Monday, 7 = Sunday
 
-    // Map workout days to Mon, Tue, Wed, etc.
-    // If workoutsPerWeek = 3, we assign workouts to Mon, Tue, Wed
-    const workoutDay = i < workoutDays.length ? workoutDays[i] : undefined;
+    // Map workout days by their dayNumber (1=Mon, 7=Sun)
+    // Falls back to sequential assignment if dayNumber is not set
+    const workoutDay = week.days.find(
+      (d) => !d.isRestDay && d.dayNumber === dayNumber
+    ) ?? (
+      // Fallback: sequential assignment for plans without dayNumber
+      week.days.every((d) => d.dayNumber == null)
+        ? (() => {
+            const workoutDays = week.days.filter((d) => !d.isRestDay);
+            return i < workoutDays.length ? workoutDays[i] : undefined;
+          })()
+        : undefined
+    );
 
     // Find completion for this specific day
     const completion = completions.find(

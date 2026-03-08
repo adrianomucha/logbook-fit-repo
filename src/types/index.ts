@@ -13,6 +13,7 @@ export interface Exercise {
 
 export interface WorkoutDay {
   id: string;
+  dayNumber?: number;
   name: string;
   exercises: Exercise[];
   isRestDay?: boolean;

@@ -193,8 +193,9 @@ async function seed() {
         { name: "Barbell Curl", sets: 3, reps: 10, weight: 65 },
       ],
     },
+    { dayNumber: 5, name: null, isRestDay: true, exercises: [] as { name: string; sets: number; reps: number; weight?: number }[] },
     {
-      dayNumber: 5,
+      dayNumber: 6,
       name: "Lower Body Power",
       isRestDay: false,
       exercises: [
@@ -204,7 +205,6 @@ async function seed() {
         { name: "Hip Thrust", sets: 3, reps: 10, weight: 135 },
       ],
     },
-    { dayNumber: 6, name: null, isRestDay: true, exercises: [] as { name: string; sets: number; reps: number; weight?: number }[] },
     { dayNumber: 7, name: null, isRestDay: true, exercises: [] as { name: string; sets: number; reps: number; weight?: number }[] },
   ];
 
@@ -382,10 +382,10 @@ async function seed() {
     data: { activePlanId: strengthPlan.id, planStartDate: daysAgo(14) },
   });
 
-  // Jordan — on week 2 (started ~8 days ago, at-risk — hasn't worked out in 6 days)
+  // Jordan — started ~2 weeks ago but dropped off (at-risk — hasn't worked out in 9 days)
   await prisma.clientProfile.update({
     where: { id: jordanUser.clientProfile!.id },
-    data: { activePlanId: strengthPlan.id, planStartDate: daysAgo(8) },
+    data: { activePlanId: strengthPlan.id, planStartDate: daysAgo(14) },
   });
 
   console.log(`✓ Plans assigned to all clients`);
@@ -452,7 +452,7 @@ async function seed() {
   const sw4 = strengthWeeks[3];
 
   // Week 1 — all 4 workout days
-  for (const dayNum of [1, 2, 4, 5]) {
+  for (const dayNum of [1, 2, 4, 6]) {
     const dayInfo = sw1.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(mikeId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 21 - dayNum + 1,
@@ -463,7 +463,7 @@ async function seed() {
   }
 
   // Week 2 — all 4 workout days
-  for (const dayNum of [1, 2, 4, 5]) {
+  for (const dayNum of [1, 2, 4, 6]) {
     const dayInfo = sw2.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(mikeId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 14 - dayNum + 1,
@@ -474,12 +474,12 @@ async function seed() {
   }
 
   // Week 3 — all 4 workout days
-  for (const dayNum of [1, 2, 4, 5]) {
+  for (const dayNum of [1, 2, 4, 6]) {
     const dayInfo = sw3.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(mikeId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 7 - dayNum + 1,
       durationMin: 45 + Math.floor(Math.random() * 10),
-      effort: dayNum === 5 ? "HARD" : "MEDIUM",
+      effort: dayNum === 6 ? "HARD" : "MEDIUM",
       setsPerExercise: 4,
     });
   }
@@ -526,7 +526,7 @@ async function seed() {
   // Alex's completions — Week 1 full, Week 2 only 3 days (missed one)
   const alexId = alexUser.clientProfile!.id;
 
-  for (const dayNum of [1, 2, 4, 5]) {
+  for (const dayNum of [1, 2, 4, 6]) {
     const dayInfo = sw1.days.find((d) => d.dayNumber === dayNum)!;
     await createCompletion(alexId, strengthPlan.id, dayInfo.dayId, dayInfo.exerciseIds, {
       completedDaysAgo: 14 - dayNum + 1,
@@ -557,27 +557,27 @@ async function seed() {
 
   console.log(`✓ Alex: 8 workout completions`);
 
-  // Jordan — only 2 completions, last one 6 days ago (at-risk)
+  // Jordan — only 2 completions, last one 9 days ago (at-risk — triggers >7 day threshold)
   const jordanId = jordanUser.clientProfile!.id;
 
   const jordanD1 = sw1.days.find((d) => d.dayNumber === 1)!;
   const jordanD2 = sw1.days.find((d) => d.dayNumber === 2)!;
 
   await createCompletion(jordanId, strengthPlan.id, jordanD1.dayId, jordanD1.exerciseIds, {
-    completedDaysAgo: 8,
+    completedDaysAgo: 12,
     durationMin: 35,
     effort: "HARD",
     setsPerExercise: 3,
   });
 
   await createCompletion(jordanId, strengthPlan.id, jordanD2.dayId, jordanD2.exerciseIds, {
-    completedDaysAgo: 6,
+    completedDaysAgo: 9,
     durationMin: 30,
     effort: "HARD",
     setsPerExercise: 3,
   });
 
-  console.log(`✓ Jordan: 2 workout completions (last 6 days ago — at risk)`);
+  console.log(`✓ Jordan: 2 workout completions (last 9 days ago — at risk)`);
 
   // ─────────────────────────────────────────────
   // 7. CHECK-INS
@@ -635,21 +635,25 @@ async function seed() {
     },
   });
 
-  // Current check-in — client responded, awaiting coach review
+  // Most recent check-in — fully completed
   await prisma.checkIn.create({
     data: {
       coachId: coachProfileId,
       clientId: mikeId,
-      status: "CLIENT_RESPONDED",
+      status: "COMPLETED",
       effortRating: "MEDIUM",
       clientFeeling: "This week went great! Bench is at 155 — that's another PR. The back stretches you recommended are helping a lot.",
       painBlockers: null,
-      clientRespondedAt: hoursAgo(6),
-      createdAt: daysAgo(1),
+      clientRespondedAt: daysAgo(2),
+      coachFeedback: "155 on bench — incredible! You're making amazing progress. Let's keep the current weights one more week to lock in form before we push further.",
+      planAdjustment: false,
+      coachRespondedAt: daysAgo(1),
+      completedAt: daysAgo(1),
+      createdAt: daysAgo(3),
     },
   });
 
-  console.log(`✓ Mike: 4 check-ins (3 completed, 1 awaiting coach review)`);
+  console.log(`✓ Mike: 4 check-ins (all completed)`);
 
   // Emma — 1 completed
   await prisma.checkIn.create({
@@ -706,15 +710,29 @@ async function seed() {
     },
   });
 
-  console.log(`✓ Alex: 2 check-ins (completed)`);
+  // Current check-in — client responded, awaiting coach review
+  await prisma.checkIn.create({
+    data: {
+      coachId: coachProfileId,
+      clientId: alexId,
+      status: "CLIENT_RESPONDED",
+      effortRating: "MEDIUM",
+      clientFeeling: "Feeling strong this week! The pre-workout walks are becoming a habit. Squats felt heavy but manageable.",
+      painBlockers: null,
+      clientRespondedAt: hoursAgo(4),
+      createdAt: daysAgo(1),
+    },
+  });
 
-  // Jordan — 1 pending (no response yet)
+  console.log(`✓ Alex: 3 check-ins (2 completed, 1 awaiting coach review)`);
+
+  // Jordan — 1 pending (no response yet — sent 5 days ago)
   await prisma.checkIn.create({
     data: {
       coachId: coachProfileId,
       clientId: jordanId,
       status: "PENDING",
-      createdAt: daysAgo(2),
+      createdAt: daysAgo(5),
     },
   });
 
@@ -818,11 +836,12 @@ async function seed() {
 
   console.log(`✓ Alex: ${alexMessages.length} messages`);
 
-  // Jordan <-> Coach — concern messages
+  // Jordan <-> Coach — concern messages (coach reaching out about inactivity)
   const jordanMessages = [
-    { from: "coach", content: "Hey Jordan! I noticed you haven't logged a workout in a few days. Everything okay?", daysAgo: 3 },
-    { from: "client", content: "Yeah, I've been dealing with some personal stuff. I'll try to get back in this week.", daysAgo: 2 },
-    { from: "coach", content: "No pressure at all. Take the time you need. When you're ready, even a lighter session can help. I'm here if you want to talk or adjust the program.", daysAgo: 2 },
+    { from: "coach", content: "Hey Jordan! I noticed you haven't logged a workout in a few days. Everything okay?", daysAgo: 6 },
+    { from: "client", content: "Yeah, I've been dealing with some personal stuff. I'll try to get back in this week.", daysAgo: 5 },
+    { from: "coach", content: "No pressure at all. Take the time you need. When you're ready, even a lighter session can help. I'm here if you want to talk or adjust the program.", daysAgo: 5 },
+    { from: "coach", content: "Just checking in again — no rush, but wanted you to know I'm here whenever you're ready to jump back in. We can scale things back if that helps.", daysAgo: 2, unread: true },
   ];
 
   for (const msg of jordanMessages) {
@@ -839,7 +858,7 @@ async function seed() {
     });
   }
 
-  console.log(`✓ Jordan: ${jordanMessages.length} messages`);
+  console.log(`✓ Jordan: ${jordanMessages.length} messages (1 unread)`);
 
   // ─────────────────────────────────────────────
   // 9. EXERCISE FLAGS
