@@ -13,6 +13,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Dumbbell,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WorkoutPlan, Exercise } from '@/types';
@@ -22,8 +24,12 @@ import { ExerciseEditorDrawer } from './ExerciseEditorDrawer';
 interface PlanEditorDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  plan: WorkoutPlan;
+  plan: WorkoutPlan | null;
   onUpdatePlan: (plan: WorkoutPlan) => void;
+  /** Show a loading spinner while the plan detail is being fetched */
+  isLoading?: boolean;
+  /** Error message to display if plan failed to load */
+  error?: string;
   /** Initial week to show (0-indexed) */
   initialWeekIndex?: number;
   /** Initial day to show (0-indexed) */
@@ -35,6 +41,8 @@ export function PlanEditorDrawer({
   onOpenChange,
   plan,
   onUpdatePlan,
+  isLoading,
+  error,
   initialWeekIndex = 0,
   initialDayIndex = 0,
 }: PlanEditorDrawerProps) {
@@ -45,7 +53,7 @@ export function PlanEditorDrawer({
   const [exerciseDrawerOpen, setExerciseDrawerOpen] = useState(false);
   const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
 
-  const currentWeek = plan.weeks[selectedWeek];
+  const currentWeek = plan?.weeks[selectedWeek];
   const currentDay = currentWeek?.days[selectedDay];
 
   // Local state for day name input to prevent keyboard dismissal on each keystroke.
@@ -59,6 +67,12 @@ export function PlanEditorDrawer({
     setLocalDayName(currentDay?.name || '');
   }, [selectedWeek, selectedDay, currentDay?.name]);
 
+  // Reset selection when plan changes (e.g. opening a different plan)
+  useEffect(() => {
+    setSelectedWeek(initialWeekIndex);
+    setSelectedDay(initialDayIndex);
+  }, [plan?.id, initialWeekIndex, initialDayIndex]);
+
   // Navigate weeks
   const goToPrevWeek = () => {
     if (selectedWeek > 0) {
@@ -68,7 +82,7 @@ export function PlanEditorDrawer({
   };
 
   const goToNextWeek = () => {
-    if (selectedWeek < plan.weeks.length - 1) {
+    if (plan && selectedWeek < plan.weeks.length - 1) {
       setSelectedWeek(selectedWeek + 1);
       setSelectedDay(0);
     }
@@ -88,6 +102,7 @@ export function PlanEditorDrawer({
 
   // Save exercise (new or update)
   const handleSaveExercise = (exercise: Exercise) => {
+    if (!plan) return;
     const updatedPlan = { ...plan };
 
     if (editingExerciseIndex !== null) {
@@ -104,7 +119,7 @@ export function PlanEditorDrawer({
 
   // Delete exercise
   const handleDeleteExercise = () => {
-    if (editingExerciseIndex === null) return;
+    if (!plan || editingExerciseIndex === null) return;
 
     const updatedPlan = { ...plan };
     updatedPlan.weeks[selectedWeek].days[selectedDay].exercises.splice(editingExerciseIndex, 1);
@@ -114,12 +129,11 @@ export function PlanEditorDrawer({
 
   // Commit the day name to the parent only on blur (not on every keystroke)
   const commitDayName = () => {
-    if (localDayName !== currentDay?.name) {
-      const updatedPlan = { ...plan };
-      updatedPlan.weeks[selectedWeek].days[selectedDay].name = localDayName;
-      updatedPlan.updatedAt = new Date().toISOString();
-      onUpdatePlan(updatedPlan);
-    }
+    if (!plan || localDayName === currentDay?.name) return;
+    const updatedPlan = { ...plan };
+    updatedPlan.weeks[selectedWeek].days[selectedDay].name = localDayName;
+    updatedPlan.updatedAt = new Date().toISOString();
+    onUpdatePlan(updatedPlan);
   };
 
   // Get the exercise being edited (if any)
@@ -127,132 +141,203 @@ export function PlanEditorDrawer({
     ? currentDay?.exercises[editingExerciseIndex]
     : null;
 
-  if (!currentWeek || !currentDay) {
-    return null;
-  }
+  // Determine what content to show inside the Sheet
+  const hasWeeks = plan && plan.weeks.length > 0;
+  const hasDays = currentWeek && currentWeek.days.length > 0;
 
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b space-y-3">
-            <SheetHeader>
-              <SheetTitle className="flex items-center gap-2">
-                <span className="text-xl">{plan.emoji || '💪'}</span>
-                <span className="truncate">{plan.name}</span>
-              </SheetTitle>
-              <SheetDescription>
-                Tap an exercise to edit
-              </SheetDescription>
-            </SheetHeader>
-
-            {/* Week Navigation */}
-            <div className="flex items-center justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={goToPrevWeek}
-                disabled={selectedWeek === 0}
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Prev
-              </Button>
-              <span className="text-sm font-medium">
-                Week {selectedWeek + 1} of {plan.weeks.length}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={goToNextWeek}
-                disabled={selectedWeek === plan.weeks.length - 1}
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-
-            {/* Day Tabs */}
-            <div className="flex gap-1 overflow-x-auto pb-1">
-              {currentWeek.days.map((day, idx) => {
-                const exerciseCount = day.exercises?.length || 0;
-                return (
-                  <Button
-                    key={day.id}
-                    variant={selectedDay === idx ? 'default' : 'outline'}
-                    size="sm"
-                    className={cn(
-                      'shrink-0 text-xs',
-                      day.isRestDay && 'opacity-60'
-                    )}
-                    onClick={() => setSelectedDay(idx)}
-                  >
-                    {day.name || `Day ${idx + 1}`}
-                    {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
-                  </Button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto">
-            {/* Day Name Edit */}
-            <div className="p-4 border-b">
-              <label className="text-xs text-muted-foreground mb-1 block">
-                Workout Name
-              </label>
-              <Input
-                ref={dayNameInputRef}
-                value={localDayName}
-                onChange={(e) => setLocalDayName(e.target.value)}
-                onBlur={commitDayName}
-                placeholder="e.g., Push Day, Upper Body"
-                className="font-medium"
-              />
-            </div>
-
-            {/* Add Exercise Button */}
-            {!currentDay.isRestDay && (
+          {/* Loading state */}
+          {isLoading && !plan && (
+            <>
               <div className="p-4 border-b">
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleAddExercise}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Exercise
+                <SheetHeader>
+                  <SheetTitle>Loading plan…</SheetTitle>
+                  <SheetDescription>Please wait</SheetDescription>
+                </SheetHeader>
+              </div>
+              <div className="flex-1 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+              </div>
+            </>
+          )}
+
+          {/* Error state */}
+          {error && !plan && (
+            <>
+              <div className="p-4 border-b">
+                <SheetHeader>
+                  <SheetTitle>Error</SheetTitle>
+                  <SheetDescription>Something went wrong</SheetDescription>
+                </SheetHeader>
+              </div>
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
+                <AlertCircle className="w-10 h-10 text-destructive" />
+                <p className="text-sm text-muted-foreground">{error}</p>
+                <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                  Close
                 </Button>
               </div>
-            )}
+            </>
+          )}
 
-            {/* Exercise List or Rest Day */}
-            {currentDay.isRestDay ? (
-              <div className="p-12 text-center space-y-3">
-                <p className="text-3xl">😴</p>
-                <p className="text-muted-foreground">This is a rest day</p>
+          {/* Plan loaded but has no weeks */}
+          {plan && !hasWeeks && (
+            <>
+              <div className="p-4 border-b">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <span className="text-xl">{plan.emoji || '💪'}</span>
+                    <span className="truncate">{plan.name}</span>
+                  </SheetTitle>
+                  <SheetDescription>Plan editor</SheetDescription>
+                </SheetHeader>
               </div>
-            ) : (
-              <div className="divide-y">
-                {currentDay.exercises.length === 0 ? (
-                  <div className="p-12 text-center text-muted-foreground">
-                    <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                    <p>No exercises yet</p>
-                    <p className="text-sm">Add your first exercise to get started</p>
+              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
+                <Dumbbell className="w-10 h-10 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">
+                  This plan has no weeks yet. Try deleting it and creating a new one.
+                </p>
+                <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                  Close
+                </Button>
+              </div>
+            </>
+          )}
+
+          {/* Normal state: plan loaded with weeks and days */}
+          {plan && hasWeeks && (
+            <>
+              {/* Header */}
+              <div className="p-4 border-b space-y-3">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <span className="text-xl">{plan.emoji || '💪'}</span>
+                    <span className="truncate">{plan.name}</span>
+                  </SheetTitle>
+                  <SheetDescription>
+                    Tap an exercise to edit
+                  </SheetDescription>
+                </SheetHeader>
+
+                {/* Week Navigation */}
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goToPrevWeek}
+                    disabled={selectedWeek === 0}
+                  >
+                    <ChevronLeft className="w-4 h-4 mr-1" />
+                    Prev
+                  </Button>
+                  <span className="text-sm font-medium">
+                    Week {selectedWeek + 1} of {plan.weeks.length}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={goToNextWeek}
+                    disabled={selectedWeek === plan.weeks.length - 1}
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+
+                {/* Day Tabs */}
+                {hasDays && (
+                  <div className="flex gap-1 overflow-x-auto pb-1">
+                    {currentWeek.days.map((day, idx) => {
+                      const exerciseCount = day.exercises?.length || 0;
+                      return (
+                        <Button
+                          key={day.id}
+                          variant={selectedDay === idx ? 'default' : 'outline'}
+                          size="sm"
+                          className={cn(
+                            'shrink-0 text-xs',
+                            day.isRestDay && 'opacity-60'
+                          )}
+                          onClick={() => setSelectedDay(idx)}
+                        >
+                          {day.name || `Day ${idx + 1}`}
+                          {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
+                        </Button>
+                      );
+                    })}
                   </div>
-                ) : (
-                  currentDay.exercises.map((exercise, idx) => (
-                    <ExerciseCard
-                      key={exercise.id}
-                      exercise={exercise}
-                      exerciseIndex={idx}
-                      onClick={() => handleEditExercise(idx)}
-                    />
-                  ))
                 )}
               </div>
-            )}
-          </div>
+
+              {/* Content */}
+              {currentDay ? (
+                <div className="flex-1 overflow-y-auto">
+                  {/* Day Name Edit */}
+                  <div className="p-4 border-b">
+                    <label className="text-xs text-muted-foreground mb-1 block">
+                      Workout Name
+                    </label>
+                    <Input
+                      ref={dayNameInputRef}
+                      value={localDayName}
+                      onChange={(e) => setLocalDayName(e.target.value)}
+                      onBlur={commitDayName}
+                      placeholder="e.g., Push Day, Upper Body"
+                      className="font-medium"
+                    />
+                  </div>
+
+                  {/* Add Exercise Button */}
+                  {!currentDay.isRestDay && (
+                    <div className="p-4 border-b">
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        onClick={handleAddExercise}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Exercise
+                      </Button>
+                    </div>
+                  )}
+
+                  {/* Exercise List or Rest Day */}
+                  {currentDay.isRestDay ? (
+                    <div className="p-12 text-center space-y-3">
+                      <p className="text-3xl">😴</p>
+                      <p className="text-muted-foreground">This is a rest day</p>
+                    </div>
+                  ) : (
+                    <div className="divide-y">
+                      {currentDay.exercises.length === 0 ? (
+                        <div className="p-12 text-center text-muted-foreground">
+                          <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                          <p>No exercises yet</p>
+                          <p className="text-sm">Add your first exercise to get started</p>
+                        </div>
+                      ) : (
+                        currentDay.exercises.map((exercise, idx) => (
+                          <ExerciseCard
+                            key={exercise.id}
+                            exercise={exercise}
+                            exerciseIndex={idx}
+                            onClick={() => handleEditExercise(idx)}
+                          />
+                        ))
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex-1 flex items-center justify-center p-8 text-center text-muted-foreground">
+                  <p className="text-sm">No days in this week</p>
+                </div>
+              )}
+            </>
+          )}
         </SheetContent>
       </Sheet>
 

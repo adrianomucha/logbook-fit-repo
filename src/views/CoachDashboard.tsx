@@ -82,7 +82,7 @@ export function CoachDashboard() {
   // --- API hooks ---
   const { clients: dashboardClients, isLoading: isDashboardLoading } = useCoachDashboard();
   const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
-  const { plan: editingPlanDetail } = usePlanDetail(editingPlanId);
+  const { plan: editingPlanDetail, isLoading: isEditingPlanLoading, error: editingPlanError } = usePlanDetail(editingPlanId);
 
   // Adapt plans for display
   const templates = useMemo(
@@ -181,14 +181,14 @@ export function CoachDashboard() {
       />
 
       {/* Plan Editor Drawer */}
-      {editingPlan && (
-        <PlanEditorDrawer
-          open={!!editingPlanId}
-          onOpenChange={(open) => !open && setEditingPlanId(null)}
-          plan={editingPlan}
-          onUpdatePlan={handleUpdatePlan}
-        />
-      )}
+      <PlanEditorDrawer
+        open={!!editingPlanId}
+        onOpenChange={(open) => !open && setEditingPlanId(null)}
+        plan={editingPlan ?? null}
+        isLoading={isEditingPlanLoading}
+        error={editingPlanError ? 'Failed to load plan' : undefined}
+        onUpdatePlan={handleUpdatePlan}
+      />
 
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav
