@@ -58,10 +58,16 @@ export const GET = withCoach(
             dayId: true,
             completedAt: true,
             completionPct: true,
+            exercisesDone: true,
+            exercisesTotal: true,
             effortRating: true,
             durationSec: true,
             day: {
-              select: { name: true, dayNumber: true },
+              select: {
+                name: true,
+                dayNumber: true,
+                week: { select: { id: true } },
+              },
             },
           },
         },

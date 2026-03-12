@@ -103,13 +103,13 @@ function apiCompletionsToWorkoutCompletions(
     id: c.id,
     clientId: clientProfileId,
     planId,
-    weekId: '', // Not available from API, but not critical for display
+    weekId: c.day?.week?.id ?? '',
     dayId: c.dayId,
     status: 'COMPLETED' as const,
     completedAt: c.completedAt ?? undefined,
-    completionPct: (c.completionPct ?? 0) * 100,
-    exercisesDone: 0,
-    exercisesTotal: 0,
+    completionPct: c.completionPct ?? 0,
+    exercisesDone: c.exercisesDone ?? 0,
+    exercisesTotal: c.exercisesTotal ?? 0,
     durationSec: c.durationSec ?? undefined,
     effortRating: (c.effortRating as WorkoutCompletion['effortRating']) ?? undefined,
   }));
