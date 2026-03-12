@@ -453,22 +453,37 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list */}
-      <div className={cn("flex-1 p-3 sm:p-4 space-y-3 max-w-3xl mx-auto w-full", !isReadOnly && "pb-20")}>
-        {exercises.map((exercise, index) => (
-          <ExerciseCard
-            key={exercise.workoutExerciseId}
-            exercise={exercise}
-            exerciseNumber={index + 1}
-            isExpanded={expandedExerciseId === exercise.workoutExerciseId}
-            onToggleExpand={() => handleToggleExpand(exercise.workoutExerciseId)}
-            onToggleSet={handleToggleSet}
-            onToggleFlag={() => toggleFlag(exercise.workoutExerciseId)}
-            onUpdateFlagNote={(note) => updateFlagNote(exercise.workoutExerciseId, note)}
-            onMessageCoach={() => handleMessageCoach(exercise.workoutExerciseId)}
-            isReadOnly={isReadOnly}
-          />
-        ))}
+      {/* Exercise list — single card wrapping all exercises (Figma layout) */}
+      <div className={cn("flex-1 p-3 sm:p-4 max-w-3xl mx-auto w-full", !isReadOnly && "pb-20")}>
+        <Card>
+          {/* Card header — workout name + exercise count */}
+          <div className="flex items-center justify-between p-6 border-b">
+            <h2 className="font-heading text-xl font-semibold tracking-tight">
+              {day.name}
+            </h2>
+            <span className="font-heading text-base font-bold text-foreground">
+              {stats.exercisesTotal}x
+            </span>
+          </div>
+
+          {/* Card content — flat exercise rows */}
+          <div className="p-6 flex flex-col gap-8">
+            {exercises.map((exercise, index) => (
+              <ExerciseCard
+                key={exercise.workoutExerciseId}
+                exercise={exercise}
+                exerciseNumber={index + 1}
+                isExpanded={expandedExerciseId === exercise.workoutExerciseId}
+                onToggleExpand={() => handleToggleExpand(exercise.workoutExerciseId)}
+                onToggleSet={handleToggleSet}
+                onToggleFlag={() => toggleFlag(exercise.workoutExerciseId)}
+                onUpdateFlagNote={(note) => updateFlagNote(exercise.workoutExerciseId, note)}
+                onMessageCoach={() => handleMessageCoach(exercise.workoutExerciseId)}
+                isReadOnly={isReadOnly}
+              />
+            ))}
+          </div>
+        </Card>
       </div>
 
       {/* Sticky finish button (only for active workouts) */}
