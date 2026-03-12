@@ -60,7 +60,10 @@ export const GET = withClient(
                 id: true,
                 status: true,
                 completionPct: true,
+                exercisesDone: true,
+                startedAt: true,
                 completedAt: true,
+                durationSec: true,
                 effortRating: true,
               },
             },
@@ -87,7 +90,11 @@ export const GET = withClient(
         exerciseCount: day.exercises.length,
         status: completion?.status ?? "NOT_STARTED",
         completionPct: completion?.completionPct ?? null,
+        exercisesDone: completion?.exercisesDone ?? null,
         completionId: completion?.id ?? null,
+        startedAt: completion?.startedAt?.toISOString() ?? null,
+        completedAt: completion?.completedAt?.toISOString() ?? null,
+        durationSec: completion?.durationSec ?? null,
         effortRating: completion?.effortRating ?? null,
       };
     });

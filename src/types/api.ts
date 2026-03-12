@@ -83,9 +83,11 @@ export interface ClientDetail {
     dayId: string;
     completedAt: string | null;
     completionPct: number | null;
+    exercisesDone: number | null;
+    exercisesTotal: number | null;
     effortRating: string | null;
     durationSec: number | null;
-    day: { name: string | null; dayNumber: number } | null;
+    day: { name: string | null; dayNumber: number; week: { id: string } | null } | null;
   }[];
   checkIns: {
     id: string;
@@ -105,7 +107,11 @@ export interface WeekOverviewDay {
   exerciseCount: number;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
   completionPct: number | null;
+  exercisesDone: number | null;
   completionId: string | null;
+  startedAt: string | null;
+  completedAt: string | null;
+  durationSec: number | null;
   effortRating: string | null;
 }
 

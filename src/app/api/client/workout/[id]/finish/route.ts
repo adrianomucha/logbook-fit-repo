@@ -65,7 +65,7 @@ export const POST = withClient(
       where: { workoutCompletionId: completionId, completed: true },
     });
 
-    const completionPct = totalSets > 0 ? completedSets / totalSets : 0;
+    const completionPct = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
     const now = new Date();
     const durationSec = completion.startedAt
       ? Math.floor((now.getTime() - completion.startedAt.getTime()) / 1000)

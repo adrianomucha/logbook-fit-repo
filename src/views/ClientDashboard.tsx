@@ -175,8 +175,11 @@ export function ClientDashboard() {
         dayId: d.dayId,
         status: d.status as WorkoutCompletion['status'],
         completionPct: d.completionPct ?? 0,
-        exercisesDone: 0,
+        exercisesDone: d.exercisesDone ?? 0,
         exercisesTotal: d.exerciseCount,
+        startedAt: d.startedAt ?? undefined,
+        completedAt: d.completedAt ?? undefined,
+        durationSec: d.durationSec ?? undefined,
         effortRating: (d.effortRating as WorkoutCompletion['effortRating']) ?? undefined,
       }));
   }, [weekOverview, client]);
