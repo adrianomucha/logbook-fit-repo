@@ -312,28 +312,24 @@ export function ClientWorkoutExecution() {
           <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-success flex items-center justify-center animate-in zoom-in duration-300">
             <CheckCircle2 className="w-12 h-12 text-success-foreground" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {day.name}
           </h1>
         </div>
 
-        {/* Workout Summary */}
-        <div className="flex items-center justify-center gap-6 sm:gap-8 mb-8 sm:mb-10">
-          <div className="text-center">
-            <p className="text-3xl font-bold text-foreground">
+        {/* Workout Summary — stat blocks */}
+        <div className="flex gap-3 mb-8 sm:mb-10">
+          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+            <p className="text-2xl font-bold tabular-nums leading-none">
               {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
             </p>
-            <p className="text-sm text-success">exercises</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Exercises</p>
           </div>
-          <div className="w-px h-12 bg-success/20" />
-          <div className="text-center">
-            <div className="flex items-center justify-center gap-1">
-              <Clock className="w-5 h-5 text-success" />
-              <p className="text-3xl font-bold text-foreground">
-                {completedWorkoutData.durationMin}
-              </p>
-            </div>
-            <p className="text-sm text-success">min</p>
+          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+            <p className="text-2xl font-bold tabular-nums leading-none">
+              {completedWorkoutData.durationMin}
+            </p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Minutes</p>
           </div>
         </div>
 
@@ -342,7 +338,7 @@ export function ClientWorkoutExecution() {
           className="text-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-foreground mb-4 font-medium">
+          <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-4">
             How did that feel?
           </p>
           <div className="flex gap-2 sm:gap-3">
@@ -351,7 +347,7 @@ export function ClientWorkoutExecution() {
                 key={level}
                 onClick={() => handleEffortRating(level)}
                 disabled={isSavingRating}
-                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-success/10 text-foreground font-medium hover:bg-success/20 transition-colors touch-manipulation min-h-[44px] disabled:opacity-50"
+                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-foreground text-background font-bold uppercase tracking-wider text-sm hover:bg-foreground/90 transition-colors touch-manipulation min-h-[44px] disabled:opacity-50"
               >
                 {level === 'EASY' ? 'Easy' : level === 'MEDIUM' ? 'Medium' : 'Hard'}
               </button>
@@ -359,7 +355,7 @@ export function ClientWorkoutExecution() {
           </div>
         </div>
 
-        <p className="text-xs text-muted-foreground mt-8">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-8">
           Tap anywhere to skip
         </p>
       </div>
@@ -375,11 +371,11 @@ export function ClientWorkoutExecution() {
             <div className="flex justify-center mb-4">
               <RotateCcw className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-semibold text-center mb-2">
+            <h2 className="text-lg font-bold tracking-tight text-center mb-1">
               Restart this workout?
             </h2>
-            <p className="text-center text-muted-foreground mb-6">
-              All progress, flags, and notes will be cleared. This can&apos;t be undone.
+            <p className="text-center text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-6">
+              All progress, flags, and notes will be cleared
             </p>
             <div className="flex gap-3">
               <Button
@@ -411,12 +407,11 @@ export function ClientWorkoutExecution() {
       <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardContent className="py-6">
-            <h2 className="text-xl font-semibold text-center mb-2">
+            <h2 className="text-lg font-bold tracking-tight text-center mb-1">
               Finish this workout?
             </h2>
-            <p className="text-center text-muted-foreground mb-6">
-              You completed {stats.exercisesDone} of {stats.exercisesTotal}{' '}
-              exercises
+            <p className="text-center text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-6">
+              {stats.exercisesDone} of {stats.exercisesTotal} exercises completed
             </p>
             <div className="flex gap-3">
               <Button

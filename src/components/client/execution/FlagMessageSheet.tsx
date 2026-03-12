@@ -8,7 +8,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from '@/components/ui/sheet';
-import { Dumbbell, Send, Loader2 } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 import type { WorkoutExercise } from '@/types/api';
 import { getCompletedSetsCount } from '@/hooks/api/useWorkoutExecution';
 
@@ -70,7 +70,7 @@ export function FlagMessageSheet({
 
         {/* Header */}
         <SheetHeader className="px-4 pb-3 border-b text-left">
-          <SheetTitle>Message Coach</SheetTitle>
+          <SheetTitle className="text-sm font-bold tracking-tight uppercase">Message Coach</SheetTitle>
           <SheetDescription className="sr-only">
             Send a message to your coach about {exercise?.exercise.name}
           </SheetDescription>
@@ -79,20 +79,15 @@ export function FlagMessageSheet({
         {/* Content */}
         <div className="p-4 space-y-4 overflow-y-auto max-h-[calc(70vh-10rem)]">
           {/* Exercise context card - auto-attached */}
-          <div className="bg-muted rounded-lg p-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <Dumbbell className="w-4 h-4 text-muted-foreground shrink-0" />
-              <span className="font-medium truncate">{exercise?.exercise.name}</span>
-            </div>
-            <p className="text-sm text-muted-foreground mt-1">
-              {getPrescription()}
-            </p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Progress: {setsCompleted}/{totalSets} sets done
+          <div className="bg-muted/40 rounded-lg p-3">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">Exercise</p>
+            <p className="text-sm font-bold tracking-tight truncate">{exercise?.exercise.name}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1">
+              {getPrescription()} · {setsCompleted}/{totalSets} sets done
             </p>
             {flagNote && (
-              <p className="text-sm mt-2 italic text-muted-foreground">
-                Your note: &ldquo;{flagNote}&rdquo;
+              <p className="text-sm mt-2 italic text-muted-foreground border-l-2 border-foreground/15 pl-2.5">
+                &ldquo;{flagNote}&rdquo;
               </p>
             )}
           </div>

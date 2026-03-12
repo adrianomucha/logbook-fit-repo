@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCheckIn } from '@/hooks/api/useCheckIn';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, CheckCircle2, Dumbbell, AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -134,125 +134,112 @@ export function ClientCheckInForm() {
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Header */}
         <div>
-          <Button variant="ghost" onClick={() => router.push('/client')} className="mb-2">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold">Weekly Check-in</h1>
-          <p className="text-muted-foreground text-sm mt-1">Let your coach know how things are going</p>
+          <button
+            onClick={() => router.push('/client')}
+            className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation mb-3 block"
+          >
+            ← Back
+          </button>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">Check-in</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Weekly Check-in</h1>
         </div>
 
         {/* Question 1: Effort Rating */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">How did your workouts feel this week?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-3 gap-2">
-              {EFFORT_OPTIONS.map(({ value, label, emoji }) => (
-                <Button
-                  key={value}
-                  variant={effortRating === value ? 'default' : 'outline'}
-                  className="h-auto py-3 flex flex-col gap-1"
-                  onClick={() => { setEffortRating(value); setErrors(e => ({ ...e, effortRating: '' })); }}
-                >
-                  <span className="text-xl">{emoji}</span>
-                  <span className="text-xs">{label}</span>
-                </Button>
-              ))}
-            </div>
-            {errors.effortRating && (
-              <p className="text-xs text-destructive mt-2">{errors.effortRating}</p>
-            )}
-          </CardContent>
-        </Card>
+        <div>
+          <p className="text-[11px] uppercase tracking-wide font-bold mb-3">How did your workouts feel?</p>
+          <div className="grid grid-cols-3 gap-2">
+            {EFFORT_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => { setEffortRating(value); setErrors(e => ({ ...e, effortRating: '' })); }}
+                className={cn(
+                  'py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors touch-manipulation min-h-[44px]',
+                  effortRating === value
+                    ? 'bg-foreground text-background'
+                    : 'bg-muted/60 text-foreground hover:bg-muted'
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {errors.effortRating && (
+            <p className="text-xs text-destructive mt-2">{errors.effortRating}</p>
+          )}
+        </div>
 
         {/* Question 2: Body Feeling */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">How does your body feel?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {FEELING_OPTIONS.map(({ value, label, emoji }) => (
-                <Button
-                  key={value}
-                  variant={clientFeeling === value ? 'default' : 'outline'}
-                  className="h-auto py-3 flex flex-col gap-1"
-                  onClick={() => { setClientFeeling(value); setErrors(e => ({ ...e, clientFeeling: '' })); }}
-                >
-                  <span className="text-xl">{emoji}</span>
-                  <span className="text-xs">{label}</span>
-                </Button>
-              ))}
-            </div>
-            {errors.clientFeeling && (
-              <p className="text-xs text-destructive mt-2">{errors.clientFeeling}</p>
-            )}
-          </CardContent>
-        </Card>
+        <div>
+          <p className="text-[11px] uppercase tracking-wide font-bold mb-3">How does your body feel?</p>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {FEELING_OPTIONS.map(({ value, label }) => (
+              <button
+                key={value}
+                onClick={() => { setClientFeeling(value); setErrors(e => ({ ...e, clientFeeling: '' })); }}
+                className={cn(
+                  'py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors touch-manipulation min-h-[44px]',
+                  clientFeeling === value
+                    ? 'bg-foreground text-background'
+                    : 'bg-muted/60 text-foreground hover:bg-muted'
+                )}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {errors.clientFeeling && (
+            <p className="text-xs text-destructive mt-2">{errors.clientFeeling}</p>
+          )}
+        </div>
 
         {/* Optional Notes */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Anything else for your coach?</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Textarea
-              placeholder="Pain, blockers, schedule changes, or just how your week went..."
-              value={painBlockers}
-              onChange={(e) => setPainBlockers(e.target.value.slice(0, 500))}
-              rows={3}
-            />
-            <p className="text-xs text-muted-foreground mt-1 text-right">{painBlockers.length}/500</p>
-          </CardContent>
-        </Card>
+        <div>
+          <p className="text-[11px] uppercase tracking-wide font-bold mb-3">Anything else for your coach?</p>
+          <Textarea
+            placeholder="Pain, blockers, schedule changes, or just how your week went..."
+            value={painBlockers}
+            onChange={(e) => setPainBlockers(e.target.value.slice(0, 500))}
+            rows={3}
+          />
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1 text-right tabular-nums">{painBlockers.length}/500</p>
+        </div>
 
         {/* Recent Workouts Summary */}
         {recentCompletions.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <Dumbbell className="w-4 h-4" />
-                Recent Workouts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {recentCompletions.map((completion) => (
-                  <div
-                    key={completion.id}
-                    className="flex items-center gap-3 p-2 rounded-lg bg-muted/50"
-                  >
-                    <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">
-                        {completion.day?.name ?? 'Workout'}
-                      </p>
-                      {completion.completedAt && (
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(completion.completedAt), 'EEEE, MMM d')}
-                        </p>
-                      )}
-                    </div>
-                    {completion.completionPct != null && (
-                      <p className="text-xs text-muted-foreground shrink-0">
-                        {Math.round(completion.completionPct)}%
+          <div>
+            <p className="text-[11px] uppercase tracking-wide font-bold mb-3">Recent Workouts</p>
+            <div className="space-y-1.5">
+              {recentCompletions.map((completion) => (
+                <div
+                  key={completion.id}
+                  className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/40"
+                >
+                  <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold tracking-tight truncate">
+                      {completion.day?.name ?? 'Workout'}
+                    </p>
+                    {completion.completedAt && (
+                      <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                        {format(new Date(completion.completedAt), 'EEEE, MMM d')}
                       </p>
                     )}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  {completion.completionPct != null && (
+                    <p className="text-sm font-bold tabular-nums shrink-0">
+                      {Math.round(completion.completionPct)}%
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         {recentCompletions.length === 0 && (
-          <Card>
-            <CardContent className="py-6 text-center text-muted-foreground text-sm">
-              No recent completed workouts
-            </CardContent>
-          </Card>
+          <div className="rounded-lg bg-muted/40 py-6 text-center">
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">No recent completed workouts</p>
+          </div>
         )}
 
         {/* Submit Error */}
@@ -264,7 +251,7 @@ export function ClientCheckInForm() {
         <Button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="w-full"
+          className="w-full h-14 text-base font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
           size="lg"
         >
           {isSubmitting ? (

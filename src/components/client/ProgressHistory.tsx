@@ -98,7 +98,7 @@ export function ProgressHistory({
         {/* Narrative verdict — connects the numbers to how the client is doing */}
         {verdict && (
           <div className="animate-fade-in-up">
-            <p className="text-sm text-muted-foreground px-1">{verdict}</p>
+            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium px-1">{verdict}</p>
           </div>
         )}
 

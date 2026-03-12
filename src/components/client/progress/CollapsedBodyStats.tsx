@@ -52,7 +52,7 @@ export function CollapsedBodyStats({ measurements, clientId }: CollapsedBodyStat
       >
         {/* Row 1: Title + chevron */}
         <div className="flex items-center justify-between gap-2">
-          <h4 className="text-[15px] font-semibold tracking-tight">Body Stats</h4>
+          <h4 className="text-sm font-bold tracking-tight">Body Stats</h4>
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
           ) : (
@@ -61,7 +61,7 @@ export function CollapsedBodyStats({ measurements, clientId }: CollapsedBodyStat
         </div>
 
         {/* Row 2: Date metadata */}
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-0.5">
           Updated {latestDate} · {rows.length} {rows.length === 1 ? 'measurement' : 'measurements'}
         </p>
       </button>

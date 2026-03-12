@@ -3,14 +3,14 @@ import { Modal } from '@/components/ui/Modal';
 import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
-const FEELING_LABELS: Record<string, { label: string; emoji: string }> = {
-  TOO_EASY: { label: 'Too Easy', emoji: '😴' },
-  ABOUT_RIGHT: { label: 'About Right', emoji: '💪' },
-  TOO_HARD: { label: 'Too Hard', emoji: '😰' },
-  FRESH: { label: 'Fresh', emoji: '✨' },
-  NORMAL: { label: 'Normal', emoji: '👍' },
-  TIRED: { label: 'Tired', emoji: '😓' },
-  RUN_DOWN: { label: 'Run Down', emoji: '🥴' },
+const FEELING_LABELS: Record<string, { label: string }> = {
+  TOO_EASY: { label: 'Too Easy' },
+  ABOUT_RIGHT: { label: 'About Right' },
+  TOO_HARD: { label: 'Too Hard' },
+  FRESH: { label: 'Fresh' },
+  NORMAL: { label: 'Normal' },
+  TIRED: { label: 'Tired' },
+  RUN_DOWN: { label: 'Run Down' },
 };
 
 interface CheckInDetailModalProps {
@@ -84,24 +84,20 @@ export function CheckInDetailModal({
       <div className="space-y-6">
         {/* What You Said */}
         <section>
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
             What You Said
           </h3>
           <div className="space-y-3">
             {workoutFeeling && (
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{workoutFeeling.emoji}</span>
-                <span className="text-sm">
-                  Workouts felt: <span className="font-medium">{workoutFeeling.label}</span>
-                </span>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Workouts felt</span>
+                <span className="font-bold">{workoutFeeling.label}</span>
               </div>
             )}
             {bodyFeeling && (
-              <div className="flex items-center gap-2">
-                <span className="text-lg">{bodyFeeling.emoji}</span>
-                <span className="text-sm">
-                  Body feels: <span className="font-medium">{bodyFeeling.label}</span>
-                </span>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Body feels</span>
+                <span className="font-bold">{bodyFeeling.label}</span>
               </div>
             )}
             {flaggedWorkout && (
@@ -128,7 +124,7 @@ export function CheckInDetailModal({
 
         {/* Coach's Feedback */}
         <section>
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
             Your Coach's Feedback
           </h3>
           {checkIn.coachResponse ? (
@@ -155,7 +151,7 @@ export function CheckInDetailModal({
 
         {/* This Week's Workouts */}
         <section>
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3">
+          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
             That Week's Workouts
           </h3>
           {weekWorkouts.length > 0 ? (
@@ -176,7 +172,7 @@ export function CheckInDetailModal({
                 <p className="text-sm font-medium">
                   {completed >= totalExpected ? (
                     <span className="text-success">
-                      You completed all {completed} workouts! Great job! 🎉
+                      You completed all {completed} workouts
                     </span>
                   ) : (
                     <span className="text-foreground">

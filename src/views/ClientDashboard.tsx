@@ -23,7 +23,7 @@ import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, Loader2, AlertCircle } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
 
 // ---- Data Adapters ----
 
@@ -361,34 +361,20 @@ export function ClientDashboard() {
         {/* Check-in prompt banner */}
         {pendingCheckIn && (
           <section aria-label="Pending check-in">
-            <Card className="border-info/20 bg-info/5">
-              <CardContent className="py-3 sm:py-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-2.5 sm:gap-3">
-                    <ClipboardCheck className="w-5 h-5 sm:w-6 sm:h-6 text-info shrink-0" />
-                    <div>
-                      <p className="font-medium text-foreground">Check-in waiting for you</p>
-                      <p className="text-sm text-muted-foreground">Your coach wants to hear how training is going</p>
-                    </div>
-                  </div>
-                  <Button
-                    onClick={() => router.push(`/client/checkin/${pendingCheckIn.id}`)}
-                    className="w-full sm:w-auto"
-                  >
-                    Complete Check-in
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="rounded-lg bg-muted/40 px-4 py-3.5">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-2">
+                Check-in
+              </p>
+              <p className="text-sm font-bold tracking-tight mb-1">Your coach wants to hear how training is going</p>
+              <Button
+                onClick={() => router.push(`/client/checkin/${pendingCheckIn.id}`)}
+                className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 mt-2.5"
+                size="sm"
+              >
+                Complete Check-in
+              </Button>
+            </div>
           </section>
-        )}
-
-        {/* Coach feedback card (shows if coach responded to this week's check-in) */}
-        {thisWeekCheckIn && currentView === 'workout' && workoutViewMode === 'weekly' && (
-          <CoachFeedbackCard
-            checkIn={thisWeekCheckIn}
-            onViewDetails={() => setShowCheckInModal(true)}
-          />
         )}
 
         {/* Workout Views */}
@@ -415,27 +401,35 @@ export function ClientDashboard() {
         {currentView === 'workout' && workoutViewMode === 'weekly' && (
           <>
             <div className="flex items-center justify-between">
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Workouts</h1>
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
                 onClick={() => setWorkoutViewMode('today')}
-                className="text-muted-foreground hover:text-foreground"
+                className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation"
               >
-                ← Back to today
-              </Button>
+                ← Today
+              </button>
             </div>
+
             <WeeklyOverview
               client={client}
               plan={plan}
               completions={clientWorkoutCompletions}
             />
+
+            {thisWeekCheckIn && (
+              <CoachFeedbackCard
+                checkIn={thisWeekCheckIn}
+                onViewDetails={() => setShowCheckInModal(true)}
+              />
+            )}
           </>
         )}
 
         {currentView === 'chat' && coachUserId && (
           <>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight shrink-0">My Chat</h1>
+            <div className="shrink-0">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">Messages</p>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Chat</h1>
+            </div>
             <ChatView
               client={client}
               messages={messages}
@@ -455,7 +449,10 @@ export function ClientDashboard() {
 
         {currentView === 'progress' && (
           <>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">My Progress</h1>
+            <div>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">History</p>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Progress</h1>
+            </div>
             <ProgressHistory
               completedWorkouts={[]}
               plans={plan ? [plan] : []}

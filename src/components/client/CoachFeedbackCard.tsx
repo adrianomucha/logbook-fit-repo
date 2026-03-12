@@ -1,8 +1,5 @@
 import { CheckIn } from '@/types';
 import { truncateText } from '@/lib/checkin-context-helpers';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface CoachFeedbackCardProps {
@@ -11,48 +8,34 @@ interface CoachFeedbackCardProps {
 }
 
 /**
- * Card showing the coach's most recent feedback on the client dashboard.
+ * Coach feedback strip for the weekly view.
  * Only renders if there's a completed check-in with coach response.
  */
 export function CoachFeedbackCard({ checkIn, onViewDetails }: CoachFeedbackCardProps) {
-  // Don't render if no check-in, not completed, or no coach response
   if (!checkIn || checkIn.status !== 'completed' || !checkIn.coachResponse) {
     return null;
   }
 
-  const feedbackPreview = truncateText(checkIn.coachResponse, 200);
+  const feedbackPreview = truncateText(checkIn.coachResponse, 180);
   const checkInDate = format(
     new Date(checkIn.completedAt || checkIn.date),
     'MMM d'
   );
 
   return (
-    <Card className="border-border">
-      <CardContent className="py-3 sm:py-4">
-        <div className="flex items-start gap-2.5 sm:gap-3">
-          <div className="p-1.5 sm:p-2 rounded-full bg-muted shrink-0">
-            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-muted-foreground" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-foreground mb-1">
-              Your Coach's Feedback
-            </p>
-            <p className="text-sm text-muted-foreground mb-2">
-              &ldquo;{feedbackPreview}&rdquo;
-            </p>
-            <p className="text-xs text-muted-foreground mb-3">
-              From check-in on {checkInDate}
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onViewDetails}
-            >
-              View Full Check-in
-            </Button>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="rounded-lg bg-muted/40 px-4 py-3.5">
+      <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5">
+        Coach Feedback · {checkInDate}
+      </p>
+      <p className="text-sm text-foreground/80 leading-relaxed line-clamp-2 mb-2">
+        {feedbackPreview}
+      </p>
+      <button
+        onClick={onViewDetails}
+        className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground hover:text-foreground transition-colors touch-manipulation underline underline-offset-2"
+      >
+        View Check-in
+      </button>
+    </div>
   );
 }
