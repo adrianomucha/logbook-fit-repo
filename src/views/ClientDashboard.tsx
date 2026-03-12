@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
 import { TodayFocusView } from '@/components/client/today/TodayFocusView';
-import { ChatView } from '@/components/coach/ChatView';
+import { ChatView } from '@/components/chat/ChatView';
 import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';

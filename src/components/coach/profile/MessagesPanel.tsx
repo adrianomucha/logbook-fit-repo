@@ -1,5 +1,5 @@
 import { Client, Message } from '@/types';
-import { ChatView } from '@/components/coach/ChatView';
+import { ChatView } from '@/components/chat/ChatView';
 
 interface MessagesPanelProps {
   client: Client;

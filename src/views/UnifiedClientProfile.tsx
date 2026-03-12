@@ -17,7 +17,7 @@ import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistory
 import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
-import { ChatView } from '@/components/coach/ChatView';
+import { ChatView } from '@/components/chat/ChatView';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { CoachNav } from '@/components/coach/CoachNav';
