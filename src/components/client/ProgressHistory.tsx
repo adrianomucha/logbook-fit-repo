@@ -24,10 +24,19 @@ interface ProgressHistoryProps {
  * Generate a single-sentence verdict that connects the stats to how the client is doing.
  * This turns raw numbers into coaching-flavored encouragement.
  */
-function getProgressVerdict(
+type VerdictTone = 'success' | 'warning' | 'neutral';
+
+interface WeekProgress {
+  completed: number;
+  target: number;
+  text: string;
+  tone: VerdictTone;
+}
+
+function getWeekProgress(
   completions: WorkoutCompletion[],
   targetPerWeek: number,
-): string {
+): WeekProgress {
   const now = new Date();
   const weekStart = startOfWeek(now, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
@@ -39,41 +48,51 @@ function getProgressVerdict(
   }).length;
 
   const totalCompleted = completions.filter((c) => c.status === 'COMPLETED').length;
+  const base = { completed: thisWeekCompleted, target: targetPerWeek };
 
-  // No history at all
   if (totalCompleted === 0) {
-    return 'Your first workout will kick things off.';
+    return { ...base, text: 'Your first workout will kick things off.', tone: 'neutral' };
   }
-
-  // All done this week
   if (thisWeekCompleted >= targetPerWeek) {
-    return 'You hit your target this week — consistency is building.';
+    return { ...base, text: 'Target hit — consistency is building.', tone: 'success' };
   }
 
-  // Ahead of pace
   const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
   const expectedByNow = Math.ceil((dayOfWeek / 7) * targetPerWeek);
   if (thisWeekCompleted >= expectedByNow) {
     const remaining = targetPerWeek - thisWeekCompleted;
-    if (remaining === 1) return 'On pace — one more this week and you\'re set.';
-    return `On pace — ${remaining} more this week to hit your target.`;
+    return { ...base, text: remaining === 1 ? 'On pace — one more to go.' : `On pace — ${remaining} more to go.`, tone: 'success' };
   }
 
-  // Behind pace but some work done
   if (thisWeekCompleted > 0) {
     const remaining = targetPerWeek - thisWeekCompleted;
-    if (remaining === 1) return 'Almost there — one more session to close out the week.';
-    return `${remaining} sessions left to hit your weekly target.`;
+    return { ...base, text: remaining === 1 ? 'Almost there — one more session.' : `${remaining} sessions to go.`, tone: 'warning' };
   }
 
-  // Week just started, nothing yet
   if (dayOfWeek <= 2) {
-    return 'Week\'s just getting started — you\'ve got this.';
+    return { ...base, text: 'Week\'s just getting started.', tone: 'neutral' };
   }
 
-  // Mid-week, nothing done
-  return 'Still time to get some sessions in this week.';
+  return { ...base, text: 'Still time to get sessions in.', tone: 'warning' };
 }
+
+const toneBlock: Record<VerdictTone, { filled: string; empty: string; text: string }> = {
+  success: {
+    filled: 'bg-emerald-500',
+    empty: 'bg-emerald-500/15',
+    text: 'text-emerald-600 dark:text-emerald-400',
+  },
+  warning: {
+    filled: 'bg-amber-500',
+    empty: 'bg-amber-500/15',
+    text: 'text-amber-600 dark:text-amber-400',
+  },
+  neutral: {
+    filled: 'bg-foreground',
+    empty: 'bg-muted-foreground/15',
+    text: 'text-muted-foreground',
+  },
+};
 
 export function ProgressHistory({
   completedWorkouts: _completedWorkouts,
@@ -86,19 +105,49 @@ export function ProgressHistory({
   // If we have the new props, render the enhanced view
   const hasEnhancedData = client && plan && workoutCompletions;
 
-  const verdict = useMemo(() => {
+  const weekProgress = useMemo(() => {
     if (!hasEnhancedData) return null;
     const target = plan.workoutsPerWeek || 3;
-    return getProgressVerdict(workoutCompletions, target);
+    return getWeekProgress(workoutCompletions, target);
   }, [hasEnhancedData, plan, workoutCompletions]);
 
   if (hasEnhancedData) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        {/* Narrative verdict — connects the numbers to how the client is doing */}
-        {verdict && (
-          <div className="animate-fade-in-up">
-            <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium px-1">{verdict}</p>
+        {/* Week progress tracker */}
+        {weekProgress && (
+          <div className="animate-fade-in-up bg-muted/40 rounded-lg p-5">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                This week
+              </span>
+              <p className={`text-[10px] uppercase tracking-[0.12em] font-bold ${toneBlock[weekProgress.tone].text}`}>
+                {weekProgress.text}
+              </p>
+            </div>
+            <div className="flex gap-2 mb-4">
+              {Array.from({ length: weekProgress.target }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-3 flex-1 rounded-sm transition-colors ${
+                    i < weekProgress.completed
+                      ? toneBlock[weekProgress.tone].filled
+                      : toneBlock[weekProgress.tone].empty
+                  }`}
+                />
+              ))}
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-3xl font-bold tabular-nums leading-none">
+                {weekProgress.completed}
+              </span>
+              <span className="text-lg text-muted-foreground/50 font-bold tabular-nums leading-none">
+                / {weekProgress.target}
+              </span>
+              <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium ml-1">
+                sessions
+              </span>
+            </div>
           </div>
         )}
 

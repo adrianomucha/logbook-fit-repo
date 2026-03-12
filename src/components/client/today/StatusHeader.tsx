@@ -38,7 +38,7 @@ export function StatusHeader({ status, clientName }: StatusHeaderProps) {
   const { label, dot } = statusConfig[status];
 
   return (
-    <div>
+    <div className="py-4">
       <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
         {dateStr || '\u00A0'}
       </p>
