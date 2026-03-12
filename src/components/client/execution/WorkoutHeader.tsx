@@ -22,34 +22,34 @@ export function WorkoutHeader({
   completedDate,
 }: WorkoutHeaderProps) {
   return (
-    <div className="sticky top-0 z-10 bg-card-foreground rounded-b-lg">
+    <div className="sticky top-0 z-10 bg-card-foreground">
       <div className="flex items-center justify-between px-4 h-[64px]">
-        {/* Left — back + optional progress */}
-        <div className="flex items-center gap-2">
+        {/* Left — back + progress */}
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={onBack}
-            className="text-primary-foreground p-1 -ml-1 touch-manipulation"
+            className="text-primary-foreground p-2 -ml-2 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
             aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
 
-          {/* Progress pill */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-primary-foreground/80 text-sm font-semibold">
+          {/* Bold counter + progress bar */}
+          <div className="flex items-center gap-2.5">
+            <span className="text-primary-foreground font-bold text-base tabular-nums">
               {exercisesDone}/{exercisesTotal}
             </span>
             {exercisesTotal <= 8 && (
-              <div className="flex gap-1 ml-0.5">
+              <div className="flex gap-1">
                 {Array.from({ length: exercisesTotal }, (_, i) => (
                   <div
                     key={i}
                     className={cn(
-                      'w-2 h-2 rounded-full transition-colors',
+                      'w-2.5 h-2.5 rounded-full transition-all duration-300',
                       i < exercisesDone
-                        ? 'bg-success'
-                        : 'bg-primary-foreground/30'
+                        ? 'bg-success scale-110'
+                        : 'bg-primary-foreground/20'
                     )}
                   />
                 ))}
@@ -59,14 +59,14 @@ export function WorkoutHeader({
         </div>
 
         {/* Centre — workout name */}
-        <h1 className="text-primary-foreground font-semibold text-lg tracking-tight truncate max-w-[55%] text-center">
+        <h1 className="text-primary-foreground font-bold text-sm tracking-[0.05em] uppercase truncate max-w-[45%] text-center">
           {workoutName}
         </h1>
 
         {/* Right — read-only badge / restart */}
         <div className="flex items-center gap-2">
           {isReadOnly && completedDate && (
-            <span className="text-primary-foreground/60 text-xs">
+            <span className="text-primary-foreground/60 text-xs font-bold tabular-nums">
               {completedDate}
             </span>
           )}

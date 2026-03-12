@@ -58,30 +58,40 @@ export function ExerciseCard({
       <button
         type="button"
         onClick={onToggleExpand}
-        className="w-full flex items-center gap-6 text-left py-2 transition-colors hover:bg-muted/30 active:scale-[0.99] touch-manipulation min-h-[44px]"
+        className="w-full flex items-center gap-2 sm:gap-3 text-left py-2 transition-colors hover:bg-muted/30 active:scale-[0.99] touch-manipulation min-h-[52px]"
         aria-expanded={isExpanded}
         aria-label={`${exercise.exercise.name}, ${getPrescription()}`}
       >
-        {/* Left column — exercise number (fixed width to match Figma) */}
-        <span className="w-[80px] flex-shrink-0 text-sm font-medium text-foreground">
+        {/* Left — bold counter number */}
+        <span
+          className={cn(
+            'w-8 sm:w-10 flex-shrink-0 text-2xl sm:text-3xl font-bold tabular-nums tracking-tight transition-colors',
+            isComplete ? 'text-success' : 'text-foreground/20'
+          )}
+        >
           {exerciseNumber}
         </span>
 
-        {/* Middle — name + prescription subtitle */}
-        <div className="flex-1 min-w-0 flex flex-col gap-1">
+        {/* Middle — name + prescription */}
+        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5">
-            <p className="text-sm font-medium text-foreground truncate">
+            <p
+              className={cn(
+                'text-sm font-semibold tracking-tight truncate transition-colors',
+                isComplete ? 'text-foreground/50' : 'text-foreground'
+              )}
+            >
               {exercise.exercise.name}
             </p>
             {isFlagged && (
               <div className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-muted-foreground tracking-wide uppercase">
             {getPrescription()}
             {completedSets > 0 && !isComplete && (
-              <span className="ml-1.5 text-success font-medium">
-                ({completedSets}/{exercise.sets})
+              <span className="ml-1.5 text-success font-bold normal-case">
+                {completedSets}/{exercise.sets}
               </span>
             )}
           </p>
@@ -90,26 +100,29 @@ export function ExerciseCard({
         {/* Right — circle checkbox */}
         <div
           className={cn(
-            'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all',
+            'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
             isComplete
-              ? 'bg-success border-success'
-              : 'border-muted-foreground/25 bg-transparent'
+              ? 'bg-success border-success scale-100'
+              : 'border-foreground/15 bg-transparent'
           )}
         >
           {isComplete && (
-            <Check className="w-4 h-4 text-success-foreground" />
+            <Check className="w-4 h-4 text-success-foreground animate-set-complete" />
           )}
         </div>
       </button>
 
       {/* ── Expanded: set rows + coach tip + flag ── */}
       {isExpanded && (
-        <div className="pl-[80px] pr-1 pb-4 pt-1 space-y-3">
+        <div className="pl-10 sm:pl-[52px] pr-1 pb-4 pt-1 space-y-3 animate-fade-in-up">
           {/* Coach notes */}
           {exercise.coachNotes && (
-            <div className="p-3 bg-muted/50 rounded-lg">
+            <div className="p-3 bg-muted/50 rounded-lg border-l-2 border-foreground/10">
               <p className="text-sm text-foreground">
-                <span className="font-medium">Coach tip:</span>{' '}
+                <span className="font-semibold uppercase text-xs tracking-wide text-muted-foreground">
+                  Coach
+                </span>
+                <br />
                 {exercise.coachNotes}
               </p>
             </div>
@@ -136,13 +149,24 @@ export function ExerciseCard({
                     <span className="text-xs text-muted-foreground">
                       {(flagNote?.length || 0)}/200
                     </span>
-                    <button
-                      type="button"
-                      onClick={onMessageCoach}
-                      className="text-sm text-primary hover:underline min-h-[44px] flex items-center touch-manipulation"
-                    >
-                      Message coach →
-                    </button>
+                    <div className="flex items-center gap-4">
+                      {onToggleFlag && (
+                        <button
+                          type="button"
+                          onClick={handleFlagClick}
+                          className="text-sm text-muted-foreground/60 hover:text-destructive transition-colors min-h-[44px] flex items-center touch-manipulation"
+                        >
+                          Remove flag
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={onMessageCoach}
+                        className="text-sm text-primary hover:underline min-h-[44px] flex items-center touch-manipulation"
+                      >
+                        Message coach →
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : (
@@ -160,7 +184,7 @@ export function ExerciseCard({
             <button
               type="button"
               onClick={handleFlagClick}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-muted-foreground transition-colors touch-manipulation"
+              className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation uppercase tracking-wider"
             >
               <Flag className="w-3.5 h-3.5" />
               Flag for coach

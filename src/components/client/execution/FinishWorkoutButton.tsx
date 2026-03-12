@@ -22,17 +22,17 @@ export function FinishWorkoutButton({
         onClick={onFinish}
         disabled={disabled}
         className={cn(
-          'w-full h-12 rounded-md text-sm font-semibold transition-all touch-manipulation',
+          'w-full h-14 rounded-lg text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 touch-manipulation',
           'text-primary-foreground',
           allDone
-            ? 'bg-success hover:bg-success/90'
+            ? 'bg-success hover:bg-success/90 shadow-[0_0_20px_hsl(var(--success)/0.3)]'
             : 'bg-card-foreground hover:bg-card-foreground/90',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
         Finish Workout
         {!allDone && (
-          <span className="ml-2 text-primary-foreground/60">
+          <span className="ml-2 text-primary-foreground/50 font-bold tabular-nums">
             {exercisesDone}/{exercisesTotal}
           </span>
         )}

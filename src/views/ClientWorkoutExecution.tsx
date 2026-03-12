@@ -454,20 +454,20 @@ export function ClientWorkoutExecution() {
       />
 
       {/* Exercise list — single card wrapping all exercises (Figma layout) */}
-      <div className={cn("flex-1 p-3 sm:p-4 max-w-3xl mx-auto w-full", !isReadOnly && "pb-28")}>
+      <div className="flex-1 p-3 sm:p-4 max-w-3xl mx-auto w-full">
         <Card>
           {/* Card header — workout name + exercise count */}
-          <div className="flex items-center justify-between p-6 border-b">
-            <h2 className="font-heading text-xl font-semibold tracking-tight">
+          <div className="flex items-baseline justify-between px-4 py-4 sm:px-6 sm:py-5 border-b-2 border-foreground/10">
+            <h2 className="font-heading text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground">
               {day.name}
             </h2>
-            <span className="font-heading text-base font-bold text-foreground">
-              {stats.exercisesTotal}x
+            <span className="font-heading text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground">
+              {stats.exercisesTotal} exercises
             </span>
           </div>
 
           {/* Card content — flat exercise rows */}
-          <div className="p-6 flex flex-col gap-8">
+          <div className="px-4 py-4 sm:p-6 flex flex-col gap-6 sm:gap-8">
             {exercises.map((exercise, index) => (
               <ExerciseCard
                 key={exercise.workoutExerciseId}
@@ -485,6 +485,9 @@ export function ClientWorkoutExecution() {
           </div>
         </Card>
       </div>
+
+      {/* Spacer so content can scroll above the fixed finish button */}
+      {!isReadOnly && <div className="h-28 flex-shrink-0" />}
 
       {/* Sticky finish button (only for active workouts) */}
       {!isReadOnly && (

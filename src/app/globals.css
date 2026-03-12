@@ -105,11 +105,27 @@
       opacity: 1;
     }
   }
+
+  /* Set completion check pop — snappy scale + fade */
+  .animate-set-complete {
+    animation: setComplete 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes setComplete {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 }
 
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
+  .animate-set-complete,
   [class*="animate-[completionPop"] {
     animation: none !important;
   }
