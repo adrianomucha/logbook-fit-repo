@@ -4,9 +4,11 @@ import { StatusHeader, StatusType } from './StatusHeader';
 import { TodayActionCard, ActionState } from './TodayActionCard';
 import { CoachContextStrip } from './CoachContextStrip';
 import { QuickEffortFeedback } from './QuickEffortFeedback';
+import { WorkoutOverview } from './WorkoutOverview';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, CheckCircle2 } from 'lucide-react';
+import { Progress } from '@/components/ui/progress';
+import { Calendar, CheckCircle2, Play, RotateCcw } from 'lucide-react';
 
 interface TodayFocusViewProps {
   client: Client;
@@ -63,48 +65,70 @@ export function TodayFocusView({
 }: TodayFocusViewProps) {
   const statusType = getStatusType(todayWorkout, todayCompletion);
   const actionState = getActionState(todayWorkout, todayCompletion);
-
-  const handleAction = () => {
-    switch (actionState) {
-      case 'scheduled':
-        onStartWorkout();
-        break;
-      case 'in-progress':
-        onResumeWorkout();
-        break;
-      case 'completed':
-        onMessageCoach();
-        break;
-      case 'rest':
-        onMessageCoach();
-        break;
-    }
-  };
-
-  const workoutName = todayWorkout?.workoutDay?.name;
-  const exerciseCount = todayWorkout?.workoutDay?.exercises?.length;
   const completionPct = todayCompletion?.completionPct || 0;
 
-  // Show feedback prompt only if workout completed and not yet submitted feedback
   const showFeedbackPrompt = actionState === 'completed' && !feedbackSubmitted && !todayCompletion?.effortRating;
   const showFeedbackSent = actionState === 'completed' && (feedbackSubmitted || !!todayCompletion?.effortRating);
+
+  const showOverview = (actionState === 'scheduled' || actionState === 'in-progress') && todayWorkout?.workoutDay;
 
   return (
     <div className="space-y-4">
       {/* Status Header */}
       <StatusHeader status={statusType} />
 
-      {/* Primary Action Card */}
-      <TodayActionCard
-        state={actionState}
-        workoutName={workoutName}
-        exerciseCount={exerciseCount}
-        completionPct={completionPct}
-        onAction={handleAction}
-      />
+      {/* Workout Overview (scheduled / in-progress) */}
+      {showOverview && todayWorkout?.workoutDay && (
+        <>
+          <WorkoutOverview
+            workoutDay={todayWorkout.workoutDay}
+            coachName={coachName}
+          />
 
-      {/* Coach Context Strip (only if coach note exists) */}
-      {coachNote && coachName && (
+          {/* In-progress: show progress bar */}
+          {actionState === 'in-progress' && (
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">{completionPct}% complete</span>
+              </div>
+              <Progress value={completionPct} className="h-2" />
+            </div>
+          )}
+
+          {/* Start / Resume button */}
+          <Button
+            onClick={actionState === 'in-progress' ? onResumeWorkout : onStartWorkout}
+            className="w-full"
+            size="lg"
+          >
+            {actionState === 'in-progress' ? (
+              <>
+                <RotateCcw className="w-5 h-5 mr-2" />
+                Resume Workout
+              </>
+            ) : (
+              <>
+                <Play className="w-5 h-5 mr-2" />
+                Start Workout
+              </>
+            )}
+          </Button>
+        </>
+      )}
+
+      {/* Fallback to action card for completed / rest states */}
+      {(actionState === 'completed' || actionState === 'rest') && (
+        <TodayActionCard
+          state={actionState}
+          workoutName={todayWorkout?.workoutDay?.name}
+          exerciseCount={todayWorkout?.workoutDay?.exercises?.length}
+          completionPct={completionPct}
+          onAction={onMessageCoach}
+        />
+      )}
+
+      {/* Coach Context Strip (only for completed/rest, since overview handles it for scheduled) */}
+      {(actionState === 'completed' || actionState === 'rest') && coachNote && coachName && (
         <CoachContextStrip
           coachName={coachName}
           coachAvatar={coachAvatar}
@@ -112,7 +136,7 @@ export function TodayFocusView({
         />
       )}
 
-      {/* Quick Effort Feedback (only if workout completed and no rating yet) */}
+      {/* Quick Effort Feedback */}
       {showFeedbackPrompt && (
         <QuickEffortFeedback onSubmit={onSendFeedback} isSubmitting={isSendingFeedback} />
       )}

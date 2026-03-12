@@ -40,10 +40,12 @@ function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
         id: d.id,
         dayNumber: d.dayNumber,
         name: d.name ?? `Day ${d.dayNumber}`,
+        description: d.description ?? undefined,
         isRestDay: d.isRestDay,
         exercises: d.exercises.map((e) => ({
           id: e.id,
           name: e.exercise.name,
+          category: e.exercise.category ?? undefined,
           sets: e.sets,
           reps: e.reps ?? undefined,
           weight: e.weight ?? undefined,

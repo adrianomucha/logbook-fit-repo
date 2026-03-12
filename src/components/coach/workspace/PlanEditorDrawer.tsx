@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Plus,
   ChevronLeft,
@@ -75,10 +76,14 @@ export function PlanEditorDrawer({
   const [localDayName, setLocalDayName] = useState(currentDay?.name || '');
   const dayNameInputRef = useRef<HTMLInputElement>(null);
 
+  // Local state for day description (workout briefing for clients)
+  const [localDayDescription, setLocalDayDescription] = useState(currentDay?.description || '');
+
   // Sync local day name when navigating to a different day/week or when plan changes externally
   useEffect(() => {
     setLocalDayName(currentDay?.name || '');
-  }, [selectedWeek, selectedDay, currentDay?.name]);
+    setLocalDayDescription(currentDay?.description || '');
+  }, [selectedWeek, selectedDay, currentDay?.name, currentDay?.description]);
 
   // Reset selection when plan changes (e.g. opening a different plan)
   useEffect(() => {
@@ -219,6 +224,23 @@ export function PlanEditorDrawer({
     } catch {
       // Revert on error
       setLocalDayName(currentDay.name || '');
+    }
+  };
+
+  // Commit the day description to the API on blur
+  const commitDayDescription = async () => {
+    if (!plan || !currentDay) return;
+    const newDesc = localDayDescription.trim() || null;
+    const oldDesc = currentDay.description || null;
+    if (newDesc === oldDesc) return;
+    try {
+      await apiFetch(`/api/days/${currentDay.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ description: newDesc }),
+      });
+      onRefresh?.();
+    } catch {
+      setLocalDayDescription(currentDay.description || '');
     }
   };
 
@@ -371,19 +393,36 @@ export function PlanEditorDrawer({
               {/* Content */}
               {currentDay ? (
                 <div className="flex-1 overflow-y-auto">
-                  {/* Day Name Edit */}
-                  <div className="p-4 border-b">
-                    <label className="text-xs text-muted-foreground mb-1 block">
-                      Workout Name
-                    </label>
-                    <Input
-                      ref={dayNameInputRef}
-                      value={localDayName}
-                      onChange={(e) => setLocalDayName(e.target.value)}
-                      onBlur={commitDayName}
-                      placeholder="e.g., Push Day, Upper Body"
-                      className="font-medium"
-                    />
+                  {/* Day Name & Description Edit */}
+                  <div className="p-4 border-b space-y-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">
+                        Workout Name
+                      </label>
+                      <Input
+                        ref={dayNameInputRef}
+                        value={localDayName}
+                        onChange={(e) => setLocalDayName(e.target.value)}
+                        onBlur={commitDayName}
+                        placeholder="e.g., Push Day, Upper Body"
+                        className="font-medium"
+                      />
+                    </div>
+                    {!currentDay.isRestDay && (
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          Workout Briefing
+                        </label>
+                        <Textarea
+                          value={localDayDescription}
+                          onChange={(e) => setLocalDayDescription(e.target.value)}
+                          onBlur={commitDayDescription}
+                          placeholder="Describe this workout for your client — what to expect, how to approach it..."
+                          className="text-sm resize-none"
+                          rows={3}
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Add Exercise Button */}

@@ -37,8 +37,9 @@ export const PUT = withCoach(
     }
 
     const body = await req.json();
-    const { name, isRestDay } = body as {
+    const { name, description, isRestDay } = body as {
       name?: string;
+      description?: string | null;
       isRestDay?: boolean;
     };
 
@@ -46,6 +47,7 @@ export const PUT = withCoach(
       where: { id: dayId },
       data: {
         ...(name !== undefined ? { name } : {}),
+        ...(description !== undefined ? { description } : {}),
         ...(isRestDay !== undefined ? { isRestDay } : {}),
       },
     });

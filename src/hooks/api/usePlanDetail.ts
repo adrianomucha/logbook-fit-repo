@@ -20,6 +20,7 @@ export interface PlanDetail {
       id: string;
       dayNumber: number;
       name: string | null;
+      description: string | null;
       isRestDay: boolean;
       exercises: {
         id: string;

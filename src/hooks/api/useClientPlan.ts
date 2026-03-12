@@ -4,7 +4,11 @@ import type { PlanDetail } from './usePlanDetail';
 /** Fetches the client's active plan from GET /api/client/plan */
 export function useClientPlan() {
   const { data, error, isLoading, mutate } = useSWR<PlanDetail>(
-    '/api/client/plan'
+    '/api/client/plan',
+    {
+      revalidateOnFocus: true,
+      refreshInterval: 30_000, // Poll every 30s so coach edits propagate quickly
+    }
   );
 
   return {

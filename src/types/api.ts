@@ -173,6 +173,7 @@ export interface WorkoutDayDetail {
   dayId: string;
   dayNumber: number;
   name: string | null;
+  description: string | null;
   isRestDay: boolean;
   weekNumber: number;
   exercises: WorkoutExercise[];

@@ -1,6 +1,7 @@
 export interface Exercise {
   id: string;
   name: string;
+  category?: string;
   sets: number;
   reps?: string;
   time?: string;
@@ -15,6 +16,7 @@ export interface WorkoutDay {
   id: string;
   dayNumber?: number;
   name: string;
+  description?: string;
   exercises: Exercise[];
   isRestDay?: boolean;
 }
