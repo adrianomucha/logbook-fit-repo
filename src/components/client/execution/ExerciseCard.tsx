@@ -52,6 +52,19 @@ export function ExerciseCard({
     if (!isReadOnly && onToggleFlag) onToggleFlag();
   };
 
+  const handleToggleAllSets = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isReadOnly) return;
+    // Toggle all sets — if all complete, uncomplete them; otherwise complete remaining
+    const setNumbers = Array.from({ length: exercise.sets }, (_, i) => i + 1);
+    const targetSets = isComplete
+      ? setNumbers.filter((n) => isSetCompleted(exercise.setCompletions, n))
+      : setNumbers.filter((n) => !isSetCompleted(exercise.setCompletions, n));
+    for (const setNumber of targetSets) {
+      onToggleSet(exercise.workoutExerciseId, setNumber);
+    }
+  };
+
   return (
     <div>
       {/* ── Exercise row ── */}
@@ -97,19 +110,39 @@ export function ExerciseCard({
           </p>
         </div>
 
-        {/* Right — circle checkbox */}
-        <div
-          className={cn(
-            'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
-            isComplete
-              ? 'bg-success border-success scale-100'
-              : 'border-foreground/15 bg-transparent'
-          )}
-        >
-          {isComplete && (
-            <Check className="w-4 h-4 text-success-foreground animate-set-complete" />
-          )}
-        </div>
+        {/* Right — circle checkbox (tappable: toggles all sets) */}
+        {!isReadOnly ? (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={handleToggleAllSets}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggleAllSets(e as unknown as React.MouseEvent); } }}
+            className={cn(
+              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 cursor-pointer',
+              isComplete
+                ? 'bg-success border-success scale-100'
+                : 'border-foreground/15 bg-transparent hover:border-foreground/30'
+            )}
+            aria-label={isComplete ? 'Mark all sets incomplete' : 'Mark all sets complete'}
+          >
+            {isComplete && (
+              <Check className="w-4 h-4 text-success-foreground animate-set-complete" />
+            )}
+          </div>
+        ) : (
+          <div
+            className={cn(
+              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+              isComplete
+                ? 'bg-success border-success'
+                : 'border-foreground/15 bg-transparent'
+            )}
+          >
+            {isComplete && (
+              <Check className="w-4 h-4 text-success-foreground" />
+            )}
+          </div>
+        )}
       </button>
 
       {/* ── Expanded: set rows + coach tip + flag ── */}

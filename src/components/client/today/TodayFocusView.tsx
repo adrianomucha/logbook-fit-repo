@@ -5,10 +5,9 @@ import { TodayActionCard, ActionState } from './TodayActionCard';
 import { CoachContextStrip } from './CoachContextStrip';
 import { QuickEffortFeedback } from './QuickEffortFeedback';
 import { WorkoutOverview } from './WorkoutOverview';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Calendar, CheckCircle2, Play, RotateCcw } from 'lucide-react';
+import { Calendar, Play, RotateCcw } from 'lucide-react';
 
 interface TodayFocusViewProps {
   client: Client;
@@ -134,6 +133,7 @@ export function TodayFocusView({
             exerciseCount={todayWorkout?.workoutDay?.exercises?.length}
             completionPct={completionPct}
             onAction={onMessageCoach}
+            hideCta={showFeedbackSent}
           />
         </div>
       )}
@@ -169,17 +169,6 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Feedback sent confirmation */}
-      {showFeedbackSent && (
-        <Card className="border-success/20 bg-success/5 animate-fade-in-up">
-          <CardContent className="py-3 px-4">
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
-              <p className="text-sm font-medium text-success">Feedback sent to your coach</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* View Week — more prominent placement */}
       <div className="flex items-center justify-between pt-1 border-t border-border/50">

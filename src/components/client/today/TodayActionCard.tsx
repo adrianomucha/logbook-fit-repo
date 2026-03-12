@@ -12,6 +12,8 @@ interface TodayActionCardProps {
   exerciseCount?: number;
   completionPct?: number;
   onAction: () => void;
+  /** Hide the call-to-action button (e.g. when feedback already sent) */
+  hideCta?: boolean;
 }
 
 export function TodayActionCard({
@@ -20,6 +22,7 @@ export function TodayActionCard({
   exerciseCount,
   completionPct = 0,
   onAction,
+  hideCta,
 }: TodayActionCardProps) {
   const renderContent = () => {
     switch (state) {
@@ -75,7 +78,7 @@ export function TodayActionCard({
       case 'completed':
         return (
           <>
-            <div className="flex items-center gap-3 mb-4">
+            <div className={cn("flex items-center gap-3", !hideCta && "mb-4")}>
               <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center shrink-0 animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]">
                 <CheckCircle2 className="w-6 h-6 text-success" />
               </div>
@@ -86,15 +89,17 @@ export function TodayActionCard({
                 </p>
               </div>
             </div>
-            <Button
-              onClick={onAction}
-              variant="outline"
-              className="w-full border-success/30 text-success hover:bg-success/5"
-              size="lg"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              Send Feedback to Coach
-            </Button>
+            {!hideCta && (
+              <Button
+                onClick={onAction}
+                variant="outline"
+                className="w-full border-success/30 text-success hover:bg-success/5"
+                size="lg"
+              >
+                <MessageSquare className="w-5 h-5 mr-2" />
+                Send Feedback to Coach
+              </Button>
+            )}
           </>
         );
 
