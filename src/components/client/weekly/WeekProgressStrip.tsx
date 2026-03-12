@@ -1,5 +1,3 @@
-import { Progress } from '@/components/ui/progress';
-
 interface WeekProgressStripProps {
   completed: number;
   total: number;
@@ -7,33 +5,25 @@ interface WeekProgressStripProps {
   percentage: number;
 }
 
-function getVerdict(completed: number, total: number, remaining: number): string {
-  if (total === 0) return 'No workouts this week';
-  if (completed === total) return 'All done — great week!';
-  if (completed === 0 && remaining === total) return 'Fresh week ahead';
-  if (completed === 0) return 'Time to get started';
-  if (remaining === 0) return `${completed} of ${total} completed`;
-  if (remaining === 1) return `${completed} down, 1 to go`;
-  return `${completed} down, ${remaining} to go`;
-}
-
 export function WeekProgressStrip({
   completed,
   total,
   remaining,
-  percentage,
 }: WeekProgressStripProps) {
-  const verdict = getVerdict(completed, total, remaining);
-
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between text-sm">
-        <span className="font-medium">{verdict}</span>
-        <span className="text-muted-foreground tabular-nums">
-          {completed}/{total}
-        </span>
+    <div className="flex gap-3">
+      <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+        <p className="text-2xl font-bold tabular-nums leading-none">{completed}</p>
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Done</p>
       </div>
-      <Progress value={percentage} className="h-2" />
+      <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+        <p className="text-2xl font-bold tabular-nums leading-none">{remaining}</p>
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Remaining</p>
+      </div>
+      <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+        <p className="text-2xl font-bold tabular-nums leading-none">{total}</p>
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Total</p>
+      </div>
     </div>
   );
 }

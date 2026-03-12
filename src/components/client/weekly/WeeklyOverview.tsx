@@ -10,8 +10,6 @@ import {
 import { WeekHeader } from './WeekHeader';
 import { WeekProgressStrip } from './WeekProgressStrip';
 import { DayCardGrid } from './DayCardGrid';
-import { Card, CardContent } from '@/components/ui/card';
-import { Dumbbell } from 'lucide-react';
 
 interface WeeklyOverviewProps {
   client: Client;
@@ -39,7 +37,6 @@ export function WeeklyOverview({
 
   // Get the current week data
   const currentWeek = useMemo(() => {
-    // Find the week matching current week number, or default to first week
     return (
       plan.weeks.find((w) => w.weekNumber === currentWeekNumber) ||
       plan.weeks[0]
@@ -62,7 +59,6 @@ export function WeeklyOverview({
   // Calculate progress
   const progress = useMemo(() => {
     const base = getWeekProgress(weekDays);
-    // Count upcoming workouts (remaining to do)
     const remaining = weekDays.filter(
       (d) => d.status === 'TODAY' || d.status === 'UPCOMING'
     ).length;
@@ -76,29 +72,27 @@ export function WeeklyOverview({
     }
   };
 
-  // Handle case where plan has no weeks or no start date
+  // Empty state
   if (!currentWeek || !client.planStartDate) {
     return (
-      <Card>
-        <CardContent className="py-8">
-          <div className="text-center">
-            <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-semibold mb-2">No workouts scheduled</h3>
-            <p className="text-sm text-muted-foreground">
-              Your coach will assign workouts to your plan soon.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="text-center py-12">
+        <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2">
+          No Plan
+        </p>
+        <h3 className="font-bold text-lg tracking-tight mb-1">
+          No workouts scheduled
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Your coach will assign workouts soon.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      {/* Header: Plan name and week */}
+    <div className="space-y-5">
       <WeekHeader plan={plan} currentWeek={currentWeekNumber} />
 
-      {/* Progress strip */}
       <WeekProgressStrip
         completed={progress.completed}
         total={progress.total}
@@ -106,7 +100,6 @@ export function WeeklyOverview({
         percentage={progress.percentage}
       />
 
-      {/* Day cards */}
       <DayCardGrid days={weekDays} onDayClick={handleDayClick} />
     </div>
   );

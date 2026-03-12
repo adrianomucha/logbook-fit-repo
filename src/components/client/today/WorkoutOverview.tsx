@@ -1,7 +1,6 @@
 import { WorkoutDay } from '@/types';
 import { ExercisePreviewList } from './ExercisePreviewList';
 import { Card, CardContent } from '@/components/ui/card';
-import { Timer, Dumbbell } from 'lucide-react';
 
 interface WorkoutOverviewProps {
   workoutDay: WorkoutDay;
@@ -9,7 +8,6 @@ interface WorkoutOverviewProps {
 }
 
 function estimateDuration(exercises: WorkoutDay['exercises']): number {
-  // Rough estimate: ~2 min per set (including rest)
   const totalSets = exercises.reduce((sum, e) => sum + e.sets, 0);
   return Math.max(10, Math.round(totalSets * 2));
 }
@@ -18,7 +16,6 @@ function getUniqueCategories(exercises: WorkoutDay['exercises']): string[] {
   const cats = new Set<string>();
   for (const e of exercises) {
     if (e.category) {
-      // Convert enum-style to readable: "UPPER_BODY" → "Upper Body"
       const readable = e.category
         .split('_')
         .map((w) => w.charAt(0) + w.slice(1).toLowerCase())
@@ -35,48 +32,63 @@ export function WorkoutOverview({
 }: WorkoutOverviewProps) {
   const exercises = workoutDay.exercises;
   const duration = estimateDuration(exercises);
+  const totalSets = exercises.reduce((sum, e) => sum + e.sets, 0);
   const categories = getUniqueCategories(exercises);
 
   return (
-    <div className="space-y-4">
-      {/* Header */}
+    <div className="space-y-5">
+      {/* Workout Name */}
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">
+        <h2 className="text-xl font-bold tracking-tight">
           {workoutDay.name || 'Today\u2019s Workout'}
         </h2>
         {coachName && (
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wide">
             By {coachName}
           </p>
         )}
       </div>
 
-      {/* Metadata */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2.5 text-sm">
-          <Timer className="w-4 h-4 text-muted-foreground shrink-0" />
-          <span>
-            ~{duration} min. &middot; {exercises.length} exercises
-          </span>
+      {/* Stat Blocks — gym-counter style */}
+      <div className="flex gap-3">
+        <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+          <p className="text-2xl font-bold tabular-nums leading-none">{duration}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Minutes</p>
         </div>
-        {categories.length > 0 && (
-          <div className="flex items-center gap-2.5 text-sm">
-            <Dumbbell className="w-4 h-4 text-muted-foreground shrink-0" />
-            <span>{categories.join(', ')}</span>
-          </div>
-        )}
+        <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+          <p className="text-2xl font-bold tabular-nums leading-none">{exercises.length}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Exercises</p>
+        </div>
+        <div className="flex-1 bg-muted/60 rounded-lg px-3 py-2.5 text-center">
+          <p className="text-2xl font-bold tabular-nums leading-none">{totalSets}</p>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Total Sets</p>
+        </div>
       </div>
+
+      {/* Categories */}
+      {categories.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {categories.map((cat) => (
+            <span
+              key={cat}
+              className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground bg-muted/80 px-2 py-1 rounded"
+            >
+              {cat}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Coach Description */}
       {workoutDay.description && (
-        <p className="text-sm leading-relaxed text-foreground">
+        <p className="text-sm leading-relaxed text-foreground/80">
           {workoutDay.description}
         </p>
       )}
 
       {/* Exercise List */}
       {exercises.length > 0 && (
-        <Card>
+        <Card className="border-border/60">
           <CardContent className="p-4 sm:p-5">
             <ExercisePreviewList exercises={exercises} />
           </CardContent>

@@ -1,5 +1,6 @@
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
 import { DayCard } from './DayCard';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface DayCardGridProps {
   days: WeekDayInfo[];
@@ -8,14 +9,18 @@ interface DayCardGridProps {
 
 export function DayCardGrid({ days, onDayClick }: DayCardGridProps) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      {days.map((day) => (
-        <DayCard
-          key={day.dayNumber}
-          day={day}
-          onClick={() => onDayClick(day)}
-        />
-      ))}
-    </div>
+    <Card className="border-border/60">
+      <CardContent className="p-2 sm:p-3">
+        <div className="divide-y divide-border/40">
+          {days.map((day) => (
+            <DayCard
+              key={day.dayNumber}
+              day={day}
+              onClick={() => onDayClick(day)}
+            />
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }

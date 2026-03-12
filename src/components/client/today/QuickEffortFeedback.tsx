@@ -3,7 +3,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
-import { Send, Smile, Meh, Frown } from 'lucide-react';
+import { Send } from 'lucide-react';
 
 type EffortRating = 'EASY' | 'MEDIUM' | 'HARD';
 
@@ -12,10 +12,10 @@ interface QuickEffortFeedbackProps {
   isSubmitting?: boolean;
 }
 
-const effortOptions: { value: EffortRating; label: string; icon: typeof Smile; color: string }[] = [
-  { value: 'EASY', label: 'Easy', icon: Smile, color: 'text-success bg-success/10 border-success/30' },
-  { value: 'MEDIUM', label: 'Medium', icon: Meh, color: 'text-foreground bg-muted border-foreground/20' },
-  { value: 'HARD', label: 'Hard', icon: Frown, color: 'text-warning bg-warning/10 border-warning/30' },
+const effortOptions: { value: EffortRating; label: string; selectedClass: string }[] = [
+  { value: 'EASY', label: 'Easy', selectedClass: 'text-success bg-success/10 border-success/40 ring-1 ring-success/20' },
+  { value: 'MEDIUM', label: 'Just Right', selectedClass: 'text-foreground bg-muted border-foreground/25 ring-1 ring-foreground/10' },
+  { value: 'HARD', label: 'Hard', selectedClass: 'text-warning bg-warning/10 border-warning/40 ring-1 ring-warning/20' },
 ];
 
 export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEffortFeedbackProps) {
@@ -30,26 +30,27 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
 
   return (
     <Card className="border-border">
-      <CardContent className="p-4 sm:p-5">
-        <h4 className="text-sm font-medium mb-3">How did that feel?</h4>
+      <CardContent className="p-5 sm:p-6">
+        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-3">
+          How did that feel?
+        </p>
 
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-2.5 mb-4">
           {effortOptions.map((option) => {
-            const Icon = option.icon;
             const isSelected = selectedRating === option.value;
             return (
               <button
                 key={option.value}
                 onClick={() => setSelectedRating(option.value)}
                 className={cn(
-                  'flex-1 flex flex-col items-center gap-1 py-3 px-2 rounded-lg border-2 transition-all min-h-[44px] touch-manipulation',
+                  'flex-1 py-3.5 px-2 rounded-lg border-2 transition-all min-h-[52px] touch-manipulation',
+                  'text-sm font-bold uppercase tracking-wide',
                   isSelected
-                    ? option.color
-                    : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted'
+                    ? option.selectedClass
+                    : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
-                <Icon className="w-5 h-5" />
-                <span className="text-xs font-medium">{option.label}</span>
+                {option.label}
               </button>
             );
           })}
@@ -78,7 +79,6 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
             onClick={handleSubmit}
             disabled={isSubmitting}
             className="w-full"
-            size="sm"
           >
             <Send className="w-4 h-4 mr-2" />
             {isSubmitting ? 'Sending...' : 'Send to Coach'}

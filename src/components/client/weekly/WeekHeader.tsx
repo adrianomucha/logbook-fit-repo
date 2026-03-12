@@ -9,20 +9,13 @@ export function WeekHeader({ plan, currentWeek }: WeekHeaderProps) {
   const totalWeeks = plan.durationWeeks || plan.weeks.length;
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-3">
-        {plan.emoji && (
-          <span className="text-3xl" role="img" aria-label={`${plan.name} icon`}>
-            {plan.emoji}
-          </span>
-        )}
-        <div>
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">{plan.name}</h2>
-          <p className="text-sm text-muted-foreground">
-            Week {currentWeek} of {totalWeeks}
-          </p>
-        </div>
-      </div>
+    <div>
+      <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-1">
+        Week {currentWeek} of {totalWeeks}
+      </p>
+      <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+        {plan.name}
+      </h2>
     </div>
   );
 }
