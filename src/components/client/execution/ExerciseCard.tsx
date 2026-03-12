@@ -38,7 +38,7 @@ export function ExerciseCard({
   const isFlagged = !!exercise.flag;
   const flagNote = exercise.flag?.note;
 
-  // Build summary text: "4 x 8-10 @ 135 lbs"
+  // Build summary text: "4x 8-10 @ 135 lbs"
   const getSummary = () => {
     const parts: string[] = [`${exercise.sets}x`];
     if (exercise.reps) parts.push(exercise.reps);
@@ -60,24 +60,19 @@ export function ExerciseCard({
     <Card
       className={cn(
         'transition-[border-color] overflow-hidden',
-        isComplete && 'border-success/20',
-        isFlagged && !isComplete && 'border-warning/20'
+        isComplete && 'border-success/30 bg-success/[0.03]',
+        isFlagged && !isComplete && 'border-warning/30 bg-warning/[0.02]'
       )}
     >
-      {/* Header - always visible */}
-      <div
-        className={cn(
-          'flex items-center transition-colors',
-          isComplete && 'bg-success/5'
-        )}
-      >
+      {/* Header — always visible */}
+      <div className="flex items-center">
         {/* Expand toggle — semantic button */}
         <button
           type="button"
           onClick={onToggleExpand}
           className={cn(
-            'flex-1 min-w-0 p-3 sm:p-4 flex items-center gap-3 text-left transition-colors cursor-pointer',
-            'hover:bg-muted/50'
+            'flex-1 min-w-0 p-4 flex items-center gap-3 text-left transition-colors cursor-pointer',
+            'hover:bg-muted/40'
           )}
           aria-expanded={isExpanded}
           aria-label={`${exercise.exercise.name}, ${getSummary()}`}
@@ -85,7 +80,7 @@ export function ExerciseCard({
           {/* Exercise number or checkmark */}
           <div
             className={cn(
-              'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm',
+              'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 font-semibold text-sm',
               isComplete
                 ? 'bg-success text-success-foreground'
                 : 'bg-muted text-muted-foreground'
@@ -105,7 +100,7 @@ export function ExerciseCard({
               >
                 {exercise.exercise.name}
               </p>
-              {/* Flag indicator when collapsed */}
+              {/* Flag dot when collapsed */}
               {isFlagged && !isExpanded && (
                 <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
               )}
@@ -113,7 +108,7 @@ export function ExerciseCard({
             <p className="text-sm text-muted-foreground">
               {getSummary()}
               {completedSets > 0 && !isComplete && (
-                <span className="ml-2 text-success">
+                <span className="ml-2 text-success font-medium">
                   ({completedSets}/{exercise.sets} done)
                 </span>
               )}
@@ -145,7 +140,7 @@ export function ExerciseCard({
               'w-4 h-4 transition-colors',
               isFlagged
                 ? 'text-warning fill-warning'
-                : 'text-muted-foreground/50'
+                : 'text-muted-foreground/40'
             )}
           />
         </button>
@@ -153,17 +148,18 @@ export function ExerciseCard({
 
       {/* Expanded content */}
       {isExpanded && (
-        <CardContent className="p-3 sm:p-4 pt-0">
+        <CardContent className="px-4 pb-4 pt-0">
           {/* Coach notes */}
           {exercise.coachNotes && (
-            <div className="mb-4 p-3 sm:p-4 bg-info/5 rounded-lg border border-info/20">
+            <div className="mb-4 p-3 bg-muted/50 rounded-lg">
               <p className="text-sm text-foreground">
-                <span className="font-medium">Coach tip:</span> {exercise.coachNotes}
+                <span className="font-medium">Coach tip:</span>{' '}
+                {exercise.coachNotes}
               </p>
             </div>
           )}
 
-          {/* Flag note section - only visible when flagged */}
+          {/* Flag note section — only visible when flagged */}
           {isFlagged && (
             <div className="mb-4 p-3 bg-warning/5 rounded-lg border border-warning/20">
               <div className="flex items-center gap-2 mb-2">
@@ -204,8 +200,8 @@ export function ExerciseCard({
           )}
 
           {/* Set rows */}
-          <div className="space-y-2">
-            {setRows.map((setNumber) => (
+          <div>
+            {setRows.map((setNumber, idx) => (
               <SetRow
                 key={setNumber}
                 setNumber={setNumber}
@@ -215,7 +211,10 @@ export function ExerciseCard({
                   exercise.setCompletions,
                   setNumber
                 )}
-                onToggle={() => onToggleSet(exercise.workoutExerciseId, setNumber)}
+                onToggle={() =>
+                  onToggleSet(exercise.workoutExerciseId, setNumber)
+                }
+                showDivider={idx > 0}
               />
             ))}
           </div>

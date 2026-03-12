@@ -21,60 +21,27 @@ export function WorkoutHeader({
   isReadOnly,
   completedDate,
 }: WorkoutHeaderProps) {
-  const allDone = exercisesDone === exercisesTotal;
-
   return (
-    <div className="sticky top-0 z-10 bg-background border-b">
-      <div className="p-3 sm:p-4">
-        <div className="flex items-center gap-3">
-          {/* Back button */}
-          <Button
-            variant="ghost"
-            size="icon"
+    <div className="sticky top-0 z-10 bg-card-foreground rounded-b-lg">
+      <div className="flex items-center justify-between px-4 h-[64px]">
+        {/* Left — back + optional progress */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
             onClick={onBack}
-            className="flex-shrink-0"
+            className="text-primary-foreground p-1 -ml-1 touch-manipulation"
+            aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
-          </Button>
-
-          {/* Workout name */}
-          <div className="flex-1 min-w-0">
-            <h1 className="font-semibold text-lg truncate">{workoutName}</h1>
-            {isReadOnly && completedDate && (
-              <p className="text-sm text-muted-foreground">
-                Completed {completedDate}
-              </p>
-            )}
-          </div>
-
-          {/* Restart button (read-only / completed) */}
-          {isReadOnly && onRestart && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRestart}
-              className="flex-shrink-0 gap-1.5"
-            >
-              <RotateCcw className="w-4 h-4" />
-              Restart
-            </Button>
-          )}
+          </button>
 
           {/* Progress pill */}
-          <div
-            className={cn(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium flex-shrink-0',
-              allDone
-                ? 'bg-success/10 text-success'
-                : 'bg-muted text-muted-foreground'
-            )}
-          >
-            <span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-primary-foreground/80 text-sm font-semibold">
               {exercisesDone}/{exercisesTotal}
             </span>
-            {/* Progress dots — hide when too many to prevent overflow */}
             {exercisesTotal <= 8 && (
-              <div className="hidden sm:flex gap-0.5 ml-1">
+              <div className="flex gap-1 ml-0.5">
                 {Array.from({ length: exercisesTotal }, (_, i) => (
                   <div
                     key={i}
@@ -82,13 +49,40 @@ export function WorkoutHeader({
                       'w-2 h-2 rounded-full transition-colors',
                       i < exercisesDone
                         ? 'bg-success'
-                        : 'bg-muted-foreground/30'
+                        : 'bg-primary-foreground/30'
                     )}
                   />
                 ))}
               </div>
             )}
           </div>
+        </div>
+
+        {/* Centre — workout name */}
+        <h1 className="text-primary-foreground font-semibold text-lg tracking-tight truncate max-w-[55%] text-center">
+          {workoutName}
+        </h1>
+
+        {/* Right — read-only badge / restart */}
+        <div className="flex items-center gap-2">
+          {isReadOnly && completedDate && (
+            <span className="text-primary-foreground/60 text-xs">
+              {completedDate}
+            </span>
+          )}
+          {isReadOnly && onRestart && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onRestart}
+              className="text-primary-foreground hover:bg-primary-foreground/10 gap-1.5"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Restart
+            </Button>
+          )}
+          {/* Spacer so the title stays centred when there's nothing on the right */}
+          {!isReadOnly && <div className="w-5" />}
         </div>
       </div>
     </div>

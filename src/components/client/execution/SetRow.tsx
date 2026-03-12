@@ -8,6 +8,8 @@ interface SetRowProps {
   time?: string;
   completed: boolean;
   onToggle: () => void;
+  /** If true, render a top border to separate from the previous row */
+  showDivider?: boolean;
 }
 
 export function SetRow({
@@ -17,13 +19,13 @@ export function SetRow({
   time,
   completed,
   onToggle,
+  showDivider = false,
 }: SetRowProps) {
-  // Build the set description
+  // Build the set description — just reps (weight lives in the card header)
   const getSetDescription = () => {
     const parts: string[] = [];
     if (reps) parts.push(`${reps} reps`);
     if (time) parts.push(time);
-    if (weight) parts.push(`@ ${weight}`);
     return parts.join(' ');
   };
 
@@ -32,36 +34,33 @@ export function SetRow({
       type="button"
       onClick={onToggle}
       className={cn(
-        'w-full flex items-center gap-3 p-3 rounded-lg transition-all min-h-[44px] touch-manipulation',
-        'hover:bg-muted/50 active:scale-[0.99]',
-        completed && 'bg-success/5'
+        'w-full flex items-center justify-between py-3.5 px-1 transition-all min-h-[44px] touch-manipulation',
+        'hover:bg-muted/30 active:scale-[0.99]',
+        showDivider && 'border-t border-border/60'
       )}
     >
-      {/* Checkbox circle */}
-      <div
-        className={cn(
-          'w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all',
-          completed
-            ? 'bg-success border-success'
-            : 'border-muted-foreground/40'
-        )}
-      >
-        {completed && <Check className="w-4 h-4 text-success-foreground" />}
-      </div>
+      {/* Left: Set label */}
+      <span className="font-medium text-sm text-foreground">
+        Set {setNumber}
+      </span>
 
-      {/* Set info */}
-      <div className="flex-1 text-left">
-        <span
-          className={cn(
-            'font-medium text-sm',
-            completed && 'text-success'
-          )}
-        >
-          Set {setNumber}
-        </span>
-        <span className="text-sm text-muted-foreground ml-2">
+      {/* Right: description + checkbox */}
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-muted-foreground">
           {getSetDescription()}
         </span>
+
+        {/* Circle checkbox — matches Figma check-circle-2 style */}
+        <div
+          className={cn(
+            'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all',
+            completed
+              ? 'bg-success border-success'
+              : 'border-muted-foreground/30 bg-transparent'
+          )}
+        >
+          {completed && <Check className="w-4 h-4 text-success-foreground" />}
+        </div>
       </div>
     </button>
   );

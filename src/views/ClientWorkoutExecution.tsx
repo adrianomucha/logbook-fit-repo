@@ -437,7 +437,7 @@ export function ClientWorkoutExecution() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-muted/30 flex flex-col">
       {/* Sticky header */}
       <WorkoutHeader
         workoutName={day.name ?? 'Workout'}

@@ -1,5 +1,3 @@
-import { Button } from '@/components/ui/button';
-import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface FinishWorkoutButtonProps {
@@ -18,28 +16,27 @@ export function FinishWorkoutButton({
   const allDone = exercisesDone === exercisesTotal;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-10 bg-background border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <Button
+    <div className="fixed bottom-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <button
+        type="button"
         onClick={onFinish}
         disabled={disabled}
         className={cn(
-          'w-full h-12 text-base font-semibold transition-all touch-manipulation',
+          'w-full h-12 rounded-md text-sm font-semibold transition-all touch-manipulation',
+          'text-primary-foreground',
           allDone
             ? 'bg-success hover:bg-success/90'
-            : 'bg-primary hover:bg-primary/90'
+            : 'bg-card-foreground hover:bg-card-foreground/90',
+          disabled && 'opacity-50 cursor-not-allowed'
         )}
       >
-        {allDone ? (
-          <>
-            <Check className="w-5 h-5 mr-2" />
-            Finish Workout
-          </>
-        ) : (
-          <>
-            Finish Workout ({exercisesDone}/{exercisesTotal} done)
-          </>
+        Finish Workout
+        {!allDone && (
+          <span className="ml-2 text-primary-foreground/60">
+            {exercisesDone}/{exercisesTotal}
+          </span>
         )}
-      </Button>
+      </button>
     </div>
   );
 }
