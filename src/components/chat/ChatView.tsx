@@ -3,7 +3,8 @@ import { Message, Client } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
+// Using a plain scrollable div instead of Radix ScrollArea for reliable
+// programmatic scroll control (Radix viewport timing issues).
 import { Send, Dumbbell, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ export function ChatView({
   const [newMessage, setNewMessage] = useState('');
   const [unseenCount, setUnseenCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isNearBottomRef = useRef(true);
   const justSentRef = useRef(false);
@@ -69,9 +71,7 @@ export function ChatView({
 
   // Track scroll position to know if user is "at the bottom"
   useEffect(() => {
-    const el = messagesEndRef.current;
-    if (!el) return;
-    const viewport = el.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    const viewport = scrollRef.current;
     if (!viewport) return;
 
     const handleScroll = () => {
@@ -90,27 +90,23 @@ export function ChatView({
 
   // Scroll helper
   const scrollToBottom = useCallback((instant?: boolean) => {
-    const el = messagesEndRef.current;
-    if (!el) return;
-    const viewport = el.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
-    if (viewport) {
-      if (instant) {
-        viewport.scrollTop = viewport.scrollHeight;
-      } else {
-        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
-      }
+    const viewport = scrollRef.current;
+    if (!viewport) return;
+    if (instant) {
+      viewport.scrollTop = viewport.scrollHeight;
+    } else {
+      viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
     }
     setUnseenCount(0);
     isNearBottomRef.current = true;
   }, []);
 
-  // Initial load — pin to bottom before the browser paints (no visible scroll)
+  // Initial load — pin to bottom before paint (no flash at top).
+  // Works reliably now that we use a plain div instead of Radix ScrollArea.
   useLayoutEffect(() => {
     if (initialLoadRef.current && clientMessages.length > 0) {
       initialLoadRef.current = false;
-      const el = messagesEndRef.current;
-      if (!el) return;
-      const viewport = el.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+      const viewport = scrollRef.current;
       if (viewport) {
         viewport.scrollTop = viewport.scrollHeight;
       }
@@ -171,7 +167,10 @@ export function ChatView({
     <section aria-label={chatLabel} className="h-full flex flex-col min-h-0">
       <Card className={cn('flex flex-col min-h-0 overflow-hidden', heightClass)}>
         <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-          <ScrollArea className="flex-1 min-h-0 px-3 sm:px-6">
+          <div
+            ref={scrollRef}
+            className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6"
+          >
             <div className="flex flex-col justify-end min-h-full">
               <div
                 role="log"
@@ -258,7 +257,7 @@ export function ChatView({
                 <div ref={messagesEndRef} />
               </div>
             </div>
-          </ScrollArea>
+          </div>
 
           {/* "New messages" pill — Messenger-style */}
           {unseenCount > 0 && (
