@@ -1,11 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { Message, Client } from '@/types';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-// Using a plain scrollable div instead of Radix ScrollArea for reliable
-// programmatic scroll control (Radix viewport timing issues).
-import { Send, Dumbbell, ChevronDown } from 'lucide-react';
+import { Send, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -102,7 +98,6 @@ export function ChatView({
   }, []);
 
   // Initial load — pin to bottom before paint (no flash at top).
-  // Works reliably now that we use a plain div instead of Radix ScrollArea.
   useLayoutEffect(() => {
     if (initialLoadRef.current && clientMessages.length > 0) {
       initialLoadRef.current = false;
@@ -162,142 +157,177 @@ export function ChatView({
   );
 
   const chatLabel = `Chat with ${client.name}`;
+  const peerFirst = peerName?.split(' ')[0] || client.name?.split(' ')[0] || 'Coach';
 
   return (
     <section aria-label={chatLabel} className="h-full flex flex-col min-h-0">
-      <Card className={cn('flex flex-col min-h-0 overflow-hidden', heightClass)}>
-        <CardContent className="flex-1 flex flex-col min-h-0 p-0">
-          <div
-            ref={scrollRef}
-            className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-6"
-          >
-            <div className="flex flex-col justify-end min-h-full">
-              <div
-                role="log"
-                aria-live="polite"
-                aria-label="Message history"
-                className="space-y-3 sm:space-y-4 pb-4 pt-4"
-              >
-                {clientMessages.length === 0 && (
-                  <div className="text-center py-8 text-sm text-muted-foreground space-y-3">
-                    <div className="w-10 h-10 mx-auto rounded-full bg-muted flex items-center justify-center">
-                      <Send className="w-4 h-4 text-muted-foreground" />
+      <div className={cn('flex flex-col min-h-0 overflow-hidden border border-border rounded-lg', heightClass)}>
+        {/* Message area */}
+        <div
+          ref={scrollRef}
+          className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4"
+        >
+          <div className="flex flex-col justify-end min-h-full">
+            <div
+              role="log"
+              aria-live="polite"
+              aria-label="Message history"
+              className="space-y-1 pb-4 pt-4"
+            >
+              {/* Empty state */}
+              {clientMessages.length === 0 && (
+                <div className="py-12 text-center space-y-4">
+                  <div className="space-y-2">
+                    <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                      No messages yet
+                    </p>
+                    <p className="text-sm text-muted-foreground/60">
+                      Send {peerFirst} a message to get started
+                    </p>
+                  </div>
+                  {conversationStarters && conversationStarters.length > 0 && (
+                    <div className="flex flex-wrap justify-center gap-2 pt-2">
+                      {conversationStarters.map((starter) => (
+                        <button
+                          key={starter}
+                          onClick={() => {
+                            setNewMessage(starter);
+                            inputRef.current?.focus();
+                          }}
+                          className="text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-md bg-muted/60 text-foreground hover:bg-foreground hover:text-background transition-colors touch-manipulation min-h-[44px]"
+                        >
+                          {starter}
+                        </button>
+                      ))}
                     </div>
-                    <div className="space-y-1">
-                      <p>
-                        {peerName
-                          ? `Start a conversation with ${peerName.split(' ')[0] || peerName}`
-                          : `No messages with ${client.name?.split(' ')[0] || 'this client'} yet`}
-                      </p>
-                      <p className="text-xs">Send a message to get started</p>
-                    </div>
-                    {conversationStarters && conversationStarters.length > 0 && (
-                      <div className="flex flex-wrap justify-center gap-2 pt-1">
-                        {conversationStarters.map((starter) => (
-                          <button
-                            key={starter}
-                            onClick={() => {
-                              setNewMessage(starter);
-                              inputRef.current?.focus();
-                            }}
-                            className="text-xs px-3 py-1.5 rounded-full border border-border hover:bg-muted transition-colors touch-manipulation"
-                          >
-                            {starter}
-                          </button>
-                        ))}
+                  )}
+                </div>
+              )}
+
+              {/* Messages */}
+              {clientMessages.map((message, idx) => {
+                const isCurrentUser = message.senderId === currentUserId;
+                const prevMsg = idx > 0 ? clientMessages[idx - 1] : null;
+                const sameSender = prevMsg?.senderId === message.senderId;
+                // Show date separator when day changes
+                const msgDate = new Date(message.timestamp);
+                const prevDate = prevMsg ? new Date(prevMsg.timestamp) : null;
+                const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString();
+
+                return (
+                  <div key={message.id}>
+                    {/* Date separator */}
+                    {showDateSep && (
+                      <div className="flex items-center gap-3 py-4">
+                        <div className="flex-1 border-t border-border/50" />
+                        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60 font-medium">
+                          {format(msgDate, 'EEEE, MMM d')}
+                        </span>
+                        <div className="flex-1 border-t border-border/50" />
                       </div>
                     )}
-                  </div>
-                )}
-                {clientMessages.map((message) => {
-                  const isCurrentUser = message.senderId === currentUserId;
-                  return (
-                  <div
-                    key={message.id}
-                    className={cn('flex', isCurrentUser ? 'justify-end' : 'justify-start')}
-                  >
+
                     <div
                       className={cn(
-                        'max-w-[85%] sm:max-w-[70%] rounded-lg p-2.5 sm:p-3',
-                        isCurrentUser
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted'
+                        'flex',
+                        isCurrentUser ? 'justify-end' : 'justify-start',
+                        sameSender && !showDateSep ? 'mt-0.5' : 'mt-3'
                       )}
                     >
-                      {/* Exercise context card (attached when client flags an exercise) */}
-                      {message.exerciseContext && (
-                        <div className={cn(
-                          'rounded p-2 mb-2 text-xs',
+                      <div
+                        className={cn(
+                          'max-w-[85%] sm:max-w-[70%]',
                           isCurrentUser
-                            ? 'bg-primary-foreground/10'
-                            : 'bg-background/50'
-                        )}>
-                          <div className="flex items-center gap-1 min-w-0">
-                            <Dumbbell className="w-3 h-3 shrink-0" />
-                            <span className="font-medium truncate">{message.exerciseContext.exerciseName}</span>
-                          </div>
-                          <p className={cn('truncate', isCurrentUser ? 'opacity-80' : 'text-muted-foreground')}>
-                            {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets done
+                            ? 'bg-foreground text-background rounded-lg px-3.5 py-2.5'
+                            : 'bg-muted/40 rounded-lg px-3.5 py-2.5'
+                        )}
+                      >
+                        {/* Sender label — only on first message in a group */}
+                        {!sameSender && !isCurrentUser && (
+                          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">
+                            {peerFirst}
                           </p>
-                          {message.exerciseContext.flagNote && (
-                            <p className="italic mt-1">
-                              Note: &ldquo;{message.exerciseContext.flagNote}&rdquo;
+                        )}
+
+                        {/* Exercise context card (attached when client flags an exercise) */}
+                        {message.exerciseContext && (
+                          <div className={cn(
+                            'rounded-md px-2.5 py-2 mb-2',
+                            isCurrentUser
+                              ? 'bg-background/10'
+                              : 'bg-muted/40'
+                          )}>
+                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-60 mb-0.5">Exercise</p>
+                            <p className="text-sm font-bold tracking-tight truncate">{message.exerciseContext.exerciseName}</p>
+                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-60 mt-0.5">
+                              {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets
                             </p>
-                          )}
-                        </div>
-                      )}
-                      <p className="text-[13px] sm:text-sm leading-relaxed">{message.content}</p>
-                      <p className="text-[10px] sm:text-xs mt-1 opacity-70">
-                        {format(new Date(message.timestamp), 'MMM d, h:mm a')}
-                      </p>
+                            {message.exerciseContext.flagNote && (
+                              <p className="text-xs mt-1.5 italic border-l-2 border-current/20 pl-2 opacity-70">
+                                &ldquo;{message.exerciseContext.flagNote}&rdquo;
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        <p className="text-[13px] sm:text-sm leading-relaxed">{message.content}</p>
+                        <p className={cn(
+                          'text-[10px] uppercase tracking-[0.12em] font-medium mt-1.5',
+                          isCurrentUser ? 'opacity-50' : 'text-muted-foreground/50'
+                        )}>
+                          {format(msgDate, 'h:mm a')}
+                        </p>
+                      </div>
                     </div>
                   </div>
-                  );
-                })}
-                <div ref={messagesEndRef} />
-              </div>
+                );
+              })}
+              <div ref={messagesEndRef} />
             </div>
           </div>
+        </div>
 
-          {/* "New messages" pill — Messenger-style */}
-          {unseenCount > 0 && (
-            <div className="flex justify-center -mt-5 mb-1 relative z-10">
-              <button
-                onClick={() => scrollToBottom(false)}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-md hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation"
-              >
-                <ChevronDown className="w-3.5 h-3.5" />
-                {unseenCount === 1 ? 'New message' : `${unseenCount} new messages`}
-              </button>
-            </div>
-          )}
-
-          <div className="p-3 sm:p-4 border-t">
-            <div className="flex gap-2">
-              <label htmlFor="chat-message-input" className="sr-only">
-                Message to {client.name}
-              </label>
-              <Input
-                id="chat-message-input"
-                ref={inputRef}
-                placeholder="Type a message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={handleKeyPress}
-              />
-              <Button
-                onClick={handleSend}
-                size="icon"
-                disabled={!newMessage.trim()}
-                className="shrink-0 min-h-[44px] min-w-[44px] touch-manipulation"
-                aria-label="Send message"
-              >
-                <Send className="w-4 h-4" />
-              </Button>
-            </div>
+        {/* "New messages" pill */}
+        {unseenCount > 0 && (
+          <div className="flex justify-center -mt-5 mb-1 relative z-10">
+            <button
+              onClick={() => scrollToBottom(false)}
+              className="flex items-center gap-1.5 px-3.5 py-2 bg-foreground text-background text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg hover:bg-foreground/90 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-md"
+            >
+              <ChevronDown className="w-3 h-3" />
+              {unseenCount === 1 ? '1 new' : `${unseenCount} new`}
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        {/* Input bar */}
+        <div className="p-3 sm:p-4 border-t border-border bg-muted/20">
+          <div className="flex gap-2 items-center">
+            <label htmlFor="chat-message-input" className="sr-only">
+              Message to {client.name}
+            </label>
+            <input
+              id="chat-message-input"
+              ref={inputRef}
+              type="text"
+              placeholder={`Message ${peerFirst}...`}
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={handleKeyPress}
+              className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/40 focus:outline-none min-h-[44px] px-1"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!newMessage.trim()}
+              className="shrink-0 h-10 px-4 bg-foreground text-background hover:bg-foreground/90 font-bold uppercase tracking-wider text-[11px] touch-manipulation disabled:opacity-30"
+              aria-label="Send message"
+            >
+              <Send className="w-3.5 h-3.5 mr-1.5" />
+              Send
+            </Button>
+          </div>
+        </div>
+      </div>
     </section>
   );
 }
