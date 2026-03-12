@@ -22,6 +22,8 @@ interface TodayFocusViewProps {
   isSendingFeedback?: boolean;
   onStartWorkout: () => void;
   onResumeWorkout: () => void;
+  onRestartWorkout?: () => void;
+  isRestarting?: boolean;
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
   onMessageCoach: () => void;
   onViewWeekly: () => void;
@@ -48,6 +50,7 @@ function getActionState(
 }
 
 export function TodayFocusView({
+  client,
   todayWorkout,
   todayCompletion,
   coachNote,
@@ -57,6 +60,8 @@ export function TodayFocusView({
   isSendingFeedback,
   onStartWorkout,
   onResumeWorkout,
+  onRestartWorkout,
+  isRestarting,
   onSendFeedback,
   onMessageCoach,
   onViewWeekly,
@@ -73,19 +78,23 @@ export function TodayFocusView({
   return (
     <div className="space-y-4">
       {/* Status Header */}
-      <StatusHeader status={statusType} />
+      <div className="animate-fade-in-up">
+        <StatusHeader status={statusType} clientName={client.name} />
+      </div>
 
       {/* Workout Overview (scheduled / in-progress) */}
       {showOverview && todayWorkout?.workoutDay && (
         <>
-          <WorkoutOverview
-            workoutDay={todayWorkout.workoutDay}
-            coachName={coachName}
-          />
+          <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+            <WorkoutOverview
+              workoutDay={todayWorkout.workoutDay}
+              coachName={coachName}
+            />
+          </div>
 
-          {/* In-progress: show progress bar */}
-          {actionState === 'in-progress' && (
-            <div className="space-y-2">
+          {/* In-progress: show progress bar (only when there's actual progress) */}
+          {actionState === 'in-progress' && completionPct > 0 && (
+            <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: '120ms' }}>
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium">{completionPct}% complete</span>
               </div>
@@ -94,54 +103,75 @@ export function TodayFocusView({
           )}
 
           {/* Start / Resume button */}
-          <Button
-            onClick={actionState === 'in-progress' ? onResumeWorkout : onStartWorkout}
-            className="w-full"
-            size="lg"
-          >
-            {actionState === 'in-progress' ? (
-              <>
-                <RotateCcw className="w-5 h-5 mr-2" />
-                Resume Workout
-              </>
-            ) : (
-              <>
-                <Play className="w-5 h-5 mr-2" />
-                Start Workout
-              </>
-            )}
-          </Button>
+          <div className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>
+            <Button
+              onClick={actionState === 'in-progress' ? onResumeWorkout : onStartWorkout}
+              className="w-full"
+              size="lg"
+            >
+              {actionState === 'in-progress' ? (
+                <>
+                  <RotateCcw className="w-5 h-5 mr-2" />
+                  {completionPct > 0 ? 'Resume Workout' : 'Continue Workout'}
+                </>
+              ) : (
+                <>
+                  <Play className="w-5 h-5 mr-2" />
+                  Start Workout
+                </>
+              )}
+            </Button>
+          </div>
         </>
       )}
 
       {/* Fallback to action card for completed / rest states */}
       {(actionState === 'completed' || actionState === 'rest') && (
-        <TodayActionCard
-          state={actionState}
-          workoutName={todayWorkout?.workoutDay?.name}
-          exerciseCount={todayWorkout?.workoutDay?.exercises?.length}
-          completionPct={completionPct}
-          onAction={onMessageCoach}
-        />
+        <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+          <TodayActionCard
+            state={actionState}
+            workoutName={todayWorkout?.workoutDay?.name}
+            exerciseCount={todayWorkout?.workoutDay?.exercises?.length}
+            completionPct={completionPct}
+            onAction={onMessageCoach}
+          />
+        </div>
+      )}
+
+      {/* Restart workout button (completed state only) */}
+      {actionState === 'completed' && onRestartWorkout && (
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          onClick={onRestartWorkout}
+          disabled={isRestarting}
+        >
+          <RotateCcw className="w-4 h-4" />
+          {isRestarting ? 'Restarting...' : 'Restart Workout'}
+        </Button>
       )}
 
       {/* Coach Context Strip (only for completed/rest, since overview handles it for scheduled) */}
       {(actionState === 'completed' || actionState === 'rest') && coachNote && coachName && (
-        <CoachContextStrip
-          coachName={coachName}
-          coachAvatar={coachAvatar}
-          note={coachNote}
-        />
+        <div className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>
+          <CoachContextStrip
+            coachName={coachName}
+            coachAvatar={coachAvatar}
+            note={coachNote}
+          />
+        </div>
       )}
 
       {/* Quick Effort Feedback */}
       {showFeedbackPrompt && (
-        <QuickEffortFeedback onSubmit={onSendFeedback} isSubmitting={isSendingFeedback} />
+        <div className="animate-fade-in-up" style={{ animationDelay: '180ms' }}>
+          <QuickEffortFeedback onSubmit={onSendFeedback} isSubmitting={isSendingFeedback} />
+        </div>
       )}
 
       {/* Feedback sent confirmation */}
       {showFeedbackSent && (
-        <Card className="border-success/20 bg-success/5">
+        <Card className="border-success/20 bg-success/5 animate-fade-in-up">
           <CardContent className="py-3 px-4">
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
@@ -151,16 +181,19 @@ export function TodayFocusView({
         </Card>
       )}
 
-      {/* View Week Link */}
-      <div className="pt-2 text-center">
+      {/* View Week — more prominent placement */}
+      <div className="flex items-center justify-between pt-1 border-t border-border/50">
+        <span className="text-xs text-muted-foreground">
+          {todayWorkout?.workoutDay ? 'See the rest of your week' : 'View your schedule'}
+        </span>
         <Button
           variant="ghost"
           size="sm"
           onClick={onViewWeekly}
-          className="text-muted-foreground hover:text-foreground"
+          className="text-muted-foreground hover:text-foreground -mr-2"
         >
-          <Calendar className="w-4 h-4 mr-2" />
-          View full week
+          <Calendar className="w-4 h-4 mr-1.5" />
+          Full week
         </Button>
       </div>
     </div>

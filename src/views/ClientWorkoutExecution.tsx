@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount } from '@/hooks/api/useWorkoutExecution';
+import { RotateCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
 import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
@@ -31,6 +32,7 @@ export function ClientWorkoutExecution() {
     error,
     isLoading,
     startWorkout,
+    restartWorkout,
     toggleSet,
     toggleFlag,
     updateFlagNote,
@@ -42,6 +44,8 @@ export function ClientWorkoutExecution() {
   const [showPartialConfirm, setShowPartialConfirm] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isSavingRating, setIsSavingRating] = useState(false);
+  const [showRestartConfirm, setShowRestartConfirm] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
   const [messageSheetExercise, setMessageSheetExercise] = useState<WorkoutExercise | null>(null);
   const [completedWorkoutData, setCompletedWorkoutData] = useState<{
     exercisesDone: number;
@@ -209,6 +213,27 @@ export function ClientWorkoutExecution() {
     router.push('/client');
   };
 
+  // Handle restart workout
+  const handleRestartClick = () => {
+    setShowRestartConfirm(true);
+  };
+
+  const handleRestartConfirm = async () => {
+    if (isRestarting) return;
+    setIsRestarting(true);
+    try {
+      await restartWorkout();
+      setShowRestartConfirm(false);
+      setExpandedExerciseId(null);
+      startedRef.current = false;
+      toast.success('Workout restarted');
+    } catch {
+      toast.error('Failed to restart workout. Please try again.');
+    } finally {
+      setIsRestarting(false);
+    }
+  };
+
   // Handle effort rating selection
   const handleEffortRating = async (rating: string) => {
     if (isSavingRating) return;
@@ -341,6 +366,45 @@ export function ClientWorkoutExecution() {
     );
   }
 
+  // Restart confirmation
+  if (showRestartConfirm) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="py-6">
+            <div className="flex justify-center mb-4">
+              <RotateCcw className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h2 className="text-xl font-semibold text-center mb-2">
+              Restart this workout?
+            </h2>
+            <p className="text-center text-muted-foreground mb-6">
+              All progress, flags, and notes will be cleared. This can&apos;t be undone.
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowRestartConfirm(false)}
+                disabled={isRestarting}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                className="flex-1"
+                onClick={handleRestartConfirm}
+                disabled={isRestarting}
+              >
+                {isRestarting ? 'Restarting...' : 'Restart'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   // Partial completion confirmation
   if (showPartialConfirm) {
     return (
@@ -380,6 +444,7 @@ export function ClientWorkoutExecution() {
         exercisesDone={stats.exercisesDone}
         exercisesTotal={stats.exercisesTotal}
         onBack={handleBack}
+        onRestart={handleRestartClick}
         isReadOnly={isReadOnly}
         completedDate={
           isReadOnly && completion?.completedAt

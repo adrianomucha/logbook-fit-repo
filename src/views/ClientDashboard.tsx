@@ -272,6 +272,22 @@ export function ClientDashboard() {
     }
   };
 
+  const [isRestartingWorkout, setIsRestartingWorkout] = useState(false);
+
+  const handleRestartWorkout = async () => {
+    if (!todayCompletion?.id || !todayWorkout?.workoutDay || !currentWeek) return;
+    setIsRestartingWorkout(true);
+    try {
+      await apiFetch(`/api/client/workout/${todayCompletion.id}/restart`, {
+        method: 'POST',
+      });
+      router.push(`/client/workout/${currentWeek.id}/${todayWorkout.workoutDay.id}`);
+    } catch {
+      toast.error('Failed to restart workout. Please try again.');
+      setIsRestartingWorkout(false);
+    }
+  };
+
   const handleMessageCoach = () => {
     setCurrentView('chat');
     requestAnimationFrame(() => window.scrollTo(0, 0));
@@ -385,6 +401,8 @@ export function ClientDashboard() {
             isSendingFeedback={isSendingFeedback}
             onStartWorkout={handleStartWorkout}
             onResumeWorkout={handleResumeWorkout}
+            onRestartWorkout={handleRestartWorkout}
+            isRestarting={isRestartingWorkout}
             onSendFeedback={handleSendFeedback}
             onMessageCoach={handleMessageCoach}
             onViewWeekly={() => setWorkoutViewMode('weekly')}

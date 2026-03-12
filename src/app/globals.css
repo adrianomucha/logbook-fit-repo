@@ -26,8 +26,8 @@
     --radius: 0.625rem;
     --success: 142 71% 45%;
     --success-foreground: 0 0% 98%;
-    --warning: 0 84% 60%;
-    --warning-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
     --info: 221 83% 53%;
     --info-foreground: 0 0% 98%;
   }
@@ -54,8 +54,8 @@
     --ring: 0 0% 83.1%;
     --success: 142 71% 45%;
     --success-foreground: 0 0% 98%;
-    --warning: 0 62.8% 50%;
-    --warning-foreground: 0 0% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 9%;
     --info: 217 91% 60%;
     --info-foreground: 0 0% 98%;
   }
@@ -93,11 +93,24 @@
       transform: translateY(0);
     }
   }
+
+  /* Completion celebration pop */
+  @keyframes completionPop {
+    0% {
+      transform: scale(0.6);
+      opacity: 0;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 }
 
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
-  .animate-fade-in-up {
-    animation: none;
+  .animate-fade-in-up,
+  [class*="animate-[completionPop"] {
+    animation: none !important;
   }
 }

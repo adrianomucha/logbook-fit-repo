@@ -214,6 +214,18 @@ export function useWorkoutExecution(dayId: string | null) {
     [completionId, isReadOnly, mutate, flagExercise]
   );
 
+  /** Restart the workout — resets all sets/flags and starts fresh */
+  const restartWorkout = useCallback(async () => {
+    if (!completionId) return null;
+
+    const result = await apiFetch<{ id: string; status: string }>(
+      `/api/client/workout/${completionId}/restart`,
+      { method: 'POST' }
+    );
+    await mutate();
+    return result;
+  }, [completionId, mutate]);
+
   /** Finish the workout — throws on failure so callers can handle */
   const finishWorkout = useCallback(
     async (effortRating?: string) => {
@@ -259,6 +271,7 @@ export function useWorkoutExecution(dayId: string | null) {
     error,
     isLoading,
     startWorkout,
+    restartWorkout,
     toggleSet,
     toggleFlag,
     updateFlagNote,

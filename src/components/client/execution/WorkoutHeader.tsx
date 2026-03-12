@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -7,6 +7,7 @@ interface WorkoutHeaderProps {
   exercisesDone: number;
   exercisesTotal: number;
   onBack: () => void;
+  onRestart?: () => void;
   isReadOnly?: boolean;
   completedDate?: string;
 }
@@ -16,6 +17,7 @@ export function WorkoutHeader({
   exercisesDone,
   exercisesTotal,
   onBack,
+  onRestart,
   isReadOnly,
   completedDate,
 }: WorkoutHeaderProps) {
@@ -44,6 +46,19 @@ export function WorkoutHeader({
               </p>
             )}
           </div>
+
+          {/* Restart button (read-only / completed) */}
+          {isReadOnly && onRestart && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRestart}
+              className="flex-shrink-0 gap-1.5"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Restart
+            </Button>
+          )}
 
           {/* Progress pill */}
           <div

@@ -76,13 +76,13 @@ export function TodayActionCard({
         return (
           <>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center shrink-0 animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]">
                 <CheckCircle2 className="w-6 h-6 text-success" />
               </div>
               <div className="min-w-0">
                 <h3 className="font-semibold text-lg">Great work!</h3>
                 <p className="text-sm text-muted-foreground truncate">
-                  {workoutName ? `${workoutName} completed` : 'Workout completed'}
+                  {workoutName ? `${workoutName} — done` : 'Workout completed'}
                 </p>
               </div>
             </div>
