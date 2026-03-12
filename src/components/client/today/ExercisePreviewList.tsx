@@ -5,15 +5,10 @@ interface ExercisePreviewListProps {
 }
 
 function formatPrescription(exercise: Exercise): string {
-  const parts: string[] = [];
-
   if (exercise.reps) {
-    parts.push(`${exercise.reps}x`);
-  } else {
-    parts.push(`${exercise.sets} sets`);
+    return `${exercise.sets} × ${exercise.reps}`;
   }
-
-  return parts.join(' ');
+  return `${exercise.sets} sets`;
 }
 
 export function ExercisePreviewList({ exercises }: ExercisePreviewListProps) {

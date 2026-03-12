@@ -376,7 +376,6 @@ export function ClientDashboard() {
         {currentView === 'workout' && workoutViewMode === 'today' && (
           <TodayFocusView
             client={client}
-            plan={plan}
             todayWorkout={todayWorkout}
             todayCompletion={todayCompletion}
             coachNote={todayCoachNote}

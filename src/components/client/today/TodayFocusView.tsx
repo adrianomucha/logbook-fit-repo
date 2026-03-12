@@ -1,4 +1,4 @@
-import { Client, WorkoutPlan, WorkoutCompletion } from '@/types';
+import { Client, WorkoutCompletion } from '@/types';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
 import { StatusHeader, StatusType } from './StatusHeader';
 import { TodayActionCard, ActionState } from './TodayActionCard';
@@ -12,7 +12,6 @@ import { Calendar, CheckCircle2, Play, RotateCcw } from 'lucide-react';
 
 interface TodayFocusViewProps {
   client: Client;
-  plan: WorkoutPlan;
   todayWorkout: WeekDayInfo | null;
   todayCompletion: WorkoutCompletion | null;
   /** Coach's instruction note from today's workout exercises */
@@ -49,7 +48,6 @@ function getActionState(
 }
 
 export function TodayFocusView({
-  plan,
   todayWorkout,
   todayCompletion,
   coachNote,
