@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { Message, Client } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -104,19 +104,28 @@ export function ChatView({
     isNearBottomRef.current = true;
   }, []);
 
-  // Smart auto-scroll: only scroll when appropriate
+  // Initial load — pin to bottom before the browser paints (no visible scroll)
+  useLayoutEffect(() => {
+    if (initialLoadRef.current && clientMessages.length > 0) {
+      initialLoadRef.current = false;
+      const el = messagesEndRef.current;
+      if (!el) return;
+      const viewport = el.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+      if (viewport) {
+        viewport.scrollTop = viewport.scrollHeight;
+      }
+      isNearBottomRef.current = true;
+    }
+  }, [clientMessages.length]);
+
+  // Subsequent messages — smart auto-scroll
   useEffect(() => {
     const count = clientMessages.length;
     const prevCount = prevCountRef.current;
     prevCountRef.current = count;
 
-    // Initial load — jump to bottom instantly (no animation)
-    if (initialLoadRef.current && count > 0) {
-      initialLoadRef.current = false;
-      // Use rAF to wait for DOM paint
-      requestAnimationFrame(() => scrollToBottom(true));
-      return;
-    }
+    // Skip initial load (handled by useLayoutEffect above)
+    if (prevCount === 0) return;
 
     const newMessages = count - prevCount;
     if (newMessages <= 0) return;
