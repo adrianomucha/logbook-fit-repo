@@ -435,7 +435,7 @@ async function seed() {
         status: "COMPLETED",
         startedAt,
         completedAt,
-        completionPct: 1.0,
+        completionPct: 100,
         exercisesDone: workoutExerciseIds.length,
         exercisesTotal: workoutExerciseIds.length,
         durationSec: opts.durationMin * 60,
