@@ -454,7 +454,7 @@ export function ClientWorkoutExecution() {
       />
 
       {/* Exercise list — single card wrapping all exercises (Figma layout) */}
-      <div className={cn("flex-1 p-3 sm:p-4 max-w-3xl mx-auto w-full", !isReadOnly && "pb-20")}>
+      <div className={cn("flex-1 p-3 sm:p-4 max-w-3xl mx-auto w-full", !isReadOnly && "pb-28")}>
         <Card>
           {/* Card header — workout name + exercise count */}
           <div className="flex items-center justify-between p-6 border-b">
