@@ -4,9 +4,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Dumbbell } from 'lucide-react';
+import { Send, Dumbbell, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+
+const NEAR_BOTTOM_THRESHOLD = 100; // px from bottom to count as "at bottom"
 
 interface ChatViewProps {
   client: Client;
@@ -36,8 +38,13 @@ export function ChatView({
   conversationStarters,
 }: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
+  const [unseenCount, setUnseenCount] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const isNearBottomRef = useRef(true);
+  const justSentRef = useRef(false);
+  const prevCountRef = useRef(0);
+  const initialLoadRef = useRef(true);
 
   // Handle initial prefill
   useEffect(() => {
@@ -60,22 +67,80 @@ export function ChatView({
     [messages, client.id]
   );
 
-  // Auto-scroll to bottom on new messages or initial load.
-  // We scroll the nearest ScrollArea viewport rather than using
-  // scrollIntoView, which would scroll the entire page.
+  // Track scroll position to know if user is "at the bottom"
   useEffect(() => {
     const el = messagesEndRef.current;
     if (!el) return;
-    const viewport = el.closest('[data-radix-scroll-area-viewport]');
+    const viewport = el.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
+    if (!viewport) return;
+
+    const handleScroll = () => {
+      const distFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
+      const wasNearBottom = isNearBottomRef.current;
+      isNearBottomRef.current = distFromBottom <= NEAR_BOTTOM_THRESHOLD;
+      // Clear unseen count when user scrolls to bottom
+      if (!wasNearBottom && isNearBottomRef.current) {
+        setUnseenCount(0);
+      }
+    };
+
+    viewport.addEventListener('scroll', handleScroll, { passive: true });
+    return () => viewport.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Scroll helper
+  const scrollToBottom = useCallback((instant?: boolean) => {
+    const el = messagesEndRef.current;
+    if (!el) return;
+    const viewport = el.closest('[data-radix-scroll-area-viewport]') as HTMLElement | null;
     if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
-    } else {
-      el.scrollIntoView({ behavior: 'smooth' });
+      if (instant) {
+        viewport.scrollTop = viewport.scrollHeight;
+      } else {
+        viewport.scrollTo({ top: viewport.scrollHeight, behavior: 'smooth' });
+      }
     }
-  }, [clientMessages.length]);
+    setUnseenCount(0);
+    isNearBottomRef.current = true;
+  }, []);
+
+  // Smart auto-scroll: only scroll when appropriate
+  useEffect(() => {
+    const count = clientMessages.length;
+    const prevCount = prevCountRef.current;
+    prevCountRef.current = count;
+
+    // Initial load — jump to bottom instantly (no animation)
+    if (initialLoadRef.current && count > 0) {
+      initialLoadRef.current = false;
+      // Use rAF to wait for DOM paint
+      requestAnimationFrame(() => scrollToBottom(true));
+      return;
+    }
+
+    const newMessages = count - prevCount;
+    if (newMessages <= 0) return;
+
+    // User just sent a message — always scroll
+    if (justSentRef.current) {
+      justSentRef.current = false;
+      requestAnimationFrame(() => scrollToBottom(false));
+      return;
+    }
+
+    // Incoming message while near bottom — auto-scroll
+    if (isNearBottomRef.current) {
+      requestAnimationFrame(() => scrollToBottom(false));
+      return;
+    }
+
+    // Incoming message while scrolled up — don't scroll, show pill
+    setUnseenCount((prev) => prev + newMessages);
+  }, [clientMessages.length, scrollToBottom]);
 
   const handleSend = useCallback(() => {
     if (newMessage.trim()) {
+      justSentRef.current = true;
       onSendMessage(newMessage);
       setNewMessage('');
     }
@@ -185,6 +250,20 @@ export function ChatView({
               </div>
             </div>
           </ScrollArea>
+
+          {/* "New messages" pill — Messenger-style */}
+          {unseenCount > 0 && (
+            <div className="flex justify-center -mt-5 mb-1 relative z-10">
+              <button
+                onClick={() => scrollToBottom(false)}
+                className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-md hover:bg-primary/90 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation"
+              >
+                <ChevronDown className="w-3.5 h-3.5" />
+                {unseenCount === 1 ? 'New message' : `${unseenCount} new messages`}
+              </button>
+            </div>
+          )}
+
           <div className="p-3 sm:p-4 border-t">
             <div className="flex gap-2">
               <label htmlFor="chat-message-input" className="sr-only">
