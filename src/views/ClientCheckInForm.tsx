@@ -133,7 +133,7 @@ export function ClientCheckInForm() {
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Header */}
-        <div>
+        <div className="py-4">
           <button
             onClick={() => router.push('/client')}
             className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation mb-3 block"

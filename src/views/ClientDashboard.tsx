@@ -426,7 +426,7 @@ export function ClientDashboard() {
 
         {currentView === 'chat' && coachUserId && (
           <>
-            <div className="shrink-0">
+            <div className="shrink-0 py-4">
               <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">Messages</p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
             </div>
@@ -449,7 +449,7 @@ export function ClientDashboard() {
 
         {currentView === 'progress' && (
           <>
-            <div>
+            <div className="py-4">
               <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">History</p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Progress</h1>
             </div>
