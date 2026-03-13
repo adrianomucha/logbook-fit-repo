@@ -1,9 +1,9 @@
 import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Check, Minus, Dumbbell, Edit2 } from 'lucide-react';
+import { Dumbbell, Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 import { Client, WorkoutPlan, WorkoutCompletion } from '@/types';
 import {
   getWeekDays,
@@ -85,50 +85,41 @@ export function InteractiveWeeklyStrip({
     );
   }
 
-  // Compact mode: single row ~60-72px height
+  const remaining = weekDays.filter(
+    (d) => d.status === 'TODAY' || d.status === 'UPCOMING'
+  ).length;
+
+  // Compact mode: stat blocks + day list (mirrors client-side WeeklyOverview)
   if (compact) {
     return (
-      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-3 px-4 bg-card border rounded-xl">
-        {/* Top row on mobile: Week indicator + Progress */}
-        <div className="flex items-center justify-between sm:hidden">
-          <span className="text-xs text-muted-foreground whitespace-nowrap">
-            Week {currentWeekNum}/{plan.weeks.length}
-          </span>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
-            <span>
-              {progress.completed}/{progress.total}
-            </span>
-            <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-success rounded-full transition-all"
-                style={{ width: `${progress.percentage}%` }}
-              />
-            </div>
+      <div className="space-y-3">
+        {/* Week label */}
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+          Week {currentWeekNum} of {plan.weeks.length}
+        </p>
+
+        {/* Stat blocks — mirrors client-side WeekProgressStrip */}
+        <div className="flex gap-2">
+          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
+            <p className="text-xl font-bold tabular-nums leading-none">{progress.completed}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Done</p>
+          </div>
+          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
+            <p className="text-xl font-bold tabular-nums leading-none">{remaining}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Left</p>
+          </div>
+          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
+            <p className="text-xl font-bold tabular-nums leading-none">{progress.total}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Total</p>
           </div>
         </div>
 
-        {/* Desktop: Week indicator */}
-        <span className="hidden sm:block text-xs text-muted-foreground whitespace-nowrap">
-          Week {currentWeekNum}/{plan.weeks.length}
-        </span>
-
-        {/* 7-day compact strip */}
-        <div className="flex gap-1.5 sm:gap-1 flex-1 justify-center sm:justify-center">
-          {weekDays.map((day) => (
-            <CompactDayCell key={day.dayNumber} day={day} />
-          ))}
-        </div>
-
-        {/* Desktop: Progress summary */}
-        <div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
-          <span>
-            {progress.completed}/{progress.total}
-          </span>
-          <div className="w-12 h-1.5 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-success rounded-full transition-all"
-              style={{ width: `${progress.percentage}%` }}
-            />
+        {/* 7-day list — mirrors client-side DayCardGrid */}
+        <div className="border border-border/60 rounded-lg p-2">
+          <div className="divide-y divide-border/40">
+            {weekDays.map((day) => (
+              <CompactDayRow key={day.dayNumber} day={day} />
+            ))}
           </div>
         </div>
       </div>
@@ -137,44 +128,47 @@ export function InteractiveWeeklyStrip({
 
   return (
     <Card>
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">
-            This Week
-            <span className="text-xs text-muted-foreground font-normal ml-2">
-              Week {currentWeekNum} of {plan.weeks.length}
-            </span>
-          </CardTitle>
-          <span className="text-sm font-medium">{progress.percentage}%</span>
-        </div>
+      <CardHeader className="pb-3">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+          Week {currentWeekNum} of {plan.weeks.length}
+        </p>
+        <CardTitle className="text-base">This Week</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* 7-day interactive strip */}
-        <div className="grid grid-cols-7 gap-1">
-          {weekDays.map((day) => (
-            <InteractiveDayCell
-              key={day.dayNumber}
-              day={day}
-              isExpanded={expandedDayNumber === day.dayNumber}
-              onClick={() => {
-                if (day.workoutDay && day.status !== 'REST') {
-                  setExpandedDayNumber(
-                    expandedDayNumber === day.dayNumber ? null : day.dayNumber
-                  );
-                }
-              }}
-            />
-          ))}
+        {/* Stat blocks */}
+        <div className="flex gap-2">
+          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
+            <p className="text-xl font-bold tabular-nums leading-none">{progress.completed}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Done</p>
+          </div>
+          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
+            <p className="text-xl font-bold tabular-nums leading-none">{remaining}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Left</p>
+          </div>
+          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
+            <p className="text-xl font-bold tabular-nums leading-none">{progress.total}</p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Total</p>
+          </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="space-y-1">
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>
-              {progress.completed} of {progress.total} workouts
-            </span>
+        {/* 7-day interactive list */}
+        <div className="border border-border/60 rounded-lg p-2">
+          <div className="divide-y divide-border/40">
+            {weekDays.map((day) => (
+              <InteractiveDayRow
+                key={day.dayNumber}
+                day={day}
+                isExpanded={expandedDayNumber === day.dayNumber}
+                onClick={() => {
+                  if (day.workoutDay && day.status !== 'REST') {
+                    setExpandedDayNumber(
+                      expandedDayNumber === day.dayNumber ? null : day.dayNumber
+                    );
+                  }
+                }}
+              />
+            ))}
           </div>
-          <Progress value={progress.percentage} className="h-1.5" />
         </div>
 
         {/* Expanded workout details */}
@@ -262,144 +256,148 @@ export function InteractiveWeeklyStrip({
   );
 }
 
-interface InteractiveDayCellProps {
+interface InteractiveDayRowProps {
   day: WeekDayInfo;
   isExpanded: boolean;
   onClick: () => void;
 }
 
-function InteractiveDayCell({ day, isExpanded, onClick }: InteractiveDayCellProps) {
-  const effortRating = day.completion?.effortRating;
+function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps) {
   const isClickable = day.workoutDay && day.status !== 'REST';
+  const isRest = day.status === 'REST';
+  const isCompleted = day.status === 'COMPLETED';
+  const isToday = day.status === 'TODAY';
+  const isUpcoming = day.status === 'UPCOMING';
+  const isMissed = day.status === 'MISSED';
+  const exerciseCount = day.workoutDay?.exercises?.length || 0;
 
   return (
     <button
       onClick={onClick}
       disabled={!isClickable}
       className={cn(
-        'flex flex-col items-center gap-1 py-1 rounded transition-colors',
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-colors min-h-[44px]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        isClickable && 'hover:bg-muted/50 cursor-pointer',
+        isToday && 'bg-muted/80',
+        isCompleted && 'opacity-70',
+        isUpcoming && 'opacity-35',
+        isMissed && 'opacity-45',
+        isRest && 'opacity-30',
+        isClickable && 'hover:bg-muted/60 active:bg-muted cursor-pointer',
         isExpanded && 'bg-muted',
-        !isClickable && 'cursor-default'
+        !isClickable && 'cursor-default',
       )}
     >
-      {/* Day label */}
-      <span className="text-xs text-muted-foreground">{day.dayOfWeek}</span>
+      {/* Day abbreviation + date */}
+      <div className="w-9 shrink-0">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+          {day.dayOfWeek.slice(0, 3)}
+        </p>
+        <p className="text-[10px] tabular-nums text-muted-foreground/60">
+          {format(day.date, 'M/d')}
+        </p>
+      </div>
 
-      {/* Status indicator */}
-      <div className="relative">
-        {day.status === 'COMPLETED' && (
-          <div
-            className={cn(
-              'w-8 h-8 rounded-full bg-success flex items-center justify-center',
-              isExpanded && 'ring-2 ring-offset-2 ring-success'
-            )}
-          >
-            <Check className="w-4 h-4 text-success-foreground" />
-          </div>
-        )}
-
-        {day.status === 'TODAY' && (
-          <div
-            className={cn(
-              'w-8 h-8 rounded-full border-2 border-info flex items-center justify-center',
-              'bg-info/10',
-              isExpanded && 'ring-2 ring-offset-2 ring-info'
-            )}
-          >
-            <div className="w-2 h-2 rounded-full bg-info animate-pulse" />
-          </div>
-        )}
-
-        {day.status === 'MISSED' && (
-          <div
-            className={cn(
-              'w-8 h-8 rounded-full bg-muted flex items-center justify-center',
-              isExpanded && 'ring-2 ring-offset-2 ring-muted-foreground'
-            )}
-          >
-            <Minus className="w-4 h-4 text-muted-foreground" />
-          </div>
-        )}
-
-        {day.status === 'UPCOMING' && (
-          <div
-            className={cn(
-              'w-8 h-8 rounded-full border border-muted-foreground/30',
-              isExpanded && 'ring-2 ring-offset-2 ring-muted-foreground'
-            )}
-          />
-        )}
-
-        {day.status === 'REST' && (
-          <div className="w-8 h-8 flex items-center justify-center">
-            <div className="w-6 border-b border-dashed border-muted-foreground/50" />
-          </div>
+      {/* Workout info */}
+      <div className="flex-1 min-w-0">
+        {isRest ? (
+          <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+            Rest
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-bold truncate tracking-tight">
+              {day.workoutDay?.name || 'Workout'}
+            </p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+              {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
+            </p>
+          </>
         )}
       </div>
 
-      {/* Effort dot */}
-      {day.status === 'COMPLETED' && effortRating && (
-        <div
-          className={cn(
-            'w-2 h-2 rounded-full',
-            effortRating === 'EASY' && 'bg-success',
-            effortRating === 'MEDIUM' && 'bg-warning/60',
-            effortRating === 'HARD' && 'bg-warning'
-          )}
-          title={`Effort: ${effortRating.toLowerCase()}`}
-        />
-      )}
-
-      {/* Spacer */}
-      {(day.status !== 'COMPLETED' || !effortRating) && <div className="h-2" />}
+      {/* Status indicator */}
+      <div className="shrink-0">
+        {isCompleted && (
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+            Done
+          </span>
+        )}
+        {isToday && (
+          <span className="w-2 h-2 rounded-full bg-info block" />
+        )}
+        {isMissed && (
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+            Missed
+          </span>
+        )}
+      </div>
     </button>
   );
 }
 
-// Compact day cell for the condensed strip
-const STATUS_LABELS: Record<string, string> = {
-  COMPLETED: 'Completed',
-  TODAY: 'Scheduled for today',
-  MISSED: 'Missed',
-  UPCOMING: 'Upcoming',
-  REST: 'Rest day',
-};
-
-function CompactDayCell({ day }: { day: WeekDayInfo }) {
-  // Single-letter day labels for compact strip
-  const shortLabel = day.dayOfWeek.charAt(0);
-  const statusLabel = STATUS_LABELS[day.status] || day.status;
-  const dayLabel = `${day.dayOfWeek}: ${day.workoutDay?.name || 'Rest'} — ${statusLabel}`;
+// Compact day row — mirrors client-side DayCard layout
+function CompactDayRow({ day }: { day: WeekDayInfo }) {
+  const isRest = day.status === 'REST';
+  const isCompleted = day.status === 'COMPLETED';
+  const isToday = day.status === 'TODAY';
+  const isUpcoming = day.status === 'UPCOMING';
+  const isMissed = day.status === 'MISSED';
+  const exerciseCount = day.workoutDay?.exercises?.length || 0;
 
   return (
     <div
-      className="flex flex-col items-center gap-1"
-      role="img"
-      aria-label={dayLabel}
+      className={cn(
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg min-h-[44px]',
+        isToday && 'bg-muted/80',
+        isCompleted && 'opacity-70',
+        isUpcoming && 'opacity-35',
+        isMissed && 'opacity-45',
+        isRest && 'opacity-30',
+      )}
     >
-      <span className="text-xs text-muted-foreground leading-none" aria-hidden="true">
-        {shortLabel}
-      </span>
-      <div
-        aria-hidden="true"
-        className={cn(
-          'w-8 h-8 rounded-full flex items-center justify-center',
-          day.status === 'COMPLETED' && 'bg-success',
-          day.status === 'TODAY' && 'border-2 border-info bg-info/10',
-          day.status === 'MISSED' && 'bg-muted',
-          day.status === 'UPCOMING' && 'border border-muted-foreground/30',
-          day.status === 'REST' && 'opacity-50'
+      {/* Day abbreviation + date */}
+      <div className="w-9 shrink-0">
+        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+          {day.dayOfWeek.slice(0, 3)}
+        </p>
+        <p className="text-[10px] tabular-nums text-muted-foreground/60">
+          {format(day.date, 'M/d')}
+        </p>
+      </div>
+
+      {/* Workout info */}
+      <div className="flex-1 min-w-0">
+        {isRest ? (
+          <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
+            Rest
+          </p>
+        ) : (
+          <>
+            <p className="text-sm font-bold truncate tracking-tight">
+              {day.workoutDay?.name || 'Workout'}
+            </p>
+            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+              {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
+            </p>
+          </>
         )}
-      >
-        {day.status === 'COMPLETED' && <Check className="w-4 h-4 text-success-foreground" />}
-        {day.status === 'TODAY' && (
-          <div className="w-2 h-2 rounded-full bg-info animate-pulse" />
+      </div>
+
+      {/* Status indicator */}
+      <div className="shrink-0">
+        {isCompleted && (
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+            Done
+          </span>
         )}
-        {day.status === 'MISSED' && <Minus className="w-4 h-4 text-muted-foreground" />}
-        {day.status === 'REST' && (
-          <div className="w-5 border-b border-dashed border-muted-foreground/50" />
+        {isToday && (
+          <span className="w-2 h-2 rounded-full bg-info block" />
+        )}
+        {isMissed && (
+          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+            Missed
+          </span>
         )}
       </div>
     </div>
