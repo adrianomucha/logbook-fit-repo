@@ -92,7 +92,7 @@ export function AllClientsPage() {
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-      <div className="max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav activeTab="clients" />
 
         <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Clients</h1>

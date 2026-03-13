@@ -6,9 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  ArrowLeft, Clock, CheckCircle2, ClipboardCheck, AlertTriangle,
+  ArrowLeft, Clock, CheckCircle2, ClipboardCheck, AlertCircle,
   Dumbbell, Send, Loader2,
 } from 'lucide-react';
+import { CoachNav } from '@/components/coach/CoachNav';
 import { format, formatDistanceToNow } from 'date-fns';
 
 const EFFORT_DISPLAY: Record<string, { label: string; emoji: string }> = {
@@ -101,15 +102,18 @@ export function ClientCheckIn() {
   // Client not found
   if (!client) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="text-center py-12">
-            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
-            <p className="text-muted-foreground mb-4">This client doesn't exist.</p>
-            <Button onClick={() => router.push('/coach')}>Back to Dashboard</Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <CoachNav activeTab="clients" />
+          <Card className="max-w-md mx-auto">
+            <CardContent className="text-center py-12">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
+              <p className="text-muted-foreground mb-4">This client doesn&apos;t exist or has been removed.</p>
+              <Button onClick={() => router.push('/coach/clients')}>Back to Clients</Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -117,24 +121,27 @@ export function ClientCheckIn() {
   // Success screen
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="text-center py-12">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
-            <h2 className="text-2xl font-bold mb-2">Check-in Complete!</h2>
-            <p className="text-muted-foreground mb-6">
-              Your response has been recorded for {clientName}.
-            </p>
-            <div className="space-y-2">
-              <Button onClick={handleBack} className="w-full">
-                Back to {clientName}'s Profile
-              </Button>
-              <Button variant="outline" onClick={() => router.push('/coach')} className="w-full">
-                Back to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <CoachNav activeTab="clients" />
+          <Card className="max-w-md mx-auto">
+            <CardContent className="text-center py-12">
+              <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
+              <h2 className="text-2xl font-bold mb-2">Check-in Complete!</h2>
+              <p className="text-muted-foreground mb-6">
+                Your response has been recorded for {clientName}.
+              </p>
+              <div className="space-y-2">
+                <Button onClick={handleBack} className="w-full">
+                  Back to {clientName}&apos;s Profile
+                </Button>
+                <Button variant="outline" onClick={() => router.push('/coach')} className="w-full">
+                  Back to Dashboard
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -147,14 +154,23 @@ export function ClientCheckIn() {
   // State C: No active check-in
   if (!activeCheckIn && !activeCheckInId) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <div>
-            <Button variant="ghost" onClick={handleBack} className="mb-2">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Profile
+      <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <CoachNav activeTab="clients" />
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="h-8 w-8 p-0 shrink-0"
+              aria-label="Back to Profile"
+            >
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold">Check-in for {clientName}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
+              Check-in for {clientName}
+            </h1>
           </div>
 
           <Card>
@@ -189,14 +205,23 @@ export function ClientCheckIn() {
     const sentAgo = formatDistanceToNow(new Date(activeCheckIn.createdAt), { addSuffix: true });
 
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4">
-        <div className="max-w-2xl mx-auto space-y-4">
-          <div>
-            <Button variant="ghost" onClick={handleBack} className="mb-2">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Profile
+      <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+          <CoachNav activeTab="clients" />
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="h-8 w-8 p-0 shrink-0"
+              aria-label="Back to Profile"
+            >
+              <ArrowLeft className="h-4 w-4" />
             </Button>
-            <h1 className="text-2xl sm:text-3xl font-bold">Check-in for {clientName}</h1>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
+              Check-in for {clientName}
+            </h1>
           </div>
 
           <Card className="border-warning/20 bg-warning/5">
@@ -232,16 +257,27 @@ export function ClientCheckIn() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <CoachNav activeTab="clients" />
+
         {/* Header */}
-        <div className="mb-4">
-          <Button variant="ghost" onClick={handleBack} className="mb-2">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Profile
-          </Button>
-          <h1 className="text-2xl sm:text-3xl font-bold">Check-in for {clientName}</h1>
-          <p className="text-muted-foreground text-sm mt-1">
+        <div>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              className="h-8 w-8 p-0 shrink-0"
+              aria-label="Back to Profile"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
+              Check-in for {clientName}
+            </h1>
+          </div>
+          <p className="text-muted-foreground text-sm mt-1 pl-11">
             Submitted {activeCheckIn?.clientRespondedAt
               ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })
               : 'recently'}
