@@ -57,7 +57,7 @@ export function CheckInHistoryPanel({
       );
   }, [checkIns, clientId]);
 
-  const firstName = clientName.split(' ')[0];
+  const firstName = clientName?.split(' ')[0] || clientName || 'Client';
   const isScheduleActive = schedule?.status === 'ACTIVE';
 
   const scheduleToggle = hasPlan && onToggleSchedule ? (

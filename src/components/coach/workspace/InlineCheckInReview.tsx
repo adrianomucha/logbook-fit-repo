@@ -61,6 +61,8 @@ interface InlineCheckInReviewProps {
   justSentFromParent?: boolean;
   /** Hide the title when it would be redundant with status header */
   hideTitle?: boolean;
+  /** Visual weight: 'card' (default) with border, 'flat' borderless */
+  variant?: 'card' | 'flat';
 }
 
 export function InlineCheckInReview({
@@ -75,11 +77,13 @@ export function InlineCheckInReview({
   onMessageAboutFlag,
   justSentFromParent = false,
   hideTitle = false,
+  variant = 'card',
 }: InlineCheckInReviewProps) {
   const [coachResponse, setCoachResponse] = useState('');
   const [planAdjustment, setPlanAdjustment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Timer refs for cleanup on unmount
   const sentTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -151,15 +155,21 @@ export function InlineCheckInReview({
   }, [flaggedExercisesFromWeek, workoutCompletions, plan]);
 
   const handleStartNewCheckIn = () => {
-    const newCheckIn = createCheckIn(client.id, currentUserId);
-    onCreateCheckIn(newCheckIn);
-    setJustSentCheckIn(true);
-    // Clear the "just sent" state after 5 seconds
-    sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const newCheckIn = createCheckIn(client.id, currentUserId);
+      onCreateCheckIn(newCheckIn);
+      setJustSentCheckIn(true);
+      sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCompleteCheckIn = () => {
-    if (!activeCheckIn || !coachResponse.trim()) return;
+    if (!activeCheckIn || !coachResponse.trim() || isSubmitting) return;
+    setIsSubmitting(true);
 
     const completed = completeCheckIn(activeCheckIn, {
       coachResponse: coachResponse.trim(),
@@ -170,41 +180,47 @@ export function InlineCheckInReview({
     setCoachResponse('');
     setPlanAdjustment(false);
     setShowSuccess(true);
+    setIsSubmitting(false);
 
-    // Reset success message after 3 seconds
     successTimerRef.current = setTimeout(() => setShowSuccess(false), 3000);
   };
+
+  // Safe first-name extraction — never returns empty string
+  const firstName = client.name?.split(' ')[0] || client.name || 'Client';
+
+  const isFlat = variant === 'flat';
+  const Wrapper = isFlat ? 'div' : Card;
 
   // Success message (inline, not a separate page)
   if (showSuccess) {
     return (
-      <Card className="animate-fade-in-up">
-        <CardContent className="py-8">
+      <Wrapper className="animate-fade-in-up">
+        <div className="py-8">
           <div className="flex flex-col items-center text-center gap-2">
             <CheckCircle2 className="w-10 h-10 text-success" />
             <h3 className="font-semibold text-lg">
               Check-in complete
             </h3>
             <p className="text-sm text-muted-foreground">
-              Your response has been sent to {client.name.split(' ')[0]}.
+              Your response has been sent to {firstName}.
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </Wrapper>
     );
   }
 
   // State: No active check-in
   if (!activeCheckIn) {
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <ClipboardCheck className="w-4 h-4" />
+      <Wrapper>
+        <div className={cn("pb-2", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
+          <div className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <ClipboardCheck className="w-5 h-5" />
             Check-In
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+          </div>
+        </div>
+        <div className={cn(isFlat ? '' : 'px-3 sm:px-6 pb-6')}>
           {/* Show flagged exercises even without check-in */}
           {flaggedExercisesWithContext.length > 0 && (
             <div className="mb-4">
@@ -221,15 +237,15 @@ export function InlineCheckInReview({
           )}>
             <p className="font-medium">No active check-in</p>
             <p className="text-sm text-muted-foreground mb-3">
-              Start a check-in to hear how {client.name.split(' ')[0]} is doing.
+              Start a check-in to hear how {firstName} is doing.
             </p>
-            <Button onClick={handleStartNewCheckIn} size="sm">
+            <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting}>
               <ClipboardCheck className="w-4 h-4 mr-2" />
-              Send Check-in
+              {isSubmitting ? 'Sending…' : 'Send Check-in'}
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </Wrapper>
     );
   }
 
@@ -241,8 +257,8 @@ export function InlineCheckInReview({
     // Can be triggered from local button OR from parent (status header button)
     if (justSentCheckIn || justSentFromParent) {
       return (
-        <Card>
-          <CardContent className="py-6">
+        <Wrapper className="animate-fade-in-up">
+          <div className={cn("py-6", isFlat ? '' : 'px-3 sm:px-6')}>
             <div className="flex items-center gap-3">
               <div className="p-2 bg-muted rounded-full">
                 <SendHorizonal className="w-6 h-6 text-success" />
@@ -252,38 +268,38 @@ export function InlineCheckInReview({
                   Check-in Sent!
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {client.name.split(' ')[0]} will be notified to share how they're doing.
+                  {firstName} will be notified to share how things are going.
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </Wrapper>
       );
     }
 
     return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Clock className="w-4 h-4 text-muted-foreground animate-pulse" />
-            Waiting for {client.name.split(' ')[0]}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      <Wrapper>
+        <div className={cn("pb-2", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
+          <div className="text-lg sm:text-xl font-bold flex items-center gap-2">
+            <Clock className="w-5 h-5 text-muted-foreground animate-pulse" />
+            Waiting for {firstName}
+          </div>
+        </div>
+        <div className={cn("space-y-4", isFlat ? '' : 'px-3 sm:px-6 pb-6')}>
           {/* Status explanation */}
           <div className="bg-background rounded-lg p-3 border">
             <p className="text-sm font-medium mb-1">
               Check-in sent {sentAgo}
             </p>
             <p className="text-xs text-muted-foreground">
-              {client.name.split(' ')[0]} will receive a notification to share how their workouts are going.
-              Once they respond, you'll see their feedback here and can reply.
+              {firstName} will get a notification to share how workouts are going.
+              Once {firstName} responds, you&apos;ll see the feedback here and can reply.
             </p>
           </div>
 
           {/* What client will see */}
           <div className="text-xs text-muted-foreground">
-            <p className="font-medium mb-1">What {client.name.split(' ')[0]} will answer:</p>
+            <p className="font-medium mb-1">What {firstName} will answer:</p>
             <ul className="list-disc list-inside space-y-0.5 ml-1">
               <li>How workouts felt (too easy / about right / too hard)</li>
               <li>How their body feels (fresh / normal / tired / run down)</li>
@@ -300,8 +316,8 @@ export function InlineCheckInReview({
               />
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </Wrapper>
     );
   }
 
@@ -314,48 +330,50 @@ export function InlineCheckInReview({
     : null;
 
   return (
-    <Card>
+    <Wrapper>
       {!hideTitle && (
-        <CardHeader className="pb-2 px-3 sm:px-6">
+        <div className={cn("pb-2", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
           <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base flex items-center gap-2 min-w-0">
-              <ClipboardCheck className="w-4 h-4 shrink-0" />
-              <span className="truncate">{client.name.split(' ')[0]}'s Check-In</span>
-            </CardTitle>
+            <div className="text-lg sm:text-xl font-bold flex items-center gap-2 min-w-0">
+              <ClipboardCheck className="w-5 h-5 shrink-0" />
+              <span className="truncate">{firstName}&apos;s Check-In</span>
+            </div>
             <span className="text-xs text-muted-foreground shrink-0">
               {activeCheckIn.clientRespondedAt
                 ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })
                 : 'recently'}
             </span>
           </div>
-        </CardHeader>
-      )}
-      <CardContent className={cn("space-y-4 px-3 sm:px-6", hideTitle && "pt-4")}>
-        {/* Feeling indicators - flattened, no nested borders */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-3">
-          {workoutFeeling && (
-            <div className="bg-background/60 rounded-lg p-2 sm:p-2.5">
-              <p className="text-xs text-muted-foreground mb-0.5">Workouts felt</p>
-              <p className="text-sm font-medium">
-                {workoutFeeling.emoji} {workoutFeeling.label}
-              </p>
-            </div>
-          )}
-          {bodyFeeling && (
-            <div className="bg-background/60 rounded-lg p-2 sm:p-2.5">
-              <p className="text-xs text-muted-foreground mb-0.5">Body feels</p>
-              <p className="text-sm font-medium">
-                {bodyFeeling.emoji} {bodyFeeling.label}
-              </p>
-            </div>
-          )}
         </div>
+      )}
+      <div className={cn("space-y-4", isFlat ? '' : 'px-3 sm:px-6 pb-6', hideTitle && "pt-4")}>
+        {/* Feeling indicators */}
+        {(workoutFeeling || bodyFeeling) && (
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+            {workoutFeeling && (
+              <div className="bg-muted/40 rounded-xl p-3 sm:p-4">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Workouts felt</p>
+                <p className="text-lg font-bold">
+                  <span className="text-xl mr-1">{workoutFeeling.emoji}</span> {workoutFeeling.label}
+                </p>
+              </div>
+            )}
+            {bodyFeeling && (
+              <div className="bg-muted/40 rounded-xl p-3 sm:p-4">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Body feels</p>
+                <p className="text-lg font-bold">
+                  <span className="text-xl mr-1">{bodyFeeling.emoji}</span> {bodyFeeling.label}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Client notes - flattened styling */}
         {activeCheckIn.clientNotes && (
           <div>
             <p className="text-xs text-muted-foreground mb-1">
-              Notes from {client.name.split(' ')[0]}
+              Notes from {firstName}
             </p>
             <p className="text-sm bg-background/60 rounded-lg p-3">
               "{activeCheckIn.clientNotes}"
@@ -372,15 +390,16 @@ export function InlineCheckInReview({
         )}
 
         {/* Coach Response - Inline Form */}
-        <div className="pt-3 border-t space-y-3">
+        <div className="space-y-3 bg-muted/50 rounded-xl p-3 sm:p-4">
           <div>
-            <label className="text-xs text-muted-foreground mb-1 block">Your response</label>
+            <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Your response</label>
             <Textarea
-              placeholder={`Write your response to ${client.name.split(' ')[0]}...`}
+              placeholder={`Write your response to ${firstName}...`}
               value={coachResponse}
               onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
+              maxLength={1000}
               rows={3}
-              className="bg-background"
+              className="bg-background border-border/60"
             />
             {coachResponse.length > 0 && (
               <p className="text-xs text-muted-foreground mt-1 text-right">
@@ -395,22 +414,27 @@ export function InlineCheckInReview({
               onCheckedChange={(checked) => setPlanAdjustment(!!checked)}
               className="h-5 w-5"
             />
-            <span className="text-sm select-none">I'll adjust the plan based on this feedback</span>
+            <span className="text-sm select-none">I&apos;ll adjust the plan based on this feedback</span>
           </label>
 
           <Button
             onClick={handleCompleteCheckIn}
-            disabled={!coachResponse.trim()}
+            disabled={!coachResponse.trim() || isSubmitting}
+            className={cn(
+              "w-full min-h-[48px] text-sm font-semibold transition-all duration-150 active:scale-[0.98]",
+              coachResponse.trim()
+                ? 'bg-foreground text-background hover:bg-foreground/90 shadow-sm'
+                : ''
+            )}
             variant={coachResponse.trim() ? 'default' : 'outline'}
-            className="w-full min-h-[44px] transition-all duration-150 active:scale-[0.98]"
-            size="sm"
+            size="lg"
           >
             <Send className="w-4 h-4 mr-2" />
-            Complete Check-in
+            {isSubmitting ? 'Sending…' : 'Complete Check-in'}
           </Button>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Wrapper>
   );
 }
 

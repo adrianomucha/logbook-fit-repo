@@ -11,7 +11,7 @@ import { useCoachPlans } from '@/hooks/api/useCoachPlans';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { createCheckInForClient, useCheckIn } from '@/hooks/api/useCheckIn';
 import { apiFetch } from '@/lib/api-client';
-import { ContextualStatusHeader } from '@/components/coach/workspace/ContextualStatusHeader';
+import { cn } from '@/lib/utils';
 import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
 import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
 import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
@@ -24,6 +24,7 @@ import { CoachNav } from '@/components/coach/CoachNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { getClientStatus } from '@/lib/client-status';
 
 // ---- Data Adapters ----
@@ -159,6 +160,7 @@ export function UnifiedClientProfile() {
   const [showPlanDrawer, setShowPlanDrawer] = useState(false);
   const [chatPrefill, setChatPrefill] = useState<string | undefined>(undefined);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
+  const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -169,6 +171,12 @@ export function UnifiedClientProfile() {
   const checkInRef = useRef<HTMLDivElement>(null);
   const planEditorRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+
+  // Timer ref for cleanup
+  const sentTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => {
+    return () => clearTimeout(sentTimerRef.current);
+  }, []);
 
   // ---- Adapted data for sub-components ----
   const client: Client | null = useMemo(
@@ -289,15 +297,19 @@ export function UnifiedClientProfile() {
   };
 
   const handleStartCheckIn = async () => {
-    if (!clientId || activeCheckIn) return;
+    if (!clientId || activeCheckIn || isSendingCheckIn) return;
+    setIsSendingCheckIn(true);
     try {
       await createCheckInForClient(clientId);
       refreshClient();
       setJustSentCheckIn(true);
-      setTimeout(() => setJustSentCheckIn(false), 5000);
+      clearTimeout(sentTimerRef.current);
+      sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
       handleScrollToCheckIn();
     } catch {
-      // Failed to create check-in
+      toast.error('Failed to send check-in. Please try again.');
+    } finally {
+      setIsSendingCheckIn(false);
     }
   };
 
@@ -314,7 +326,7 @@ export function UnifiedClientProfile() {
       });
       refreshClient();
     } catch {
-      // Failed to complete check-in
+      toast.error('Failed to submit your response. Please try again.');
     }
   };
 
@@ -324,7 +336,7 @@ export function UnifiedClientProfile() {
       await createCheckInForClient(clientId);
       refreshClient();
     } catch {
-      // Failed to create
+      toast.error('Failed to create check-in. Please try again.');
     }
   };
 
@@ -369,7 +381,7 @@ export function UnifiedClientProfile() {
       refreshPlan();
       refreshCoachPlans();
     } catch {
-      // Error handled by apiFetch
+      toast.error('Failed to create and assign plan. Please try again.');
     }
   };
 
@@ -383,7 +395,7 @@ export function UnifiedClientProfile() {
       refreshClient();
       refreshPlan();
     } catch {
-      // Failed to assign
+      toast.error('Failed to assign plan. Please try again.');
     }
     setShowAssignPlanModal(false);
   };
@@ -438,54 +450,117 @@ export function UnifiedClientProfile() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        {/* Top Navigation */}
-        <CoachNav activeTab="clients" />
+  // Safe first-name extraction — never returns empty string
+  const firstName = client.name?.split(' ')[0] || client.name || 'Client';
 
-        {/* Page title */}
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push('/coach/clients')}
-            className="h-8 w-8 p-0 shrink-0"
-            aria-label="Back to Clients"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
-            {client.name}
-          </h1>
+  // Derive inline status info
+  // Suppress urgent badges when coach already sent a check-in — "Waiting for X" section is the real status
+  const hasActiveCheckIn = !!activeCheckIn;
+  const rawUrgent = status && (status.type === 'overdue' || status.type === 'at-risk');
+  const showStatusBanner = status
+    && !(priorityMode === 'B' && status.type === 'ok')
+    && status.type !== 'pending-checkin'
+    && !(rawUrgent && hasActiveCheckIn);
+  const statusLabel = showStatusBanner ? status!.label : null;
+  const statusColor = showStatusBanner ? status!.color : null;
+  const StatusIcon = showStatusBanner ? status!.icon : null;
+  const statusIsUrgent = showStatusBanner && (status!.type === 'overdue' || status!.type === 'at-risk');
+
+  // Status action — only show when actionable (not already sent)
+  const statusAction = statusIsUrgent ? {
+    label: isSendingCheckIn ? 'Sending…' : 'Send Check-In',
+    onClick: handleStartCheckIn,
+    disabled: isSendingCheckIn,
+  } : status?.type === 'unread' ? {
+    label: 'View Messages',
+    onClick: handleScrollToCheckIn,
+    disabled: false,
+  } : null;
+
+  return (
+    <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Top Navigation */}
+        <div className="px-3 sm:px-4 pt-3 sm:pt-4">
+          <CoachNav activeTab="clients" />
         </div>
 
-        {/* Contextual Status Header */}
-        {status && !(priorityMode === 'B' && status.type === 'ok') && status.type !== 'pending-checkin' && (
-          <ContextualStatusHeader
+        {/* ── Hero zone ── */}
+        <div className="px-3 sm:px-4 pt-8 sm:pt-12 pb-8 space-y-6">
+          {/* Back + Name + Status */}
+          <div className="space-y-2">
+            <button
+              onClick={() => router.push('/coach/clients')}
+              className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors group"
+              aria-label="Back to Clients"
+            >
+              <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              Clients
+            </button>
+            <div className="flex items-center gap-4 flex-wrap">
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight truncate min-w-0">
+                {client.name}
+              </h1>
+              {showStatusBanner && StatusIcon && (
+                <span className={cn(
+                  'inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.12em] font-semibold px-2.5 py-1 rounded-full',
+                  statusIsUrgent
+                    ? 'bg-warning/15 text-warning'
+                    : status!.type === 'unread'
+                      ? 'bg-info/15 text-info'
+                      : 'bg-muted text-muted-foreground',
+                )}>
+                  <StatusIcon className="w-3.5 h-3.5" />
+                  {statusLabel}
+                </span>
+              )}
+            </div>
+            {/* Status context line + action */}
+            {showStatusBanner && (
+              <div className="flex items-center gap-3 flex-wrap">
+                <p className="text-sm text-muted-foreground">
+                  {status!.type === 'overdue' && client.lastCheckInDate && (() => {
+                    const days = Math.max(1, Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
+                    return <>{days} {days === 1 ? 'day' : 'days'} since last check-in</>;
+                  })()}
+                  {status!.type === 'at-risk' && client.lastCheckInDate && (() => {
+                    const days = Math.max(1, 7 - Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
+                    return <>{days} {days === 1 ? 'day' : 'days'} until overdue</>;
+                  })()}
+                  {status!.type === 'unread' && 'New messages waiting'}
+                  {status!.type === 'ok' && `Up to date with ${firstName}`}
+                </p>
+                {statusAction && (
+                  <Button
+                    variant={statusIsUrgent ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={statusAction.onClick}
+                    disabled={statusAction.disabled}
+                    className="h-7 text-xs"
+                  >
+                    {statusAction.label}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Weekly Strip — part of the hero zone */}
+          <InteractiveWeeklyStrip
             client={client}
-            status={status}
-            lastCheckIn={lastCompletedCheckIn}
-            respondedCheckIn={respondedCheckIn}
-            activeCheckIn={activeCheckIn}
-            onScrollToCheckIn={handleScrollToCheckIn}
-            onStartCheckIn={handleStartCheckIn}
+            plan={plan}
+            planStartDate={client.planStartDate}
+            workoutCompletions={workoutCompletions}
+            onScrollToPlanEditor={handleScrollToPlanEditor}
+            compact
           />
-        )}
+        </div>
 
-        {/* Compact Weekly Strip */}
-        <InteractiveWeeklyStrip
-          client={client}
-          plan={plan}
-          planStartDate={client.planStartDate}
-          workoutCompletions={workoutCompletions}
-          onScrollToPlanEditor={handleScrollToPlanEditor}
-          compact
-        />
+        <div className="px-3 sm:px-4 space-y-8 sm:space-y-12">
 
-        {/* Primary card — full width */}
+        {/* Primary content — full width, borderless */}
         {priorityMode === 'A' ? (
-          <div ref={checkInRef} className="animate-fade-in-up">
+          <div ref={checkInRef} className="animate-fade-in-up border-t border-border pt-6 sm:pt-8">
             <InlineCheckInReview
               client={client}
               activeCheckIn={activeCheckIn}
@@ -498,10 +573,11 @@ export function UnifiedClientProfile() {
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
               hideTitle={activeCheckIn?.status === 'responded'}
+              variant="flat"
             />
           </div>
         ) : (
-          <div ref={planEditorRef} className="animate-fade-in-up">
+          <div ref={planEditorRef} className="animate-fade-in-up border-t border-border pt-6 sm:pt-8">
             <InlinePlanEditor
               client={client}
               plan={plan}
@@ -512,14 +588,15 @@ export function UnifiedClientProfile() {
               onCreatePlan={handleCreateNewPlan}
               onUnassignPlan={handleUnassignPlan}
               exercisesCollapsed={false}
+              variant="flat"
             />
           </div>
         )}
 
         {/* Bottom row: Chat + Secondary content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           {/* Chat */}
-          <div ref={chatRef} className="flex flex-col h-[320px] md:h-[500px]">
+          <div ref={chatRef} className="flex flex-col h-[400px] md:h-[500px]">
             <ChatView
               client={client}
               messages={messages}
@@ -532,9 +609,9 @@ export function UnifiedClientProfile() {
           </div>
 
           {/* Secondary content */}
-          <div className="flex flex-col gap-4 md:h-[500px] md:overflow-y-auto">
+          <div className="flex flex-col border-t md:border-t-0 border-border/50 pt-4 md:pt-0 md:h-[500px] md:overflow-y-auto">
             {priorityMode === 'A' && (
-              <Card ref={planEditorRef} className="p-3 sm:p-4">
+              <div ref={planEditorRef} className="py-3 sm:py-4">
                 <InlinePlanEditor
                   client={client}
                   plan={plan}
@@ -547,10 +624,10 @@ export function UnifiedClientProfile() {
                   exercisesCollapsed={true}
                   variant="flat"
                 />
-              </Card>
+              </div>
             )}
 
-            <Card className="p-3 sm:p-4">
+            <div className="border-t border-border/50 py-3 sm:py-4">
               <CheckInHistoryPanel
                 checkIns={checkIns}
                 clientId={client.id}
@@ -559,7 +636,7 @@ export function UnifiedClientProfile() {
                 hasPlan={!!plan}
                 onToggleSchedule={handleToggleCheckInSchedule}
               />
-            </Card>
+            </div>
           </div>
         </div>
 
@@ -587,6 +664,7 @@ export function UnifiedClientProfile() {
           onUpdatePlan={handleUpdatePlan}
           onRefresh={() => { refreshPlan(); refreshCoachPlans(); }}
         />
+        </div>{/* end px-3 content wrapper */}
       </div>
     </div>
   );

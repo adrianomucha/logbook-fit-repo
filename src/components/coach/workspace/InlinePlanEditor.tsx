@@ -82,7 +82,7 @@ export function InlinePlanEditor({
           <div className="text-center py-6">
             <Dumbbell className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
             <p className="text-sm text-muted-foreground mb-4">
-              No plan assigned to {client.name.split(' ')[0]}
+              No plan assigned to {client.name?.split(' ')[0] || client.name || 'this client'}
             </p>
             <div className="flex gap-2 justify-center">
               <Button variant="outline" size="sm" onClick={onChangePlan}>

@@ -119,7 +119,7 @@ export function InteractiveWeeklyStrip({
             <div
               key={day.dayNumber}
               className={cn(
-                'flex-1 h-3 rounded-full',
+                'flex-1 h-4 rounded-full',
                 day.status === 'COMPLETED'
                   ? 'bg-success'
                   : 'bg-success/15'
@@ -130,14 +130,14 @@ export function InteractiveWeeklyStrip({
 
         {/* Session count */}
         <p className="text-sm">
-          <span className="text-2xl font-bold tabular-nums tracking-tight">
+          <span className="text-3xl sm:text-4xl font-black tabular-nums tracking-tight">
             {progress.completed}
           </span>
-          <span className="text-muted-foreground mx-0.5">/</span>
-          <span className="text-lg font-bold tabular-nums text-muted-foreground">
+          <span className="text-muted-foreground/40 mx-0.5">/</span>
+          <span className="text-lg font-bold tabular-nums text-muted-foreground/60">
             {progress.total}
           </span>
-          <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium ml-2">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium ml-2">
             Sessions
           </span>
         </p>
