@@ -1,6 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { Message, Client } from '@/types';
-import { Button } from '@/components/ui/button';
 import { Send, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -21,6 +20,34 @@ interface ChatViewProps {
   peerName?: string;
   /** Optional: tappable conversation starter chips for the empty state */
   conversationStarters?: string[];
+}
+
+/**
+ * Compute Messenger-style bubble rounding.
+ * Full rounding = 1.25rem (20px). Flattened corner = 0.25rem (4px).
+ * The "tail" corner is bottom-right for outgoing, bottom-left for incoming.
+ * First-in-group gets full top, last-in-group gets full bottom on the tail side.
+ */
+function bubbleRadius(
+  isCurrentUser: boolean,
+  isFirstInGroup: boolean,
+  isLastInGroup: boolean,
+): string {
+  // For outgoing: the right side is the "tail" side
+  // For incoming: the left side is the "tail" side
+  if (isCurrentUser) {
+    const tl = '1.25rem'; // always full
+    const bl = '1.25rem'; // always full
+    const tr = isFirstInGroup ? '1.25rem' : '0.25rem';
+    const br = isLastInGroup ? '1.25rem' : '0.25rem';
+    return `${tl} ${tr} ${br} ${bl}`;
+  } else {
+    const tr = '1.25rem'; // always full
+    const br = '1.25rem'; // always full
+    const tl = isFirstInGroup ? '1.25rem' : '0.25rem';
+    const bl = isLastInGroup ? '1.25rem' : '0.25rem';
+    return `${tl} ${tr} ${br} ${bl}`;
+  }
 }
 
 export function ChatView({
@@ -48,7 +75,6 @@ export function ChatView({
   useEffect(() => {
     if (initialPrefill) {
       setNewMessage(initialPrefill);
-      // Focus and move cursor to end
       setTimeout(() => {
         inputRef.current?.focus();
         inputRef.current?.setSelectionRange(
@@ -59,13 +85,12 @@ export function ChatView({
     }
   }, [initialPrefill]);
 
-  // Memoize message filtering to avoid re-computing on every render
   const clientMessages = useMemo(
     () => messages.filter((msg) => msg.clientId === client.id),
     [messages, client.id]
   );
 
-  // Track scroll position to know if user is "at the bottom"
+  // Track scroll position
   useEffect(() => {
     const viewport = scrollRef.current;
     if (!viewport) return;
@@ -74,7 +99,6 @@ export function ChatView({
       const distFromBottom = viewport.scrollHeight - viewport.scrollTop - viewport.clientHeight;
       const wasNearBottom = isNearBottomRef.current;
       isNearBottomRef.current = distFromBottom <= NEAR_BOTTOM_THRESHOLD;
-      // Clear unseen count when user scrolls to bottom
       if (!wasNearBottom && isNearBottomRef.current) {
         setUnseenCount(0);
       }
@@ -84,7 +108,6 @@ export function ChatView({
     return () => viewport.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Scroll helper
   const scrollToBottom = useCallback((instant?: boolean) => {
     const viewport = scrollRef.current;
     if (!viewport) return;
@@ -97,7 +120,7 @@ export function ChatView({
     isNearBottomRef.current = true;
   }, []);
 
-  // Initial load — pin to bottom before paint (no flash at top).
+  // Initial load — pin to bottom before paint
   useLayoutEffect(() => {
     if (initialLoadRef.current && clientMessages.length > 0) {
       initialLoadRef.current = false;
@@ -115,26 +138,21 @@ export function ChatView({
     const prevCount = prevCountRef.current;
     prevCountRef.current = count;
 
-    // Skip initial load (handled by useLayoutEffect above)
     if (prevCount === 0) return;
-
     const newMessages = count - prevCount;
     if (newMessages <= 0) return;
 
-    // User just sent a message — always scroll
     if (justSentRef.current) {
       justSentRef.current = false;
       requestAnimationFrame(() => scrollToBottom(false));
       return;
     }
 
-    // Incoming message while near bottom — auto-scroll
     if (isNearBottomRef.current) {
       requestAnimationFrame(() => scrollToBottom(false));
       return;
     }
 
-    // Incoming message while scrolled up — don't scroll, show pill
     setUnseenCount((prev) => prev + newMessages);
   }, [clientMessages.length, scrollToBottom]);
 
@@ -159,9 +177,33 @@ export function ChatView({
   const chatLabel = `Chat with ${client.name}`;
   const peerFirst = peerName?.split(' ')[0] || client.name?.split(' ')[0] || 'Coach';
 
+  // Pre-compute grouping info for each message
+  const groupInfo = useMemo(() => {
+    return clientMessages.map((msg, idx) => {
+      const prev = idx > 0 ? clientMessages[idx - 1] : null;
+      const next = idx < clientMessages.length - 1 ? clientMessages[idx + 1] : null;
+      const msgDate = new Date(msg.timestamp);
+      const prevDate = prev ? new Date(prev.timestamp) : null;
+      const nextDate = next ? new Date(next.timestamp) : null;
+
+      const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString();
+      const nextIsNewDay = !nextDate || msgDate.toDateString() !== nextDate.toDateString();
+
+      const sameSenderAsPrev = prev?.senderId === msg.senderId && !showDateSep;
+      const sameSenderAsNext = next?.senderId === msg.senderId && !nextIsNewDay;
+
+      const isFirstInGroup = !sameSenderAsPrev;
+      const isLastInGroup = !sameSenderAsNext;
+
+      return { showDateSep, isFirstInGroup, isLastInGroup, msgDate };
+    });
+  }, [clientMessages]);
+
+  const hasInput = newMessage.trim().length > 0;
+
   return (
     <section aria-label={chatLabel} className="h-full flex flex-col min-h-0">
-      <div className={cn('flex flex-col min-h-0 overflow-hidden border border-border rounded-lg', heightClass)}>
+      <div className={cn('flex flex-col min-h-0', heightClass)}>
         {/* Message area */}
         <div
           ref={scrollRef}
@@ -172,7 +214,7 @@ export function ChatView({
               role="log"
               aria-live="polite"
               aria-label="Message history"
-              className="space-y-1 pb-4 pt-4"
+              className="pb-2 pt-4"
             >
               {/* Empty state */}
               {clientMessages.length === 0 && (
@@ -194,7 +236,7 @@ export function ChatView({
                             setNewMessage(starter);
                             inputRef.current?.focus();
                           }}
-                          className="text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-md bg-muted/60 text-foreground hover:bg-foreground hover:text-background transition-colors touch-manipulation min-h-[44px]"
+                          className="text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-150 touch-manipulation min-h-[44px]"
                         >
                           {starter}
                         </button>
@@ -207,23 +249,16 @@ export function ChatView({
               {/* Messages */}
               {clientMessages.map((message, idx) => {
                 const isCurrentUser = message.senderId === currentUserId;
-                const prevMsg = idx > 0 ? clientMessages[idx - 1] : null;
-                const sameSender = prevMsg?.senderId === message.senderId;
-                // Show date separator when day changes
-                const msgDate = new Date(message.timestamp);
-                const prevDate = prevMsg ? new Date(prevMsg.timestamp) : null;
-                const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString();
+                const { showDateSep, isFirstInGroup, isLastInGroup, msgDate } = groupInfo[idx];
 
                 return (
                   <div key={message.id}>
                     {/* Date separator */}
                     {showDateSep && (
-                      <div className="flex items-center gap-3 py-4">
-                        <div className="flex-1 border-t border-border/50" />
-                        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/60 font-medium">
+                      <div className="flex justify-center py-4">
+                        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
                           {format(msgDate, 'EEEE, MMM d')}
                         </span>
-                        <div className="flex-1 border-t border-border/50" />
                       </div>
                     )}
 
@@ -231,35 +266,29 @@ export function ChatView({
                       className={cn(
                         'flex',
                         isCurrentUser ? 'justify-end' : 'justify-start',
-                        sameSender && !showDateSep ? 'mt-0.5' : 'mt-3'
+                        isFirstInGroup ? 'mt-4' : 'mt-[5px]'
                       )}
                     >
                       <div
                         className={cn(
-                          'max-w-[85%] sm:max-w-[70%]',
+                          'max-w-[80%] sm:max-w-[65%] px-4 py-2.5',
                           isCurrentUser
-                            ? 'bg-foreground text-background rounded-lg px-3.5 py-2.5'
-                            : 'bg-muted/40 rounded-lg px-3.5 py-2.5'
+                            ? 'bg-foreground text-background'
+                            : 'bg-muted/50'
                         )}
+                        style={{ borderRadius: bubbleRadius(isCurrentUser, isFirstInGroup, isLastInGroup) }}
                       >
-                        {/* Sender label — only on first message in a group */}
-                        {!sameSender && !isCurrentUser && (
-                          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">
-                            {peerFirst}
-                          </p>
-                        )}
-
-                        {/* Exercise context card (attached when client flags an exercise) */}
+                        {/* Exercise context card */}
                         {message.exerciseContext && (
                           <div className={cn(
-                            'rounded-md px-2.5 py-2 mb-2',
+                            'rounded-lg px-3 py-2.5 mb-2 -mx-0.5',
                             isCurrentUser
                               ? 'bg-background/10'
-                              : 'bg-muted/40'
+                              : 'bg-muted/50'
                           )}>
-                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-60 mb-0.5">Exercise</p>
+                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-50 mb-0.5">Exercise</p>
                             <p className="text-sm font-bold tracking-tight truncate">{message.exerciseContext.exerciseName}</p>
-                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-60 mt-0.5">
+                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-50 mt-0.5">
                               {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets
                             </p>
                             {message.exerciseContext.flagNote && (
@@ -270,15 +299,19 @@ export function ChatView({
                           </div>
                         )}
 
-                        <p className="text-[13px] sm:text-sm leading-relaxed">{message.content}</p>
-                        <p className={cn(
-                          'text-[10px] uppercase tracking-[0.12em] font-medium mt-1.5',
-                          isCurrentUser ? 'opacity-50' : 'text-muted-foreground/50'
-                        )}>
-                          {format(msgDate, 'h:mm a')}
-                        </p>
+                        <p className="text-sm leading-[1.65]">{message.content}</p>
                       </div>
                     </div>
+
+                    {/* Timestamp — only after last message in a group */}
+                    {isLastInGroup && (
+                      <p className={cn(
+                        'text-[10px] text-muted-foreground/40 mt-1.5 px-0.5',
+                        isCurrentUser ? 'text-right' : 'text-left'
+                      )}>
+                        {format(msgDate, 'h:mm a')}
+                      </p>
+                    )}
                   </div>
                 );
               })}
@@ -289,10 +322,10 @@ export function ChatView({
 
         {/* "New messages" pill */}
         {unseenCount > 0 && (
-          <div className="flex justify-center -mt-5 mb-1 relative z-10">
+          <div className="flex justify-center -mt-4 mb-1 relative z-10">
             <button
               onClick={() => scrollToBottom(false)}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-foreground text-background text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg hover:bg-foreground/90 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-md"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-foreground text-background text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg hover:bg-foreground/90 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-full"
             >
               <ChevronDown className="w-3 h-3" />
               {unseenCount === 1 ? '1 new' : `${unseenCount} new`}
@@ -301,30 +334,36 @@ export function ChatView({
         )}
 
         {/* Input bar */}
-        <div className="p-3 sm:p-4 border-t border-border bg-muted/20">
+        <div className="px-3 sm:px-4 py-2.5">
           <div className="flex gap-2 items-center">
             <label htmlFor="chat-message-input" className="sr-only">
               Message to {client.name}
             </label>
-            <input
-              id="chat-message-input"
-              ref={inputRef}
-              type="text"
-              placeholder={`Message ${peerFirst}...`}
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={handleKeyPress}
-              className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/40 focus:outline-none min-h-[44px] px-1"
-            />
-            <Button
+            <div className="flex-1 flex items-center bg-muted/40 rounded-full px-4 min-h-[44px] transition-colors duration-150 focus-within:bg-muted/60">
+              <input
+                id="chat-message-input"
+                ref={inputRef}
+                type="text"
+                placeholder={`Message ${peerFirst}...`}
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/40 focus:outline-none py-2.5"
+              />
+            </div>
+            <button
               onClick={handleSend}
-              disabled={!newMessage.trim()}
-              className="shrink-0 h-10 px-4 bg-foreground text-background hover:bg-foreground/90 font-bold uppercase tracking-wider text-[11px] touch-manipulation disabled:opacity-30"
+              disabled={!hasInput}
+              className={cn(
+                'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ease-out touch-manipulation',
+                hasInput
+                  ? 'bg-foreground text-background hover:bg-foreground/90 active:scale-95 scale-100'
+                  : 'bg-muted/40 text-muted-foreground/30 scale-90 pointer-events-none'
+              )}
               aria-label="Send message"
             >
-              <Send className="w-3.5 h-3.5 mr-1.5" />
-              Send
-            </Button>
+              <Send className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>

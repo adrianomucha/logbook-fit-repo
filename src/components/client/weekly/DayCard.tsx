@@ -27,7 +27,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-3.5 py-3 rounded-lg transition-colors touch-manipulation',
+        'flex items-center gap-3 px-3.5 py-3 rounded-lg transition-colors touch-manipulation min-h-[52px]',
         isToday && 'bg-muted/80',
         isCompleted && 'opacity-70',
         isUpcoming && 'opacity-35 pointer-events-none',

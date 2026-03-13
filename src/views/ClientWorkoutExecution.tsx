@@ -304,7 +304,7 @@ export function ClientWorkoutExecution() {
   if (showCelebration && completedWorkoutData) {
     return (
       <div
-        className="fixed inset-0 z-50 bg-success/5 flex flex-col items-center justify-center p-6"
+        className="fixed inset-0 z-50 bg-success/5 flex flex-col items-center justify-center p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]"
         onClick={handleCelebrationDismiss}
       >
         {/* Celebration Header */}
@@ -318,14 +318,14 @@ export function ClientWorkoutExecution() {
         </div>
 
         {/* Workout Summary — stat blocks */}
-        <div className="flex gap-3 mb-8 sm:mb-10">
-          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-6 text-center">
+        <div className="flex gap-2 sm:gap-3 mb-8 sm:mb-10 w-full max-w-xs">
+          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-5 sm:py-6 text-center">
             <p className="text-2xl font-bold tabular-nums leading-none">
               {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
             </p>
             <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Exercises</p>
           </div>
-          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-6 text-center">
+          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-5 sm:py-6 text-center">
             <p className="text-2xl font-bold tabular-nums leading-none">
               {completedWorkoutData.durationMin}
             </p>
@@ -365,7 +365,7 @@ export function ClientWorkoutExecution() {
   // Restart confirmation
   if (showRestartConfirm) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Card className="w-full max-w-md">
           <CardContent className="py-6">
             <div className="flex justify-center mb-4">
@@ -404,7 +404,7 @@ export function ClientWorkoutExecution() {
   // Partial completion confirmation
   if (showPartialConfirm) {
     return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4">
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <Card className="w-full max-w-md">
           <CardContent className="py-6">
             <h2 className="text-lg font-bold tracking-tight text-center mb-1">

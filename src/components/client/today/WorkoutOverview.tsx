@@ -50,16 +50,16 @@ export function WorkoutOverview({
       </div>
 
       {/* Stat Blocks — gym-counter style */}
-      <div className="flex gap-3">
-        <div className="flex-1 bg-muted/60 rounded-lg px-3 py-6 text-center">
+      <div className="flex gap-2 sm:gap-3">
+        <div className="flex-1 bg-muted/60 rounded-lg px-2 sm:px-3 py-5 sm:py-6 text-center">
           <p className="text-2xl font-bold tabular-nums leading-none">{duration}</p>
           <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Minutes</p>
         </div>
-        <div className="flex-1 bg-muted/60 rounded-lg px-3 py-6 text-center">
+        <div className="flex-1 bg-muted/60 rounded-lg px-2 sm:px-3 py-5 sm:py-6 text-center">
           <p className="text-2xl font-bold tabular-nums leading-none">{exercises.length}</p>
           <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Exercises</p>
         </div>
-        <div className="flex-1 bg-muted/60 rounded-lg px-3 py-6 text-center">
+        <div className="flex-1 bg-muted/60 rounded-lg px-2 sm:px-3 py-5 sm:py-6 text-center">
           <p className="text-2xl font-bold tabular-nums leading-none">{totalSets}</p>
           <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Total Sets</p>
         </div>

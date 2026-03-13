@@ -14,7 +14,7 @@ interface QuickEffortFeedbackProps {
 
 const effortOptions: { value: EffortRating; label: string; selectedClass: string }[] = [
   { value: 'EASY', label: 'Easy', selectedClass: 'text-success bg-success/10 border-success/40 ring-1 ring-success/20' },
-  { value: 'MEDIUM', label: 'Just Right', selectedClass: 'text-foreground bg-muted border-foreground/25 ring-1 ring-foreground/10' },
+  { value: 'MEDIUM', label: 'Medium', selectedClass: 'text-foreground bg-muted border-foreground/25 ring-1 ring-foreground/10' },
   { value: 'HARD', label: 'Hard', selectedClass: 'text-warning bg-warning/10 border-warning/40 ring-1 ring-warning/20' },
 ];
 

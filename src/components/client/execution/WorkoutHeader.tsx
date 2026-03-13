@@ -22,7 +22,7 @@ export function WorkoutHeader({
   completedDate,
 }: WorkoutHeaderProps) {
   return (
-    <div className="sticky top-0 z-10 bg-card-foreground">
+    <div className="sticky top-0 z-10 bg-card-foreground pt-[env(safe-area-inset-top)]">
       <div className="flex items-center justify-between px-4 h-[64px]">
         {/* Left — back + progress */}
         <div className="flex items-center gap-3">

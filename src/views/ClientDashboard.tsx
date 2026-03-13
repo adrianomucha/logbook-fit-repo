@@ -342,7 +342,7 @@ export function ClientDashboard() {
       'bg-background p-3 sm:p-4',
       currentView === 'chat'
         ? 'fixed inset-0 pb-20 flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-screen'
-        : 'min-h-screen'
+        : 'min-h-screen pb-24 sm:pb-4'
     )}>
       <div className={cn(
         'max-w-2xl mx-auto',
@@ -428,7 +428,7 @@ export function ClientDashboard() {
           <>
             <div className="shrink-0">
               <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">Messages</p>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Chat</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
             </div>
             <ChatView
               client={client}
@@ -451,7 +451,7 @@ export function ClientDashboard() {
           <>
             <div>
               <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">History</p>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">My Progress</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Progress</h1>
             </div>
             <ProgressHistory
               completedWorkouts={[]}

@@ -112,7 +112,7 @@ export function TodayFocusView({
               {actionState === 'in-progress' ? (
                 <>
                   <RotateCcw className="w-5 h-5 mr-2.5" />
-                  {completionPct > 0 ? 'Resume' : 'Continue'}
+                  Continue
                 </>
               ) : (
                 <>

@@ -61,7 +61,7 @@ export function ClientCheckInForm() {
             <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <h2 className="text-xl font-bold mb-2">Check-in Not Found</h2>
             <p className="text-muted-foreground mb-4">This check-in doesn't exist or has expired.</p>
-            <Button onClick={() => router.push('/client')}>Back to Home</Button>
+            <Button onClick={() => router.push('/client')}>Back to Dashboard</Button>
           </CardContent>
         </Card>
       </div>
@@ -77,7 +77,7 @@ export function ClientCheckInForm() {
             <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-success" />
             <h2 className="text-xl font-bold mb-2">Already Submitted</h2>
             <p className="text-muted-foreground mb-4">You've already responded to this check-in.</p>
-            <Button onClick={() => router.push('/client')}>Back to Home</Button>
+            <Button onClick={() => router.push('/client')}>Back to Dashboard</Button>
           </CardContent>
         </Card>
       </div>
@@ -130,7 +130,7 @@ export function ClientCheckInForm() {
   const recentCompletions = checkIn.client.completions ?? [];
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4">
+    <div className="min-h-screen bg-background p-3 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Header */}
         <div>
