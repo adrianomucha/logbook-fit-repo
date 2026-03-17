@@ -72,7 +72,8 @@ export function PlanEditorDrawer({
   initialDayIndex = 0,
 }: PlanEditorDrawerProps) {
   const [selectedWeek, setSelectedWeek] = useState(initialWeekIndex);
-  const [selectedDay, setSelectedDay] = useState(initialDayIndex);
+  // Track selected day by ID so it survives data re-sorts (e.g. weekday changes)
+  const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
 
   // Exercise editor drawer state
   const [exerciseDrawerOpen, setExerciseDrawerOpen] = useState(false);
@@ -81,24 +82,21 @@ export function PlanEditorDrawer({
   // Prevent double-submit on async operations
   const [isSaving, setIsSaving] = useState(false);
 
-  // After a weekday change + refresh, resolve the day by ID instead of index
-  const pendingDayIdRef = useRef<string | null>(null);
-
-  // Clamp indices to valid range to prevent out-of-bounds after plan refresh
+  // Clamp week index to valid range
   const clampedWeek = plan ? Math.min(selectedWeek, Math.max(0, plan.weeks.length - 1)) : 0;
   const currentWeek = plan?.weeks[clampedWeek];
-  const clampedDay = currentWeek ? Math.min(selectedDay, Math.max(0, currentWeek.days.length - 1)) : 0;
+
+  // Resolve selected day: find by ID, fall back to first day
+  const currentDayIndex = currentWeek?.days.findIndex((d) => d.id === selectedDayId) ?? -1;
+  const clampedDay = currentDayIndex >= 0 ? currentDayIndex : 0;
   const currentDay = currentWeek?.days[clampedDay];
 
-  // When plan data refreshes after a weekday change, find the day by ID and update selectedDay
+  // Auto-select first day when entering a week with no selection
   useEffect(() => {
-    if (!pendingDayIdRef.current || !currentWeek) return;
-    const idx = currentWeek.days.findIndex((d) => d.id === pendingDayIdRef.current);
-    if (idx >= 0) {
-      setSelectedDay(idx);
-      pendingDayIdRef.current = null;
+    if (currentWeek && currentWeek.days.length > 0 && currentDayIndex < 0) {
+      setSelectedDayId(currentWeek.days[0].id);
     }
-  }, [currentWeek]);
+  }, [currentWeek, currentDayIndex]);
 
   // Local state for plan name input — same pattern as day name below.
   const [localPlanName, setLocalPlanName] = useState(plan?.name || '');
@@ -133,21 +131,24 @@ export function PlanEditorDrawer({
   // Reset selection when plan changes (e.g. opening a different plan)
   useEffect(() => {
     setSelectedWeek(initialWeekIndex);
-    setSelectedDay(initialDayIndex);
+    // Resolve initial day index to an ID
+    const week = plan?.weeks[initialWeekIndex];
+    const day = week?.days[initialDayIndex];
+    setSelectedDayId(day?.id ?? null);
   }, [plan?.id, initialWeekIndex, initialDayIndex]);
 
   // Navigate weeks
   const goToPrevWeek = () => {
     if (selectedWeek > 0) {
       setSelectedWeek(selectedWeek - 1);
-      setSelectedDay(0);
+      setSelectedDayId(null); // will auto-select first day via effect
     }
   };
 
   const goToNextWeek = () => {
     if (plan && selectedWeek < plan.weeks.length - 1) {
       setSelectedWeek(selectedWeek + 1);
-      setSelectedDay(0);
+      setSelectedDayId(null); // will auto-select first day via effect
     }
   };
 
@@ -283,8 +284,7 @@ export function PlanEditorDrawer({
     if (!plan || !currentDay) return;
     const prev = localDayNumber;
     setLocalDayNumber(dayNum);
-    // Track this day by ID so the effect can resolve the correct index after refresh
-    pendingDayIdRef.current = currentDay.id;
+    // selectedDayId already tracks this day — no index juggling needed
 
     try {
       await apiFetch(`/api/days/${currentDay.id}`, {
@@ -294,7 +294,6 @@ export function PlanEditorDrawer({
       onRefresh?.();
     } catch {
       setLocalDayNumber(prev);
-      pendingDayIdRef.current = null;
     }
   };
 
@@ -473,8 +472,8 @@ export function PlanEditorDrawer({
                         <button
                           key={wd.num}
                           onClick={() => {
-                            if (dayIdx !== undefined) {
-                              setSelectedDay(dayIdx);
+                            if (day) {
+                              setSelectedDayId(day.id);
                             }
                           }}
                           disabled={dayIdx === undefined}
