@@ -267,9 +267,21 @@ export function PlanEditorDrawer({
 
   // Commit the day-of-week to the API immediately on click
   const commitDayNumber = async (dayNum: number) => {
-    if (!plan || !currentDay) return;
+    if (!plan || !currentDay || !currentWeek) return;
     const prev = localDayNumber;
     setLocalDayNumber(dayNum);
+
+    // Predict where this day will land after re-sort (API returns days ordered by dayNumber asc).
+    // Build a list of dayNumbers after the change, sort, and find the new index.
+    const dayNumbers = currentWeek.days.map((d, i) =>
+      i === clampedDay ? dayNum : (d.dayNumber ?? 0)
+    );
+    const sorted = dayNumbers
+      .map((dn, i) => ({ dn, i }))
+      .sort((a, b) => a.dn - b.dn);
+    const newIdx = sorted.findIndex((s) => s.i === clampedDay);
+    if (newIdx >= 0) setSelectedDay(newIdx);
+
     try {
       await apiFetch(`/api/days/${currentDay.id}`, {
         method: 'PUT',
@@ -278,6 +290,7 @@ export function PlanEditorDrawer({
       onRefresh?.();
     } catch {
       setLocalDayNumber(prev);
+      setSelectedDay(clampedDay); // revert index too
     }
   };
 
