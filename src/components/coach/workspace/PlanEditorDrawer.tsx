@@ -81,11 +81,24 @@ export function PlanEditorDrawer({
   // Prevent double-submit on async operations
   const [isSaving, setIsSaving] = useState(false);
 
+  // After a weekday change + refresh, resolve the day by ID instead of index
+  const pendingDayIdRef = useRef<string | null>(null);
+
   // Clamp indices to valid range to prevent out-of-bounds after plan refresh
   const clampedWeek = plan ? Math.min(selectedWeek, Math.max(0, plan.weeks.length - 1)) : 0;
   const currentWeek = plan?.weeks[clampedWeek];
   const clampedDay = currentWeek ? Math.min(selectedDay, Math.max(0, currentWeek.days.length - 1)) : 0;
   const currentDay = currentWeek?.days[clampedDay];
+
+  // When plan data refreshes after a weekday change, find the day by ID and update selectedDay
+  useEffect(() => {
+    if (!pendingDayIdRef.current || !currentWeek) return;
+    const idx = currentWeek.days.findIndex((d) => d.id === pendingDayIdRef.current);
+    if (idx >= 0) {
+      setSelectedDay(idx);
+      pendingDayIdRef.current = null;
+    }
+  }, [currentWeek]);
 
   // Local state for plan name input — same pattern as day name below.
   const [localPlanName, setLocalPlanName] = useState(plan?.name || '');
@@ -267,20 +280,11 @@ export function PlanEditorDrawer({
 
   // Commit the day-of-week to the API immediately on click
   const commitDayNumber = async (dayNum: number) => {
-    if (!plan || !currentDay || !currentWeek) return;
+    if (!plan || !currentDay) return;
     const prev = localDayNumber;
     setLocalDayNumber(dayNum);
-
-    // Predict where this day will land after re-sort (API returns days ordered by dayNumber asc).
-    // Build a list of dayNumbers after the change, sort, and find the new index.
-    const dayNumbers = currentWeek.days.map((d, i) =>
-      i === clampedDay ? dayNum : (d.dayNumber ?? 0)
-    );
-    const sorted = dayNumbers
-      .map((dn, i) => ({ dn, i }))
-      .sort((a, b) => a.dn - b.dn);
-    const newIdx = sorted.findIndex((s) => s.i === clampedDay);
-    if (newIdx >= 0) setSelectedDay(newIdx);
+    // Track this day by ID so the effect can resolve the correct index after refresh
+    pendingDayIdRef.current = currentDay.id;
 
     try {
       await apiFetch(`/api/days/${currentDay.id}`, {
@@ -290,7 +294,7 @@ export function PlanEditorDrawer({
       onRefresh?.();
     } catch {
       setLocalDayNumber(prev);
-      setSelectedDay(clampedDay); // revert index too
+      pendingDayIdRef.current = null;
     }
   };
 
