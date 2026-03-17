@@ -21,7 +21,20 @@ import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
 import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
-import { ExerciseEditorDrawer } from './ExerciseEditorDrawer';
+import { ExerciseEditorContent } from './ExerciseEditorDrawer';
+
+// Weekday labels (1=Mon … 7=Sun matching Prisma model)
+const WEEKDAYS = [
+  { num: 1, short: 'Mon' },
+  { num: 2, short: 'Tue' },
+  { num: 3, short: 'Wed' },
+  { num: 4, short: 'Thu' },
+  { num: 5, short: 'Fri' },
+  { num: 6, short: 'Sat' },
+  { num: 7, short: 'Sun' },
+] as const;
+
+const weekdayShort = (num?: number) => WEEKDAYS.find((w) => w.num === num)?.short;
 
 interface PlanEditorDrawerProps {
   open: boolean;
@@ -75,6 +88,7 @@ export function PlanEditorDrawer({
   // overwrite the input value and cause focus loss on mobile.
   const [localDayName, setLocalDayName] = useState(currentDay?.name || '');
   const dayNameInputRef = useRef<HTMLInputElement>(null);
+  const [localDayNumber, setLocalDayNumber] = useState<number | undefined>(currentDay?.dayNumber);
 
   // Local state for day description (workout briefing for clients)
   const [localDayDescription, setLocalDayDescription] = useState(currentDay?.description || '');
@@ -83,7 +97,8 @@ export function PlanEditorDrawer({
   useEffect(() => {
     setLocalDayName(currentDay?.name || '');
     setLocalDayDescription(currentDay?.description || '');
-  }, [selectedWeek, selectedDay, currentDay?.name, currentDay?.description]);
+    setLocalDayNumber(currentDay?.dayNumber);
+  }, [selectedWeek, selectedDay, currentDay?.name, currentDay?.description, currentDay?.dayNumber]);
 
   // Reset selection when plan changes (e.g. opening a different plan)
   useEffect(() => {
@@ -227,6 +242,22 @@ export function PlanEditorDrawer({
     }
   };
 
+  // Commit the day-of-week to the API immediately on click
+  const commitDayNumber = async (dayNum: number) => {
+    if (!plan || !currentDay) return;
+    const prev = localDayNumber;
+    setLocalDayNumber(dayNum);
+    try {
+      await apiFetch(`/api/days/${currentDay.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ dayNumber: dayNum }),
+      });
+      onRefresh?.();
+    } catch {
+      setLocalDayNumber(prev);
+    }
+  };
+
   // Commit the day description to the API on blur
   const commitDayDescription = async () => {
     if (!plan || !currentDay) return;
@@ -253,248 +284,289 @@ export function PlanEditorDrawer({
   const hasWeeks = plan && plan.weeks.length > 0;
   const hasDays = currentWeek && currentWeek.days.length > 0;
 
+  const closeExerciseEditor = () => {
+    setExerciseDrawerOpen(false);
+    setEditingExerciseIndex(null);
+  };
+
   return (
-    <>
-      <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col">
-          {/* Loading state */}
-          {isLoading && !plan && (
-            <>
-              <div className="p-4 border-b">
-                <SheetHeader>
-                  <SheetTitle>Loading plan…</SheetTitle>
-                  <SheetDescription>Please wait</SheetDescription>
-                </SheetHeader>
-              </div>
-              <div className="flex-1 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
-              </div>
-            </>
-          )}
+    <Sheet open={open} onOpenChange={(o) => {
+      if (!o) closeExerciseEditor();
+      onOpenChange(o);
+    }}>
+      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col">
+        {/* Loading state */}
+        {isLoading && !plan && (
+          <>
+            <div className="p-4 border-b">
+              <SheetHeader>
+                <SheetTitle>Loading plan…</SheetTitle>
+                <SheetDescription>Please wait</SheetDescription>
+              </SheetHeader>
+            </div>
+            <div className="flex-1 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+            </div>
+          </>
+        )}
 
-          {/* Error state */}
-          {error && !plan && (
-            <>
-              <div className="p-4 border-b">
-                <SheetHeader>
-                  <SheetTitle>Error</SheetTitle>
-                  <SheetDescription>Something went wrong</SheetDescription>
-                </SheetHeader>
-              </div>
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
-                <AlertCircle className="w-10 h-10 text-destructive" />
-                <p className="text-sm text-muted-foreground">{error}</p>
-                <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-                  Close
+        {/* Error state */}
+        {error && !plan && (
+          <>
+            <div className="p-4 border-b">
+              <SheetHeader>
+                <SheetTitle>Error</SheetTitle>
+                <SheetDescription>Something went wrong</SheetDescription>
+              </SheetHeader>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
+              <AlertCircle className="w-10 h-10 text-destructive" />
+              <p className="text-sm text-muted-foreground">{error}</p>
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* Plan loaded but has no weeks */}
+        {plan && !hasWeeks && (
+          <>
+            <div className="p-4 border-b">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <span className="text-xl">{plan.emoji || '💪'}</span>
+                  <span className="truncate">{plan.name}</span>
+                </SheetTitle>
+                <SheetDescription>Plan editor</SheetDescription>
+              </SheetHeader>
+            </div>
+            <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
+              <Dumbbell className="w-10 h-10 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">
+                This plan has no weeks yet. Try deleting it and creating a new one.
+              </p>
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+            </div>
+          </>
+        )}
+
+        {/* Normal state: plan loaded with weeks and days */}
+        {plan && hasWeeks && !exerciseDrawerOpen && (
+          <>
+            {/* Header */}
+            <div className="p-4 border-b space-y-4">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2.5">
+                  <span className="text-2xl">{plan.emoji || '💪'}</span>
+                  <Input
+                    ref={planNameInputRef}
+                    value={localPlanName}
+                    onChange={(e) => setLocalPlanName(e.target.value)}
+                    onBlur={commitPlanName}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') planNameInputRef.current?.blur();
+                    }}
+                    placeholder="Plan name"
+                    className="font-bold text-lg h-auto py-1 px-2 border-transparent hover:border-input focus:border-input transition-colors"
+                  />
+                </SheetTitle>
+                <SheetDescription>
+                  Tap an exercise to edit
+                </SheetDescription>
+              </SheetHeader>
+
+              {/* Week Navigation */}
+              <div className="flex items-center justify-between bg-muted/50 rounded-lg px-2 py-1.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={goToPrevWeek}
+                  disabled={selectedWeek === 0}
+                >
+                  <ChevronLeft className="w-4 h-4" />
                 </Button>
-              </div>
-            </>
-          )}
-
-          {/* Plan loaded but has no weeks */}
-          {plan && !hasWeeks && (
-            <>
-              <div className="p-4 border-b">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <span className="text-xl">{plan.emoji || '💪'}</span>
-                    <span className="truncate">{plan.name}</span>
-                  </SheetTitle>
-                  <SheetDescription>Plan editor</SheetDescription>
-                </SheetHeader>
-              </div>
-              <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
-                <Dumbbell className="w-10 h-10 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">
-                  This plan has no weeks yet. Try deleting it and creating a new one.
-                </p>
-                <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-                  Close
-                </Button>
-              </div>
-            </>
-          )}
-
-          {/* Normal state: plan loaded with weeks and days */}
-          {plan && hasWeeks && (
-            <>
-              {/* Header */}
-              <div className="p-4 border-b space-y-4">
-                <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2.5">
-                    <span className="text-2xl">{plan.emoji || '💪'}</span>
-                    <Input
-                      ref={planNameInputRef}
-                      value={localPlanName}
-                      onChange={(e) => setLocalPlanName(e.target.value)}
-                      onBlur={commitPlanName}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') planNameInputRef.current?.blur();
-                      }}
-                      placeholder="Plan name"
-                      className="font-bold text-lg h-auto py-1 px-2 border-transparent hover:border-input focus:border-input transition-colors"
-                    />
-                  </SheetTitle>
-                  <SheetDescription>
-                    Tap an exercise to edit
-                  </SheetDescription>
-                </SheetHeader>
-
-                {/* Week Navigation */}
-                <div className="flex items-center justify-between bg-muted/50 rounded-lg px-2 py-1.5">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={goToPrevWeek}
-                    disabled={selectedWeek === 0}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <div className="text-center">
-                    <span className="text-sm font-bold tracking-tight">
-                      Week {selectedWeek + 1}
-                    </span>
-                    <span className="text-xs text-muted-foreground ml-1.5">
-                      / {plan.weeks.length}
-                    </span>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={goToNextWeek}
-                    disabled={selectedWeek === plan.weeks.length - 1}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
+                <div className="text-center">
+                  <span className="text-sm font-bold tracking-tight">
+                    Week {selectedWeek + 1}
+                  </span>
+                  <span className="text-xs text-muted-foreground ml-1.5">
+                    / {plan.weeks.length}
+                  </span>
                 </div>
-
-                {/* Day Tabs */}
-                {hasDays && (
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {currentWeek.days.map((day, idx) => {
-                      const exerciseCount = day.exercises?.length || 0;
-                      const isActive = selectedDay === idx;
-                      return (
-                        <button
-                          key={day.id}
-                          className={cn(
-                            'shrink-0 text-xs font-medium px-3 py-1.5 rounded-md transition-all',
-                            isActive
-                              ? 'bg-foreground text-background'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                            day.isRestDay && !isActive && 'opacity-50'
-                          )}
-                          onClick={() => setSelectedDay(idx)}
-                        >
-                          {day.name || `Day ${idx + 1}`}
-                          {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={goToNextWeek}
+                  disabled={selectedWeek === plan.weeks.length - 1}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
               </div>
 
-              {/* Content */}
-              {currentDay ? (
-                <div className="flex-1 overflow-y-auto">
-                  {/* Day Name & Description Edit */}
-                  <div className="p-4 border-b space-y-3">
+              {/* Day Tabs */}
+              {hasDays && (
+                <div className="flex gap-1.5 overflow-x-auto pb-1">
+                  {currentWeek.days.map((day, idx) => {
+                    const exerciseCount = day.exercises?.length || 0;
+                    const isActive = selectedDay === idx;
+                    return (
+                      <button
+                        key={day.id}
+                        className={cn(
+                          'shrink-0 text-xs font-medium px-3 py-1.5 rounded-md transition-all',
+                          isActive
+                            ? 'bg-foreground text-background'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                          day.isRestDay && !isActive && 'opacity-50'
+                        )}
+                        onClick={() => setSelectedDay(idx)}
+                      >
+                        {weekdayShort(day.dayNumber) || day.name || `Day ${idx + 1}`}
+                        {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Content */}
+            {currentDay ? (
+              <div className="flex-1 overflow-y-auto">
+                {/* Day Name & Description Edit */}
+                <div className="p-4 border-b space-y-3">
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                      Workout Name
+                    </label>
+                    <Input
+                      ref={dayNameInputRef}
+                      value={localDayName}
+                      onChange={(e) => setLocalDayName(e.target.value)}
+                      onBlur={commitDayName}
+                      placeholder="e.g., Push Day, Upper Body"
+                      className="font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                      Day of Week
+                    </label>
+                    <div className="flex gap-1">
+                      {WEEKDAYS.map((wd) => (
+                        <button
+                          key={wd.num}
+                          onClick={() => { if (localDayNumber !== wd.num) commitDayNumber(wd.num); }}
+                          className={cn(
+                            'flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all',
+                            localDayNumber === wd.num
+                              ? 'bg-foreground text-background'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                          )}
+                        >
+                          {wd.short}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  {!currentDay.isRestDay && (
                     <div>
                       <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                        Workout Name
+                        Briefing
                       </label>
-                      <Input
-                        ref={dayNameInputRef}
-                        value={localDayName}
-                        onChange={(e) => setLocalDayName(e.target.value)}
-                        onBlur={commitDayName}
-                        placeholder="e.g., Push Day, Upper Body"
-                        className="font-bold"
+                      <Textarea
+                        value={localDayDescription}
+                        onChange={(e) => setLocalDayDescription(e.target.value)}
+                        onBlur={commitDayDescription}
+                        placeholder="Describe this workout for your client — what to expect, how to approach it..."
+                        className="text-sm resize-none"
+                        rows={2}
                       />
-                    </div>
-                    {!currentDay.isRestDay && (
-                      <div>
-                        <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                          Briefing
-                        </label>
-                        <Textarea
-                          value={localDayDescription}
-                          onChange={(e) => setLocalDayDescription(e.target.value)}
-                          onBlur={commitDayDescription}
-                          placeholder="Describe this workout for your client — what to expect, how to approach it..."
-                          className="text-sm resize-none"
-                          rows={2}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Exercise List or Rest Day */}
-                  {currentDay.isRestDay ? (
-                    <div className="p-12 text-center space-y-2">
-                      <p className="text-4xl">😴</p>
-                      <p className="text-sm font-medium text-muted-foreground">Rest day</p>
-                    </div>
-                  ) : (
-                    <div className="divide-y">
-                      {currentDay.exercises.length === 0 ? (
-                        <div className="flex flex-col items-center py-16 px-8 text-center">
-                          <Dumbbell className="w-6 h-6 text-muted-foreground/40 mb-4" />
-                          <p className="text-sm font-bold mb-1">No exercises yet</p>
-                          <p className="text-xs text-muted-foreground mb-6">Add your first exercise to this day</p>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleAddExercise}
-                          >
-                            <Plus className="w-3.5 h-3.5 mr-1.5" />
-                            Add Exercise
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          {currentDay.exercises.map((exercise, idx) => (
-                            <ExerciseCard
-                              key={exercise.id}
-                              exercise={exercise}
-                              exerciseIndex={idx}
-                              onClick={() => handleEditExercise(idx)}
-                            />
-                          ))}
-                          <button
-                            onClick={handleAddExercise}
-                            className="w-full px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
-                          >
-                            <Plus className="w-3.5 h-3.5" />
-                            Add Exercise
-                          </button>
-                        </>
-                      )}
                     </div>
                   )}
                 </div>
-              ) : (
-                <div className="flex-1 flex items-center justify-center p-8 text-center text-muted-foreground">
-                  <p className="text-sm">No days in this week</p>
-                </div>
-              )}
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
 
-      {/* Exercise Editor Drawer - nested */}
-      <ExerciseEditorDrawer
-        open={exerciseDrawerOpen}
-        onOpenChange={setExerciseDrawerOpen}
-        exercise={editingExercise || null}
-        onSave={handleSaveExercise}
-        onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
-        exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
-      />
-    </>
+                {/* Exercise List or Rest Day */}
+                {currentDay.isRestDay ? (
+                  <div className="p-12 text-center space-y-2">
+                    <p className="text-4xl">😴</p>
+                    <p className="text-sm font-medium text-muted-foreground">Rest day</p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {currentDay.exercises.length === 0 ? (
+                      <div className="flex flex-col items-center py-16 px-8 text-center">
+                        <Dumbbell className="w-6 h-6 text-muted-foreground/40 mb-4" />
+                        <p className="text-sm font-bold mb-1">No exercises yet</p>
+                        <p className="text-xs text-muted-foreground mb-6">Add your first exercise to this day</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleAddExercise}
+                        >
+                          <Plus className="w-3.5 h-3.5 mr-1.5" />
+                          Add Exercise
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        {currentDay.exercises.map((exercise, idx) => (
+                          <ExerciseCard
+                            key={exercise.id}
+                            exercise={exercise}
+                            exerciseIndex={idx}
+                            onClick={() => handleEditExercise(idx)}
+                          />
+                        ))}
+                        <button
+                          onClick={handleAddExercise}
+                          className="w-full px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add Exercise
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1 flex items-center justify-center p-8 text-center text-muted-foreground">
+                <p className="text-sm">No days in this week</p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Exercise editor — inline view swap (no stacking sheets) */}
+        {plan && hasWeeks && exerciseDrawerOpen && (
+          <>
+            {/* Back button header */}
+            <div className="px-4 py-3 border-b">
+              <button
+                onClick={closeExerciseEditor}
+                className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                Back to {currentDay?.name || 'workout'}
+              </button>
+            </div>
+            <ExerciseEditorContent
+              exercise={editingExercise || null}
+              onSave={handleSaveExercise}
+              onClose={closeExerciseEditor}
+              onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
+              exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
+              open={exerciseDrawerOpen}
+            />
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
   );
 }

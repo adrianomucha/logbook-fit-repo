@@ -37,11 +37,20 @@ export const PUT = withCoach(
     }
 
     const body = await req.json();
-    const { name, description, isRestDay } = body as {
+    const { name, description, isRestDay, dayNumber } = body as {
       name?: string;
       description?: string | null;
       isRestDay?: boolean;
+      dayNumber?: number;
     };
+
+    // Validate dayNumber if provided
+    if (dayNumber !== undefined && (dayNumber < 1 || dayNumber > 7)) {
+      return NextResponse.json(
+        { error: "dayNumber must be between 1 and 7" },
+        { status: 400 }
+      );
+    }
 
     const updated = await prisma.day.update({
       where: { id: dayId },
@@ -49,6 +58,7 @@ export const PUT = withCoach(
         ...(name !== undefined ? { name } : {}),
         ...(description !== undefined ? { description } : {}),
         ...(isRestDay !== undefined ? { isRestDay } : {}),
+        ...(dayNumber !== undefined ? { dayNumber } : {}),
       },
     });
 

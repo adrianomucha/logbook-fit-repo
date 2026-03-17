@@ -1,11 +1,4 @@
 import { useState, useEffect, useMemo } from 'react';
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,27 +15,33 @@ import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
 import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
 
-interface ExerciseEditorDrawerProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+interface ExerciseEditorContentProps {
   /** Existing exercise to edit, or null for new exercise */
   exercise: Exercise | null;
   /** Called when exercise is saved */
   onSave: (exercise: Exercise) => void;
+  /** Called to close the editor */
+  onClose: () => void;
   /** Called when exercise is deleted (only shown when editing existing) */
   onDelete?: () => void;
   /** Exercise number for display (1-indexed) */
   exerciseNumber?: number;
+  /** Whether this is rendered inline (true) or standalone */
+  open?: boolean;
 }
 
-export function ExerciseEditorDrawer({
-  open,
-  onOpenChange,
+/**
+ * Exercise editor content — renders inline (no Sheet wrapper).
+ * Used inside PlanEditorDrawer as a view swap.
+ */
+export function ExerciseEditorContent({
   exercise,
   onSave,
+  onClose,
   onDelete,
   exerciseNumber,
-}: ExerciseEditorDrawerProps) {
+  open = true,
+}: ExerciseEditorContentProps) {
   const isNew = !exercise;
   const [mode, setMode] = useState<'library' | 'custom'>(isNew ? 'library' : 'custom');
   const [searchQuery, setSearchQuery] = useState('');
@@ -75,9 +74,8 @@ export function ExerciseEditorDrawer({
       setWeightUnit(exercise.weightUnit || 'lbs');
       setRestSeconds(exercise.restSeconds?.toString() || '');
       setNotes(exercise.notes || '');
-      setMode('custom'); // Start on form when editing
+      setMode('custom');
     } else {
-      // New exercise - reset to defaults
       setName('');
       setSets('3');
       setReps('10');
@@ -85,7 +83,7 @@ export function ExerciseEditorDrawer({
       setWeightUnit('lbs');
       setRestSeconds('');
       setNotes('');
-      setMode('library'); // Start on library for new
+      setMode('library');
     }
     setSearchQuery('');
     setSelectedCategory(null);
@@ -103,7 +101,7 @@ export function ExerciseEditorDrawer({
     return exerciseLibrary;
   }, [searchQuery, selectedCategory]);
 
-  // Select from library (for new exercises) - populates with defaults
+  // Select from library (for new exercises)
   const handleSelectFromLibrary = (template: ExerciseTemplate) => {
     setName(template.name);
     if (template.defaultSets) setSets(template.defaultSets.toString());
@@ -112,10 +110,9 @@ export function ExerciseEditorDrawer({
     setMode('custom');
   };
 
-  // Replace with library exercise (for existing) - keeps current sets/reps/weight
+  // Replace with library exercise (for existing)
   const handleReplaceWithLibrary = (template: ExerciseTemplate) => {
     setName(template.name);
-    // Optionally update defaults if current values are empty
     if (!sets || sets === '0') setSets(template.defaultSets?.toString() || '3');
     if (!reps) setReps(template.defaultReps || '10');
     setMode('custom');
@@ -133,294 +130,312 @@ export function ExerciseEditorDrawer({
       notes: notes || undefined,
     };
     onSave(savedExercise);
-    onOpenChange(false);
+    onClose();
   };
 
   const canSave = name.trim().length > 0 && parseInt(sets) > 0;
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-[480px] p-0 flex flex-col">
-        {/* Header */}
-        <div className="p-4 border-b">
-          <SheetHeader>
-            <SheetTitle>
-              {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` #${exerciseNumber}` : ''}`}
-            </SheetTitle>
-            <SheetDescription>
-              {isNew ? 'Choose from library or create custom' : 'Modify exercise details'}
-            </SheetDescription>
-          </SheetHeader>
-
-          {/* Mode toggle - always available */}
-          <div className="mt-4 flex gap-2">
-            <Button
-              variant={mode === 'library' ? 'default' : 'outline'}
-              size="sm"
-              className="flex-1 gap-2"
-              onClick={() => setMode('library')}
-            >
-              <Library className="w-4 h-4" />
-              {isNew ? 'From Library' : 'Replace'}
-            </Button>
-            <Button
-              variant={mode === 'custom' ? 'default' : 'outline'}
-              size="sm"
-              className="flex-1 gap-2"
-              onClick={() => setMode('custom')}
-            >
-              <Plus className="w-4 h-4" />
-              {isNew ? 'Custom' : 'Edit Details'}
-            </Button>
-          </div>
+    <>
+      {/* Header */}
+      <div className="p-4 border-b">
+        <div className="mb-1">
+          <h2 className="text-base font-bold">
+            {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` #${String(exerciseNumber).padStart(2, '0')}` : ''}`}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {isNew ? 'Choose from library or create custom' : 'Modify exercise details'}
+          </p>
         </div>
 
-        {/* Content */}
-        <div className="flex-1 overflow-y-auto">
-          {mode === 'library' ? (
-            <div className="p-4 space-y-4">
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search exercises..."
-                  className="pl-9"
-                />
-              </div>
+        {/* Mode toggle */}
+        <div className="mt-3 flex gap-1.5">
+          <button
+            className={cn(
+              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-all flex items-center justify-center gap-1.5',
+              mode === 'library'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            )}
+            onClick={() => setMode('library')}
+          >
+            <Library className="w-3.5 h-3.5" />
+            {isNew ? 'Library' : 'Replace'}
+          </button>
+          <button
+            className={cn(
+              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-all flex items-center justify-center gap-1.5',
+              mode === 'custom'
+                ? 'bg-foreground text-background'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            )}
+            onClick={() => setMode('custom')}
+          >
+            <Plus className="w-3.5 h-3.5" />
+            {isNew ? 'Custom' : 'Details'}
+          </button>
+        </div>
+      </div>
 
-              {/* Category filter */}
-              <div className="flex gap-2 flex-wrap">
-                <Badge
-                  variant={selectedCategory === null ? 'default' : 'outline'}
-                  className="cursor-pointer"
-                  onClick={() => setSelectedCategory(null)}
-                >
-                  All
-                </Badge>
-                {categories.map((cat) => (
-                  <Badge
-                    key={cat}
-                    variant={selectedCategory === cat ? 'default' : 'outline'}
-                    className="cursor-pointer capitalize"
-                    onClick={() => setSelectedCategory(cat)}
-                  >
-                    {cat}
-                  </Badge>
-                ))}
-              </div>
-
-              {/* Exercise list */}
-              <div className="space-y-2">
-                {filteredLibrary.map((ex) => (
-                  <button
-                    key={ex.id}
-                    onClick={() => isNew ? handleSelectFromLibrary(ex) : handleReplaceWithLibrary(ex)}
-                    className={cn(
-                      'w-full text-left p-3 border rounded-lg transition-colors',
-                      'hover:bg-muted/80 active:bg-muted'
-                    )}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium truncate">{ex.name}</p>
-                        <div className="flex gap-2 mt-1 text-xs text-muted-foreground">
-                          <Badge variant="secondary" className="text-xs capitalize">
-                            {ex.category}
-                          </Badge>
-                          {ex.equipment && (
-                            <span>{ex.equipment}</span>
-                          )}
-                          {ex.defaultSets && ex.defaultReps && (
-                            <span>
-                              {ex.defaultSets} × {ex.defaultReps}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                ))}
-                {filteredLibrary.length === 0 && (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No exercises found</p>
-                    <Button
-                      variant="link"
-                      className="mt-2"
-                      onClick={() => {
-                        setMode('custom');
-                        setName(searchQuery);
-                      }}
-                    >
-                      Create "{searchQuery}" as custom
-                    </Button>
-                  </div>
-                )}
-              </div>
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto">
+        {mode === 'library' ? (
+          <div className="p-4 space-y-3">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search exercises..."
+                className="pl-9"
+              />
             </div>
-          ) : (
-            /* Custom / Edit form */
-            <div className="p-4 space-y-4">
-              {/* Exercise Name - with library picker */}
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Exercise Name</label>
-                <div className="flex gap-2">
-                  <Input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., Barbell Squat"
-                    className="flex-1"
-                  />
+
+            {/* Category filter */}
+            <div className="flex gap-1.5 flex-wrap">
+              <Badge
+                variant={selectedCategory === null ? 'default' : 'outline'}
+                className="cursor-pointer text-[10px]"
+                onClick={() => setSelectedCategory(null)}
+              >
+                All
+              </Badge>
+              {categories.map((cat) => (
+                <Badge
+                  key={cat}
+                  variant={selectedCategory === cat ? 'default' : 'outline'}
+                  className="cursor-pointer capitalize text-[10px]"
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </Badge>
+              ))}
+            </div>
+
+            {/* Exercise list */}
+            <div className="space-y-1">
+              {filteredLibrary.map((ex) => (
+                <button
+                  key={ex.id}
+                  onClick={() => isNew ? handleSelectFromLibrary(ex) : handleReplaceWithLibrary(ex)}
+                  className={cn(
+                    'w-full text-left px-3 py-2.5 rounded-lg transition-colors',
+                    'hover:bg-muted/80 active:bg-muted'
+                  )}
+                >
+                  <p className="font-bold text-sm truncate">{ex.name}</p>
+                  <div className="flex gap-2 mt-0.5 text-[11px] text-muted-foreground items-center">
+                    <span className="capitalize">{ex.category}</span>
+                    {ex.equipment && (
+                      <>
+                        <span className="text-border">·</span>
+                        <span>{ex.equipment}</span>
+                      </>
+                    )}
+                    {ex.defaultSets && ex.defaultReps && (
+                      <>
+                        <span className="text-border">·</span>
+                        <span className="tabular-nums">
+                          {ex.defaultSets} × {ex.defaultReps}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </button>
+              ))}
+              {filteredLibrary.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p className="text-sm">No exercises found</p>
                   <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setMode('library')}
-                    title="Pick from library"
+                    variant="link"
+                    className="mt-2 text-xs"
+                    onClick={() => {
+                      setMode('custom');
+                      setName(searchQuery);
+                    }}
                   >
-                    <Library className="w-4 h-4" />
+                    Create &ldquo;{searchQuery}&rdquo; as custom
                   </Button>
                 </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Custom / Edit form */
+          <div className="p-4 space-y-4">
+            {/* Exercise Name */}
+            <div>
+              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                Exercise Name
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g., Barbell Squat"
+                  className="flex-1 font-bold"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setMode('library')}
+                  title="Pick from library"
+                >
+                  <Library className="w-4 h-4" />
+                </Button>
               </div>
+            </div>
 
-              {/* Sets & Reps */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Sets</label>
-                  <Input
-                    type="number"
-                    value={sets}
-                    onChange={(e) => setSets(e.target.value)}
-                    min="1"
-                    max="20"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1.5 block">Reps</label>
-                  <Input
-                    value={reps}
-                    onChange={(e) => setReps(e.target.value)}
-                    placeholder="10 or 8-12"
-                  />
-                </div>
-              </div>
-
-              {/* Weight */}
+            {/* Sets & Reps */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Weight</label>
-                <div className="flex gap-2">
-                  <Input
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    placeholder="135"
-                    className="flex-1"
-                  />
-                  <Select value={weightUnit} onValueChange={setWeightUnit}>
-                    <SelectTrigger className="w-20">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lbs">lbs</SelectItem>
-                      <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="bw">BW</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Rest */}
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Rest (seconds)</label>
+                <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                  Sets
+                </label>
                 <Input
                   type="number"
-                  value={restSeconds}
-                  onChange={(e) => setRestSeconds(e.target.value)}
-                  placeholder="60"
+                  value={sets}
+                  onChange={(e) => setSets(e.target.value)}
+                  min="1"
+                  max="20"
+                  className="tabular-nums"
                 />
               </div>
-
-              {/* Coaching Notes */}
               <div>
-                <label className="text-sm font-medium mb-1.5 block">Coaching Notes</label>
-                <Textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Form cues, progressions, modifications..."
-                  rows={3}
+                <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                  Reps
+                </label>
+                <Input
+                  value={reps}
+                  onChange={(e) => setReps(e.target.value)}
+                  placeholder="10 or 8-12"
+                  className="tabular-nums"
                 />
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="p-4 border-t bg-background">
-          {mode === 'custom' ? (
-            <div className="space-y-3">
-              <Button
-                onClick={handleSave}
-                disabled={!canSave}
-                className="w-full"
-              >
-                {isNew ? 'Add Exercise' : 'Save Changes'}
-              </Button>
-
-              {/* Delete option for existing exercises */}
-              {!isNew && onDelete && (
-                showDeleteConfirm ? (
-                  <div className="flex items-center justify-center gap-3 py-2">
-                    <span className="text-sm text-muted-foreground">Remove this exercise?</span>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        onDelete();
-                        onOpenChange(false);
-                      }}
-                    >
-                      Remove
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowDeleteConfirm(false)}
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowDeleteConfirm(true)}
-                    className="w-full text-center text-sm text-destructive hover:text-destructive/80 transition-colors py-2"
-                  >
-                    <Trash2 className="w-4 h-4 inline mr-1.5" />
-                    Remove Exercise
-                  </button>
-                )
-              )}
+            {/* Weight */}
+            <div>
+              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                Weight
+              </label>
+              <div className="flex gap-2">
+                <Input
+                  value={weight}
+                  onChange={(e) => setWeight(e.target.value)}
+                  placeholder="135"
+                  className="flex-1 tabular-nums"
+                />
+                <Select value={weightUnit} onValueChange={setWeightUnit}>
+                  <SelectTrigger className="w-20">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="lbs">lbs</SelectItem>
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="bw">BW</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-center text-sm text-muted-foreground">
-                {isNew ? 'Select an exercise or switch to custom' : 'Select an exercise to replace current'}
-              </p>
-              {/* Delete option available in library mode too for existing */}
-              {!isNew && onDelete && (
+
+            {/* Rest */}
+            <div>
+              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                Rest (seconds)
+              </label>
+              <Input
+                type="number"
+                value={restSeconds}
+                onChange={(e) => setRestSeconds(e.target.value)}
+                placeholder="60"
+                className="tabular-nums"
+              />
+            </div>
+
+            {/* Coaching Notes */}
+            <div>
+              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                Notes
+              </label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Form cues, progressions, modifications..."
+                rows={2}
+                className="text-sm resize-none"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer */}
+      <div className="p-4 border-t bg-background">
+        {mode === 'custom' ? (
+          <div className="space-y-2">
+            <Button
+              onClick={handleSave}
+              disabled={!canSave}
+              className="w-full"
+            >
+              {isNew ? 'Add Exercise' : 'Save Changes'}
+            </Button>
+
+            {!isNew && onDelete && (
+              showDeleteConfirm ? (
+                <div className="flex items-center justify-center gap-3 py-1">
+                  <span className="text-xs text-muted-foreground">Remove?</span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      onDelete();
+                      onClose();
+                    }}
+                  >
+                    Remove
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowDeleteConfirm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
                 <button
-                  onClick={() => {
-                    onDelete();
-                    onOpenChange(false);
-                  }}
-                  className="w-full text-center text-sm text-destructive hover:text-destructive/80 transition-colors py-2"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full text-center text-xs text-destructive hover:text-destructive/80 transition-colors py-1.5"
                 >
-                  <Trash2 className="w-4 h-4 inline mr-1.5" />
+                  <Trash2 className="w-3.5 h-3.5 inline mr-1" />
                   Remove Exercise
                 </button>
-              )}
-            </div>
-          )}
-        </div>
-      </SheetContent>
-    </Sheet>
+              )
+            )}
+          </div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-center text-xs text-muted-foreground">
+              {isNew ? 'Select an exercise or switch to custom' : 'Select to replace current exercise'}
+            </p>
+            {!isNew && onDelete && (
+              <button
+                onClick={() => {
+                  onDelete();
+                  onClose();
+                }}
+                className="w-full text-center text-xs text-destructive hover:text-destructive/80 transition-colors py-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5 inline mr-1" />
+                Remove Exercise
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+    </>
   );
 }

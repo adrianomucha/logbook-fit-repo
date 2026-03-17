@@ -52,6 +52,7 @@ function planDetailToWorkoutPlan(p: PlanDetail): WorkoutPlan {
       weekNumber: w.weekNumber,
       days: w.days.map((d) => ({
         id: d.id,
+        dayNumber: d.dayNumber,
         name: d.name ?? `Day ${d.dayNumber}`,
         isRestDay: d.isRestDay,
         exercises: d.exercises.map((e) => ({
