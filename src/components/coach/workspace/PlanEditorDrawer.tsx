@@ -10,6 +10,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -426,50 +433,74 @@ export function PlanEditorDrawer({
                 </Button>
               </div>
 
-              {/* Day Tabs */}
-              {hasDays && (
-                <div className="space-y-2">
-                  <div className="flex gap-1.5 overflow-x-auto pb-1">
-                    {currentWeek.days.map((day, idx) => {
-                      const exerciseCount = day.exercises?.length || 0;
-                      const isActive = clampedDay === idx;
+              {/* Week Calendar Strip — unified day navigation + weekday assignment */}
+              {hasDays && (() => {
+                // Map dayNumber → index in currentWeek.days
+                const dayByWeekday = new Map<number, number>();
+                currentWeek.days.forEach((day, idx) => {
+                  if (day.dayNumber && day.dayNumber >= 1 && day.dayNumber <= 7) {
+                    dayByWeekday.set(day.dayNumber, idx);
+                  }
+                });
+                return (
+                  <div className="grid grid-cols-7 gap-1">
+                    {WEEKDAYS.map((wd) => {
+                      const dayIdx = dayByWeekday.get(wd.num);
+                      const day = dayIdx !== undefined ? currentWeek.days[dayIdx] : null;
+                      const isActive = dayIdx !== undefined && clampedDay === dayIdx;
+                      const exerciseCount = day?.exercises?.length || 0;
+                      const hasWorkout = day && !day.isRestDay;
+                      const isRest = day?.isRestDay;
+
                       return (
                         <button
-                          key={day.id}
+                          key={wd.num}
+                          onClick={() => {
+                            if (dayIdx !== undefined) {
+                              setSelectedDay(dayIdx);
+                            }
+                          }}
+                          disabled={dayIdx === undefined}
                           className={cn(
-                            'shrink-0 text-xs font-medium px-3 py-1.5 rounded-md transition-all',
+                            'flex flex-col items-center gap-0.5 py-2 rounded-lg transition-all',
                             isActive
                               ? 'bg-foreground text-background'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                            day.isRestDay && !isActive && 'opacity-50'
+                              : day
+                                ? 'hover:bg-muted cursor-pointer'
+                                : 'cursor-default'
                           )}
-                          onClick={() => setSelectedDay(idx)}
                         >
-                          {weekdayShort(day.dayNumber) || day.name || `Day ${idx + 1}`}
-                          {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
+                          <span className={cn(
+                            'text-[10px] font-bold uppercase tracking-wide',
+                            !isActive && !day && 'text-muted-foreground/25',
+                            !isActive && isRest && 'text-muted-foreground/50',
+                            !isActive && hasWorkout && 'text-foreground',
+                          )}>
+                            {wd.short}
+                          </span>
+                          {hasWorkout && (
+                            <span className={cn(
+                              'text-[10px] tabular-nums font-medium',
+                              isActive ? 'text-background/70' : 'text-muted-foreground'
+                            )}>
+                              {exerciseCount}
+                            </span>
+                          )}
+                          {isRest && (
+                            <span className="text-[10px] leading-none">💤</span>
+                          )}
+                          {!day && (
+                            <span className={cn(
+                              'w-1 h-1 rounded-full',
+                              isActive ? 'bg-background/40' : 'bg-muted-foreground/15'
+                            )} />
+                          )}
                         </button>
                       );
                     })}
                   </div>
-                  {/* Weekday selector for active day */}
-                  <div className="flex gap-0.5">
-                    {WEEKDAYS.map((wd) => (
-                      <button
-                        key={wd.num}
-                        onClick={() => { if (localDayNumber !== wd.num) commitDayNumber(wd.num); }}
-                        className={cn(
-                          'flex-1 text-[10px] font-medium py-1 rounded transition-all',
-                          localDayNumber === wd.num
-                            ? 'bg-foreground text-background'
-                            : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted'
-                        )}
-                      >
-                        {wd.short}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
 
             {/* Content */}
@@ -477,23 +508,45 @@ export function PlanEditorDrawer({
               <div className="flex-1 overflow-y-auto">
                 {/* Day Name & Description Edit */}
                 <div className="p-4 border-b space-y-3">
-                  <div>
-                    <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                      Workout Name
-                    </label>
-                    <Input
-                      ref={dayNameInputRef}
-                      value={localDayName}
-                      onChange={(e) => setLocalDayName(e.target.value)}
-                      onBlur={commitDayName}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') dayNameInputRef.current?.blur();
-                        if (e.key === 'Escape') { setLocalDayName(currentDay?.name || ''); dayNameInputRef.current?.blur(); }
-                      }}
-                      placeholder="e.g., Push Day, Upper Body"
-                      maxLength={80}
-                      className="font-bold"
-                    />
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                        Workout Name
+                      </label>
+                      <Input
+                        ref={dayNameInputRef}
+                        value={localDayName}
+                        onChange={(e) => setLocalDayName(e.target.value)}
+                        onBlur={commitDayName}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') dayNameInputRef.current?.blur();
+                          if (e.key === 'Escape') { setLocalDayName(currentDay?.name || ''); dayNameInputRef.current?.blur(); }
+                        }}
+                        placeholder="e.g., Push Day"
+                        maxLength={80}
+                        className="font-bold"
+                      />
+                    </div>
+                    <div className="w-[90px] shrink-0">
+                      <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                        Day
+                      </label>
+                      <Select
+                        value={localDayNumber?.toString() || ''}
+                        onValueChange={(v) => commitDayNumber(parseInt(v))}
+                      >
+                        <SelectTrigger className="font-bold">
+                          <SelectValue placeholder="—" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {WEEKDAYS.map((wd) => (
+                            <SelectItem key={wd.num} value={wd.num.toString()}>
+                              {wd.short}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   {!currentDay.isRestDay && (
                     <div>
