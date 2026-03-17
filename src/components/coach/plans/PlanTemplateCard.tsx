@@ -36,9 +36,9 @@ export function PlanTemplateCard({
       onClick={onEdit}
       className={cn(
         'group relative cursor-pointer transition-all duration-200',
-        'rounded-xl border bg-card overflow-hidden',
-        'hover:shadow-md hover:border-foreground/20',
-        'active:scale-[0.98]',
+        'rounded-xl border-2 border-border/80 bg-card overflow-hidden',
+        'hover:border-foreground hover:shadow-lg',
+        'active:scale-[0.97]',
         isArchived && 'opacity-50 grayscale'
       )}
       role="button"
@@ -50,10 +50,10 @@ export function PlanTemplateCard({
         }
       }}
     >
-      <div className="p-4 sm:p-5">
+      <div className="p-5 sm:p-6">
         {/* Top row: large emoji + actions */}
-        <div className="flex items-start justify-between mb-4">
-          <div className="text-4xl sm:text-5xl leading-none select-none transition-transform duration-200 group-hover:scale-110">
+        <div className="flex items-start justify-between mb-5">
+          <div className="text-5xl sm:text-6xl leading-none select-none transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
             {plan.emoji || '💪'}
           </div>
 
@@ -104,50 +104,28 @@ export function PlanTemplateCard({
         </div>
 
         {/* Plan name */}
-        <h3 className="text-base sm:text-lg font-bold leading-snug truncate mb-1">
+        <h3 className="text-lg sm:text-xl font-bold leading-tight truncate mb-1.5">
           {plan.name}
         </h3>
 
-        {/* Metadata chips */}
-        <div className="flex items-center gap-2 text-xs text-muted-foreground mb-4">
-          {plan.durationWeeks && (
-            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-medium tabular-nums">
-              {plan.durationWeeks} {plan.durationWeeks === 1 ? 'wk' : 'wks'}
-            </span>
-          )}
-          {plan.workoutsPerWeek && (
-            <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 font-medium tabular-nums">
-              {plan.workoutsPerWeek}x&thinsp;/&thinsp;week
-            </span>
-          )}
-          {isArchived && (
-            <span className="inline-flex items-center rounded-md bg-destructive/10 text-destructive px-2 py-0.5 font-medium">
-              Archived
-            </span>
-          )}
-        </div>
+        {/* Metadata — inline, typographic */}
+        <p className="text-xs text-muted-foreground font-medium tabular-nums tracking-wide mb-5">
+          {[
+            plan.durationWeeks && `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'wk' : 'wks'}`,
+            plan.workoutsPerWeek && `${plan.workoutsPerWeek}x / week`,
+            isArchived && 'Archived',
+          ].filter(Boolean).join(' \u00B7 ')}
+        </p>
 
-        {/* Client count footer with usage bar */}
-        <div className="pt-3 border-t border-border/60">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Users className="w-3.5 h-3.5" />
-              <span className="font-medium">
-                {clientCount === 0
-                  ? 'No clients yet'
-                  : `${clientCount} ${clientCount === 1 ? 'client' : 'clients'}`}
-              </span>
-            </div>
-            {clientCount > 0 && (
-              <div className="flex gap-0.5">
-                {Array.from({ length: Math.min(clientCount, 5) }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 h-3 rounded-sm bg-foreground/20"
-                  />
-                ))}
-              </div>
-            )}
+        {/* Client count footer */}
+        <div className="pt-3 border-t border-border">
+          <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+            <Users className="w-3.5 h-3.5" />
+            <span className="font-medium">
+              {clientCount === 0
+                ? 'No clients'
+                : `${clientCount} ${clientCount === 1 ? 'client' : 'clients'}`}
+            </span>
           </div>
         </div>
       </div>

@@ -221,23 +221,29 @@ export function CoachDashboard() {
 
         {currentView === 'plans' && (
           <div className="space-y-6">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Plan Templates</h1>
-            <section>
-              <div className="flex items-center justify-between px-1 pb-2">
-                <span className="text-[11px] sm:text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                  {templates.length} {templates.length === 1 ? 'template' : 'templates'}
-                </span>
-                <button
-                  onClick={handleCreateNewPlan}
-                  className="flex items-center gap-1 text-[11px] sm:text-xs text-muted-foreground hover:text-foreground transition-colors font-medium uppercase tracking-wider"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  New
-                </button>
+            {/* Header row */}
+            <div className="flex items-end justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
+                  Plans
+                </h1>
+                {templates.length > 0 && (
+                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mt-2">
+                    {templates.length} {templates.length === 1 ? 'template' : 'templates'}
+                  </p>
+                )}
               </div>
+              {templates.length > 0 && (
+                <Button onClick={handleCreateNewPlan} size="sm" variant="outline">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  New Plan
+                </Button>
+              )}
+            </div>
 
+            <section>
               {isPlansLoading ? (
-                <div className="flex items-center justify-center py-12">
+                <div className="flex items-center justify-center py-20">
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
               ) : templates.length > 0 ? (
@@ -258,17 +264,17 @@ export function CoachDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-xl border border-dashed bg-muted/30 text-center py-20 space-y-5">
-                  <div className="text-5xl select-none">💪</div>
-                  <div className="space-y-1.5">
-                    <h3 className="text-base font-bold">No templates yet</h3>
-                    <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                      Create your first workout plan template. Assign it to clients later.
-                    </p>
-                  </div>
-                  <Button onClick={handleCreateNewPlan} size="sm">
-                    <Plus className="w-4 h-4 mr-1" />
-                    Create Your First Template
+                <div className="flex flex-col items-center text-center pt-8 sm:pt-16 pb-8">
+                  <div className="text-6xl sm:text-7xl select-none mb-6">💪</div>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
+                    Build your first plan
+                  </h2>
+                  <p className="text-sm text-muted-foreground max-w-[280px] mb-8">
+                    Design a workout template, then assign it to any client.
+                  </p>
+                  <Button onClick={handleCreateNewPlan} size="lg" className="text-sm tracking-wide px-8">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Template
                   </Button>
                 </div>
               )}

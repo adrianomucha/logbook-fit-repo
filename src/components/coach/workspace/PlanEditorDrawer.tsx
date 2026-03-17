@@ -319,10 +319,10 @@ export function PlanEditorDrawer({
           {plan && hasWeeks && (
             <>
               {/* Header */}
-              <div className="p-4 border-b space-y-3">
+              <div className="p-4 border-b space-y-4">
                 <SheetHeader>
-                  <SheetTitle className="flex items-center gap-2">
-                    <span className="text-xl">{plan.emoji || '💪'}</span>
+                  <SheetTitle className="flex items-center gap-2.5">
+                    <span className="text-2xl">{plan.emoji || '💪'}</span>
                     <Input
                       ref={planNameInputRef}
                       value={localPlanName}
@@ -332,7 +332,7 @@ export function PlanEditorDrawer({
                         if (e.key === 'Enter') planNameInputRef.current?.blur();
                       }}
                       placeholder="Plan name"
-                      className="font-semibold text-lg h-auto py-1 px-2 border-transparent hover:border-input focus:border-input transition-colors"
+                      className="font-bold text-lg h-auto py-1 px-2 border-transparent hover:border-input focus:border-input transition-colors"
                     />
                   </SheetTitle>
                   <SheetDescription>
@@ -341,49 +341,56 @@ export function PlanEditorDrawer({
                 </SheetHeader>
 
                 {/* Week Navigation */}
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between bg-muted/50 rounded-lg px-2 py-1.5">
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="h-8 w-8"
                     onClick={goToPrevWeek}
                     disabled={selectedWeek === 0}
                   >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
-                    Prev
+                    <ChevronLeft className="w-4 h-4" />
                   </Button>
-                  <span className="text-sm font-medium">
-                    Week {selectedWeek + 1} of {plan.weeks.length}
-                  </span>
+                  <div className="text-center">
+                    <span className="text-sm font-bold tracking-tight">
+                      Week {selectedWeek + 1}
+                    </span>
+                    <span className="text-xs text-muted-foreground ml-1.5">
+                      / {plan.weeks.length}
+                    </span>
+                  </div>
                   <Button
                     variant="ghost"
-                    size="sm"
+                    size="icon"
+                    className="h-8 w-8"
                     onClick={goToNextWeek}
                     disabled={selectedWeek === plan.weeks.length - 1}
                   >
-                    Next
-                    <ChevronRight className="w-4 h-4 ml-1" />
+                    <ChevronRight className="w-4 h-4" />
                   </Button>
                 </div>
 
                 {/* Day Tabs */}
                 {hasDays && (
-                  <div className="flex gap-1 overflow-x-auto pb-1">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {currentWeek.days.map((day, idx) => {
                       const exerciseCount = day.exercises?.length || 0;
+                      const isActive = selectedDay === idx;
                       return (
-                        <Button
+                        <button
                           key={day.id}
-                          variant={selectedDay === idx ? 'default' : 'outline'}
-                          size="sm"
                           className={cn(
-                            'shrink-0 text-xs',
-                            day.isRestDay && 'opacity-60'
+                            'shrink-0 text-xs font-medium px-3 py-1.5 rounded-md transition-all',
+                            isActive
+                              ? 'bg-foreground text-background'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                            day.isRestDay && !isActive && 'opacity-50'
                           )}
                           onClick={() => setSelectedDay(idx)}
                         >
                           {day.name || `Day ${idx + 1}`}
                           {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
-                        </Button>
+                        </button>
                       );
                     })}
                   </div>
@@ -396,7 +403,7 @@ export function PlanEditorDrawer({
                   {/* Day Name & Description Edit */}
                   <div className="p-4 border-b space-y-3">
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block">
+                      <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
                         Workout Name
                       </label>
                       <Input
@@ -405,13 +412,13 @@ export function PlanEditorDrawer({
                         onChange={(e) => setLocalDayName(e.target.value)}
                         onBlur={commitDayName}
                         placeholder="e.g., Push Day, Upper Body"
-                        className="font-medium"
+                        className="font-bold"
                       />
                     </div>
                     {!currentDay.isRestDay && (
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">
-                          Workout Briefing
+                        <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+                          Briefing
                         </label>
                         <Textarea
                           value={localDayDescription}
@@ -419,49 +426,52 @@ export function PlanEditorDrawer({
                           onBlur={commitDayDescription}
                           placeholder="Describe this workout for your client — what to expect, how to approach it..."
                           className="text-sm resize-none"
-                          rows={3}
+                          rows={2}
                         />
                       </div>
                     )}
                   </div>
 
-                  {/* Add Exercise Button */}
-                  {!currentDay.isRestDay && (
-                    <div className="p-4 border-b">
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={handleAddExercise}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Exercise
-                      </Button>
-                    </div>
-                  )}
-
                   {/* Exercise List or Rest Day */}
                   {currentDay.isRestDay ? (
-                    <div className="p-12 text-center space-y-3">
-                      <p className="text-3xl">😴</p>
-                      <p className="text-muted-foreground">This is a rest day</p>
+                    <div className="p-12 text-center space-y-2">
+                      <p className="text-4xl">😴</p>
+                      <p className="text-sm font-medium text-muted-foreground">Rest day</p>
                     </div>
                   ) : (
                     <div className="divide-y">
                       {currentDay.exercises.length === 0 ? (
-                        <div className="p-12 text-center text-muted-foreground">
-                          <Dumbbell className="w-8 h-8 mx-auto mb-3 opacity-50" />
-                          <p>No exercises yet</p>
-                          <p className="text-sm">Add your first exercise to get started</p>
+                        <div className="flex flex-col items-center py-16 px-8 text-center">
+                          <Dumbbell className="w-6 h-6 text-muted-foreground/40 mb-4" />
+                          <p className="text-sm font-bold mb-1">No exercises yet</p>
+                          <p className="text-xs text-muted-foreground mb-6">Add your first exercise to this day</p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleAddExercise}
+                          >
+                            <Plus className="w-3.5 h-3.5 mr-1.5" />
+                            Add Exercise
+                          </Button>
                         </div>
                       ) : (
-                        currentDay.exercises.map((exercise, idx) => (
-                          <ExerciseCard
-                            key={exercise.id}
-                            exercise={exercise}
-                            exerciseIndex={idx}
-                            onClick={() => handleEditExercise(idx)}
-                          />
-                        ))
+                        <>
+                          {currentDay.exercises.map((exercise, idx) => (
+                            <ExerciseCard
+                              key={exercise.id}
+                              exercise={exercise}
+                              exerciseIndex={idx}
+                              onClick={() => handleEditExercise(idx)}
+                            />
+                          ))}
+                          <button
+                            onClick={handleAddExercise}
+                            className="w-full px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            Add Exercise
+                          </button>
+                        </>
                       )}
                     </div>
                   )}
