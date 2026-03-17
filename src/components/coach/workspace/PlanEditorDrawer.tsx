@@ -71,8 +71,14 @@ export function PlanEditorDrawer({
   const [exerciseDrawerOpen, setExerciseDrawerOpen] = useState(false);
   const [editingExerciseIndex, setEditingExerciseIndex] = useState<number | null>(null);
 
-  const currentWeek = plan?.weeks[selectedWeek];
-  const currentDay = currentWeek?.days[selectedDay];
+  // Prevent double-submit on async operations
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Clamp indices to valid range to prevent out-of-bounds after plan refresh
+  const clampedWeek = plan ? Math.min(selectedWeek, Math.max(0, plan.weeks.length - 1)) : 0;
+  const currentWeek = plan?.weeks[clampedWeek];
+  const clampedDay = currentWeek ? Math.min(selectedDay, Math.max(0, currentWeek.days.length - 1)) : 0;
+  const currentDay = currentWeek?.days[clampedDay];
 
   // Local state for plan name input — same pattern as day name below.
   const [localPlanName, setLocalPlanName] = useState(plan?.name || '');
@@ -139,8 +145,9 @@ export function PlanEditorDrawer({
 
   // Save exercise (new or update) — persists via API
   const handleSaveExercise = async (exercise: Exercise) => {
-    if (!plan || !currentDay) return;
+    if (!plan || !currentDay || isSaving) return;
     const dayId = currentDay.id;
+    setIsSaving(true);
 
     try {
       if (editingExerciseIndex !== null) {
@@ -192,6 +199,8 @@ export function PlanEditorDrawer({
     } catch (err) {
       console.error('Failed to save exercise:', err);
       return; // Don't refresh on error
+    } finally {
+      setIsSaving(false);
     }
 
     onRefresh?.();
@@ -199,8 +208,9 @@ export function PlanEditorDrawer({
 
   // Delete exercise — persists via API
   const handleDeleteExercise = async () => {
-    if (!plan || editingExerciseIndex === null || !currentDay) return;
+    if (!plan || editingExerciseIndex === null || !currentDay || isSaving) return;
     const exerciseToDelete = currentDay.exercises[editingExerciseIndex];
+    setIsSaving(true);
 
     try {
       await apiFetch(`/api/workout-exercises/${exerciseToDelete.id}`, {
@@ -209,6 +219,8 @@ export function PlanEditorDrawer({
     } catch (err) {
       console.error('Failed to delete exercise:', err);
       return;
+    } finally {
+      setIsSaving(false);
     }
 
     onRefresh?.();
@@ -372,8 +384,10 @@ export function PlanEditorDrawer({
                     onBlur={commitPlanName}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') planNameInputRef.current?.blur();
+                      if (e.key === 'Escape') { setLocalPlanName(plan.name); planNameInputRef.current?.blur(); }
                     }}
                     placeholder="Plan name"
+                    maxLength={100}
                     className="font-bold text-lg h-auto py-1 px-2 border-transparent hover:border-input focus:border-input transition-colors"
                   />
                 </SheetTitle>
@@ -418,7 +432,7 @@ export function PlanEditorDrawer({
                   <div className="flex gap-1.5 overflow-x-auto pb-1">
                     {currentWeek.days.map((day, idx) => {
                       const exerciseCount = day.exercises?.length || 0;
-                      const isActive = selectedDay === idx;
+                      const isActive = clampedDay === idx;
                       return (
                         <button
                           key={day.id}
@@ -472,7 +486,12 @@ export function PlanEditorDrawer({
                       value={localDayName}
                       onChange={(e) => setLocalDayName(e.target.value)}
                       onBlur={commitDayName}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') dayNameInputRef.current?.blur();
+                        if (e.key === 'Escape') { setLocalDayName(currentDay?.name || ''); dayNameInputRef.current?.blur(); }
+                      }}
                       placeholder="e.g., Push Day, Upper Body"
+                      maxLength={80}
                       className="font-bold"
                     />
                   </div>
@@ -488,6 +507,7 @@ export function PlanEditorDrawer({
                         placeholder="Describe this workout for your client — what to expect, how to approach it..."
                         className="text-sm resize-none"
                         rows={2}
+                        maxLength={500}
                       />
                     </div>
                   )}

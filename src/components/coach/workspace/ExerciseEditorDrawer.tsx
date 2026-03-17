@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Library, Plus, Search, Trash2 } from 'lucide-react';
+import { Library, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
 import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
@@ -19,7 +19,7 @@ interface ExerciseEditorContentProps {
   /** Existing exercise to edit, or null for new exercise */
   exercise: Exercise | null;
   /** Called when exercise is saved */
-  onSave: (exercise: Exercise) => void;
+  onSave: (exercise: Exercise) => void | Promise<void>;
   /** Called to close the editor */
   onClose: () => void;
   /** Called when exercise is deleted (only shown when editing existing) */
@@ -54,6 +54,7 @@ export function ExerciseEditorContent({
   );
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Form state
   const [name, setName] = useState(exercise?.name || '');
@@ -88,6 +89,7 @@ export function ExerciseEditorContent({
     setSearchQuery('');
     setSelectedCategory(null);
     setShowDeleteConfirm(false);
+    setIsSaving(false);
   }, [exercise, open]);
 
   // Filter exercises from library
@@ -118,18 +120,24 @@ export function ExerciseEditorContent({
     setMode('custom');
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSaving || !canSave) return;
+    setIsSaving(true);
     const savedExercise: Exercise = {
       id: exercise?.id || `ex-${Date.now()}`,
-      name,
-      sets: parseInt(sets) || 3,
+      name: name.trim(),
+      sets: Math.max(1, parseInt(sets) || 3),
       reps,
       weight: weight || undefined,
       weightUnit,
-      restSeconds: restSeconds ? parseInt(restSeconds) : undefined,
-      notes: notes || undefined,
+      restSeconds: restSeconds ? Math.max(0, parseInt(restSeconds)) : undefined,
+      notes: notes.trim() || undefined,
     };
-    onSave(savedExercise);
+    try {
+      await onSave(savedExercise);
+    } finally {
+      setIsSaving(false);
+    }
     onClose();
   };
 
@@ -274,6 +282,7 @@ export function ExerciseEditorContent({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Barbell Squat"
+                  maxLength={100}
                   className="flex-1 font-bold"
                 />
                 <Button
@@ -297,8 +306,8 @@ export function ExerciseEditorContent({
                   type="number"
                   value={sets}
                   onChange={(e) => setSets(e.target.value)}
-                  min="1"
-                  max="20"
+                  min={1}
+                  max={20}
                   className="tabular-nums"
                 />
               </div>
@@ -310,6 +319,7 @@ export function ExerciseEditorContent({
                   value={reps}
                   onChange={(e) => setReps(e.target.value)}
                   placeholder="10 or 8-12"
+                  maxLength={20}
                   className="tabular-nums"
                 />
               </div>
@@ -325,6 +335,7 @@ export function ExerciseEditorContent({
                   value={weight}
                   onChange={(e) => setWeight(e.target.value)}
                   placeholder="135"
+                  maxLength={20}
                   className="flex-1 tabular-nums"
                 />
                 <Select value={weightUnit} onValueChange={setWeightUnit}>
@@ -350,6 +361,8 @@ export function ExerciseEditorContent({
                 value={restSeconds}
                 onChange={(e) => setRestSeconds(e.target.value)}
                 placeholder="60"
+                min={0}
+                max={600}
                 className="tabular-nums"
               />
             </div>
@@ -364,6 +377,7 @@ export function ExerciseEditorContent({
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Form cues, progressions, modifications..."
                 rows={2}
+                maxLength={500}
                 className="text-sm resize-none"
               />
             </div>
@@ -377,10 +391,14 @@ export function ExerciseEditorContent({
           <div className="space-y-2">
             <Button
               onClick={handleSave}
-              disabled={!canSave}
+              disabled={!canSave || isSaving}
               className="w-full"
             >
-              {isNew ? 'Add Exercise' : 'Save Changes'}
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                isNew ? 'Add Exercise' : 'Save Changes'
+              )}
             </Button>
 
             {!isNew && onDelete && (
