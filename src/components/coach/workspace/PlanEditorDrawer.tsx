@@ -414,27 +414,46 @@ export function PlanEditorDrawer({
 
               {/* Day Tabs */}
               {hasDays && (
-                <div className="flex gap-1.5 overflow-x-auto pb-1">
-                  {currentWeek.days.map((day, idx) => {
-                    const exerciseCount = day.exercises?.length || 0;
-                    const isActive = selectedDay === idx;
-                    return (
+                <div className="space-y-2">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                    {currentWeek.days.map((day, idx) => {
+                      const exerciseCount = day.exercises?.length || 0;
+                      const isActive = selectedDay === idx;
+                      return (
+                        <button
+                          key={day.id}
+                          className={cn(
+                            'shrink-0 text-xs font-medium px-3 py-1.5 rounded-md transition-all',
+                            isActive
+                              ? 'bg-foreground text-background'
+                              : 'text-muted-foreground hover:text-foreground hover:bg-muted',
+                            day.isRestDay && !isActive && 'opacity-50'
+                          )}
+                          onClick={() => setSelectedDay(idx)}
+                        >
+                          {weekdayShort(day.dayNumber) || day.name || `Day ${idx + 1}`}
+                          {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {/* Weekday selector for active day */}
+                  <div className="flex gap-0.5">
+                    {WEEKDAYS.map((wd) => (
                       <button
-                        key={day.id}
+                        key={wd.num}
+                        onClick={() => { if (localDayNumber !== wd.num) commitDayNumber(wd.num); }}
                         className={cn(
-                          'shrink-0 text-xs font-medium px-3 py-1.5 rounded-md transition-all',
-                          isActive
+                          'flex-1 text-[10px] font-medium py-1 rounded transition-all',
+                          localDayNumber === wd.num
                             ? 'bg-foreground text-background'
-                            : 'text-muted-foreground hover:text-foreground hover:bg-muted',
-                          day.isRestDay && !isActive && 'opacity-50'
+                            : 'text-muted-foreground/50 hover:text-foreground hover:bg-muted'
                         )}
-                        onClick={() => setSelectedDay(idx)}
                       >
-                        {weekdayShort(day.dayNumber) || day.name || `Day ${idx + 1}`}
-                        {day.isRestDay ? ' 💤' : ` (${exerciseCount})`}
+                        {wd.short}
                       </button>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
@@ -456,27 +475,6 @@ export function PlanEditorDrawer({
                       placeholder="e.g., Push Day, Upper Body"
                       className="font-bold"
                     />
-                  </div>
-                  <div>
-                    <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                      Day of Week
-                    </label>
-                    <div className="flex gap-1">
-                      {WEEKDAYS.map((wd) => (
-                        <button
-                          key={wd.num}
-                          onClick={() => { if (localDayNumber !== wd.num) commitDayNumber(wd.num); }}
-                          className={cn(
-                            'flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all',
-                            localDayNumber === wd.num
-                              ? 'bg-foreground text-background'
-                              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-                          )}
-                        >
-                          {wd.short}
-                        </button>
-                      ))}
-                    </div>
                   </div>
                   {!currentDay.isRestDay && (
                     <div>
