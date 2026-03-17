@@ -93,12 +93,16 @@ export function PlanEditorDrawer({
   // Local state for day description (workout briefing for clients)
   const [localDayDescription, setLocalDayDescription] = useState(currentDay?.description || '');
 
-  // Sync local day name when navigating to a different day/week or when plan changes externally
+  // Sync local day fields when navigating to a different day/week or when plan changes externally
+  const currentDayId = currentDay?.id;
+  const currentDayName = currentDay?.name;
+  const currentDayDesc = currentDay?.description;
+  const currentDayNum = currentDay?.dayNumber;
   useEffect(() => {
-    setLocalDayName(currentDay?.name || '');
-    setLocalDayDescription(currentDay?.description || '');
-    setLocalDayNumber(currentDay?.dayNumber);
-  }, [selectedWeek, selectedDay, currentDay?.name, currentDay?.description, currentDay?.dayNumber]);
+    setLocalDayName(currentDayName || '');
+    setLocalDayDescription(currentDayDesc || '');
+    setLocalDayNumber(currentDayNum);
+  }, [currentDayId, currentDayName, currentDayDesc, currentDayNum]);
 
   // Reset selection when plan changes (e.g. opening a different plan)
   useEffect(() => {
