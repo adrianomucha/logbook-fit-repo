@@ -317,7 +317,7 @@ export function PlanEditorDrawer({
       if (!o) closeExerciseEditor();
       onOpenChange(o);
     }}>
-      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col">
+      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col pb-[env(safe-area-inset-bottom)]">
         {/* Loading state */}
         {isLoading && !plan && (
           <>
@@ -380,7 +380,7 @@ export function PlanEditorDrawer({
         {plan && hasWeeks && !exerciseDrawerOpen && (
           <>
             {/* Header */}
-            <div className="p-4 border-b space-y-4">
+            <div className="p-3 sm:p-4 border-b space-y-3 sm:space-y-4">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2.5">
                   <span className="text-2xl">{plan.emoji || '💪'}</span>
@@ -404,11 +404,11 @@ export function PlanEditorDrawer({
               </SheetHeader>
 
               {/* Week Navigation */}
-              <div className="flex items-center justify-between bg-muted/50 rounded-lg px-2 py-1.5">
+              <div className="flex items-center justify-between bg-muted/50 rounded-lg px-1 py-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-10 w-10 sm:h-8 sm:w-8"
                   onClick={goToPrevWeek}
                   disabled={selectedWeek === 0}
                 >
@@ -425,7 +425,7 @@ export function PlanEditorDrawer({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-10 w-10 sm:h-8 sm:w-8"
                   onClick={goToNextWeek}
                   disabled={selectedWeek === plan.weeks.length - 1}
                 >
@@ -462,16 +462,16 @@ export function PlanEditorDrawer({
                           }}
                           disabled={dayIdx === undefined}
                           className={cn(
-                            'flex flex-col items-center gap-0.5 py-2 rounded-lg transition-all',
+                            'flex flex-col items-center gap-0.5 py-2.5 sm:py-2 rounded-lg transition-all min-h-[44px] sm:min-h-0',
                             isActive
                               ? 'bg-foreground text-background'
                               : day
-                                ? 'hover:bg-muted cursor-pointer'
+                                ? 'hover:bg-muted cursor-pointer active:bg-muted'
                                 : 'cursor-default'
                           )}
                         >
                           <span className={cn(
-                            'text-[10px] font-bold uppercase tracking-wide',
+                            'text-[11px] sm:text-[10px] font-bold uppercase tracking-wide',
                             !isActive && !day && 'text-muted-foreground/25',
                             !isActive && isRest && 'text-muted-foreground/50',
                             !isActive && hasWorkout && 'text-foreground',
@@ -480,14 +480,14 @@ export function PlanEditorDrawer({
                           </span>
                           {hasWorkout && (
                             <span className={cn(
-                              'text-[10px] tabular-nums font-medium',
+                              'text-[11px] sm:text-[10px] tabular-nums font-medium',
                               isActive ? 'text-background/70' : 'text-muted-foreground'
                             )}>
                               {exerciseCount}
                             </span>
                           )}
                           {isRest && (
-                            <span className="text-[10px] leading-none">💤</span>
+                            <span className="text-[11px] sm:text-[10px] leading-none">💤</span>
                           )}
                           {!day && (
                             <span className={cn(
@@ -600,7 +600,7 @@ export function PlanEditorDrawer({
                         ))}
                         <button
                           onClick={handleAddExercise}
-                          className="w-full px-4 py-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors flex items-center justify-center gap-1.5"
+                          className="w-full px-4 py-3.5 sm:py-3 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 transition-colors flex items-center justify-center gap-1.5"
                         >
                           <Plus className="w-3.5 h-3.5" />
                           Add Exercise
@@ -622,12 +622,12 @@ export function PlanEditorDrawer({
         {plan && hasWeeks && exerciseDrawerOpen && (
           <>
             {/* Back button header */}
-            <div className="px-4 py-3 border-b">
+            <div className="px-4 py-2 border-b">
               <button
                 onClick={closeExerciseEditor}
-                className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground active:text-foreground transition-colors min-h-[44px] sm:min-h-[36px]"
               >
-                <ChevronLeft className="w-3.5 h-3.5" />
+                <ChevronLeft className="w-4 h-4" />
                 Back to {currentDay?.name || 'workout'}
               </button>
             </div>
