@@ -135,10 +135,10 @@ function SignupContent() {
         : { emoji: '🔗', title: 'Link not found', message: 'This invite link doesn\'t look right. Double-check the URL or ask your coach for a new one.' };
 
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-screen bg-background p-4 pt-16 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
-            <h1 className="text-4xl font-bold mb-2">LogBook.fit</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold mb-2">LogBook.fit</h1>
           </div>
           <Card>
             <CardContent className="pt-8 pb-8 text-center space-y-3">
@@ -161,10 +161,10 @@ function SignupContent() {
 
   // Valid invite — show signup form
   return (
-    <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+    <div className="min-h-screen bg-background p-4 pt-12 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-4xl font-bold">LogBook.fit</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold">LogBook.fit</h1>
           <p className="text-muted-foreground">
             <strong>{inviteInfo.coachName}</strong> invited you to train together
           </p>
