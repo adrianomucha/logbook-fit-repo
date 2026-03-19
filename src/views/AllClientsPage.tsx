@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import type { DashboardClient } from '@/types/api';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
+import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { EmptyStateNoClients } from '@/components/coach/EmptyStates';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -107,6 +109,7 @@ function ClientRow({ client }: { client: DashboardClient }) {
 
 export function AllClientsPage() {
   const { clients, isLoading } = useCoachDashboard();
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
@@ -117,7 +120,7 @@ export function AllClientsPage() {
           title="Clients"
           subtitle={clients.length > 0 ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}` : undefined}
           action={
-            <Button size="sm" variant="outline">
+            <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)}>
               <Plus className="w-4 h-4 mr-1.5" />
               Invite Client
             </Button>
@@ -138,6 +141,11 @@ export function AllClientsPage() {
           </div>
         )}
       </div>
+
+      <InviteClientModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
     </div>
   );
 }
