@@ -90,14 +90,14 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
       {/* Stat row — dramatic numbers with accessible labels */}
       <div className="flex gap-0">
         {/* On Track — always shown */}
-        <div className="flex-1 border-r border-white/10 pr-4">
+        <div className="flex-1 border-r border-white/15 pr-4">
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl sm:text-3xl font-black tabular-nums leading-none">
               {onTrack}
             </span>
             <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
           </div>
-          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1">
+          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1.5">
             On Track
           </p>
         </div>
@@ -105,7 +105,7 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
         {/* Needs Action */}
         <div className={cn(
           'flex-1 px-4',
-          atRisk > 0 && 'border-r border-white/10'
+          atRisk > 0 && 'border-r border-white/15'
         )}>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl sm:text-3xl font-black tabular-nums leading-none">
@@ -115,8 +115,8 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
               <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
             )}
           </div>
-          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1">
-            Action
+          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1.5">
+            Pending
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
             )}
           </div>
           <p className={cn(
-            'text-[11px] uppercase tracking-[0.15em] font-medium mt-1',
+            'text-[11px] uppercase tracking-[0.15em] font-medium mt-1.5',
             atRisk > 0 ? 'text-red-400' : 'text-white/60'
           )}>
             At Risk
