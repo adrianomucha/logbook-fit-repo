@@ -21,6 +21,7 @@ import { ChatView } from '@/components/chat/ChatView';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { CoachNav } from '@/components/coach/CoachNav';
+import { PageHeader } from '@/components/coach/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
@@ -477,195 +478,208 @@ export function UnifiedClientProfile() {
     disabled: false,
   } : null;
 
+  // Build subtitle from status or plan
+  const headerSubtitle = statusLabel
+    ?? (plan ? `${plan.emoji} ${plan.name}` : undefined);
+
   return (
-    <div className="min-h-screen bg-background pb-24 sm:pb-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Top Navigation */}
-        <div className="px-3 sm:px-4 pt-3 sm:pt-4">
-          <CoachNav activeTab="clients" />
-        </div>
+    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+        <CoachNav activeTab="clients" />
 
-        {/* ── Hero zone ── */}
-        <div className="px-3 sm:px-4 pt-8 sm:pt-12 pb-8 space-y-6">
-          {/* Back + Name + Status */}
-          <div className="space-y-2">
-            <button
-              onClick={() => router.push('/coach/clients')}
-              className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors group"
-              aria-label="Back to Clients"
+        {/* Back link */}
+        <button
+          onClick={() => router.push('/coach/clients')}
+          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors group"
+          aria-label="Back to Clients"
+        >
+          <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          Clients
+        </button>
+
+        {/* Page header — matches Dashboard/Clients/Plans pattern */}
+        <PageHeader
+          title={client.name}
+          subtitle={headerSubtitle}
+          action={statusAction ? (
+            <Button
+              variant={statusIsUrgent ? 'default' : 'outline'}
+              size="sm"
+              onClick={statusAction.onClick}
+              disabled={statusAction.disabled}
             >
-              <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
-              Clients
-            </button>
-            <div className="flex items-center gap-4 flex-wrap">
-              <h1 className="text-4xl sm:text-5xl font-black tracking-tight truncate min-w-0">
-                {client.name}
-              </h1>
-              {showStatusBanner && StatusIcon && (
-                <span className={cn(
-                  'inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.12em] font-semibold px-2.5 py-1 rounded-full',
-                  statusIsUrgent
-                    ? 'bg-warning/15 text-warning'
-                    : status!.type === 'unread'
-                      ? 'bg-info/15 text-info'
-                      : 'bg-muted text-muted-foreground',
-                )}>
-                  <StatusIcon className="w-3.5 h-3.5" />
-                  {statusLabel}
-                </span>
-              )}
-            </div>
-            {/* Status context line + action */}
-            {showStatusBanner && (
-              <div className="flex items-center gap-3 flex-wrap">
-                <p className="text-sm text-muted-foreground">
-                  {status!.type === 'overdue' && client.lastCheckInDate && (() => {
-                    const days = Math.max(1, Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
-                    return <>{days} {days === 1 ? 'day' : 'days'} since last check-in</>;
-                  })()}
-                  {status!.type === 'at-risk' && client.lastCheckInDate && (() => {
-                    const days = Math.max(1, 7 - Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
-                    return <>{days} {days === 1 ? 'day' : 'days'} until overdue</>;
-                  })()}
-                  {status!.type === 'unread' && 'New messages waiting'}
-                  {status!.type === 'ok' && `Up to date with ${firstName}`}
-                </p>
-                {statusAction && (
-                  <Button
-                    variant={statusIsUrgent ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={statusAction.onClick}
-                    disabled={statusAction.disabled}
-                    className="h-7 text-xs"
-                  >
-                    {statusAction.label}
-                  </Button>
-                )}
-              </div>
-            )}
-          </div>
+              {statusAction.label}
+            </Button>
+          ) : undefined}
+        />
 
-          {/* Weekly Strip — part of the hero zone */}
-          <InteractiveWeeklyStrip
-            client={client}
-            plan={plan}
-            planStartDate={client.planStartDate}
-            workoutCompletions={workoutCompletions}
-            onScrollToPlanEditor={handleScrollToPlanEditor}
-            compact
-          />
-        </div>
-
-        <div className="px-3 sm:px-4 space-y-8 sm:space-y-12">
-
-        {/* Primary content — full width, borderless */}
-        {priorityMode === 'A' ? (
-          <div ref={checkInRef} className="animate-fade-in-up border-t border-border pt-6 sm:pt-8">
-            <InlineCheckInReview
-              client={client}
-              activeCheckIn={activeCheckIn}
-              plan={plan}
-              workoutCompletions={workoutCompletions}
-              exerciseFlags={[]}
-              currentUserId={user?.id ?? ''}
-              onCompleteCheckIn={handleCompleteCheckIn}
-              onCreateCheckIn={handleCreateCheckIn}
-              onMessageAboutFlag={handleMessageAboutFlag}
-              justSentFromParent={justSentCheckIn}
-              hideTitle={activeCheckIn?.status === 'responded'}
-              variant="flat"
-            />
-          </div>
-        ) : (
-          <div ref={planEditorRef} className="animate-fade-in-up border-t border-border pt-6 sm:pt-8">
-            <InlinePlanEditor
-              client={client}
-              plan={plan}
-              planStartDate={client.planStartDate}
-              onUpdatePlan={handleUpdatePlan}
-              onEditPlan={handleEditPlan}
-              onChangePlan={handleChangePlan}
-              onCreatePlan={handleCreateNewPlan}
-              onUnassignPlan={handleUnassignPlan}
-              exercisesCollapsed={false}
-              variant="flat"
-            />
+        {/* Status alert strip — only when urgent */}
+        {showStatusBanner && statusIsUrgent && StatusIcon && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 text-warning text-xs font-medium">
+            <StatusIcon className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              {status!.type === 'overdue' && client.lastCheckInDate && (() => {
+                const days = Math.max(1, Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
+                return `${days}d since last check-in`;
+              })()}
+              {status!.type === 'at-risk' && client.lastCheckInDate && (() => {
+                const days = Math.max(1, 7 - Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
+                return `${days}d until overdue`;
+              })()}
+            </span>
           </div>
         )}
 
-        {/* Bottom row: Chat + Secondary content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {/* Chat */}
-          <div ref={chatRef} className="flex flex-col h-[400px] md:h-[500px]">
-            <ChatView
-              client={client}
-              messages={messages}
-              currentUserId={user?.id ?? ''}
-              currentUserName={user?.name ?? 'Coach'}
-              onSendMessage={handleSendMessage}
-              initialPrefill={chatPrefill}
-              heightClass="h-full"
-            />
-          </div>
+        {/* This Week — compact progress strip */}
+        <InteractiveWeeklyStrip
+          client={client}
+          plan={plan}
+          planStartDate={client.planStartDate}
+          workoutCompletions={workoutCompletions}
+          onScrollToPlanEditor={handleScrollToPlanEditor}
+          compact
+        />
 
-          {/* Secondary content */}
-          <div className="flex flex-col border-t md:border-t-0 border-border/50 pt-4 md:pt-0 md:h-[500px] md:overflow-y-auto">
+        {/* ── Sections ── */}
+
+        {/* Primary: Check-in or Plan */}
+        {priorityMode === 'A' ? (
+          <section ref={checkInRef}>
+            <div className="px-1 pb-2">
+              <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                Check-in
+              </span>
+            </div>
+            <div className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
+              <InlineCheckInReview
+                client={client}
+                activeCheckIn={activeCheckIn}
+                plan={plan}
+                workoutCompletions={workoutCompletions}
+                exerciseFlags={[]}
+                currentUserId={user?.id ?? ''}
+                onCompleteCheckIn={handleCompleteCheckIn}
+                onCreateCheckIn={handleCreateCheckIn}
+                onMessageAboutFlag={handleMessageAboutFlag}
+                justSentFromParent={justSentCheckIn}
+                hideTitle={activeCheckIn?.status === 'responded'}
+                variant="flat"
+              />
+            </div>
+          </section>
+        ) : (
+          <section ref={planEditorRef}>
+            <div className="px-1 pb-2">
+              <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                Training Plan
+              </span>
+            </div>
+            <div className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
+              <InlinePlanEditor
+                client={client}
+                plan={plan}
+                planStartDate={client.planStartDate}
+                onUpdatePlan={handleUpdatePlan}
+                onEditPlan={handleEditPlan}
+                onChangePlan={handleChangePlan}
+                onCreatePlan={handleCreateNewPlan}
+                onUnassignPlan={handleUnassignPlan}
+                exercisesCollapsed={false}
+                variant="flat"
+              />
+            </div>
+          </section>
+        )}
+
+        {/* Two-column: Chat + Secondary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          {/* Messages */}
+          <section>
+            <div className="px-1 pb-2">
+              <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                Messages
+              </span>
+            </div>
+            <div ref={chatRef} className="bg-card rounded-xl border overflow-hidden h-[400px] md:h-[480px]">
+              <ChatView
+                client={client}
+                messages={messages}
+                currentUserId={user?.id ?? ''}
+                currentUserName={user?.name ?? 'Coach'}
+                onSendMessage={handleSendMessage}
+                initialPrefill={chatPrefill}
+                heightClass="h-full"
+              />
+            </div>
+          </section>
+
+          {/* Secondary: Plan (if check-in is primary) + History */}
+          <section className="space-y-4 sm:space-y-6">
             {priorityMode === 'A' && (
-              <div ref={planEditorRef} className="py-3 sm:py-4">
-                <InlinePlanEditor
-                  client={client}
-                  plan={plan}
-                  planStartDate={client.planStartDate}
-                  onUpdatePlan={handleUpdatePlan}
-                  onEditPlan={handleEditPlan}
-                  onChangePlan={handleChangePlan}
-                  onCreatePlan={handleCreateNewPlan}
-                  onUnassignPlan={handleUnassignPlan}
-                  exercisesCollapsed={true}
-                  variant="flat"
-                />
+              <div>
+                <div className="px-1 pb-2">
+                  <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                    Training Plan
+                  </span>
+                </div>
+                <div ref={planEditorRef} className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
+                  <InlinePlanEditor
+                    client={client}
+                    plan={plan}
+                    planStartDate={client.planStartDate}
+                    onUpdatePlan={handleUpdatePlan}
+                    onEditPlan={handleEditPlan}
+                    onChangePlan={handleChangePlan}
+                    onCreatePlan={handleCreateNewPlan}
+                    onUnassignPlan={handleUnassignPlan}
+                    exercisesCollapsed={true}
+                    variant="flat"
+                  />
+                </div>
               </div>
             )}
 
-            <div className="border-t border-border/50 py-3 sm:py-4">
-              <CheckInHistoryPanel
-                checkIns={checkIns}
-                clientId={client.id}
-                clientName={client.name}
-                initialCount={3}
-                hasPlan={!!plan}
-                onToggleSchedule={handleToggleCheckInSchedule}
-              />
+            <div>
+              <div className="px-1 pb-2">
+                <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                  Check-in History
+                </span>
+              </div>
+              <div className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
+                <CheckInHistoryPanel
+                  checkIns={checkIns}
+                  clientId={client.id}
+                  clientName={client.name}
+                  initialCount={3}
+                  hasPlan={!!plan}
+                  onToggleSchedule={handleToggleCheckInSchedule}
+                />
+              </div>
             </div>
-          </div>
+          </section>
         </div>
-
-        {/* Plan Setup Modal */}
-        <PlanSetupModal
-          isOpen={showPlanSetupModal}
-          onSubmit={handlePlanCreated}
-          onClose={() => setShowPlanSetupModal(false)}
-        />
-
-        {/* Assign Plan Modal */}
-        <AssignPlanModal
-          isOpen={showAssignPlanModal}
-          onClose={() => setShowAssignPlanModal(false)}
-          onAssign={handleAssignPlan}
-          plans={plansList}
-          currentPlanId={plan?.id}
-        />
-
-        {/* Plan Editor Drawer */}
-        <PlanEditorDrawer
-          open={showPlanDrawer}
-          onOpenChange={setShowPlanDrawer}
-          plan={plan ?? null}
-          onUpdatePlan={handleUpdatePlan}
-          onRefresh={() => { refreshPlan(); refreshCoachPlans(); }}
-        />
-        </div>{/* end px-3 content wrapper */}
       </div>
+
+      {/* Modals & Drawers */}
+      <PlanSetupModal
+        isOpen={showPlanSetupModal}
+        onSubmit={handlePlanCreated}
+        onClose={() => setShowPlanSetupModal(false)}
+      />
+      <AssignPlanModal
+        isOpen={showAssignPlanModal}
+        onClose={() => setShowAssignPlanModal(false)}
+        onAssign={handleAssignPlan}
+        plans={plansList}
+        currentPlanId={plan?.id}
+      />
+      <PlanEditorDrawer
+        open={showPlanDrawer}
+        onOpenChange={setShowPlanDrawer}
+        plan={plan ?? null}
+        onUpdatePlan={handleUpdatePlan}
+        onRefresh={() => { refreshPlan(); refreshCoachPlans(); }}
+      />
     </div>
   );
 }
