@@ -63,9 +63,8 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     try {
       await navigator.clipboard.writeText(fullLink);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback for older browsers
       const input = document.createElement('input');
       input.value = fullLink;
       document.body.appendChild(input);
@@ -73,7 +72,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
       document.execCommand('copy');
       document.body.removeChild(input);
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setTimeout(() => setCopied(false), 2500);
     }
   };
 
@@ -82,7 +81,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title="Invite Client"
-      description="Generate a signup link to send to your client."
+      description={!invite ? 'Send a signup link to get your client on board.' : undefined}
       maxWidth="sm"
       footer={
         !invite ? (
@@ -101,6 +100,14 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           </div>
         ) : (
           <div className="flex gap-2 justify-end">
+            <Button size="sm" onClick={handleCopy}>
+              {copied ? (
+                <Check className="w-4 h-4 mr-1.5" />
+              ) : (
+                <Copy className="w-4 h-4 mr-1.5" />
+              )}
+              {copied ? 'Copied!' : 'Copy Link'}
+            </Button>
             <Button variant="outline" size="sm" onClick={onClose}>
               Done
             </Button>
@@ -122,6 +129,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="client@example.com"
+              autoFocus
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
                   e.preventDefault();
@@ -130,7 +138,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               }}
             />
             <p className="text-xs text-muted-foreground mt-1.5">
-              If provided, the signup form will be pre-filled with this email.
+              Pre-fills the signup form so they don't have to type it.
             </p>
           </div>
 
@@ -140,10 +148,21 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         </div>
       ) : (
         <div className="space-y-4">
+          {/* Success header */}
+          <div className="flex items-center gap-2">
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-emerald-100 text-emerald-600">
+              <Check className="w-4 h-4" strokeWidth={3} />
+            </span>
+            <div>
+              <p className="text-sm font-semibold">Link ready</p>
+              <p className="text-xs text-muted-foreground">
+                Send this to your client — they'll be set up in seconds.
+              </p>
+            </div>
+          </div>
+
+          {/* Link field */}
           <div className="rounded-lg bg-muted/50 p-3 space-y-2">
-            <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-              Invite link
-            </p>
             <div className="flex gap-2">
               <Input
                 readOnly
@@ -158,7 +177,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                 onClick={handleCopy}
               >
                 {copied ? (
-                  <Check className="w-4 h-4 text-success" />
+                  <Check className="w-4 h-4 text-emerald-600" />
                 ) : (
                   <Copy className="w-4 h-4" />
                 )}
@@ -167,9 +186,9 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            Share this link with your client. It expires in 7 days.
+            Expires in 7 days.
             {invite.email && (
-              <> The signup form will be pre-filled with <strong>{invite.email}</strong>.</>
+              <> Email pre-filled as <strong>{invite.email}</strong>.</>
             )}
           </p>
         </div>

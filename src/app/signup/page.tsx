@@ -128,11 +128,11 @@ function SignupContent() {
 
   // Invalid or expired invite
   if (!inviteInfo?.valid) {
-    const message = inviteInfo?.reason === 'expired'
-      ? 'This invite link has expired. Ask your coach to send a new one.'
+    const errorContent = inviteInfo?.reason === 'expired'
+      ? { emoji: '😅', title: 'Link expired', message: 'This invite is past its 7-day window. Ask your coach to send a fresh one — it only takes them a second.' }
       : inviteInfo?.reason === 'used'
-        ? 'This invite link has already been used.'
-        : 'This invite link is invalid. Check the URL or ask your coach for a new link.';
+        ? { emoji: '🎉', title: 'Already used', message: 'Looks like you\'re already signed up! Try signing in instead.' }
+        : { emoji: '🔗', title: 'Link not found', message: 'This invite link doesn\'t look right. Double-check the URL or ask your coach for a new one.' };
 
     return (
       <div className="min-h-screen bg-background p-4 flex items-center justify-center">
@@ -141,15 +141,17 @@ function SignupContent() {
             <h1 className="text-4xl font-bold mb-2">LogBook.fit</h1>
           </div>
           <Card>
-            <CardContent className="pt-6 text-center space-y-4">
-              <AlertCircle className="w-10 h-10 mx-auto text-muted-foreground" />
-              <div>
-                <p className="font-semibold mb-1">Invalid invite</p>
-                <p className="text-sm text-muted-foreground">{message}</p>
+            <CardContent className="pt-8 pb-8 text-center space-y-3">
+              <span className="text-4xl select-none block">{errorContent.emoji}</span>
+              <p className="font-semibold">{errorContent.title}</p>
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-[300px] mx-auto">
+                {errorContent.message}
+              </p>
+              <div className="pt-2">
+                <Button variant="outline" onClick={() => router.push('/login')}>
+                  Go to sign in
+                </Button>
               </div>
-              <Button variant="outline" onClick={() => router.push('/login')}>
-                Go to sign in
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -161,18 +163,18 @@ function SignupContent() {
   return (
     <div className="min-h-screen bg-background p-4 flex items-center justify-center">
       <div className="max-w-md w-full space-y-6">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold mb-2">LogBook.fit</h1>
+        <div className="text-center space-y-1">
+          <h1 className="text-4xl font-bold">LogBook.fit</h1>
           <p className="text-muted-foreground">
-            <strong>{inviteInfo.coachName}</strong> invited you to join
+            <strong>{inviteInfo.coachName}</strong> invited you to train together
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Create your account</CardTitle>
+            <CardTitle className="text-lg">Let's get you started</CardTitle>
             <CardDescription>
-              Set up your account to start training
+              Create your account and you're in — takes 30 seconds.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -223,8 +225,14 @@ function SignupContent() {
               {error && <p className="text-sm text-destructive">{error}</p>}
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Create Account
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Setting up...
+                  </>
+                ) : (
+                  "Let's go"
+                )}
               </Button>
             </form>
           </CardContent>
