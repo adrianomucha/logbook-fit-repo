@@ -25,17 +25,17 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   return (
-    <div className="bg-foreground text-background rounded-2xl p-5 sm:p-6 space-y-5">
+    <div className="bg-neutral-800 text-white rounded-2xl p-5 sm:p-6 space-y-5">
       {/* Top row: label + hero number */}
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.2em] font-medium text-background/50">
+          <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] font-medium text-white/70">
             This Week
           </p>
           <p className="text-[40px] sm:text-[56px] font-black leading-[0.85] tracking-tight tabular-nums">
             {total}
           </p>
-          <p className="text-[11px] sm:text-xs text-background/40 font-medium">
+          <p className="text-xs text-white/60 font-medium">
             active clients
           </p>
         </div>
@@ -45,18 +45,18 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
           {dayLabels.map((label, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               <span className={cn(
-                'text-[9px] font-bold uppercase',
-                i <= dayIndex ? 'text-background/60' : 'text-background/20'
+                'text-[10px] font-bold uppercase',
+                i <= dayIndex ? 'text-white/70' : 'text-white/40'
               )}>
                 {label}
               </span>
               <div className={cn(
                 'w-1.5 h-1.5 rounded-full transition-all',
                 i < dayIndex
-                  ? 'bg-background/50'
+                  ? 'bg-white/50'
                   : i === dayIndex
-                    ? 'bg-background w-2 h-2'
-                    : 'bg-background/15'
+                    ? 'bg-white w-2 h-2'
+                    : 'bg-white/15'
               )} />
             </div>
           ))}
@@ -65,41 +65,39 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
 
       {/* Ratio bar — stacked horizontal showing client health distribution */}
       {total > 0 && (
-        <div className="space-y-2">
-          <div className="flex h-2.5 sm:h-3 rounded-full overflow-hidden gap-px">
-            {pctOnTrack > 0 && (
-              <div
-                className="bg-success rounded-full transition-all duration-500"
-                style={{ width: `${pctOnTrack}%` }}
-              />
-            )}
-            {pctNeedsAction > 0 && (
-              <div
-                className="bg-warning rounded-full transition-all duration-500"
-                style={{ width: `${pctNeedsAction}%` }}
-              />
-            )}
-            {pctAtRisk > 0 && (
-              <div
-                className="bg-destructive rounded-full transition-all duration-500"
-                style={{ width: `${pctAtRisk}%` }}
-              />
-            )}
-          </div>
+        <div className="flex h-2 sm:h-2.5 rounded-full overflow-hidden gap-0.5">
+          {pctOnTrack > 0 && (
+            <div
+              className="bg-emerald-400 rounded-full transition-all duration-500"
+              style={{ width: `${pctOnTrack}%`, minWidth: '8px' }}
+            />
+          )}
+          {pctNeedsAction > 0 && (
+            <div
+              className="bg-amber-400 rounded-full transition-all duration-500"
+              style={{ width: `${pctNeedsAction}%`, minWidth: '8px' }}
+            />
+          )}
+          {pctAtRisk > 0 && (
+            <div
+              className="bg-red-400 rounded-full transition-all duration-500"
+              style={{ width: `${pctAtRisk}%`, minWidth: '8px' }}
+            />
+          )}
         </div>
       )}
 
-      {/* Stat row — dramatic numbers with tiny labels */}
+      {/* Stat row — dramatic numbers with accessible labels */}
       <div className="flex gap-0">
         {/* On Track — always shown */}
-        <div className="flex-1 border-r border-background/10 pr-4">
+        <div className="flex-1 border-r border-white/10 pr-4">
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl sm:text-3xl font-black tabular-nums leading-none">
               {onTrack}
             </span>
-            <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
           </div>
-          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-background/40 font-medium mt-1">
+          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1">
             On Track
           </p>
         </div>
@@ -107,17 +105,17 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
         {/* Needs Action */}
         <div className={cn(
           'flex-1 px-4',
-          atRisk > 0 && 'border-r border-background/10'
+          atRisk > 0 && 'border-r border-white/10'
         )}>
           <div className="flex items-baseline gap-1.5">
             <span className="text-2xl sm:text-3xl font-black tabular-nums leading-none">
               {needsAction}
             </span>
             {needsAction > 0 && (
-              <span className="w-2 h-2 rounded-full bg-warning shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
             )}
           </div>
-          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] text-background/40 font-medium mt-1">
+          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1">
             Action
           </p>
         </div>
@@ -127,17 +125,17 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
           <div className="flex items-baseline gap-1.5">
             <span className={cn(
               'text-2xl sm:text-3xl font-black tabular-nums leading-none',
-              atRisk > 0 && 'text-destructive'
+              atRisk > 0 && 'text-red-400'
             )}>
               {atRisk}
             </span>
             {atRisk > 0 && (
-              <span className="w-2 h-2 rounded-full bg-destructive shrink-0 animate-pulse" />
+              <span className="w-2 h-2 rounded-full bg-red-400 shrink-0 animate-pulse" />
             )}
           </div>
           <p className={cn(
-            'text-[10px] sm:text-[11px] uppercase tracking-[0.15em] font-medium mt-1',
-            atRisk > 0 ? 'text-destructive/70' : 'text-background/40'
+            'text-[11px] uppercase tracking-[0.15em] font-medium mt-1',
+            atRisk > 0 ? 'text-red-400' : 'text-white/60'
           )}>
             At Risk
           </p>
