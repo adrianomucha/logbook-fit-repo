@@ -19,33 +19,33 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
 
   return (
     <div className="bg-neutral-800 text-white rounded-xl px-4 py-5 sm:px-5 sm:py-6 space-y-3">
-      {/* Single row: hero number + label | stats */}
+      {/* Single row: total + label | stats */}
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
-          <p className="text-2xl sm:text-3xl font-black leading-none tracking-tight tabular-nums">
+          <p className="text-lg sm:text-xl font-black leading-none tracking-tight tabular-nums">
             {total}
           </p>
-          <p className="text-[10px] sm:text-[11px] uppercase tracking-[0.15em] font-medium text-white/50">
+          <p className="text-[11px] sm:text-xs uppercase tracking-[0.12em] font-medium text-white/50">
             clients this week
           </p>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs">
+        <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
             <span className="font-bold tabular-nums">{onTrack}</span>
             <span className="text-white/50 font-medium">ok</span>
           </div>
           {needsAction > 0 && (
             <div className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
               <span className="font-bold tabular-nums">{needsAction}</span>
               <span className="text-white/50 font-medium">pending</span>
             </div>
           )}
           <div className="flex items-center gap-1.5">
             <span className={cn(
-              'w-1.5 h-1.5 rounded-full',
+              'w-2 h-2 rounded-full',
               atRisk > 0 ? 'bg-red-400 animate-pulse' : 'bg-red-400/30'
             )} />
             <span className={cn(
