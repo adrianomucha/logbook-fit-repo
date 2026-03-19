@@ -206,7 +206,14 @@ export function CoachDashboard() {
 
         {currentView === 'dashboard' && (
           <div className="space-y-6">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
+              {dashboardClients.length > 0 && (
+                <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mt-1">
+                  Overview
+                </p>
+              )}
+            </div>
             {isDashboardLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -225,11 +232,9 @@ export function CoachDashboard() {
             {/* Header row */}
             <div className="flex items-end justify-between gap-4">
               <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Plans
-                </h1>
+                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Plans</h1>
                 {templates.length > 0 && (
-                  <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mt-2">
+                  <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mt-1">
                     {templates.length} {templates.length === 1 ? 'template' : 'templates'}
                   </p>
                 )}
