@@ -6,17 +6,18 @@ import { QUICK_START_EXERCISES } from "@/lib/quick-start-exercises";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email: rawEmail, password, name, role } = body as {
+    const { email: rawEmail, password, name, role, inviteToken } = body as {
       email?: string;
       password?: string;
       name?: string;
       role?: string;
+      inviteToken?: string;
     };
 
-    // Validate required fields
-    if (!rawEmail || !password || !name || !role) {
+    // Validate required fields — role is optional when using invite token
+    if (!rawEmail || !password || !name || (!role && !inviteToken)) {
       return NextResponse.json(
-        { error: "Missing required fields: email, password, name, role" },
+        { error: "Missing required fields: email, password, name" + (!inviteToken ? ", role" : "") },
         { status: 400 }
       );
     }
@@ -24,8 +25,36 @@ export async function POST(req: Request) {
     // Normalize email to lowercase for case-insensitive uniqueness
     const email = rawEmail.trim().toLowerCase();
 
+    // If invite token provided, validate it and force CLIENT role
+    let invite: { id: string; coachId: string; email: string | null } | null = null;
+    let effectiveRole = role;
+
+    if (inviteToken) {
+      const found = await prisma.clientInvite.findUnique({
+        where: { token: inviteToken },
+      });
+
+      if (!found || found.status !== 'PENDING' || found.expiresAt < new Date()) {
+        return NextResponse.json(
+          { error: "Invite link is invalid or expired" },
+          { status: 400 }
+        );
+      }
+
+      // If invite has a pre-filled email, it must match
+      if (found.email && found.email.toLowerCase() !== email) {
+        return NextResponse.json(
+          { error: "Email does not match the invite" },
+          { status: 400 }
+        );
+      }
+
+      invite = { id: found.id, coachId: found.coachId, email: found.email };
+      effectiveRole = "CLIENT"; // Always CLIENT when using invite
+    }
+
     // Validate role
-    if (role !== "COACH" && role !== "CLIENT") {
+    if (effectiveRole !== "COACH" && effectiveRole !== "CLIENT") {
       return NextResponse.json(
         { error: "Role must be COACH or CLIENT" },
         { status: 400 }
@@ -61,19 +90,19 @@ export async function POST(req: Request) {
           email,
           passwordHash,
           name,
-          role,
-          ...(role === "COACH"
+          role: effectiveRole!,
+          ...(effectiveRole === "COACH"
             ? { coachProfile: { create: {} } }
             : { clientProfile: { create: {} } }),
         },
         include: {
-          coachProfile: role === "COACH",
-          clientProfile: role === "CLIENT",
+          coachProfile: effectiveRole === "COACH",
+          clientProfile: effectiveRole === "CLIENT",
         },
       });
 
       // For coaches: clone Quick Start exercises into their library
-      if (role === "COACH" && newUser.coachProfile) {
+      if (effectiveRole === "COACH" && newUser.coachProfile) {
         await tx.exercise.createMany({
           data: QUICK_START_EXERCISES.map((ex) => ({
             coachId: newUser.coachProfile!.id,
@@ -83,6 +112,22 @@ export async function POST(req: Request) {
             defaultReps: ex.defaultReps,
             defaultRest: ex.defaultRest,
           })),
+        });
+      }
+
+      // For invite-based signups: create coach-client relationship + accept invite
+      if (invite && newUser.clientProfile) {
+        await tx.coachClientRelationship.create({
+          data: {
+            coachId: invite.coachId,
+            clientId: newUser.clientProfile.id,
+            status: 'ACTIVE',
+          },
+        });
+
+        await tx.clientInvite.update({
+          where: { id: invite.id },
+          data: { status: 'ACCEPTED' },
         });
       }
 
