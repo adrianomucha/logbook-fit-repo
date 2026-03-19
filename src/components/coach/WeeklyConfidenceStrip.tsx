@@ -18,50 +18,20 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
   const pctNeedsAction = total > 0 ? (needsAction / total) * 100 : 0;
   const pctAtRisk = total > 0 ? (atRisk / total) * 100 : 0;
 
-  // Day of week progress (0=Sun, 1=Mon … 6=Sat)
-  const today = new Date().getDay();
-  // Convert to Mon=0 … Sun=6 for a training-week perspective
-  const dayIndex = today === 0 ? 6 : today - 1;
-  const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-
   return (
     <div className="bg-neutral-800 text-white rounded-xl p-4 sm:p-5 space-y-3.5">
-      {/* Top row: label + hero number + week dots */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-baseline gap-3">
-          <p className="text-[32px] sm:text-[40px] font-black leading-none tracking-tight tabular-nums">
-            {total}
+      {/* Top row: hero number + label */}
+      <div className="flex items-baseline gap-3">
+        <p className="text-[32px] sm:text-[40px] font-black leading-none tracking-tight tabular-nums">
+          {total}
+        </p>
+        <div>
+          <p className="text-[11px] uppercase tracking-[0.15em] font-medium text-white/70 leading-tight">
+            Active clients
           </p>
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.15em] font-medium text-white/70 leading-tight">
-              Active clients
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.15em] text-white/40 mt-0.5">
-              This week
-            </p>
-          </div>
-        </div>
-
-        {/* Week progress dots */}
-        <div className="flex gap-1.5 pt-1">
-          {dayLabels.map((label, i) => (
-            <div key={i} className="flex flex-col items-center gap-1">
-              <span className={cn(
-                'text-[9px] font-bold uppercase',
-                i <= dayIndex ? 'text-white/70' : 'text-white/40'
-              )}>
-                {label}
-              </span>
-              <div className={cn(
-                'w-1.5 h-1.5 rounded-full',
-                i < dayIndex
-                  ? 'bg-white/50'
-                  : i === dayIndex
-                    ? 'bg-white w-1.5 h-1.5'
-                    : 'bg-white/15'
-              )} />
-            </div>
-          ))}
+          <p className="text-[10px] uppercase tracking-[0.15em] text-white/40 mt-0.5">
+            This week
+          </p>
         </div>
       </div>
 
