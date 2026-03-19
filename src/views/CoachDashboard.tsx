@@ -12,6 +12,7 @@ import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer'
 import { Button } from '@/components/ui/button';
 import { Plus, CheckCircle, Loader2 } from 'lucide-react';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
+import { PageHeader } from '@/components/coach/PageHeader';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import { useCoachPlans } from '@/hooks/api/useCoachPlans';
 import { usePlanDetail } from '@/hooks/api/usePlanDetail';
@@ -206,14 +207,10 @@ export function CoachDashboard() {
 
         {currentView === 'dashboard' && (
           <div className="space-y-6">
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Dashboard</h1>
-              {dashboardClients.length > 0 && (
-                <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mt-1">
-                  Overview
-                </p>
-              )}
-            </div>
+            <PageHeader
+              title="Dashboard"
+              subtitle={dashboardClients.length > 0 ? 'Overview' : undefined}
+            />
             {isDashboardLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -229,23 +226,16 @@ export function CoachDashboard() {
 
         {currentView === 'plans' && (
           <div className="space-y-6">
-            {/* Header row */}
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Plans</h1>
-                {templates.length > 0 && (
-                  <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mt-1">
-                    {templates.length} {templates.length === 1 ? 'template' : 'templates'}
-                  </p>
-                )}
-              </div>
-              {templates.length > 0 && (
+            <PageHeader
+              title="Plans"
+              subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'template' : 'templates'}` : undefined}
+              action={templates.length > 0 ? (
                 <Button onClick={handleCreateNewPlan} size="sm" variant="outline">
                   <Plus className="w-4 h-4 mr-1.5" />
                   New Plan
                 </Button>
-              )}
-            </div>
+              ) : undefined}
+            />
 
             <section>
               {isPlansLoading ? (

@@ -2,6 +2,7 @@ import { useRouter } from 'next/navigation';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import type { DashboardClient } from '@/types/api';
 import { CoachNav } from '@/components/coach/CoachNav';
+import { PageHeader } from '@/components/coach/PageHeader';
 import { EmptyStateNoClients } from '@/components/coach/EmptyStates';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -112,20 +113,16 @@ export function AllClientsPage() {
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav activeTab="clients" />
 
-        <div className="flex items-end justify-between gap-4">
-          <div>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Clients</h1>
-            {clients.length > 0 && (
-              <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mt-1">
-                {clients.length} {clients.length === 1 ? 'client' : 'clients'}
-              </p>
-            )}
-          </div>
-          <Button size="sm" variant="outline">
-            <Plus className="w-4 h-4 mr-1.5" />
-            Invite Client
-          </Button>
-        </div>
+        <PageHeader
+          title="Clients"
+          subtitle={clients.length > 0 ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}` : undefined}
+          action={
+            <Button size="sm" variant="outline">
+              <Plus className="w-4 h-4 mr-1.5" />
+              Invite Client
+            </Button>
+          }
+        />
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
