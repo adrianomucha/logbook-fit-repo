@@ -18,7 +18,7 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
   const pctAtRisk = total > 0 ? (atRisk / total) * 100 : 0;
 
   return (
-    <div className="bg-neutral-800 text-white rounded-xl px-4 py-3 sm:px-5 sm:py-3.5 space-y-2.5">
+    <div className="bg-neutral-800 text-white rounded-xl px-4 py-5 sm:px-5 sm:py-6 space-y-3">
       {/* Single row: hero number + label | stats */}
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-2">
