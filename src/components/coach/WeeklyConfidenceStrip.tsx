@@ -25,19 +25,21 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
   const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
   return (
-    <div className="bg-neutral-800 text-white rounded-2xl p-5 sm:p-6 space-y-5">
-      {/* Top row: label + hero number */}
+    <div className="bg-neutral-800 text-white rounded-xl p-4 sm:p-5 space-y-3.5">
+      {/* Top row: label + hero number + week dots */}
       <div className="flex items-start justify-between">
-        <div className="space-y-1">
-          <p className="text-[11px] sm:text-xs uppercase tracking-[0.2em] font-medium text-white/70">
-            This Week
-          </p>
-          <p className="text-[40px] sm:text-[56px] font-black leading-[0.85] tracking-tight tabular-nums">
+        <div className="flex items-baseline gap-3">
+          <p className="text-[32px] sm:text-[40px] font-black leading-none tracking-tight tabular-nums">
             {total}
           </p>
-          <p className="text-xs text-white/60 font-medium">
-            active clients
-          </p>
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.15em] font-medium text-white/70 leading-tight">
+              Active clients
+            </p>
+            <p className="text-[10px] uppercase tracking-[0.15em] text-white/40 mt-0.5">
+              This week
+            </p>
+          </div>
         </div>
 
         {/* Week progress dots */}
@@ -45,17 +47,17 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
           {dayLabels.map((label, i) => (
             <div key={i} className="flex flex-col items-center gap-1">
               <span className={cn(
-                'text-[10px] font-bold uppercase',
+                'text-[9px] font-bold uppercase',
                 i <= dayIndex ? 'text-white/70' : 'text-white/40'
               )}>
                 {label}
               </span>
               <div className={cn(
-                'w-1.5 h-1.5 rounded-full transition-all',
+                'w-1.5 h-1.5 rounded-full',
                 i < dayIndex
                   ? 'bg-white/50'
                   : i === dayIndex
-                    ? 'bg-white w-2 h-2'
+                    ? 'bg-white w-1.5 h-1.5'
                     : 'bg-white/15'
               )} />
             </div>
@@ -63,78 +65,75 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
         </div>
       </div>
 
-      {/* Ratio bar — stacked horizontal showing client health distribution */}
+      {/* Ratio bar */}
       {total > 0 && (
-        <div className="flex h-2 sm:h-2.5 rounded-full overflow-hidden gap-0.5">
+        <div className="flex h-1.5 rounded-full overflow-hidden gap-0.5">
           {pctOnTrack > 0 && (
             <div
               className="bg-emerald-400 rounded-full transition-all duration-500"
-              style={{ width: `${pctOnTrack}%`, minWidth: '8px' }}
+              style={{ width: `${pctOnTrack}%`, minWidth: '6px' }}
             />
           )}
           {pctNeedsAction > 0 && (
             <div
               className="bg-amber-400 rounded-full transition-all duration-500"
-              style={{ width: `${pctNeedsAction}%`, minWidth: '8px' }}
+              style={{ width: `${pctNeedsAction}%`, minWidth: '6px' }}
             />
           )}
           {pctAtRisk > 0 && (
             <div
               className="bg-red-400 rounded-full transition-all duration-500"
-              style={{ width: `${pctAtRisk}%`, minWidth: '8px' }}
+              style={{ width: `${pctAtRisk}%`, minWidth: '6px' }}
             />
           )}
         </div>
       )}
 
-      {/* Stat row — dramatic numbers with accessible labels */}
+      {/* Stat row — compact */}
       <div className="flex gap-0">
-        {/* On Track — always shown */}
-        <div className="flex-1 border-r border-white/15 pr-4">
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-black tabular-nums leading-none">
+        <div className="flex-1 border-r border-white/15 pr-3">
+          <div className="flex items-baseline gap-1">
+            <span className="text-lg sm:text-xl font-black tabular-nums leading-none">
               {onTrack}
             </span>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
           </div>
-          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1.5">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-white/60 font-medium mt-1">
             On Track
           </p>
         </div>
 
-        {/* Needs Action */}
         <div className={cn(
-          'flex-1 px-4',
+          'flex-1 px-3',
           atRisk > 0 && 'border-r border-white/15'
         )}>
-          <div className="flex items-baseline gap-1.5">
-            <span className="text-2xl sm:text-3xl font-black tabular-nums leading-none">
+          <div className="flex items-baseline gap-1">
+            <span className="text-lg sm:text-xl font-black tabular-nums leading-none">
               {needsAction}
             </span>
             {needsAction > 0 && (
-              <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
             )}
           </div>
-          <p className="text-[11px] uppercase tracking-[0.15em] text-white/60 font-medium mt-1.5">
+          <p className="text-[10px] uppercase tracking-[0.12em] text-white/60 font-medium mt-1">
             Pending
           </p>
         </div>
 
-        {/* At Risk — visually heavier when non-zero */}
-        <div className="flex-1 pl-4">
-          <div className="flex items-baseline gap-1.5">
+        <div className="flex-1 pl-3">
+          <div className="flex items-baseline gap-1">
             <span className={cn(
-              'text-2xl sm:text-3xl font-black tabular-nums leading-none',
+              'text-lg sm:text-xl font-black tabular-nums leading-none',
               atRisk > 0 && 'text-red-400'
             )}>
               {atRisk}
             </span>
             {atRisk > 0 && (
-              <span className="w-2 h-2 rounded-full bg-red-400 shrink-0 animate-pulse" />
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400 shrink-0 animate-pulse" />
             )}
           </div>
           <p className={cn(
-            'text-[11px] uppercase tracking-[0.15em] font-medium mt-1.5',
+            'text-[10px] uppercase tracking-[0.12em] font-medium mt-1',
             atRisk > 0 ? 'text-red-400' : 'text-white/60'
           )}>
             At Risk
