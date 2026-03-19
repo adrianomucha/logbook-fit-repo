@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -17,6 +17,18 @@ interface InviteInfo {
 }
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    }>
+      <SignupContent />
+    </Suspense>
+  );
+}
+
+function SignupContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const inviteToken = searchParams?.get('invite') ?? null;
