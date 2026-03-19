@@ -30,28 +30,34 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
           </p>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="flex items-center gap-1">
+        <div className="flex items-center gap-3 sm:gap-4 text-[11px] sm:text-xs">
+          <div className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            <span className="text-sm sm:text-base font-bold tabular-nums">{onTrack}</span>
+            <span className="font-bold tabular-nums">{onTrack}</span>
+            <span className="text-white/50 font-medium">ok</span>
           </div>
           {needsAction > 0 && (
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-              <span className="text-sm sm:text-base font-bold tabular-nums">{needsAction}</span>
+              <span className="font-bold tabular-nums">{needsAction}</span>
+              <span className="text-white/50 font-medium">pending</span>
             </div>
           )}
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <span className={cn(
               'w-1.5 h-1.5 rounded-full',
               atRisk > 0 ? 'bg-red-400 animate-pulse' : 'bg-red-400/30'
             )} />
             <span className={cn(
-              'text-sm sm:text-base font-bold tabular-nums',
+              'font-bold tabular-nums',
               atRisk > 0 && 'text-red-400'
             )}>
               {atRisk}
             </span>
+            <span className={cn(
+              'font-medium',
+              atRisk > 0 ? 'text-red-400/60' : 'text-white/50'
+            )}>risk</span>
           </div>
         </div>
       </div>
