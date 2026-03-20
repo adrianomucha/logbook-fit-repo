@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
-import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import {
+  workoutService,
+  WorkoutNotFoundError,
+  InvalidStateError,
+} from "@/lib/services/workout";
 
 /**
  * POST /api/client/workout/[id]/finish
@@ -15,75 +19,23 @@ export const POST = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const completionId = ctx.params.id;
-
-    const completion = await prisma.workoutCompletion.findFirst({
-      where: { id: completionId, clientId: clientProfileId },
-      include: {
-        day: {
-          include: {
-            exercises: { select: { id: true, sets: true } },
-          },
-        },
-      },
-    });
-
-    if (!completion) {
-      return NextResponse.json({ error: "Workout not found" }, { status: 404 });
-    }
-
     const body = await req.json().catch(() => ({}));
     const { effortRating } = body as { effortRating?: string };
 
-    // Allow updating effort rating on already-completed workouts
-    if (completion.status === "COMPLETED") {
-      if (effortRating) {
-        const updated = await prisma.workoutCompletion.update({
-          where: { id: completionId },
-          data: { effortRating: effortRating as never },
-        });
-        return NextResponse.json(updated);
-      }
-      return NextResponse.json(
-        { error: "Workout already completed" },
-        { status: 400 }
+    try {
+      const updated = await workoutService.finish(
+        { role: "client", clientProfileId },
+        { completionId: ctx.params.id, effortRating }
       );
+      return NextResponse.json(updated);
+    } catch (e) {
+      if (e instanceof WorkoutNotFoundError) {
+        return NextResponse.json({ error: "Workout not found" }, { status: 404 });
+      }
+      if (e instanceof InvalidStateError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
     }
-
-    // Calculate completion stats
-    const totalSets = completion.day.exercises.reduce(
-      (sum, ex) => sum + ex.sets,
-      0
-    );
-    const completedSets = await prisma.setCompletion.count({
-      where: { workoutCompletionId: completionId, completed: true },
-    });
-
-    // Count exercises with at least 1 completed set
-    const exercisesWithCompletedSets = await prisma.setCompletion.groupBy({
-      by: ["workoutExerciseId"],
-      where: { workoutCompletionId: completionId, completed: true },
-    });
-
-    const completionPct = totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
-    const now = new Date();
-    const durationSec = completion.startedAt
-      ? Math.floor((now.getTime() - completion.startedAt.getTime()) / 1000)
-      : null;
-
-    const updated = await prisma.workoutCompletion.update({
-      where: { id: completionId },
-      data: {
-        status: "COMPLETED",
-        completedAt: now,
-        completionPct,
-        exercisesDone: exercisesWithCompletedSets.length,
-        exercisesTotal: completion.day.exercises.length,
-        durationSec,
-        ...(effortRating ? { effortRating: effortRating as never } : {}),
-      },
-    });
-
-    return NextResponse.json(updated);
   }
 );

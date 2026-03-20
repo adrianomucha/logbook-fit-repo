@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
-import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import {
+  workoutService,
+  WorkoutNotFoundError,
+  ValidationError,
+} from "@/lib/services/workout";
 
 /**
  * PUT /api/client/workout/[id]/sets
@@ -15,16 +19,6 @@ export const PUT = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const completionId = ctx.params.id;
-
-    // Verify ownership
-    const completion = await prisma.workoutCompletion.findFirst({
-      where: { id: completionId, clientId: clientProfileId },
-    });
-    if (!completion) {
-      return NextResponse.json({ error: "Workout not found" }, { status: 404 });
-    }
-
     const body = await req.json();
     const { sets } = body as {
       sets?: {
@@ -43,51 +37,20 @@ export const PUT = withClient(
       );
     }
 
-    // Validate all workoutExerciseIds belong to the completion's day
-    const uniqueWeIds = [...new Set(sets.map((s) => s.workoutExerciseId))];
-    const validExercises = await prisma.workoutExercise.findMany({
-      where: { id: { in: uniqueWeIds }, dayId: completion.dayId },
-      select: { id: true },
-    });
-    const validIds = new Set(validExercises.map((e) => e.id));
-    const invalidIds = uniqueWeIds.filter((id) => !validIds.has(id));
-    if (invalidIds.length > 0) {
-      return NextResponse.json(
-        { error: "workoutExerciseId(s) do not belong to this workout day" },
-        { status: 400 }
+    try {
+      await workoutService.updateSets(
+        { role: "client", clientProfileId },
+        { completionId: ctx.params.id, sets }
       );
+      return NextResponse.json({ success: true });
+    } catch (e) {
+      if (e instanceof WorkoutNotFoundError) {
+        return NextResponse.json({ error: "Workout not found" }, { status: 404 });
+      }
+      if (e instanceof ValidationError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
     }
-
-    // Batch upsert in a transaction
-    await prisma.$transaction(
-      sets.map((s) =>
-        prisma.setCompletion.upsert({
-          where: {
-            workoutCompletionId_workoutExerciseId_setNumber: {
-              workoutCompletionId: completionId,
-              workoutExerciseId: s.workoutExerciseId,
-              setNumber: s.setNumber,
-            },
-          },
-          create: {
-            workoutCompletionId: completionId,
-            workoutExerciseId: s.workoutExerciseId,
-            setNumber: s.setNumber,
-            completed: s.completed,
-            actualWeight: s.actualWeight,
-            actualReps: s.actualReps,
-            completedAt: s.completed ? new Date() : null,
-          },
-          update: {
-            completed: s.completed,
-            actualWeight: s.actualWeight,
-            actualReps: s.actualReps,
-            completedAt: s.completed ? new Date() : null,
-          },
-        })
-      )
-    );
-
-    return NextResponse.json({ success: true });
   }
 );

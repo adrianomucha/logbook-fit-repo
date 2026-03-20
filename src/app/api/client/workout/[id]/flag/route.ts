@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
-import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import {
+  workoutService,
+  WorkoutNotFoundError,
+  ValidationError,
+} from "@/lib/services/workout";
 
 /**
  * POST /api/client/workout/[id]/flag
- * Flags an exercise within a workout — creates an ExerciseFlag record.
+ * Flags an exercise within a workout — creates or updates an ExerciseFlag record.
  * Accepts: { workoutExerciseId, note?: string }
  */
 export const POST = withClient(
@@ -15,16 +19,6 @@ export const POST = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const completionId = ctx.params.id;
-
-    // Verify ownership
-    const completion = await prisma.workoutCompletion.findFirst({
-      where: { id: completionId, clientId: clientProfileId },
-    });
-    if (!completion) {
-      return NextResponse.json({ error: "Workout not found" }, { status: 404 });
-    }
-
     const body = await req.json();
     const { workoutExerciseId, note } = body as {
       workoutExerciseId?: string;
@@ -38,45 +32,20 @@ export const POST = withClient(
       );
     }
 
-    // Validate workoutExerciseId belongs to the completion's day
-    const exerciseBelongsToDay = await prisma.workoutExercise.findFirst({
-      where: { id: workoutExerciseId, dayId: completion.dayId },
-      select: { id: true },
-    });
-    if (!exerciseBelongsToDay) {
-      return NextResponse.json(
-        { error: "workoutExerciseId does not belong to this workout day" },
-        { status: 400 }
+    try {
+      const flag = await workoutService.flagExercise(
+        { role: "client", clientProfileId },
+        { completionId: ctx.params.id, workoutExerciseId, note }
       );
+      return NextResponse.json(flag);
+    } catch (e) {
+      if (e instanceof WorkoutNotFoundError) {
+        return NextResponse.json({ error: "Workout not found" }, { status: 404 });
+      }
+      if (e instanceof ValidationError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
     }
-
-    // Check if already flagged (unique constraint)
-    const existingFlag = await prisma.exerciseFlag.findUnique({
-      where: {
-        workoutCompletionId_workoutExerciseId: {
-          workoutCompletionId: completionId,
-          workoutExerciseId,
-        },
-      },
-    });
-
-    if (existingFlag) {
-      // Update existing flag
-      const updated = await prisma.exerciseFlag.update({
-        where: { id: existingFlag.id },
-        data: { note: note ?? existingFlag.note },
-      });
-      return NextResponse.json(updated);
-    }
-
-    const flag = await prisma.exerciseFlag.create({
-      data: {
-        workoutCompletionId: completionId,
-        workoutExerciseId,
-        note: note ?? null,
-      },
-    });
-
-    return NextResponse.json(flag, { status: 201 });
   }
 );

@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
-import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import {
+  workoutService,
+  WorkoutNotFoundError,
+  InvalidStateError,
+} from "@/lib/services/workout";
 
 /**
  * POST /api/client/workout/[id]/restart
@@ -15,73 +19,20 @@ export const POST = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const completionId = ctx.params.id;
-
-    const completion = await prisma.workoutCompletion.findFirst({
-      where: { id: completionId, clientId: clientProfileId },
-      include: {
-        day: {
-          include: {
-            exercises: { orderBy: { orderIndex: "asc" } },
-          },
-        },
-      },
-    });
-
-    if (!completion) {
-      return NextResponse.json({ error: "Workout not found" }, { status: 404 });
-    }
-
-    if (completion.status !== "IN_PROGRESS" && completion.status !== "COMPLETED") {
-      return NextResponse.json(
-        { error: "Workout cannot be restarted" },
-        { status: 400 }
+    try {
+      const updated = await workoutService.restart(
+        { role: "client", clientProfileId },
+        { completionId: ctx.params.id }
       );
-    }
-
-    const updated = await prisma.$transaction(async (tx) => {
-      // Delete all set completions
-      await tx.setCompletion.deleteMany({
-        where: { workoutCompletionId: completionId },
-      });
-
-      // Delete all exercise flags
-      await tx.exerciseFlag.deleteMany({
-        where: { workoutCompletionId: completionId },
-      });
-
-      // Reset the completion record
-      const wc = await tx.workoutCompletion.update({
-        where: { id: completionId },
-        data: {
-          status: "IN_PROGRESS",
-          startedAt: new Date(),
-          completedAt: null,
-          completionPct: 0,
-          exercisesDone: 0,
-          exercisesTotal: completion.day.exercises.length,
-          durationSec: null,
-          effortRating: null,
-        },
-      });
-
-      // Re-create set completion rows
-      const setData = completion.day.exercises.flatMap((we) =>
-        Array.from({ length: we.sets }, (_, i) => ({
-          workoutCompletionId: completionId,
-          workoutExerciseId: we.id,
-          setNumber: i + 1,
-          completed: false,
-        }))
-      );
-
-      if (setData.length > 0) {
-        await tx.setCompletion.createMany({ data: setData });
+      return NextResponse.json(updated);
+    } catch (e) {
+      if (e instanceof WorkoutNotFoundError) {
+        return NextResponse.json({ error: "Workout not found" }, { status: 404 });
       }
-
-      return wc;
-    });
-
-    return NextResponse.json(updated);
+      if (e instanceof InvalidStateError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
+    }
   }
 );

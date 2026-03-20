@@ -10,8 +10,13 @@ import { useClientProgress } from '@/hooks/api/useClientProgress';
 import { useClientCheckIns } from '@/hooks/api/useClientCheckIns';
 import { useMessages } from '@/hooks/api/useMessages';
 import { useClientPlan } from '@/hooks/api/useClientPlan';
-import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import { apiFetch } from '@/lib/api-client';
+import {
+  apiPlanToWorkoutPlan,
+  apiCheckInToCheckIn,
+  apiMessagesToMessages,
+  apiProgressToWorkoutCompletions,
+} from '@/lib/adapters/api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
@@ -24,60 +29,6 @@ import { ClientNav } from '@/components/client/ClientNav';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Loader2, AlertCircle } from 'lucide-react';
-
-// ---- Data Adapters ----
-
-function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
-  return {
-    id: plan.id,
-    name: plan.name,
-    description: plan.description ?? undefined,
-    durationWeeks: plan.durationWeeks,
-    weeks: plan.weeks.map((w) => ({
-      id: w.id,
-      weekNumber: w.weekNumber,
-      days: w.days.map((d) => ({
-        id: d.id,
-        dayNumber: d.dayNumber,
-        name: d.name ?? `Day ${d.dayNumber}`,
-        description: d.description ?? undefined,
-        isRestDay: d.isRestDay,
-        exercises: d.exercises.map((e) => ({
-          id: e.id,
-          name: e.exercise.name,
-          category: e.exercise.category ?? undefined,
-          sets: e.sets,
-          reps: e.reps ?? undefined,
-          weight: e.weight ?? undefined,
-          notes: e.coachNotes ?? undefined,
-        })),
-      })),
-    })),
-    createdAt: plan.createdAt,
-    updatedAt: plan.updatedAt,
-  };
-}
-
-function apiCheckInToLocalCheckIn(
-  ci: { id: string; status: string; createdAt: string; effortRating: string | null; painBlockers: string | null; clientFeeling: string | null; clientRespondedAt: string | null; coachFeedback: string | null; planAdjustment: boolean | null; completedAt: string | null },
-  clientProfileId: string,
-  coachUserId: string
-): CheckIn {
-  return {
-    id: ci.id,
-    clientId: clientProfileId,
-    coachId: coachUserId,
-    date: ci.createdAt,
-    status: ci.status === 'PENDING' ? 'pending' : ci.status === 'CLIENT_RESPONDED' ? 'responded' : 'completed',
-    workoutFeeling: (ci.effortRating as CheckIn['workoutFeeling']) ?? undefined,
-    bodyFeeling: (ci.clientFeeling as CheckIn['bodyFeeling']) ?? undefined,
-    clientNotes: ci.painBlockers ?? undefined,
-    clientRespondedAt: ci.clientRespondedAt ?? undefined,
-    coachResponse: ci.coachFeedback ?? undefined,
-    planAdjustment: ci.planAdjustment || undefined,
-    completedAt: ci.completedAt ?? undefined,
-  };
-}
 
 // ---- Component ----
 
@@ -136,7 +87,7 @@ export function ClientDashboard() {
   const checkIns: CheckIn[] = useMemo(
     () =>
       apiCheckIns.map((ci) =>
-        apiCheckInToLocalCheckIn(ci, client?.id ?? '', coachUserId ?? '')
+        apiCheckInToCheckIn(ci, client?.id ?? '', coachUserId ?? '')
       ),
     [apiCheckIns, client, coachUserId]
   );
@@ -184,6 +135,12 @@ export function ClientDashboard() {
       }));
   }, [weekOverview, client]);
 
+  // All workout completions from progress API (for full history on progress page)
+  const allWorkoutCompletions: WorkoutCompletion[] = useMemo(() => {
+    if (!progress?.allCompletions) return clientWorkoutCompletions;
+    return apiProgressToWorkoutCompletions(progress.allCompletions);
+  }, [progress, clientWorkoutCompletions]);
+
   // Today's workout data for TodayFocusView
   const { todayWorkout, todayCompletion, todayCoachNote, currentWeek } = useMemo(() => {
     if (!client?.planStartDate || !plan || !weekOverview) {
@@ -221,16 +178,7 @@ export function ClientDashboard() {
 
   // Messages adapted for ChatView
   const messages: Message[] = useMemo(
-    () =>
-      apiMessages.map((m) => ({
-        id: m.id,
-        senderId: m.senderId,
-        senderName: m.sender?.name ?? 'Unknown',
-        content: m.content,
-        timestamp: m.createdAt,
-        read: m.readAt !== null,
-        clientId: client?.id ?? '',
-      })).reverse(),
+    () => apiMessagesToMessages(apiMessages, client?.id ?? ''),
     [apiMessages, client]
   );
 
@@ -458,8 +406,9 @@ export function ClientDashboard() {
               plans={plan ? [plan] : []}
               client={client}
               plan={plan}
-              workoutCompletions={clientWorkoutCompletions}
+              workoutCompletions={allWorkoutCompletions}
               measurements={[]}
+              progressStats={progress?.stats}
             />
           </>
         )}

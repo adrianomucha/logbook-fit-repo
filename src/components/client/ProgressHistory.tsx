@@ -9,6 +9,13 @@ import {
   parseISO,
 } from 'date-fns';
 
+interface ProgressStats {
+  totalWorkouts: number;
+  avgCompletionPct: number;
+  currentStreak: number;
+  workoutsLast7Days: number;
+}
+
 interface ProgressHistoryProps {
   // Legacy props (kept for backward compatibility)
   completedWorkouts: CompletedWorkout[];
@@ -18,6 +25,7 @@ interface ProgressHistoryProps {
   plan?: WorkoutPlan;
   workoutCompletions?: WorkoutCompletion[];
   measurements?: Measurement[];
+  progressStats?: ProgressStats;
 }
 
 /**
@@ -101,6 +109,7 @@ export function ProgressHistory({
   plan,
   workoutCompletions,
   measurements,
+  progressStats,
 }: ProgressHistoryProps) {
   // If we have the new props, render the enhanced view
   const hasEnhancedData = client && plan && workoutCompletions;
@@ -147,6 +156,36 @@ export function ProgressHistory({
               <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium ml-1">
                 sessions
               </span>
+            </div>
+          </div>
+        )}
+
+        {/* Overall stats */}
+        {progressStats && (
+          <div className="animate-fade-in-up grid grid-cols-3 gap-2" style={{ animationDelay: '25ms' }}>
+            <div className="bg-muted/40 rounded-lg px-3 py-4 text-center">
+              <p className="text-2xl font-bold tabular-nums leading-none">
+                {progressStats.totalWorkouts}
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">
+                Total
+              </p>
+            </div>
+            <div className="bg-muted/40 rounded-lg px-3 py-4 text-center">
+              <p className="text-2xl font-bold tabular-nums leading-none">
+                {progressStats.currentStreak}
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">
+                Streak
+              </p>
+            </div>
+            <div className="bg-muted/40 rounded-lg px-3 py-4 text-center">
+              <p className="text-2xl font-bold tabular-nums leading-none">
+                {Math.round(progressStats.avgCompletionPct)}%
+              </p>
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">
+                Avg
+              </p>
             </div>
           </div>
         )}

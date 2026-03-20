@@ -5,12 +5,18 @@ import { useParams, useRouter } from 'next/navigation';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, ExerciseFlag, Message, WorkoutDay, Exercise, WorkoutWeek } from '@/types';
 import { useClientProfile } from '@/hooks/api/useClientProfile';
 import { usePlanDetail } from '@/hooks/api/usePlanDetail';
-import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import { useMessages } from '@/hooks/api/useMessages';
 import { useCoachPlans } from '@/hooks/api/useCoachPlans';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { createCheckInForClient, useCheckIn } from '@/hooks/api/useCheckIn';
 import { apiFetch } from '@/lib/api-client';
+import {
+  apiPlanToWorkoutPlan,
+  apiCheckInToCheckIn,
+  apiMessagesToMessages,
+  apiClientDetailToWorkoutCompletions,
+  apiClientDetailToClient,
+} from '@/lib/adapters/api';
 import { cn } from '@/lib/utils';
 import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
 import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
@@ -28,109 +34,6 @@ import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { getClientStatus } from '@/lib/client-status';
 
-// ---- Data Adapters ----
-// Map API responses → localStorage types for existing sub-components
-
-function apiClientToClient(
-  detail: NonNullable<ReturnType<typeof useClientProfile>['client']>
-): Client {
-  return {
-    id: detail.id,
-    name: detail.user.name ?? 'Unknown',
-    email: detail.user.email,
-    currentPlanId: detail.activePlan?.id,
-    status: detail.relationshipStatus === 'ACTIVE' ? 'active' : 'inactive',
-    avatar: undefined,
-    planStartDate: detail.planStartDate ?? undefined,
-    lastCheckInDate: detail.checkIns[0]?.completedAt ?? undefined,
-  };
-}
-
-function apiCheckInsToCheckIns(
-  checkIns: NonNullable<ReturnType<typeof useClientProfile>['client']>['checkIns'],
-  clientProfileId: string,
-  coachUserId: string
-): CheckIn[] {
-  return checkIns.map((ci) => ({
-    id: ci.id,
-    clientId: clientProfileId,
-    coachId: coachUserId,
-    date: ci.createdAt,
-    status: ci.status === 'PENDING'
-      ? 'pending' as const
-      : ci.status === 'CLIENT_RESPONDED'
-        ? 'responded' as const
-        : 'completed' as const,
-    completedAt: ci.completedAt ?? undefined,
-    effortRating: ci.effortRating ?? undefined,
-  }));
-}
-
-function apiPlanToPlan(detail: PlanDetail): WorkoutPlan {
-  return {
-    id: detail.id,
-    name: detail.name,
-    description: detail.description ?? undefined,
-    emoji: detail.emoji,
-    durationWeeks: detail.durationWeeks,
-    workoutsPerWeek: detail.workoutsPerWeek,
-    weeks: detail.weeks.map((w): WorkoutWeek => ({
-      id: w.id,
-      weekNumber: w.weekNumber,
-      days: w.days.map((d): WorkoutDay => ({
-        id: d.id,
-        name: d.name ?? `Day ${d.dayNumber}`,
-        isRestDay: d.isRestDay,
-        exercises: d.exercises.map((we): Exercise => ({
-          id: we.id, // workoutExercise.id as the Exercise id (sub-components use this)
-          name: we.exercise.name,
-          sets: we.sets,
-          reps: we.reps ?? undefined,
-          weight: we.weight ?? undefined,
-          notes: we.coachNotes ?? undefined,
-        })),
-      })),
-    })),
-    createdAt: detail.createdAt,
-    updatedAt: detail.updatedAt,
-  };
-}
-
-function apiCompletionsToWorkoutCompletions(
-  completions: NonNullable<ReturnType<typeof useClientProfile>['client']>['completions'],
-  clientProfileId: string,
-  planId: string
-): WorkoutCompletion[] {
-  return completions.map((c) => ({
-    id: c.id,
-    clientId: clientProfileId,
-    planId,
-    weekId: c.day?.week?.id ?? '',
-    dayId: c.dayId,
-    status: 'COMPLETED' as const,
-    completedAt: c.completedAt ?? undefined,
-    completionPct: c.completionPct ?? 0,
-    exercisesDone: c.exercisesDone ?? 0,
-    exercisesTotal: c.exercisesTotal ?? 0,
-    durationSec: c.durationSec ?? undefined,
-    effortRating: (c.effortRating as WorkoutCompletion['effortRating']) ?? undefined,
-  }));
-}
-
-function apiMessagesToMessages(
-  messages: ReturnType<typeof useMessages>['messages'],
-  clientProfileId: string
-): Message[] {
-  return messages.map((m) => ({
-    id: m.id,
-    senderId: m.senderId,
-    senderName: m.sender.name ?? 'Unknown',
-    content: m.content,
-    timestamp: m.createdAt,
-    read: m.readAt !== null,
-    clientId: clientProfileId,
-  })).reverse(); // API returns newest first, localStorage expects oldest first
-}
 
 export function UnifiedClientProfile() {
   const params = useParams<{ clientId: string }>();
@@ -181,27 +84,27 @@ export function UnifiedClientProfile() {
 
   // ---- Adapted data for sub-components ----
   const client: Client | null = useMemo(
-    () => (apiClient ? apiClientToClient(apiClient) : null),
+    () => (apiClient ? apiClientDetailToClient(apiClient) : null),
     [apiClient]
   );
 
   const checkIns: CheckIn[] = useMemo(
     () =>
       apiClient && user
-        ? apiCheckInsToCheckIns(apiClient.checkIns, apiClient.id, user.id)
+        ? apiClient.checkIns.map((ci) => apiCheckInToCheckIn(ci, apiClient.id, user.id))
         : [],
     [apiClient, user]
   );
 
   const plan: WorkoutPlan | undefined = useMemo(
-    () => (apiPlan ? apiPlanToPlan(apiPlan) : undefined),
+    () => (apiPlan ? apiPlanToWorkoutPlan(apiPlan) : undefined),
     [apiPlan]
   );
 
   const workoutCompletions: WorkoutCompletion[] = useMemo(
     () =>
       apiClient
-        ? apiCompletionsToWorkoutCompletions(
+        ? apiClientDetailToWorkoutCompletions(
             apiClient.completions,
             apiClient.id,
             apiClient.activePlan?.id ?? ''

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
-import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import {
+  workoutService,
+  ValidationError,
+} from "@/lib/services/workout";
 
 /**
  * POST /api/client/workout/start
@@ -25,83 +28,25 @@ export const POST = withClient(
       );
     }
 
-    const client = await prisma.clientProfile.findUnique({
-      where: { id: clientProfileId },
-      select: { activePlanId: true },
-    });
-
-    if (!client?.activePlanId) {
-      return NextResponse.json(
-        { error: "No active plan assigned" },
-        { status: 404 }
-      );
-    }
-
-    // Verify day belongs to client's active plan
-    const day = await prisma.day.findUnique({
-      where: { id: dayId },
-      include: {
-        week: { select: { planId: true } },
-        exercises: { orderBy: { orderIndex: "asc" } },
-      },
-    });
-
-    if (!day || day.week.planId !== client.activePlanId) {
-      return NextResponse.json({ error: "Day not found" }, { status: 404 });
-    }
-
-    // Check if workout already started
-    const existing = await prisma.workoutCompletion.findFirst({
-      where: {
-        clientId: clientProfileId,
-        planId: client.activePlanId,
-        dayId,
-      },
-    });
-
-    if (existing) {
-      return NextResponse.json(
-        {
-          id: existing.id,
-          status: existing.status,
-          message: "Workout already started",
-        },
-        { status: 200 }
-      );
-    }
-
-    // Create workout completion + pre-create set completion rows
-    const completion = await prisma.$transaction(async (tx) => {
-      const wc = await tx.workoutCompletion.create({
-        data: {
-          clientId: clientProfileId,
-          planId: client.activePlanId!,
-          dayId,
-          status: "IN_PROGRESS",
-          startedAt: new Date(),
-          exercisesTotal: day.exercises.length,
-          exercisesDone: 0,
-          completionPct: 0,
-        },
-      });
-
-      // Pre-create set completion rows
-      const setData = day.exercises.flatMap((we) =>
-        Array.from({ length: we.sets }, (_, i) => ({
-          workoutCompletionId: wc.id,
-          workoutExerciseId: we.id,
-          setNumber: i + 1,
-          completed: false,
-        }))
+    try {
+      const { completion, created } = await workoutService.start(
+        { role: "client", clientProfileId },
+        { dayId }
       );
 
-      if (setData.length > 0) {
-        await tx.setCompletion.createMany({ data: setData });
+      if (!created) {
+        return NextResponse.json(
+          { id: completion.id, status: completion.status, message: "Workout already started" },
+          { status: 200 }
+        );
       }
 
-      return wc;
-    });
-
-    return NextResponse.json(completion, { status: 201 });
+      return NextResponse.json(completion, { status: 201 });
+    } catch (e) {
+      if (e instanceof ValidationError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
+      }
+      throw e;
+    }
   }
 );

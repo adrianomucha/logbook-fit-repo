@@ -124,6 +124,22 @@ export interface WeekOverview {
 }
 
 // GET /api/client/progress
+export interface ClientProgressCompletion {
+  id: string;
+  clientId: string;
+  planId: string;
+  weekId: string;
+  dayId: string;
+  status: string;
+  startedAt?: string;
+  completedAt?: string;
+  completionPct: number;
+  exercisesDone: number;
+  exercisesTotal: number;
+  durationSec?: number;
+  effortRating?: string;
+}
+
 export interface ClientProgress {
   recentCompletions: {
     id: string;
@@ -135,6 +151,7 @@ export interface ClientProgress {
     effortRating: string | null;
     day: { name: string | null; dayNumber: number } | null;
   }[];
+  allCompletions: ClientProgressCompletion[];
   stats: {
     totalWorkouts: number;
     avgCompletionPct: number;
