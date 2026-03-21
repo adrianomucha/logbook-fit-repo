@@ -3,6 +3,8 @@ import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { verifyCoachOwnership } from "@/lib/scoping";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { updateExerciseSchema } from "@/lib/validations/schemas";
 
 /**
  * PUT /api/exercises/[id]
@@ -22,17 +24,9 @@ export const PUT = withCoach(
       return NextResponse.json({ error: "Exercise not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { name, category, defaultSets, defaultReps, defaultWeight, defaultRest, instructions } =
-      body as {
-        name?: string;
-        category?: string;
-        defaultSets?: number;
-        defaultReps?: number;
-        defaultWeight?: number;
-        defaultRest?: number;
-        instructions?: string;
-      };
+    const result = await parseBody(req, updateExerciseSchema);
+    if (!result.success) return result.response;
+    const { name, category, defaultSets, defaultReps, defaultWeight, defaultRest, instructions } = result.data;
 
     // If renaming, check for duplicate
     if (name) {

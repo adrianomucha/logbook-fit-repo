@@ -3,6 +3,8 @@ import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { coachScope } from "@/lib/scoping";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { createExerciseSchema } from "@/lib/validations/schemas";
 
 /**
  * GET /api/exercises
@@ -46,24 +48,9 @@ export const POST = withCoach(
     _session: Session,
     coachProfileId: string
   ) => {
-    const body = await req.json();
-    const { name, category, defaultSets, defaultReps, defaultWeight, defaultRest, instructions } =
-      body as {
-        name?: string;
-        category?: string;
-        defaultSets?: number;
-        defaultReps?: number;
-        defaultWeight?: number;
-        defaultRest?: number;
-        instructions?: string;
-      };
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Exercise name is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, createExerciseSchema);
+    if (!result.success) return result.response;
+    const { name, category, defaultSets, defaultReps, defaultWeight, defaultRest, instructions } = result.data;
 
     // Check for duplicate name (scoped to coach, non-deleted)
     const existing = await prisma.exercise.findFirst({

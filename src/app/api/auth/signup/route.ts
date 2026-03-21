@@ -2,28 +2,26 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { QUICK_START_EXERCISES } from "@/lib/quick-start-exercises";
+import { parseBody } from "@/lib/validations/parseBody";
+import { signupSchema } from "@/lib/validations/schemas";
+import { signupLimiter, getClientIp } from "@/lib/rate-limit";
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { email: rawEmail, password, name, role, inviteToken } = body as {
-      email?: string;
-      password?: string;
-      name?: string;
-      role?: string;
-      inviteToken?: string;
-    };
-
-    // Validate required fields — role is optional when using invite token
-    if (!rawEmail || !password || !name || (!role && !inviteToken)) {
+    // Rate limit by IP
+    const ip = getClientIp(req);
+    const { allowed } = signupLimiter(ip);
+    if (!allowed) {
       return NextResponse.json(
-        { error: "Missing required fields: email, password, name" + (!inviteToken ? ", role" : "") },
-        { status: 400 }
+        { error: "Too many signup attempts. Please try again later." },
+        { status: 429 }
       );
     }
 
-    // Normalize email to lowercase for case-insensitive uniqueness
-    const email = rawEmail.trim().toLowerCase();
+    const result = await parseBody(req, signupSchema);
+    if (!result.success) return result.response;
+
+    const { email, password, name, role, inviteToken } = result.data;
 
     // If invite token provided, validate it and force CLIENT role
     let invite: { id: string; coachId: string; email: string | null } | null = null;
@@ -53,18 +51,10 @@ export async function POST(req: Request) {
       effectiveRole = "CLIENT"; // Always CLIENT when using invite
     }
 
-    // Validate role
+    // Validate role (invite forces CLIENT, otherwise must be provided and valid)
     if (effectiveRole !== "COACH" && effectiveRole !== "CLIENT") {
       return NextResponse.json(
         { error: "Role must be COACH or CLIENT" },
-        { status: 400 }
-      );
-    }
-
-    // Validate password length
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
         { status: 400 }
       );
     }

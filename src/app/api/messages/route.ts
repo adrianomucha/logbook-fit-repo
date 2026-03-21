@@ -2,6 +2,8 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { parseBody } from "@/lib/validations/parseBody";
+import { sendMessageSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/messages
@@ -14,21 +16,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const body = await req.json();
-  const { recipientId, content, workoutReferenceId, exerciseReferenceId } =
-    body as {
-      recipientId?: string;
-      content?: string;
-      workoutReferenceId?: string;
-      exerciseReferenceId?: string;
-    };
-
-  if (!recipientId || !content) {
-    return NextResponse.json(
-      { error: "recipientId and content are required" },
-      { status: 400 }
-    );
-  }
+  const result = await parseBody(req, sendMessageSchema);
+  if (!result.success) return result.response;
+  const { recipientId, content, workoutReferenceId, exerciseReferenceId } = result.data;
 
   const senderId = session.user.id;
 

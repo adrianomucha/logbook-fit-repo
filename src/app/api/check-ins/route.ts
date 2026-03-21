@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { createCheckInSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/check-ins
@@ -14,15 +16,9 @@ export const POST = withCoach(
     _session: Session,
     coachProfileId: string
   ) => {
-    const body = await req.json();
-    const { clientProfileId } = body as { clientProfileId?: string };
-
-    if (!clientProfileId) {
-      return NextResponse.json(
-        { error: "clientProfileId is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, createCheckInSchema);
+    if (!result.success) return result.response;
+    const { clientProfileId } = result.data;
 
     // Verify coach-client relationship
     const relationship = await prisma.coachClientRelationship.findFirst({

@@ -3,6 +3,8 @@ import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { coachScope } from "@/lib/scoping";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { assignPlanSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/plans/[id]/assign
@@ -29,15 +31,9 @@ export const POST = withCoach(
       return NextResponse.json({ error: "Plan not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { clientProfileId } = body as { clientProfileId?: string };
-
-    if (!clientProfileId) {
-      return NextResponse.json(
-        { error: "clientProfileId is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, assignPlanSchema);
+    if (!result.success) return result.response;
+    const { clientProfileId } = result.data;
 
     // Verify coach-client relationship
     const relationship = await prisma.coachClientRelationship.findFirst({

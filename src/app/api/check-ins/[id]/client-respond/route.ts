@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { clientRespondSchema } from "@/lib/validations/schemas";
 
 /**
  * PUT /api/check-ins/[id]/client-respond
@@ -32,12 +34,9 @@ export const PUT = withClient(
       );
     }
 
-    const body = await req.json();
-    const { effortRating, painBlockers, clientFeeling } = body as {
-      effortRating?: string;
-      painBlockers?: string;
-      clientFeeling?: string;
-    };
+    const result = await parseBody(req, clientRespondSchema);
+    if (!result.success) return result.response;
+    const { effortRating, painBlockers, clientFeeling } = result.data;
 
     const updated = await prisma.checkIn.update({
       where: { id: checkInId },

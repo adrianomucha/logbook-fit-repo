@@ -6,6 +6,8 @@ import {
   WorkoutNotFoundError,
   ValidationError,
 } from "@/lib/services/workout";
+import { parseBody } from "@/lib/validations/parseBody";
+import { flagExerciseSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/client/workout/[id]/flag
@@ -19,18 +21,9 @@ export const POST = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const body = await req.json();
-    const { workoutExerciseId, note } = body as {
-      workoutExerciseId?: string;
-      note?: string;
-    };
-
-    if (!workoutExerciseId) {
-      return NextResponse.json(
-        { error: "workoutExerciseId is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, flagExerciseSchema);
+    if (!result.success) return result.response;
+    const { workoutExerciseId, note } = result.data;
 
     try {
       const flag = await workoutService.flagExercise(

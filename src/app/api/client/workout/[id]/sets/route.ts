@@ -6,6 +6,8 @@ import {
   WorkoutNotFoundError,
   ValidationError,
 } from "@/lib/services/workout";
+import { parseBody } from "@/lib/validations/parseBody";
+import { updateSetsSchema } from "@/lib/validations/schemas";
 
 /**
  * PUT /api/client/workout/[id]/sets
@@ -19,23 +21,9 @@ export const PUT = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const body = await req.json();
-    const { sets } = body as {
-      sets?: {
-        workoutExerciseId: string;
-        setNumber: number;
-        completed: boolean;
-        actualWeight?: number;
-        actualReps?: number;
-      }[];
-    };
-
-    if (!sets || !Array.isArray(sets) || sets.length === 0) {
-      return NextResponse.json(
-        { error: "sets array is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, updateSetsSchema);
+    if (!result.success) return result.response;
+    const { sets } = result.data;
 
     try {
       await workoutService.updateSets(

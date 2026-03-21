@@ -5,6 +5,8 @@ import {
   workoutService,
   ValidationError,
 } from "@/lib/services/workout";
+import { parseBody } from "@/lib/validations/parseBody";
+import { startWorkoutSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/client/workout/start
@@ -18,15 +20,9 @@ export const POST = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const body = await req.json();
-    const { dayId } = body as { dayId?: string };
-
-    if (!dayId) {
-      return NextResponse.json(
-        { error: "dayId is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, startWorkoutSchema);
+    if (!result.success) return result.response;
+    const { dayId } = result.data;
 
     try {
       const { completion, created } = await workoutService.start(

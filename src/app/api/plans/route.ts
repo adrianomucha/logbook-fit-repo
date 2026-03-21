@@ -3,6 +3,8 @@ import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { coachScope } from "@/lib/scoping";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { createPlanSchema } from "@/lib/validations/schemas";
 
 /**
  * GET /api/plans
@@ -47,21 +49,9 @@ export const POST = withCoach(
     _session: Session,
     coachProfileId: string
   ) => {
-    const body = await req.json();
-    const { name, description, emoji, durationWeeks, workoutsPerWeek } = body as {
-      name?: string;
-      description?: string;
-      emoji?: string;
-      durationWeeks?: number;
-      workoutsPerWeek?: number;
-    };
-
-    if (!name) {
-      return NextResponse.json(
-        { error: "Plan name is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, createPlanSchema);
+    if (!result.success) return result.response;
+    const { name, description, emoji, durationWeeks, workoutsPerWeek } = result.data;
 
     // Check for duplicate name (scoped to coach, non-deleted)
     const existing = await prisma.plan.findFirst({
@@ -77,8 +67,8 @@ export const POST = withCoach(
       );
     }
 
-    const weeks = durationWeeks ?? 4;
-    const wpw = workoutsPerWeek ?? 4;
+    const weeks = durationWeeks;
+    const wpw = workoutsPerWeek;
 
     const plan = await prisma.$transaction(async (tx) => {
       const created = await tx.plan.create({

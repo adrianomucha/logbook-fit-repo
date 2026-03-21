@@ -6,6 +6,8 @@ import {
   WorkoutNotFoundError,
   InvalidStateError,
 } from "@/lib/services/workout";
+import { parseBody } from "@/lib/validations/parseBody";
+import { finishWorkoutSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/client/workout/[id]/finish
@@ -19,8 +21,9 @@ export const POST = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    const body = await req.json().catch(() => ({}));
-    const { effortRating } = body as { effortRating?: string };
+    const result = await parseBody(req, finishWorkoutSchema);
+    if (!result.success) return result.response;
+    const { effortRating } = result.data;
 
     try {
       const updated = await workoutService.finish(

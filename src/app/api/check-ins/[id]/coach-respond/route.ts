@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { coachRespondSchema } from "@/lib/validations/schemas";
 
 /**
  * PUT /api/check-ins/[id]/coach-respond
@@ -32,11 +34,9 @@ export const PUT = withCoach(
       );
     }
 
-    const body = await req.json();
-    const { coachFeedback, planAdjustment } = body as {
-      coachFeedback?: string;
-      planAdjustment?: boolean;
-    };
+    const result = await parseBody(req, coachRespondSchema);
+    if (!result.success) return result.response;
+    const { coachFeedback, planAdjustment } = result.data;
 
     const updated = await prisma.checkIn.update({
       where: { id: checkInId },
