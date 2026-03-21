@@ -2,6 +2,7 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
+import { loginLimiter } from "@/lib/rate-limit";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -11,7 +12,7 @@ export const authOptions: NextAuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         try {
           if (!credentials?.email || !credentials?.password) {
             console.error("[AUTH] Missing credentials");
@@ -19,6 +20,18 @@ export const authOptions: NextAuthOptions = {
           }
 
           const email = credentials.email.trim().toLowerCase();
+
+          // Rate limit by IP + email to prevent brute-force
+          const ip =
+            (req?.headers && "x-forwarded-for" in req.headers
+              ? (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
+              : undefined) ?? "unknown";
+          const { allowed } = loginLimiter(`${ip}:${email}`);
+          if (!allowed) {
+            console.error("[AUTH] Rate limited:", email);
+            return null;
+          }
+
           console.log("[AUTH] Attempting login for:", email);
 
           const user = await prisma.user.findFirst({
