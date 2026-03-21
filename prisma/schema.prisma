@@ -158,7 +158,7 @@ model CoachClientRelationship {
 model ClientInvite {
   id        String       @id @default(uuid())
   coachId   String
-  token     String       @unique @default(uuid())
+  token     String       @unique
   email     String?
   status    InviteStatus @default(PENDING)
   expiresAt DateTime     // 7 days from creation
