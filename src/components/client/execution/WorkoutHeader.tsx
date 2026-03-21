@@ -29,7 +29,7 @@ export function WorkoutHeader({
           <button
             type="button"
             onClick={onBack}
-            className="text-primary-foreground p-2 -ml-2 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center"
+            className="text-primary-foreground p-2 -ml-2 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.92] transition-transform duration-150"
             aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -59,7 +59,7 @@ export function WorkoutHeader({
         </div>
 
         {/* Centre — workout name */}
-        <h1 className="text-primary-foreground font-bold text-sm tracking-[0.05em] uppercase truncate max-w-[45%] text-center">
+        <h1 className="text-primary-foreground font-bold text-sm tracking-[0.05em] uppercase truncate max-w-[45%] text-center antialiased">
           {workoutName}
         </h1>
 

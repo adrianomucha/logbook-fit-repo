@@ -13,7 +13,7 @@ export default function ClientLoading() {
         </div>
 
         {/* Today's workout card */}
-        <div className="rounded-xl border bg-card p-4 space-y-4">
+        <div className="rounded-xl bg-card p-4 space-y-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
           <div className="h-5 w-36 rounded bg-muted" />
           <div className="space-y-3">
             {Array.from({ length: 4 }).map((_, i) => (

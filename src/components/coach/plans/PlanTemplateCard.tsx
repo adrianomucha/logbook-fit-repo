@@ -36,8 +36,9 @@ export function PlanTemplateCard({
       onClick={onEdit}
       className={cn(
         'group relative cursor-pointer transition-all duration-200',
-        'rounded-xl border-2 border-border/80 bg-card overflow-hidden',
-        'hover:border-foreground hover:shadow-lg',
+        'rounded-xl bg-card overflow-hidden',
+        'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]',
+        'hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)]',
         'active:scale-[0.97]',
         isArchived && 'opacity-50 grayscale'
       )}

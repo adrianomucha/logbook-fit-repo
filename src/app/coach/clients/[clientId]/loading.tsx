@@ -27,12 +27,12 @@ export default function ClientProfileLoading() {
 
         {/* Tab content area */}
         <div className="space-y-4">
-          <div className="rounded-xl border bg-card p-4 space-y-3">
+          <div className="rounded-xl bg-card p-4 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
             <div className="h-5 w-32 rounded bg-muted" />
             <div className="h-4 w-full rounded bg-muted" />
             <div className="h-4 w-3/4 rounded bg-muted" />
           </div>
-          <div className="rounded-xl border bg-card p-4 space-y-3">
+          <div className="rounded-xl bg-card p-4 space-y-3 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
             <div className="h-5 w-40 rounded bg-muted" />
             <div className="h-4 w-full rounded bg-muted" />
             <div className="h-4 w-2/3 rounded bg-muted" />

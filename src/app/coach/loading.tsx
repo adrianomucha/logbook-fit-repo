@@ -26,7 +26,7 @@ export default function CoachLoading() {
         {/* Client list section */}
         <div className="space-y-3">
           <div className="h-4 w-32 rounded bg-muted" />
-          <div className="bg-card rounded-xl border divide-y divide-border overflow-hidden">
+          <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center gap-4 py-4 px-4">
                 <div className="w-12 h-12 rounded-full bg-muted" />

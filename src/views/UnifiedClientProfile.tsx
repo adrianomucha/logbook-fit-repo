@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, ExerciseFlag, Message, WorkoutDay, Exercise, WorkoutWeek } from '@/types';
 import { useClientProfile } from '@/hooks/api/useClientProfile';
@@ -327,8 +327,8 @@ export function UnifiedClientProfile() {
   // ---- Loading State ----
   if (isLoadingClient) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-background flex items-center justify-center animate-enter">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -339,16 +339,21 @@ export function UnifiedClientProfile() {
       <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
           <CoachNav activeTab="clients" />
-          <Card className="max-w-md mx-auto">
-            <CardContent className="text-center py-12">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
-              <p className="text-muted-foreground mb-4">
+          <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+            <div className="text-center py-12 px-6">
+              <AlertCircle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
+              <h2 className="text-lg font-bold mb-1.5 tracking-tight">Client Not Found</h2>
+              <p className="text-sm text-muted-foreground mb-5">
                 The client you&apos;re looking for doesn&apos;t exist or has been removed.
               </p>
-              <Button onClick={() => router.push('/coach/clients')}>Back to Clients</Button>
-            </CardContent>
-          </Card>
+              <Button
+                onClick={() => router.push('/coach/clients')}
+                className="active:scale-[0.96] transition-transform duration-150"
+              >
+                Back to Clients
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -385,42 +390,66 @@ export function UnifiedClientProfile() {
   const headerSubtitle = statusLabel
     ?? (plan ? `${plan.emoji} ${plan.name}` : undefined);
 
+  // Section label helper — consistent uppercase tracking with antialiased rendering
+  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
+    <div className="px-1 pb-2">
+      <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
+        {children}
+      </span>
+    </div>
+  );
+
+  // Card surface helper — shadows over borders, concentric radii (outer 12px, inner content inherits)
+  const SectionCard = ({ children, className: cardClassName }: { children: React.ReactNode; className?: string }) => (
+    <div className={cn(
+      "bg-card rounded-xl overflow-hidden p-3 sm:p-4",
+      "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
+      "transition-shadow duration-200",
+      cardClassName
+    )}>
+      {children}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav activeTab="clients" />
 
-        {/* Back link */}
+        {/* Back link — scale on press, smooth arrow nudge */}
         <button
           onClick={() => router.push('/coach/clients')}
-          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors group"
+          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased hover:text-foreground active:scale-[0.97] transition-[color,transform] duration-150 group"
           aria-label="Back to Clients"
         >
-          <ArrowLeft className="h-3.5 w-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-150 group-hover:-translate-x-0.5" />
           Clients
         </button>
 
-        {/* Page header — matches Dashboard/Clients/Plans pattern */}
-        <PageHeader
-          title={client.name}
-          subtitle={headerSubtitle}
-          action={statusAction ? (
-            <Button
-              variant={statusIsUrgent ? 'default' : 'outline'}
-              size="sm"
-              onClick={statusAction.onClick}
-              disabled={statusAction.disabled}
-            >
-              {statusAction.label}
-            </Button>
-          ) : undefined}
-        />
+        {/* Page header — stagger delay 1 */}
+        <div className="animate-enter" style={{ animationDelay: '0ms' }}>
+          <PageHeader
+            title={client.name}
+            subtitle={headerSubtitle}
+            action={statusAction ? (
+              <Button
+                variant={statusIsUrgent ? 'default' : 'outline'}
+                size="sm"
+                onClick={statusAction.onClick}
+                disabled={statusAction.disabled}
+                className="active:scale-[0.96] transition-transform duration-150"
+              >
+                {statusAction.label}
+              </Button>
+            ) : undefined}
+          />
+        </div>
 
         {/* Status alert strip — only when urgent */}
         {showStatusBanner && statusIsUrgent && StatusIcon && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 text-warning text-xs font-medium">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 text-warning text-xs font-medium antialiased animate-enter" style={{ animationDelay: '60ms' }}>
             <StatusIcon className="w-3.5 h-3.5 shrink-0" />
-            <span>
+            <span className="tabular-nums">
               {status!.type === 'overdue' && client.lastCheckInDate && (() => {
                 const days = Math.max(1, Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
                 return `${days}d since last check-in`;
@@ -433,27 +462,25 @@ export function UnifiedClientProfile() {
           </div>
         )}
 
-        {/* This Week — compact progress strip */}
-        <InteractiveWeeklyStrip
-          client={client}
-          plan={plan}
-          planStartDate={client.planStartDate}
-          workoutCompletions={workoutCompletions}
-          onScrollToPlanEditor={handleScrollToPlanEditor}
-          compact
-        />
+        {/* This Week — stagger delay 2 */}
+        <div className="animate-enter" style={{ animationDelay: '80ms' }}>
+          <InteractiveWeeklyStrip
+            client={client}
+            plan={plan}
+            planStartDate={client.planStartDate}
+            workoutCompletions={workoutCompletions}
+            onScrollToPlanEditor={handleScrollToPlanEditor}
+            compact
+          />
+        </div>
 
         {/* ── Sections ── */}
 
-        {/* Primary: Check-in or Plan */}
+        {/* Primary: Check-in or Plan — stagger delay 3 */}
         {priorityMode === 'A' ? (
-          <section ref={checkInRef}>
-            <div className="px-1 pb-2">
-              <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-                Check-in
-              </span>
-            </div>
-            <div className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
+          <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
+            <SectionLabel>Check-in</SectionLabel>
+            <SectionCard>
               <InlineCheckInReview
                 client={client}
                 activeCheckIn={activeCheckIn}
@@ -468,16 +495,12 @@ export function UnifiedClientProfile() {
                 hideTitle={activeCheckIn?.status === 'responded'}
                 variant="flat"
               />
-            </div>
+            </SectionCard>
           </section>
         ) : (
-          <section ref={planEditorRef}>
-            <div className="px-1 pb-2">
-              <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-                Training Plan
-              </span>
-            </div>
-            <div className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
+          <section ref={planEditorRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
+            <SectionLabel>Training Plan</SectionLabel>
+            <SectionCard>
               <InlinePlanEditor
                 client={client}
                 plan={plan}
@@ -490,20 +513,19 @@ export function UnifiedClientProfile() {
                 exercisesCollapsed={false}
                 variant="flat"
               />
-            </div>
+            </SectionCard>
           </section>
         )}
 
-        {/* Two-column: Chat + Secondary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        {/* Two-column: Chat + Secondary — stagger delay 4 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '200ms' }}>
           {/* Messages */}
           <section>
-            <div className="px-1 pb-2">
-              <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-                Messages
-              </span>
-            </div>
-            <div ref={chatRef} className="bg-card rounded-xl border overflow-hidden h-[400px] md:h-[480px]">
+            <SectionLabel>Messages</SectionLabel>
+            <div ref={chatRef} className={cn(
+              "bg-card rounded-xl overflow-hidden h-[400px] md:h-[480px]",
+              "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
+            )}>
               <ChatView
                 client={client}
                 messages={messages}
@@ -520,35 +542,29 @@ export function UnifiedClientProfile() {
           <section className="space-y-4 sm:space-y-6">
             {priorityMode === 'A' && (
               <div>
-                <div className="px-1 pb-2">
-                  <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-                    Training Plan
-                  </span>
-                </div>
-                <div ref={planEditorRef} className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
-                  <InlinePlanEditor
-                    client={client}
-                    plan={plan}
-                    planStartDate={client.planStartDate}
-                    onUpdatePlan={handleUpdatePlan}
-                    onEditPlan={handleEditPlan}
-                    onChangePlan={handleChangePlan}
-                    onCreatePlan={handleCreateNewPlan}
-                    onUnassignPlan={handleUnassignPlan}
-                    exercisesCollapsed={true}
-                    variant="flat"
-                  />
-                </div>
+                <SectionLabel>Training Plan</SectionLabel>
+                <SectionCard>
+                  <div ref={planEditorRef}>
+                    <InlinePlanEditor
+                      client={client}
+                      plan={plan}
+                      planStartDate={client.planStartDate}
+                      onUpdatePlan={handleUpdatePlan}
+                      onEditPlan={handleEditPlan}
+                      onChangePlan={handleChangePlan}
+                      onCreatePlan={handleCreateNewPlan}
+                      onUnassignPlan={handleUnassignPlan}
+                      exercisesCollapsed={true}
+                      variant="flat"
+                    />
+                  </div>
+                </SectionCard>
               </div>
             )}
 
             <div>
-              <div className="px-1 pb-2">
-                <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-                  Check-in History
-                </span>
-              </div>
-              <div className="bg-card rounded-xl border overflow-hidden p-3 sm:p-4">
+              <SectionLabel>Check-in History</SectionLabel>
+              <SectionCard>
                 <CheckInHistoryPanel
                   checkIns={checkIns}
                   clientId={client.id}
@@ -557,7 +573,7 @@ export function UnifiedClientProfile() {
                   hasPlan={!!plan}
                   onToggleSchedule={handleToggleCheckInSchedule}
                 />
-              </div>
+              </SectionCard>
             </div>
           </section>
         </div>

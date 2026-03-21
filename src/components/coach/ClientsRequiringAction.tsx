@@ -87,11 +87,11 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
       {needsAction.length > 0 && (
         <section>
           <div className="px-1 pb-2">
-            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
               Needs Attention · {needsAction.length}
             </span>
           </div>
-          <div className="bg-card rounded-xl border divide-y divide-border overflow-hidden">
+          <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
             {needsAction.map((client) => {
               const badge = urgencyBadge(client.urgency);
               const cta = ctaForUrgency(client.urgency);
@@ -99,7 +99,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
               return (
                 <div
                   key={client.clientProfileId}
-                  className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] transition-[background-color,transform] duration-150 cursor-pointer"
                   onClick={() => handleClientAction(client)}
                   role="link"
                   tabIndex={0}
@@ -159,17 +159,17 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
       {onTrack.length > 0 && (
         <section>
           <div className="px-1 pb-2">
-            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
               On Track · {onTrack.length}
             </span>
           </div>
-          <div className="bg-card rounded-xl border divide-y divide-border overflow-hidden">
+          <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
             {onTrack.map((client) => {
               const displayName = client.user.name || client.user.email;
               return (
                 <div
                   key={client.clientProfileId}
-                  className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 transition-colors cursor-pointer"
+                  className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] transition-[background-color,transform] duration-150 cursor-pointer"
                   onClick={() => router.push(`/coach/clients/${client.clientProfileId}`)}
                   role="link"
                   tabIndex={0}

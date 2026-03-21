@@ -63,7 +63,7 @@ function ClientRow({ client }: { client: DashboardClient }) {
   return (
     <div
       onClick={() => router.push(`/coach/clients/${client.clientProfileId}`)}
-      className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 active:bg-muted/70 transition-colors cursor-pointer"
+      className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] transition-[background-color,transform] duration-150 cursor-pointer"
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -116,25 +116,27 @@ export function AllClientsPage() {
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav activeTab="clients" />
 
-        <PageHeader
-          title="Clients"
-          subtitle={clients.length > 0 ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}` : undefined}
-          action={
-            <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)}>
-              <Plus className="w-4 h-4 mr-1.5" />
-              Invite Client
-            </Button>
-          }
-        />
+        <div className="animate-enter">
+          <PageHeader
+            title="Clients"
+            subtitle={clients.length > 0 ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}` : undefined}
+            action={
+              <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
+                <Plus className="w-4 h-4 mr-1.5" />
+                Invite Client
+              </Button>
+            }
+          />
+        </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-12 animate-enter">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : clients.length === 0 ? (
           <EmptyStateNoClients />
         ) : (
-          <div className="bg-card rounded-xl border divide-y divide-border overflow-hidden">
+          <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
             {clients.map((client) => (
               <ClientRow key={client.clientProfileId} client={client} />
             ))}

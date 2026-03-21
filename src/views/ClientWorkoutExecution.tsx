@@ -261,8 +261,8 @@ export function ClientWorkoutExecution() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-background flex items-center justify-center animate-enter">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -271,14 +271,14 @@ export function ClientWorkoutExecution() {
   if (error) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card>
-          <CardContent className="py-8 text-center">
-            <p className="text-muted-foreground">Failed to load workout.</p>
-            <Button onClick={handleBack} className="mt-4">
+        <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="py-8 px-6 text-center">
+            <p className="text-muted-foreground antialiased">Failed to load workout.</p>
+            <Button onClick={handleBack} className="mt-4 active:scale-[0.96] transition-transform duration-150">
               Go Back
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -286,16 +286,16 @@ export function ClientWorkoutExecution() {
   if (!day) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card>
-          <CardContent className="py-8 text-center">
-            <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-            <p className="font-semibold mb-2">Workout not found</p>
-            <p className="text-sm text-muted-foreground mb-4">
+        <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="py-8 px-6 text-center">
+            <Dumbbell className="w-10 h-10 mx-auto text-muted-foreground/60 mb-4" />
+            <p className="font-semibold mb-1.5 tracking-tight antialiased">Workout not found</p>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">
               This workout doesn&apos;t exist in your plan.
             </p>
-            <Button onClick={handleBack}>Go Back</Button>
-          </CardContent>
-        </Card>
+            <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">Go Back</Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -347,7 +347,7 @@ export function ClientWorkoutExecution() {
                 key={level}
                 onClick={() => handleEffortRating(level)}
                 disabled={isSavingRating}
-                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-foreground text-background font-bold uppercase tracking-wider text-sm hover:bg-foreground/90 transition-colors touch-manipulation min-h-[44px] disabled:opacity-50"
+                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-foreground text-background font-bold uppercase tracking-wider text-sm hover:bg-foreground/90 active:scale-[0.95] transition-[background-color,transform] duration-150 touch-manipulation min-h-[44px] disabled:opacity-50"
               >
                 {level === 'EASY' ? 'Easy' : level === 'MEDIUM' ? 'Medium' : 'Hard'}
               </button>
@@ -450,7 +450,7 @@ export function ClientWorkoutExecution() {
 
       {/* Exercise list — single card wrapping all exercises (Figma layout) */}
       <div className="flex-1 p-3 sm:p-4 max-w-3xl mx-auto w-full">
-        <Card>
+        <Card className="shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
           {/* Card header — workout name + exercise count */}
           <div className="flex items-baseline justify-between px-4 py-4 sm:px-6 sm:py-5 border-b-2 border-foreground/10">
             <h2 className="font-heading text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground">

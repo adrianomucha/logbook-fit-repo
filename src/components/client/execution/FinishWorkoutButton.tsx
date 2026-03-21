@@ -22,7 +22,7 @@ export function FinishWorkoutButton({
         onClick={onFinish}
         disabled={disabled}
         className={cn(
-          'w-full h-14 rounded-lg text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 touch-manipulation',
+          'w-full h-14 rounded-lg text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 touch-manipulation active:scale-[0.97]',
           'text-primary-foreground',
           allDone
             ? 'bg-success hover:bg-success/90 shadow-[0_0_20px_hsl(var(--success)/0.3)]'

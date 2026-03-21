@@ -46,8 +46,8 @@ export function ClientCheckInForm() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center animate-enter">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -56,14 +56,14 @@ export function ClientCheckInForm() {
   if (!checkIn) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="text-center py-12">
-            <AlertTriangle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-xl font-bold mb-2">Check-in Not Found</h2>
-            <p className="text-muted-foreground mb-4">This check-in doesn't exist or has expired.</p>
-            <Button onClick={() => router.push('/client')}>Back to Dashboard</Button>
-          </CardContent>
-        </Card>
+        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="text-center py-12 px-6">
+            <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in Not Found</h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in doesn't exist or has expired.</p>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -72,14 +72,14 @@ export function ClientCheckInForm() {
   if (checkIn.status !== 'PENDING') {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="text-center py-12">
-            <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-success" />
-            <h2 className="text-xl font-bold mb-2">Already Submitted</h2>
-            <p className="text-muted-foreground mb-4">You've already responded to this check-in.</p>
-            <Button onClick={() => router.push('/client')}>Back to Dashboard</Button>
-          </CardContent>
-        </Card>
+        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="text-center py-12 px-6">
+            <CheckCircle2 className="w-10 h-10 mx-auto mb-4 text-success" />
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Already Submitted</h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">You've already responded to this check-in.</p>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -88,13 +88,13 @@ export function ClientCheckInForm() {
   if (showSuccess) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card className="max-w-md w-full">
-          <CardContent className="text-center py-12">
-            <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
-            <h2 className="text-2xl font-bold mb-2">Sent to your coach!</h2>
-            <p className="text-muted-foreground">They'll review and get back to you soon.</p>
-          </CardContent>
-        </Card>
+        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="text-center py-12 px-6">
+            <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success" />
+            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach!</h2>
+            <p className="text-sm text-muted-foreground antialiased">They'll review and get back to you soon.</p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -251,7 +251,7 @@ export function ClientCheckInForm() {
         <Button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="w-full h-14 text-base font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
+          className="w-full h-14 text-base font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
           size="lg"
         >
           {isSubmitting ? (

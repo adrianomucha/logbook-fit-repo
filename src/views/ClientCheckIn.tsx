@@ -93,8 +93,8 @@ export function ClientCheckIn() {
   // Loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center animate-enter">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
   }

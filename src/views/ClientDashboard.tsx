@@ -247,8 +247,8 @@ export function ClientDashboard() {
   // ---- Loading/Empty States ----
   if (isLoadingUser || isLoadingWeek) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <div className="min-h-screen bg-background flex items-center justify-center animate-enter">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -256,18 +256,18 @@ export function ClientDashboard() {
   if (hasDataError && !client && !plan) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <Card>
-          <CardContent className="py-8 text-center">
-            <AlertCircle className="w-10 h-10 mx-auto text-destructive mb-3" />
-            <h2 className="text-lg font-semibold mb-1">Couldn&apos;t load your data</h2>
-            <p className="text-sm text-muted-foreground mb-4">
+        <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="py-8 px-6 text-center">
+            <AlertCircle className="w-10 h-10 mx-auto text-destructive/80 mb-3" />
+            <h2 className="text-lg font-semibold mb-1 tracking-tight antialiased">Couldn&apos;t load your data</h2>
+            <p className="text-sm text-muted-foreground mb-4 antialiased">
               Check your connection and try again.
             </p>
-            <Button onClick={() => window.location.reload()}>
+            <Button onClick={() => window.location.reload()} className="active:scale-[0.96] transition-transform duration-150">
               Retry
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -275,9 +275,9 @@ export function ClientDashboard() {
   if (!client || !plan) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">No Workout Plan Assigned</h1>
-          <p className="text-muted-foreground">
+        <div className="text-center animate-enter">
+          <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">No Workout Plan Assigned</h1>
+          <p className="text-muted-foreground antialiased">
             Contact your coach to get started with a workout plan.
           </p>
         </div>
@@ -310,13 +310,13 @@ export function ClientDashboard() {
         {pendingCheckIn && (
           <section aria-label="Pending check-in">
             <div className="rounded-lg bg-muted/40 px-4 py-3.5">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-2">
+              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-2 antialiased">
                 Check-in
               </p>
-              <p className="text-sm font-bold tracking-tight mb-1">Your coach wants to hear how training is going</p>
+              <p className="text-sm font-bold tracking-tight mb-1 antialiased">Your coach wants to hear how training is going</p>
               <Button
                 onClick={() => router.push(`/client/checkin/${pendingCheckIn.id}`)}
-                className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 mt-2.5"
+                className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150 mt-2.5"
                 size="sm"
               >
                 Complete Check-in

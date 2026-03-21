@@ -207,18 +207,24 @@ export function CoachDashboard() {
 
         {currentView === 'dashboard' && (
           <div className="space-y-6">
-            <PageHeader
-              title="Dashboard"
-              subtitle={dashboardClients.length > 0 ? 'Overview' : undefined}
-            />
+            <div className="animate-enter">
+              <PageHeader
+                title="Dashboard"
+                subtitle={dashboardClients.length > 0 ? 'Overview' : undefined}
+              />
+            </div>
             {isDashboardLoading ? (
-              <div className="flex items-center justify-center py-12">
+              <div className="flex items-center justify-center py-12 animate-enter">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
               <>
-                <WeeklyConfidenceStrip clients={dashboardClients} />
-                <ClientsRequiringAction clients={dashboardClients} />
+                <div className="animate-enter" style={{ animationDelay: '60ms' }}>
+                  <WeeklyConfidenceStrip clients={dashboardClients} />
+                </div>
+                <div className="animate-enter" style={{ animationDelay: '120ms' }}>
+                  <ClientsRequiringAction clients={dashboardClients} />
+                </div>
               </>
             )}
           </div>
@@ -226,16 +232,18 @@ export function CoachDashboard() {
 
         {currentView === 'plans' && (
           <div className="space-y-6">
-            <PageHeader
-              title="Plans"
-              subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'template' : 'templates'}` : undefined}
-              action={templates.length > 0 ? (
-                <Button onClick={handleCreateNewPlan} size="sm" variant="outline">
-                  <Plus className="w-4 h-4 mr-1.5" />
-                  New Plan
-                </Button>
-              ) : undefined}
-            />
+            <div className="animate-enter">
+              <PageHeader
+                title="Plans"
+                subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'template' : 'templates'}` : undefined}
+                action={templates.length > 0 ? (
+                  <Button onClick={handleCreateNewPlan} size="sm" variant="outline" className="active:scale-[0.96] transition-transform duration-150">
+                    <Plus className="w-4 h-4 mr-1.5" />
+                    New Plan
+                  </Button>
+                ) : undefined}
+              />
+            </div>
 
             <section>
               {isPlansLoading ? (
