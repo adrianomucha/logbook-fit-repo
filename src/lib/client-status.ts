@@ -41,8 +41,11 @@ export function getClientStatus(
     (c) => c.clientId === client.id && c.status === 'responded'
   );
 
+  // Skip urgency checks if client has no plan — can't be overdue without one
+  const hasPlan = !!client.currentPlanId;
+
   // Priority 0: At risk (5-6 days since check-in) — most urgent, coach must act
-  if (daysSinceCheckIn >= 5 && daysSinceCheckIn < 7) {
+  if (hasPlan && daysSinceCheckIn >= 5 && daysSinceCheckIn < 7) {
     return {
       type: 'at-risk',
       icon: AlertCircle,
@@ -56,7 +59,7 @@ export function getClientStatus(
   }
 
   // Priority 1: Check-in overdue (7+ days)
-  if (daysSinceCheckIn >= 7) {
+  if (hasPlan && daysSinceCheckIn >= 7) {
     return {
       type: 'overdue',
       icon: AlertCircle,
