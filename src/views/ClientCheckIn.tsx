@@ -107,10 +107,10 @@ export function ClientCheckIn() {
           <CoachNav activeTab="clients" />
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-xl font-bold mb-2">Client Not Found</h2>
-              <p className="text-muted-foreground mb-4">This client doesn&apos;t exist or has been removed.</p>
-              <Button onClick={() => router.push('/coach/clients')}>Back to Clients</Button>
+              <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
+              <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can&apos;t find this client</h2>
+              <p className="text-sm text-muted-foreground mb-5 antialiased">They may have been removed, or the link might be outdated.</p>
+              <Button onClick={() => router.push('/coach/clients')} className="active:scale-[0.96] transition-transform duration-150">Back to Clients</Button>
             </CardContent>
           </Card>
         </div>

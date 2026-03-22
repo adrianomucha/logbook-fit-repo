@@ -209,7 +209,7 @@ export function ChatView({
           ref={scrollRef}
           className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4"
         >
-          <div className="flex flex-col justify-end min-h-full">
+          <div className={cn("flex flex-col min-h-full", clientMessages.length === 0 ? "justify-center" : "justify-end")}>
             <div
               role="log"
               aria-live="polite"
@@ -218,13 +218,14 @@ export function ChatView({
             >
               {/* Empty state */}
               {clientMessages.length === 0 && (
-                <div className="py-12 text-center space-y-4">
+                <div className="flex flex-col items-center justify-center text-center space-y-4 min-h-[200px] py-8">
                   <div className="space-y-2">
-                    <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-                      No messages yet
+                    <div className="text-3xl select-none mb-1">👋</div>
+                    <p className="text-sm font-medium antialiased">
+                      Start the conversation
                     </p>
-                    <p className="text-sm text-muted-foreground/60">
-                      Send {peerFirst} a message to get started
+                    <p className="text-xs text-muted-foreground/60 antialiased">
+                      Drop {peerFirst} a note — they&apos;ll see it next time they open the app.
                     </p>
                   </div>
                   {conversationStarters && conversationStarters.length > 0 && (

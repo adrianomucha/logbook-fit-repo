@@ -257,10 +257,10 @@ export function ClientDashboard() {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
-          <div className="py-8 px-6 text-center">
-            <AlertCircle className="w-10 h-10 mx-auto text-destructive/80 mb-3" />
-            <h2 className="text-lg font-semibold mb-1 tracking-tight antialiased">Couldn&apos;t load your data</h2>
-            <p className="text-sm text-muted-foreground mb-4 antialiased">
+          <div className="py-10 px-6 text-center">
+            <div className="text-4xl select-none mb-4 animate-bounce-once">😵</div>
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Something went wrong</h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">
               Check your connection and try again.
             </p>
             <Button onClick={() => window.location.reload()} className="active:scale-[0.96] transition-transform duration-150">
@@ -276,9 +276,10 @@ export function ClientDashboard() {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="text-center animate-enter">
-          <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">No Workout Plan Assigned</h1>
-          <p className="text-muted-foreground antialiased">
-            Contact your coach to get started with a workout plan.
+          <div className="text-5xl select-none mb-4 animate-bounce-once">🏋️</div>
+          <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">No plan yet</h1>
+          <p className="text-sm text-muted-foreground antialiased">
+            Your coach will assign a workout plan — hang tight.
           </p>
         </div>
       </div>
