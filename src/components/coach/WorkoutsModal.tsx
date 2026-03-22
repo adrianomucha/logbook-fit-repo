@@ -73,8 +73,8 @@ export function WorkoutsModal({ workouts, plan, clientName, onClose }: WorkoutsM
           })
         ) : (
           <div className="text-center py-12">
-            <Dumbbell className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No workouts completed yet</p>
+            <div className="text-4xl select-none mb-3">🏋️</div>
+            <p className="text-sm text-muted-foreground antialiased">No workouts completed yet</p>
           </div>
         )}
       </div>

@@ -107,9 +107,10 @@ export function ExerciseSelector({ onSelect, onClose }: ExerciseSelectorProps) {
               </div>
             ))}
             {filteredExercises.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No exercises found. Try a different search term.
-              </p>
+              <div className="text-center py-8">
+                <div className="text-2xl select-none mb-2">🔍</div>
+                <p className="text-sm text-muted-foreground antialiased">No exercises found. Try a different search.</p>
+              </div>
             )}
           </div>
         </CardContent>

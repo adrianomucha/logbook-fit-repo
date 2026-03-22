@@ -253,8 +253,9 @@ export function ExerciseEditorContent({
                 </button>
               ))}
               {filteredLibrary.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p className="text-sm">No exercises found</p>
+                <div className="text-center py-8">
+                  <div className="text-2xl select-none mb-2">🔍</div>
+                  <p className="text-sm text-muted-foreground antialiased">No exercises found</p>
                   <Button
                     variant="link"
                     className="mt-2 text-xs"

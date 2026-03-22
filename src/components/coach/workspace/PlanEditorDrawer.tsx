@@ -359,9 +359,9 @@ export function PlanEditorDrawer({
               </SheetHeader>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
-              <AlertCircle className="w-10 h-10 text-destructive" />
-              <p className="text-sm text-muted-foreground">{error}</p>
-              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+              <div className="text-4xl select-none mb-1">😵</div>
+              <p className="text-sm text-muted-foreground antialiased">{error}</p>
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="active:scale-[0.96] transition-transform duration-150">
                 Close
               </Button>
             </div>

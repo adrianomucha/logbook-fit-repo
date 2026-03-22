@@ -24,9 +24,10 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
 
     if (weights.length < 2 && bodyFats.length < 2) {
       return (
-        <p className="text-center text-muted-foreground py-8">
-          Not enough data points for trend visualization
-        </p>
+        <div className="text-center py-8">
+          <div className="text-2xl select-none mb-2">📊</div>
+          <p className="text-sm text-muted-foreground antialiased">Not enough data points for trends yet</p>
+        </div>
       );
     }
 
@@ -169,7 +170,10 @@ export function MeasurementsModal({ measurements, onClose }: MeasurementsModalPr
                 )}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-4">No measurements recorded yet</p>
+              <div className="text-center py-6">
+                <div className="text-2xl select-none mb-2">📏</div>
+                <p className="text-sm text-muted-foreground antialiased">No measurements recorded yet</p>
+              </div>
             )}
           </CardContent>
         </Card>

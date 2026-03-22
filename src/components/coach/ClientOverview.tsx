@@ -162,9 +162,10 @@ export function ClientOverview({
                 )}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No measurements recorded yet
-              </p>
+              <div className="text-center py-6">
+                <div className="text-2xl select-none mb-2">📏</div>
+                <p className="text-sm text-muted-foreground antialiased">No measurements recorded yet</p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -239,9 +240,10 @@ export function ClientOverview({
               })}
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No workouts completed yet
-            </p>
+            <div className="text-center py-6">
+              <div className="text-2xl select-none mb-2">🏋️</div>
+              <p className="text-sm text-muted-foreground antialiased">No workouts completed yet</p>
+            </div>
           )}
         </CardContent>
       </Card>

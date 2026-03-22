@@ -38,9 +38,10 @@ export function WeekSummaryCard({ clientId, completedWorkouts, plan }: WeekSumma
       </CardHeader>
       <CardContent>
         {recentWorkouts.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No workouts completed this week
-          </p>
+          <div className="text-center py-6">
+            <div className="text-2xl select-none mb-2">🏃</div>
+            <p className="text-sm text-muted-foreground antialiased">No workouts completed this week</p>
+          </div>
         ) : (
           <div className="space-y-2">
             {recentWorkouts.map((workout) => (

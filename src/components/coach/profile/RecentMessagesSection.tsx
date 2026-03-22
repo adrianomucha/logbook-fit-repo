@@ -112,9 +112,10 @@ export function RecentMessagesSection({
               </Button>
             </div>
           ) : (
-            <div className="text-center py-4">
-              <p className="text-sm text-muted-foreground mb-3">No messages yet</p>
-              <Button variant="outline" size="sm" onClick={() => openChat()}>
+            <div className="text-center py-6">
+              <div className="text-2xl select-none mb-2">👋</div>
+              <p className="text-sm text-muted-foreground mb-3 antialiased">No messages yet</p>
+              <Button variant="outline" size="sm" onClick={() => openChat()} className="active:scale-[0.96] transition-transform duration-150">
                 <MessageSquare className="w-4 h-4 mr-1" />
                 Send a message
               </Button>
@@ -162,8 +163,9 @@ export function RecentMessagesSection({
                   );
                 })
               ) : (
-                <div className="text-center py-8 text-muted-foreground">
-                  No messages yet. Start a conversation!
+                <div className="text-center py-8">
+                  <div className="text-2xl select-none mb-2">💬</div>
+                  <p className="text-sm text-muted-foreground antialiased">Start a conversation!</p>
                 </div>
               )}
             </div>

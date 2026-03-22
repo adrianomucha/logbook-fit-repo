@@ -192,12 +192,13 @@ export function ExerciseLibraryPage({
 
       {/* Exercise List */}
       {filteredExercises.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          <p>No exercises found.</p>
+        <div className="text-center py-12">
+          <div className="text-3xl select-none mb-3">🔍</div>
+          <p className="text-sm text-muted-foreground antialiased">No exercises found.</p>
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="text-primary hover:underline mt-2"
+              className="text-sm text-primary hover:underline mt-2 active:scale-[0.96] transition-transform duration-150 antialiased"
             >
               Clear search
             </button>

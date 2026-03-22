@@ -83,7 +83,10 @@ export function MeasurementsView({ client, measurements, onAddMeasurement }: Mea
                 )}
               </div>
             ) : (
-              <p className="text-center text-muted-foreground py-4">No measurements recorded yet</p>
+              <div className="text-center py-6">
+                <div className="text-2xl select-none mb-2">📏</div>
+                <p className="text-sm text-muted-foreground antialiased">No measurements recorded yet</p>
+              </div>
             )}
           </CardContent>
         </Card>

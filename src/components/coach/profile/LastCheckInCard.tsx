@@ -109,12 +109,13 @@ export function LastCheckInCard({
             </div>
           )}
 
-          <div className="text-center py-4 border-t">
-            <p className="font-medium">No check-ins yet</p>
-            <p className="text-sm text-muted-foreground mb-3">
-              Start the first check-in to begin the coaching loop
+          <div className="text-center py-6 border-t">
+            <div className="text-2xl select-none mb-2">📋</div>
+            <p className="font-semibold antialiased">No check-ins yet</p>
+            <p className="text-sm text-muted-foreground mb-3 antialiased">
+              Start the first check-in to begin the coaching loop.
             </p>
-            <Button onClick={onStartCheckIn} size="sm">
+            <Button onClick={onStartCheckIn} size="sm" className="active:scale-[0.96] transition-transform duration-150">
               Start First Check-in
             </Button>
           </div>

@@ -222,11 +222,10 @@ export function EnhancedExercisePicker({
           <div className="overflow-y-auto max-h-[50vh] min-h-[50vh] space-y-2 pr-2">
             {coachExercises.length === 0 && (
               <div className="text-center py-12 space-y-4">
-                <p className="text-muted-foreground">
-                  No exercises in your library yet.
-                </p>
+                <div className="text-3xl select-none mb-1">💪</div>
+                <p className="text-sm font-medium antialiased">No exercises in your library yet</p>
                 {onCreateNew && (
-                  <Button onClick={onCreateNew} variant="outline">
+                  <Button onClick={onCreateNew} variant="outline" className="active:scale-[0.96] transition-transform duration-150">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First Exercise
                   </Button>
@@ -235,9 +234,10 @@ export function EnhancedExercisePicker({
             )}
 
             {coachExercises.length > 0 && filteredExercises.length === 0 && (
-              <p className="text-center text-muted-foreground py-8">
-                No exercises found. Try different filters or search terms.
-              </p>
+              <div className="text-center py-8">
+                <div className="text-2xl select-none mb-2">🔍</div>
+                <p className="text-sm text-muted-foreground antialiased">No exercises found. Try different filters or search terms.</p>
+              </div>
             )}
 
             {filteredExercises.map((exercise) => {

@@ -70,9 +70,10 @@ export function WeeklyActivityCard({ client, plan, weeklyActivity }: WeeklyActiv
           )}
 
           {!lastWorkout && scheduled > 0 && (
-            <p className="text-sm text-muted-foreground text-center py-2">
-              No workouts completed this week yet
-            </p>
+            <div className="text-center py-3">
+              <div className="text-xl select-none mb-1">🏃</div>
+              <p className="text-xs text-muted-foreground antialiased">No workouts completed this week yet</p>
+            </div>
           )}
         </div>
       </CardContent>
