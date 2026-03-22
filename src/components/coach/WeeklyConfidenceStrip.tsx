@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import type { DashboardClient } from '@/types/api';
 import { cn } from '@/lib/utils';
 
@@ -17,6 +18,13 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
   const pctNeedsAction = total > 0 ? (needsAction / total) * 100 : 0;
   const pctAtRisk = total > 0 ? (atRisk / total) * 100 : 0;
 
+  // Animate bar segments growing from 0 on mount
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   return (
     <div className="bg-neutral-800 text-white rounded-xl px-4 py-5 sm:px-5 sm:py-6 space-y-3">
       {/* Single row: total + label | stats */}
@@ -32,7 +40,10 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
 
         <div className="flex items-center gap-3 sm:gap-4 text-xs sm:text-sm">
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+            <span className={cn(
+              'w-2 h-2 rounded-full bg-emerald-400 transition-transform duration-300',
+              onTrack === total && total > 0 && 'scale-125'
+            )} />
             <span className="font-bold tabular-nums">{onTrack}</span>
             <span className="text-white/50 font-medium">ok</span>
           </div>
@@ -62,25 +73,37 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
         </div>
       </div>
 
-      {/* Ratio bar */}
+      {/* Ratio bar — segments grow from 0 on mount */}
       {total > 0 && (
-        <div className="flex h-1 rounded-full overflow-hidden gap-0.5">
+        <div className="flex h-1.5 rounded-full overflow-hidden gap-0.5">
           {pctOnTrack > 0 && (
             <div
-              className="bg-emerald-400 rounded-full transition-all duration-500"
-              style={{ width: `${pctOnTrack}%`, minWidth: '4px' }}
+              className="bg-emerald-400 rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: mounted ? `${pctOnTrack}%` : '0%',
+                minWidth: mounted ? '4px' : '0px',
+                transitionDelay: '0ms',
+              }}
             />
           )}
           {pctNeedsAction > 0 && (
             <div
-              className="bg-amber-400 rounded-full transition-all duration-500"
-              style={{ width: `${pctNeedsAction}%`, minWidth: '4px' }}
+              className="bg-amber-400 rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: mounted ? `${pctNeedsAction}%` : '0%',
+                minWidth: mounted ? '4px' : '0px',
+                transitionDelay: '150ms',
+              }}
             />
           )}
           {pctAtRisk > 0 && (
             <div
-              className="bg-red-400 rounded-full transition-all duration-500"
-              style={{ width: `${pctAtRisk}%`, minWidth: '4px' }}
+              className="bg-red-400 rounded-full transition-all duration-700 ease-out"
+              style={{
+                width: mounted ? `${pctAtRisk}%` : '0%',
+                minWidth: mounted ? '4px' : '0px',
+                transitionDelay: '300ms',
+              }}
             />
           )}
         </div>

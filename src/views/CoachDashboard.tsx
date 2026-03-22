@@ -10,8 +10,9 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateCard } from '@/components/coach/plans/PlanTemplateCard';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, CheckCircle, Loader2 } from 'lucide-react';
+import { Plus, CheckCircle, Loader2, PartyPopper } from 'lucide-react';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
+import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import { useCoachPlans } from '@/hooks/api/useCoachPlans';
@@ -23,6 +24,13 @@ import type { PlanSummary } from '@/types/api';
 type View = 'dashboard' | 'plans';
 
 const viewToNavTab = (view: View): CoachNavTab => view;
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 // Adapt PlanSummary → WorkoutPlan for sub-components
 function planSummaryToWorkoutPlan(p: PlanSummary): WorkoutPlan {
@@ -80,6 +88,7 @@ export function CoachDashboard() {
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
+  const [showInviteModal, setShowInviteModal] = useState(false);
 
   // --- API hooks ---
   const { clients: dashboardClients, isLoading: isDashboardLoading } = useCoachDashboard();
@@ -155,13 +164,29 @@ export function CoachDashboard() {
 
   return (
     <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-      {/* Success Toast */}
+      {/* Success Toast — checkmark draws in */}
       {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 bg-success text-success-foreground px-4 sm:px-6 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-top">
-          <CheckCircle className="h-5 w-5 shrink-0" />
-          <span className="font-medium text-sm sm:text-base">Plan created!</span>
+        <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(16,185,129,0.3)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
+          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
+            <path
+              d="M8 12.5l2.5 2.5 5.5-5.5"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="animate-draw-check"
+            />
+          </svg>
+          <span className="font-semibold text-sm tracking-tight">Plan created</span>
         </div>
       )}
+
+      {/* Invite Client Modal */}
+      <InviteClientModal
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+      />
 
       {/* Plan Setup Modal */}
       <PlanSetupModal
@@ -209,13 +234,27 @@ export function CoachDashboard() {
           <div className="space-y-6">
             <div className="animate-enter">
               <PageHeader
-                title="Dashboard"
-                subtitle={dashboardClients.length > 0 ? 'Overview' : undefined}
+                title={getGreeting()}
+                subtitle={dashboardClients.length > 0 ? 'Here\u2019s your roster' : undefined}
               />
             </div>
             {isDashboardLoading ? (
               <div className="flex items-center justify-center py-12 animate-enter">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : dashboardClients.length === 0 ? (
+              <div className="animate-enter flex flex-col items-center text-center pt-8 sm:pt-16 pb-8" style={{ animationDelay: '60ms' }}>
+                <div className="text-5xl sm:text-6xl select-none mb-5 animate-bounce-once">🏋️</div>
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-1.5 antialiased">
+                  Your roster is empty
+                </h2>
+                <p className="text-sm text-muted-foreground max-w-[280px] mb-6 antialiased">
+                  Invite your first client to get started.
+                </p>
+                <Button onClick={() => setShowInviteModal(true)} size="lg" className="text-sm tracking-wide px-8 active:scale-[0.96] transition-transform duration-150">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Invite Client
+                </Button>
               </div>
             ) : (
               <>
@@ -225,6 +264,16 @@ export function CoachDashboard() {
                 <div className="animate-enter" style={{ animationDelay: '120ms' }}>
                   <ClientsRequiringAction clients={dashboardClients} />
                 </div>
+
+                {/* All-clear celebration — only when every client is on track */}
+                {dashboardClients.length > 0 && dashboardClients.every((c) => c.urgency === 'ON_TRACK') && (
+                  <div className="animate-enter flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3.5" style={{ animationDelay: '180ms' }}>
+                    <PartyPopper className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 animate-bounce-once" />
+                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 antialiased">
+                      All clients on track — nice coaching.
+                    </p>
+                  </div>
+                )}
               </>
             )}
           </div>
@@ -268,15 +317,15 @@ export function CoachDashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="flex flex-col items-center text-center pt-8 sm:pt-16 pb-8">
-                  <div className="text-6xl sm:text-7xl select-none mb-6">💪</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
-                    Build your first plan
+                <div className="flex flex-col items-center text-center pt-8 sm:pt-16 pb-8 animate-enter">
+                  <div className="text-6xl sm:text-7xl select-none mb-6 animate-bounce-once">📋</div>
+                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 antialiased">
+                    Your blank canvas
                   </h2>
-                  <p className="text-sm text-muted-foreground max-w-[280px] mb-8">
-                    Design a workout template, then assign it to any client.
+                  <p className="text-sm text-muted-foreground max-w-[280px] mb-8 antialiased">
+                    Design a workout template, then assign it to any client. One plan, many athletes.
                   </p>
-                  <Button onClick={handleCreateNewPlan} size="lg" className="text-sm tracking-wide px-8">
+                  <Button onClick={handleCreateNewPlan} size="lg" className="text-sm tracking-wide px-8 active:scale-[0.96] transition-transform duration-150">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Template
                   </Button>

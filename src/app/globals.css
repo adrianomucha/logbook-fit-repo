@@ -120,6 +120,37 @@
       opacity: 1;
     }
   }
+
+  /* SVG checkmark draw animation */
+  .animate-draw-check {
+    stroke-dasharray: 20;
+    stroke-dashoffset: 20;
+    animation: drawCheck 0.4s cubic-bezier(0.65, 0, 0.35, 1) 0.15s both;
+  }
+  @keyframes drawCheck {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  /* Single playful bounce — not repeating */
+  .animate-bounce-once {
+    animation: bounceOnce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  @keyframes bounceOnce {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
 }
 
 /* Respect reduced-motion preferences */
@@ -127,6 +158,8 @@
   .animate-fade-in-up,
   .animate-set-complete,
   .animate-enter,
+  .animate-draw-check,
+  .animate-bounce-once,
   [class*="animate-[completionPop"] {
     animation: none !important;
   }
