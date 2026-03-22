@@ -76,6 +76,8 @@ export function InteractiveWeeklyStrip({
   // Get expanded workout from workoutDay
   const expandedWorkout = expandedDayInfo?.workoutDay;
 
+  const isFlat = variant === 'flat';
+
   if (!plan || weekDays.length === 0) {
     if (compact) {
       return (
@@ -174,7 +176,6 @@ export function InteractiveWeeklyStrip({
     );
   }
 
-  const isFlat = variant === 'flat';
   const Wrapper = isFlat ? 'div' : Card;
   const editHandler = onEditPlan || (onScrollToPlanEditor ? () => onScrollToPlanEditor('') : undefined);
 
