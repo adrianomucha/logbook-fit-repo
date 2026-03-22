@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dumbbell, Edit2 } from 'lucide-react';
@@ -18,8 +18,12 @@ interface InteractiveWeeklyStripProps {
   planStartDate?: string;
   workoutCompletions: WorkoutCompletion[];
   onScrollToPlanEditor?: (dayId: string) => void;
+  /** Open the plan editor drawer */
+  onEditPlan?: () => void;
   /** Render as compact single-row strip (~60-72px height) */
   compact?: boolean;
+  /** Skip Card wrapper — for embedding inside another container */
+  variant?: 'card' | 'flat';
 }
 
 export function InteractiveWeeklyStrip({
@@ -28,9 +32,19 @@ export function InteractiveWeeklyStrip({
   planStartDate,
   workoutCompletions,
   onScrollToPlanEditor,
+  onEditPlan,
   compact = false,
+  variant = 'card',
 }: InteractiveWeeklyStripProps) {
   const [expandedDayNumber, setExpandedDayNumber] = useState<number | null>(null);
+
+  // Animate compact pills growing in on mount
+  const [pillsMounted, setPillsMounted] = useState(false);
+  useEffect(() => {
+    if (!compact) return;
+    const id = requestAnimationFrame(() => setPillsMounted(true));
+    return () => cancelAnimationFrame(id);
+  }, [compact]);
 
   // Calculate current week data - use durationWeeks for consistency with client view
   const currentWeekNum = useMemo(() => {
@@ -66,20 +80,26 @@ export function InteractiveWeeklyStrip({
     if (compact) {
       return (
         <div className="flex items-center justify-between py-3 px-4 bg-card border rounded-xl text-muted-foreground">
-          <span className="text-sm">This Week</span>
-          <span className="text-xs">No plan assigned</span>
+          <span className="text-sm antialiased">This Week</span>
+          <span className="text-xs antialiased">No plan assigned</span>
+        </div>
+      );
+    }
+    if (isFlat) {
+      return (
+        <div className="text-center py-6">
+          <div className="text-3xl select-none mb-2">📅</div>
+          <p className="text-sm text-muted-foreground antialiased">No plan to show yet</p>
         </div>
       );
     }
     return (
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base">This Week</CardTitle>
-        </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground text-center py-4">
-            No plan assigned
-          </p>
+          <div className="text-center py-6">
+            <div className="text-3xl select-none mb-2">📅</div>
+            <p className="text-sm text-muted-foreground antialiased">No plan assigned</p>
+          </div>
         </CardContent>
       </Card>
     );
@@ -92,8 +112,9 @@ export function InteractiveWeeklyStrip({
   // Compact mode: pill progress bar
   if (compact) {
     const workoutDays = weekDays.filter((d) => d.status !== 'REST');
+    const allDone = progress.completed === progress.total;
     const paceMessage =
-      progress.completed === progress.total
+      allDone
         ? 'All done this week!'
         : remaining === 1
           ? `On pace \u2014 one more to go.`
@@ -105,31 +126,39 @@ export function InteractiveWeeklyStrip({
       <div className="space-y-3">
         {/* Header row */}
         <div className="flex items-baseline justify-between">
-          <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+          <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
             This Week
           </p>
-          <p className="text-[11px] uppercase tracking-[0.12em] text-success font-medium">
+          <p className={cn(
+            "text-[11px] uppercase tracking-[0.12em] font-medium antialiased transition-colors duration-300",
+            allDone ? 'text-success' : 'text-muted-foreground'
+          )}>
             {paceMessage}
           </p>
         </div>
 
-        {/* Pill progress bar */}
+        {/* Pill progress bar — staggered grow-in */}
         <div className="flex gap-1.5">
           {workoutDays.map((day, i) => (
             <div
               key={day.dayNumber}
               className={cn(
-                'flex-1 h-4 rounded-full',
+                'flex-1 h-4 rounded-full transition-all duration-500 ease-out',
                 day.status === 'COMPLETED'
                   ? 'bg-success'
                   : 'bg-success/15'
               )}
+              style={{
+                transform: pillsMounted ? 'scaleX(1)' : 'scaleX(0)',
+                transformOrigin: 'left',
+                transitionDelay: `${i * 80}ms`,
+              }}
             />
           ))}
         </div>
 
         {/* Session count */}
-        <p className="text-sm">
+        <p className="text-sm antialiased">
           <span className="text-3xl sm:text-4xl font-black tabular-nums tracking-tight">
             {progress.completed}
           </span>
@@ -138,138 +167,126 @@ export function InteractiveWeeklyStrip({
             {progress.total}
           </span>
           <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium ml-2">
-            Sessions
+            {allDone ? 'Complete' : 'Sessions'}
           </span>
         </p>
       </div>
     );
   }
 
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
-          Week {currentWeekNum} of {plan.weeks.length}
-        </p>
-        <CardTitle className="text-base">This Week</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {/* Stat blocks */}
-        <div className="flex gap-2">
-          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
-            <p className="text-xl font-bold tabular-nums leading-none">{progress.completed}</p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Done</p>
-          </div>
-          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
-            <p className="text-xl font-bold tabular-nums leading-none">{remaining}</p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Left</p>
-          </div>
-          <div className="flex-1 bg-muted/50 rounded-lg px-3 py-4 text-center">
-            <p className="text-xl font-bold tabular-nums leading-none">{progress.total}</p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1 font-medium">Total</p>
-          </div>
-        </div>
+  const isFlat = variant === 'flat';
+  const Wrapper = isFlat ? 'div' : Card;
+  const editHandler = onEditPlan || (onScrollToPlanEditor ? () => onScrollToPlanEditor('') : undefined);
 
-        {/* 7-day interactive list */}
-        <div className="border border-border/60 rounded-lg p-2">
-          <div className="divide-y divide-border/40">
-            {weekDays.map((day) => (
+  const content = (
+    <div className="space-y-4">
+      {/* Week label */}
+      {!isFlat && (
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
+            Week {currentWeekNum} of {plan.weeks.length}
+          </p>
+        </div>
+      )}
+
+      {/* 7-day interactive list — exercises expand inline under each day */}
+      <div className="divide-y divide-border/40">
+        {weekDays.map((day) => {
+          const isExpanded = expandedDayNumber === day.dayNumber;
+          const dayWorkout = isExpanded ? day.workoutDay : null;
+          const dayCompletion = isExpanded ? day.completion : null;
+
+          return (
+            <div key={day.dayNumber}>
               <InteractiveDayRow
-                key={day.dayNumber}
                 day={day}
-                isExpanded={expandedDayNumber === day.dayNumber}
+                isExpanded={isExpanded}
                 onClick={() => {
                   if (day.workoutDay && day.status !== 'REST') {
-                    setExpandedDayNumber(
-                      expandedDayNumber === day.dayNumber ? null : day.dayNumber
-                    );
+                    setExpandedDayNumber(isExpanded ? null : day.dayNumber);
                   }
                 }}
               />
-            ))}
-          </div>
-        </div>
 
-        {/* Expanded workout details */}
-        {expandedWorkout && expandedDayInfo && (
-          <div className="pt-3 border-t">
-            <div className="flex items-center justify-between mb-3">
-              <div>
-                <h4 className="font-medium text-sm">{expandedWorkout.name}</h4>
-                <p className="text-xs text-muted-foreground">
-                  {expandedDayInfo.status === 'COMPLETED' && 'Completed'}
-                  {expandedDayInfo.status === 'TODAY' && 'Scheduled for today'}
-                  {expandedDayInfo.status === 'UPCOMING' && 'Upcoming'}
-                  {expandedDayInfo.status === 'MISSED' && 'Missed'}
-                </p>
-              </div>
-              {onScrollToPlanEditor && expandedWorkout.id && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onScrollToPlanEditor(expandedWorkout.id)}
-                >
-                  <Edit2 className="w-3 h-3 mr-1" />
-                  Edit
-                </Button>
+              {/* Inline expanded exercises */}
+              {isExpanded && dayWorkout && (
+                <div className="pl-[60px] pr-3 pb-4 pt-1 animate-fade-in-up">
+                  {/* Exercise list */}
+                  {dayWorkout.exercises && dayWorkout.exercises.length > 0 ? (
+                    <div className="space-y-0">
+                      {dayWorkout.exercises.map((exercise, idx) => (
+                        <div
+                          key={exercise.id}
+                          className="flex items-center text-[13px] py-1.5"
+                        >
+                          <span className="flex-1 truncate antialiased">{exercise.name}</span>
+                          <span className="text-xs text-muted-foreground shrink-0 tabular-nums antialiased ml-3">
+                            {exercise.sets}×{exercise.reps || '—'}
+                            {exercise.weight && ` · ${exercise.weight}`}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-muted-foreground antialiased py-1">No exercises yet</p>
+                  )}
+
+                  {/* Footer: completion details + edit */}
+                  <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/30">
+                    <div className="flex items-center gap-3 text-[11px] text-muted-foreground antialiased">
+                      {dayCompletion?.effortRating && (
+                        <span>
+                          <span
+                            className={cn(
+                              'font-semibold',
+                              dayCompletion.effortRating === 'EASY' && 'text-emerald-500',
+                              dayCompletion.effortRating === 'MEDIUM' && 'text-amber-500',
+                              dayCompletion.effortRating === 'HARD' && 'text-red-400'
+                            )}
+                          >
+                            {dayCompletion.effortRating.toLowerCase()}
+                          </span>
+                        </span>
+                      )}
+                      {dayCompletion?.durationSec && (
+                        <span className="tabular-nums">
+                          {Math.round(dayCompletion.durationSec / 60)} min
+                        </span>
+                      )}
+                    </div>
+                    {editHandler && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs text-muted-foreground hover:text-foreground active:scale-[0.96] transition-all duration-150"
+                        onClick={editHandler}
+                      >
+                        <Edit2 className="w-3 h-3 mr-1" />
+                        Edit
+                      </Button>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 
-            {/* Exercise list */}
-            {expandedWorkout.exercises && expandedWorkout.exercises.length > 0 ? (
-              <ul className="space-y-1.5">
-                {expandedWorkout.exercises.map((exercise, idx) => (
-                  <li
-                    key={exercise.id}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <span className="text-xs text-muted-foreground w-4">
-                      {idx + 1}.
-                    </span>
-                    <Dumbbell className="w-3 h-3 text-muted-foreground" />
-                    <span className="flex-1 truncate">{exercise.name}</span>
-                    <span className="text-xs text-muted-foreground shrink-0">
-                      {exercise.sets}x{exercise.reps || '—'}
-                      {exercise.weight && ` @ ${exercise.weight}`}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">No exercises defined</p>
-            )}
+  if (isFlat) return content;
 
-            {/* Completion details */}
-            {expandedDayInfo.completion && (
-              <div className="mt-3 pt-3 border-t flex items-center gap-4 text-xs text-muted-foreground">
-                {expandedDayInfo.completion.effortRating && (
-                  <span>
-                    Effort:{' '}
-                    <span
-                      className={cn(
-                        'font-medium',
-                        expandedDayInfo.completion.effortRating === 'EASY' &&
-                          'text-success',
-                        expandedDayInfo.completion.effortRating === 'MEDIUM' &&
-                          'text-muted-foreground',
-                        expandedDayInfo.completion.effortRating === 'HARD' &&
-                          'text-warning'
-                      )}
-                    >
-                      {expandedDayInfo.completion.effortRating.toLowerCase()}
-                    </span>
-                  </span>
-                )}
-                {expandedDayInfo.completion.durationSec && (
-                  <span>
-                    Duration:{' '}
-                    {Math.round(expandedDayInfo.completion.durationSec / 60)} min
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
+          Week {currentWeekNum} of {plan.weeks.length}
+        </p>
+        <CardTitle className="text-base antialiased">This Week</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {content}
       </CardContent>
     </Card>
   );
@@ -290,63 +307,88 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
   const isMissed = day.status === 'MISSED';
   const exerciseCount = day.workoutDay?.exercises?.length || 0;
 
+  // Rest days: single compact line
+  if (isRest) {
+    return (
+      <div className="flex items-center gap-3 px-3 py-1.5 min-h-[32px]">
+        <span className="w-3 shrink-0" />
+        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/30 w-9 shrink-0 antialiased">
+          {day.dayOfWeek.slice(0, 3)}
+        </span>
+        <span className="text-[10px] uppercase tracking-wide text-muted-foreground/25 font-medium antialiased">
+          Rest
+        </span>
+      </div>
+    );
+  }
+
   return (
     <button
       onClick={onClick}
       disabled={!isClickable}
       className={cn(
-        'flex items-center gap-3 px-3 py-2.5 rounded-lg w-full text-left transition-colors min-h-[44px]',
+        'flex items-center gap-3 px-3 py-3 w-full text-left transition-all duration-150 min-h-[52px]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        isToday && 'bg-muted/80',
-        isCompleted && 'opacity-70',
-        isUpcoming && 'opacity-35',
-        isMissed && 'opacity-45',
-        isRest && 'opacity-30',
-        isClickable && 'hover:bg-muted/60 active:bg-muted cursor-pointer',
-        isExpanded && 'bg-muted',
-        !isClickable && 'cursor-default',
+        isToday && 'bg-foreground/[0.03]',
+        isUpcoming && 'opacity-50',
+        isMissed && 'opacity-40',
+        isClickable && 'hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] cursor-pointer',
+        isExpanded && 'bg-muted/50',
       )}
     >
+      {/* Expand chevron */}
+      <svg
+        className={cn(
+          'w-3.5 h-3.5 text-muted-foreground/40 shrink-0 transition-transform duration-200',
+          isExpanded && 'rotate-90 text-muted-foreground'
+        )}
+        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+      </svg>
+
       {/* Day abbreviation + date */}
-      <div className="w-9 shrink-0">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+      <div className="w-10 shrink-0">
+        <p className={cn(
+          'text-[11px] font-black uppercase tracking-wide antialiased',
+          isToday ? 'text-foreground' : 'text-muted-foreground'
+        )}>
           {day.dayOfWeek.slice(0, 3)}
         </p>
-        <p className="text-[10px] tabular-nums text-muted-foreground/60">
+        <p className="text-[10px] tabular-nums text-muted-foreground/50 antialiased">
           {format(day.date, 'M/d')}
         </p>
       </div>
 
       {/* Workout info */}
       <div className="flex-1 min-w-0">
-        {isRest ? (
-          <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
-            Rest
-          </p>
-        ) : (
-          <>
-            <p className="text-sm font-bold truncate tracking-tight">
-              {day.workoutDay?.name || 'Workout'}
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
-              {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
-            </p>
-          </>
-        )}
+        <p className={cn(
+          'text-sm font-bold truncate tracking-tight antialiased',
+          isCompleted && 'text-foreground/80',
+          isMissed && 'text-foreground/50'
+        )}>
+          {day.workoutDay?.name || 'Workout'}
+        </p>
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 font-medium tabular-nums antialiased">
+          {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
+        </p>
       </div>
 
       {/* Status indicator */}
-      <div className="shrink-0">
+      <div className="shrink-0 flex items-center">
         {isCompleted && (
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
-            Done
-          </span>
+          <svg className="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
         )}
         {isToday && (
-          <span className="w-2 h-2 rounded-full bg-info block" />
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-info opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-info" />
+          </span>
         )}
         {isMissed && (
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
+          <span className="text-[10px] uppercase tracking-wide text-destructive/50 font-bold antialiased">
             Missed
           </span>
         )}

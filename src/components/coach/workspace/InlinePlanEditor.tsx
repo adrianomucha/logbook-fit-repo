@@ -68,39 +68,35 @@ export function InlinePlanEditor({
     return currentWeek.days[selectedDayIndex] || currentWeek.days[0];
   }, [currentWeek, selectedDayIndex]);
 
+  const firstName = client.name?.split(' ')[0] || client.name || 'this client';
+  const isFlat = variant === 'flat';
+
   // Empty state - no plan assigned
   if (!plan) {
-    return (
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base flex items-center gap-2">
-            <Dumbbell className="w-4 h-4" />
-            Workout Plan
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-6">
-            <Dumbbell className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground mb-4">
-              No plan assigned to {client.name?.split(' ')[0] || client.name || 'this client'}
-            </p>
-            <div className="flex gap-2 justify-center">
-              <Button variant="outline" size="sm" onClick={onChangePlan}>
-                <ArrowRightLeft className="w-4 h-4 mr-1" />
-                Assign Existing
-              </Button>
-              <Button size="sm" onClick={onCreatePlan}>
-                <Plus className="w-4 h-4 mr-1" />
-                Create New
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    const emptyContent = (
+      <div className="text-center py-8">
+        <div className="text-4xl select-none mb-4 animate-bounce-once">🏋️</div>
+        <p className="font-semibold antialiased">{firstName} needs a plan</p>
+        <p className="text-sm text-muted-foreground mb-5 antialiased">
+          Assign a template or create one from scratch.
+        </p>
+        <div className="flex gap-2 justify-center">
+          <Button variant="outline" size="sm" onClick={onChangePlan} className="active:scale-[0.96] transition-transform duration-150">
+            <ArrowRightLeft className="w-4 h-4 mr-1" />
+            Assign Existing
+          </Button>
+          <Button size="sm" onClick={onCreatePlan} className="active:scale-[0.96] transition-transform duration-150">
+            <Plus className="w-4 h-4 mr-1" />
+            Create New
+          </Button>
+        </div>
+      </div>
     );
+
+    if (isFlat) return emptyContent;
+    return <Card><CardContent>{emptyContent}</CardContent></Card>;
   }
 
-  const isFlat = variant === 'flat';
   const Wrapper = isFlat ? 'div' : Card;
 
   return (
@@ -109,15 +105,15 @@ export function InlinePlanEditor({
         'flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2',
         isFlat ? 'pb-2' : 'px-3 sm:px-6 pt-6 pb-2'
       )}>
-        <div className="text-base font-semibold flex items-center gap-2 min-w-0">
+        <div className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
           <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
           <span className="truncate">{plan.name}</span>
-          <span className="text-xs text-muted-foreground font-normal shrink-0">
+          <span className="text-xs text-muted-foreground font-normal shrink-0 tabular-nums">
             Week {currentWeekNum}
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <Button variant="outline" size="sm" onClick={onEditPlan} className="flex-1 sm:flex-none">
+          <Button variant="outline" size="sm" onClick={onEditPlan} className="flex-1 sm:flex-none active:scale-[0.96] transition-transform duration-150">
             <Pencil className="w-3.5 h-3.5 mr-1.5" />
             Edit
           </Button>
@@ -165,18 +161,18 @@ export function InlinePlanEditor({
                     setShowExercises(true);
                   }}
                   className={cn(
-                    'shrink-0 px-3 py-2 sm:py-1.5 rounded-md text-xs font-medium min-h-[44px] sm:min-h-0 flex items-center',
-                    'transition-all duration-150',
+                    'shrink-0 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium min-h-[44px] sm:min-h-0 flex items-center antialiased',
+                    'transition-all duration-150 active:scale-[0.95]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                     isSelected
-                      ? 'bg-primary text-primary-foreground shadow-sm'
-                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground hover:-translate-y-0.5 hover:shadow-sm',
-                    day.isRestDay && 'opacity-60'
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
+                    day.isRestDay && 'opacity-50'
                   )}
                 >
                   {day.name || `Day ${idx + 1}`}
-                  {!day.isRestDay && (
-                    <span className="ml-1 opacity-70">{exerciseCount}</span>
+                  {!day.isRestDay && exerciseCount > 0 && (
+                    <span className="ml-1.5 tabular-nums opacity-60">{exerciseCount}</span>
                   )}
                 </button>
               );
@@ -204,7 +200,7 @@ export function InlinePlanEditor({
                 </Button>
               </div>
             ) : (
-              <div className="space-y-0.5">
+              <div className="divide-y divide-border/40">
                 {selectedDay.exercises?.map((exercise) => (
                   <ExerciseRow key={exercise.id} exercise={exercise} />
                 ))}
@@ -239,10 +235,10 @@ function ExerciseRow({ exercise }: { exercise: Exercise }) {
   }
 
   return (
-    <div className="flex items-center justify-between py-1.5 px-0.5">
-      <span className="text-sm truncate">{exercise.name}</span>
+    <div className="flex items-center justify-between py-2 px-0.5">
+      <span className="text-sm truncate antialiased">{exercise.name}</span>
       {parts.length > 0 && (
-        <span className="text-xs text-muted-foreground ml-3 shrink-0">
+        <span className="text-xs text-muted-foreground ml-3 shrink-0 tabular-nums antialiased">
           {parts.join(' · ')}
         </span>
       )}
