@@ -30,7 +30,7 @@ import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Loader2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { getClientStatus } from '@/lib/client-status';
 
@@ -63,6 +63,7 @@ export function UnifiedClientProfile() {
   const [showAssignPlanModal, setShowAssignPlanModal] = useState(false);
   const [showPlanDrawer, setShowPlanDrawer] = useState(false);
   const [chatPrefill, setChatPrefill] = useState<string | undefined>(undefined);
+  const [secondaryTab, setSecondaryTab] = useState<'plan' | 'history'>('plan');
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
 
@@ -341,10 +342,10 @@ export function UnifiedClientProfile() {
           <CoachNav activeTab="clients" />
           <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
             <div className="text-center py-12 px-6">
-              <AlertCircle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
-              <h2 className="text-lg font-bold mb-1.5 tracking-tight">Client Not Found</h2>
-              <p className="text-sm text-muted-foreground mb-5">
-                The client you&apos;re looking for doesn&apos;t exist or has been removed.
+              <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
+              <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Can&apos;t find this client</h2>
+              <p className="text-sm text-muted-foreground mb-5 antialiased">
+                They may have been removed, or the link might be outdated.
               </p>
               <Button
                 onClick={() => router.push('/coach/clients')}
@@ -462,70 +463,45 @@ export function UnifiedClientProfile() {
           </div>
         )}
 
-        {/* This Week — stagger delay 2 */}
-        <div className="animate-enter" style={{ animationDelay: '80ms' }}>
-          <InteractiveWeeklyStrip
-            client={client}
-            plan={plan}
-            planStartDate={client.planStartDate}
-            workoutCompletions={workoutCompletions}
-            onScrollToPlanEditor={handleScrollToPlanEditor}
-            compact
-          />
-        </div>
-
         {/* ── Sections ── */}
 
-        {/* Primary: Check-in or Plan — stagger delay 3 */}
-        {priorityMode === 'A' ? (
-          <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
-            <SectionLabel>Check-in</SectionLabel>
-            <SectionCard>
-              <InlineCheckInReview
-                client={client}
-                activeCheckIn={activeCheckIn}
-                plan={plan}
-                workoutCompletions={workoutCompletions}
-                exerciseFlags={[]}
-                currentUserId={user?.id ?? ''}
-                onCompleteCheckIn={handleCompleteCheckIn}
-                onCreateCheckIn={handleCreateCheckIn}
-                onMessageAboutFlag={handleMessageAboutFlag}
-                justSentFromParent={justSentCheckIn}
-                hideTitle={activeCheckIn?.status === 'responded'}
-                variant="flat"
-              />
-            </SectionCard>
-          </section>
-        ) : (
-          <section ref={planEditorRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
-            <SectionLabel>Training Plan</SectionLabel>
-            <SectionCard>
-              <InlinePlanEditor
-                client={client}
-                plan={plan}
-                planStartDate={client.planStartDate}
-                onUpdatePlan={handleUpdatePlan}
-                onEditPlan={handleEditPlan}
-                onChangePlan={handleChangePlan}
-                onCreatePlan={handleCreateNewPlan}
-                onUnassignPlan={handleUnassignPlan}
-                exercisesCollapsed={false}
-                variant="flat"
-              />
-            </SectionCard>
-          </section>
-        )}
+        {/* Check-in section — always shown */}
+        <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
+          <SectionLabel>Check-in</SectionLabel>
+          <SectionCard>
+            <InlineCheckInReview
+              client={client}
+              activeCheckIn={activeCheckIn}
+              plan={plan}
+              workoutCompletions={workoutCompletions}
+              exerciseFlags={[]}
+              currentUserId={user?.id ?? ''}
+              onCompleteCheckIn={handleCompleteCheckIn}
+              onCreateCheckIn={handleCreateCheckIn}
+              onMessageAboutFlag={handleMessageAboutFlag}
+              justSentFromParent={justSentCheckIn}
+              hideTitle={activeCheckIn?.status === 'responded'}
+              variant="flat"
+            />
+          </SectionCard>
+        </section>
 
         {/* Two-column: Chat + Secondary — stagger delay 4 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '200ms' }}>
           {/* Messages */}
           <section>
-            <SectionLabel>Messages</SectionLabel>
             <div ref={chatRef} className={cn(
-              "bg-card rounded-xl overflow-hidden h-[400px] md:h-[480px]",
+              "bg-card rounded-xl overflow-hidden md:h-[480px] flex flex-col",
               "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
             )}>
+              <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-0 shrink-0">
+                <div className="flex gap-1 border-b border-border mb-0 -mt-1">
+                  <span className="pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
+                    Messages
+                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
+                  </span>
+                </div>
+              </div>
               <ChatView
                 client={client}
                 messages={messages}
@@ -533,18 +509,73 @@ export function UnifiedClientProfile() {
                 currentUserName={user?.name ?? 'Coach'}
                 onSendMessage={handleSendMessage}
                 initialPrefill={chatPrefill}
-                heightClass="h-full"
+                heightClass="flex-1 min-h-0 h-[350px] md:h-auto"
               />
             </div>
           </section>
 
-          {/* Secondary: Plan (if check-in is primary) + History */}
-          <section className="space-y-4 sm:space-y-6">
-            {priorityMode === 'A' && (
-              <div>
-                <SectionLabel>Training Plan</SectionLabel>
-                <SectionCard>
-                  <div ref={planEditorRef}>
+          {/* Secondary: Tabbed Plan + History */}
+          <section>
+            <SectionCard className="md:h-[480px] md:flex md:flex-col">
+              {/* Tab bar */}
+              <div className="flex gap-1 border-b border-border mb-3 -mt-1">
+                {([
+                  { id: 'plan' as const, label: 'Training Plan' },
+                  { id: 'history' as const, label: 'Check-ins', count: checkIns.filter(c => c.status === 'completed').length },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setSecondaryTab(tab.id)}
+                    className={cn(
+                      'pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative',
+                      secondaryTab === tab.id
+                        ? 'text-foreground'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {tab.label}
+                    {'count' in tab && tab.count > 0 && (
+                      <span className="ml-1.5 text-[10px] tabular-nums text-muted-foreground/60">{tab.count}</span>
+                    )}
+                    {secondaryTab === tab.id && (
+                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab content */}
+              {secondaryTab === 'plan' ? (
+                <div ref={planEditorRef} className={cn(
+                  "md:flex-1 md:min-h-0 md:overflow-y-auto",
+                  !plan && "flex items-center justify-center"
+                )}>
+                  {plan ? (
+                    <>
+                      {/* Plan actions row */}
+                      <div className="flex items-center justify-between pb-3">
+                        <div className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
+                          <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
+                          <span className="truncate">{plan.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <Button variant="outline" size="sm" onClick={handleEditPlan} className="active:scale-[0.96] transition-transform duration-150">
+                            <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                            Edit
+                          </Button>
+                        </div>
+                      </div>
+                      {/* Full weekly view — matches client's weekly page */}
+                      <InteractiveWeeklyStrip
+                        client={client}
+                        plan={plan}
+                        planStartDate={client.planStartDate}
+                        workoutCompletions={workoutCompletions}
+                        onEditPlan={handleEditPlan}
+                        variant="flat"
+                      />
+                    </>
+                  ) : (
                     <InlinePlanEditor
                       client={client}
                       plan={plan}
@@ -554,27 +585,24 @@ export function UnifiedClientProfile() {
                       onChangePlan={handleChangePlan}
                       onCreatePlan={handleCreateNewPlan}
                       onUnassignPlan={handleUnassignPlan}
-                      exercisesCollapsed={true}
+                      exercisesCollapsed={false}
                       variant="flat"
                     />
-                  </div>
-                </SectionCard>
-              </div>
-            )}
-
-            <div>
-              <SectionLabel>Check-in History</SectionLabel>
-              <SectionCard>
-                <CheckInHistoryPanel
-                  checkIns={checkIns}
-                  clientId={client.id}
-                  clientName={client.name}
-                  initialCount={3}
-                  hasPlan={!!plan}
-                  onToggleSchedule={handleToggleCheckInSchedule}
-                />
-              </SectionCard>
-            </div>
+                  )}
+                </div>
+              ) : (
+                <div className="md:flex-1 md:min-h-0 md:overflow-y-auto">
+                  <CheckInHistoryPanel
+                    checkIns={checkIns}
+                    clientId={client.id}
+                    clientName={client.name}
+                    initialCount={3}
+                    hasPlan={!!plan}
+                    onToggleSchedule={handleToggleCheckInSchedule}
+                  />
+                </div>
+              )}
+            </SectionCard>
           </section>
         </div>
       </div>

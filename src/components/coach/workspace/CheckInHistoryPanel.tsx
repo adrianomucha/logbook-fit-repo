@@ -83,14 +83,11 @@ export function CheckInHistoryPanel({
   if (completedCheckIns.length === 0) {
     return (
       <div className="space-y-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          <History className="w-4 h-4" />
-          Check-In History
-        </div>
-        <div className="text-center py-4 space-y-1">
-          <p className="text-sm text-muted-foreground">No check-ins yet</p>
-          <p className="text-xs text-muted-foreground/70">
-            Check-ins will appear here once {firstName} responds
+        <div className="text-center py-8 space-y-1.5">
+          <div className="text-3xl select-none mb-2">💬</div>
+          <p className="text-sm font-medium antialiased">No check-ins yet</p>
+          <p className="text-xs text-muted-foreground/60 antialiased">
+            Completed check-ins with {firstName} will show up here.
           </p>
         </div>
         {scheduleToggle}
@@ -106,17 +103,6 @@ export function CheckInHistoryPanel({
   return (
     <>
       <div className="h-full flex flex-col">
-        <div className="pb-2 shrink-0">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <History className="w-4 h-4" />
-              Check-In History
-            </div>
-            <span className="text-xs text-muted-foreground">
-              {completedCheckIns.length} total
-            </span>
-          </div>
-        </div>
         <div className="space-y-1.5 flex-1 overflow-y-auto">
           {displayedCheckIns.map((checkIn) => {
             const checkInDate = new Date(checkIn.completedAt || checkIn.date);
@@ -132,7 +118,7 @@ export function CheckInHistoryPanel({
                 key={checkIn.id}
                 onClick={() => setSelectedCheckIn(checkIn)}
                 aria-label={`View check-in from ${format(checkInDate, 'MMMM d, yyyy')}`}
-                className="w-full text-left p-2.5 flex items-center justify-between gap-2 border rounded-lg hover:bg-muted/30 hover:translate-x-0.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full text-left p-2.5 flex items-center justify-between gap-2 rounded-lg hover:bg-muted/40 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="flex flex-col min-w-0">
