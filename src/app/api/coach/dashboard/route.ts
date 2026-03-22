@@ -51,7 +51,7 @@ export const GET = withCoach(
       let urgency: string;
       let urgencyOrder: number;
 
-      if (!lastWorkout || lastWorkout < sevenDaysAgo) {
+      if (client.activePlan && (!lastWorkout || lastWorkout < sevenDaysAgo)) {
         urgency = "AT_RISK";
         urgencyOrder = 0;
       } else if (pendingCheckIn?.status === "CLIENT_RESPONDED") {
