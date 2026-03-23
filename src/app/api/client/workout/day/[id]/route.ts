@@ -73,10 +73,9 @@ export const GET = withClient(
 
     return NextResponse.json({
       dayId: day.id,
-      dayNumber: day.dayNumber,
+      orderIndex: day.orderIndex,
       name: day.name,
       description: day.description,
-      isRestDay: day.isRestDay,
       weekNumber: day.week.weekNumber,
       exercises: day.exercises.map((we) => ({
         workoutExerciseId: we.id,

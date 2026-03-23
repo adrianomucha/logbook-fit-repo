@@ -5,7 +5,7 @@ import { Session } from "next-auth";
 
 /**
  * PUT /api/days/[id]
- * Updates a day's metadata (name, isRestDay). Coach must own the plan.
+ * Updates a day's metadata (name, description). Coach must own the plan.
  */
 export const PUT = withCoach(
   async (
@@ -37,28 +37,16 @@ export const PUT = withCoach(
     }
 
     const body = await req.json();
-    const { name, description, isRestDay, dayNumber } = body as {
+    const { name, description } = body as {
       name?: string;
       description?: string | null;
-      isRestDay?: boolean;
-      dayNumber?: number;
     };
-
-    // Validate dayNumber if provided
-    if (dayNumber !== undefined && (dayNumber < 1 || dayNumber > 7)) {
-      return NextResponse.json(
-        { error: "dayNumber must be between 1 and 7" },
-        { status: 400 }
-      );
-    }
 
     const updated = await prisma.day.update({
       where: { id: dayId },
       data: {
         ...(name !== undefined ? { name } : {}),
         ...(description !== undefined ? { description } : {}),
-        ...(isRestDay !== undefined ? { isRestDay } : {}),
-        ...(dayNumber !== undefined ? { dayNumber } : {}),
       },
     });
 

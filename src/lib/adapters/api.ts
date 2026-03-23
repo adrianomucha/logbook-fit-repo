@@ -36,10 +36,9 @@ export function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
         days: w.days.map(
           (d): WorkoutDay => ({
             id: d.id,
-            dayNumber: d.dayNumber,
-            name: d.name ?? `Day ${d.dayNumber}`,
+            orderIndex: d.orderIndex,
+            name: d.name ?? `Day ${d.orderIndex}`,
             description: d.description ?? undefined,
-            isRestDay: d.isRestDay,
             exercises: d.exercises.map(
               (e): Exercise => ({
                 id: e.id,

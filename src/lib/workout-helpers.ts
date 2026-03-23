@@ -6,24 +6,13 @@ import type { WorkoutDay, WorkoutWeek } from '../types';
 export function generateDaysForWeek(workoutsPerWeek: number): WorkoutDay[] {
   const days: WorkoutDay[] = [];
 
-  // Generate workout days
+  // Generate workout days only (no rest day records)
   for (let i = 1; i <= workoutsPerWeek; i++) {
     days.push({
       id: `day-${Date.now()}-${i}`,
-      name: `Workout ${i}`,
+      orderIndex: i,
+      name: `Day ${i}`,
       exercises: [],
-      isRestDay: false,
-    });
-  }
-
-  // Generate rest days
-  const restDays = 7 - workoutsPerWeek;
-  for (let i = 1; i <= restDays; i++) {
-    days.push({
-      id: `day-${Date.now()}-rest-${i}`,
-      name: 'Rest Day',
-      exercises: [],
-      isRestDay: true,
     });
   }
 

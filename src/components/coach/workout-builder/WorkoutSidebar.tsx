@@ -1,5 +1,5 @@
 import { WorkoutPlan, WorkoutDay, WorkoutWeek } from '@/types';
-import { CheckCircle, AlertCircle, MinusCircle, MoreVertical, Plus } from 'lucide-react';
+import { CheckCircle, AlertCircle, MoreVertical, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,18 +23,15 @@ interface WorkoutSidebarProps {
   onUpdatePlan?: (plan: WorkoutPlan) => void;
 }
 
-type WorkoutStatus = 'rest' | 'empty' | 'complete';
+type WorkoutStatus = 'empty' | 'complete';
 
 function getWorkoutStatus(day: WorkoutDay): WorkoutStatus {
-  if (day.isRestDay) return 'rest';
   if (day.exercises.length === 0) return 'empty';
   return 'complete';
 }
 
 function StatusIcon({ status }: { status: WorkoutStatus }) {
   switch (status) {
-    case 'rest':
-      return <MinusCircle className="w-4 h-4 text-muted-foreground" />;
     case 'empty':
       return <AlertCircle className="w-4 h-4 text-warning" />;
     case 'complete':
@@ -49,14 +46,14 @@ export function WorkoutSidebar({
   onSelectWorkout,
   onUpdatePlan,
 }: WorkoutSidebarProps) {
-  // Calculate total workouts and completion stats
+  // All days are workout days now (no rest day records)
   const totalWorkouts = plan.weeks.reduce(
-    (acc, week) => acc + week.days.filter((d) => !d.isRestDay).length,
+    (acc, week) => acc + week.days.length,
     0
   );
   const completedWorkouts = plan.weeks.reduce(
     (acc, week) =>
-      acc + week.days.filter((d) => !d.isRestDay && d.exercises.length > 0).length,
+      acc + week.days.filter((d) => d.exercises.length > 0).length,
     0
   );
 
@@ -179,42 +176,15 @@ export function WorkoutSidebar({
     onUpdatePlan(updatedPlan);
   };
 
-  const handleToggleRestDay = (weekIdx: number, dayIdx: number) => {
-    if (!onUpdatePlan) return;
-
-    const day = plan.weeks[weekIdx].days[dayIdx];
-    const updatedDay: WorkoutDay = {
-      ...day,
-      isRestDay: !day.isRestDay,
-      name: !day.isRestDay ? 'Rest Day' : 'Workout',
-      exercises: !day.isRestDay ? [] : day.exercises,
-    };
-
-    const updatedPlan: WorkoutPlan = {
-      ...plan,
-      weeks: plan.weeks.map((w, wIdx) =>
-        wIdx === weekIdx
-          ? {
-              ...w,
-              days: w.days.map((d, dIdx) => (dIdx === dayIdx ? updatedDay : d)),
-            }
-          : w
-      ),
-      updatedAt: new Date().toISOString(),
-    };
-
-    onUpdatePlan(updatedPlan);
-  };
-
   const handleAddDay = (weekIdx: number) => {
     if (!onUpdatePlan) return;
 
     const week = plan.weeks[weekIdx];
     const newDay: WorkoutDay = {
       id: `day-${Date.now()}`,
-      name: `Workout ${week.days.length + 1}`,
+      orderIndex: week.days.length + 1,
+      name: `Day ${week.days.length + 1}`,
       exercises: [],
-      isRestDay: false,
     };
 
     const updatedPlan: WorkoutPlan = {
@@ -248,10 +218,6 @@ export function WorkoutSidebar({
           <div className="flex items-center gap-1">
             <AlertCircle className="w-3 h-3 text-warning" />
             <span>Empty</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <MinusCircle className="w-3 h-3 text-muted-foreground" />
-            <span>Rest</span>
           </div>
         </div>
       </div>
@@ -340,23 +306,20 @@ export function WorkoutSidebar({
                             isCurrent
                               ? 'bg-primary text-primary-foreground font-medium'
                               : 'hover:bg-muted',
-                            day.isRestDay && !isCurrent && 'opacity-60'
                           )}
                         >
                           <StatusIcon status={status} />
-                          <span className="flex-1 truncate">{day.name}</span>
-                          {!day.isRestDay && (
-                            <span
-                              className={cn(
-                                'text-xs',
-                                isCurrent
-                                  ? 'text-primary-foreground/80'
-                                  : 'text-muted-foreground'
-                              )}
-                            >
-                              {exerciseCount}
-                            </span>
-                          )}
+                          <span className="flex-1 truncate">{day.name || `Day ${dayIdx + 1}`}</span>
+                          <span
+                            className={cn(
+                              'text-xs tabular-nums',
+                              isCurrent
+                                ? 'text-primary-foreground/80'
+                                : 'text-muted-foreground'
+                            )}
+                          >
+                            {exerciseCount}
+                          </span>
                         </button>
                         {/* Day Menu */}
                         {onUpdatePlan && (
@@ -373,14 +336,6 @@ export function WorkoutSidebar({
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="z-50">
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleToggleRestDay(weekIdx, dayIdx);
-                                  }}
-                                >
-                                  {day.isRestDay ? 'Mark as Workout' : 'Mark as Rest Day'}
-                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={(e) => {
                                     e.stopPropagation();

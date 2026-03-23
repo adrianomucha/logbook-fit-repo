@@ -167,11 +167,10 @@ export function InlinePlanEditor({
                     isSelected
                       ? 'bg-foreground text-background shadow-sm'
                       : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground',
-                    day.isRestDay && 'opacity-50'
                   )}
                 >
                   {day.name || `Day ${idx + 1}`}
-                  {!day.isRestDay && exerciseCount > 0 && (
+                  {exerciseCount > 0 && (
                     <span className="ml-1.5 tabular-nums opacity-60">{exerciseCount}</span>
                   )}
                 </button>
@@ -183,11 +182,7 @@ export function InlinePlanEditor({
         {/* Exercise list */}
         {selectedDay && showExercises && (
           <>
-            {selectedDay.isRestDay ? (
-              <div className="py-3 text-center text-sm text-muted-foreground">
-                Rest Day
-              </div>
-            ) : selectedDay.exercises?.length === 0 ? (
+            {selectedDay.exercises?.length === 0 ? (
               <div className="py-4 text-center">
                 <p className="text-sm text-muted-foreground">No exercises</p>
                 <Button

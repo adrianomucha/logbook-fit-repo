@@ -58,7 +58,7 @@ export function WeeklyStrip({ client, plan, planStartDate, workoutCompletions }:
         {/* 7-day strip */}
         <div className="grid grid-cols-7 gap-1">
           {weekDays.map((day) => (
-            <DayCell key={day.dayNumber} day={day} completions={workoutCompletions} />
+            <DayCell key={day.date.toISOString()} day={day} completions={workoutCompletions} />
           ))}
         </div>
 

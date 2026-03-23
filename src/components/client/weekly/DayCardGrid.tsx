@@ -14,7 +14,7 @@ export function DayCardGrid({ days, onDayClick }: DayCardGridProps) {
         <div className="divide-y divide-border/40">
           {days.map((day) => (
             <DayCard
-              key={day.dayNumber}
+              key={day.date.toISOString()}
               day={day}
               onClick={() => onDayClick(day)}
             />

@@ -83,8 +83,8 @@ export function getDayStatus(
   workoutDay: WorkoutDay | undefined,
   completion?: WorkoutCompletion
 ): DayStatus {
-  // Rest day
-  if (!workoutDay || workoutDay.isRestDay) {
+  // Rest day (no workout assigned to this calendar slot)
+  if (!workoutDay) {
     return 'REST';
   }
 
@@ -133,19 +133,9 @@ export function getWeekDays(
     const dayOfWeek = format(date, 'EEE'); // Mon, Tue, etc.
     const dayNumber = i + 1; // 1 = Monday, 7 = Sunday
 
-    // Map workout days by their dayNumber (1=Mon, 7=Sun)
-    // Falls back to sequential assignment if dayNumber is not set
-    const workoutDay = week.days.find(
-      (d) => !d.isRestDay && d.dayNumber === dayNumber
-    ) ?? (
-      // Fallback: sequential assignment for plans without dayNumber
-      week.days.every((d) => d.dayNumber == null)
-        ? (() => {
-            const workoutDays = week.days.filter((d) => !d.isRestDay);
-            return i < workoutDays.length ? workoutDays[i] : undefined;
-          })()
-        : undefined
-    );
+    // Sequential assignment: Day 1 → Mon, Day 2 → Tue, etc.
+    // All days in week.days are workout days (no rest day records)
+    const workoutDay = i < week.days.length ? week.days[i] : undefined;
 
     // Find completion for this specific day
     const completion = completions.find(
@@ -182,7 +172,7 @@ export function getWeekDays(
 export function getWeekProgress(
   weekDays: WeekDayInfo[]
 ): { completed: number; total: number; percentage: number } {
-  const workoutDays = weekDays.filter((d) => d.status !== 'REST');
+  const workoutDays = weekDays.filter((d) => d.workoutDay !== undefined);
   const completed = workoutDays.filter((d) => d.status === 'COMPLETED').length;
   const total = workoutDays.length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;

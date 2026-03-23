@@ -87,7 +87,7 @@ export interface ClientDetail {
     exercisesTotal: number | null;
     effortRating: string | null;
     durationSec: number | null;
-    day: { name: string | null; dayNumber: number; week: { id: string } | null } | null;
+    day: { name: string | null; orderIndex: number; week: { id: string } | null } | null;
   }[];
   checkIns: {
     id: string;
@@ -101,9 +101,8 @@ export interface ClientDetail {
 // GET /api/client/week-overview
 export interface WeekOverviewDay {
   dayId: string;
-  dayNumber: number;
+  orderIndex: number;
   name: string | null;
-  isRestDay: boolean;
   exerciseCount: number;
   status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
   completionPct: number | null;
@@ -149,7 +148,7 @@ export interface ClientProgress {
     exercisesTotal: number | null;
     durationSec: number | null;
     effortRating: string | null;
-    day: { name: string | null; dayNumber: number } | null;
+    day: { name: string | null; orderIndex: number } | null;
   }[];
   allCompletions: ClientProgressCompletion[];
   stats: {
@@ -194,10 +193,9 @@ export interface ApiMessage {
 // GET /api/client/workout/day/[id]
 export interface WorkoutDayDetail {
   dayId: string;
-  dayNumber: number;
+  orderIndex: number;
   name: string | null;
   description: string | null;
-  isRestDay: boolean;
   weekNumber: number;
   exercises: WorkoutExercise[];
   completion: WorkoutCompletionRecord | null;

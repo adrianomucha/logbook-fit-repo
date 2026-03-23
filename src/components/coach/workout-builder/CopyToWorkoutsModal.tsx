@@ -40,7 +40,7 @@ export function CopyToWorkoutsModal({
     return plan.weeks.some((week, weekIdx) =>
       week.days.some((day, dayIdx) => {
         const isCurrent = weekIdx === currentWeekIdx && dayIdx === currentDayIdx;
-        return !day.isRestDay && !isCurrent;
+        return !isCurrent;
       })
     );
   }, [plan.weeks, currentWeekIdx, currentDayIdx]);
@@ -103,7 +103,7 @@ export function CopyToWorkoutsModal({
           const availableWorkouts = week.days.filter((day, dayIdx) => {
             const isCurrent =
               weekIdx === currentWeekIdx && dayIdx === currentDayIdx;
-            return !day.isRestDay && !isCurrent;
+            return !isCurrent;
           });
 
           if (availableWorkouts.length === 0) return null;
@@ -117,7 +117,7 @@ export function CopyToWorkoutsModal({
                 {week.days.map((day, dayIdx) => {
                   const isCurrent =
                     weekIdx === currentWeekIdx && dayIdx === currentDayIdx;
-                  if (day.isRestDay || isCurrent) return null;
+                  if (isCurrent) return null;
 
                   const isSelected = selectedWorkouts.some(
                     (w) => w.weekIdx === weekIdx && w.dayIdx === dayIdx

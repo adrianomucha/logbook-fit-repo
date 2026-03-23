@@ -36,7 +36,7 @@ export const GET = withClient(
           orderBy: { weekNumber: "asc" },
           include: {
             days: {
-              orderBy: { dayNumber: "asc" },
+              orderBy: { orderIndex: "asc" },
               include: {
                 exercises: {
                   orderBy: { orderIndex: "asc" },

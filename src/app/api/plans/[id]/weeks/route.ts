@@ -37,30 +37,30 @@ export const POST = withCoach(
     // Parse optional day templates from body
     const body = await req.json().catch(() => ({}));
     const { days: dayTemplates } = body as {
-      days?: { dayNumber: number; name?: string; isRestDay?: boolean }[];
+      days?: { name?: string }[];
     };
 
-    // Create week with 7 days
+    const wpw = plan.workoutsPerWeek || 3;
+
+    // Create week with workout days only (no rest day records)
     const week = await prisma.week.create({
       data: {
         planId,
         weekNumber: nextWeekNumber,
         days: {
           create: dayTemplates
-            ? dayTemplates.map((d) => ({
-                dayNumber: d.dayNumber,
+            ? dayTemplates.map((d, i) => ({
+                orderIndex: i + 1,
                 name: d.name ?? null,
-                isRestDay: d.isRestDay ?? false,
               }))
-            : Array.from({ length: 7 }, (_, i) => ({
-                dayNumber: i + 1,
-                name: null,
-                isRestDay: false,
+            : Array.from({ length: wpw }, (_, i) => ({
+                orderIndex: i + 1,
+                name: `Day ${i + 1}`,
               })),
         },
       },
       include: {
-        days: { orderBy: { dayNumber: "asc" } },
+        days: { orderBy: { orderIndex: "asc" } },
       },
     });
 

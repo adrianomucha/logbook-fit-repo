@@ -45,7 +45,7 @@ export const GET = withClient(
       },
       include: {
         days: {
-          orderBy: { dayNumber: "asc" },
+          orderBy: { orderIndex: "asc" },
           include: {
             exercises: {
               orderBy: { orderIndex: "asc" },
@@ -84,9 +84,8 @@ export const GET = withClient(
       const completion = day.completions[0];
       return {
         dayId: day.id,
-        dayNumber: day.dayNumber,
+        orderIndex: day.orderIndex,
         name: day.name,
-        isRestDay: day.isRestDay,
         exerciseCount: day.exercises.length,
         status: completion?.status ?? "NOT_STARTED",
         completionPct: completion?.completionPct ?? null,

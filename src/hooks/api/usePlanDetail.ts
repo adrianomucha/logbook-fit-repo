@@ -18,10 +18,9 @@ export interface PlanDetail {
     weekNumber: number;
     days: {
       id: string;
-      dayNumber: number;
+      orderIndex: number;
       name: string | null;
       description: string | null;
-      isRestDay: boolean;
       exercises: {
         id: string;
         orderIndex: number;

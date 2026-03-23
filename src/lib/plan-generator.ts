@@ -79,24 +79,13 @@ export function generatePlanStructure(formData: PlanSetupFormData): WorkoutPlan 
     const weekId = `week-${planId}-${weekNum}`;
     const days: WorkoutDay[] = [];
 
-    // Generate workout days
+    // Generate workout days only (no rest day records)
     for (let dayNum = 1; dayNum <= formData.workoutsPerWeek; dayNum++) {
       days.push({
         id: `day-${weekId}-${dayNum}`,
-        name: `Workout ${dayNum}`,
+        orderIndex: dayNum,
+        name: `Day ${dayNum}`,
         exercises: [],
-        isRestDay: false,
-      });
-    }
-
-    // Generate rest days
-    const restDays = 7 - formData.workoutsPerWeek;
-    for (let restNum = 1; restNum <= restDays; restNum++) {
-      days.push({
-        id: `day-${weekId}-rest-${restNum}`,
-        name: 'Rest Day',
-        exercises: [],
-        isRestDay: true,
       });
     }
 

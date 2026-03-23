@@ -77,7 +77,7 @@ export function PlanSummaryCard({
   const totalWeeks = plan.weeks.length;
   const workoutsPerWeek =
     plan.workoutsPerWeek ||
-    plan.weeks[0]?.days.filter((d) => !d.isRestDay).length ||
+    plan.weeks[0]?.days.length ||
     0;
 
   return (
@@ -132,11 +132,11 @@ export function PlanSummaryCard({
         </div>
 
         {/* Today's workout preview */}
-        {todaysWorkout && !todaysWorkout.isRestDay && (
+        {todaysWorkout && (
           <div className="border-t pt-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
               <Calendar className="w-3 h-3" />
-              Today's Workout
+              Today&apos;s Workout
             </div>
             <p className="text-sm font-medium">{todaysWorkout.name}</p>
             {todaysWorkout.exercises && todaysWorkout.exercises.length > 0 && (
@@ -145,16 +145,6 @@ export function PlanSummaryCard({
                 {todaysWorkout.exercises.length !== 1 ? 's' : ''}
               </p>
             )}
-          </div>
-        )}
-
-        {todaysWorkout?.isRestDay && (
-          <div className="border-t pt-3">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
-              <Calendar className="w-3 h-3" />
-              Today
-            </div>
-            <p className="text-sm text-muted-foreground">Rest day</p>
           </div>
         )}
 

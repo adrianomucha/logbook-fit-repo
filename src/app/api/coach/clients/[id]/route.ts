@@ -65,7 +65,7 @@ export const GET = withCoach(
             day: {
               select: {
                 name: true,
-                dayNumber: true,
+                orderIndex: true,
                 week: { select: { id: true } },
               },
             },

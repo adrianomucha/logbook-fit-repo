@@ -22,14 +22,6 @@ export function WorkoutRow({
     onUpdateDay({ ...day, name: e.target.value });
   };
 
-  const handleToggleRestDay = () => {
-    onUpdateDay({
-      ...day,
-      isRestDay: !day.isRestDay,
-      name: !day.isRestDay ? 'Rest Day' : `Workout ${dayIndex + 1}`,
-    });
-  };
-
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', dayIndex.toString());
@@ -54,11 +46,7 @@ export function WorkoutRow({
       onDragStart={handleDragStart}
       onDragOver={handleDragOver}
       onDrop={handleDrop}
-      className={`flex items-center gap-3 p-3 border rounded-lg transition-colors cursor-move ${
-        day.isRestDay
-          ? 'bg-muted border-border'
-          : 'bg-card border-input hover:border-ring'
-      }`}
+      className="flex items-center gap-3 p-3 border rounded-lg transition-colors cursor-move bg-card border-input hover:border-ring"
     >
       {/* Drag handle */}
       <div className="text-muted-foreground cursor-grab active:cursor-grabbing">
@@ -71,25 +59,12 @@ export function WorkoutRow({
         value={day.name}
         onChange={handleNameChange}
         className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-        placeholder={day.isRestDay ? 'Rest Day' : 'Workout name'}
-        disabled={day.isRestDay}
+        placeholder="Workout name"
       />
-
-      {/* Rest day toggle */}
-      <button
-        onClick={handleToggleRestDay}
-        className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-          day.isRestDay
-            ? 'bg-primary text-primary-foreground hover:bg-primary/90'
-            : 'bg-background text-foreground border border-input hover:bg-muted'
-        }`}
-      >
-        {day.isRestDay ? '✓ Rest Day' : 'Set as Rest'}
-      </button>
 
       {/* Exercise count */}
       <span className="text-sm text-muted-foreground min-w-[100px] text-right">
-        {day.isRestDay ? '—' : `${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''}`}
+        {day.exercises.length} exercise{day.exercises.length !== 1 ? 's' : ''}
       </span>
 
       {/* Actions */}

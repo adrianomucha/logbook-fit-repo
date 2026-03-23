@@ -30,10 +30,9 @@ describe("apiPlanToWorkoutPlan", () => {
         days: [
           {
             id: "day-1",
-            dayNumber: 1,
+            orderIndex: 1,
             name: "Push Day",
             description: "Chest and shoulders",
-            isRestDay: false,
             exercises: [
               {
                 id: "we-1",
@@ -86,7 +85,7 @@ describe("apiPlanToWorkoutPlan", () => {
         {
           ...basePlan.weeks[0],
           days: [
-            { ...basePlan.weeks[0].days[0], name: null, dayNumber: 3 },
+            { ...basePlan.weeks[0].days[0], name: null, orderIndex: 3 },
           ],
         },
       ],
@@ -266,7 +265,7 @@ describe("apiClientDetailToWorkoutCompletions", () => {
         exercisesTotal: 5,
         effortRating: "HARD",
         durationSec: 3000,
-        day: { name: "Push", dayNumber: 1, week: { id: "week-1" } },
+        day: { name: "Push", orderIndex: 1, week: { id: "week-1" } },
       },
     ];
     const result = apiClientDetailToWorkoutCompletions(
@@ -291,7 +290,7 @@ describe("apiClientDetailToWorkoutCompletions", () => {
         exercisesTotal: null,
         effortRating: null,
         durationSec: null,
-        day: { name: null, dayNumber: 2, week: null },
+        day: { name: null, orderIndex: 2, week: null },
       },
     ];
     const result = apiClientDetailToWorkoutCompletions(

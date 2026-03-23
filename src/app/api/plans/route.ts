@@ -88,16 +88,11 @@ export const POST = withCoach(
           data: { planId: created.id, weekNumber: w },
         });
         await tx.day.createMany({
-          data: Array.from({ length: 7 }, (_, i) => {
-            const d = i + 1;
-            const isRestDay = d > wpw;
-            return {
-              weekId: week.id,
-              dayNumber: d,
-              name: isRestDay ? null : `Day ${d}`,
-              isRestDay,
-            };
-          }),
+          data: Array.from({ length: wpw }, (_, i) => ({
+            weekId: week.id,
+            orderIndex: i + 1,
+            name: `Day ${i + 1}`,
+          })),
         });
       }
 

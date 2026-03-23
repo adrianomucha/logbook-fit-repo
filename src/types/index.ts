@@ -14,11 +14,10 @@ export interface Exercise {
 
 export interface WorkoutDay {
   id: string;
-  dayNumber?: number;
+  orderIndex?: number;
   name: string;
   description?: string;
   exercises: Exercise[];
-  isRestDay?: boolean;
 }
 
 export interface WorkoutWeek {

@@ -47,7 +47,7 @@ type ProgressResult = {
     exercisesTotal: number | null;
     durationSec: number | null;
     effortRating: string | null;
-    day: { name: string | null; dayNumber: number } | null;
+    day: { name: string | null; orderIndex: number } | null;
   }[];
   allCompletions: {
     id: string;
@@ -410,7 +410,7 @@ class WorkoutServiceImpl {
         exercisesTotal: true,
         durationSec: true,
         effortRating: true,
-        day: { select: { name: true, dayNumber: true } },
+        day: { select: { name: true, orderIndex: true } },
       },
     });
 
@@ -429,7 +429,7 @@ class WorkoutServiceImpl {
         exercisesTotal: true,
         durationSec: true,
         effortRating: true,
-        day: { select: { name: true, dayNumber: true, weekId: true } },
+        day: { select: { name: true, orderIndex: true, weekId: true } },
       },
     });
 
