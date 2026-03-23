@@ -465,7 +465,8 @@ export function UnifiedClientProfile() {
 
         {/* ── Sections ── */}
 
-        {/* Check-in section — always shown */}
+        {/* Check-in section — only shown when client has an active plan */}
+        {plan && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>Check-in</SectionLabel>
           <SectionCard>
@@ -485,6 +486,7 @@ export function UnifiedClientProfile() {
             />
           </SectionCard>
         </section>
+        )}
 
         {/* Two-column: Chat + Secondary — stagger delay 4 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '200ms' }}>
