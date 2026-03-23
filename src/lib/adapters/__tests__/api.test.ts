@@ -7,13 +7,14 @@ import {
   apiClientDetailToWorkoutCompletions,
   apiClientDetailToClient,
 } from "../api";
+import type { PlanDetail } from "@/hooks/api/usePlanDetail";
 
 // ---------------------------------------------------------------------------
 // apiPlanToWorkoutPlan
 // ---------------------------------------------------------------------------
 
 describe("apiPlanToWorkoutPlan", () => {
-  const basePlan = {
+  const basePlan: PlanDetail = {
     id: "plan-1",
     name: "Strength 101",
     description: "A beginner plan",
@@ -23,6 +24,9 @@ describe("apiPlanToWorkoutPlan", () => {
     coachId: "coach-1",
     createdAt: "2025-01-01T00:00:00Z",
     updatedAt: "2025-01-02T00:00:00Z",
+    editedAt: null,
+    deletedAt: null,
+    assignedTo: [],
     weeks: [
       {
         id: "week-1",
@@ -46,6 +50,7 @@ describe("apiPlanToWorkoutPlan", () => {
                   id: "ex-1",
                   name: "Bench Press",
                   category: "UPPER_BODY",
+                  instructions: null,
                 },
               },
             ],
