@@ -43,25 +43,18 @@ export function WeeklyOverview({
     );
   }, [plan.weeks, currentWeekNumber]);
 
-  // Get the 7 days for this week
+  // Get this week's workouts as an ordered checklist
   const weekDays = useMemo(() => {
     if (!currentWeek || !client.planStartDate) {
       return [];
     }
-    return getWeekDays(
-      client.planStartDate,
-      currentWeek,
-      completions,
-      client.id
-    );
+    return getWeekDays(currentWeek, completions, client.id);
   }, [currentWeek, client.planStartDate, completions, client.id]);
 
   // Calculate progress
   const progress = useMemo(() => {
     const base = getWeekProgress(weekDays);
-    const remaining = weekDays.filter(
-      (d) => d.status === 'TODAY' || d.status === 'UPCOMING'
-    ).length;
+    const remaining = weekDays.filter((d) => d.status !== 'COMPLETED').length;
     return { ...base, remaining };
   }, [weekDays]);
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 
-export type StatusType = 'workout-scheduled' | 'in-progress' | 'completed' | 'rest-day' | 'coach-updated';
+export type StatusType = 'workout-scheduled' | 'in-progress' | 'completed' | 'coach-updated';
 
 interface StatusHeaderProps {
   status: StatusType;
@@ -21,7 +21,6 @@ const statusConfig: Record<StatusType, { label: string; dot: string }> = {
   'workout-scheduled': { label: 'Ready to train', dot: 'bg-info' },
   'in-progress': { label: 'In progress', dot: 'bg-warning' },
   'completed': { label: 'Complete', dot: 'bg-success' },
-  'rest-day': { label: 'Rest day', dot: 'bg-muted-foreground/40' },
   'coach-updated': { label: 'Plan updated', dot: 'bg-info' },
 };
 

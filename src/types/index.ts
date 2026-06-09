@@ -122,8 +122,8 @@ export interface CompletedWorkout {
 // Workout completion status for granular tracking
 export type WorkoutCompletionStatus = 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
 
-// Day status for weekly overview
-export type DayStatus = 'TODAY' | 'COMPLETED' | 'UPCOMING' | 'MISSED' | 'REST';
+// Workout status within a week's sequential checklist
+export type DayStatus = 'COMPLETED' | 'CURRENT' | 'UPCOMING';
 
 // Effort rating for post-workout feedback
 export type EffortRating = 'EASY' | 'MEDIUM' | 'HARD';

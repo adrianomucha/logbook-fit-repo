@@ -1,9 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dumbbell, Edit2 } from 'lucide-react';
+import { Edit2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
 import { Client, WorkoutPlan, WorkoutCompletion } from '@/types';
 import {
   getWeekDays,
@@ -36,7 +35,7 @@ export function InteractiveWeeklyStrip({
   compact = false,
   variant = 'card',
 }: InteractiveWeeklyStripProps) {
-  const [expandedDayNumber, setExpandedDayNumber] = useState<number | null>(null);
+  const [expandedOrderIndex, setExpandedOrderIndex] = useState<number | null>(null);
 
   // Animate compact pills growing in on mount
   const [pillsMounted, setPillsMounted] = useState(false);
@@ -62,16 +61,16 @@ export function InteractiveWeeklyStrip({
     if (!planStartDate || !plan?.weeks?.length || !currentWeek) {
       return [];
     }
-    return getWeekDays(planStartDate, currentWeek, workoutCompletions, client.id);
+    return getWeekDays(currentWeek, workoutCompletions, client.id);
   }, [plan, planStartDate, currentWeek, workoutCompletions, client.id]);
 
   const progress = useMemo(() => getWeekProgress(weekDays), [weekDays]);
 
   // Get expanded day's info
   const expandedDayInfo = useMemo(() => {
-    if (expandedDayNumber === null) return null;
-    return weekDays.find((d) => d.dayNumber === expandedDayNumber);
-  }, [expandedDayNumber, weekDays]);
+    if (expandedOrderIndex === null) return null;
+    return weekDays.find((d) => d.orderIndex === expandedOrderIndex);
+  }, [expandedOrderIndex, weekDays]);
 
   // Get expanded workout from workoutDay
   const expandedWorkout = expandedDayInfo?.workoutDay;
@@ -107,22 +106,18 @@ export function InteractiveWeeklyStrip({
     );
   }
 
-  const remaining = weekDays.filter(
-    (d) => d.status === 'TODAY' || d.status === 'UPCOMING'
-  ).length;
+  const remaining = weekDays.filter((d) => d.status !== 'COMPLETED').length;
 
   // Compact mode: pill progress bar
   if (compact) {
-    const workoutDays = weekDays.filter((d) => d.status !== 'REST');
+    const workoutDays = weekDays;
     const allDone = progress.completed === progress.total;
     const paceMessage =
       allDone
         ? 'All done this week!'
         : remaining === 1
-          ? `On pace \u2014 one more to go.`
-          : remaining === 0 && progress.completed < progress.total
-            ? `${progress.total - progress.completed} missed`
-            : `${remaining} remaining`;
+          ? `One more to go.`
+          : `${remaining} remaining`;
 
     return (
       <div className="space-y-3">
@@ -143,7 +138,7 @@ export function InteractiveWeeklyStrip({
         <div className="flex gap-1.5">
           {workoutDays.map((day, i) => (
             <div
-              key={day.dayNumber}
+              key={day.orderIndex}
               className={cn(
                 'flex-1 h-4 rounded-full transition-all duration-500 ease-out',
                 day.status === 'COMPLETED'
@@ -193,18 +188,18 @@ export function InteractiveWeeklyStrip({
       {/* 7-day interactive list — exercises expand inline under each day */}
       <div className="divide-y divide-border/40">
         {weekDays.map((day) => {
-          const isExpanded = expandedDayNumber === day.dayNumber;
+          const isExpanded = expandedOrderIndex === day.orderIndex;
           const dayWorkout = isExpanded ? day.workoutDay : null;
           const dayCompletion = isExpanded ? day.completion : null;
 
           return (
-            <div key={day.dayNumber}>
+            <div key={day.orderIndex}>
               <InteractiveDayRow
                 day={day}
                 isExpanded={isExpanded}
                 onClick={() => {
-                  if (day.workoutDay && day.status !== 'REST') {
-                    setExpandedDayNumber(isExpanded ? null : day.dayNumber);
+                  if (day.workoutDay) {
+                    setExpandedOrderIndex(isExpanded ? null : day.orderIndex);
                   }
                 }}
               />
@@ -300,28 +295,10 @@ interface InteractiveDayRowProps {
 }
 
 function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps) {
-  const isClickable = day.workoutDay && day.status !== 'REST';
-  const isRest = day.status === 'REST';
+  const isClickable = !!day.workoutDay;
   const isCompleted = day.status === 'COMPLETED';
-  const isToday = day.status === 'TODAY';
-  const isUpcoming = day.status === 'UPCOMING';
-  const isMissed = day.status === 'MISSED';
+  const isCurrent = day.status === 'CURRENT';
   const exerciseCount = day.workoutDay?.exercises?.length || 0;
-
-  // Rest days: single compact line
-  if (isRest) {
-    return (
-      <div className="flex items-center gap-3 px-3 py-1.5 min-h-[32px]">
-        <span className="w-3 shrink-0" />
-        <span className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground/30 w-9 shrink-0 antialiased">
-          {day.dayOfWeek.slice(0, 3)}
-        </span>
-        <span className="text-[10px] uppercase tracking-wide text-muted-foreground/25 font-medium antialiased">
-          Rest
-        </span>
-      </div>
-    );
-  }
 
   return (
     <button
@@ -330,9 +307,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       className={cn(
         'flex items-center gap-3 px-3 py-3 w-full text-left transition-all duration-150 min-h-[52px]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-        isToday && 'bg-foreground/[0.03]',
-        isUpcoming && 'opacity-50',
-        isMissed && 'opacity-40',
+        isCurrent && 'bg-foreground/[0.03]',
         isClickable && 'hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] cursor-pointer',
         isExpanded && 'bg-muted/50',
       )}
@@ -348,16 +323,16 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
       </svg>
 
-      {/* Day abbreviation + date */}
+      {/* Position number */}
       <div className="w-10 shrink-0">
-        <p className={cn(
-          'text-[11px] font-black uppercase tracking-wide antialiased',
-          isToday ? 'text-foreground' : 'text-muted-foreground'
-        )}>
-          {day.dayOfWeek.slice(0, 3)}
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 font-medium antialiased">
+          Day
         </p>
-        <p className="text-[10px] tabular-nums text-muted-foreground/50 antialiased">
-          {format(day.date, 'M/d')}
+        <p className={cn(
+          'text-sm font-black tabular-nums leading-none antialiased',
+          isCurrent ? 'text-foreground' : 'text-muted-foreground'
+        )}>
+          {day.orderIndex}
         </p>
       </div>
 
@@ -365,8 +340,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       <div className="flex-1 min-w-0">
         <p className={cn(
           'text-sm font-bold truncate tracking-tight antialiased',
-          isCompleted && 'text-foreground/80',
-          isMissed && 'text-foreground/50'
+          isCompleted && 'text-foreground/80'
         )}>
           {day.workoutDay?.name || 'Workout'}
         </p>
@@ -382,15 +356,9 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}
-        {isToday && (
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-info opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-info" />
-          </span>
-        )}
-        {isMissed && (
-          <span className="text-[10px] uppercase tracking-wide text-destructive/50 font-bold antialiased">
-            Missed
+        {isCurrent && (
+          <span className="text-[10px] uppercase tracking-wide text-info font-bold antialiased">
+            Up next
           </span>
         )}
       </div>

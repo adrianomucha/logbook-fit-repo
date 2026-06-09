@@ -2,7 +2,7 @@ import { Client, WorkoutPlan } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { WeeklyActivity } from '@/lib/client-activity';
-import { formatDistanceToNow, getDay } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 
 interface WeeklyActivityCardProps {
   client: Client;
@@ -15,14 +15,6 @@ function getProgressLabel(completed: number, scheduled: number): { text: string;
   if (completed >= scheduled) return { text: 'Week complete', color: 'text-success' };
 
   const remaining = scheduled - completed;
-  // 0=Sun, 1=Mon ... 6=Sat
-  const dayOfWeek = getDay(new Date());
-  // Days left in the week (Sun=0 means 0 days left, Sat=6 means 6 days left if week starts Sun)
-  const daysLeftInWeek = 6 - dayOfWeek;
-
-  if (remaining > daysLeftInWeek) {
-    return { text: `${remaining} remaining · Behind schedule`, color: 'text-warning' };
-  }
   return { text: `${remaining} remaining this week`, color: 'text-muted-foreground' };
 }
 

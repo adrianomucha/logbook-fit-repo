@@ -32,7 +32,6 @@ function getStatusType(
   todayWorkout: WeekDayInfo | null,
   todayCompletion: WorkoutCompletion | null
 ): StatusType {
-  if (!todayWorkout || todayWorkout.status === 'REST') return 'rest-day';
   if (todayCompletion?.status === 'COMPLETED') return 'completed';
   if (todayCompletion?.status === 'IN_PROGRESS') return 'in-progress';
   return 'workout-scheduled';
@@ -42,7 +41,6 @@ function getActionState(
   todayWorkout: WeekDayInfo | null,
   todayCompletion: WorkoutCompletion | null
 ): ActionState {
-  if (!todayWorkout || todayWorkout.status === 'REST') return 'rest';
   if (todayCompletion?.status === 'COMPLETED') return 'completed';
   if (todayCompletion?.status === 'IN_PROGRESS') return 'in-progress';
   return 'scheduled';

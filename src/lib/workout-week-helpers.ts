@@ -1,11 +1,7 @@
 import {
   startOfWeek,
-  addDays,
   differenceInDays,
-  isToday as isTodayDateFns,
-  isBefore,
   startOfDay,
-  format,
 } from 'date-fns';
 import {
   WorkoutWeek,
@@ -14,20 +10,22 @@ import {
   DayStatus,
 } from '@/types';
 
-// Interface for a day in the weekly overview
+// Info for a single workout in the week's sequential checklist.
+// Workouts are no longer mapped to calendar weekdays — they're an ordered
+// list the client completes in sequence, whenever they train.
 export interface WeekDayInfo {
-  date: Date;
-  dayOfWeek: string;        // "Mon", "Tue", etc.
-  dayNumber: number;        // 1-7 (Monday=1)
-  workoutDay?: WorkoutDay;  // The workout for this day (undefined if rest)
-  status: DayStatus;
+  workoutDay: WorkoutDay;   // The workout (every entry is a workout — no rest slots)
+  orderIndex: number;       // 1-based position within the week
+  status: DayStatus;        // 'COMPLETED' | 'CURRENT' | 'UPCOMING'
   completion?: WorkoutCompletion;
-  isInteractive: boolean;   // Can the user tap on this card?
+  isInteractive: boolean;   // Always true — any workout can be opened
 }
 
 /**
- * Calculate the current week number based on planStartDate
- * Week 1 starts on the Monday of (or before) planStartDate
+ * Calculate the current week number based on planStartDate.
+ * Week 1 starts on the Monday of (or before) planStartDate.
+ * Note: this advances the *displayed week* over time; it does NOT pin
+ * individual workouts to weekdays.
  * @returns 1-indexed week number, clamped to plan duration
  */
 export function getCurrentWeekNumber(
@@ -46,124 +44,49 @@ export function getCurrentWeekNumber(
 }
 
 /**
- * Get the Monday of the current week
- */
-export function getCurrentWeekMonday(): Date {
-  return startOfWeek(new Date(), { weekStartsOn: 1 });
-}
-
-/**
- * Get the Monday of the week containing planStartDate
- */
-export function getPlanStartMonday(planStartDate: string): Date {
-  const startDate = new Date(planStartDate);
-  return startOfWeek(startDate, { weekStartsOn: 1 });
-}
-
-/**
- * Check if a date is today
- */
-export function isToday(date: Date): boolean {
-  return isTodayDateFns(date);
-}
-
-/**
- * Check if a date is in the past (before today)
- */
-export function isPast(date: Date): boolean {
-  const today = startOfDay(new Date());
-  return isBefore(startOfDay(date), today);
-}
-
-/**
- * Determine the status of a day card
- */
-export function getDayStatus(
-  dayDate: Date,
-  workoutDay: WorkoutDay | undefined,
-  completion?: WorkoutCompletion
-): DayStatus {
-  // Rest day (no workout assigned to this calendar slot)
-  if (!workoutDay) {
-    return 'REST';
-  }
-
-  // Today
-  if (isToday(dayDate)) {
-    // Check if completed today
-    if (completion?.status === 'COMPLETED') {
-      return 'COMPLETED';
-    }
-    return 'TODAY';
-  }
-
-  // Past day
-  if (isPast(dayDate)) {
-    if (completion?.status === 'COMPLETED') {
-      return 'COMPLETED';
-    }
-    return 'MISSED';
-  }
-
-  // Future day
-  return 'UPCOMING';
-}
-
-/**
- * Get the 7 days for weekly overview (Mon-Sun)
- * Maps workout days to calendar days based on plan structure
+ * Build the week's workouts as an ordered checklist.
+ * The first not-yet-completed workout is marked CURRENT (the "do this next"
+ * highlight); the rest are UPCOMING. Completed workouts are COMPLETED.
  */
 export function getWeekDays(
-  planStartDate: string,
   week: WorkoutWeek,
   completions: WorkoutCompletion[],
   clientId: string
 ): WeekDayInfo[] {
-  const planStartMonday = getPlanStartMonday(planStartDate);
-  const currentWeekNumber = week.weekNumber;
+  const sorted = [...week.days].sort(
+    (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+  );
 
-  // Calculate the Monday of the target week
-  const weekMonday = addDays(planStartMonday, (currentWeekNumber - 1) * 7);
+  let currentAssigned = false;
 
-  // Build the 7-day array
-  const days: WeekDayInfo[] = [];
-
-  for (let i = 0; i < 7; i++) {
-    const date = addDays(weekMonday, i);
-    const dayOfWeek = format(date, 'EEE'); // Mon, Tue, etc.
-    const dayNumber = i + 1; // 1 = Monday, 7 = Sunday
-
-    // Sequential assignment: Day 1 → Mon, Day 2 → Tue, etc.
-    // All days in week.days are workout days (no rest day records)
-    const workoutDay = i < week.days.length ? week.days[i] : undefined;
-
-    // Find completion for this specific day
+  return sorted.map((workoutDay, i) => {
     const completion = completions.find(
       (c) =>
         c.clientId === clientId &&
         c.weekId === week.id &&
-        c.dayId === workoutDay?.id
+        c.dayId === workoutDay.id
     );
 
-    const status = getDayStatus(date, workoutDay, completion);
+    const isDone = completion?.status === 'COMPLETED';
 
-    // Determine if interactive - all workout days (today, completed, past) are tappable
-    // Only UPCOMING and REST days are non-interactive
-    const isInteractive =
-      status === 'TODAY' || status === 'COMPLETED' || status === 'MISSED';
+    let status: DayStatus;
+    if (isDone) {
+      status = 'COMPLETED';
+    } else if (!currentAssigned) {
+      status = 'CURRENT';
+      currentAssigned = true;
+    } else {
+      status = 'UPCOMING';
+    }
 
-    days.push({
-      date,
-      dayOfWeek,
-      dayNumber,
+    return {
       workoutDay,
+      orderIndex: workoutDay.orderIndex ?? i + 1,
       status,
       completion,
-      isInteractive,
-    });
-  }
-
-  return days;
+      isInteractive: true,
+    };
+  });
 }
 
 /**
@@ -172,44 +95,22 @@ export function getWeekDays(
 export function getWeekProgress(
   weekDays: WeekDayInfo[]
 ): { completed: number; total: number; percentage: number } {
-  const workoutDays = weekDays.filter((d) => d.workoutDay !== undefined);
-  const completed = workoutDays.filter((d) => d.status === 'COMPLETED').length;
-  const total = workoutDays.length;
+  const total = weekDays.length;
+  const completed = weekDays.filter((d) => d.status === 'COMPLETED').length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
   return { completed, total, percentage };
 }
 
 /**
- * Format a date as "Mon, Feb 3"
+ * Get the workout the client should focus on: the next uncompleted one,
+ * or — if the whole week is done — the last workout (so the completed
+ * state and feedback prompt still render).
  */
-export function formatDayDate(date: Date): string {
-  return format(date, 'EEE, MMM d');
-}
-
-/**
- * Format just the date number "3"
- */
-export function formatDayNumber(date: Date): string {
-  return format(date, 'd');
-}
-
-/**
- * Get today's workout from the week days array
- */
-export function getTodayWorkout(weekDays: WeekDayInfo[]): WeekDayInfo | null {
-  return weekDays.find((d) => isToday(d.date)) || null;
-}
-
-/**
- * Get the action state for today's workout based on completion status
- */
-export function getTodayWorkoutState(
-  todayWorkout: WeekDayInfo | null,
-  completion: WorkoutCompletion | null
-): 'scheduled' | 'in-progress' | 'completed' | 'rest' {
-  if (!todayWorkout || todayWorkout.status === 'REST') return 'rest';
-  if (completion?.status === 'COMPLETED') return 'completed';
-  if (completion?.status === 'IN_PROGRESS') return 'in-progress';
-  return 'scheduled';
+export function getActiveWorkout(weekDays: WeekDayInfo[]): WeekDayInfo | null {
+  if (weekDays.length === 0) return null;
+  return (
+    weekDays.find((d) => d.status === 'CURRENT') ??
+    weekDays[weekDays.length - 1]
+  );
 }

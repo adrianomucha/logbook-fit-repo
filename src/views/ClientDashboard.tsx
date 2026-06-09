@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
-import { getCurrentWeekNumber, getWeekDays, getTodayWorkout } from '@/lib/workout-week-helpers';
+import { getCurrentWeekNumber, getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
 import { useClientProgress } from '@/hooks/api/useClientProgress';
@@ -156,13 +156,12 @@ export function ClientDashboard() {
     }
 
     const weekDays = getWeekDays(
-      client.planStartDate,
       currentWeek,
       clientWorkoutCompletions,
       client.id
     );
 
-    const today = getTodayWorkout(weekDays);
+    const today = getActiveWorkout(weekDays);
     const completion = today?.completion || null;
 
     const exercises = today?.workoutDay?.exercises || [];

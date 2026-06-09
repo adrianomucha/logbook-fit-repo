@@ -1,7 +1,6 @@
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
-import { format } from 'date-fns';
 
 interface DayCardProps {
   day: WeekDayInfo;
@@ -9,7 +8,7 @@ interface DayCardProps {
 }
 
 export function DayCard({ day, onClick }: DayCardProps) {
-  const { date, dayOfWeek, workoutDay, status, isInteractive } = day;
+  const { orderIndex, workoutDay, status, isInteractive } = day;
   const exerciseCount = workoutDay?.exercises?.length || 0;
 
   const handleClick = () => {
@@ -18,21 +17,15 @@ export function DayCard({ day, onClick }: DayCardProps) {
     }
   };
 
-  const isRest = status === 'REST';
   const isCompleted = status === 'COMPLETED';
-  const isToday = status === 'TODAY';
-  const isUpcoming = status === 'UPCOMING';
-  const isMissed = status === 'MISSED';
+  const isCurrent = status === 'CURRENT';
 
   return (
     <div
       className={cn(
         'flex items-center gap-3 px-3.5 py-3 rounded-lg transition-colors touch-manipulation min-h-[52px]',
-        isToday && 'bg-muted/80',
+        isCurrent && 'bg-muted/80',
         isCompleted && 'opacity-70',
-        isUpcoming && 'opacity-35 pointer-events-none',
-        isMissed && 'opacity-45',
-        isRest && 'opacity-30',
         isInteractive && 'cursor-pointer hover:bg-muted/60 active:bg-muted',
       )}
       onClick={handleClick}
@@ -40,7 +33,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
       tabIndex={isInteractive ? 0 : undefined}
       aria-label={
         isInteractive
-          ? `${dayOfWeek} – ${workoutDay?.name || 'Workout'}`
+          ? `Workout ${orderIndex} – ${workoutDay?.name || 'Workout'}`
           : undefined
       }
       onKeyDown={
@@ -54,32 +47,24 @@ export function DayCard({ day, onClick }: DayCardProps) {
           : undefined
       }
     >
-      {/* Day abbreviation — fixed width */}
+      {/* Position number — fixed width */}
       <div className="w-10 shrink-0">
-        <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-          {dayOfWeek.slice(0, 3)}
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 font-medium">
+          Day
         </p>
-        <p className="text-[10px] tabular-nums text-muted-foreground/60">
-          {format(date, 'M/d')}
+        <p className="text-sm font-bold tabular-nums leading-none">
+          {orderIndex}
         </p>
       </div>
 
       {/* Middle — workout info */}
       <div className="flex-1 min-w-0">
-        {isRest ? (
-          <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">
-            Rest
-          </p>
-        ) : (
-          <>
-            <p className="text-sm font-bold truncate tracking-tight">
-              {workoutDay?.name || 'Workout'}
-            </p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
-              {exerciseCount} exercises
-            </p>
-          </>
-        )}
+        <p className="text-sm font-bold truncate tracking-tight">
+          {workoutDay?.name || 'Workout'}
+        </p>
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+          {exerciseCount} exercises
+        </p>
       </div>
 
       {/* Right — status indicator */}
@@ -88,12 +73,8 @@ export function DayCard({ day, onClick }: DayCardProps) {
           <div className="w-6 h-6 rounded-full bg-success/15 flex items-center justify-center">
             <Check className="w-3.5 h-3.5 text-success stroke-[3]" />
           </div>
-        ) : isToday ? (
+        ) : isCurrent ? (
           <span className="w-2 h-2 rounded-full bg-info block" />
-        ) : isMissed ? (
-          <span className="text-[10px] uppercase tracking-wide text-muted-foreground font-medium">
-            Missed
-          </span>
         ) : null}
       </div>
     </div>

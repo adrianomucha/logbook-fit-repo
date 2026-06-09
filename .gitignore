@@ -40,3 +40,4 @@ tsconfig.tsbuildinfo
 .windsurf/
 skills-lock.json
 tmp/
+.env*.local

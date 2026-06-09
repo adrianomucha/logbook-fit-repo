@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { Check, Minus } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Client, WorkoutPlan, WorkoutCompletion } from '@/types';
 import {
@@ -29,7 +29,7 @@ export function WeeklyStrip({ client, plan, planStartDate, workoutCompletions }:
 
     if (!currentWeek) return [];
 
-    return getWeekDays(planStartDate, currentWeek, workoutCompletions, client.id);
+    return getWeekDays(currentWeek, workoutCompletions, client.id);
   }, [plan, planStartDate, workoutCompletions, client.id]);
 
   const progress = useMemo(() => getWeekProgress(weekDays), [weekDays]);
@@ -55,10 +55,10 @@ export function WeeklyStrip({ client, plan, planStartDate, workoutCompletions }:
         <CardTitle className="text-base">This Week</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* 7-day strip */}
-        <div className="grid grid-cols-7 gap-1">
+        {/* Sequential workout list */}
+        <div className="divide-y divide-border/40">
           {weekDays.map((day) => (
-            <DayCell key={day.date.toISOString()} day={day} completions={workoutCompletions} />
+            <DayRow key={day.workoutDay.id} day={day} />
           ))}
         </div>
 
@@ -77,61 +77,43 @@ export function WeeklyStrip({ client, plan, planStartDate, workoutCompletions }:
   );
 }
 
-interface DayCellProps {
+interface DayRowProps {
   day: WeekDayInfo;
-  completions: WorkoutCompletion[];
 }
 
-function DayCell({ day, completions }: DayCellProps) {
-  // Get effort rating if completed
+function DayRow({ day }: DayRowProps) {
   const effortRating = day.completion?.effortRating;
+  const isCompleted = day.status === 'COMPLETED';
+  const isCurrent = day.status === 'CURRENT';
+  const exerciseCount = day.workoutDay?.exercises?.length || 0;
 
   return (
-    <div className="flex flex-col items-center gap-1">
-      {/* Day label */}
-      <span className="text-xs text-muted-foreground">{day.dayOfWeek}</span>
+    <div
+      className={cn(
+        'flex items-center gap-3 py-2.5',
+        isCompleted && 'opacity-80'
+      )}
+    >
+      {/* Position number */}
+      <span className="w-6 shrink-0 text-sm font-bold tabular-nums text-muted-foreground">
+        {day.orderIndex}
+      </span>
 
-      {/* Status indicator */}
-      <div className="relative">
-        {day.status === 'COMPLETED' && (
-          <div className="w-8 h-8 rounded-full bg-success flex items-center justify-center">
-            <Check className="w-4 h-4 text-success-foreground" />
-          </div>
-        )}
-
-        {day.status === 'TODAY' && (
-          <div
-            className={cn(
-              'w-8 h-8 rounded-full border-2 border-info flex items-center justify-center',
-              'animate-pulse bg-info/10'
-            )}
-          >
-            <div className="w-2 h-2 rounded-full bg-info" />
-          </div>
-        )}
-
-        {day.status === 'MISSED' && (
-          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-            <Minus className="w-4 h-4 text-muted-foreground" />
-          </div>
-        )}
-
-        {day.status === 'UPCOMING' && (
-          <div className="w-8 h-8 rounded-full border border-muted-foreground/30 opacity-40" />
-        )}
-
-        {day.status === 'REST' && (
-          <div className="w-8 h-8 flex items-center justify-center">
-            <div className="w-6 border-b border-dashed border-muted-foreground/50" />
-          </div>
-        )}
+      {/* Workout name */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium truncate">
+          {day.workoutDay?.name || 'Workout'}
+        </p>
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums">
+          {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
+        </p>
       </div>
 
-      {/* Effort dot (only for completed days with effort rating) */}
-      {day.status === 'COMPLETED' && effortRating && (
-        <div
+      {/* Effort dot (completed with rating) */}
+      {isCompleted && effortRating && (
+        <span
           className={cn(
-            'w-2 h-2 rounded-full',
+            'w-2 h-2 rounded-full shrink-0',
             effortRating === 'EASY' && 'bg-success',
             effortRating === 'MEDIUM' && 'bg-warning',
             effortRating === 'HARD' && 'bg-destructive'
@@ -140,8 +122,20 @@ function DayCell({ day, completions }: DayCellProps) {
         />
       )}
 
-      {/* Spacer for days without effort dot to maintain alignment */}
-      {(day.status !== 'COMPLETED' || !effortRating) && <div className="h-2" />}
+      {/* Status indicator */}
+      <div className="shrink-0">
+        {isCompleted ? (
+          <div className="w-6 h-6 rounded-full bg-success flex items-center justify-center">
+            <Check className="w-3.5 h-3.5 text-success-foreground" />
+          </div>
+        ) : isCurrent ? (
+          <span className="text-[10px] uppercase tracking-wide text-info font-bold">
+            Up next
+          </span>
+        ) : (
+          <div className="w-6 h-6 rounded-full border border-muted-foreground/25" />
+        )}
+      </div>
     </div>
   );
 }
