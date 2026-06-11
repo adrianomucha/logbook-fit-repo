@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount } from '@/hooks/api/useWorkoutExecution';
+import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount, isExerciseComplete } from '@/hooks/api/useWorkoutExecution';
 import { RotateCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
@@ -14,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Dumbbell, Clock, Loader2 } from 'lucide-react';
+import { CheckCircle2, Dumbbell, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function ClientWorkoutExecution() {
@@ -34,6 +34,7 @@ export function ClientWorkoutExecution() {
     startWorkout,
     restartWorkout,
     toggleSet,
+    updateSet,
     toggleFlag,
     updateFlagNote,
     finishWorkout,
@@ -82,19 +83,44 @@ export function ClientWorkoutExecution() {
     };
   }, []);
 
-  // Handle set toggle with auto-advance
-  const handleToggleSet = useCallback(
-    (workoutExerciseId: string, setNumber: number) => {
-      toggleSet(workoutExerciseId, setNumber);
+  // Auto-advance: when the currently-expanded exercise becomes fully complete,
+  // collapse it and jump to the next incomplete exercise (scrolling it into view).
+  const completeIdsRef = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (isReadOnly || exercises.length === 0) return;
 
-      // Auto-advance to next incomplete exercise after a brief delay
-      setTimeout(() => {
-        // We can't read the updated data directly due to closure,
-        // but the optimistic update will trigger a re-render
-      }, 100);
-    },
-    [toggleSet]
-  );
+    const nowComplete = new Set(
+      exercises.filter(isExerciseComplete).map((e) => e.workoutExerciseId)
+    );
+
+    // Seed on first run so pre-completed exercises don't trigger a jump on load.
+    if (completeIdsRef.current === null) {
+      completeIdsRef.current = nowComplete;
+      return;
+    }
+
+    const prev = completeIdsRef.current;
+    completeIdsRef.current = nowComplete;
+
+    // Only react when the exercise the user is looking at just got completed.
+    if (
+      expandedExerciseId &&
+      nowComplete.has(expandedExerciseId) &&
+      !prev.has(expandedExerciseId)
+    ) {
+      const next = exercises.find((e) => !isExerciseComplete(e));
+      if (next) {
+        setExpandedExerciseId(next.workoutExerciseId);
+        requestAnimationFrame(() => {
+          document
+            .getElementById(`exercise-${next.workoutExerciseId}`)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      } else {
+        setExpandedExerciseId(null);
+      }
+    }
+  }, [exercises, expandedExerciseId, isReadOnly]);
 
   // Handle message coach (open sheet)
   const handleMessageCoach = useCallback(
@@ -432,7 +458,7 @@ export function ClientWorkoutExecution() {
   }
 
   return (
-    <div className="min-h-screen bg-muted/30 flex flex-col">
+    <div className="min-h-screen bg-background">
       {/* Sticky header */}
       <WorkoutHeader
         workoutName={day.name ?? 'Workout'}
@@ -448,41 +474,33 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list — single card wrapping all exercises (Figma layout) */}
-      <div className="flex-1 p-3 sm:p-4 max-w-3xl mx-auto w-full">
-        <Card className="shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
-          {/* Card header — workout name + exercise count */}
-          <div className="flex items-baseline justify-between px-4 py-4 sm:px-6 sm:py-5 border-b-2 border-foreground/10">
-            <h2 className="font-heading text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground">
-              {day.name}
-            </h2>
-            <span className="font-heading text-xs font-bold tracking-[0.15em] uppercase text-muted-foreground">
-              {stats.exercisesTotal} exercises
-            </span>
-          </div>
-
-          {/* Card content — flat exercise rows */}
-          <div className="px-4 py-4 sm:p-6 flex flex-col gap-6 sm:gap-8">
-            {exercises.map((exercise, index) => (
-              <ExerciseCard
-                key={exercise.workoutExerciseId}
-                exercise={exercise}
-                exerciseNumber={index + 1}
-                isExpanded={expandedExerciseId === exercise.workoutExerciseId}
-                onToggleExpand={() => handleToggleExpand(exercise.workoutExerciseId)}
-                onToggleSet={handleToggleSet}
-                onToggleFlag={() => toggleFlag(exercise.workoutExerciseId)}
-                onUpdateFlagNote={(note) => updateFlagNote(exercise.workoutExerciseId, note)}
-                onMessageCoach={() => handleMessageCoach(exercise.workoutExerciseId)}
-                isReadOnly={isReadOnly}
-              />
-            ))}
-          </div>
-        </Card>
+      {/* Exercise list — flat rows, no surrounding card frame */}
+      <div
+        className={cn(
+          'px-3 sm:px-4 pt-3 max-w-3xl mx-auto w-full',
+          // Just enough bottom space to clear the fixed finish bar (no big gap)
+          isReadOnly ? 'pb-8' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'
+        )}
+      >
+        <div className="flex flex-col gap-5 sm:gap-7">
+          {exercises.map((exercise, index) => (
+            <ExerciseCard
+              key={exercise.workoutExerciseId}
+              id={`exercise-${exercise.workoutExerciseId}`}
+              exercise={exercise}
+              exerciseNumber={index + 1}
+              isExpanded={expandedExerciseId === exercise.workoutExerciseId}
+              onToggleExpand={() => handleToggleExpand(exercise.workoutExerciseId)}
+              onToggleSet={toggleSet}
+              onUpdateSet={updateSet}
+              onToggleFlag={() => toggleFlag(exercise.workoutExerciseId)}
+              onUpdateFlagNote={(note) => updateFlagNote(exercise.workoutExerciseId, note)}
+              onMessageCoach={() => handleMessageCoach(exercise.workoutExerciseId)}
+              isReadOnly={isReadOnly}
+            />
+          ))}
+        </div>
       </div>
-
-      {/* Spacer so content can scroll above the fixed finish button */}
-      {!isReadOnly && <div className="h-28 flex-shrink-0" />}
 
       {/* Sticky finish button (only for active workouts) */}
       {!isReadOnly && (

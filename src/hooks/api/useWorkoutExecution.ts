@@ -14,7 +14,16 @@ export function useWorkoutExecution(dayId: string | null) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSetsRef = useRef<
-    Map<string, { workoutExerciseId: string; setNumber: number; completed: boolean }>
+    Map<
+      string,
+      {
+        workoutExerciseId: string;
+        setNumber: number;
+        completed: boolean;
+        actualReps?: number;
+        actualWeight?: number;
+      }
+    >
   >(new Map());
 
   const completionId = data?.completion?.id ?? null;
@@ -37,12 +46,66 @@ export function useWorkoutExecution(dayId: string | null) {
     }
   }, [dayId, completionId, mutate]);
 
-  /** Toggle a set — optimistic update + debounced API save */
+  /** Flush pending set changes to the API */
+  const flushSets = useCallback(async () => {
+    if (!completionId || pendingSetsRef.current.size === 0) return;
+
+    const sets = Array.from(pendingSetsRef.current.values());
+    pendingSetsRef.current.clear();
+
+    try {
+      await apiFetch(`/api/client/workout/${completionId}/sets`, {
+        method: 'PUT',
+        body: JSON.stringify({ sets }),
+      });
+    } catch {
+      // On failure, revalidate to get server truth
+      mutate();
+    }
+  }, [completionId, mutate]);
+
+  /**
+   * Queue a set write, merging with any pending write for the same set so a
+   * reps/weight edit and a completion toggle land in one request. Always carries
+   * the latest known `completed` value (the API requires it on every set).
+   */
+  const enqueueSetWrite = useCallback(
+    (
+      workoutExerciseId: string,
+      setNumber: number,
+      patch: { completed?: boolean; actualReps?: number; actualWeight?: number }
+    ) => {
+      const key = `${workoutExerciseId}:${setNumber}`;
+      const existing = pendingSetsRef.current.get(key);
+      const current = data?.exercises
+        .find((e) => e.workoutExerciseId === workoutExerciseId)
+        ?.setCompletions.find((s) => s.setNumber === setNumber);
+
+      pendingSetsRef.current.set(key, {
+        workoutExerciseId,
+        setNumber,
+        completed:
+          patch.completed ?? existing?.completed ?? current?.completed ?? false,
+        actualReps:
+          patch.actualReps ?? existing?.actualReps ?? current?.actualReps ?? undefined,
+        actualWeight:
+          patch.actualWeight ??
+          existing?.actualWeight ??
+          current?.actualWeight ??
+          undefined,
+      });
+
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      debounceRef.current = setTimeout(() => flushSets(), 500);
+    },
+    [data, flushSets]
+  );
+
+  /** Toggle a set's completion — optimistic update + debounced API save */
   const toggleSet = useCallback(
     (workoutExerciseId: string, setNumber: number) => {
       if (!completionId || isReadOnly || !data) return;
 
-      // Compute the new completed state
       const exercise = data.exercises.find(
         (e) => e.workoutExerciseId === workoutExerciseId
       );
@@ -53,7 +116,6 @@ export function useWorkoutExecution(dayId: string | null) {
       );
       const newCompleted = !(existingSet?.completed ?? false);
 
-      // Optimistic update
       mutate(
         (prev) => {
           if (!prev) return prev;
@@ -75,40 +137,43 @@ export function useWorkoutExecution(dayId: string | null) {
         { revalidate: false }
       );
 
-      // Queue for batch save
-      const key = `${workoutExerciseId}:${setNumber}`;
-      pendingSetsRef.current.set(key, {
-        workoutExerciseId,
-        setNumber,
-        completed: newCompleted,
-      });
-
-      // Debounce the API call
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-      debounceRef.current = setTimeout(() => {
-        flushSets();
-      }, 500);
+      enqueueSetWrite(workoutExerciseId, setNumber, { completed: newCompleted });
     },
-    [completionId, isReadOnly, data, mutate]
+    [completionId, isReadOnly, data, mutate, enqueueSetWrite]
   );
 
-  /** Flush pending set changes to the API */
-  const flushSets = useCallback(async () => {
-    if (!completionId || pendingSetsRef.current.size === 0) return;
+  /** Update a set's logged reps and/or weight — optimistic update + debounced save */
+  const updateSet = useCallback(
+    (
+      workoutExerciseId: string,
+      setNumber: number,
+      patch: { actualReps?: number; actualWeight?: number }
+    ) => {
+      if (!completionId || isReadOnly || !data) return;
 
-    const sets = Array.from(pendingSetsRef.current.values());
-    pendingSetsRef.current.clear();
+      mutate(
+        (prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            exercises: prev.exercises.map((ex) => {
+              if (ex.workoutExerciseId !== workoutExerciseId) return ex;
+              return {
+                ...ex,
+                setCompletions: ex.setCompletions.map((sc) =>
+                  sc.setNumber === setNumber ? { ...sc, ...patch } : sc
+                ),
+              };
+            }),
+          };
+        },
+        { revalidate: false }
+      );
 
-    try {
-      await apiFetch(`/api/client/workout/${completionId}/sets`, {
-        method: 'PUT',
-        body: JSON.stringify({ sets }),
-      });
-    } catch {
-      // On failure, revalidate to get server truth
-      mutate();
-    }
-  }, [completionId, mutate]);
+      enqueueSetWrite(workoutExerciseId, setNumber, patch);
+    },
+    [completionId, isReadOnly, data, mutate, enqueueSetWrite]
+  );
 
   /** Flag/update an exercise */
   const flagExercise = useCallback(
@@ -273,6 +338,7 @@ export function useWorkoutExecution(dayId: string | null) {
     startWorkout,
     restartWorkout,
     toggleSet,
+    updateSet,
     toggleFlag,
     updateFlagNote,
     finishWorkout,
@@ -283,7 +349,7 @@ export function useWorkoutExecution(dayId: string | null) {
 
 /** Compute exercisesDone / exercisesTotal from the exercise list */
 function getCompletionStats(exercises: WorkoutExercise[]) {
-  let exercisesTotal = exercises.length;
+  const exercisesTotal = exercises.length;
   let exercisesDone = 0;
 
   for (const ex of exercises) {

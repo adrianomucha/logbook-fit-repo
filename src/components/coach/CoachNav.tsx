@@ -2,6 +2,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
+import { SwitchAccountButton } from '@/components/SwitchAccountButton';
 import { Home, Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -66,49 +67,53 @@ export function CoachNav({
           </span>
         </button>
 
-        {/* Desktop navigation tabs — hidden on mobile */}
-        <nav className="hidden sm:flex gap-1" aria-label="Main navigation">
-          <Button
-            variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
-            onClick={() => handleTabClick('dashboard')}
-            size="sm"
-            aria-current={activeTab === 'dashboard' ? 'page' : undefined}
-          >
-            <Home className="w-4 h-4 mr-2" />
-            Dashboard
-          </Button>
+        {/* Right side — desktop tabs (hidden on mobile) + switch account */}
+        <div className="flex items-center gap-1">
+          <nav className="hidden sm:flex gap-1" aria-label="Main navigation">
+            <Button
+              variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
+              onClick={() => handleTabClick('dashboard')}
+              size="sm"
+              aria-current={activeTab === 'dashboard' ? 'page' : undefined}
+            >
+              <Home className="w-4 h-4 mr-2" />
+              Dashboard
+            </Button>
 
-          <Button
-            variant={activeTab === 'clients' ? 'default' : 'ghost'}
-            onClick={() => handleTabClick('clients')}
-            size="sm"
-            aria-current={activeTab === 'clients' ? 'page' : undefined}
-          >
-            <Users className="w-4 h-4 mr-2" />
-            Clients
-            {unreadCount > 0 && (
-              <Badge
-                variant="destructive"
-                className={cn(
-                  'ml-1 px-1.5 py-0 h-5 text-xs',
-                  activeTab === 'clients' && 'bg-white text-primary'
-                )}
-              >
-                {unreadCount}
-              </Badge>
-            )}
-          </Button>
+            <Button
+              variant={activeTab === 'clients' ? 'default' : 'ghost'}
+              onClick={() => handleTabClick('clients')}
+              size="sm"
+              aria-current={activeTab === 'clients' ? 'page' : undefined}
+            >
+              <Users className="w-4 h-4 mr-2" />
+              Clients
+              {unreadCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className={cn(
+                    'ml-1 px-1.5 py-0 h-5 text-xs',
+                    activeTab === 'clients' && 'bg-white text-primary'
+                  )}
+                >
+                  {unreadCount}
+                </Badge>
+              )}
+            </Button>
 
-          <Button
-            variant={activeTab === 'plans' ? 'default' : 'ghost'}
-            onClick={() => handleTabClick('plans')}
-            size="sm"
-            aria-current={activeTab === 'plans' ? 'page' : undefined}
-          >
-            <Dumbbell className="w-4 h-4 mr-2" />
-            Plans
-          </Button>
-        </nav>
+            <Button
+              variant={activeTab === 'plans' ? 'default' : 'ghost'}
+              onClick={() => handleTabClick('plans')}
+              size="sm"
+              aria-current={activeTab === 'plans' ? 'page' : undefined}
+            >
+              <Dumbbell className="w-4 h-4 mr-2" />
+              Plans
+            </Button>
+          </nav>
+
+          <SwitchAccountButton className="sm:ml-1" />
+        </div>
       </div>
 
       {/* Mobile bottom navigation */}

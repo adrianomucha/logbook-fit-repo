@@ -15,10 +15,17 @@ interface ExerciseCardProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   onToggleSet: (workoutExerciseId: string, setNumber: number) => void;
+  onUpdateSet?: (
+    workoutExerciseId: string,
+    setNumber: number,
+    patch: { actualReps?: number; actualWeight?: number }
+  ) => void;
   onToggleFlag?: () => void;
   onUpdateFlagNote?: (note: string) => void;
   onMessageCoach?: () => void;
   isReadOnly?: boolean;
+  /** DOM id on the root, used to scroll this exercise into view on auto-advance */
+  id?: string;
 }
 
 export function ExerciseCard({
@@ -27,10 +34,12 @@ export function ExerciseCard({
   isExpanded,
   onToggleExpand,
   onToggleSet,
+  onUpdateSet,
   onToggleFlag,
   onUpdateFlagNote,
   onMessageCoach,
   isReadOnly = false,
+  id,
 }: ExerciseCardProps) {
   const isComplete = isExerciseComplete(exercise);
   const completedSets = getCompletedSetsCount(exercise);
@@ -66,7 +75,7 @@ export function ExerciseCard({
   };
 
   return (
-    <div>
+    <div id={id} style={{ scrollMarginTop: '80px' }}>
       {/* ── Exercise row ── */}
       <button
         type="button"
@@ -226,22 +235,37 @@ export function ExerciseCard({
 
           {/* Set rows */}
           <div>
-            {setRows.map((setNumber, idx) => (
-              <SetRow
-                key={setNumber}
-                setNumber={setNumber}
-                reps={exercise.reps ?? undefined}
-                weight={exercise.weight ?? undefined}
-                completed={isSetCompleted(
-                  exercise.setCompletions,
-                  setNumber
-                )}
-                onToggle={() =>
-                  onToggleSet(exercise.workoutExerciseId, setNumber)
-                }
-                showDivider={idx > 0}
-              />
-            ))}
+            {setRows.map((setNumber, idx) => {
+              const sc = exercise.setCompletions.find(
+                (s) => s.setNumber === setNumber
+              );
+              return (
+                <SetRow
+                  key={setNumber}
+                  setNumber={setNumber}
+                  repsTarget={exercise.reps ?? undefined}
+                  weightTarget={exercise.weight ?? undefined}
+                  actualReps={sc?.actualReps ?? null}
+                  actualWeight={sc?.actualWeight ?? null}
+                  completed={!!sc?.completed}
+                  onToggle={() =>
+                    onToggleSet(exercise.workoutExerciseId, setNumber)
+                  }
+                  onChangeReps={(reps) =>
+                    onUpdateSet?.(exercise.workoutExerciseId, setNumber, {
+                      actualReps: reps,
+                    })
+                  }
+                  onChangeWeight={(weight) =>
+                    onUpdateSet?.(exercise.workoutExerciseId, setNumber, {
+                      actualWeight: weight,
+                    })
+                  }
+                  isReadOnly={isReadOnly}
+                  showDivider={idx > 0}
+                />
+              );
+            })}
           </div>
         </div>
       )}

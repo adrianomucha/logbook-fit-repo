@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { IBM_Plex_Mono } from 'next/font/google';
 import { SessionProvider } from '@/providers/SessionProvider';
 import { SWRProvider } from '@/providers/SWRProvider';
-import { LogoutButton } from '@/components/LogoutButton';
 import { ScrollToTop } from '@/components/ScrollToTop';
 import '@/app/globals.css';
 
@@ -25,7 +24,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <SWRProvider>
               <ScrollToTop />
               {children}
-              <LogoutButton />
           </SWRProvider>
         </SessionProvider>
       </body>
