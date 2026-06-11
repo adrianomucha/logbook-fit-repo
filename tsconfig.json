@@ -37,8 +37,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "next-env.d.ts",
-    "/tmp/logbook-next/types/**/*.ts"
+    "tmp/logbook-next.nosync/types/**/*.ts",
+    "next-env.d.ts"
   ],
   "exclude": [
     "node_modules",
