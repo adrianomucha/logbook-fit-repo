@@ -49,9 +49,10 @@ export const PUT = withCoach(
     }
 
     const body = await req.json();
-    const { sets, reps, weight, restSeconds, coachNotes, orderIndex } = body as {
+    const { sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex } = body as {
       sets?: number;
       reps?: number;
+      repsMax?: number | null;
       weight?: number;
       restSeconds?: number;
       coachNotes?: string;
@@ -63,6 +64,7 @@ export const PUT = withCoach(
       data: {
         ...(sets !== undefined ? { sets } : {}),
         ...(reps !== undefined ? { reps } : {}),
+        ...(repsMax !== undefined ? { repsMax } : {}),
         ...(weight !== undefined ? { weight } : {}),
         ...(restSeconds !== undefined ? { restSeconds } : {}),
         ...(coachNotes !== undefined ? { coachNotes } : {}),

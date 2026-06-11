@@ -15,6 +15,7 @@ import type {
   ApiMessage,
 } from '@/types/api';
 import type { PlanDetail } from '@/hooks/api/usePlanDetail';
+import { formatReps } from '@/lib/reps';
 
 // ---------------------------------------------------------------------------
 // Plan adapters
@@ -45,7 +46,7 @@ export function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
                 name: e.exercise.name,
                 category: e.exercise.category ?? undefined,
                 sets: e.sets,
-                reps: e.reps ?? undefined,
+                reps: formatReps(e.reps, e.repsMax),
                 weight: e.weight ?? undefined,
                 notes: e.coachNotes ?? undefined,
               }),

@@ -33,10 +33,11 @@ export const POST = withCoach(
     }
 
     const body = await req.json();
-    const { exerciseId, sets, reps, weight, restSeconds, coachNotes, orderIndex } = body as {
+    const { exerciseId, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex } = body as {
       exerciseId?: string;
       sets?: number;
       reps?: number;
+      repsMax?: number | null;
       weight?: number;
       restSeconds?: number;
       coachNotes?: string;
@@ -79,6 +80,7 @@ export const POST = withCoach(
         orderIndex: idx,
         sets: sets ?? exercise.defaultSets ?? 3,
         reps: reps ?? exercise.defaultReps ?? 10,
+        repsMax: repsMax ?? null,
         weight: weight ?? exercise.defaultWeight,
         restSeconds: restSeconds ?? exercise.defaultRest,
         coachNotes,

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
+import { parseRepsInput } from '@/lib/reps';
 import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseEditorContent } from './ExerciseEditorDrawer';
@@ -147,6 +148,9 @@ export function PlanEditorDrawer({
     const dayId = currentDay.id;
     setIsSaving(true);
 
+    // Parse the reps string ("6-8", "8") into a stored min + optional max.
+    const { reps, repsMax } = parseRepsInput(exercise.reps);
+
     try {
       if (editingExerciseIndex !== null) {
         // Update existing workout exercise
@@ -155,7 +159,8 @@ export function PlanEditorDrawer({
           method: 'PUT',
           body: JSON.stringify({
             sets: exercise.sets,
-            reps: parseInt(exercise.reps || '0') || null,
+            reps: reps ?? undefined,
+            repsMax,
             weight: exercise.weight ? parseFloat(exercise.weight) : null,
             restSeconds: exercise.restSeconds || null,
             coachNotes: exercise.notes || null,
@@ -187,7 +192,8 @@ export function PlanEditorDrawer({
           body: JSON.stringify({
             exerciseId: libraryExerciseId,
             sets: exercise.sets,
-            reps: parseInt(exercise.reps || '0') || undefined,
+            reps: reps ?? undefined,
+            repsMax: repsMax ?? undefined,
             weight: exercise.weight ? parseFloat(exercise.weight) : undefined,
             restSeconds: exercise.restSeconds || undefined,
             coachNotes: exercise.notes || undefined,

@@ -267,7 +267,8 @@ model WorkoutExercise {
   exerciseId  String
   orderIndex  Int     // Sort order within the day — unique per day
   sets        Int     @default(3)
-  reps        Int     @default(10)
+  reps        Int     @default(10) // Lower bound of the prescribed rep range (or the exact count)
+  repsMax     Int?    // Upper bound when the coach prescribes a range, e.g. 6-8 → reps=6, repsMax=8
   weight      Float?  // kg or lbs (user preference)
   restSeconds Int?    // Rest between sets
   coachNotes  String? // Per-workout coaching notes

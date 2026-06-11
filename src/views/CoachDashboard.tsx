@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlanSetupFormData } from '@/types';
+import { formatReps } from '@/lib/reps';
 import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip';
 import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
@@ -67,7 +68,7 @@ function planDetailToWorkoutPlan(p: PlanDetail): WorkoutPlan {
           id: e.id,
           name: e.exercise.name,
           sets: e.sets,
-          reps: e.reps ?? undefined,
+          reps: formatReps(e.reps, e.repsMax),
           weight: e.weight ?? undefined,
           notes: e.coachNotes ?? undefined,
         })),

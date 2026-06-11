@@ -25,7 +25,8 @@ export interface PlanDetail {
         id: string;
         orderIndex: number;
         sets: number;
-        reps: string | null;
+        reps: number;
+        repsMax: number | null;
         weight: string | null;
         restSeconds: number | null;
         coachNotes: string | null;

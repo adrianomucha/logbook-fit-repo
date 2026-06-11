@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
+import { formatReps } from "@/lib/reps";
 import { Session } from "next-auth";
 
 /**
@@ -81,7 +82,7 @@ export const GET = withClient(
         workoutExerciseId: we.id,
         orderIndex: we.orderIndex,
         sets: we.sets,
-        reps: we.reps,
+        reps: formatReps(we.reps, we.repsMax),
         weight: we.weight,
         restSeconds: we.restSeconds,
         coachNotes: we.coachNotes,
