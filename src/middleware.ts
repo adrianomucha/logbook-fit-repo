@@ -14,12 +14,13 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // Role-based route protection
-  if (path.startsWith("/coach") && token.role !== "coach") {
+  // Role-based route protection. Roles are stored uppercase (UserRole enum:
+  // COACH/CLIENT) everywhere — see prisma schema, seed.ts, and withAuth.ts.
+  if (path.startsWith("/coach") && token.role !== "COACH") {
     return NextResponse.redirect(new URL("/client", request.url));
   }
 
-  if (path.startsWith("/client") && token.role !== "client") {
+  if (path.startsWith("/client") && token.role !== "CLIENT") {
     return NextResponse.redirect(new URL("/coach", request.url));
   }
 

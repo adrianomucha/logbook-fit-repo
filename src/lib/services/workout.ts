@@ -395,27 +395,31 @@ class WorkoutServiceImpl {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const recentCompletions = await this.db.workoutCompletion.findMany({
+    // History/streak look-back window. The streak loop only scans 365 days, and
+    // the progress UI only renders the active plan's history, so we bound the row
+    // transfer to one year instead of pulling the client's full lifetime on every
+    // load. All-time totals below still come from the database.
+    const oneYearAgo = new Date();
+    oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+
+    // All-time totals computed in the database (index: [clientId, status]) so we
+    // never load every completion row into memory just to count and average them.
+    const agg = await this.db.workoutCompletion.aggregate({
+      where: { clientId, status: "COMPLETED" },
+      _count: { _all: true },
+      _avg: { completionPct: true },
+    });
+    const totalWorkouts = agg._count._all;
+    const avgCompletionPct = agg._avg.completionPct ?? 0;
+
+    // One bounded read (index: [clientId, completedAt]) feeds the history list,
+    // the last-7-days slice, and the streak — no second full-table scan.
+    const windowRaw = await this.db.workoutCompletion.findMany({
       where: {
         clientId,
         status: "COMPLETED",
-        completedAt: { gte: sevenDaysAgo },
+        completedAt: { gte: oneYearAgo },
       },
-      orderBy: { completedAt: "desc" },
-      select: {
-        id: true,
-        completedAt: true,
-        completionPct: true,
-        exercisesDone: true,
-        exercisesTotal: true,
-        durationSec: true,
-        effortRating: true,
-        day: { select: { name: true, orderIndex: true } },
-      },
-    });
-
-    const allRaw = await this.db.workoutCompletion.findMany({
-      where: { clientId, status: "COMPLETED" },
       orderBy: { completedAt: "desc" },
       select: {
         id: true,
@@ -433,20 +437,26 @@ class WorkoutServiceImpl {
       },
     });
 
-    const totalWorkouts = allRaw.length;
-    const avgCompletionPct =
-      allRaw.length > 0
-        ? allRaw.reduce((sum, c) => sum + (c.completionPct ?? 0), 0) /
-          allRaw.length
-        : 0;
-
     const streak = this.calculateStreak(
-      allRaw
+      windowRaw
         .map((c) => c.completedAt)
         .filter((d): d is Date => d !== null),
     );
 
-    const allCompletions = allRaw.map((c) => ({
+    const recentCompletions = windowRaw
+      .filter((c) => c.completedAt !== null && c.completedAt >= sevenDaysAgo)
+      .map((c) => ({
+        id: c.id,
+        completedAt: c.completedAt,
+        completionPct: c.completionPct,
+        exercisesDone: c.exercisesDone,
+        exercisesTotal: c.exercisesTotal,
+        durationSec: c.durationSec,
+        effortRating: c.effortRating,
+        day: c.day ? { name: c.day.name, orderIndex: c.day.orderIndex } : null,
+      }));
+
+    const allCompletions = windowRaw.map((c) => ({
       id: c.id,
       clientId,
       planId: c.planId,
