@@ -101,20 +101,20 @@ export function SetRow({
   return (
     <div
       className={cn(
-        'flex items-center gap-2.5 py-2.5',
+        'flex items-center gap-3 py-2.5',
         showDivider && 'border-t border-border/40'
       )}
     >
       <span
         className={cn(
-          'font-bold text-sm tabular-nums w-11 flex-shrink-0 transition-colors',
-          completed ? 'text-foreground/30' : 'text-foreground'
+          'text-[11px] font-bold uppercase tracking-[0.12em] flex-shrink-0 transition-colors',
+          completed ? 'text-muted-foreground/40' : 'text-muted-foreground'
         )}
       >
         Set {setNumber}
       </span>
 
-      <div className="flex-1 flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         <Field
           label="reps"
           value={reps}
@@ -175,11 +175,11 @@ function Field({
   return (
     <label
       className={cn(
-        'flex items-center gap-1 rounded-md border bg-background px-2 py-1.5 transition-colors',
+        'flex items-baseline gap-1.5 rounded-lg px-2.5 py-1.5 transition-all',
         disabled && 'pointer-events-none',
         completed
-          ? 'border-border/40 opacity-60'
-          : 'border-border focus-within:border-foreground/40'
+          ? 'bg-muted/30'
+          : 'bg-muted/60 focus-within:bg-background focus-within:ring-1 focus-within:ring-foreground/15'
       )}
     >
       <input
@@ -189,9 +189,13 @@ function Field({
         placeholder={placeholder}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="w-9 bg-transparent text-sm font-semibold tabular-nums text-foreground outline-none placeholder:text-muted-foreground/40 disabled:opacity-100"
+        className={cn(
+          // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
+          'w-9 bg-transparent text-base sm:text-sm font-bold tabular-nums text-right outline-none placeholder:font-semibold placeholder:text-muted-foreground/40 disabled:opacity-100',
+          completed ? 'text-muted-foreground/50' : 'text-foreground'
+        )}
       />
-      <span className="text-[10px] uppercase tracking-wider text-muted-foreground/60">
+      <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60">
         {label}
       </span>
     </label>
