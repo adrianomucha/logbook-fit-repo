@@ -162,7 +162,7 @@ export function InlinePlanEditor({
                   }}
                   className={cn(
                     'shrink-0 px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium min-h-[44px] sm:min-h-0 flex items-center antialiased',
-                    'transition-all duration-150 active:scale-[0.95]',
+                    'transition-[background-color,color,transform] duration-150 active:scale-[0.95]',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                     isSelected
                       ? 'bg-foreground text-background shadow-sm'

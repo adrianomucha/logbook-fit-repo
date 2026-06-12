@@ -140,7 +140,7 @@ export function InteractiveWeeklyStrip({
             <div
               key={day.orderIndex}
               className={cn(
-                'flex-1 h-4 rounded-full transition-all duration-500 ease-out',
+                'flex-1 h-4 rounded-full transition-[transform,background-color] duration-500 ease-out',
                 day.status === 'COMPLETED'
                   ? 'bg-success'
                   : 'bg-success/15'
@@ -159,8 +159,8 @@ export function InteractiveWeeklyStrip({
           <span className="text-3xl sm:text-4xl font-black tabular-nums tracking-tight">
             {progress.completed}
           </span>
-          <span className="text-muted-foreground/40 mx-0.5">/</span>
-          <span className="text-lg font-bold tabular-nums text-muted-foreground/60">
+          <span className="text-muted-foreground mx-0.5">/</span>
+          <span className="text-lg font-bold tabular-nums text-muted-foreground">
             {progress.total}
           </span>
           <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium ml-2">
@@ -235,9 +235,9 @@ export function InteractiveWeeklyStrip({
                           <span
                             className={cn(
                               'font-semibold',
-                              dayCompletion.effortRating === 'EASY' && 'text-emerald-500',
-                              dayCompletion.effortRating === 'MEDIUM' && 'text-amber-500',
-                              dayCompletion.effortRating === 'HARD' && 'text-red-400'
+                              dayCompletion.effortRating === 'EASY' && 'text-success',
+                              dayCompletion.effortRating === 'MEDIUM' && 'text-warning',
+                              dayCompletion.effortRating === 'HARD' && 'text-destructive'
                             )}
                           >
                             {dayCompletion.effortRating.toLowerCase()}
@@ -254,7 +254,7 @@ export function InteractiveWeeklyStrip({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs text-muted-foreground hover:text-foreground active:scale-[0.96] transition-all duration-150"
+                        className="h-7 text-xs text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] duration-150 tap-target"
                         onClick={editHandler}
                       >
                         <Edit2 className="w-3 h-3 mr-1" />
@@ -305,7 +305,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       onClick={onClick}
       disabled={!isClickable}
       className={cn(
-        'flex items-center gap-3 px-3 py-3 w-full text-left transition-all duration-150 min-h-[52px]',
+        'flex items-center gap-3 px-3 py-3 w-full text-left transition-[background-color,transform] duration-150 min-h-[52px]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         isCurrent && 'bg-foreground/[0.03]',
         isClickable && 'hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] cursor-pointer',
@@ -315,8 +315,8 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       {/* Expand chevron */}
       <svg
         className={cn(
-          'w-3.5 h-3.5 text-muted-foreground/40 shrink-0 transition-transform duration-200',
-          isExpanded && 'rotate-90 text-muted-foreground'
+          'w-3.5 h-3.5 text-muted-foreground shrink-0 transition-transform duration-200',
+          isExpanded && 'rotate-90 text-foreground'
         )}
         fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
       >
@@ -325,7 +325,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
 
       {/* Position number */}
       <div className="w-10 shrink-0">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 font-medium antialiased">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
           Day
         </p>
         <p className={cn(
@@ -344,7 +344,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
         )}>
           {day.workoutDay?.name || 'Workout'}
         </p>
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 font-medium tabular-nums antialiased">
+        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased">
           {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
         </p>
       </div>
@@ -352,7 +352,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       {/* Status indicator */}
       <div className="shrink-0 flex items-center">
         {isCompleted && (
-          <svg className="w-5 h-5 text-emerald-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+          <svg className="w-5 h-5 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}

@@ -25,7 +25,7 @@ export function ExerciseCard({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left px-4 py-3.5 transition-all group',
+        'w-full text-left px-4 py-3.5 transition-[background-color,transform] group',
         'hover:bg-muted/60',
         'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         'active:bg-muted/80 active:scale-[0.99]'
@@ -33,7 +33,7 @@ export function ExerciseCard({
     >
       <div className="flex items-center gap-3">
         {/* Exercise number — bold counter */}
-        <span className="text-[11px] font-black text-muted-foreground/40 w-5 shrink-0 tabular-nums select-none">
+        <span className="text-[11px] font-black text-muted-foreground w-5 shrink-0 tabular-nums select-none">
           {String(exerciseIndex + 1).padStart(2, '0')}
         </span>
 

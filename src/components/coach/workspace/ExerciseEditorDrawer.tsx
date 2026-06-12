@@ -160,7 +160,7 @@ export function ExerciseEditorContent({
         <div className="mt-3 flex gap-1.5">
           <button
             className={cn(
-              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-all flex items-center justify-center gap-1.5',
+              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-[background-color,color,box-shadow] flex items-center justify-center gap-1.5',
               mode === 'library'
                 ? 'bg-foreground text-background'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -172,7 +172,7 @@ export function ExerciseEditorContent({
           </button>
           <button
             className={cn(
-              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-all flex items-center justify-center gap-1.5',
+              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-[background-color,color,box-shadow] flex items-center justify-center gap-1.5',
               mode === 'custom'
                 ? 'bg-foreground text-background'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'

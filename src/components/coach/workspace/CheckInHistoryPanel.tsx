@@ -86,7 +86,7 @@ export function CheckInHistoryPanel({
         <div className="text-center py-8 space-y-1.5">
           <div className="text-3xl select-none mb-2">💬</div>
           <p className="text-sm font-medium antialiased">No check-ins yet</p>
-          <p className="text-xs text-muted-foreground/60 antialiased">
+          <p className="text-xs text-muted-foreground antialiased">
             Completed check-ins with {firstName} will show up here.
           </p>
         </div>
@@ -118,7 +118,7 @@ export function CheckInHistoryPanel({
                 key={checkIn.id}
                 onClick={() => setSelectedCheckIn(checkIn)}
                 aria-label={`View check-in from ${format(checkInDate, 'MMMM d, yyyy')}`}
-                className="w-full text-left p-2.5 flex items-center justify-between gap-2 rounded-lg hover:bg-muted/40 active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="w-full text-left p-2.5 flex items-center justify-between gap-2 rounded-lg hover:bg-muted/40 active:scale-[0.98] transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="flex flex-col min-w-0">

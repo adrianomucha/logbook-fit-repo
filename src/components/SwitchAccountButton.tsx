@@ -13,7 +13,7 @@ export function SwitchAccountButton({ className }: { className?: string }) {
       type="button"
       onClick={() => signOut({ callbackUrl: '/login' })}
       className={cn(
-        'text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60 hover:text-foreground transition-colors px-2 py-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation',
+        'text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation',
         className
       )}
     >

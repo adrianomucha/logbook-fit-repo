@@ -273,13 +273,13 @@ export function InlineCheckInReview({
     return (
       <Wrapper>
         <div className={cn("pb-3", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
-          <div className="text-base font-semibold flex items-center gap-2 antialiased">
+          <h3 className="text-base font-semibold flex items-center gap-2 antialiased">
             <span className="relative flex h-2.5 w-2.5 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
             </span>
             Waiting on {firstName}
-          </div>
+          </h3>
         </div>
         <div className={cn("space-y-4", isFlat ? 'rounded-xl bg-warning/[0.07] p-4' : 'px-3 sm:px-6 pb-6')}>
           {/* Timeline-style status */}
@@ -302,7 +302,7 @@ export function InlineCheckInReview({
                 <p className="text-sm text-muted-foreground antialiased">
                   {firstName} responds
                 </p>
-                <p className="font-prose text-[13px] text-muted-foreground/60 mt-0.5 antialiased">
+                <p className="font-prose text-[13px] text-muted-foreground mt-0.5 antialiased">
                   You&apos;ll review their feedback and reply here.
                 </p>
               </div>
@@ -316,9 +316,9 @@ export function InlineCheckInReview({
               What {firstName} will answer
             </summary>
             <ul className="space-y-0.5 ml-[18px] mt-1.5 antialiased">
-              <li className="flex items-baseline gap-1.5"><span className="text-muted-foreground/40">·</span> How workouts felt</li>
-              <li className="flex items-baseline gap-1.5"><span className="text-muted-foreground/40">·</span> How their body feels</li>
-              <li className="flex items-baseline gap-1.5"><span className="text-muted-foreground/40">·</span> Any notes or concerns</li>
+              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How workouts felt</li>
+              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How their body feels</li>
+              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> Any notes or concerns</li>
             </ul>
           </details>
 
@@ -436,7 +436,7 @@ export function InlineCheckInReview({
             onClick={handleCompleteCheckIn}
             disabled={!coachResponse.trim() || isSubmitting}
             className={cn(
-              "w-full min-h-[48px] text-sm font-semibold transition-all duration-150 active:scale-[0.98]",
+              "w-full min-h-[48px] text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.98]",
               coachResponse.trim()
                 ? 'bg-foreground text-background hover:bg-foreground/90 shadow-sm'
                 : ''

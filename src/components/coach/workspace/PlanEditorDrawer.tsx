@@ -408,7 +408,7 @@ export function PlanEditorDrawer({
                     <div className="relative shrink-0" ref={emojiPickerRef}>
                       <button
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className="text-lg leading-none p-1 -m-1 rounded-md hover:bg-muted active:scale-[0.9] transition-all"
+                        className="text-lg leading-none p-1 -m-1 rounded-md hover:bg-muted active:scale-[0.9] transition-[background-color,transform]"
                         aria-label="Change emoji"
                       >
                         {plan.emoji || '💪'}
@@ -421,7 +421,7 @@ export function PlanEditorDrawer({
                                 key={e}
                                 onClick={() => commitEmoji(e)}
                                 className={cn(
-                                  'w-8 h-8 flex items-center justify-center rounded-md text-sm hover:bg-muted active:scale-[0.85] transition-all',
+                                  'w-8 h-8 flex items-center justify-center rounded-md text-sm hover:bg-muted active:scale-[0.85] transition-[background-color,transform]',
                                   e === plan.emoji && 'bg-muted ring-1 ring-foreground/20'
                                 )}
                               >
@@ -462,7 +462,7 @@ export function PlanEditorDrawer({
                     {/* Close drawer */}
                     <button
                       onClick={() => onOpenChange(false)}
-                      className="text-xs font-bold text-muted-foreground hover:text-foreground active:scale-[0.96] transition-all shrink-0 px-2 py-1 rounded-md hover:bg-muted"
+                      className="text-xs font-bold text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1 rounded-md hover:bg-muted"
                     >
                       Close
                     </button>
@@ -483,7 +483,7 @@ export function PlanEditorDrawer({
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        "h-8 w-8 shrink-0 active:scale-[0.92] transition-all",
+                        "h-8 w-8 shrink-0 active:scale-[0.92] transition-[background-color,color,transform]",
                         selectedWeek === 0 && "opacity-20 pointer-events-none"
                       )}
                       onClick={goToPrevWeek}
@@ -499,7 +499,7 @@ export function PlanEditorDrawer({
                         of {plan.weeks.length}
                       </span>
                       {totalDays > 0 && (
-                        <span className="text-[10px] text-muted-foreground/60 ml-2 tabular-nums">
+                        <span className="text-[10px] text-muted-foreground ml-2 tabular-nums">
                           {daysWithExercises}/{totalDays} ready
                         </span>
                       )}
@@ -508,7 +508,7 @@ export function PlanEditorDrawer({
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        "h-8 w-8 shrink-0 active:scale-[0.92] transition-all",
+                        "h-8 w-8 shrink-0 active:scale-[0.92] transition-[background-color,color,transform]",
                         selectedWeek === plan.weeks.length - 1 && "opacity-20 pointer-events-none"
                       )}
                       onClick={goToNextWeek}
@@ -532,7 +532,7 @@ export function PlanEditorDrawer({
                         key={day.id}
                         onClick={() => setSelectedDayId(day.id)}
                         className={cn(
-                          'flex items-center gap-1.5 px-3.5 py-2.5 sm:px-3 sm:py-2 rounded-xl transition-all whitespace-nowrap min-h-[44px] shrink-0 snap-start',
+                          'flex items-center gap-1.5 px-3.5 py-2.5 sm:px-3 sm:py-2 rounded-xl transition-[background-color,color,border-color,box-shadow] whitespace-nowrap min-h-[44px] shrink-0 snap-start',
                           isActive
                             ? 'bg-foreground text-background scale-[1.02] shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
                             : 'bg-muted/40 hover:bg-muted active:scale-[0.95]'
@@ -643,7 +643,7 @@ export function PlanEditorDrawer({
                       ))}
                       <button
                         onClick={handleAddExercise}
-                        className="w-full px-4 py-3.5 sm:py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 border-t border-dashed group"
+                        className="w-full px-4 py-3.5 sm:py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
                       >
                         <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
                         Add Exercise
@@ -669,7 +669,7 @@ export function PlanEditorDrawer({
             <div className="px-4 py-2 border-b">
               <button
                 onClick={closeExerciseEditor}
-                className="group flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground active:text-foreground active:scale-[0.97] transition-all min-h-[44px] sm:min-h-[36px]"
+                className="group flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground active:text-foreground active:scale-[0.97] transition-[color,transform] min-h-[44px] sm:min-h-[36px]"
               >
                 <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
                 Back to {currentDay?.name || 'workout'}
