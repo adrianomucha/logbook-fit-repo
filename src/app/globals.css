@@ -79,6 +79,20 @@
     display: none;
   }
 
+  /* Expands a control's hit area to ≥44×44px without changing its visual size */
+  .tap-target {
+    position: relative;
+  }
+  .tap-target::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+  }
+
   /* Subtle fade-in + slide-up for content entrance */
   .animate-fade-in-up {
     animation: fadeInUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) both;

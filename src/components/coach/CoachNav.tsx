@@ -74,6 +74,7 @@ export function CoachNav({
               variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
               onClick={() => handleTabClick('dashboard')}
               size="sm"
+              className="tap-target"
               aria-current={activeTab === 'dashboard' ? 'page' : undefined}
             >
               <Home className="w-4 h-4 mr-2" />
@@ -84,6 +85,7 @@ export function CoachNav({
               variant={activeTab === 'clients' ? 'default' : 'ghost'}
               onClick={() => handleTabClick('clients')}
               size="sm"
+              className="tap-target"
               aria-current={activeTab === 'clients' ? 'page' : undefined}
             >
               <Users className="w-4 h-4 mr-2" />
@@ -105,6 +107,7 @@ export function CoachNav({
               variant={activeTab === 'plans' ? 'default' : 'ghost'}
               onClick={() => handleTabClick('plans')}
               size="sm"
+              className="tap-target"
               aria-current={activeTab === 'plans' ? 'page' : undefined}
             >
               <Dumbbell className="w-4 h-4 mr-2" />

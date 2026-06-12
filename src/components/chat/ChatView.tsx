@@ -224,7 +224,7 @@ export function ChatView({
                     <p className="text-sm font-medium antialiased">
                       Start the conversation
                     </p>
-                    <p className="text-xs text-muted-foreground/60 antialiased">
+                    <p className="text-xs text-muted-foreground antialiased">
                       Drop {peerFirst} a note — they&apos;ll see it next time they open the app.
                     </p>
                   </div>
@@ -237,7 +237,7 @@ export function ChatView({
                             setNewMessage(starter);
                             inputRef.current?.focus();
                           }}
-                          className="text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-all duration-150 touch-manipulation min-h-[44px]"
+                          className="text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-[background-color,color,transform] duration-150 touch-manipulation min-h-[44px]"
                         >
                           {starter}
                         </button>
@@ -257,7 +257,7 @@ export function ChatView({
                     {/* Date separator */}
                     {showDateSep && (
                       <div className="flex justify-center py-4">
-                        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/50 font-medium">
+                        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
                           {format(msgDate, 'EEEE, MMM d')}
                         </span>
                       </div>
@@ -307,7 +307,7 @@ export function ChatView({
                     {/* Timestamp — only after last message in a group */}
                     {isLastInGroup && (
                       <p className={cn(
-                        'text-[10px] text-muted-foreground/40 mt-1.5 px-0.5',
+                        'text-[10px] text-muted-foreground mt-1.5 px-0.5',
                         isCurrentUser ? 'text-right' : 'text-left'
                       )}>
                         {format(msgDate, 'h:mm a')}
@@ -326,7 +326,7 @@ export function ChatView({
           <div className="flex justify-center -mt-4 mb-1 relative z-10">
             <button
               onClick={() => scrollToBottom(false)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-foreground text-background text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg hover:bg-foreground/90 transition-all animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-full"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-foreground text-background text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg hover:bg-foreground/90 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-full tap-target"
             >
               <ChevronDown className="w-3 h-3" />
               {unseenCount === 1 ? '1 new' : `${unseenCount} new`}
@@ -349,14 +349,14 @@ export function ChatView({
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="flex-1 bg-transparent font-prose text-[15px] placeholder:font-prose placeholder:text-muted-foreground/40 focus:outline-none py-2.5"
+                className="flex-1 bg-transparent font-prose text-[15px] placeholder:font-prose placeholder:text-muted-foreground focus:outline-none py-2.5"
               />
             </div>
             <button
               onClick={handleSend}
               disabled={!hasInput}
               className={cn(
-                'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 ease-out touch-manipulation',
+                'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-[background-color,color,transform] duration-200 ease-out touch-manipulation tap-target',
                 hasInput
                   ? 'bg-foreground text-background hover:bg-foreground/90 active:scale-95 scale-100'
                   : 'bg-muted/40 text-muted-foreground/30 scale-90 pointer-events-none'

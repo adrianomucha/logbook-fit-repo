@@ -397,12 +397,13 @@ export function UnifiedClientProfile() {
   const headerSubtitle = statusLabel
     ?? (plan ? `${plan.emoji} ${plan.name}` : undefined);
 
-  // Section label helper — consistent uppercase tracking with antialiased rendering
+  // Section label helper — consistent uppercase tracking with antialiased rendering.
+  // Real <h2> so the page has a navigable heading outline, styled down to a label.
   const SectionLabel = ({ children }: { children: React.ReactNode }) => (
     <div className="px-1 pb-2">
-      <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
+      <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
         {children}
-      </span>
+      </h2>
     </div>
   );
 
@@ -423,10 +424,11 @@ export function UnifiedClientProfile() {
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         <CoachNav activeTab="clients" />
 
+        <main className="space-y-4 sm:space-y-6">
         {/* Back link — scale on press, smooth arrow nudge */}
         <button
           onClick={() => router.push('/coach/clients')}
-          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased hover:text-foreground active:scale-[0.97] transition-[color,transform] duration-150 group"
+          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased hover:text-foreground active:scale-[0.97] transition-[color,transform] duration-150 group tap-target"
           aria-label="Back to Clients"
         >
           <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-150 group-hover:-translate-x-0.5" />
@@ -444,7 +446,7 @@ export function UnifiedClientProfile() {
                 size="sm"
                 onClick={primaryAction.onClick}
                 disabled={primaryAction.disabled}
-                className="active:scale-[0.96] transition-transform duration-150"
+                className="active:scale-[0.96] transition-transform duration-150 tap-target"
               >
                 {primaryAction.label}
               </Button>
@@ -504,10 +506,10 @@ export function UnifiedClientProfile() {
             )}>
               <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-0 shrink-0">
                 <div className="flex gap-1 border-b border-border mb-0 -mt-1">
-                  <span className="pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
+                  <h2 className="pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
                     Messages
                     <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
-                  </span>
+                  </h2>
                 </div>
               </div>
               <ChatView
@@ -535,7 +537,7 @@ export function UnifiedClientProfile() {
                     key={tab.id}
                     onClick={() => setSecondaryTab(tab.id)}
                     className={cn(
-                      'pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative',
+                      'pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target',
                       secondaryTab === tab.id
                         ? 'text-foreground'
                         : 'text-muted-foreground hover:text-foreground'
@@ -543,7 +545,7 @@ export function UnifiedClientProfile() {
                   >
                     {tab.label}
                     {'count' in tab && tab.count > 0 && (
-                      <span className="ml-1.5 text-[10px] tabular-nums text-muted-foreground/60">{tab.count}</span>
+                      <span className="ml-1.5 text-[10px] tabular-nums text-muted-foreground">{tab.count}</span>
                     )}
                     {secondaryTab === tab.id && (
                       <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
@@ -562,12 +564,12 @@ export function UnifiedClientProfile() {
                     <>
                       {/* Plan actions row */}
                       <div className="flex items-center justify-between pb-3">
-                        <div className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
+                        <h3 className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
                           <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
                           <span className="truncate">{plan.name}</span>
-                        </div>
+                        </h3>
                         <div className="flex items-center gap-1 shrink-0">
-                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150">
+                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <Pencil className="w-3.5 h-3.5 mr-1.5" />
                             Edit
                           </Button>
@@ -613,6 +615,7 @@ export function UnifiedClientProfile() {
             </SectionCard>
           </section>
         </div>
+        </main>
       </div>
 
       {/* Modals & Drawers */}
