@@ -463,7 +463,6 @@ export function ClientWorkoutExecution() {
       <WorkoutHeader
         workoutName={day.name ?? 'Workout'}
         dayLabel={day.orderIndex ? `Day ${day.orderIndex}` : undefined}
-        description={day.description ?? undefined}
         exercisesDone={stats.exercisesDone}
         exercisesTotal={stats.exercisesTotal}
         onBack={handleBack}

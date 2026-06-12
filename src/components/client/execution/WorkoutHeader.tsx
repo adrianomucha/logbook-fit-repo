@@ -4,8 +4,6 @@ interface WorkoutHeaderProps {
   workoutName: string;
   /** Small eyebrow above the title, e.g. "Day 2" (rendered uppercase) */
   dayLabel?: string;
-  /** Coach note / day description shown as a subtitle */
-  description?: string;
   exercisesDone: number;
   exercisesTotal: number;
   onBack: () => void;
@@ -17,7 +15,6 @@ interface WorkoutHeaderProps {
 export function WorkoutHeader({
   workoutName,
   dayLabel,
-  description,
   exercisesDone,
   exercisesTotal,
   onBack,
@@ -76,13 +73,6 @@ export function WorkoutHeader({
           {workoutName}
         </h1>
 
-        {/* Subtitle — day note */}
-        {description && (
-          <p className="text-sm text-primary-foreground/50 mt-1.5 leading-snug line-clamp-2">
-            {description}
-          </p>
-        )}
-
         {/* Progress bar */}
         <div
           role="progressbar"
@@ -90,7 +80,7 @@ export function WorkoutHeader({
           aria-valuemin={0}
           aria-valuemax={exercisesTotal}
           aria-valuenow={exercisesDone}
-          className="mt-4 h-1 w-full rounded-full bg-primary-foreground/15 overflow-hidden"
+          className="mt-3.5 h-1 w-full rounded-full bg-primary-foreground/15 overflow-hidden"
         >
           <div
             className="h-full rounded-full bg-success transition-[width] duration-500 ease-out"
