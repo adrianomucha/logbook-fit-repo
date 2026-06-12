@@ -75,7 +75,7 @@ export function ExerciseCard({
   };
 
   return (
-    <div id={id} style={{ scrollMarginTop: '80px' }}>
+    <div id={id}>
       {/* ── Exercise row ── */}
       <button
         type="button"

@@ -1,5 +1,15 @@
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 
+/**
+ * Drop a leading "Day N" prefix from the title — the day number already lives in
+ * the eyebrow, so "Day 2 — Legs + Glutes + Core" becomes "Legs + Glutes + Core".
+ * Falls back to the original if stripping would leave nothing.
+ */
+function stripDayPrefix(name: string): string {
+  const stripped = name.replace(/^\s*day\s*\d+\s*(?:[—–\-:.]+\s*)?/i, '').trim();
+  return stripped.length > 0 ? stripped : name;
+}
+
 interface WorkoutHeaderProps {
   workoutName: string;
   /** Small eyebrow above the title, e.g. "Day 2" (rendered uppercase) */
@@ -70,7 +80,7 @@ export function WorkoutHeader({
 
         {/* Title — full width, never truncated */}
         <h1 className="text-primary-foreground font-bold text-2xl sm:text-3xl tracking-tight leading-[1.1] antialiased mt-1">
-          {workoutName}
+          {stripDayPrefix(workoutName)}
         </h1>
 
         {/* Progress bar */}

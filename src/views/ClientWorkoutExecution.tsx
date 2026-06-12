@@ -111,11 +111,19 @@ export function ClientWorkoutExecution() {
       const next = exercises.find((e) => !isExerciseComplete(e));
       if (next) {
         setExpandedExerciseId(next.workoutExerciseId);
-        requestAnimationFrame(() => {
-          document
-            .getElementById(`exercise-${next.workoutExerciseId}`)
-            ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        });
+        // Scroll the next exercise to just below the sticky header. Measure the
+        // header height (it varies with the title) so the row never hides under it.
+        // Two frames: let the collapse/expand reflow settle before measuring.
+        requestAnimationFrame(() =>
+          requestAnimationFrame(() => {
+            const el = document.getElementById(`exercise-${next.workoutExerciseId}`);
+            if (!el) return;
+            const headerH =
+              document.querySelector('header')?.getBoundingClientRect().height ?? 0;
+            const top = el.getBoundingClientRect().top + window.scrollY - headerH - 12;
+            window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+          })
+        );
       } else {
         setExpandedExerciseId(null);
       }
