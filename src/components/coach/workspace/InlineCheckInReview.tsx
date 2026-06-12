@@ -272,29 +272,29 @@ export function InlineCheckInReview({
 
     return (
       <Wrapper>
-        <div className={cn("pb-2", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
+        <div className={cn("pb-3", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
           <div className="text-base font-semibold flex items-center gap-2 antialiased">
             <span className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
             </span>
             Waiting on {firstName}
           </div>
         </div>
-        <div className={cn("space-y-3", isFlat ? '' : 'px-3 sm:px-6 pb-6')}>
+        <div className={cn("space-y-4", isFlat ? 'rounded-xl bg-warning/[0.07] p-4' : 'px-3 sm:px-6 pb-6')}>
           {/* Timeline-style status */}
-          <div className="flex gap-3">
+          <div className="flex gap-3.5">
             <div className="flex flex-col items-center pt-1.5">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0" />
-              <div className="w-px flex-1 bg-border my-1" />
-              <div className="w-1.5 h-1.5 rounded-full border-2 border-muted-foreground/30 shrink-0" />
+              <div className="w-2 h-2 rounded-full bg-success shrink-0" />
+              <div className="w-px flex-1 bg-success/30 my-1.5" />
+              <div className="w-2 h-2 rounded-full border-2 border-warning/50 shrink-0" />
             </div>
-            <div className="space-y-3.5 flex-1 -mt-0.5">
+            <div className="space-y-5 flex-1 -mt-0.5">
               <div>
                 <p className="text-sm font-medium antialiased">
                   Check-in sent <span className="text-muted-foreground font-normal tabular-nums">{sentAgo}</span>
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5 antialiased">
+                <p className="font-prose text-[13px] text-muted-foreground mt-0.5 antialiased">
                   {firstName} got a notification to share how training is going.
                 </p>
               </div>
@@ -302,7 +302,7 @@ export function InlineCheckInReview({
                 <p className="text-sm text-muted-foreground antialiased">
                   {firstName} responds
                 </p>
-                <p className="text-xs text-muted-foreground/60 mt-0.5 antialiased">
+                <p className="font-prose text-[13px] text-muted-foreground/60 mt-0.5 antialiased">
                   You&apos;ll review their feedback and reply here.
                 </p>
               </div>
@@ -390,8 +390,8 @@ export function InlineCheckInReview({
             <p className="text-xs text-muted-foreground mb-1">
               Notes from {firstName}
             </p>
-            <p className="text-sm bg-background/60 rounded-lg p-3">
-              "{activeCheckIn.clientNotes}"
+            <p className="font-prose text-[15px] leading-[1.5] bg-background/60 rounded-lg p-3">
+              &ldquo;{activeCheckIn.clientNotes}&rdquo;
             </p>
           </div>
         )}
@@ -414,7 +414,7 @@ export function InlineCheckInReview({
               onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
               maxLength={1000}
               rows={3}
-              className="bg-background border-border/60"
+              className="bg-background border-border/60 font-prose text-[15px] leading-[1.5]"
             />
             {coachResponse.length > 0 && (
               <p className="text-xs text-muted-foreground mt-1 text-right">

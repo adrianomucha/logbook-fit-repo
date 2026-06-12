@@ -68,6 +68,9 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-ibm-plex-mono)', 'IBM Plex Mono', 'monospace'],
         heading: ['var(--font-ibm-plex-mono)', 'IBM Plex Mono', 'monospace'],
+        // Proportional face for conversational/long-form text (font-prose).
+        // Mono stays the default for all UI chrome, data, labels, and numbers.
+        prose: ['var(--font-ibm-plex-sans)', 'IBM Plex Sans', 'sans-serif'],
       },
       keyframes: {
         "accordion-down": {

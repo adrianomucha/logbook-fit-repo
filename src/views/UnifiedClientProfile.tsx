@@ -376,16 +376,22 @@ export function UnifiedClientProfile() {
   const StatusIcon = showStatusBanner ? status!.icon : null;
   const statusIsUrgent = showStatusBanner && (status!.type === 'overdue' || status!.type === 'at-risk');
 
-  // Status action — only show when actionable (not already sent)
-  const statusAction = statusIsUrgent ? {
-    label: isSendingCheckIn ? 'Sending…' : 'Send Check-In',
-    onClick: handleStartCheckIn,
-    disabled: isSendingCheckIn,
-  } : status?.type === 'unread' ? {
-    label: 'View Messages',
-    onClick: handleScrollToCheckIn,
-    disabled: false,
-  } : null;
+  // Primary action — always give the coach one obvious next move, chosen by the
+  // client's state, so the page is never just a passive read-out.
+  const scrollToChat = () =>
+    chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const primaryAction: { label: string; onClick: () => void; disabled?: boolean } =
+    !plan
+      ? { label: 'Assign a plan', onClick: handleChangePlan }
+      : activeCheckIn?.status === 'responded'
+        ? { label: 'Review check-in', onClick: handleScrollToCheckIn }
+        : activeCheckIn?.status === 'pending'
+          ? { label: `Message ${firstName}`, onClick: scrollToChat }
+          : statusIsUrgent
+            ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn }
+            : status?.hasUnread
+              ? { label: `Message ${firstName}`, onClick: scrollToChat }
+              : { label: isSendingCheckIn ? 'Sending…' : 'Request check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn };
 
   // Build subtitle from status or plan
   const headerSubtitle = statusLabel
@@ -432,17 +438,17 @@ export function UnifiedClientProfile() {
           <PageHeader
             title={client.name}
             subtitle={headerSubtitle}
-            action={statusAction ? (
+            action={
               <Button
-                variant={statusIsUrgent ? 'default' : 'outline'}
+                variant="default"
                 size="sm"
-                onClick={statusAction.onClick}
-                disabled={statusAction.disabled}
+                onClick={primaryAction.onClick}
+                disabled={primaryAction.disabled}
                 className="active:scale-[0.96] transition-transform duration-150"
               >
-                {statusAction.label}
+                {primaryAction.label}
               </Button>
-            ) : undefined}
+            }
           />
         </div>
 
@@ -468,7 +474,7 @@ export function UnifiedClientProfile() {
         {/* Check-in section — only shown when client has an active plan */}
         {plan && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
-          <SectionLabel>Check-in</SectionLabel>
+          <SectionLabel>Latest check-in</SectionLabel>
           <SectionCard>
             <InlineCheckInReview
               client={client}
@@ -523,7 +529,7 @@ export function UnifiedClientProfile() {
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
                 {([
                   { id: 'plan' as const, label: 'Training Plan' },
-                  { id: 'history' as const, label: 'Check-ins', count: checkIns.filter(c => c.status === 'completed').length },
+                  { id: 'history' as const, label: 'History', count: checkIns.filter(c => c.status === 'completed').length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
@@ -561,7 +567,7 @@ export function UnifiedClientProfile() {
                           <span className="truncate">{plan.name}</span>
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
-                          <Button variant="outline" size="sm" onClick={handleEditPlan} className="active:scale-[0.96] transition-transform duration-150">
+                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150">
                             <Pencil className="w-3.5 h-3.5 mr-1.5" />
                             Edit
                           </Button>

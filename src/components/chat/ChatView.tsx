@@ -293,14 +293,14 @@ export function ChatView({
                               {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets
                             </p>
                             {message.exerciseContext.flagNote && (
-                              <p className="text-xs mt-1.5 italic border-l-2 border-current/20 pl-2 opacity-70">
+                              <p className="font-prose text-[13px] mt-1.5 italic border-l-2 border-current/20 pl-2 opacity-70">
                                 &ldquo;{message.exerciseContext.flagNote}&rdquo;
                               </p>
                             )}
                           </div>
                         )}
 
-                        <p className="text-sm leading-[1.65]">{message.content}</p>
+                        <p className="font-prose text-[15px] leading-[1.55]">{message.content}</p>
                       </div>
                     </div>
 
@@ -349,7 +349,7 @@ export function ChatView({
                 value={newMessage}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="flex-1 bg-transparent text-sm placeholder:text-muted-foreground/40 focus:outline-none py-2.5"
+                className="flex-1 bg-transparent font-prose text-[15px] placeholder:font-prose placeholder:text-muted-foreground/40 focus:outline-none py-2.5"
               />
             </div>
             <button
