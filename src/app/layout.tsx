@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { AnalyticsWithOptOut } from '@/components/AnalyticsWithOptOut';
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import { SessionProvider } from '@/providers/SessionProvider';
 import { SWRProvider } from '@/providers/SWRProvider';
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
           </SWRProvider>
         </SessionProvider>
+        <AnalyticsWithOptOut />
       </body>
     </html>
   );
