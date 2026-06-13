@@ -301,7 +301,7 @@ export function ClientDashboard() {
       />
 
       <div className={cn(
-        'max-w-2xl mx-auto w-full px-3 pt-3 sm:px-4 sm:pt-4',
+        'max-w-2xl mx-auto w-full px-3 pt-3 sm:px-4 sm:pt-7',
         currentView === 'chat'
           ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
           : 'space-y-4 sm:space-y-6'

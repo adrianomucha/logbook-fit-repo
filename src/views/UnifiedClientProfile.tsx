@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, ExerciseFlag, Message, WorkoutDay, Exercise, WorkoutWeek } from '@/types';
+import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, ExerciseFlag, Message } from '@/types';
 import { useClientProfile } from '@/hooks/api/useClientProfile';
 import { usePlanDetail } from '@/hooks/api/usePlanDetail';
 import { useMessages } from '@/hooks/api/useMessages';
@@ -28,9 +28,8 @@ import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowLeft, Loader2, Pencil } from 'lucide-react';
+import { Loader2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { getClientStatus } from '@/lib/client-status';
 
@@ -166,30 +165,6 @@ export function UnifiedClientProfile() {
 
   const priorityMode: 'A' | 'B' = activeCheckIn ? 'A' : 'B';
 
-  const lastCompletedCheckIn = useMemo(() => {
-    return (
-      checkIns
-        .filter((c) => c.status === 'completed')
-        .sort(
-          (a, b) =>
-            new Date(b.completedAt || b.date).getTime() -
-            new Date(a.completedAt || a.date).getTime()
-        )[0] ?? null
-    );
-  }, [checkIns]);
-
-  const respondedCheckIn = useMemo(() => {
-    return (
-      checkIns
-        .filter((c) => c.status === 'responded')
-        .sort(
-          (a, b) =>
-            new Date(b.clientRespondedAt || b.date).getTime() -
-            new Date(a.clientRespondedAt || a.date).getTime()
-        )[0] ?? null
-    );
-  }, [checkIns]);
-
   // Status computation — uses full getClientStatus for ContextualStatusHeader
   const status = useMemo(() => {
     if (!client) return null;
@@ -261,7 +236,7 @@ export function UnifiedClientProfile() {
     // TODO: Implement plan unassignment via API when endpoint exists
   };
 
-  const handleUpdatePlan = async (updatedPlan: WorkoutPlan) => {
+  const handleUpdatePlan = async () => {
     // TODO: Implement plan update via API when endpoint exists
     refreshPlan();
   };
@@ -321,10 +296,6 @@ export function UnifiedClientProfile() {
     // TODO: Implement schedule toggle via API when endpoint exists
   };
 
-  const handleScrollToPlanEditor = () => {
-    planEditorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   // ---- Loading State ----
   if (isLoadingClient) {
     return (
@@ -339,7 +310,7 @@ export function UnifiedClientProfile() {
     return (
       <div className="min-h-screen bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
             <div className="text-center py-12 px-6">
               <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
@@ -372,7 +343,6 @@ export function UnifiedClientProfile() {
     && status.type !== 'pending-checkin'
     && !(rawUrgent && hasActiveCheckIn);
   const statusLabel = showStatusBanner ? status!.label : null;
-  const statusColor = showStatusBanner ? status!.color : null;
   const StatusIcon = showStatusBanner ? status!.icon : null;
   const statusIsUrgent = showStatusBanner && (status!.type === 'overdue' || status!.type === 'at-risk');
 
@@ -393,9 +363,15 @@ export function UnifiedClientProfile() {
               ? { label: `Message ${firstName}`, onClick: scrollToChat }
               : { label: isSendingCheckIn ? 'Sending…' : 'Request check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn };
 
-  // Build subtitle from status or plan
-  const headerSubtitle = statusLabel
-    ?? (plan ? `${plan.emoji} ${plan.name}` : undefined);
+  // Build subtitle from status or plan. Status text is a label (uppercase via
+  // PageHeader's string styling); the plan is an entity name, so it keeps its
+  // case and gets a quieter metadata voice instead of shouting in tracked caps.
+  const headerSubtitle: React.ReactNode = statusLabel
+    ?? (plan ? (
+      <p className="text-[13px] text-muted-foreground antialiased">
+        {plan.emoji} {plan.name}
+      </p>
+    ) : undefined);
 
   // Section label helper — consistent uppercase tracking with antialiased rendering.
   // Real <h2> so the page has a navigable heading outline, styled down to a label.
@@ -423,23 +399,14 @@ export function UnifiedClientProfile() {
     <div className="min-h-screen bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="clients" />
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
         <main className="space-y-4 sm:space-y-6">
-        {/* Back link — scale on press, smooth arrow nudge */}
-        <button
-          onClick={() => router.push('/coach/clients')}
-          className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased hover:text-foreground active:scale-[0.97] transition-[color,transform] duration-150 group tap-target"
-          aria-label="Back to Clients"
-        >
-          <ArrowLeft className="h-3.5 w-3.5 transition-transform duration-150 group-hover:-translate-x-0.5" />
-          Clients
-        </button>
-
-        {/* Page header — stagger delay 1 */}
-        <div className="animate-enter" style={{ animationDelay: '0ms' }}>
+        {/* Page header — path-style title; "Clients /" crumb is the way back */}
+        <div className="animate-enter mb-1.5 sm:mb-3" style={{ animationDelay: '0ms' }}>
           <PageHeader
             title={client.name}
             subtitle={headerSubtitle}
+            breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
             action={
               <Button
                 variant="default"
