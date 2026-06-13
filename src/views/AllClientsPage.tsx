@@ -112,9 +112,10 @@ export function AllClientsPage() {
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        <CoachNav activeTab="clients" />
+    <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <CoachNav activeTab="clients" />
+
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
 
         <div className="animate-enter">
           <PageHeader

@@ -1,5 +1,4 @@
 import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { SwitchAccountButton } from '@/components/SwitchAccountButton';
@@ -16,6 +15,12 @@ interface CoachNavProps {
   /** Handler for tab changes (for in-page view switching like CoachDashboard) */
   onTabChange?: (tab: CoachNavTab) => void;
 }
+
+const DESKTOP_TABS: { id: CoachNavTab; label: string }[] = [
+  { id: 'dashboard', label: 'Dashboard' },
+  { id: 'clients', label: 'Clients' },
+  { id: 'plans', label: 'Plans' },
+];
 
 export function CoachNav({
   activeTab,
@@ -52,72 +57,57 @@ export function CoachNav({
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        {/* Logotype */}
-        <button
-          onClick={() => router.push('/coach')}
-          className="flex items-center gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          aria-label="Logbook Fitness home"
-        >
-          <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground group-hover:text-foreground transition-colors">
-            Logbook
-          </span>
-          <span className="text-[11px] sm:text-xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
-            Fitness
-          </span>
-        </button>
-
-        {/* Right side — desktop tabs (hidden on mobile) + switch account */}
-        <div className="flex items-center gap-1">
-          <nav className="hidden sm:flex gap-1" aria-label="Main navigation">
-            <Button
-              variant={activeTab === 'dashboard' ? 'default' : 'ghost'}
-              onClick={() => handleTabClick('dashboard')}
-              size="sm"
-              className="tap-target"
-              aria-current={activeTab === 'dashboard' ? 'page' : undefined}
+      <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-sm">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 flex h-12 items-center justify-between">
+          <div className="flex items-center self-stretch gap-4 sm:gap-6">
+            {/* Logotype */}
+            <button
+              onClick={() => router.push('/coach')}
+              className="flex items-baseline gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label="Logbook Fitness home"
             >
-              <Home className="w-4 h-4 mr-2" />
-              Dashboard
-            </Button>
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-foreground">
+                Logbook
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+                Fitness
+              </span>
+            </button>
 
-            <Button
-              variant={activeTab === 'clients' ? 'default' : 'ghost'}
-              onClick={() => handleTabClick('clients')}
-              size="sm"
-              className="tap-target"
-              aria-current={activeTab === 'clients' ? 'page' : undefined}
-            >
-              <Users className="w-4 h-4 mr-2" />
-              Clients
-              {unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
+            {/* Brand / nav divider */}
+            <div className="hidden sm:block h-3.5 w-px bg-border" aria-hidden="true" />
+
+            {/* Desktop tabs — underline indicator sits on the header hairline */}
+            <nav className="hidden sm:flex items-stretch self-stretch gap-5" aria-label="Main navigation">
+              {DESKTOP_TABS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => handleTabClick(id)}
+                  aria-current={activeTab === id ? 'page' : undefined}
                   className={cn(
-                    'ml-1 px-1.5 py-0 h-5 text-xs',
-                    activeTab === 'clients' && 'bg-white text-primary'
+                    'inline-flex items-center gap-1.5 border-b-2 px-0.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    activeTab === id
+                      ? 'border-foreground text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  {unreadCount}
-                </Badge>
-              )}
-            </Button>
+                  {label}
+                  {id === 'clients' && unreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="h-4 min-w-4 justify-center px-1 py-0 text-[10px] tabular-nums"
+                    >
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-            <Button
-              variant={activeTab === 'plans' ? 'default' : 'ghost'}
-              onClick={() => handleTabClick('plans')}
-              size="sm"
-              className="tap-target"
-              aria-current={activeTab === 'plans' ? 'page' : undefined}
-            >
-              <Dumbbell className="w-4 h-4 mr-2" />
-              Plans
-            </Button>
-          </nav>
-
-          <SwitchAccountButton className="sm:ml-1" />
+          <SwitchAccountButton />
         </div>
-      </div>
+      </header>
 
       {/* Mobile bottom navigation */}
       <MobileBottomNav

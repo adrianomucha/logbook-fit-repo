@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { SwitchAccountButton } from '@/components/SwitchAccountButton';
 import { Dumbbell, MessageSquare, TrendingUp } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export type ClientNavTab = 'workout' | 'chat' | 'progress';
 
@@ -11,6 +11,12 @@ interface ClientNavProps {
   /** Handler for tab changes */
   onTabChange: (tab: ClientNavTab) => void;
 }
+
+const DESKTOP_TABS: { id: ClientNavTab; label: string }[] = [
+  { id: 'workout', label: 'Workout' },
+  { id: 'chat', label: 'Chat' },
+  { id: 'progress', label: 'Progress' },
+];
 
 export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
   // Mobile bottom nav items
@@ -22,58 +28,49 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
 
   return (
     <>
-      <div className="flex items-center justify-between">
-        {/* Logotype */}
-        <button
-          onClick={() => onTabChange('workout')}
-          className="flex items-center gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          aria-label="Logbook Fitness home"
-        >
-          <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.15em] text-muted-foreground group-hover:text-foreground transition-colors">
-            Logbook
-          </span>
-          <span className="text-[11px] sm:text-xs font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
-            Fitness
-          </span>
-        </button>
-
-        {/* Right side — desktop tabs (hidden on mobile) + switch account */}
-        <div className="flex items-center gap-1">
-          <nav className="hidden sm:flex gap-1" aria-label="Main navigation">
-            <Button
-              variant={activeTab === 'workout' ? 'default' : 'ghost'}
+      <header className="sticky top-0 z-40 shrink-0 border-b border-border bg-background/85 backdrop-blur-sm">
+        <div className="max-w-2xl mx-auto px-3 sm:px-4 flex h-12 items-center justify-between">
+          <div className="flex items-center self-stretch gap-4 sm:gap-6">
+            {/* Logotype */}
+            <button
               onClick={() => onTabChange('workout')}
-              size="sm"
-              aria-current={activeTab === 'workout' ? 'page' : undefined}
+              className="flex items-baseline gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              aria-label="Logbook Fitness home"
             >
-              <Dumbbell className="w-4 h-4 mr-2" />
-              Workout
-            </Button>
+              <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-foreground">
+                Logbook
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+                Fitness
+              </span>
+            </button>
 
-            <Button
-              variant={activeTab === 'chat' ? 'default' : 'ghost'}
-              onClick={() => onTabChange('chat')}
-              size="sm"
-              aria-current={activeTab === 'chat' ? 'page' : undefined}
-            >
-              <MessageSquare className="w-4 h-4 mr-2" />
-              Chat
-            </Button>
+            {/* Brand / nav divider */}
+            <div className="hidden sm:block h-3.5 w-px bg-border" aria-hidden="true" />
 
-            <Button
-              variant={activeTab === 'progress' ? 'default' : 'ghost'}
-              onClick={() => onTabChange('progress')}
-              size="sm"
-              aria-current={activeTab === 'progress' ? 'page' : undefined}
-            >
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Progress
-            </Button>
-          </nav>
+            {/* Desktop tabs — underline indicator sits on the header hairline */}
+            <nav className="hidden sm:flex items-stretch self-stretch gap-5" aria-label="Main navigation">
+              {DESKTOP_TABS.map(({ id, label }) => (
+                <button
+                  key={id}
+                  onClick={() => onTabChange(id)}
+                  aria-current={activeTab === id ? 'page' : undefined}
+                  className={cn(
+                    'inline-flex items-center border-b-2 px-0.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    activeTab === id
+                      ? 'border-foreground text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </nav>
+          </div>
 
-          <SwitchAccountButton className="sm:ml-1" />
+          <SwitchAccountButton />
         </div>
-      </div>
+      </header>
 
       {/* Mobile bottom navigation */}
       <MobileBottomNav
