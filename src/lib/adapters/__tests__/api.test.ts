@@ -155,13 +155,13 @@ describe("apiCheckInToCheckIn", () => {
     const ci = {
       ...baseCheckIn,
       status: "CLIENT_RESPONDED",
-      effortRating: "ABOUT_RIGHT",
+      effortRating: "MEDIUM",
       painBlockers: "Sore shoulder",
       clientFeeling: "NORMAL",
       clientRespondedAt: "2025-03-01T14:00:00Z",
     };
     const result = apiCheckInToCheckIn(ci, "c", "co");
-    expect(result.workoutFeeling).toBe("ABOUT_RIGHT");
+    expect(result.workoutFeeling).toBe("MEDIUM");
     expect(result.clientNotes).toBe("Sore shoulder");
     expect(result.bodyFeeling).toBe("NORMAL");
     expect(result.clientRespondedAt).toBe("2025-03-01T14:00:00Z");

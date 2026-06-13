@@ -61,7 +61,7 @@ export interface Message {
   };
 }
 
-export type WorkoutFeeling = 'TOO_EASY' | 'ABOUT_RIGHT' | 'TOO_HARD';
+export type WorkoutFeeling = 'EASY' | 'MEDIUM' | 'HARD';
 export type BodyFeeling = 'FRESH' | 'NORMAL' | 'TIRED' | 'RUN_DOWN';
 export type CheckInStatus = 'pending' | 'responded' | 'completed';
 

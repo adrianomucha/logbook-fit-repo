@@ -6,9 +6,9 @@ import { ChevronDown, ChevronUp, History } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FEELING_LABELS: Record<string, { label: string; emoji: string }> = {
-  TOO_EASY: { label: 'Too Easy', emoji: '😴' },
-  ABOUT_RIGHT: { label: 'About Right', emoji: '💪' },
-  TOO_HARD: { label: 'Too Hard', emoji: '😰' },
+  EASY: { label: 'Too Easy', emoji: '😴' },
+  MEDIUM: { label: 'About Right', emoji: '💪' },
+  HARD: { label: 'Too Hard', emoji: '😰' },
   FRESH: { label: 'Fresh', emoji: '✨' },
   NORMAL: { label: 'Normal', emoji: '👍' },
   TIRED: { label: 'Tired', emoji: '😓' },

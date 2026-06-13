@@ -6,9 +6,9 @@ import { format, addDays } from 'date-fns';
  */
 export const FEELING_LABELS = {
   workout: {
-    TOO_EASY: 'Too Easy',
-    ABOUT_RIGHT: 'About Right',
-    TOO_HARD: 'Too Hard',
+    EASY: 'Too Easy',
+    MEDIUM: 'About Right',
+    HARD: 'Too Hard',
   } as Record<string, string>,
   body: {
     FRESH: 'Fresh',

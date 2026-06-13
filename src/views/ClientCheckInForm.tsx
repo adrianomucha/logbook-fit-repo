@@ -9,9 +9,9 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 const EFFORT_OPTIONS: { value: string; label: string; emoji: string }[] = [
-  { value: 'TOO_EASY', label: 'Too Easy', emoji: '😴' },
-  { value: 'ABOUT_RIGHT', label: 'About Right', emoji: '💪' },
-  { value: 'TOO_HARD', label: 'Too Hard', emoji: '😰' },
+  { value: 'EASY', label: 'Too Easy', emoji: '😴' },
+  { value: 'MEDIUM', label: 'About Right', emoji: '💪' },
+  { value: 'HARD', label: 'Too Hard', emoji: '😰' },
 ];
 
 const FEELING_OPTIONS: { value: string; label: string; emoji: string }[] = [

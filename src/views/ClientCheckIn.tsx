@@ -13,9 +13,9 @@ import { CoachNav } from '@/components/coach/CoachNav';
 import { format, formatDistanceToNow } from 'date-fns';
 
 const EFFORT_DISPLAY: Record<string, { label: string; emoji: string }> = {
-  TOO_EASY: { label: 'Too Easy', emoji: '😴' },
-  ABOUT_RIGHT: { label: 'About Right', emoji: '💪' },
-  TOO_HARD: { label: 'Too Hard', emoji: '😰' },
+  EASY: { label: 'Too Easy', emoji: '😴' },
+  MEDIUM: { label: 'About Right', emoji: '💪' },
+  HARD: { label: 'Too Hard', emoji: '😰' },
 };
 
 const FEELING_DISPLAY: Record<string, { label: string; emoji: string }> = {

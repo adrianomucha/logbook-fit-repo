@@ -4,9 +4,9 @@ import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
 import { format } from 'date-fns';
 
 const FEELING_LABELS: Record<string, { label: string }> = {
-  TOO_EASY: { label: 'Too Easy' },
-  ABOUT_RIGHT: { label: 'About Right' },
-  TOO_HARD: { label: 'Too Hard' },
+  EASY: { label: 'Too Easy' },
+  MEDIUM: { label: 'About Right' },
+  HARD: { label: 'Too Hard' },
   FRESH: { label: 'Fresh' },
   NORMAL: { label: 'Normal' },
   TIRED: { label: 'Tired' },
