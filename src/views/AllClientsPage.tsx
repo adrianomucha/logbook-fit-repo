@@ -115,9 +115,9 @@ export function AllClientsPage() {
     <div className="min-h-screen bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="clients" />
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
-        <div className="animate-enter">
+        <div className="animate-enter mb-1.5 sm:mb-3">
           <PageHeader
             title="Clients"
             subtitle={clients.length > 0 ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}` : undefined}

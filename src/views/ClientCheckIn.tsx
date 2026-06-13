@@ -104,7 +104,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-screen bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
@@ -123,7 +123,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-screen bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
@@ -156,7 +156,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-screen bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
           <div className="flex items-center gap-3">
             <Button
@@ -207,7 +207,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-screen bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
           <div className="flex items-center gap-3">
             <Button
@@ -259,7 +259,7 @@ export function ClientCheckIn() {
   return (
     <div className="min-h-screen bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="clients" />
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
         {/* Header */}
         <div>

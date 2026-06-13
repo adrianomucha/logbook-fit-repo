@@ -229,11 +229,11 @@ export function CoachDashboard() {
         }}
       />
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
         {currentView === 'dashboard' && (
           <div className="space-y-6">
-            <div className="animate-enter">
+            <div className="animate-enter mb-1.5 sm:mb-3">
               <PageHeader
                 title={getGreeting()}
                 subtitle={dashboardClients.length > 0 ? 'Here\u2019s your roster' : undefined}
@@ -282,7 +282,7 @@ export function CoachDashboard() {
 
         {currentView === 'plans' && (
           <div className="space-y-6">
-            <div className="animate-enter">
+            <div className="animate-enter mb-1.5 sm:mb-3">
               <PageHeader
                 title="Plans"
                 subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'template' : 'templates'}` : undefined}
