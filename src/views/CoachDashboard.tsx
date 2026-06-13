@@ -163,7 +163,7 @@ export function CoachDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
+    <div className="min-h-screen bg-background pb-24 sm:pb-4">
       {/* Success Toast — checkmark draws in */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(16,185,129,0.3)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
@@ -218,17 +218,18 @@ export function CoachDashboard() {
         onRefresh={() => { refreshEditingPlan(); refreshPlans(); }}
       />
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        <CoachNav
-          activeTab={viewToNavTab(currentView)}
-          onTabChange={(tab) => {
-            if (tab === 'clients') {
-              router.push('/coach/clients');
-            } else {
-              setCurrentView(tab as View);
-            }
-          }}
-        />
+      <CoachNav
+        activeTab={viewToNavTab(currentView)}
+        onTabChange={(tab) => {
+          if (tab === 'clients') {
+            router.push('/coach/clients');
+          } else {
+            setCurrentView(tab as View);
+          }
+        }}
+      />
+
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
 
         {currentView === 'dashboard' && (
           <div className="space-y-6">

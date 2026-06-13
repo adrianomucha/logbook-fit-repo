@@ -287,24 +287,25 @@ export function ClientDashboard() {
 
   return (
     <div className={cn(
-      'bg-background p-3 sm:p-4',
+      'bg-background',
       currentView === 'chat'
         ? 'fixed inset-0 pb-20 flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-screen'
         : 'min-h-screen pb-24 sm:pb-4'
     )}>
+      <ClientNav
+        activeTab={currentView}
+        onTabChange={(tab) => {
+          setCurrentView(tab);
+          window.scrollTo(0, 0);
+        }}
+      />
+
       <div className={cn(
-        'max-w-2xl mx-auto',
+        'max-w-2xl mx-auto w-full px-3 pt-3 sm:px-4 sm:pt-4',
         currentView === 'chat'
           ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
           : 'space-y-4 sm:space-y-6'
       )}>
-        <ClientNav
-          activeTab={currentView}
-          onTabChange={(tab) => {
-            setCurrentView(tab);
-            window.scrollTo(0, 0);
-          }}
-        />
 
         {/* Check-in prompt banner */}
         {pendingCheckIn && (

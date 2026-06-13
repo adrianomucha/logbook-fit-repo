@@ -337,9 +337,9 @@ export function UnifiedClientProfile() {
   // Client not found
   if (!client || !apiClient) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-          <CoachNav activeTab="clients" />
+      <div className="min-h-screen bg-background pb-24 sm:pb-4">
+        <CoachNav activeTab="clients" />
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
           <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
             <div className="text-center py-12 px-6">
               <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
@@ -420,10 +420,10 @@ export function UnifiedClientProfile() {
   );
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4">
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
-        <CoachNav activeTab="clients" />
+    <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <CoachNav activeTab="clients" />
 
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-4">
         <main className="space-y-4 sm:space-y-6">
         {/* Back link — scale on press, smooth arrow nudge */}
         <button
