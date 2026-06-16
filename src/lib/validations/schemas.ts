@@ -21,6 +21,13 @@ export const signupSchema = z
     path: ["role"],
   });
 
+// Mobile (iOS) token login. Validates an existing credential, so we only check
+// the password is present — the account's real policy was enforced at signup.
+export const mobileLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1, "Password is required"),
+});
+
 // ──────────────────────────────────────
 // EXERCISES
 // ──────────────────────────────────────
