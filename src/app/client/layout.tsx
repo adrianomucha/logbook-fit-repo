@@ -7,7 +7,7 @@ import { Toaster } from 'sonner';
  */
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-0">
+    <div className="min-h-screen bg-background pb-24 sm:pb-0">
       {children}
       <Toaster position="top-center" richColors closeButton />
     </div>

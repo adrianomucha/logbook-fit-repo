@@ -37,17 +37,17 @@ export function StatusHeader({ status, clientName }: StatusHeaderProps) {
   const { label, dot } = statusConfig[status];
 
   return (
-    <div className="py-4">
+    <div className="py-3">
       <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
         {dateStr || '\u00A0'}
       </p>
-      <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mt-1">
+      <h1 className="text-[22px] sm:text-2xl font-bold tracking-tight mt-1">
         {greeting && firstName ? `${greeting}, ${firstName}` : label}
       </h1>
       {greeting && firstName && (
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className={`w-2 h-2 rounded-full ${dot} shrink-0`} />
-          <span className="text-sm text-muted-foreground font-medium uppercase tracking-wide">
+        <div className="flex items-center gap-1.5 mt-1.5">
+          <span className={`w-1.5 h-1.5 rounded-full ${dot} shrink-0`} />
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
             {label}
           </span>
         </div>

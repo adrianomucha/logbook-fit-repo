@@ -104,17 +104,17 @@ export function TodayFocusView({
           <div className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
             <Button
               onClick={actionState === 'in-progress' ? onResumeWorkout : onStartWorkout}
-              className="w-full h-14 text-base font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
+              className="w-full h-12 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
               size="lg"
             >
               {actionState === 'in-progress' ? (
                 <>
-                  <RotateCcw className="w-5 h-5 mr-2.5" />
+                  <RotateCcw className="w-4 h-4 mr-2" />
                   Continue
                 </>
               ) : (
                 <>
-                  <Play className="w-5 h-5 mr-2.5" />
+                  <Play className="w-4 h-4 mr-2" />
                   Start Workout
                 </>
               )}
