@@ -117,11 +117,13 @@ async function seed() {
       createdAt: Date;
     }
   ) {
-    // No unique key on check-ins — match the client's feeling text (unique per
-    // check-in in this seed), or any open PENDING check-in for content-less ones.
+    // No unique key on check-ins — match the client's note text (the narrative in
+    // painBlockers is unique per check-in in this seed), or any open PENDING
+    // check-in for ones without notes. clientFeeling is a categorical token
+    // (FRESH/NORMAL/TIRED/RUN_DOWN), not unique, so it can't be the match key.
     const existing = await prisma.checkIn.findFirst({
-      where: data.clientFeeling
-        ? { coachId: coachProfileId, clientId, clientFeeling: data.clientFeeling }
+      where: data.painBlockers
+        ? { coachId: coachProfileId, clientId, painBlockers: data.painBlockers }
         : { coachId: coachProfileId, clientId, status: "PENDING" },
     });
     if (existing) return existing;
@@ -583,8 +585,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "EASY",
-    clientFeeling: "Felt great this week. The weights are manageable — maybe time to bump up?",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "Felt great this week. The weights are manageable — maybe time to bump up?",
     clientRespondedAt: daysAgo(18),
     coachFeedback: "Great to hear! I've bumped your bench by 10 lbs starting next week. Keep the form tight.",
     planAdjustment: true,
@@ -596,8 +598,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "Good week overall. Hit a bench PR at 145 lbs! Squat felt solid too.",
-    painBlockers: null,
+    clientFeeling: "NORMAL",
+    painBlockers: "Good week overall. Hit a bench PR at 145 lbs! Squat felt solid too.",
     clientRespondedAt: daysAgo(11),
     coachFeedback: "That's a 10 lb PR on bench — awesome progress! Keep the squat form dialed in at this weight before we move up.",
     planAdjustment: false,
@@ -609,8 +611,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "HARD",
-    clientFeeling: "Tough week. Felt tired going into deadlifts. Lower back was a bit tight after the session.",
-    painBlockers: "Lower back tightness after deadlifts on Day 5",
+    clientFeeling: "TIRED",
+    painBlockers: "Tough week. Felt tired going into deadlifts. Lower back was a bit tight after the session. (Lower back tightness after deadlifts on Day 5)",
     clientRespondedAt: daysAgo(4),
     coachFeedback: "Let's reduce deadlift volume to 3x3 next week and add cat-cow stretches to your warm-up. If the tightness persists, let me know and we'll adjust further.",
     planAdjustment: true,
@@ -623,8 +625,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "This week went great! Bench is at 155 — that's another PR. The back stretches you recommended are helping a lot.",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "This week went great! Bench is at 155 — that's another PR. The back stretches you recommended are helping a lot.",
     clientRespondedAt: daysAgo(2),
     coachFeedback: "155 on bench — incredible! You're making amazing progress. Let's keep the current weights one more week to lock in form before we push further.",
     planAdjustment: false,
@@ -639,8 +641,8 @@ async function seed() {
   await ensureCheckIn(emmaId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "Really enjoying the HIIT circuits! Could I add an extra session on Saturdays?",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "Really enjoying the HIIT circuits! Could I add an extra session on Saturdays?",
     clientRespondedAt: daysAgo(5),
     coachFeedback: "I love the enthusiasm! Let's hold off on adding a 5th day for now — your body needs time to adapt. We'll reassess after week 4.",
     planAdjustment: false,
@@ -655,8 +657,8 @@ async function seed() {
   await ensureCheckIn(alexId, {
     status: "COMPLETED",
     effortRating: "HARD",
-    clientFeeling: "Struggled this week. Work has been stressful and I missed a session.",
-    painBlockers: "General fatigue from work stress",
+    clientFeeling: "RUN_DOWN",
+    painBlockers: "Struggled this week. Work has been stressful and I missed a session. (General fatigue from work stress)",
     clientRespondedAt: daysAgo(8),
     coachFeedback: "No worries about the missed session — life happens. Focus on the sessions you do make and keep the quality high. Consider a 5-min walk before training to reset.",
     planAdjustment: false,
@@ -668,8 +670,8 @@ async function seed() {
   await ensureCheckIn(alexId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "Much better this week. Got back on track with all sessions. The pre-workout walk tip is a game changer.",
-    painBlockers: null,
+    clientFeeling: "NORMAL",
+    painBlockers: "Much better this week. Got back on track with all sessions. The pre-workout walk tip is a game changer.",
     clientRespondedAt: daysAgo(2),
     coachFeedback: "That's great to hear! Consistency > perfection. Let's keep this momentum going.",
     planAdjustment: false,
@@ -682,8 +684,8 @@ async function seed() {
   await ensureCheckIn(alexId, {
     status: "CLIENT_RESPONDED",
     effortRating: "MEDIUM",
-    clientFeeling: "Feeling strong this week! The pre-workout walks are becoming a habit. Squats felt heavy but manageable.",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "Feeling strong this week! The pre-workout walks are becoming a habit. Squats felt heavy but manageable.",
     clientRespondedAt: hoursAgo(4),
     createdAt: daysAgo(1),
   });
