@@ -217,6 +217,15 @@ export interface WorkoutExercise {
   };
   setCompletions: WorkoutSetCompletion[];
   flag: WorkoutFlag | null;
+  /** Heaviest logged set from the most recent completed session of this exercise. */
+  lastPerformance: LastPerformance | null;
+}
+
+/** The "last time you hit X" reference: top set of the prior session. */
+export interface LastPerformance {
+  weight: number | null;
+  reps: number | null;
+  performedAt: string;
 }
 
 export interface WorkoutSetCompletion {

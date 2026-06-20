@@ -1,13 +1,39 @@
 import { Input } from '@/components/ui/input';
 import { Check, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { WorkoutExercise } from '@/types/api';
+import type { LastPerformance, WorkoutExercise } from '@/types/api';
 import { SetRow } from './SetRow';
 import {
   isExerciseComplete,
   getCompletedSetsCount,
   isSetCompleted,
 } from '@/hooks/api/useWorkoutExecution';
+
+/** Weight unit inferred from the coach's prescription string ("50 kg" → kg). */
+function weightUnit(weightTarget?: string | null): string {
+  return weightTarget && /kg/i.test(weightTarget) ? 'kg' : 'lbs';
+}
+
+/** "52.5 lbs × 8" / "12 reps" (bodyweight) — empty if nothing logged. */
+function formatLastSet(p: LastPerformance, unit: string): string {
+  if (p.weight != null) {
+    return p.reps != null ? `${p.weight} ${unit} × ${p.reps}` : `${p.weight} ${unit}`;
+  }
+  return p.reps != null ? `${p.reps} ${p.reps === 1 ? 'rep' : 'reps'}` : '';
+}
+
+/** Compact "when": today / yesterday / 3d ago / 2w ago / Mar 4. */
+function relativeDay(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+  if (days < 35) return `${Math.round(days / 7)}w ago`;
+  return new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  });
+}
 
 interface ExerciseCardProps {
   exercise: WorkoutExercise;
@@ -232,6 +258,29 @@ export function ExerciseCard({
               Flag for coach
             </button>
           )}
+
+          {/* Last session's top set — a reference for what to beat today */}
+          {(() => {
+            const last = exercise.lastPerformance;
+            if (!last) return null;
+            const value = formatLastSet(last, weightUnit(exercise.weight));
+            if (!value) return null;
+            return (
+              <div className="flex items-baseline gap-2 px-0.5">
+                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+                  Last
+                </span>
+                <span className="text-xs font-semibold tabular-nums text-foreground/70">
+                  {value}
+                </span>
+                {last.performedAt && (
+                  <span className="text-[10px] text-muted-foreground/50">
+                    {relativeDay(last.performedAt)}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Set rows */}
           <div>
