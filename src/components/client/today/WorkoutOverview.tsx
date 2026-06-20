@@ -36,7 +36,7 @@ export function WorkoutOverview({
   const categories = getUniqueCategories(exercises);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Workout Name */}
       <div>
         <h2 className="text-[17px] sm:text-lg font-bold tracking-tight leading-snug">

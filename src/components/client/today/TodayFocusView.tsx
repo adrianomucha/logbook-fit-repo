@@ -73,7 +73,7 @@ export function TodayFocusView({
   const showOverview = (actionState === 'scheduled' || actionState === 'in-progress') && todayWorkout?.workoutDay;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Status Header */}
       <div className="animate-fade-in-up">
         <StatusHeader status={statusType} clientName={client.name} />
