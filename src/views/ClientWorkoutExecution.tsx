@@ -488,7 +488,7 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list — open list, same voice as the dashboard's exercise list */}
+      {/* Exercise list — contained module matching the dashboard's exercise card */}
       <div
         className={cn(
           'px-4 pt-4 max-w-2xl mx-auto w-full flex-1',
@@ -496,16 +496,20 @@ export function ClientWorkoutExecution() {
           isReadOnly ? 'pb-8' : 'pb-6'
         )}
       >
-        <div className="flex items-baseline justify-between mb-1 px-1">
-          <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
-            Exercises
-          </h2>
-          <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
-            {stats.exercisesDone}/{exercises.length}
-          </span>
-        </div>
-        <div className="divide-y divide-border/50">
-          {groupBySuperset(exercises).map((group, groupIndex) => {
+        <section
+          aria-label="Exercises"
+          className="rounded-2xl bg-card border border-border/70 overflow-hidden"
+        >
+          <div className="flex items-baseline justify-between px-4 pt-4 pb-3 border-b border-border/50">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
+              Exercises
+            </h2>
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+              {stats.exercisesDone}/{exercises.length}
+            </span>
+          </div>
+          <div className="divide-y divide-border/50 px-4 py-1">
+            {groupBySuperset(exercises).map((group, groupIndex) => {
             const renderCard = (exercise: WorkoutExercise, memberIndex: number) => (
               <ExerciseCard
                 key={exercise.workoutExerciseId}
@@ -549,7 +553,8 @@ export function ClientWorkoutExecution() {
               </div>
             );
           })}
-        </div>
+          </div>
+        </section>
       </div>
 
       {/* Sticky finish button (only for active workouts) */}
