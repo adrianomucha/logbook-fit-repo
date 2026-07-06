@@ -657,7 +657,8 @@ export function UnifiedClientProfile() {
 
           {/* Secondary: Tabbed Plan + History */}
           <section ref={secondaryRef}>
-            <SectionCard className="md:h-[480px] md:flex md:flex-col">
+            {/* Height follows content — a short plan shouldn't leave a hollow card */}
+            <SectionCard>
               {/* Tab bar */}
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
                 {([
@@ -687,10 +688,7 @@ export function UnifiedClientProfile() {
 
               {/* Tab content */}
               {secondaryTab === 'plan' ? (
-                <div ref={planEditorRef} className={cn(
-                  "md:flex-1 md:min-h-0 md:overflow-y-auto",
-                  !plan && "flex items-center justify-center"
-                )}>
+                <div ref={planEditorRef} className={cn(!plan && "flex items-center justify-center py-6")}>
                   {plan ? (
                     <>
                       {/* Plan actions row */}
@@ -724,6 +722,12 @@ export function UnifiedClientProfile() {
                         onEditPlan={handleEditPlan}
                         variant="flat"
                       />
+                      {/* Plan meta footer */}
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40">
+                        {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'}
+                        {plan.workoutsPerWeek ? ` · ${plan.workoutsPerWeek}×/week` : ''}
+                        {client.planStartDate ? ` · Started ${format(new Date(client.planStartDate), 'MMM d')}` : ''}
+                      </p>
                     </>
                   ) : (
                     <InlinePlanEditor
@@ -741,7 +745,7 @@ export function UnifiedClientProfile() {
                   )}
                 </div>
               ) : (
-                <div className="md:flex-1 md:min-h-0 md:overflow-y-auto">
+                <div>
                   <CheckInHistoryPanel
                     checkIns={checkIns}
                     clientId={client.id}
