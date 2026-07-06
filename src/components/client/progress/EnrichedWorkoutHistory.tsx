@@ -186,13 +186,16 @@ export function EnrichedWorkoutHistory({
 
   if (enrichedCompletions.length === 0) {
     return (
-      <section aria-label="Workout history">
-        <div className="flex items-baseline justify-between mb-2 px-1">
+      <section
+        aria-label="Workout history"
+        className="rounded-2xl bg-card border border-border/70 overflow-hidden"
+      >
+        <div className="flex items-baseline justify-between px-4 pt-4 pb-3 border-b border-border/50">
           <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
             Workout history
           </h3>
         </div>
-        <div className="rounded-xl border border-border/70 bg-card text-center py-10 px-6 space-y-3">
+        <div className="text-center py-10 px-6 space-y-3">
           <div className="w-14 h-14 mx-auto rounded-full bg-muted flex items-center justify-center">
             <Dumbbell className="w-6 h-6 text-muted-foreground" />
           </div>
@@ -208,9 +211,12 @@ export function EnrichedWorkoutHistory({
   }
 
   return (
-    <section aria-label="Workout history">
-      {/* Section header — same voice as the dashboard's exercise list */}
-      <div className="flex items-baseline justify-between mb-1 px-1">
+    <section
+      aria-label="Workout history"
+      className="rounded-2xl bg-card border border-border/70 overflow-hidden"
+    >
+      {/* Header bar — mono voice, hairline separator */}
+      <div className="flex items-baseline justify-between px-4 pt-4 pb-3 border-b border-border/50">
         <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
           Workout history
         </h3>
@@ -219,8 +225,8 @@ export function EnrichedWorkoutHistory({
         </span>
       </div>
 
-      {/* Workout items — open list, hairline dividers */}
-      <div className="divide-y divide-border/50">
+      {/* Workout items — hairline dividers inside the card */}
+      <div className="divide-y divide-border/50 px-4">
         {displayedCompletions.map((item) => (
           <WorkoutHistoryItem
             key={item.completion.id}
@@ -233,24 +239,26 @@ export function EnrichedWorkoutHistory({
       </div>
 
       {hasMore && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowAll(!showAll)}
-          className="w-full mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground"
-        >
-          {showAll ? (
-            <>
-              <ChevronUp className="w-4 h-4 mr-1" />
-              Show less
-            </>
-          ) : (
-            <>
-              <ChevronDown className="w-4 h-4 mr-1" />
-              Show all ({enrichedCompletions.length - initialCount} more)
-            </>
-          )}
-        </Button>
+        <div className="border-t border-border/50">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowAll(!showAll)}
+            className="w-full h-11 rounded-none font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground"
+          >
+            {showAll ? (
+              <>
+                <ChevronUp className="w-4 h-4 mr-1" />
+                Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 mr-1" />
+                Show all ({enrichedCompletions.length - initialCount} more)
+              </>
+            )}
+          </Button>
+        </div>
       )}
     </section>
   );

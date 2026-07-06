@@ -112,10 +112,14 @@ export function WorkoutOverview({
         </button>
       </div>
 
-      {/* Exercise list — open list, no boxed-in card */}
+      {/* Exercise list — contained module: mono header bar + hairline card,
+          so the section reads as one unit against the rest of the page */}
       {exercises.length > 0 && (
-        <section aria-label="Exercises">
-          <div className="flex items-baseline justify-between mb-2 px-1">
+        <section
+          aria-label="Exercises"
+          className="rounded-2xl bg-card border border-border/70 overflow-hidden"
+        >
+          <div className="flex items-baseline justify-between px-5 pt-4 pb-3 border-b border-border/50">
             <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
               Exercises
             </h3>
@@ -123,7 +127,9 @@ export function WorkoutOverview({
               {exercises.length}
             </span>
           </div>
-          <ExercisePreviewList exercises={exercises} />
+          <div className="px-5 py-4">
+            <ExercisePreviewList exercises={exercises} />
+          </div>
         </section>
       )}
     </div>
