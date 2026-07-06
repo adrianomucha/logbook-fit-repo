@@ -488,7 +488,7 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list — open list, same voice as the dashboard's "The work" section */}
+      {/* Exercise list — open list, same voice as the dashboard's exercise list */}
       <div
         className={cn(
           'px-4 pt-4 max-w-2xl mx-auto w-full flex-1',
@@ -498,10 +498,10 @@ export function ClientWorkoutExecution() {
       >
         <div className="flex items-baseline justify-between mb-1 px-1">
           <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
-            The work
+            Exercises
           </h2>
           <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
-            {exercises.length}
+            {stats.exercisesDone}/{exercises.length}
           </span>
         </div>
         <div className="divide-y divide-border/50">
