@@ -11,7 +11,7 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateCard } from '@/components/coach/plans/PlanTemplateCard';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, CheckCircle, Loader2, PartyPopper } from 'lucide-react';
+import { Plus, Loader2, PartyPopper } from 'lucide-react';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { PageHeader } from '@/components/coach/PageHeader';
@@ -127,7 +127,7 @@ export function CoachDashboard() {
     }
   }, [searchParams]);
 
-  const handleUpdatePlan = (_updatedPlan: WorkoutPlan) => {
+  const handleUpdatePlan = () => {
     refreshPlans();
   };
 
