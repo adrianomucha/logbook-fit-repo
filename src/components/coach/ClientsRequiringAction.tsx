@@ -86,10 +86,10 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
     <div className="space-y-6">
       {needsAction.length > 0 && (
         <section>
-          <div className="px-1 pb-2">
-            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
+          <div className="px-1 pb-2.5">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
               Needs Attention · {needsAction.length}
-            </span>
+            </h2>
           </div>
           <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
             {needsAction.map((client) => {
@@ -158,10 +158,10 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
 
       {onTrack.length > 0 && (
         <section>
-          <div className="px-1 pb-2">
-            <span className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
+          <div className="px-1 pb-2.5">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
               On Track · {onTrack.length}
-            </span>
+            </h2>
           </div>
           <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
             {onTrack.map((client) => {
