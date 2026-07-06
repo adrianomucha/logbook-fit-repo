@@ -41,14 +41,14 @@ export function WorkoutHeader({
     .join(' · ');
 
   return (
-    <header className="sticky top-0 z-10 bg-card-foreground pt-[env(safe-area-inset-top)]">
-      <div className="px-4 pb-4">
+    <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-sm border-b border-border pt-[env(safe-area-inset-top)]">
+      <div className="max-w-2xl mx-auto px-4 pb-4">
         {/* Top row — back + progress count (+ restart when viewing a finished workout) */}
-        <div className="flex items-center justify-between h-[52px]">
+        <div className="flex items-center justify-between h-12">
           <button
             type="button"
             onClick={onBack}
-            className="text-primary-foreground p-2 -ml-2 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.92] transition-transform duration-150"
+            className="text-foreground p-2 -ml-2 touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.92] transition-transform duration-150"
             aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -60,40 +60,41 @@ export function WorkoutHeader({
                 type="button"
                 onClick={onRestart}
                 aria-label="Restart workout"
-                className="text-primary-foreground/70 hover:text-primary-foreground p-2 touch-manipulation active:scale-[0.92] transition-[color,transform] duration-150"
+                className="text-muted-foreground hover:text-foreground p-2 touch-manipulation active:scale-[0.92] transition-[color,transform] duration-150"
               >
                 <RotateCcw className="w-[18px] h-[18px]" />
               </button>
             )}
-            <span className="text-primary-foreground font-bold text-base tabular-nums">
-              {exercisesDone}/{exercisesTotal}
+            <span className="font-mono text-sm font-bold tabular-nums">
+              {exercisesDone}
+              <span className="text-muted-foreground/60">/{exercisesTotal}</span>
             </span>
           </div>
         </div>
 
-        {/* Eyebrow */}
+        {/* Eyebrow — mono data voice, same as the dashboard */}
         {eyebrow && (
-          <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-primary-foreground/50">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
             {eyebrow}
           </p>
         )}
 
         {/* Title — full width, never truncated */}
-        <h1 className="text-primary-foreground font-bold text-2xl sm:text-3xl tracking-tight leading-[1.1] antialiased mt-1">
+        <h1 className="font-bold text-2xl sm:text-3xl tracking-tight leading-[1.1] antialiased mt-1">
           {stripDayPrefix(workoutName)}
         </h1>
 
-        {/* Progress bar */}
+        {/* Progress bar — volt fill on muted track, matching the hero session card */}
         <div
           role="progressbar"
           aria-label="Workout progress"
           aria-valuemin={0}
           aria-valuemax={exercisesTotal}
           aria-valuenow={exercisesDone}
-          className="mt-3.5 h-1 w-full rounded-full bg-primary-foreground/15 overflow-hidden"
+          className="mt-3.5 h-1.5 w-full rounded-full bg-muted overflow-hidden"
         >
           <div
-            className="h-full rounded-full bg-success transition-[width] duration-500 ease-out"
+            className="h-full rounded-full bg-brand transition-[width] duration-500 ease-out"
             style={{ width: `${pct}%` }}
           />
         </div>

@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Dumbbell, Loader2 } from 'lucide-react';
+import { Check, Dumbbell, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function ClientWorkoutExecution() {
@@ -307,7 +307,7 @@ export function ClientWorkoutExecution() {
   if (error) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+        <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
           <div className="py-8 px-6 text-center">
             <p className="text-muted-foreground antialiased">Failed to load workout.</p>
             <Button onClick={handleBack} className="mt-4 active:scale-[0.96] transition-transform duration-150">
@@ -322,7 +322,7 @@ export function ClientWorkoutExecution() {
   if (!day) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+        <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
           <div className="py-8 px-6 text-center">
             <Dumbbell className="w-10 h-10 mx-auto text-muted-foreground/60 mb-4" />
             <p className="font-semibold mb-1.5 tracking-tight antialiased">Workout not found</p>
@@ -340,32 +340,35 @@ export function ClientWorkoutExecution() {
   if (showCelebration && completedWorkoutData) {
     return (
       <div
-        className="fixed inset-0 z-50 bg-success/5 flex flex-col items-center justify-center p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+        className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]"
         onClick={handleCelebrationDismiss}
       >
-        {/* Celebration Header */}
+        {/* Celebration Header — volt burst, mono eyebrow */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-success flex items-center justify-center animate-in zoom-in duration-300">
-            <CheckCircle2 className="w-12 h-12 text-success-foreground" />
+          <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-in zoom-in duration-300">
+            <Check className="w-10 h-10 text-brand-foreground" strokeWidth={3} />
           </div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
+            Session complete
+          </p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {day.name}
           </h1>
         </div>
 
-        {/* Workout Summary — stat blocks */}
+        {/* Workout Summary — flat stat blocks, mono data voice */}
         <div className="flex gap-2 sm:gap-3 mb-8 sm:mb-10 w-full max-w-xs">
-          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-5 sm:py-6 text-center">
-            <p className="text-2xl font-bold tabular-nums leading-none">
+          <div className="flex-1 bg-muted/60 rounded-xl px-3 py-5 sm:py-6 text-center">
+            <p className="font-mono text-2xl font-bold tabular-nums leading-none">
               {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
             </p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Exercises</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">Exercises</p>
           </div>
-          <div className="flex-1 bg-muted/60 rounded-lg px-3 py-5 sm:py-6 text-center">
-            <p className="text-2xl font-bold tabular-nums leading-none">
+          <div className="flex-1 bg-muted/60 rounded-xl px-3 py-5 sm:py-6 text-center">
+            <p className="font-mono text-2xl font-bold tabular-nums leading-none">
               {completedWorkoutData.durationMin}
             </p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Minutes</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">Minutes</p>
           </div>
         </div>
 
@@ -374,7 +377,7 @@ export function ClientWorkoutExecution() {
           className="text-center"
           onClick={(e) => e.stopPropagation()}
         >
-          <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-4">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-4">
             How did that feel?
           </p>
           <div className="flex gap-2 sm:gap-3">
@@ -391,7 +394,7 @@ export function ClientWorkoutExecution() {
           </div>
         </div>
 
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-8">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/60 mt-8">
           Tap anywhere to skip
         </p>
       </div>
@@ -410,7 +413,7 @@ export function ClientWorkoutExecution() {
             <h2 className="text-lg font-bold tracking-tight text-center mb-1">
               Restart this workout?
             </h2>
-            <p className="text-center text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-6">
+            <p className="text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-6">
               All progress, flags, and notes will be cleared
             </p>
             <div className="flex gap-3">
@@ -446,7 +449,7 @@ export function ClientWorkoutExecution() {
             <h2 className="text-lg font-bold tracking-tight text-center mb-1">
               Finish this workout?
             </h2>
-            <p className="text-center text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-6">
+            <p className="text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-6">
               {stats.exercisesDone} of {stats.exercisesTotal} exercises completed
             </p>
             <div className="flex gap-3">
@@ -485,15 +488,23 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list — flat rows, no surrounding card frame */}
+      {/* Exercise list — open list, same voice as the dashboard's "The work" section */}
       <div
         className={cn(
-          'px-3 sm:px-4 pt-3 max-w-3xl mx-auto w-full',
+          'px-4 pt-4 max-w-2xl mx-auto w-full',
           // Just enough bottom space to clear the fixed finish bar (no big gap)
           isReadOnly ? 'pb-8' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'
         )}
       >
-        <div className="flex flex-col gap-5 sm:gap-7">
+        <div className="flex items-baseline justify-between mb-1 px-1">
+          <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
+            The work
+          </h2>
+          <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+            {exercises.length}
+          </span>
+        </div>
+        <div className="divide-y divide-border/50">
           {groupBySuperset(exercises).map((group, groupIndex) => {
             const renderCard = (exercise: WorkoutExercise, memberIndex: number) => (
               <ExerciseCard
@@ -513,25 +524,26 @@ export function ClientWorkoutExecution() {
             );
 
             if (!isSuperset(group)) {
-              return renderCard(group[0], 0);
+              return (
+                <div key={group[0].workoutExerciseId} className="py-1.5">
+                  {renderCard(group[0], 0)}
+                </div>
+              );
             }
 
-            // Superset: members share one framed block so they read as a single station
+            // Superset: members share a volt left rail so they read as one station
             return (
-              <div
-                key={group[0].workoutExerciseId}
-                className="rounded-xl border border-foreground/10 bg-muted/20 px-2 sm:px-3 pb-1"
-              >
-                <div className="flex items-center gap-1.5 pt-2.5 pb-1 pl-1">
-                  <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+              <div key={group[0].workoutExerciseId} className="py-3.5">
+                <div className="flex items-center gap-1.5 mb-1">
+                  <Link2 className="w-3 h-3 text-muted-foreground/60" />
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/60">
                     Superset
                   </span>
-                  <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/40">
                     · Alternate sets
                   </span>
                 </div>
-                <div className="flex flex-col divide-y divide-border/40">
+                <div className="border-l-2 border-brand/60 pl-3 divide-y divide-border/40">
                   {group.map((exercise, memberIndex) => renderCard(exercise, memberIndex))}
                 </div>
               </div>

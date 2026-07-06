@@ -107,7 +107,7 @@ export function SetRow({
     >
       <span
         className={cn(
-          'text-[11px] font-bold uppercase tracking-[0.12em] flex-shrink-0 transition-colors',
+          'font-mono text-[11px] font-medium uppercase tracking-[0.12em] tabular-nums flex-shrink-0 transition-colors',
           completed ? 'text-muted-foreground/40' : 'text-muted-foreground'
         )}
       >
@@ -191,11 +191,11 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         className={cn(
           // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
-          'w-9 bg-transparent text-base sm:text-sm font-bold tabular-nums text-right outline-none placeholder:font-semibold placeholder:text-muted-foreground/40 disabled:opacity-100',
+          'w-9 bg-transparent font-mono text-base sm:text-sm font-bold tabular-nums text-right outline-none placeholder:font-semibold placeholder:text-muted-foreground/40 disabled:opacity-100',
           completed ? 'text-muted-foreground/50' : 'text-foreground'
         )}
       />
-      <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60">
+      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60">
         {label}
       </span>
     </label>

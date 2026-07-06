@@ -16,27 +16,28 @@ export function FinishWorkoutButton({
   const allDone = exercisesDone === exercisesTotal;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-10 bg-background/80 backdrop-blur-sm border-t p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-      <button
-        type="button"
-        onClick={onFinish}
-        disabled={disabled}
-        className={cn(
-          'w-full h-14 rounded-lg text-sm font-bold uppercase tracking-[0.1em] transition-all duration-200 touch-manipulation active:scale-[0.97]',
-          'text-primary-foreground',
-          allDone
-            ? 'bg-success hover:bg-success/90 shadow-[0_0_20px_hsl(var(--success)/0.3)]'
-            : 'bg-card-foreground hover:bg-card-foreground/90',
-          disabled && 'opacity-50 cursor-not-allowed'
-        )}
-      >
-        Finish Workout
-        {!allDone && (
-          <span className="ml-2 text-primary-foreground/50 font-bold tabular-nums">
-            {exercisesDone}/{exercisesTotal}
-          </span>
-        )}
-      </button>
+    <div className="fixed bottom-0 left-0 right-0 z-10 bg-background/85 backdrop-blur-sm border-t border-border p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="max-w-2xl mx-auto">
+        <button
+          type="button"
+          onClick={onFinish}
+          disabled={disabled}
+          className={cn(
+            'w-full h-14 rounded-xl text-sm font-bold uppercase tracking-wider transition-[background-color,transform] duration-150 touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            allDone
+              ? 'bg-brand text-brand-foreground hover:bg-brand/90'
+              : 'bg-foreground text-background hover:bg-foreground/90',
+            disabled && 'opacity-50 cursor-not-allowed'
+          )}
+        >
+          Finish Workout
+          {!allDone && (
+            <span className="ml-2 font-mono tabular-nums opacity-50">
+              {exercisesDone}/{exercisesTotal}
+            </span>
+          )}
+        </button>
+      </div>
     </div>
   );
 }

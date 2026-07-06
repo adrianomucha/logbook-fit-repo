@@ -73,12 +73,15 @@ export function ExerciseCard({
   const isFlagged = !!exercise.flag;
   const flagNote = exercise.flag?.note;
 
-  // Build prescription subtitle: "3x 10-12 @50 lbs"
+  // Zero-pad the numeric part so labels line up with the dashboard's
+  // exercise preview list: "4" → "04", "4B" → "04B".
+  const displayLabel = exerciseLabel.replace(/^\d+/, (n) => n.padStart(2, '0'));
+
+  // Build prescription subtitle: "3×10-12 · 50 lbs"
   const getPrescription = () => {
-    const parts: string[] = [`${exercise.sets}x`];
-    if (exercise.reps) parts.push(exercise.reps);
-    if (exercise.weight) parts.push(`@${exercise.weight}`);
-    return parts.join(' ');
+    let text = exercise.reps ? `${exercise.sets}×${exercise.reps}` : `${exercise.sets} sets`;
+    if (exercise.weight) text += ` · ${exercise.weight}`;
+    return text;
   };
 
   const setRows = Array.from({ length: exercise.sets }, (_, i) => i + 1);
@@ -107,19 +110,18 @@ export function ExerciseCard({
       <button
         type="button"
         onClick={onToggleExpand}
-        className="w-full flex items-center gap-2 sm:gap-3 text-left py-2 transition-colors hover:bg-muted/30 active:scale-[0.99] touch-manipulation min-h-[52px]"
+        className="w-full flex items-center gap-3.5 text-left py-2.5 transition-colors hover:bg-muted/30 active:scale-[0.99] touch-manipulation min-h-[56px]"
         aria-expanded={isExpanded}
         aria-label={`${exercise.exercise.name}, ${getPrescription()}`}
       >
-        {/* Left — bold counter number */}
+        {/* Left — mono index, same voice as the dashboard preview list */}
         <span
           className={cn(
-            'w-8 sm:w-10 flex-shrink-0 text-2xl sm:text-3xl font-bold tabular-nums tracking-tight transition-colors',
-            exerciseLabel.length > 2 && 'text-xl sm:text-2xl',
-            isComplete ? 'text-success' : 'text-foreground/20'
+            'font-mono text-[11px] font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
+            isComplete ? 'text-success' : 'text-muted-foreground/50'
           )}
         >
-          {exerciseLabel}
+          {displayLabel}
         </span>
 
         {/* Middle — name + prescription */}
@@ -127,7 +129,7 @@ export function ExerciseCard({
           <div className="flex items-center gap-1.5">
             <p
               className={cn(
-                'text-sm font-semibold tracking-tight truncate transition-colors',
+                'text-[15px] font-semibold tracking-tight leading-snug truncate transition-colors',
                 isComplete ? 'text-foreground/50' : 'text-foreground'
               )}
             >
@@ -137,10 +139,10 @@ export function ExerciseCard({
               <div className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
             )}
           </div>
-          <p className="text-xs text-muted-foreground tracking-wide uppercase">
+          <p className="font-mono text-xs tabular-nums text-muted-foreground">
             {getPrescription()}
             {completedSets > 0 && !isComplete && (
-              <span className="ml-1.5 text-success font-bold normal-case">
+              <span className="ml-1.5 text-success font-bold">
                 {completedSets}/{exercise.sets}
               </span>
             )}
@@ -184,15 +186,14 @@ export function ExerciseCard({
 
       {/* ── Expanded: set rows + coach tip + flag ── */}
       {isExpanded && (
-        <div className="pl-10 sm:pl-[52px] pr-1 pb-4 pt-1 space-y-3 animate-fade-in-up">
-          {/* Coach notes */}
+        <div className="pl-[42px] pr-1 pb-4 pt-1 space-y-3 animate-fade-in-up">
+          {/* Coach notes — volt left rail, same as the dashboard's coach strip */}
           {exercise.coachNotes && (
-            <div className="p-3 bg-muted/50 rounded-lg border-l-2 border-foreground/10">
-              <p className="text-sm text-foreground">
-                <span className="font-semibold uppercase text-xs tracking-wide text-muted-foreground">
-                  Coach
-                </span>
-                <br />
+            <div className="pl-3.5 border-l-2 border-brand">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+                Coach note
+              </p>
+              <p className="text-sm text-foreground/80 leading-relaxed">
                 {exercise.coachNotes}
               </p>
             </div>
@@ -216,7 +217,7 @@ export function ExerciseCard({
                     maxLength={200}
                   />
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-muted-foreground">
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
                       {(flagNote?.length || 0)}/200
                     </span>
                     <div className="flex items-center gap-4">
@@ -254,7 +255,7 @@ export function ExerciseCard({
             <button
               type="button"
               onClick={handleFlagClick}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation uppercase tracking-wider"
+              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation"
             >
               <Flag className="w-3.5 h-3.5" />
               Flag for coach
@@ -269,14 +270,14 @@ export function ExerciseCard({
             if (!value) return null;
             return (
               <div className="flex items-baseline gap-2 px-0.5">
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/70">
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
                   Last
                 </span>
-                <span className="text-xs font-semibold tabular-nums text-foreground/70">
+                <span className="font-mono text-xs font-semibold tabular-nums text-foreground/70">
                   {value}
                 </span>
                 {last.performedAt && (
-                  <span className="text-[10px] text-muted-foreground/50">
+                  <span className="font-mono text-[10px] text-muted-foreground/50">
                     {relativeDay(last.performedAt)}
                   </span>
                 )}
