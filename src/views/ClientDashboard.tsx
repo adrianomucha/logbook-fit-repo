@@ -379,20 +379,23 @@ export function ClientDashboard() {
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
               <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
             </div>
-            <ChatView
-              client={client}
-              messages={messages}
-              currentUserId={user?.id ?? ''}
-              currentUserName={client.name}
-              onSendMessage={handleSendMessage}
-              heightClass="flex-1 min-h-0 sm:h-[600px] sm:flex-none"
-              peerName={coach?.user.name ?? 'Coach'}
-              conversationStarters={[
-                'How should I warm up?',
-                'Feeling sore today',
-                'Can we adjust my plan?',
-              ]}
-            />
+            {/* Contained module — hairline card, matching the rest of the client pages */}
+            <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
+              <ChatView
+                client={client}
+                messages={messages}
+                currentUserId={user?.id ?? ''}
+                currentUserName={client.name}
+                onSendMessage={handleSendMessage}
+                heightClass="flex-1 min-h-0"
+                peerName={coach?.user.name ?? 'Coach'}
+                conversationStarters={[
+                  'How should I warm up?',
+                  'Feeling sore today',
+                  'Can we adjust my plan?',
+                ]}
+              />
+            </div>
           </>
         )}
 
