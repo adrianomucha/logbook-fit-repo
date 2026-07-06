@@ -9,8 +9,8 @@ import { UserCog, User, Loader2 } from 'lucide-react';
 import { LogoMark } from '@/components/brand/LogoMark';
 
 const DEMO_ACCOUNTS = {
-  coach: { email: 'coach@logbook.fit', password: 'demo1234', label: 'Coach', icon: UserCog },
-  client: { email: 'client@logbook.fit', password: 'demo1234', label: 'Client', icon: User },
+  coach: { email: 'coach@logbook.fit', password: 'demo1234', label: 'Demo Coach', icon: UserCog },
+  client: { email: 'client@logbook.fit', password: 'demo1234', label: 'Demo Client', icon: User },
 } as const;
 
 export default function LoginPage() {
@@ -53,99 +53,64 @@ export default function LoginPage() {
   };
 
   return (
-    // The login screen commits to the dark brand canvas regardless of theme —
-    // the `dark` class flips all tokens for everything inside.
-    <div className="dark relative min-h-dvh overflow-hidden bg-background text-foreground flex items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      {/* Ruled logbook lines */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0 [background-image:repeating-linear-gradient(to_bottom,transparent_0px,transparent_31px,hsl(var(--foreground)/0.05)_31px,hsl(var(--foreground)/0.05)_32px)]"
-      />
-      {/* Volt glow behind the header */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-44 left-1/2 h-96 w-[38rem] -translate-x-1/2 rounded-full bg-brand/10 blur-3xl"
-      />
-
-      <div className="relative w-full max-w-sm space-y-7">
-        <div className="text-center animate-enter">
-          <div className="mb-5 flex justify-center">
-            <LogoMark size={52} />
+    <div className="min-h-dvh bg-background p-4 flex items-center justify-center pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div className="max-w-sm w-full space-y-5 animate-enter">
+        <div className="text-center">
+          <div className="flex justify-center mb-4">
+            <LogoMark size={44} />
           </div>
-          <p className="mb-3 font-mono text-[11px] font-medium uppercase tracking-[0.35em] text-muted-foreground">
-            Train · Log · Progress
-          </p>
-          <h1 className="text-4xl font-bold tracking-tight">
-            Welcome back<span className="text-brand">.</span>
+          <h1 className="text-2xl font-bold tracking-tight antialiased mb-1">
+            Logbook<span className="text-muted-foreground/60">.fit</span>
           </h1>
+          <p className="text-sm text-muted-foreground antialiased">Sign in to continue</p>
         </div>
 
         {/* Manual login form */}
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-4 rounded-2xl border border-border bg-white/[0.03] p-5 sm:p-6 animate-enter [animation-delay:80ms]"
-        >
-          <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground"
+        <div className="rounded-xl border border-border/70 bg-card px-4 py-4 sm:px-5 sm:py-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium antialiased">Email</label>
+              <Input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium antialiased">Password</label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Your password"
+                autoComplete="current-password"
+                required
+              />
+            </div>
+            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+            <Button
+              type="submit"
+              className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
+              disabled={loading === 'form'}
             >
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@logbook.fit"
-              autoComplete="email"
-              className="h-11 bg-background/60"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <label
-              htmlFor="password"
-              className="font-mono text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground"
-            >
-              Password
-            </label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              autoComplete="current-password"
-              className="h-11 bg-background/60"
-              required
-            />
-          </div>
-          {error && (
-            <p role="alert" className="text-sm text-destructive">
-              {error}
-            </p>
-          )}
-          <Button
-            type="submit"
-            className="h-11 w-full bg-brand font-semibold text-brand-foreground hover:bg-brand/90"
-            disabled={loading === 'form'}
-          >
-            {loading === 'form' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Sign in
-          </Button>
-        </form>
+              {loading === 'form' && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Sign In
+            </Button>
+          </form>
+        </div>
 
         {/* Quick demo login */}
-        <div className="space-y-3 animate-enter [animation-delay:160ms]">
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border" />
-            <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-              Demo access
-            </span>
-            <div className="h-px flex-1 bg-border" />
-          </div>
-          <div className="grid grid-cols-2 gap-2">
+        <div className="rounded-xl border border-border/70 bg-card px-4 py-4 sm:px-5 sm:py-5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-3 antialiased flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />
+            Demo access
+          </p>
+          <div className="space-y-2">
             {Object.entries(DEMO_ACCOUNTS).map(([key, account]) => {
               const Icon = account.icon;
               return (
@@ -154,26 +119,22 @@ export default function LoginPage() {
                   type="button"
                   disabled={loading !== null}
                   onClick={() => handleLogin(account.email, account.password, key)}
-                  className="group rounded-xl border border-border bg-white/[0.02] p-3.5 text-left transition-colors hover:border-brand/60 hover:bg-brand/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                  className="w-full h-11 px-3 rounded-lg border border-border/70 flex items-center gap-2.5 text-sm font-medium antialiased hover:bg-accent active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
                 >
                   {loading === key ? (
-                    <Loader2 className="mb-2 h-4 w-4 animate-spin text-brand" />
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
                   ) : (
-                    <Icon className="mb-2 h-4 w-4 text-brand" />
+                    <Icon className="w-4 h-4 text-muted-foreground" />
                   )}
-                  <div className="text-sm font-medium">{account.label}</div>
-                  <div className="truncate font-mono text-[10px] text-muted-foreground">
+                  {account.label}
+                  <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">
                     {account.email}
-                  </div>
+                  </span>
                 </button>
               );
             })}
           </div>
         </div>
-
-        <p className="text-center font-mono text-[10px] uppercase tracking-[0.3em] text-muted-foreground/60 animate-enter [animation-delay:240ms]">
-          Every rep counts
-        </p>
       </div>
     </div>
   );
