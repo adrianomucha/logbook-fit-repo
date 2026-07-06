@@ -34,7 +34,6 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { getClientStatus } from '@/lib/client-status';
 import { getCurrentWeekNumber, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
-import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
 function daysAgoLabel(iso?: string | Date | null): string | null {
@@ -542,90 +541,26 @@ export function UnifiedClientProfile() {
         </div>
         )}
 
-        {/* Check-in section — only shown when client has an active plan */}
-        {plan && (
+        {/* Check-in section — only shown while a check-in is in flight; past
+            check-ins live in the History tab */}
+        {plan && activeCheckIn && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>Latest check-in</SectionLabel>
           <SectionCard>
-            {activeCheckIn ? (
-              <InlineCheckInReview
-                client={client}
-                activeCheckIn={activeCheckIn}
-                plan={plan}
-                workoutCompletions={workoutCompletions}
-                exerciseFlags={[]}
-                currentUserId={user?.id ?? ''}
-                onCompleteCheckIn={handleCompleteCheckIn}
-                onCreateCheckIn={handleCreateCheckIn}
-                onMessageAboutFlag={handleMessageAboutFlag}
-                justSentFromParent={justSentCheckIn}
-                hideTitle={activeCheckIn?.status === 'responded'}
-                variant="flat"
-              />
-            ) : (
-              /* No check-in in flight — one compact row instead of a full-height hero,
-                 summarizing the most recent completed check-in so the section earns its label */
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="min-w-0">
-                  {lastCompletedCheckIn ? (
-                    <>
-                      <p className="text-sm font-semibold antialiased">
-                        Completed {format(new Date(lastCompletedCheckIn.completedAt || lastCompletedCheckIn.date), 'MMM d')}
-                        {lastCompletedCheckIn.workoutFeeling && WORKOUT_FEELING_DISPLAY[lastCompletedCheckIn.workoutFeeling] && (
-                          <span className="font-normal text-muted-foreground">
-                            {' '}· {WORKOUT_FEELING_DISPLAY[lastCompletedCheckIn.workoutFeeling].emoji} {WORKOUT_FEELING_DISPLAY[lastCompletedCheckIn.workoutFeeling].label}
-                          </span>
-                        )}
-                        {lastCompletedCheckIn.bodyFeeling && BODY_FEELING_DISPLAY[lastCompletedCheckIn.bodyFeeling] && (
-                          <span className="font-normal text-muted-foreground">
-                            {' '}· {BODY_FEELING_DISPLAY[lastCompletedCheckIn.bodyFeeling].emoji} {BODY_FEELING_DISPLAY[lastCompletedCheckIn.bodyFeeling].label}
-                          </span>
-                        )}
-                      </p>
-                      {lastCompletedCheckIn.clientNotes && (
-                        <p className="font-prose text-[13px] text-muted-foreground truncate mt-0.5 antialiased">
-                          &ldquo;{lastCompletedCheckIn.clientNotes}&rdquo;
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      <p className="text-sm font-semibold antialiased">No check-ins yet</p>
-                      <p className="text-[13px] text-muted-foreground mt-0.5 antialiased">
-                        Send the first one to hear how {firstName}&apos;s training is going.
-                      </p>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {lastCompletedCheckIn && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-muted-foreground hover:text-foreground tap-target"
-                      onClick={() => {
-                        setSecondaryTab('history');
-                        secondaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }}
-                    >
-                      View history
-                    </Button>
-                  )}
-                  {/* The header CTA already sends the check-in — don't repeat the same primary button */}
-                  {primaryAction.kind !== 'send' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={handleStartCheckIn}
-                      disabled={isSendingCheckIn || justSentCheckIn}
-                      className="active:scale-[0.96] transition-transform duration-150 tap-target"
-                    >
-                      {isSendingCheckIn ? 'Sending…' : justSentCheckIn ? 'Sent ✓' : 'Send check-in'}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
+            <InlineCheckInReview
+              client={client}
+              activeCheckIn={activeCheckIn}
+              plan={plan}
+              workoutCompletions={workoutCompletions}
+              exerciseFlags={[]}
+              currentUserId={user?.id ?? ''}
+              onCompleteCheckIn={handleCompleteCheckIn}
+              onCreateCheckIn={handleCreateCheckIn}
+              onMessageAboutFlag={handleMessageAboutFlag}
+              justSentFromParent={justSentCheckIn}
+              hideTitle={activeCheckIn?.status === 'responded'}
+              variant="flat"
+            />
           </SectionCard>
         </section>
         )}
