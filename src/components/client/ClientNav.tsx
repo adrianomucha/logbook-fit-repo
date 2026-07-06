@@ -1,5 +1,6 @@
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { SwitchAccountButton } from '@/components/SwitchAccountButton';
+import { Logo } from '@/components/brand/LogoMark';
 import { Dumbbell, MessageSquare, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -34,15 +35,10 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
             {/* Logotype */}
             <button
               onClick={() => onTabChange('workout')}
-              className="flex items-baseline gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label="Logbook Fitness home"
             >
-              <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-foreground">
-                Logbook
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
-                Fitness
-              </span>
+              <Logo markSize={20} />
             </button>
 
             {/* Brand / nav divider */}

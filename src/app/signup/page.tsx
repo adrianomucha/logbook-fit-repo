@@ -6,7 +6,8 @@ import { signIn } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { LogoMark } from '@/components/brand/LogoMark';
 
 interface InviteInfo {
   valid: boolean;
@@ -138,7 +139,12 @@ function SignupContent() {
       <div className="min-h-screen bg-background p-4 pt-16 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl font-bold mb-2">LogBook.fit</h1>
+            <div className="flex justify-center mb-4">
+              <LogoMark size={44} />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight mb-2">
+              Logbook<span className="text-muted-foreground/60">.fit</span>
+            </h1>
           </div>
           <Card>
             <CardContent className="pt-8 pb-8 text-center space-y-3">
@@ -164,7 +170,12 @@ function SignupContent() {
     <div className="min-h-screen bg-background p-4 pt-12 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center space-y-1">
-          <h1 className="text-3xl sm:text-4xl font-bold">LogBook.fit</h1>
+          <div className="flex justify-center mb-3">
+            <LogoMark size={44} />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Logbook<span className="text-muted-foreground/60">.fit</span>
+          </h1>
           <p className="text-muted-foreground">
             <strong>{inviteInfo.coachName}</strong> invited you to train together
           </p>
