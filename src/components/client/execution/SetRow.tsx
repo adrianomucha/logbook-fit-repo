@@ -2,6 +2,12 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Shared grid template for the set table: SET · LAST · WEIGHT · REPS · ✓.
+ * The header row in ExerciseCard uses the same template so columns align.
+ */
+export const SET_GRID = 'grid grid-cols-[1.75rem_1fr_4.25rem_3.5rem_2rem] gap-x-2 items-center';
+
 interface SetRowProps {
   setNumber: number;
   /** Coach-prescribed reps. Usually a number, but tolerate a range string like "6-8". */
@@ -12,6 +18,8 @@ interface SetRowProps {
   actualReps?: number | null;
   /** Logged weight for this set (null if not logged yet) */
   actualWeight?: number | null;
+  /** Last session's result, compact ("52.5×8") — rendered as the LAST column */
+  previous?: string;
   completed: boolean;
   onToggle: () => void;
   onChangeReps?: (reps: number) => void;
@@ -36,20 +44,13 @@ function parseTargetWeight(target?: string | number): number | undefined {
   return m ? Number(m[0]) : undefined;
 }
 
-function weightUnit(target?: string | number): string {
-  return target != null && /kg/i.test(String(target)) ? 'kg' : 'lbs';
-}
-
-function toStr(v?: string | number): string | undefined {
-  return v == null ? undefined : String(v);
-}
-
 export function SetRow({
   setNumber,
   repsTarget,
   weightTarget,
   actualReps,
   actualWeight,
+  previous,
   completed,
   onToggle,
   onChangeReps,
@@ -59,7 +60,6 @@ export function SetRow({
 }: SetRowProps) {
   const defaultReps = parseTargetReps(repsTarget);
   const defaultWeight = parseTargetWeight(weightTarget);
-  const unit = weightUnit(weightTarget);
 
   // Local input state seeded from the logged value, falling back to the
   // prescribed target. SetRows unmount when their exercise collapses, so this
@@ -98,42 +98,68 @@ export function SetRow({
     onToggle();
   };
 
+  const cellInput = (opts: {
+    value: string;
+    placeholder?: string;
+    onChange: (v: string) => void;
+    inputMode: 'numeric' | 'decimal';
+    label: string;
+  }) => (
+    <input
+      type="text"
+      inputMode={opts.inputMode}
+      value={opts.value}
+      placeholder={opts.placeholder ?? '—'}
+      disabled={isReadOnly}
+      aria-label={`Set ${setNumber} ${opts.label}`}
+      onChange={(e) => opts.onChange(e.target.value)}
+      className={cn(
+        // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
+        'h-11 w-full rounded-lg text-center font-mono text-base sm:text-sm font-bold tabular-nums outline-none transition-colors',
+        'placeholder:font-semibold placeholder:text-muted-foreground/40 disabled:opacity-100',
+        completed
+          ? 'bg-transparent text-muted-foreground/50'
+          : 'bg-muted/50 text-foreground focus:bg-background focus:ring-1 focus:ring-foreground/20'
+      )}
+    />
+  );
+
   return (
     <div
       className={cn(
-        'flex items-center gap-3 py-2.5',
-        showDivider && 'border-t border-border/40'
+        SET_GRID,
+        'h-[56px]',
+        showDivider && 'border-t border-border/30'
       )}
     >
       <span
         className={cn(
-          'font-mono text-[11px] font-medium uppercase tracking-[0.12em] tabular-nums flex-shrink-0 transition-colors',
+          'font-mono text-sm font-bold tabular-nums transition-colors',
           completed ? 'text-muted-foreground/40' : 'text-muted-foreground'
         )}
       >
-        Set {setNumber}
+        {setNumber}
       </span>
 
-      <div className="ml-auto flex items-center gap-2">
-        <Field
-          label="reps"
-          value={reps}
-          placeholder={toStr(repsTarget) ?? '—'}
-          onChange={commitReps}
-          disabled={isReadOnly}
-          completed={completed}
-          inputMode="numeric"
-        />
-        <Field
-          label={unit}
-          value={weight}
-          placeholder={defaultWeight != null ? String(defaultWeight) : toStr(weightTarget) ?? '—'}
-          onChange={commitWeight}
-          disabled={isReadOnly}
-          completed={completed}
-          inputMode="decimal"
-        />
-      </div>
+      <span className="font-mono text-xs tabular-nums text-muted-foreground/45 truncate">
+        {previous || '—'}
+      </span>
+
+      {cellInput({
+        value: weight,
+        placeholder: defaultWeight != null ? String(defaultWeight) : undefined,
+        onChange: commitWeight,
+        inputMode: 'decimal',
+        label: 'weight',
+      })}
+
+      {cellInput({
+        value: reps,
+        placeholder: defaultReps != null ? String(defaultReps) : undefined,
+        onChange: commitReps,
+        inputMode: 'numeric',
+        label: 'reps',
+      })}
 
       <button
         type="button"
@@ -142,7 +168,7 @@ export function SetRow({
         aria-label={completed ? `Mark set ${setNumber} incomplete` : `Mark set ${setNumber} complete`}
         aria-pressed={completed}
         className={cn(
-          'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 touch-manipulation',
+          'w-8 h-8 rounded-full border-2 flex items-center justify-center justify-self-end transition-all duration-200 touch-manipulation',
           !isReadOnly && 'active:scale-[0.92] cursor-pointer',
           completed
             ? 'bg-success border-success'
@@ -152,52 +178,5 @@ export function SetRow({
         {completed && <Check className="w-4 h-4 text-success-foreground animate-set-complete" />}
       </button>
     </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  placeholder,
-  onChange,
-  disabled,
-  completed,
-  inputMode,
-}: {
-  label: string;
-  value: string;
-  placeholder?: string;
-  onChange: (v: string) => void;
-  disabled?: boolean;
-  completed?: boolean;
-  inputMode?: 'numeric' | 'decimal';
-}) {
-  return (
-    <label
-      className={cn(
-        'flex items-baseline gap-1.5 rounded-lg px-2.5 py-1.5 transition-all',
-        disabled && 'pointer-events-none',
-        completed
-          ? 'bg-muted/30'
-          : 'bg-muted/60 focus-within:bg-background focus-within:ring-1 focus-within:ring-foreground/15'
-      )}
-    >
-      <input
-        type="text"
-        inputMode={inputMode}
-        value={value}
-        placeholder={placeholder}
-        disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-        className={cn(
-          // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
-          'w-11 bg-transparent font-mono text-base sm:text-sm font-bold tabular-nums text-right outline-none placeholder:font-semibold placeholder:text-muted-foreground/40 disabled:opacity-100',
-          completed ? 'text-muted-foreground/50' : 'text-foreground'
-        )}
-      />
-      <span className="font-mono text-[10px] font-medium uppercase tracking-[0.12em] text-muted-foreground/60">
-        {label}
-      </span>
-    </label>
   );
 }

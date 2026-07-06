@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input';
 import { Check, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { LastPerformance, WorkoutExercise } from '@/types/api';
-import { SetRow } from './SetRow';
+import { SetRow, SET_GRID } from './SetRow';
 import {
   isExerciseComplete,
   getCompletedSetsCount,
@@ -14,25 +14,12 @@ function weightUnit(weightTarget?: string | null): string {
   return weightTarget && /kg/i.test(weightTarget) ? 'kg' : 'lbs';
 }
 
-/** "52.5 lbs × 8" / "12 reps" (bodyweight) — empty if nothing logged. */
-function formatLastSet(p: LastPerformance, unit: string): string {
+/** Compact last-session cell for the set table: "52.5×8" / "12" — empty if nothing logged. */
+function formatLastCompact(p: LastPerformance): string {
   if (p.weight != null) {
-    return p.reps != null ? `${p.weight} ${unit} × ${p.reps}` : `${p.weight} ${unit}`;
+    return p.reps != null ? `${p.weight}×${p.reps}` : String(p.weight);
   }
-  return p.reps != null ? `${p.reps} ${p.reps === 1 ? 'rep' : 'reps'}` : '';
-}
-
-/** Compact "when": today / yesterday / 3d ago / 2w ago / Mar 4. */
-function relativeDay(iso: string): string {
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
-  if (days <= 0) return 'today';
-  if (days === 1) return 'yesterday';
-  if (days < 7) return `${days}d ago`;
-  if (days < 35) return `${Math.round(days / 7)}w ago`;
-  return new Date(iso).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  });
+  return p.reps != null ? String(p.reps) : '';
 }
 
 interface ExerciseCardProps {
@@ -184,49 +171,15 @@ export function ExerciseCard({
         )}
       </button>
 
-      {/* ── Expanded: set rows + coach tip + flag ── */}
+      {/* ── Expanded: coach tip + set table + flag ── */}
       {isExpanded && (
-        <div className="pl-[42px] pr-1 pb-3.5 pt-0.5 space-y-2.5 animate-fade-in-up">
+        <div className="pl-[42px] pr-1 pb-4 pt-1.5 space-y-3.5 animate-fade-in-up">
           {/* Coach note — the volt rail alone marks the voice; no label line */}
           {exercise.coachNotes && (
-            <p className="pl-3 border-l-2 border-brand text-[13px] leading-snug text-foreground/75">
+            <p className="pl-3 border-l-2 border-brand text-sm leading-relaxed text-foreground/75">
               {exercise.coachNotes}
             </p>
           )}
-
-          {/* Meta row — last session reference and the flag action share one line */}
-          {(() => {
-            const last = exercise.lastPerformance;
-            const lastValue = last ? formatLastSet(last, weightUnit(exercise.weight)) : '';
-            const showFlagButton = !isFlagged && !isReadOnly;
-            if (!lastValue && !showFlagButton) return null;
-            return (
-              <div className="flex items-center justify-between gap-3">
-                {lastValue ? (
-                  <p className="font-mono text-[11px] tabular-nums text-muted-foreground min-w-0 truncate">
-                    <span className="uppercase tracking-[0.14em] text-muted-foreground/60">Last </span>
-                    <span className="font-semibold text-foreground/70">{lastValue}</span>
-                    {last?.performedAt && (
-                      <span className="text-muted-foreground/50"> · {relativeDay(last.performedAt)}</span>
-                    )}
-                  </p>
-                ) : (
-                  <span aria-hidden="true" />
-                )}
-                {showFlagButton && (
-                  <button
-                    type="button"
-                    onClick={handleFlagClick}
-                    aria-label="Flag for coach"
-                    className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation shrink-0 py-1.5 -my-1.5"
-                  >
-                    <Flag className="w-3.5 h-3.5" />
-                    Flag
-                  </button>
-                )}
-              </div>
-            );
-          })()}
 
           {/* Flag section */}
           {isFlagged && (
@@ -279,8 +232,24 @@ export function ExerciseCard({
             </div>
           )}
 
-          {/* Set rows */}
+          {/* Set table — SET · LAST · WEIGHT · REPS · ✓. Labels live in this
+              header once, so the rows below are pure numbers. */}
           <div>
+            <div className={cn(SET_GRID, 'pb-1')}>
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50">
+                Set
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50">
+                Last
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
+                {weightUnit(exercise.weight)}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
+                Reps
+              </span>
+              <span aria-hidden="true" />
+            </div>
             {setRows.map((setNumber, idx) => {
               const sc = exercise.setCompletions.find(
                 (s) => s.setNumber === setNumber
@@ -293,6 +262,11 @@ export function ExerciseCard({
                   weightTarget={exercise.weight ?? undefined}
                   actualReps={sc?.actualReps ?? null}
                   actualWeight={sc?.actualWeight ?? null}
+                  previous={
+                    exercise.lastPerformance
+                      ? formatLastCompact(exercise.lastPerformance)
+                      : undefined
+                  }
                   completed={!!sc?.completed}
                   onToggle={() =>
                     onToggleSet(exercise.workoutExerciseId, setNumber)
@@ -313,6 +287,18 @@ export function ExerciseCard({
               );
             })}
           </div>
+
+          {/* Flag — quiet action at the end of the exercise */}
+          {!isFlagged && !isReadOnly && (
+            <button
+              type="button"
+              onClick={handleFlagClick}
+              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation py-2 -my-2"
+            >
+              <Flag className="w-3.5 h-3.5" />
+              Flag for coach
+            </button>
+          )}
         </div>
       )}
     </div>
