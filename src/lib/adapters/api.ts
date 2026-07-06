@@ -49,6 +49,7 @@ export function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
                 reps: formatReps(e.reps, e.repsMax),
                 weight: e.weight ?? undefined,
                 notes: e.coachNotes ?? undefined,
+                supersetWithPrevious: e.supersetWithPrevious || undefined,
               }),
             ),
           }),

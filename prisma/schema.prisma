@@ -272,6 +272,7 @@ model WorkoutExercise {
   weight      Float?  // kg or lbs (user preference)
   restSeconds Int?    // Rest between sets
   coachNotes  String? // Per-workout coaching notes
+  supersetWithPrevious Boolean @default(false) // Chains this exercise to the one above it into a superset
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

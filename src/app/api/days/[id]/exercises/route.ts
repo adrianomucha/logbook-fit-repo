@@ -33,7 +33,7 @@ export const POST = withCoach(
     }
 
     const body = await req.json();
-    const { exerciseId, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex } = body as {
+    const { exerciseId, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
       exerciseId?: string;
       sets?: number;
       reps?: number;
@@ -42,6 +42,7 @@ export const POST = withCoach(
       restSeconds?: number;
       coachNotes?: string;
       orderIndex?: number;
+      supersetWithPrevious?: boolean;
     };
 
     if (!exerciseId) {
@@ -84,6 +85,7 @@ export const POST = withCoach(
         weight: weight ?? exercise.defaultWeight,
         restSeconds: restSeconds ?? exercise.defaultRest,
         coachNotes,
+        supersetWithPrevious: supersetWithPrevious ?? false,
       },
       include: {
         exercise: {

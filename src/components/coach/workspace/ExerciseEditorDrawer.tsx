@@ -10,7 +10,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Library, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Library, Link2, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
 import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
@@ -28,6 +29,8 @@ interface ExerciseEditorContentProps {
   exerciseNumber?: number;
   /** Whether this is rendered inline (true) or standalone */
   open?: boolean;
+  /** Name of the exercise directly above this one, when there is one — enables the superset toggle */
+  previousExerciseName?: string | null;
 }
 
 /**
@@ -41,6 +44,7 @@ export function ExerciseEditorContent({
   onDelete,
   exerciseNumber,
   open = true,
+  previousExerciseName,
 }: ExerciseEditorContentProps) {
   const isNew = !exercise;
   const [mode, setMode] = useState<'library' | 'custom'>(isNew ? 'library' : 'custom');
@@ -64,6 +68,7 @@ export function ExerciseEditorContent({
   const [weightUnit, setWeightUnit] = useState(exercise?.weightUnit || 'lbs');
   const [restSeconds, setRestSeconds] = useState(exercise?.restSeconds?.toString() || '');
   const [notes, setNotes] = useState(exercise?.notes || '');
+  const [supersetWithPrevious, setSupersetWithPrevious] = useState(!!exercise?.supersetWithPrevious);
 
   // Reset form when exercise changes
   useEffect(() => {
@@ -75,6 +80,7 @@ export function ExerciseEditorContent({
       setWeightUnit(exercise.weightUnit || 'lbs');
       setRestSeconds(exercise.restSeconds?.toString() || '');
       setNotes(exercise.notes || '');
+      setSupersetWithPrevious(!!exercise.supersetWithPrevious);
       setMode('custom');
     } else {
       setName('');
@@ -84,6 +90,7 @@ export function ExerciseEditorContent({
       setWeightUnit('lbs');
       setRestSeconds('');
       setNotes('');
+      setSupersetWithPrevious(false);
       setMode('library');
     }
     setSearchQuery('');
@@ -132,6 +139,7 @@ export function ExerciseEditorContent({
       weightUnit,
       restSeconds: restSeconds ? Math.max(0, parseInt(restSeconds)) : undefined,
       notes: notes.trim() || undefined,
+      supersetWithPrevious: previousExerciseName ? supersetWithPrevious : false,
     };
     try {
       await onSave(savedExercise);
@@ -367,6 +375,29 @@ export function ExerciseEditorContent({
                 className="tabular-nums"
               />
             </div>
+
+            {/* Superset toggle — only when there's an exercise above to pair with */}
+            {previousExerciseName && (
+              <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2.5">
+                <div className="min-w-0">
+                  <label
+                    htmlFor="superset-toggle"
+                    className="text-sm font-medium flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                    Superset with previous
+                  </label>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                    Pairs with {previousExerciseName} — client alternates sets
+                  </p>
+                </div>
+                <Switch
+                  id="superset-toggle"
+                  checked={supersetWithPrevious}
+                  onCheckedChange={setSupersetWithPrevious}
+                />
+              </div>
+            )}
 
             {/* Coaching Notes */}
             <div>

@@ -150,6 +150,7 @@ export const GET = withClient(
         weight: we.weight,
         restSeconds: we.restSeconds,
         coachNotes: we.coachNotes,
+        supersetWithPrevious: we.supersetWithPrevious,
         exercise: we.exercise,
         setCompletions: completion
           ? completion.sets.filter((s) => s.workoutExerciseId === we.id)

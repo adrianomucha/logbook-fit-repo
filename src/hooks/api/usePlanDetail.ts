@@ -30,6 +30,7 @@ export interface PlanDetail {
         weight: string | null;
         restSeconds: number | null;
         coachNotes: string | null;
+        supersetWithPrevious: boolean;
         exercise: {
           id: string;
           name: string;

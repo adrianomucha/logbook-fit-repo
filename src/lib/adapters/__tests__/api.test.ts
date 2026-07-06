@@ -47,6 +47,7 @@ describe("apiPlanToWorkoutPlan", () => {
                 weight: "135 lbs",
                 restSeconds: 90,
                 coachNotes: "Focus on form",
+                supersetWithPrevious: false,
                 exercise: {
                   id: "ex-1",
                   name: "Bench Press",
@@ -82,6 +83,34 @@ describe("apiPlanToWorkoutPlan", () => {
     expect(result.weeks[0].days[0].exercises[0].name).toBe("Bench Press");
     expect(result.weeks[0].days[0].exercises[0].sets).toBe(3);
     expect(result.weeks[0].days[0].exercises[0].reps).toBe("8-10");
+    expect(result.weeks[0].days[0].exercises[0].supersetWithPrevious).toBeUndefined();
+  });
+
+  it("maps supersetWithPrevious when set", () => {
+    const plan = {
+      ...basePlan,
+      weeks: [
+        {
+          ...basePlan.weeks[0],
+          days: [
+            {
+              ...basePlan.weeks[0].days[0],
+              exercises: [
+                basePlan.weeks[0].days[0].exercises[0],
+                {
+                  ...basePlan.weeks[0].days[0].exercises[0],
+                  id: "we-2",
+                  orderIndex: 1,
+                  supersetWithPrevious: true,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const result = apiPlanToWorkoutPlan(plan);
+    expect(result.weeks[0].days[0].exercises[1].supersetWithPrevious).toBe(true);
   });
 
   it("handles null day name with fallback", () => {

@@ -10,6 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import {
   Dumbbell,
+  Link2,
   MoreHorizontal,
   Pencil,
   ArrowRightLeft,
@@ -17,6 +18,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { groupBySuperset, isSuperset } from '@/lib/superset';
 import { Client, WorkoutPlan, Exercise } from '@/types';
 import { getCurrentWeekNumber } from '@/lib/workout-week-helpers';
 
@@ -196,9 +198,25 @@ export function InlinePlanEditor({
               </div>
             ) : (
               <div className="divide-y divide-border/40">
-                {selectedDay.exercises?.map((exercise) => (
-                  <ExerciseRow key={exercise.id} exercise={exercise} />
-                ))}
+                {groupBySuperset(selectedDay.exercises ?? []).map((group) =>
+                  isSuperset(group) ? (
+                    <div key={group[0].id} className="py-1.5">
+                      <div className="flex items-center gap-1.5 px-0.5 pb-0.5">
+                        <Link2 className="w-3 h-3 text-muted-foreground/60" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+                          Superset
+                        </span>
+                      </div>
+                      <div className="border-l-2 border-foreground/15 pl-2 divide-y divide-border/40">
+                        {group.map((exercise) => (
+                          <ExerciseRow key={exercise.id} exercise={exercise} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <ExerciseRow key={group[0].id} exercise={group[0]} />
+                  )
+                )}
               </div>
             )}
           </>

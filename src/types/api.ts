@@ -209,6 +209,8 @@ export interface WorkoutExercise {
   weight: string | null;
   restSeconds: number | null;
   coachNotes: string | null;
+  /** Chained to the exercise above it (by orderIndex) into a superset. */
+  supersetWithPrevious: boolean;
   exercise: {
     id: string;
     name: string;

@@ -37,7 +37,8 @@ function relativeDay(iso: string): string {
 
 interface ExerciseCardProps {
   exercise: WorkoutExercise;
-  exerciseNumber: number;
+  /** Display label: "4" for a standalone exercise, "4A"/"4B" inside a superset */
+  exerciseLabel: string;
   isExpanded: boolean;
   onToggleExpand: () => void;
   onToggleSet: (workoutExerciseId: string, setNumber: number) => void;
@@ -56,7 +57,7 @@ interface ExerciseCardProps {
 
 export function ExerciseCard({
   exercise,
-  exerciseNumber,
+  exerciseLabel,
   isExpanded,
   onToggleExpand,
   onToggleSet,
@@ -114,10 +115,11 @@ export function ExerciseCard({
         <span
           className={cn(
             'w-8 sm:w-10 flex-shrink-0 text-2xl sm:text-3xl font-bold tabular-nums tracking-tight transition-colors',
+            exerciseLabel.length > 2 && 'text-xl sm:text-2xl',
             isComplete ? 'text-success' : 'text-foreground/20'
           )}
         >
-          {exerciseNumber}
+          {exerciseLabel}
         </span>
 
         {/* Middle — name + prescription */}

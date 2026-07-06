@@ -49,7 +49,7 @@ export const PUT = withCoach(
     }
 
     const body = await req.json();
-    const { sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex } = body as {
+    const { sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
       sets?: number;
       reps?: number;
       repsMax?: number | null;
@@ -57,6 +57,7 @@ export const PUT = withCoach(
       restSeconds?: number;
       coachNotes?: string;
       orderIndex?: number;
+      supersetWithPrevious?: boolean;
     };
 
     const updated = await prisma.workoutExercise.update({
@@ -69,6 +70,7 @@ export const PUT = withCoach(
         ...(restSeconds !== undefined ? { restSeconds } : {}),
         ...(coachNotes !== undefined ? { coachNotes } : {}),
         ...(orderIndex !== undefined ? { orderIndex } : {}),
+        ...(supersetWithPrevious !== undefined ? { supersetWithPrevious } : {}),
       },
       include: {
         exercise: {

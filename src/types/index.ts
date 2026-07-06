@@ -10,6 +10,8 @@ export interface Exercise {
   restSeconds?: number;
   notes?: string;
   completed?: boolean;
+  /** Chained to the exercise above it into a superset. */
+  supersetWithPrevious?: boolean;
 }
 
 export interface WorkoutDay {

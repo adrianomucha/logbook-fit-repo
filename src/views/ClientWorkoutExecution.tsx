@@ -10,6 +10,8 @@ import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
 import { FinishWorkoutButton } from '@/components/client/execution/FinishWorkoutButton';
 import { FlagMessageSheet } from '@/components/client/execution/FlagMessageSheet';
 import type { WorkoutExercise } from '@/types/api';
+import { groupBySuperset, isSuperset, exerciseLabel } from '@/lib/superset';
+import { Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -492,22 +494,49 @@ export function ClientWorkoutExecution() {
         )}
       >
         <div className="flex flex-col gap-5 sm:gap-7">
-          {exercises.map((exercise, index) => (
-            <ExerciseCard
-              key={exercise.workoutExerciseId}
-              id={`exercise-${exercise.workoutExerciseId}`}
-              exercise={exercise}
-              exerciseNumber={index + 1}
-              isExpanded={expandedExerciseId === exercise.workoutExerciseId}
-              onToggleExpand={() => handleToggleExpand(exercise.workoutExerciseId)}
-              onToggleSet={toggleSet}
-              onUpdateSet={updateSet}
-              onToggleFlag={() => toggleFlag(exercise.workoutExerciseId)}
-              onUpdateFlagNote={(note) => updateFlagNote(exercise.workoutExerciseId, note)}
-              onMessageCoach={() => handleMessageCoach(exercise.workoutExerciseId)}
-              isReadOnly={isReadOnly}
-            />
-          ))}
+          {groupBySuperset(exercises).map((group, groupIndex) => {
+            const renderCard = (exercise: WorkoutExercise, memberIndex: number) => (
+              <ExerciseCard
+                key={exercise.workoutExerciseId}
+                id={`exercise-${exercise.workoutExerciseId}`}
+                exercise={exercise}
+                exerciseLabel={exerciseLabel(groupIndex + 1, memberIndex, group.length)}
+                isExpanded={expandedExerciseId === exercise.workoutExerciseId}
+                onToggleExpand={() => handleToggleExpand(exercise.workoutExerciseId)}
+                onToggleSet={toggleSet}
+                onUpdateSet={updateSet}
+                onToggleFlag={() => toggleFlag(exercise.workoutExerciseId)}
+                onUpdateFlagNote={(note) => updateFlagNote(exercise.workoutExerciseId, note)}
+                onMessageCoach={() => handleMessageCoach(exercise.workoutExerciseId)}
+                isReadOnly={isReadOnly}
+              />
+            );
+
+            if (!isSuperset(group)) {
+              return renderCard(group[0], 0);
+            }
+
+            // Superset: members share one framed block so they read as a single station
+            return (
+              <div
+                key={group[0].workoutExerciseId}
+                className="rounded-xl border border-foreground/10 bg-muted/20 px-2 sm:px-3 pb-1"
+              >
+                <div className="flex items-center gap-1.5 pt-2.5 pb-1 pl-1">
+                  <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
+                    Superset
+                  </span>
+                  <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60">
+                    · Alternate sets
+                  </span>
+                </div>
+                <div className="flex flex-col divide-y divide-border/40">
+                  {group.map((exercise, memberIndex) => renderCard(exercise, memberIndex))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

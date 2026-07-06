@@ -13,10 +13,12 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Link2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
 import { parseRepsInput } from '@/lib/reps';
+import { groupBySuperset, isSuperset } from '@/lib/superset';
 import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseEditorContent } from './ExerciseEditorDrawer';
@@ -164,6 +166,7 @@ export function PlanEditorDrawer({
             weight: exercise.weight ? parseFloat(exercise.weight) : null,
             restSeconds: exercise.restSeconds || null,
             coachNotes: exercise.notes || null,
+            supersetWithPrevious: exercise.supersetWithPrevious ?? false,
           }),
         });
       } else {
@@ -197,6 +200,7 @@ export function PlanEditorDrawer({
             weight: exercise.weight ? parseFloat(exercise.weight) : undefined,
             restSeconds: exercise.restSeconds || undefined,
             coachNotes: exercise.notes || undefined,
+            supersetWithPrevious: exercise.supersetWithPrevious ?? false,
           }),
         });
       }
@@ -628,19 +632,54 @@ export function PlanEditorDrawer({
                     </div>
                   ) : (
                     <>
-                      {currentDay.exercises.map((exercise, idx) => (
-                        <div
-                          key={exercise.id}
-                          className="animate-fade-in-up"
-                          style={{ animationDelay: `${idx * 40}ms`, animationFillMode: 'backwards' }}
-                        >
-                          <ExerciseCard
-                            exercise={exercise}
-                            exerciseIndex={idx}
-                            onClick={() => handleEditExercise(idx)}
-                          />
-                        </div>
-                      ))}
+                      {(() => {
+                        let idx = 0;
+                        return groupBySuperset(currentDay.exercises).map((group) => {
+                          const baseIdx = idx;
+                          idx += group.length;
+
+                          if (!isSuperset(group)) {
+                            return (
+                              <div
+                                key={group[0].id}
+                                className="animate-fade-in-up"
+                                style={{ animationDelay: `${baseIdx * 40}ms`, animationFillMode: 'backwards' }}
+                              >
+                                <ExerciseCard
+                                  exercise={group[0]}
+                                  exerciseIndex={baseIdx}
+                                  onClick={() => handleEditExercise(baseIdx)}
+                                />
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div
+                              key={group[0].id}
+                              className="animate-fade-in-up py-2"
+                              style={{ animationDelay: `${baseIdx * 40}ms`, animationFillMode: 'backwards' }}
+                            >
+                              <div className="flex items-center gap-1.5 px-4 pb-1">
+                                <Link2 className="w-3 h-3 text-muted-foreground/60" />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+                                  Superset
+                                </span>
+                              </div>
+                              <div className="ml-4 border-l-2 border-foreground/15 divide-y divide-border/40">
+                                {group.map((exercise, memberIndex) => (
+                                  <ExerciseCard
+                                    key={exercise.id}
+                                    exercise={exercise}
+                                    exerciseIndex={baseIdx + memberIndex}
+                                    onClick={() => handleEditExercise(baseIdx + memberIndex)}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        });
+                      })()}
                       <button
                         onClick={handleAddExercise}
                         className="w-full px-4 py-3.5 sm:py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
@@ -682,6 +721,11 @@ export function PlanEditorDrawer({
               onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
               exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
               open={exerciseDrawerOpen}
+              previousExerciseName={
+                editingExerciseIndex !== null
+                  ? currentDay?.exercises[editingExerciseIndex - 1]?.name ?? null
+                  : currentDay?.exercises[currentDay.exercises.length - 1]?.name ?? null
+              }
             />
           </>
         )}
