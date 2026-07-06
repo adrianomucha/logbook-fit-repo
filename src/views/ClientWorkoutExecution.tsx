@@ -471,7 +471,7 @@ export function ClientWorkoutExecution() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Sticky header */}
       <WorkoutHeader
         workoutName={day.name ?? 'Workout'}
@@ -491,9 +491,9 @@ export function ClientWorkoutExecution() {
       {/* Exercise list — open list, same voice as the dashboard's "The work" section */}
       <div
         className={cn(
-          'px-4 pt-4 max-w-2xl mx-auto w-full',
-          // Just enough bottom space to clear the fixed finish bar (no big gap)
-          isReadOnly ? 'pb-8' : 'pb-[calc(5rem+env(safe-area-inset-bottom))]'
+          'px-4 pt-4 max-w-2xl mx-auto w-full flex-1',
+          // The finish bar sits in normal flow below, so only modest clearance is needed
+          isReadOnly ? 'pb-8' : 'pb-6'
         )}
       >
         <div className="flex items-baseline justify-between mb-1 px-1">
