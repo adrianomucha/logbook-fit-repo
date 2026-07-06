@@ -655,10 +655,11 @@ export function UnifiedClientProfile() {
             </div>
           </section>
 
-          {/* Secondary: Tabbed Plan + History */}
+          {/* Secondary: Tabbed Plan + History.
+              Matches the chat card's height on desktop; footers pin to the bottom
+              edge (like the chat input) so spare space sits inside the card. */}
           <section ref={secondaryRef}>
-            {/* Height follows content — a short plan shouldn't leave a hollow card */}
-            <SectionCard>
+            <SectionCard className="md:h-[480px] md:flex md:flex-col">
               {/* Tab bar */}
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
                 {([
@@ -688,11 +689,14 @@ export function UnifiedClientProfile() {
 
               {/* Tab content */}
               {secondaryTab === 'plan' ? (
-                <div ref={planEditorRef} className={cn(!plan && "flex items-center justify-center py-6")}>
+                <div ref={planEditorRef} className={cn(
+                  "md:flex-1 md:min-h-0 md:flex md:flex-col",
+                  !plan && "flex items-center justify-center py-6"
+                )}>
                   {plan ? (
                     <>
                       {/* Plan actions row */}
-                      <div className="flex items-center justify-between pb-3">
+                      <div className="flex items-center justify-between pb-3 md:shrink-0">
                         <div className="min-w-0">
                           <h3 className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
                             <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
@@ -713,17 +717,19 @@ export function UnifiedClientProfile() {
                           </Button>
                         </div>
                       </div>
-                      {/* Full weekly view — matches client's weekly page */}
-                      <InteractiveWeeklyStrip
-                        client={client}
-                        plan={plan}
-                        planStartDate={client.planStartDate}
-                        workoutCompletions={workoutCompletions}
-                        onEditPlan={handleEditPlan}
-                        variant="flat"
-                      />
-                      {/* Plan meta footer */}
-                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40">
+                      {/* Full weekly view — scrolls internally if it outgrows the card */}
+                      <div className="md:flex-1 md:min-h-0 md:overflow-y-auto">
+                        <InteractiveWeeklyStrip
+                          client={client}
+                          plan={plan}
+                          planStartDate={client.planStartDate}
+                          workoutCompletions={workoutCompletions}
+                          onEditPlan={handleEditPlan}
+                          variant="flat"
+                        />
+                      </div>
+                      {/* Plan meta footer — pinned to the card's bottom edge on desktop */}
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40 md:shrink-0">
                         {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'}
                         {plan.workoutsPerWeek ? ` · ${plan.workoutsPerWeek}×/week` : ''}
                         {client.planStartDate ? ` · Started ${format(new Date(client.planStartDate), 'MMM d')}` : ''}
@@ -745,7 +751,7 @@ export function UnifiedClientProfile() {
                   )}
                 </div>
               ) : (
-                <div>
+                <div className="md:flex-1 md:min-h-0">
                   <CheckInHistoryPanel
                     checkIns={checkIns}
                     clientId={client.id}
