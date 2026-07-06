@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { AnalyticsWithOptOut } from '@/components/AnalyticsWithOptOut';
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import { SessionProvider } from '@/providers/SessionProvider';
@@ -21,6 +21,14 @@ const ibmPlexSans = IBM_Plex_Sans({
   variable: '--font-ibm-plex-sans',
   display: 'swap',
 });
+
+// viewport-fit=cover so env(safe-area-inset-*) resolves on notched iPhones,
+// especially in standalone (home-screen) mode.
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
 
 export const metadata: Metadata = {
   title: 'LogBook.fit',

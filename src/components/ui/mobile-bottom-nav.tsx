@@ -14,10 +14,16 @@ interface MobileBottomNavProps {
   onSelect: (id: string) => void;
 }
 
+/**
+ * iOS-style tab bar: compact 50px content height plus the home-indicator
+ * safe area, translucent blurred background with a hairline top border,
+ * 24px icons over 10px labels, and tint (not indicator bars) for the
+ * active state — per Apple HIG tab bar conventions.
+ */
 export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border/50 px-2 pb-[env(safe-area-inset-bottom)] sm:hidden z-50">
-      <div className="flex items-center justify-around py-2">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-background/90 backdrop-blur-xl border-t border-border/60 pb-[env(safe-area-inset-bottom)]">
+      <div className="flex h-[50px]">
         {items.map((item) => {
           const Icon = item.icon;
           const isActive = activeId === item.id;
@@ -27,26 +33,16 @@ export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavPr
               key={item.id}
               onClick={() => onSelect(item.id)}
               className={cn(
-                'relative flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[48px] py-2 px-3 transition-colors touch-manipulation',
-                isActive
-                  ? 'text-foreground'
-                  : 'text-muted-foreground hover:text-foreground'
+                'flex-1 flex flex-col items-center justify-center gap-1 touch-manipulation transition-colors',
+                isActive ? 'text-foreground' : 'text-muted-foreground'
               )}
               aria-current={isActive ? 'page' : undefined}
             >
-              {/* Active indicator — volt bar along the top edge */}
-              <span
-                className={cn(
-                  'absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full transition-colors',
-                  isActive ? 'bg-brand' : 'bg-transparent'
-                )}
-                aria-hidden="true"
-              />
               <div className="relative">
                 <Icon
                   className={cn(
-                    'w-[22px] h-[22px]',
-                    isActive ? 'stroke-[2px]' : 'stroke-[1.5px]'
+                    'w-6 h-6',
+                    isActive ? 'stroke-[2.2]' : 'stroke-[1.7]'
                   )}
                 />
                 {item.badge !== undefined && item.badge > 0 && (
@@ -55,8 +51,8 @@ export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavPr
               </div>
               <span
                 className={cn(
-                  'text-[11px] leading-tight',
-                  isActive ? 'font-semibold' : 'font-normal'
+                  'text-[10px] leading-none',
+                  isActive ? 'font-semibold' : 'font-medium'
                 )}
               >
                 {item.label}

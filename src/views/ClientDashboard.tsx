@@ -289,7 +289,7 @@ export function ClientDashboard() {
     <div className={cn(
       'bg-background',
       currentView === 'chat'
-        ? 'fixed inset-0 pb-20 flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-screen'
+        ? 'fixed inset-0 pb-[calc(50px+env(safe-area-inset-bottom))] flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-screen'
         : 'sm:pb-4'
     )}>
       <ClientNav
@@ -304,7 +304,7 @@ export function ClientDashboard() {
         'max-w-2xl mx-auto w-full px-4 pt-4 sm:pt-7',
         currentView === 'chat'
           ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
-          : 'space-y-5 sm:space-y-6 pb-24 sm:pb-8'
+          : 'space-y-5 sm:space-y-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-8'
       )}>
 
         {/* Check-in prompt banner */}
