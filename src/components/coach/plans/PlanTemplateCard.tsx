@@ -51,10 +51,10 @@ export function PlanTemplateCard({
         }
       }}
     >
-      <div className="p-5 sm:p-6">
-        {/* Top row: large emoji + actions */}
-        <div className="flex items-start justify-between mb-5">
-          <div className="text-5xl sm:text-6xl leading-none select-none transition-transform duration-200 group-hover:scale-110 group-hover:-rotate-3">
+      <div className="p-4 sm:p-5">
+        {/* Top row: emoji tile + actions */}
+        <div className="flex items-start justify-between mb-4">
+          <div className="w-11 h-11 rounded-lg bg-muted/60 flex items-center justify-center text-2xl leading-none select-none">
             {plan.emoji || '💪'}
           </div>
 
@@ -64,7 +64,7 @@ export function PlanTemplateCard({
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 -mr-1 -mt-1 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                className="h-8 w-8 -mr-1 -mt-1 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
                 onClick={(e) => e.stopPropagation()}
               >
                 <MoreVertical className="w-4 h-4" />
@@ -105,22 +105,22 @@ export function PlanTemplateCard({
         </div>
 
         {/* Plan name */}
-        <h3 className="text-lg sm:text-xl font-bold leading-tight truncate mb-1.5">
+        <h3 className="text-base sm:text-lg font-semibold leading-tight truncate mb-1.5 antialiased">
           {plan.name}
         </h3>
 
-        {/* Metadata — inline, typographic */}
-        <p className="text-xs text-muted-foreground font-medium tabular-nums tracking-wide mb-5">
+        {/* Metadata — same data voice as the profile page's plan footer */}
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mb-4">
           {[
-            plan.durationWeeks && `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'wk' : 'wks'}`,
-            plan.workoutsPerWeek && `${plan.workoutsPerWeek}x / week`,
+            plan.durationWeeks && `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'week' : 'weeks'}`,
+            plan.workoutsPerWeek && `${plan.workoutsPerWeek}\u00D7/week`,
             isArchived && 'Archived',
           ].filter(Boolean).join(' \u00B7 ')}
         </p>
 
         {/* Client count footer */}
-        <div className="pt-3 border-t border-border">
-          <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-[0.15em] text-muted-foreground">
+        <div className="pt-3 border-t border-border/40">
+          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased">
             <Users className="w-3.5 h-3.5" />
             <span className="font-medium">
               {clientCount === 0

@@ -287,7 +287,7 @@ export function CoachDashboard() {
                 title="Plans"
                 subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'template' : 'templates'}` : undefined}
                 action={templates.length > 0 ? (
-                  <Button onClick={handleCreateNewPlan} size="sm" variant="outline" className="active:scale-[0.96] transition-transform duration-150">
+                  <Button onClick={handleCreateNewPlan} size="sm" className="active:scale-[0.96] transition-transform duration-150 tap-target">
                     <Plus className="w-4 h-4 mr-1.5" />
                     New Plan
                   </Button>
@@ -301,7 +301,7 @@ export function CoachDashboard() {
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
               ) : templates.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
                   {templates.map((plan, i) => (
                     <div
                       key={plan.id}
