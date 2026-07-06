@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { UserCog, User, Loader2 } from 'lucide-react';
+import { LogoMark } from '@/components/brand/LogoMark';
 
 const DEMO_ACCOUNTS = {
   coach: { email: 'coach@logbook.fit', password: 'demo1234', label: 'Demo Coach', icon: UserCog },
@@ -56,7 +57,12 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background p-4 flex items-center justify-center">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-2">LogBook.fit</h1>
+          <div className="flex justify-center mb-4">
+            <LogoMark size={44} />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight mb-1">
+            Logbook<span className="text-muted-foreground/60">.fit</span>
+          </h1>
           <p className="text-muted-foreground">Sign in to continue</p>
         </div>
 

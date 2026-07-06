@@ -2,6 +2,7 @@ import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { SwitchAccountButton } from '@/components/SwitchAccountButton';
+import { Logo } from '@/components/brand/LogoMark';
 import { Home, Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -63,15 +64,10 @@ export function CoachNav({
             {/* Logotype */}
             <button
               onClick={() => router.push('/coach')}
-              className="flex items-baseline gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex items-center rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label="Logbook Fitness home"
             >
-              <span className="font-mono text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-foreground">
-                Logbook
-              </span>
-              <span className="font-mono text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
-                Fitness
-              </span>
+              <Logo markSize={20} />
             </button>
 
             {/* Brand / nav divider */}
