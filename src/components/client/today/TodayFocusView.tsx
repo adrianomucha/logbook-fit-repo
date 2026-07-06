@@ -6,7 +6,8 @@ import { CoachContextStrip } from './CoachContextStrip';
 import { QuickEffortFeedback } from './QuickEffortFeedback';
 import { WorkoutOverview } from './WorkoutOverview';
 import { Button } from '@/components/ui/button';
-import { Calendar, ChevronRight, RotateCcw } from 'lucide-react';
+import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
+import { RotateCcw } from 'lucide-react';
 
 interface TodayFocusViewProps {
   client: Client;
@@ -78,6 +79,11 @@ export function TodayFocusView({
         <StatusHeader status={statusType} clientName={client.name} />
       </div>
 
+      {/* Today / week switcher — navigation chrome, kept quiet */}
+      <div className="animate-fade-in-up" style={{ animationDelay: '30ms' }}>
+        <WorkoutViewToggle value="today" onChange={(m) => m === 'weekly' && onViewWeekly()} />
+      </div>
+
       {/* Hero session card + exercise list (scheduled / in-progress) */}
       {showOverview && todayWorkout?.workoutDay && (
         <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
@@ -138,17 +144,6 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* View Week — one full-width tappable row */}
-      <div className="animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-        <button
-          onClick={onViewWeekly}
-          className="w-full h-12 rounded-xl border border-border/70 bg-card flex items-center gap-3 px-4 text-sm font-medium text-foreground hover:bg-muted/50 active:scale-[0.99] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Calendar className="w-4 h-4 text-muted-foreground" />
-          <span className="flex-1 text-left">View full week</span>
-          <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
-        </button>
-      </div>
     </div>
   );
 }

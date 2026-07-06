@@ -26,6 +26,7 @@ import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
+import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 
@@ -349,14 +350,13 @@ export function ClientDashboard() {
 
         {currentView === 'workout' && workoutViewMode === 'weekly' && (
           <>
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setWorkoutViewMode('today')}
-                className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation py-1"
-              >
-                ← Today
-              </button>
-            </div>
+            <WorkoutViewToggle
+              value="weekly"
+              onChange={(m) => {
+                setWorkoutViewMode(m);
+                window.scrollTo(0, 0);
+              }}
+            />
 
             <WeeklyOverview
               client={client}
