@@ -403,32 +403,47 @@ export function UnifiedClientProfile() {
   const StatusIcon = showStatusBanner ? status!.icon : null;
   const statusIsUrgent = showStatusBanner && (status!.type === 'overdue' || status!.type === 'at-risk');
 
+  // Days-since detail for urgent statuses — shown inline in the subtitle
+  // instead of a separate alert strip, so "overdue" is said once, in one place.
+  const urgentDetail: string | null = (() => {
+    if (!statusIsUrgent || !client.lastCheckInDate) return null;
+    const days = Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24));
+    if (status!.type === 'overdue') return `${Math.max(1, days)}d since last check-in`;
+    return `${Math.max(1, 7 - days)}d until overdue`;
+  })();
+
   // Primary action — always give the coach one obvious next move, chosen by the
-  // client's state, so the page is never just a passive read-out.
+  // client's state, so the page is never just a passive read-out. `kind` lets
+  // other parts of the page avoid repeating the same button.
   const scrollToChat = () =>
     chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const primaryAction: { label: string; onClick: () => void; disabled?: boolean } =
+  const primaryAction: { label: string; onClick: () => void; disabled?: boolean; kind: 'assign' | 'review' | 'message' | 'send' } =
     !plan
-      ? { label: 'Assign a plan', onClick: handleChangePlan }
+      ? { label: 'Assign a plan', onClick: handleChangePlan, kind: 'assign' }
       : activeCheckIn?.status === 'responded'
-        ? { label: 'Review check-in', onClick: handleScrollToCheckIn }
+        ? { label: 'Review check-in', onClick: handleScrollToCheckIn, kind: 'review' }
         : activeCheckIn?.status === 'pending'
-          ? { label: `Message ${firstName}`, onClick: scrollToChat }
-          : statusIsUrgent
-            ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn }
-            : status?.hasUnread
-              ? { label: `Message ${firstName}`, onClick: scrollToChat }
-              : { label: isSendingCheckIn ? 'Sending…' : 'Request check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn };
+          ? { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' }
+          : statusIsUrgent || !status?.hasUnread
+            ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn, kind: 'send' }
+            : { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' };
 
-  // Build subtitle from status or plan. Status text is a label (uppercase via
-  // PageHeader's string styling); the plan is an entity name, so it keeps its
-  // case and gets a quieter metadata voice instead of shouting in tracked caps.
-  const headerSubtitle: React.ReactNode = statusLabel
-    ?? (plan ? (
-      <p className="text-[13px] text-muted-foreground antialiased">
-        {plan.emoji} {plan.name}
+  // Build subtitle from status or plan. Urgent statuses get the warning voice
+  // with the days detail folded in; everything else keeps a quiet metadata line.
+  const headerSubtitle: React.ReactNode = statusIsUrgent && statusLabel && StatusIcon
+    ? (
+      <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-warning font-medium antialiased flex items-center gap-1.5">
+        <StatusIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+        {statusLabel}
+        {urgentDetail && <span className="text-warning/70 normal-case tracking-normal tabular-nums">· {urgentDetail}</span>}
       </p>
-    ) : undefined);
+    )
+    : statusLabel
+      ?? (plan ? (
+        <p className="text-[13px] text-muted-foreground antialiased">
+          {plan.emoji} {plan.name}
+        </p>
+      ) : undefined);
 
   // Section label helper — consistent uppercase tracking with antialiased rendering.
   // Real <h2> so the page has a navigable heading outline, styled down to a label.
@@ -478,23 +493,6 @@ export function UnifiedClientProfile() {
           />
         </div>
 
-        {/* Status alert strip — only when urgent */}
-        {showStatusBanner && statusIsUrgent && StatusIcon && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-warning/10 text-warning text-xs font-medium antialiased animate-enter" style={{ animationDelay: '60ms' }}>
-            <StatusIcon className="w-3.5 h-3.5 shrink-0" />
-            <span className="tabular-nums">
-              {status!.type === 'overdue' && client.lastCheckInDate && (() => {
-                const days = Math.max(1, Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
-                return `${days}d since last check-in`;
-              })()}
-              {status!.type === 'at-risk' && client.lastCheckInDate && (() => {
-                const days = Math.max(1, 7 - Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24)));
-                return `${days}d until overdue`;
-              })()}
-            </span>
-          </div>
-        )}
-
         {/* ── Sections ── */}
 
         {/* At-a-glance vitals — where the client is in the plan and how active they've been */}
@@ -534,7 +532,10 @@ export function UnifiedClientProfile() {
               </div>
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Last check-in</p>
-                <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">{daysAgoLabel(lastCheckInAt) ?? 'None yet'}</p>
+                <p className={cn(
+                  "font-mono text-lg font-semibold tabular-nums leading-none antialiased",
+                  statusIsUrgent && "text-warning"
+                )}>{daysAgoLabel(lastCheckInAt) ?? 'None yet'}</p>
               </div>
             </div>
           </SectionCard>
@@ -610,14 +611,18 @@ export function UnifiedClientProfile() {
                       View history
                     </Button>
                   )}
-                  <Button
-                    size="sm"
-                    onClick={handleStartCheckIn}
-                    disabled={isSendingCheckIn || justSentCheckIn}
-                    className="active:scale-[0.96] transition-transform duration-150 tap-target"
-                  >
-                    {isSendingCheckIn ? 'Sending…' : justSentCheckIn ? 'Sent ✓' : 'Send check-in'}
-                  </Button>
+                  {/* The header CTA already sends the check-in — don't repeat the same primary button */}
+                  {primaryAction.kind !== 'send' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleStartCheckIn}
+                      disabled={isSendingCheckIn || justSentCheckIn}
+                      className="active:scale-[0.96] transition-transform duration-150 tap-target"
+                    >
+                      {isSendingCheckIn ? 'Sending…' : justSentCheckIn ? 'Sent ✓' : 'Send check-in'}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
