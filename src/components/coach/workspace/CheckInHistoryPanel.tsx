@@ -3,8 +3,8 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Modal } from '@/components/ui/Modal';
 import { ChevronDown, ChevronUp, CalendarCheck, ChevronRight } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { CheckIn } from '@/types';
 import { format, formatDistanceToNow } from 'date-fns';
 import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
@@ -31,7 +31,7 @@ export function CheckInHistoryPanel({
   onToggleSchedule,
 }: CheckInHistoryPanelProps) {
   const [showAll, setShowAll] = useState(false);
-  const [selectedCheckIn, setSelectedCheckIn] = useState<CheckIn | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Filter completed check-ins for this client, sorted by date descending
   const completedCheckIns = useMemo(() => {
@@ -83,24 +83,34 @@ export function CheckInHistoryPanel({
   const hasMore = completedCheckIns.length > initialCount;
 
   return (
-    <>
-      <div className="h-full flex flex-col">
-        <div className="space-y-1.5 flex-1 overflow-y-auto">
-          {displayedCheckIns.map((checkIn) => {
-            const checkInDate = new Date(checkIn.completedAt || checkIn.date);
-            const workoutFeeling = checkIn.workoutFeeling
-              ? WORKOUT_FEELING_DISPLAY[checkIn.workoutFeeling]
-              : null;
-            const bodyFeeling = checkIn.bodyFeeling
-              ? BODY_FEELING_DISPLAY[checkIn.bodyFeeling]
-              : null;
+    <div className="h-full flex flex-col">
+      <div className="space-y-1.5 flex-1 overflow-y-auto">
+        {displayedCheckIns.map((checkIn) => {
+          const checkInDate = new Date(checkIn.completedAt || checkIn.date);
+          const workoutFeeling = checkIn.workoutFeeling
+            ? WORKOUT_FEELING_DISPLAY[checkIn.workoutFeeling]
+            : null;
+          const bodyFeeling = checkIn.bodyFeeling
+            ? BODY_FEELING_DISPLAY[checkIn.bodyFeeling]
+            : null;
+          const isExpanded = expandedId === checkIn.id;
 
-            return (
+          return (
+            <div
+              key={checkIn.id}
+              className={cn(
+                'rounded-lg transition-colors duration-150',
+                isExpanded && 'bg-muted/30'
+              )}
+            >
               <button
-                key={checkIn.id}
-                onClick={() => setSelectedCheckIn(checkIn)}
-                aria-label={`View check-in from ${format(checkInDate, 'MMMM d, yyyy')}`}
-                className="w-full text-left p-2.5 flex items-center justify-between gap-2 rounded-lg hover:bg-muted/40 active:scale-[0.98] transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onClick={() => setExpandedId(isExpanded ? null : checkIn.id)}
+                aria-expanded={isExpanded}
+                aria-label={`Check-in from ${format(checkInDate, 'MMMM d, yyyy')}`}
+                className={cn(
+                  'w-full text-left p-2.5 flex items-center justify-between gap-2 rounded-lg transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  !isExpanded && 'hover:bg-muted/40 active:scale-[0.98]'
+                )}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="flex flex-col min-w-0">
@@ -125,7 +135,7 @@ export function CheckInHistoryPanel({
                     )}
                   </div>
 
-                  {checkIn.clientNotes && (
+                  {!isExpanded && checkIn.clientNotes && (
                     <p className="text-xs text-muted-foreground truncate flex-1 min-w-0">
                       &ldquo;{checkIn.clientNotes.slice(0, 40)}
                       {checkIn.clientNotes.length > 40 ? '...' : ''}&rdquo;
@@ -133,130 +143,96 @@ export function CheckInHistoryPanel({
                   )}
                 </div>
 
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                <ChevronRight
+                  className={cn(
+                    'w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200',
+                    isExpanded && 'rotate-90'
+                  )}
+                />
               </button>
-            );
-          })}
 
-          {/* Show more/less toggle */}
-          {hasMore && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full"
-              onClick={() => setShowAll(!showAll)}
-            >
-              {showAll ? (
-                <>
-                  <ChevronUp className="w-4 h-4 mr-1" />
-                  Show less
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4 mr-1" />
-                  Show all ({completedCheckIns.length - initialCount} more)
-                </>
+              {/* Inline detail — expands in place instead of opening a modal */}
+              {isExpanded && (
+                <div className="px-2.5 pb-3 space-y-3 animate-in fade-in-0 slide-in-from-top-1 duration-150">
+                  {(workoutFeeling || bodyFeeling) && (
+                    <div className="grid grid-cols-2 gap-2">
+                      {workoutFeeling && (
+                        <div className="bg-background/60 rounded-lg p-2.5">
+                          <p className="text-xs text-muted-foreground mb-0.5">Workouts felt</p>
+                          <p className="text-sm font-medium">
+                            {workoutFeeling.emoji} {workoutFeeling.label}
+                          </p>
+                        </div>
+                      )}
+                      {bodyFeeling && (
+                        <div className="bg-background/60 rounded-lg p-2.5">
+                          <p className="text-xs text-muted-foreground mb-0.5">Body felt</p>
+                          <p className="text-sm font-medium">
+                            {bodyFeeling.emoji} {bodyFeeling.label}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {checkIn.clientNotes && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">
+                        {firstName}&apos;s notes
+                      </p>
+                      <p className="text-sm leading-relaxed bg-background/60 rounded-lg p-2.5">
+                        &ldquo;{checkIn.clientNotes}&rdquo;
+                      </p>
+                    </div>
+                  )}
+
+                  {checkIn.coachResponse && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1">Your response</p>
+                      <div className="text-sm leading-relaxed bg-background/60 rounded-lg p-2.5">
+                        {checkIn.coachResponse}
+                      </div>
+                    </div>
+                  )}
+
+                  {checkIn.planAdjustment && (
+                    <Badge variant="secondary" className="text-xs">
+                      Plan adjustment made
+                    </Badge>
+                  )}
+                </div>
               )}
-            </Button>
-          )}
-        </div>
-        {scheduleToggle && (
-          <div className="pt-2">
-            {scheduleToggle}
-          </div>
-        )}
-      </div>
-
-      {/* Check-in detail modal */}
-      {selectedCheckIn && (
-        <CheckInDetailModal
-          checkIn={selectedCheckIn}
-          clientName={firstName}
-          onClose={() => setSelectedCheckIn(null)}
-        />
-      )}
-    </>
-  );
-}
-
-function CheckInDetailModal({
-  checkIn,
-  clientName,
-  onClose,
-}: {
-  checkIn: CheckIn;
-  clientName: string;
-  onClose: () => void;
-}) {
-  const checkInDate = new Date(checkIn.completedAt || checkIn.date);
-  const workoutFeeling = checkIn.workoutFeeling
-    ? WORKOUT_FEELING_DISPLAY[checkIn.workoutFeeling]
-    : null;
-  const bodyFeeling = checkIn.bodyFeeling
-    ? BODY_FEELING_DISPLAY[checkIn.bodyFeeling]
-    : null;
-
-  const title = `Check-in · ${format(checkInDate, 'MMM d, yyyy')}`;
-
-  return (
-    <Modal isOpen onClose={onClose} title={title} maxWidth="lg">
-      <div className="space-y-4">
-        {/* Feeling cards */}
-        {(workoutFeeling || bodyFeeling) && (
-          <div className="grid grid-cols-2 gap-3">
-            {workoutFeeling && (
-              <div className="bg-muted/40 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Workouts felt</p>
-                <p className="text-sm font-medium">
-                  {workoutFeeling.emoji} {workoutFeeling.label}
-                </p>
-              </div>
-            )}
-            {bodyFeeling && (
-              <div className="bg-muted/40 rounded-lg p-3">
-                <p className="text-xs text-muted-foreground mb-1">Body felt</p>
-                <p className="text-sm font-medium">
-                  {bodyFeeling.emoji} {bodyFeeling.label}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Client notes */}
-        {checkIn.clientNotes && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-1.5">
-              {clientName}&apos;s notes
-            </p>
-            <p className="text-sm leading-relaxed bg-muted/40 rounded-lg p-3">
-              &ldquo;{checkIn.clientNotes}&rdquo;
-            </p>
-          </div>
-        )}
-
-        {/* Coach response */}
-        {checkIn.coachResponse && (
-          <div>
-            <p className="text-xs text-muted-foreground mb-1.5">Your response</p>
-            <div className="text-sm leading-relaxed bg-muted/40 rounded-lg p-3">
-              {checkIn.coachResponse}
             </div>
-          </div>
-        )}
+          );
+        })}
 
-        {/* Plan adjustment badge */}
-        {checkIn.planAdjustment && (
-          <Badge variant="secondary" className="text-xs">
-            Plan adjustment made
-          </Badge>
+        {/* Show more/less toggle */}
+        {hasMore && (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? (
+              <>
+                <ChevronUp className="w-4 h-4 mr-1" />
+                Show less
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4 mr-1" />
+                Show all ({completedCheckIns.length - initialCount} more)
+              </>
+            )}
+          </Button>
         )}
-
-        {/* Timestamp */}
-        <p className="text-xs text-muted-foreground pt-1">
-          {formatDistanceToNow(checkInDate, { addSuffix: true })}
-        </p>
       </div>
-    </Modal>
+      {scheduleToggle && (
+        <div className="pt-2">
+          {scheduleToggle}
+        </div>
+      )}
+    </div>
   );
 }
