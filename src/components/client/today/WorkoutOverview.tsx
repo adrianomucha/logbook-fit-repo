@@ -48,76 +48,68 @@ export function WorkoutOverview({
   return (
     <div className="space-y-6">
       {/* Hero session card — single focal point: what, how big, go */}
-      <div className="relative overflow-hidden rounded-2xl bg-foreground text-background p-5 sm:p-6">
-        {/* Volt corner glow — pure decoration, keeps the dark card from feeling flat */}
-        <div
-          className="pointer-events-none absolute -top-24 -right-24 w-56 h-56 rounded-full bg-brand/20 blur-3xl"
-          aria-hidden="true"
-        />
+      <div className="rounded-2xl bg-card border border-border/70 shadow-sm p-5 sm:p-6">
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+          Today&rsquo;s session{coachName ? ` · Coach ${coachName.split(' ')[0]}` : ''}
+        </p>
 
-        <div className="relative">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-background/50">
-            Today&rsquo;s session{coachName ? ` · Coach ${coachName.split(' ')[0]}` : ''}
+        <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight leading-tight mt-2">
+          {workoutDay.name || 'Today’s Workout'}
+        </h2>
+
+        {categories.length > 0 && (
+          <p className="text-sm text-muted-foreground mt-1">
+            {categories.join(' · ')}
           </p>
+        )}
 
-          <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight leading-tight mt-2">
-            {workoutDay.name || 'Today’s Workout'}
-          </h2>
+        {/* Stat line — mono is the data voice */}
+        <p className="font-mono text-xs tracking-wide text-muted-foreground tabular-nums mt-4">
+          {duration} min&ensp;·&ensp;{exercises.length} exercises&ensp;·&ensp;{totalSets} sets
+        </p>
 
-          {categories.length > 0 && (
-            <p className="text-sm text-background/60 mt-1">
-              {categories.join(' · ')}
-            </p>
-          )}
-
-          {/* Stat line — mono is the data voice */}
-          <p className="font-mono text-xs tracking-wide text-background/70 tabular-nums mt-4">
-            {duration} min&ensp;·&ensp;{exercises.length} exercises&ensp;·&ensp;{totalSets} sets
+        {workoutDay.description && (
+          <p className="text-sm leading-relaxed text-foreground/75 mt-3">
+            {workoutDay.description}
           </p>
+        )}
 
-          {workoutDay.description && (
-            <p className="text-sm leading-relaxed text-background/70 mt-3">
-              {workoutDay.description}
-            </p>
-          )}
-
-          {/* Progress — only when there's actual progress to show */}
-          {inProgress && completionPct > 0 && (
-            <div className="mt-5">
-              <div className="flex items-baseline justify-between mb-1.5">
-                <span className="font-mono text-xs font-bold tabular-nums text-brand">
-                  {completionPct}%
-                </span>
-                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-background/50">
-                  complete
-                </span>
-              </div>
-              <div className="h-1.5 rounded-full bg-background/15 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-brand transition-all duration-500"
-                  style={{ width: `${completionPct}%` }}
-                />
-              </div>
+        {/* Progress — only when there's actual progress to show */}
+        {inProgress && completionPct > 0 && (
+          <div className="mt-5">
+            <div className="flex items-baseline justify-between mb-1.5">
+              <span className="font-mono text-xs font-bold tabular-nums">
+                {completionPct}%
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                complete
+              </span>
             </div>
-          )}
+            <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+              <div
+                className="h-full rounded-full bg-brand transition-all duration-500"
+                style={{ width: `${completionPct}%` }}
+              />
+            </div>
+          </div>
+        )}
 
-          <button
-            onClick={onAction}
-            className="mt-5 w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
-          >
-            {inProgress ? (
-              <>
-                <RotateCcw className="w-4 h-4" strokeWidth={2.5} />
-                Continue workout
-              </>
-            ) : (
-              <>
-                <Play className="w-4 h-4 fill-current" />
-                Start workout
-              </>
-            )}
-          </button>
-        </div>
+        <button
+          onClick={onAction}
+          className="mt-5 w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          {inProgress ? (
+            <>
+              <RotateCcw className="w-4 h-4" strokeWidth={2.5} />
+              Continue workout
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 fill-current" />
+              Start workout
+            </>
+          )}
+        </button>
       </div>
 
       {/* Exercise list — open list, no boxed-in card */}

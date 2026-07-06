@@ -309,8 +309,9 @@ export function ClientDashboard() {
         {/* Check-in prompt banner */}
         {pendingCheckIn && (
           <section aria-label="Pending check-in">
-            <div className="rounded-xl border border-brand/40 bg-brand/10 px-4 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased">
+            <div className="rounded-xl border border-border/70 bg-card shadow-sm px-4 py-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />
                 Weekly check-in
               </p>
               <p className="text-[15px] font-bold tracking-tight antialiased">Your coach wants to hear how training is going</p>
