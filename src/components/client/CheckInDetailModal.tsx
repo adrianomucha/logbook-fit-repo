@@ -1,7 +1,7 @@
-import { CheckIn, CompletedWorkout, WorkoutPlan } from '@/types';
+import { CheckIn, WorkoutCompletion, WorkoutPlan } from '@/types';
 import { Modal } from '@/components/ui/Modal';
 import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
-import { format } from 'date-fns';
+import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 
 const FEELING_LABELS: Record<string, { label: string }> = {
   EASY: { label: 'Too Easy' },
@@ -17,7 +17,7 @@ interface CheckInDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   checkIn: CheckIn | null;
-  completedWorkouts: CompletedWorkout[];
+  completedWorkouts: WorkoutCompletion[];
   plan?: WorkoutPlan;
 }
 
@@ -46,16 +46,23 @@ export function CheckInDetailModal({
     ? FEELING_LABELS[checkIn.bodyFeeling]
     : null;
 
-  // Get workouts completed around the check-in date
+  // Workouts completed in the 7 days ending on the check-in day (day-inclusive,
+  // so workouts logged later the same day still count)
   const checkInDateObj = new Date(checkIn.date);
-  const weekStart = new Date(checkInDateObj);
-  weekStart.setDate(weekStart.getDate() - 7);
+  const windowEnd = endOfDay(checkInDateObj);
+  const windowStart = startOfDay(subDays(checkInDateObj, 6));
 
-  const weekWorkouts = completedWorkouts.filter((w) => {
-    if (w.clientId !== checkIn.clientId) return false;
-    const workoutDate = new Date(w.completedAt);
-    return workoutDate >= weekStart && workoutDate <= checkInDateObj;
-  });
+  const weekWorkouts = completedWorkouts
+    .filter((w) => {
+      if (w.clientId !== checkIn.clientId) return false;
+      if (w.status !== 'COMPLETED' || !w.completedAt) return false;
+      const workoutDate = new Date(w.completedAt);
+      return workoutDate >= windowStart && workoutDate <= windowEnd;
+    })
+    .sort(
+      (a, b) =>
+        new Date(a.completedAt!).getTime() - new Date(b.completedAt!).getTime()
+    );
 
   // Get workout names from plan if available
   const getWorkoutName = (dayId: string): string => {
@@ -80,7 +87,21 @@ export function CheckInDetailModal({
   const completed = uniqueWorkoutDays.size;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Check-in - ${checkInDate}`} maxWidth="lg">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        <>
+          <span className="block font-mono text-[10px] font-normal uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+            Check-in
+          </span>
+          <span className="block text-lg sm:text-xl font-bold tracking-tight">
+            {checkInDate}
+          </span>
+        </>
+      }
+      maxWidth="lg"
+    >
       <div className="space-y-6">
         {/* What You Said */}
         <section>
@@ -125,12 +146,12 @@ export function CheckInDetailModal({
         {/* Coach's Feedback */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
-            Your Coach's Feedback
+            Your Coach&apos;s Feedback
           </h3>
           {checkIn.coachResponse ? (
             <div className="space-y-3">
-              <div className="bg-info/5 rounded-lg p-4 border border-info/20">
-                <p className="text-sm">{checkIn.coachResponse}</p>
+              <div className="rounded-xl bg-muted/40 px-4 py-4 border-l-2 border-brand">
+                <p className="text-sm text-foreground/80 leading-relaxed">{checkIn.coachResponse}</p>
               </div>
               {checkIn.planAdjustment && (
                 <div className="flex items-center gap-2 text-success">
@@ -152,7 +173,7 @@ export function CheckInDetailModal({
         {/* This Week's Workouts */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
-            That Week's Workouts
+            That Week&apos;s Workouts
           </h3>
           {weekWorkouts.length > 0 ? (
             <div className="space-y-2">
@@ -164,7 +185,7 @@ export function CheckInDetailModal({
                   <CheckCircle2 className="w-4 h-4 text-success" />
                   <span>{getWorkoutName(workout.dayId)}</span>
                   <span className="text-muted-foreground text-xs">
-                    ({format(new Date(workout.completedAt), 'MMM d')})
+                    ({format(new Date(workout.completedAt!), 'MMM d')})
                   </span>
                 </div>
               ))}
@@ -183,7 +204,7 @@ export function CheckInDetailModal({
               </div>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No workouts logged this week.</p>
+            <p className="text-sm text-muted-foreground">No workouts logged that week.</p>
           )}
         </section>
       </div>

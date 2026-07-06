@@ -432,7 +432,7 @@ export function ClientDashboard() {
         isOpen={showCheckInModal}
         onClose={() => setShowCheckInModal(false)}
         checkIn={thisWeekCheckIn}
-        completedWorkouts={[]}
+        completedWorkouts={allWorkoutCompletions}
         plan={plan}
       />
     </div>
