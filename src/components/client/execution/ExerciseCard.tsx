@@ -186,18 +186,47 @@ export function ExerciseCard({
 
       {/* ── Expanded: set rows + coach tip + flag ── */}
       {isExpanded && (
-        <div className="pl-[42px] pr-1 pb-4 pt-1 space-y-3 animate-fade-in-up">
-          {/* Coach notes — volt left rail, same as the dashboard's coach strip */}
+        <div className="pl-[42px] pr-1 pb-3.5 pt-0.5 space-y-2.5 animate-fade-in-up">
+          {/* Coach note — the volt rail alone marks the voice; no label line */}
           {exercise.coachNotes && (
-            <div className="pl-3.5 border-l-2 border-brand">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
-                Coach note
-              </p>
-              <p className="text-sm text-foreground/80 leading-relaxed">
-                {exercise.coachNotes}
-              </p>
-            </div>
+            <p className="pl-3 border-l-2 border-brand text-[13px] leading-snug text-foreground/75">
+              {exercise.coachNotes}
+            </p>
           )}
+
+          {/* Meta row — last session reference and the flag action share one line */}
+          {(() => {
+            const last = exercise.lastPerformance;
+            const lastValue = last ? formatLastSet(last, weightUnit(exercise.weight)) : '';
+            const showFlagButton = !isFlagged && !isReadOnly;
+            if (!lastValue && !showFlagButton) return null;
+            return (
+              <div className="flex items-center justify-between gap-3">
+                {lastValue ? (
+                  <p className="font-mono text-[11px] tabular-nums text-muted-foreground min-w-0 truncate">
+                    <span className="uppercase tracking-[0.14em] text-muted-foreground/60">Last </span>
+                    <span className="font-semibold text-foreground/70">{lastValue}</span>
+                    {last?.performedAt && (
+                      <span className="text-muted-foreground/50"> · {relativeDay(last.performedAt)}</span>
+                    )}
+                  </p>
+                ) : (
+                  <span aria-hidden="true" />
+                )}
+                {showFlagButton && (
+                  <button
+                    type="button"
+                    onClick={handleFlagClick}
+                    aria-label="Flag for coach"
+                    className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation shrink-0 py-1.5 -my-1.5"
+                  >
+                    <Flag className="w-3.5 h-3.5" />
+                    Flag
+                  </button>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Flag section */}
           {isFlagged && (
@@ -249,41 +278,6 @@ export function ExerciseCard({
               )}
             </div>
           )}
-
-          {/* Flag toggle (when not yet flagged) */}
-          {!isFlagged && !isReadOnly && (
-            <button
-              type="button"
-              onClick={handleFlagClick}
-              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation"
-            >
-              <Flag className="w-3.5 h-3.5" />
-              Flag for coach
-            </button>
-          )}
-
-          {/* Last session's top set — a reference for what to beat today */}
-          {(() => {
-            const last = exercise.lastPerformance;
-            if (!last) return null;
-            const value = formatLastSet(last, weightUnit(exercise.weight));
-            if (!value) return null;
-            return (
-              <div className="flex items-baseline gap-2 px-0.5">
-                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70">
-                  Last
-                </span>
-                <span className="font-mono text-xs font-semibold tabular-nums text-foreground/70">
-                  {value}
-                </span>
-                {last.performedAt && (
-                  <span className="font-mono text-[10px] text-muted-foreground/50">
-                    {relativeDay(last.performedAt)}
-                  </span>
-                )}
-              </div>
-            );
-          })()}
 
           {/* Set rows */}
           <div>
