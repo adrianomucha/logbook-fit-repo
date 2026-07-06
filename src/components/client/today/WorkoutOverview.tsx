@@ -29,7 +29,39 @@ function getUniqueCategories(exercises: WorkoutDay['exercises']): string[] {
       cats.add(readable);
     }
   }
-  return Array.from(cats);
+  // "Other" is a catch-all bucket, not information — never lead with it
+  return Array.from(cats).filter((c) => c.toLowerCase() !== 'other');
+}
+
+/**
+ * Split a coach-authored session name into typographic roles:
+ * a "Day N —" prefix is metadata (goes to the eyebrow), and a trailing
+ * "(...)" is a subtitle trapped in parentheses. "Day 1 — Chest + Lats
+ * (Posture Focus)" → day "1", title "Chest + Lats", subtitle "Posture Focus".
+ * Names without these patterns pass through untouched.
+ */
+function parseSessionName(rawName: string): {
+  day?: string;
+  title: string;
+  subtitle?: string;
+} {
+  let title = rawName.trim();
+  let day: string | undefined;
+  let subtitle: string | undefined;
+
+  const dayMatch = title.match(/^day\s*(\d+)\s*[—–:-]\s*(.\S.*)$/i);
+  if (dayMatch) {
+    day = dayMatch[1];
+    title = dayMatch[2].trim();
+  }
+
+  const parenMatch = title.match(/^(.*\S)\s*\(([^()]{2,40})\)$/);
+  if (parenMatch) {
+    title = parenMatch[1];
+    subtitle = parenMatch[2];
+  }
+
+  return { day, title, subtitle };
 }
 
 export function WorkoutOverview({
@@ -45,31 +77,50 @@ export function WorkoutOverview({
   const categories = getUniqueCategories(exercises);
   const inProgress = actionState === 'in-progress';
 
+  const { day, title, subtitle } = parseSessionName(workoutDay.name || 'Today’s Workout');
+  const eyebrowParts = [
+    day ? `Today · Day ${day}` : 'Today’s session',
+    coachName ? `Coach ${coachName.split(' ')[0]}` : null,
+  ].filter(Boolean);
+
+  const stats: [number, string][] = [
+    [duration, 'min'],
+    [exercises.length, exercises.length === 1 ? 'exercise' : 'exercises'],
+    [totalSets, 'sets'],
+  ];
+
   return (
     <div className="space-y-6">
       {/* Hero session card — single focal point: what, how big, go */}
       <div className="rounded-2xl bg-card border border-border/70 p-5 sm:p-6">
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-          Today&rsquo;s session{coachName ? ` · Coach ${coachName.split(' ')[0]}` : ''}
+          {eyebrowParts.join(' · ')}
         </p>
 
-        <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight leading-tight mt-2">
-          {workoutDay.name || 'Today’s Workout'}
+        <h2 className="text-[26px] sm:text-[28px] font-bold tracking-tight leading-[1.15] mt-2.5 text-balance">
+          {title}
         </h2>
 
-        {categories.length > 0 && (
-          <p className="text-sm text-muted-foreground mt-1">
-            {categories.join(' · ')}
+        {/* One supporting line: the parsed subtitle wins, muscle groups otherwise */}
+        {(subtitle || categories.length > 0) && (
+          <p className="text-[15px] text-muted-foreground mt-1.5">
+            {subtitle ?? categories.join(' · ')}
           </p>
         )}
 
-        {/* Stat line — mono is the data voice */}
-        <p className="font-mono text-xs tracking-wide text-muted-foreground tabular-nums mt-4">
-          {duration} min&ensp;·&ensp;{exercises.length} exercises&ensp;·&ensp;{totalSets} sets
+        {/* Stat band — numbers carry the weight, units stay quiet */}
+        <p className="font-mono text-[13px] tabular-nums mt-4 pt-4 border-t border-border/50">
+          {stats.map(([value, unit], i) => (
+            <span key={unit}>
+              {i > 0 && <span className="text-muted-foreground/40">&ensp;·&ensp;</span>}
+              <span className="font-semibold text-foreground">{value}</span>
+              <span className="text-muted-foreground"> {unit}</span>
+            </span>
+          ))}
         </p>
 
         {workoutDay.description && (
-          <p className="text-sm leading-relaxed text-foreground/75 mt-3">
+          <p className="text-sm leading-relaxed text-muted-foreground mt-3 text-pretty">
             {workoutDay.description}
           </p>
         )}
@@ -96,7 +147,7 @@ export function WorkoutOverview({
 
         <button
           onClick={onAction}
-          className="mt-5 w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="mt-6 w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           {inProgress ? (
             <>
