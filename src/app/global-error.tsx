@@ -10,7 +10,7 @@ export default function GlobalError({
   return (
     <html lang="en">
       <body>
-        <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="min-h-dvh flex items-center justify-center p-4">
           <div className="text-center space-y-4">
             <h2 className="text-xl font-bold">Something went wrong</h2>
             <button

@@ -297,7 +297,7 @@ export function ClientWorkoutExecution() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center animate-enter">
+      <div className="min-h-dvh bg-background flex items-center justify-center animate-enter">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -306,7 +306,7 @@ export function ClientWorkoutExecution() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
           <div className="py-8 px-6 text-center">
             <p className="text-muted-foreground antialiased">Failed to load workout.</p>
@@ -321,7 +321,7 @@ export function ClientWorkoutExecution() {
 
   if (!day) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
           <div className="py-8 px-6 text-center">
             <Dumbbell className="w-10 h-10 mx-auto text-muted-foreground/60 mb-4" />
@@ -471,7 +471,7 @@ export function ClientWorkoutExecution() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-dvh bg-background flex flex-col">
       {/* Sticky header */}
       <WorkoutHeader
         workoutName={day.name ?? 'Workout'}
@@ -488,7 +488,7 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list — contained module matching the dashboard's exercise card */}
+      {/* Exercise list — open and full-width: bigger tap targets mid-workout */}
       <div
         className={cn(
           'px-4 pt-4 max-w-2xl mx-auto w-full flex-1',
@@ -496,11 +496,8 @@ export function ClientWorkoutExecution() {
           isReadOnly ? 'pb-8' : 'pb-6'
         )}
       >
-        <section
-          aria-label="Exercises"
-          className="rounded-2xl bg-card border border-border/70 overflow-hidden"
-        >
-          <div className="flex items-baseline justify-between px-4 pt-4 pb-3 border-b border-border/50">
+        <section aria-label="Exercises">
+          <div className="flex items-baseline justify-between mb-1 px-1">
             <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
               Exercises
             </h2>
@@ -508,7 +505,7 @@ export function ClientWorkoutExecution() {
               {stats.exercisesDone}/{exercises.length}
             </span>
           </div>
-          <div className="divide-y divide-border/50 px-4 py-1">
+          <div className="divide-y divide-border/50">
             {groupBySuperset(exercises).map((group, groupIndex) => {
             const renderCard = (exercise: WorkoutExercise, memberIndex: number) => (
               <ExerciseCard

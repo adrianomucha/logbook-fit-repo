@@ -46,7 +46,7 @@ export function ClientCheckInForm() {
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center animate-enter">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center animate-enter">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -55,7 +55,7 @@ export function ClientCheckInForm() {
   // Not found
   if (!checkIn) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
@@ -71,7 +71,7 @@ export function ClientCheckInForm() {
   // Already submitted
   if (checkIn.status !== 'PENDING') {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-10 h-10 mx-auto mb-4 text-success" />
@@ -87,7 +87,7 @@ export function ClientCheckInForm() {
   // Success screen
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success" />
@@ -130,7 +130,7 @@ export function ClientCheckInForm() {
   const recentCompletions = checkIn.client.completions ?? [];
 
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+    <div className="min-h-dvh bg-background p-3 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="max-w-2xl mx-auto space-y-4">
         {/* Header */}
         <div className="py-4">

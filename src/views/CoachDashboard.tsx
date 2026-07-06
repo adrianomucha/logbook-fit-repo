@@ -163,7 +163,7 @@ export function CoachDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24 sm:pb-4">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-4">
       {/* Success Toast — checkmark draws in */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(16,185,129,0.3)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">

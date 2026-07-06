@@ -4,7 +4,7 @@
  */
 export default function WorkoutLoading() {
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4 animate-pulse">
+    <div className="min-h-dvh bg-background p-3 sm:p-4 pb-24 sm:pb-4 animate-pulse">
       <div className="max-w-lg mx-auto space-y-6">
         {/* Back button + day title */}
         <div className="space-y-2">

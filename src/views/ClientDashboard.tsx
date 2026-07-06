@@ -246,7 +246,7 @@ export function ClientDashboard() {
   // ---- Loading/Empty States ----
   if (isLoadingUser || isLoadingWeek) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center animate-enter">
+      <div className="min-h-dvh bg-background flex items-center justify-center animate-enter">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -254,7 +254,7 @@ export function ClientDashboard() {
 
   if (hasDataError && !client && !plan) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
           <div className="py-10 px-6 text-center">
             <div className="text-4xl select-none mb-4 animate-bounce-once">😵</div>
@@ -273,7 +273,7 @@ export function ClientDashboard() {
 
   if (!client || !plan) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="text-center animate-enter">
           <div className="text-5xl select-none mb-4 animate-bounce-once">🏋️</div>
           <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">No plan yet</h1>
@@ -289,7 +289,7 @@ export function ClientDashboard() {
     <div className={cn(
       'bg-background',
       currentView === 'chat'
-        ? 'fixed inset-0 pb-[calc(50px+env(safe-area-inset-bottom))] flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-screen'
+        ? 'fixed inset-0 pb-[calc(50px+env(safe-area-inset-bottom))] flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-dvh'
         : 'sm:pb-4'
     )}>
       <ClientNav

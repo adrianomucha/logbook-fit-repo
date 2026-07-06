@@ -4,7 +4,7 @@
  */
 export default function CoachLoading() {
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4 animate-pulse">
+    <div className="min-h-dvh bg-background p-3 sm:p-4 pb-24 sm:pb-4 animate-pulse">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Nav placeholder */}
         <div className="flex gap-4">

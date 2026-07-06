@@ -93,7 +93,7 @@ export function ClientCheckIn() {
   // Loading
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center animate-enter">
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center animate-enter">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -102,7 +102,7 @@ export function ClientCheckIn() {
   // Client not found
   if (!client) {
     return (
-      <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <Card className="max-w-md mx-auto">
@@ -121,7 +121,7 @@ export function ClientCheckIn() {
   // Success screen
   if (showSuccess) {
     return (
-      <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <Card className="max-w-md mx-auto">
@@ -154,7 +154,7 @@ export function ClientCheckIn() {
   // State C: No active check-in
   if (!activeCheckIn && !activeCheckInId) {
     return (
-      <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
@@ -205,7 +205,7 @@ export function ClientCheckIn() {
     const sentAgo = formatDistanceToNow(new Date(activeCheckIn.createdAt), { addSuffix: true });
 
     return (
-      <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
@@ -257,7 +257,7 @@ export function ClientCheckIn() {
     : null;
 
   return (
-    <div className="min-h-screen bg-background pb-24 sm:pb-4">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="clients" />
       <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 

@@ -4,7 +4,7 @@
  */
 export default function ClientProfileLoading() {
   return (
-    <div className="min-h-screen bg-background p-3 sm:p-4 pb-24 sm:pb-4 animate-pulse">
+    <div className="min-h-dvh bg-background p-3 sm:p-4 pb-24 sm:pb-4 animate-pulse">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Back button */}
         <div className="h-8 w-20 rounded bg-muted" />

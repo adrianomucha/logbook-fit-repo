@@ -334,7 +334,7 @@ export function UnifiedClientProfile() {
   // ---- Loading State ----
   if (isLoadingClient) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center animate-enter">
+      <div className="min-h-dvh bg-background flex items-center justify-center animate-enter">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
     );
@@ -343,7 +343,7 @@ export function UnifiedClientProfile() {
   // Client not found
   if (!client || !apiClient) {
     return (
-      <div className="min-h-screen bg-background pb-24 sm:pb-4">
+      <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
@@ -468,7 +468,7 @@ export function UnifiedClientProfile() {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24 sm:pb-4">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="clients" />
 
       <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">

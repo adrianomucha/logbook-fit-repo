@@ -20,7 +20,7 @@ interface InviteInfo {
 export default function SignupPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-4 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     }>
@@ -121,7 +121,7 @@ function SignupContent() {
   // Loading state while validating token
   if (isValidating) {
     return (
-      <div className="min-h-screen bg-background p-4 flex items-center justify-center">
+      <div className="min-h-dvh bg-background p-4 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -136,7 +136,7 @@ function SignupContent() {
         : { emoji: '🔗', title: 'Link not found', message: 'This invite link doesn\'t look right. Double-check the URL or ask your coach for a new one.' };
 
     return (
-      <div className="min-h-screen bg-background p-4 pt-16 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
+      <div className="min-h-dvh bg-background p-4 pt-16 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-md w-full space-y-6">
           <div className="text-center">
             <div className="flex justify-center mb-4">
@@ -167,7 +167,7 @@ function SignupContent() {
 
   // Valid invite — show signup form
   return (
-    <div className="min-h-screen bg-background p-4 pt-12 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
+    <div className="min-h-dvh bg-background p-4 pt-12 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md w-full space-y-6">
         <div className="text-center space-y-1">
           <div className="flex justify-center mb-3">
