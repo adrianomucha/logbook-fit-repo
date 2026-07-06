@@ -174,16 +174,17 @@ async function seed() {
   const emma = await ensureClient("emma@demo.logbook.fit", "Emma Wilson");
   const alex = await ensureClient("alex@demo.logbook.fit", "Alex Rodriguez");
   const jordan = await ensureClient("jordan@demo.logbook.fit", "Jordan Lee");
+  const piyumika = await ensureClient("piyumika@demo.logbook.fit", "Piyumika de Silva");
 
   // Coach-client relationships
-  for (const client of [mike, emma, alex, jordan]) {
+  for (const client of [mike, emma, alex, jordan, piyumika]) {
     await prisma.coachClientRelationship.upsert({
       where: { coachId_clientId: { coachId: coachProfileId, clientId: client.profile.id } },
       create: { coachId: coachProfileId, clientId: client.profile.id, status: "ACTIVE" },
       update: {},
     });
   }
-  console.log(`✓ 4 clients ensured & linked to coach`);
+  console.log(`✓ 5 clients ensured & linked to coach`);
 
   // ─────────────────────────────────────────────
   // 4. PLANS
@@ -383,8 +384,9 @@ async function seed() {
   await ensureActivePlan(alex.profile.id, strengthPlan.id, 14);
   // Jordan — started ~2 weeks ago but dropped off (at-risk — hasn't worked out in 9 days)
   await ensureActivePlan(jordan.profile.id, strengthPlan.id, 14);
+  // Piyumika — newly onboarded, no plan assigned yet
 
-  console.log(`✓ Plans assigned to all clients`);
+  console.log(`✓ Plans assigned to clients (Piyumika awaiting assignment)`);
 
   // ─────────────────────────────────────────────
   // 6. WORKOUT COMPLETIONS (with set data)
@@ -838,6 +840,7 @@ async function seed() {
   console.log("  Client:  emma@demo.logbook.fit / demo1234  (Emma Wilson)");
   console.log("  Client:  alex@demo.logbook.fit / demo1234  (Alex Rodriguez)");
   console.log("  Client:  jordan@demo.logbook.fit / demo1234  (Jordan Lee)");
+  console.log("  Client:  piyumika@demo.logbook.fit / demo1234  (Piyumika de Silva)");
   console.log("─────────────────────────────────────\n");
 }
 
