@@ -42,7 +42,8 @@ export function StatusHeader({ status, clientName }: StatusHeaderProps) {
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground truncate">
           {dateStr || '\u00A0'}
         </p>
-        {greeting && firstName && (
+        {/* Default state carries no signal — only show the pill when something is happening */}
+        {greeting && firstName && status !== 'workout-scheduled' && (
           <span className="flex items-center gap-1.5 shrink-0 rounded-full bg-muted/70 pl-2.5 pr-3 py-1">
             <span className={`w-1.5 h-1.5 rounded-full ${dot} shrink-0`} />
             <span className="font-mono text-[10px] text-muted-foreground font-medium uppercase tracking-[0.08em] whitespace-nowrap">
