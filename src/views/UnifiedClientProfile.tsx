@@ -29,9 +29,20 @@ import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { Button } from '@/components/ui/button';
-import { Loader2, Pencil } from 'lucide-react';
+import { ArrowLeftRight, Loader2, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import { getClientStatus } from '@/lib/client-status';
+import { getCurrentWeekNumber, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
+import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
+
+// Compact relative-day label for the vitals strip — "Today", "1d ago", …
+function daysAgoLabel(iso?: string | Date | null): string | null {
+  if (!iso) return null;
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return 'Today';
+  return `${days}d ago`;
+}
 
 
 export function UnifiedClientProfile() {
@@ -75,6 +86,7 @@ export function UnifiedClientProfile() {
   const checkInRef = useRef<HTMLDivElement>(null);
   const planEditorRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
+  const secondaryRef = useRef<HTMLDivElement>(null);
 
   // Timer ref for cleanup
   const sentTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -334,6 +346,28 @@ export function UnifiedClientProfile() {
   // Safe first-name extraction — never returns empty string
   const firstName = client.name?.split(' ')[0] || client.name || 'Client';
 
+  // ---- At-a-glance vitals (plain derivations — we're past all hooks/early returns) ----
+  const planTotalWeeks = plan ? (plan.durationWeeks || plan.weeks.length) : 0;
+  const currentWeekNum = plan && client.planStartDate
+    ? getCurrentWeekNumber(client.planStartDate, planTotalWeeks)
+    : null;
+  const currentWeek = plan
+    ? (plan.weeks.find((w) => w.weekNumber === currentWeekNum) ?? plan.weeks[0])
+    : null;
+  const weekProgress = currentWeek
+    ? getWeekProgress(getWeekDays(currentWeek, workoutCompletions, client.id))
+    : null;
+  const lastWorkoutAt = workoutCompletions.reduce<Date | null>((latest, wc) => {
+    if (wc.status !== 'COMPLETED' || !wc.completedAt) return latest;
+    const at = new Date(wc.completedAt);
+    return !latest || at > latest ? at : latest;
+  }, null);
+  const lastCompletedCheckIn = checkIns
+    .filter((c) => c.status === 'completed')
+    .sort((a, b) => new Date(b.completedAt || b.date).getTime() - new Date(a.completedAt || a.date).getTime())[0] ?? null;
+  // lastCheckInDate isn't always populated on the client record — fall back to history
+  const lastCheckInAt = client.lastCheckInDate ?? lastCompletedCheckIn?.completedAt ?? lastCompletedCheckIn?.date;
+
   // Derive inline status info
   // Suppress urgent badges when coach already sent a check-in — "Waiting for X" section is the real status
   const hasActiveCheckIn = !!activeCheckIn;
@@ -440,25 +474,130 @@ export function UnifiedClientProfile() {
 
         {/* ── Sections ── */}
 
+        {/* At-a-glance vitals — where the client is in the plan and how active they've been */}
+        {plan && weekProgress && (
+        <div className="animate-enter" style={{ animationDelay: '100ms' }}>
+          <SectionCard>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">This week</p>
+                <div className="flex items-center gap-2.5">
+                  <p className="text-sm font-bold tabular-nums antialiased">
+                    {weekProgress.completed}
+                    <span className="text-muted-foreground font-normal">/{weekProgress.total}</span>
+                  </p>
+                  <div className="flex gap-1 w-full max-w-[64px]" aria-hidden="true">
+                    {Array.from({ length: weekProgress.total }, (_, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          'flex-1 h-1.5 rounded-full',
+                          i < weekProgress.completed ? 'bg-success' : 'bg-success/15'
+                        )}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">Plan week</p>
+                <p className="text-sm font-bold tabular-nums antialiased">
+                  {currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span>
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">Last workout</p>
+                <p className="text-sm font-bold tabular-nums antialiased">{daysAgoLabel(lastWorkoutAt) ?? '—'}</p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">Last check-in</p>
+                <p className="text-sm font-bold tabular-nums antialiased">{daysAgoLabel(lastCheckInAt) ?? 'None yet'}</p>
+              </div>
+            </div>
+          </SectionCard>
+        </div>
+        )}
+
         {/* Check-in section — only shown when client has an active plan */}
         {plan && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>Latest check-in</SectionLabel>
           <SectionCard>
-            <InlineCheckInReview
-              client={client}
-              activeCheckIn={activeCheckIn}
-              plan={plan}
-              workoutCompletions={workoutCompletions}
-              exerciseFlags={[]}
-              currentUserId={user?.id ?? ''}
-              onCompleteCheckIn={handleCompleteCheckIn}
-              onCreateCheckIn={handleCreateCheckIn}
-              onMessageAboutFlag={handleMessageAboutFlag}
-              justSentFromParent={justSentCheckIn}
-              hideTitle={activeCheckIn?.status === 'responded'}
-              variant="flat"
-            />
+            {activeCheckIn ? (
+              <InlineCheckInReview
+                client={client}
+                activeCheckIn={activeCheckIn}
+                plan={plan}
+                workoutCompletions={workoutCompletions}
+                exerciseFlags={[]}
+                currentUserId={user?.id ?? ''}
+                onCompleteCheckIn={handleCompleteCheckIn}
+                onCreateCheckIn={handleCreateCheckIn}
+                onMessageAboutFlag={handleMessageAboutFlag}
+                justSentFromParent={justSentCheckIn}
+                hideTitle={activeCheckIn?.status === 'responded'}
+                variant="flat"
+              />
+            ) : (
+              /* No check-in in flight — one compact row instead of a full-height hero,
+                 summarizing the most recent completed check-in so the section earns its label */
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="min-w-0">
+                  {lastCompletedCheckIn ? (
+                    <>
+                      <p className="text-sm font-semibold antialiased">
+                        Completed {format(new Date(lastCompletedCheckIn.completedAt || lastCompletedCheckIn.date), 'MMM d')}
+                        {lastCompletedCheckIn.workoutFeeling && WORKOUT_FEELING_DISPLAY[lastCompletedCheckIn.workoutFeeling] && (
+                          <span className="font-normal text-muted-foreground">
+                            {' '}· {WORKOUT_FEELING_DISPLAY[lastCompletedCheckIn.workoutFeeling].emoji} {WORKOUT_FEELING_DISPLAY[lastCompletedCheckIn.workoutFeeling].label}
+                          </span>
+                        )}
+                        {lastCompletedCheckIn.bodyFeeling && BODY_FEELING_DISPLAY[lastCompletedCheckIn.bodyFeeling] && (
+                          <span className="font-normal text-muted-foreground">
+                            {' '}· {BODY_FEELING_DISPLAY[lastCompletedCheckIn.bodyFeeling].emoji} {BODY_FEELING_DISPLAY[lastCompletedCheckIn.bodyFeeling].label}
+                          </span>
+                        )}
+                      </p>
+                      {lastCompletedCheckIn.clientNotes && (
+                        <p className="font-prose text-[13px] text-muted-foreground truncate mt-0.5 antialiased">
+                          &ldquo;{lastCompletedCheckIn.clientNotes}&rdquo;
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-semibold antialiased">No check-ins yet</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5 antialiased">
+                        Send the first one to hear how {firstName}&apos;s training is going.
+                      </p>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {lastCompletedCheckIn && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-foreground tap-target"
+                      onClick={() => {
+                        setSecondaryTab('history');
+                        secondaryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }}
+                    >
+                      View history
+                    </Button>
+                  )}
+                  <Button
+                    size="sm"
+                    onClick={handleStartCheckIn}
+                    disabled={isSendingCheckIn || justSentCheckIn}
+                    className="active:scale-[0.96] transition-transform duration-150 tap-target"
+                  >
+                    {isSendingCheckIn ? 'Sending…' : justSentCheckIn ? 'Sent ✓' : 'Send check-in'}
+                  </Button>
+                </div>
+              </div>
+            )}
           </SectionCard>
         </section>
         )}
@@ -486,13 +625,15 @@ export function UnifiedClientProfile() {
                 currentUserName={user?.name ?? 'Coach'}
                 onSendMessage={handleSendMessage}
                 initialPrefill={chatPrefill}
-                heightClass="flex-1 min-h-0 h-[350px] md:h-auto"
+                /* Fixed height on mobile so the history scrolls inside the card instead of
+                   stretching the page (flex-basis 0 from flex-1 would override h-[…]) */
+                heightClass="h-[420px] md:h-auto md:flex-1 md:min-h-0"
               />
             </div>
           </section>
 
           {/* Secondary: Tabbed Plan + History */}
-          <section>
+          <section ref={secondaryRef}>
             <SectionCard className="md:h-[480px] md:flex md:flex-col">
               {/* Tab bar */}
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
@@ -531,11 +672,20 @@ export function UnifiedClientProfile() {
                     <>
                       {/* Plan actions row */}
                       <div className="flex items-center justify-between pb-3">
-                        <h3 className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
-                          <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
-                          <span className="truncate">{plan.name}</span>
-                        </h3>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="min-w-0">
+                          <h3 className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
+                            <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
+                            <span className="truncate">{plan.name}</span>
+                          </h3>
+                          <p className="text-[11px] text-muted-foreground tabular-nums antialiased mt-0.5">
+                            Week {currentWeekNum ?? 1} of {planTotalWeeks}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          <Button variant="ghost" size="sm" onClick={handleChangePlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
+                            <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
+                            Change
+                          </Button>
                           <Button variant="ghost" size="sm" onClick={handleEditPlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <Pencil className="w-3.5 h-3.5 mr-1.5" />
                             Edit

@@ -26,19 +26,7 @@ import {
 } from '@/types';
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import { completeCheckIn, createCheckIn } from '@/lib/checkin-helpers';
-
-const WORKOUT_FEELING_DISPLAY: Record<string, { label: string; emoji: string }> = {
-  EASY: { label: 'Too Easy', emoji: '😴' },
-  MEDIUM: { label: 'About Right', emoji: '💪' },
-  HARD: { label: 'Too Hard', emoji: '😰' },
-};
-
-const BODY_FEELING_DISPLAY: Record<string, { label: string; emoji: string }> = {
-  FRESH: { label: 'Fresh', emoji: '✨' },
-  NORMAL: { label: 'Normal', emoji: '👍' },
-  TIRED: { label: 'Tired', emoji: '😓' },
-  RUN_DOWN: { label: 'Run Down', emoji: '🥴' },
-};
+import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
 
 interface FlaggedExerciseWithContext {
   flag: ExerciseFlag;
@@ -483,7 +471,7 @@ function FlaggedExercisesSection({
               </p>
               {flag.note && (
                 <p className="text-xs text-muted-foreground ml-5 italic mt-0.5">
-                  "{flag.note}"
+                  &ldquo;{flag.note}&rdquo;
                 </p>
               )}
             </div>

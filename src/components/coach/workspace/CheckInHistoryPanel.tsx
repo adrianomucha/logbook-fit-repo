@@ -4,23 +4,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Modal } from '@/components/ui/Modal';
-import { ChevronDown, ChevronUp, History, CalendarCheck, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ChevronDown, ChevronUp, CalendarCheck, ChevronRight } from 'lucide-react';
 import { CheckIn, CheckInSchedule } from '@/types';
 import { format, formatDistanceToNow } from 'date-fns';
-
-const WORKOUT_FEELING_DISPLAY: Record<string, { label: string; emoji: string }> = {
-  EASY: { label: 'Too Easy', emoji: '😴' },
-  MEDIUM: { label: 'About Right', emoji: '💪' },
-  HARD: { label: 'Too Hard', emoji: '😰' },
-};
-
-const BODY_FEELING_DISPLAY: Record<string, { label: string; emoji: string }> = {
-  FRESH: { label: 'Fresh', emoji: '✨' },
-  NORMAL: { label: 'Normal', emoji: '👍' },
-  TIRED: { label: 'Tired', emoji: '😓' },
-  RUN_DOWN: { label: 'Run Down', emoji: '🥴' },
-};
+import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
 
 interface CheckInHistoryPanelProps {
   checkIns: CheckIn[];
@@ -145,8 +132,8 @@ export function CheckInHistoryPanel({
 
                   {checkIn.clientNotes && (
                     <p className="text-xs text-muted-foreground truncate flex-1 min-w-0">
-                      "{checkIn.clientNotes.slice(0, 40)}
-                      {checkIn.clientNotes.length > 40 ? '...' : ''}"
+                      &ldquo;{checkIn.clientNotes.slice(0, 40)}
+                      {checkIn.clientNotes.length > 40 ? '...' : ''}&rdquo;
                     </p>
                   )}
                 </div>
@@ -245,10 +232,10 @@ function CheckInDetailModal({
         {checkIn.clientNotes && (
           <div>
             <p className="text-xs text-muted-foreground mb-1.5">
-              {clientName}'s notes
+              {clientName}&apos;s notes
             </p>
             <p className="text-sm leading-relaxed bg-muted/40 rounded-lg p-3">
-              "{checkIn.clientNotes}"
+              &ldquo;{checkIn.clientNotes}&rdquo;
             </p>
           </div>
         )}
