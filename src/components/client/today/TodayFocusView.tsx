@@ -1,6 +1,6 @@
 import { Client, WorkoutCompletion } from '@/types';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
-import { StatusHeader, StatusType } from './StatusHeader';
+import { StatusHeader } from './StatusHeader';
 import { TodayActionCard, ActionState } from './TodayActionCard';
 import { CoachContextStrip } from './CoachContextStrip';
 import { QuickEffortFeedback } from './QuickEffortFeedback';
@@ -26,15 +26,8 @@ interface TodayFocusViewProps {
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
   onMessageCoach: () => void;
   onViewWeekly: () => void;
-}
-
-function getStatusType(
-  todayWorkout: WeekDayInfo | null,
-  todayCompletion: WorkoutCompletion | null
-): StatusType {
-  if (todayCompletion?.status === 'COMPLETED') return 'completed';
-  if (todayCompletion?.status === 'IN_PROGRESS') return 'in-progress';
-  return 'workout-scheduled';
+  /** Show the "Plan updated" pill in the header (fresh plan, week 1 not yet completed) */
+  showPlanUpdated?: boolean;
 }
 
 function getActionState(
@@ -62,8 +55,8 @@ export function TodayFocusView({
   onSendFeedback,
   onMessageCoach,
   onViewWeekly,
+  showPlanUpdated,
 }: TodayFocusViewProps) {
-  const statusType = getStatusType(todayWorkout, todayCompletion);
   const actionState = getActionState(todayWorkout, todayCompletion);
   const completionPct = todayCompletion?.completionPct || 0;
 
@@ -76,7 +69,7 @@ export function TodayFocusView({
     <div className="space-y-6">
       {/* Status Header */}
       <div className="animate-fade-in-up">
-        <StatusHeader status={statusType} clientName={client.name} />
+        <StatusHeader showPlanUpdated={showPlanUpdated} clientName={client.name} />
       </div>
 
       {/* Today / week switcher — navigation chrome, kept quiet */}

@@ -175,6 +175,14 @@ export function ClientDashboard() {
     };
   }, [client, plan, weekOverview, clientWorkoutCompletions]);
 
+  // "Plan updated" pill — on for a fresh plan, off once week 1 is fully completed
+  // (or once the calendar has moved past week 1)
+  const showPlanUpdated = useMemo(() => {
+    if (!weekOverview) return false;
+    if (weekOverview.weekNumber !== 1) return false;
+    return !weekOverview.days.every((d) => d.status === 'COMPLETED');
+  }, [weekOverview]);
+
   // Messages adapted for ChatView
   const messages: Message[] = useMemo(
     () => apiMessagesToMessages(apiMessages, client?.id ?? ''),
@@ -345,6 +353,7 @@ export function ClientDashboard() {
             onSendFeedback={handleSendFeedback}
             onMessageCoach={handleMessageCoach}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
+            showPlanUpdated={showPlanUpdated}
           />
         )}
 
