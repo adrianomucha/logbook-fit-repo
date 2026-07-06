@@ -24,6 +24,11 @@ const ibmPlexSans = IBM_Plex_Sans({
 
 export const metadata: Metadata = {
   title: 'LogBook.fit',
+  appleWebApp: {
+    capable: true,
+    title: 'Logbook',
+    statusBarStyle: 'default',
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
