@@ -84,26 +84,15 @@ function getWeekProgress(
   return { ...base, text: 'Still time to get sessions in.', tone: 'warning' };
 }
 
-const toneBlock: Record<VerdictTone, { filled: string; empty: string; text: string }> = {
-  success: {
-    filled: 'bg-emerald-500',
-    empty: 'bg-emerald-500/15',
-    text: 'text-emerald-600 dark:text-emerald-400',
-  },
-  warning: {
-    filled: 'bg-amber-500',
-    empty: 'bg-amber-500/15',
-    text: 'text-amber-600 dark:text-amber-400',
-  },
-  neutral: {
-    filled: 'bg-foreground',
-    empty: 'bg-muted-foreground/15',
-    text: 'text-muted-foreground',
-  },
+// Verdict text uses semantic tokens; the segment fill is always volt so the
+// strip reads the same as the dashboard's weekly progress strip.
+const toneText: Record<VerdictTone, string> = {
+  success: 'text-success',
+  warning: 'text-warning',
+  neutral: 'text-muted-foreground',
 };
 
 export function ProgressHistory({
-  completedWorkouts: _completedWorkouts,
   plans,
   client,
   plan,
@@ -123,39 +112,41 @@ export function ProgressHistory({
   if (hasEnhancedData) {
     return (
       <div className="space-y-4 sm:space-y-6">
-        {/* Week progress tracker */}
+        {/* Week progress tracker — same vocabulary as the dashboard's weekly strip */}
         {weekProgress && (
-          <div className="animate-fade-in-up bg-muted/40 rounded-lg p-5">
-            <div className="flex items-center justify-between mb-4 gap-3">
+          <div className="animate-fade-in-up rounded-xl bg-muted/40 p-4">
+            <div className="flex items-center justify-between gap-3 mb-3">
               <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground shrink-0">
                 This week
               </span>
-              <p className={`text-[11px] font-semibold text-right ${toneBlock[weekProgress.tone].text}`}>
+              <p className={`text-[11px] font-semibold text-right ${toneText[weekProgress.tone]}`}>
                 {weekProgress.text}
               </p>
             </div>
-            <div className="flex gap-2 mb-4">
-              {Array.from({ length: weekProgress.target }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`h-3 flex-1 rounded-sm transition-colors ${
-                    i < weekProgress.completed
-                      ? toneBlock[weekProgress.tone].filled
-                      : toneBlock[weekProgress.tone].empty
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="font-mono text-3xl font-bold tabular-nums leading-none">
+            <div className="flex items-baseline gap-1.5 mb-3">
+              <span className="font-mono text-2xl font-bold tabular-nums leading-none">
                 {weekProgress.completed}
               </span>
-              <span className="font-mono text-lg text-muted-foreground/50 font-bold tabular-nums leading-none">
+              <span className="font-mono text-sm text-muted-foreground/60 font-bold tabular-nums leading-none">
                 / {weekProgress.target}
               </span>
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground ml-1">
                 sessions
               </span>
+            </div>
+            <div
+              className="flex gap-1.5"
+              role="img"
+              aria-label={`${weekProgress.completed} of ${weekProgress.target} sessions completed this week`}
+            >
+              {Array.from({ length: weekProgress.target }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-2.5 flex-1 rounded-full transition-colors ${
+                    i < weekProgress.completed ? 'bg-brand' : 'bg-muted-foreground/15'
+                  }`}
+                />
+              ))}
             </div>
           </div>
         )}

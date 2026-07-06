@@ -79,29 +79,29 @@ const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ completion, dayNam
   const estimatedSets = completion.exercisesDone * 3; // Assume ~3 sets per exercise
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3.5 min-h-[44px] text-left hover:bg-muted/50 transition-colors touch-manipulation"
+        className="w-full py-3.5 min-h-[44px] text-left hover:bg-muted/30 transition-colors touch-manipulation"
         aria-expanded={isExpanded}
       >
         {/* Row 1: Name + chevron */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-sm font-bold tracking-tight truncate">{dayName}</h4>
+            <h4 className="text-[15px] font-semibold tracking-tight leading-snug truncate">{dayName}</h4>
             {completion.status === 'COMPLETED' && (
-              <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+              <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
             )}
           </div>
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+            <ChevronUp className="w-4 h-4 text-muted-foreground/60 shrink-0" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+            <ChevronDown className="w-4 h-4 text-muted-foreground/60 shrink-0" />
           )}
         </div>
 
-        {/* Row 2: Date · Week · Effort */}
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-0.5">
+        {/* Row 2: Date · Week · Effort — mono data voice */}
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums text-muted-foreground mt-1">
           {completion.completedAt
             ? format(parseISO(completion.completedAt), 'MMM d, yyyy')
             : 'In Progress'}
@@ -114,19 +114,19 @@ const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ completion, dayNam
         </p>
 
         {/* Row 3: Quick stats */}
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50 text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 font-medium">
-          <span className="tabular-nums">{completion.exercisesDone}/{completion.exercisesTotal} exercises</span>
-          <span className="tabular-nums">{formatDuration(completion.durationSec)}</span>
-          <span className="tabular-nums">~{estimatedSets} sets</span>
-        </div>
+        <p className="font-mono text-xs tabular-nums text-muted-foreground/70 mt-1.5">
+          {completion.exercisesDone}/{completion.exercisesTotal} exercises
+          &ensp;·&ensp;{formatDuration(completion.durationSec)}
+          &ensp;·&ensp;~{estimatedSets} sets
+        </p>
       </button>
 
       {/* Expanded details — same label ↔ value rows as Body Stats */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-3 border-t space-y-2.5">
+        <div className="pb-4 pt-1 space-y-2.5 animate-fade-in-up">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Completion</span>
-            <span className="font-medium tabular-nums">{Math.round(completion.completionPct)}%</span>
+            <span className="font-mono font-medium tabular-nums">{Math.round(completion.completionPct)}%</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Effort</span>
@@ -186,35 +186,41 @@ export function EnrichedWorkoutHistory({
 
   if (enrichedCompletions.length === 0) {
     return (
-      <div className="border rounded-lg">
-        <div className="p-3">
-          <span className="text-[11px] uppercase tracking-wide font-bold">Workout History</span>
+      <section aria-label="Workout history">
+        <div className="flex items-baseline justify-between mb-2 px-1">
+          <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
+            Workout history
+          </h3>
         </div>
-        <div className="text-center py-8 space-y-3 border-t">
+        <div className="rounded-xl border border-border/70 bg-card text-center py-10 px-6 space-y-3">
           <div className="w-14 h-14 mx-auto rounded-full bg-muted flex items-center justify-center">
             <Dumbbell className="w-6 h-6 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-sm font-bold tracking-tight">No workouts logged yet</p>
-            <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1">Your completed sessions will appear here</p>
+            <p className="text-[15px] font-semibold tracking-tight">No workouts logged yet</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-1.5">
+              Your completed sessions will appear here
+            </p>
           </div>
         </div>
-      </div>
+      </section>
     );
   }
 
   return (
-    <div className="space-y-2">
-      {/* Section header */}
-      <div className="flex items-center justify-between px-1">
-        <span className="text-[11px] uppercase tracking-wide font-bold">Workout History</span>
-        <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums">
-          {enrichedCompletions.length} {enrichedCompletions.length === 1 ? 'workout' : 'workouts'}
+    <section aria-label="Workout history">
+      {/* Section header — same voice as the dashboard's "The work" */}
+      <div className="flex items-baseline justify-between mb-1 px-1">
+        <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
+          Workout history
+        </h3>
+        <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+          {enrichedCompletions.length}
         </span>
       </div>
 
-      {/* Workout items */}
-      <div className="space-y-2">
+      {/* Workout items — open list, hairline dividers */}
+      <div className="divide-y divide-border/50">
         {displayedCompletions.map((item) => (
           <WorkoutHistoryItem
             key={item.completion.id}
@@ -224,28 +230,28 @@ export function EnrichedWorkoutHistory({
             planName={item.planName}
           />
         ))}
-
-        {hasMore && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowAll(!showAll)}
-            className="w-full text-muted-foreground"
-          >
-            {showAll ? (
-              <>
-                <ChevronUp className="w-4 h-4 mr-1" />
-                Show Less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4 mr-1" />
-                Show All ({enrichedCompletions.length - initialCount} more)
-              </>
-            )}
-          </Button>
-        )}
       </div>
-    </div>
+
+      {hasMore && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowAll(!showAll)}
+          className="w-full mt-1 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground"
+        >
+          {showAll ? (
+            <>
+              <ChevronUp className="w-4 h-4 mr-1" />
+              Show less
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-4 h-4 mr-1" />
+              Show all ({enrichedCompletions.length - initialCount} more)
+            </>
+          )}
+        </Button>
+      )}
+    </section>
   );
 }

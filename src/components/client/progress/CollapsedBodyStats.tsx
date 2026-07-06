@@ -12,7 +12,7 @@ function StatRow({ label, value, unit }: { label: string; value: number; unit: s
   return (
     <div className="flex justify-between text-sm">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium tabular-nums">{value}{unit && ` ${unit}`}</span>
+      <span className="font-mono font-medium tabular-nums">{value}{unit && ` ${unit}`}</span>
     </div>
   );
 }
@@ -43,32 +43,32 @@ export function CollapsedBodyStats({ measurements, clientId }: CollapsedBodyStat
   if (latest.thighs !== undefined) rows.push({ label: 'Thighs', value: latest.thighs, unit: 'in' });
 
   return (
-    <div className="border rounded-lg overflow-hidden">
+    <div className="rounded-xl border border-border/70 bg-card overflow-hidden">
       {/* Collapsed row */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full px-4 py-3.5 min-h-[44px] text-left hover:bg-muted/50 transition-colors touch-manipulation"
+        className="w-full px-4 py-3.5 min-h-[44px] text-left hover:bg-muted/30 transition-colors touch-manipulation"
         aria-expanded={isExpanded}
       >
         {/* Row 1: Title + chevron */}
         <div className="flex items-center justify-between gap-2">
-          <h4 className="text-sm font-bold tracking-tight">Body Stats</h4>
+          <h4 className="text-[15px] font-semibold tracking-tight leading-snug">Body Stats</h4>
           {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground shrink-0" />
+            <ChevronUp className="w-4 h-4 text-muted-foreground/60 shrink-0" />
           ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
+            <ChevronDown className="w-4 h-4 text-muted-foreground/60 shrink-0" />
           )}
         </div>
 
-        {/* Row 2: Date metadata */}
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-0.5">
+        {/* Row 2: Date metadata — mono data voice */}
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums text-muted-foreground mt-1">
           Updated {latestDate} · {rows.length} {rows.length === 1 ? 'measurement' : 'measurements'}
         </p>
       </button>
 
       {/* Expanded content */}
       {isExpanded && (
-        <div className="px-4 pb-4 pt-3 border-t space-y-2.5">
+        <div className="px-4 pb-4 pt-3 border-t border-border/50 space-y-2.5 animate-fade-in-up">
           {rows.map((row) => (
             <StatRow key={row.label} label={row.label} value={row.value} unit={row.unit} />
           ))}
