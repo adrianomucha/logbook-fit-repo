@@ -117,9 +117,10 @@ export function PlanEditorDrawer({
     setSelectedDayId(day?.id ?? null);
   }, [plan?.id, initialWeekIndex, initialDayIndex]);
 
-  // Navigate weeks
+  // Navigate weeks — abandon any in-flight exercise edit, it belongs to the old day
   const goToPrevWeek = () => {
     if (selectedWeek > 0) {
+      closeExerciseEditor();
       setSelectedWeek(selectedWeek - 1);
       setSelectedDayId(null); // will auto-select first day via effect
     }
@@ -127,9 +128,15 @@ export function PlanEditorDrawer({
 
   const goToNextWeek = () => {
     if (plan && selectedWeek < plan.weeks.length - 1) {
+      closeExerciseEditor();
       setSelectedWeek(selectedWeek + 1);
       setSelectedDayId(null); // will auto-select first day via effect
     }
+  };
+
+  const handleSelectDay = (dayId: string) => {
+    closeExerciseEditor();
+    setSelectedDayId(dayId);
   };
 
   // Open exercise drawer for new exercise
@@ -329,7 +336,7 @@ export function PlanEditorDrawer({
       if (!o) closeExerciseEditor();
       onOpenChange(o);
     }}>
-      <SheetContent side="right" className="w-full sm:max-w-[500px] p-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
+      <SheetContent side="right" className="w-full sm:max-w-[840px] p-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
         {/* Loading state — skeleton */}
         {isLoading && !plan && (
           <>
@@ -400,11 +407,13 @@ export function PlanEditorDrawer({
           </>
         )}
 
-        {/* Normal state: plan loaded with weeks and days */}
-        {plan && hasWeeks && !exerciseDrawerOpen && (
+        {/* Normal state: plan loaded with weeks and days.
+            Two panes on desktop: week/day rail on the left, day content on the
+            right — no pill scroller, no stacked chrome eating vertical space. */}
+        {plan && hasWeeks && (
           <>
-            {/* Header */}
-            <div className="p-3 sm:p-4 border-b space-y-3 sm:space-y-4 overflow-visible relative z-10">
+            {/* Plan header — always visible */}
+            <div className="px-3 sm:px-4 py-3 border-b overflow-visible relative z-10 shrink-0">
               <SheetHeader>
                 <SheetTitle asChild>
                   <div className="flex items-center gap-2 min-w-0">
@@ -476,137 +485,192 @@ export function PlanEditorDrawer({
                   Tap an exercise to edit
                 </SheetDescription>
               </SheetHeader>
-
-              {/* Week Navigation */}
-              {(() => {
-                const daysWithExercises = currentWeek?.days.filter(d => d.exercises?.length > 0).length || 0;
-                const totalDays = currentWeek?.days.length || 0;
-                return (
-                  <div className="flex items-center gap-2 bg-muted/40 rounded-xl px-1.5 py-1.5">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn(
-                        "h-8 w-8 shrink-0 active:scale-[0.92] transition-[background-color,color,transform]",
-                        selectedWeek === 0 && "opacity-20 pointer-events-none"
-                      )}
-                      onClick={goToPrevWeek}
-                      disabled={selectedWeek === 0}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <div className="flex-1 text-center select-none">
-                      <span className="text-xs font-bold tabular-nums antialiased">
-                        Week {selectedWeek + 1}
-                      </span>
-                      <span className="text-xs text-muted-foreground ml-1 tabular-nums">
-                        of {plan.weeks.length}
-                      </span>
-                      {totalDays > 0 && (
-                        <span className="text-[10px] text-muted-foreground ml-2 tabular-nums">
-                          {daysWithExercises}/{totalDays} ready
-                        </span>
-                      )}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn(
-                        "h-8 w-8 shrink-0 active:scale-[0.92] transition-[background-color,color,transform]",
-                        selectedWeek === plan.weeks.length - 1 && "opacity-20 pointer-events-none"
-                      )}
-                      onClick={goToNextWeek}
-                      disabled={selectedWeek === plan.weeks.length - 1}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                );
-              })()}
-
-              {/* Sequential Day Pills */}
-              {hasDays && (
-                <div className="flex gap-1.5 overflow-x-auto pb-0.5 -mx-1 px-1 scrollbar-none snap-x snap-mandatory">
-                  {currentWeek.days.map((day, idx) => {
-                    const isActive = clampedDay === idx;
-                    const exerciseCount = day.exercises?.length || 0;
-
-                    return (
-                      <button
-                        key={day.id}
-                        onClick={() => setSelectedDayId(day.id)}
-                        className={cn(
-                          'flex items-center gap-1.5 px-3.5 py-2.5 sm:px-3 sm:py-2 rounded-xl transition-[background-color,color,border-color,box-shadow] whitespace-nowrap min-h-[44px] shrink-0 snap-start',
-                          isActive
-                            ? 'bg-foreground text-background scale-[1.02] shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
-                            : 'bg-muted/40 hover:bg-muted active:scale-[0.95]'
-                        )}
-                      >
-                        <span className="text-xs font-bold truncate max-w-[120px]">
-                          {day.name || `Day ${idx + 1}`}
-                        </span>
-                        {exerciseCount > 0 && (
-                          <span className={cn(
-                            'text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md',
-                            isActive ? 'bg-background/20 text-background' : 'bg-foreground/10 text-muted-foreground'
-                          )}>
-                            {exerciseCount}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
             </div>
 
-            {/* Content */}
-            {currentDay ? (
-              <div className="flex-1 overflow-y-auto">
-                {/* Day Name & Description Edit */}
-                <div className="p-4 border-b space-y-3">
-                  <div>
-                    <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block antialiased">
-                      Workout name
-                    </label>
-                    <Input
-                      ref={dayNameInputRef}
-                      value={localDayName}
-                      onChange={(e) => setLocalDayName(e.target.value)}
-                      onBlur={commitDayName}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') dayNameInputRef.current?.blur();
-                        if (e.key === 'Escape') { setLocalDayName(currentDay?.name || ''); dayNameInputRef.current?.blur(); }
-                      }}
-                      placeholder="e.g., Push Day"
-                      maxLength={80}
-                      aria-label="Workout name"
-                      className="font-bold"
-                    />
+            {/* Body: rail + main pane */}
+            <div className="flex-1 min-h-0 flex flex-col sm:flex-row">
+              {/* Week/day rail — on mobile it collapses to a stepper + pill row,
+                  and hides entirely while the exercise editor is open */}
+              <div className={cn(
+                'shrink-0 border-b sm:border-b-0 sm:border-r sm:w-[220px] sm:bg-muted/20 flex flex-col',
+                exerciseDrawerOpen && 'hidden sm:flex'
+              )}>
+                {/* Week stepper */}
+                {(() => {
+                  const daysWithExercises = currentWeek?.days.filter(d => d.exercises?.length > 0).length || 0;
+                  const totalDays = currentWeek?.days.length || 0;
+                  return (
+                    <div className="flex items-center gap-1 px-2 pt-2 sm:pt-3 pb-1.5 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          'h-7 w-7 shrink-0 active:scale-[0.92] transition-[background-color,color,transform]',
+                          selectedWeek === 0 && 'opacity-20 pointer-events-none'
+                        )}
+                        onClick={goToPrevWeek}
+                        disabled={selectedWeek === 0}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <div className="flex-1 text-center select-none leading-tight">
+                        <span className="font-mono text-[11px] font-semibold tabular-nums antialiased">
+                          Week {selectedWeek + 1} <span className="text-muted-foreground font-normal">of {plan.weeks.length}</span>
+                        </span>
+                        {totalDays > 0 && (
+                          <span className="block font-mono text-[10px] text-muted-foreground tabular-nums antialiased">
+                            {daysWithExercises}/{totalDays} ready
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          'h-7 w-7 shrink-0 active:scale-[0.92] transition-[background-color,color,transform]',
+                          selectedWeek === plan.weeks.length - 1 && 'opacity-20 pointer-events-none'
+                        )}
+                        onClick={goToNextWeek}
+                        disabled={selectedWeek === plan.weeks.length - 1}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  );
+                })()}
+
+                {/* Days — vertical list on desktop */}
+                {hasDays && (
+                  <div className="hidden sm:block flex-1 overflow-y-auto px-2 pb-3 space-y-0.5">
+                    {currentWeek.days.map((day, idx) => {
+                      const isActive = clampedDay === idx;
+                      const exerciseCount = day.exercises?.length || 0;
+                      return (
+                        <button
+                          key={day.id}
+                          onClick={() => handleSelectDay(day.id)}
+                          className={cn(
+                            'w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-left transition-[background-color,color] duration-150',
+                            isActive
+                              ? 'bg-foreground text-background'
+                              : 'hover:bg-muted text-foreground'
+                          )}
+                        >
+                          <span className="text-[13px] font-medium truncate antialiased">
+                            {day.name || `Day ${idx + 1}`}
+                          </span>
+                          <span className={cn(
+                            'font-mono text-[10px] tabular-nums shrink-0',
+                            isActive ? 'text-background/60' : 'text-muted-foreground'
+                          )}>
+                            {exerciseCount || '—'}
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
-                  <div>
-                    <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block antialiased">
-                      Briefing
-                    </label>
-                    <Textarea
-                      value={localDayDescription}
-                      onChange={(e) => setLocalDayDescription(e.target.value)}
-                      onBlur={commitDayDescription}
-                      placeholder="Describe this workout for your client — what to expect, how to approach it..."
-                      className="text-sm resize-none"
-                      rows={2}
-                      maxLength={500}
-                    />
+                )}
+
+                {/* Days — pill row on mobile */}
+                {hasDays && (
+                  <div className="sm:hidden flex gap-1.5 overflow-x-auto px-3 pb-3 scrollbar-none snap-x snap-mandatory">
+                    {currentWeek.days.map((day, idx) => {
+                      const isActive = clampedDay === idx;
+                      const exerciseCount = day.exercises?.length || 0;
+                      return (
+                        <button
+                          key={day.id}
+                          onClick={() => handleSelectDay(day.id)}
+                          className={cn(
+                            'flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl transition-[background-color,color,box-shadow] whitespace-nowrap min-h-[44px] shrink-0 snap-start',
+                            isActive
+                              ? 'bg-foreground text-background shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
+                              : 'bg-muted/40 hover:bg-muted active:scale-[0.95]'
+                          )}
+                        >
+                          <span className="text-xs font-bold truncate max-w-[120px]">
+                            {day.name || `Day ${idx + 1}`}
+                          </span>
+                          {exerciseCount > 0 && (
+                            <span className={cn(
+                              'font-mono text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md',
+                              isActive ? 'bg-background/20 text-background' : 'bg-foreground/10 text-muted-foreground'
+                            )}>
+                              {exerciseCount}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
+                )}
+              </div>
+
+              {/* Main pane */}
+              <div className="flex-1 min-w-0 min-h-0 flex flex-col">
+              {exerciseDrawerOpen ? (
+                <>
+                  {/* Back button header */}
+                  <div className="px-4 py-2 border-b shrink-0">
+                    <button
+                      onClick={closeExerciseEditor}
+                      className="group flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground active:text-foreground active:scale-[0.97] transition-[color,transform] min-h-[44px] sm:min-h-[36px]"
+                    >
+                      <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
+                      Back to {currentDay?.name || 'workout'}
+                    </button>
+                  </div>
+                  <ExerciseEditorContent
+                    exercise={editingExercise || null}
+                    onSave={handleSaveExercise}
+                    onClose={closeExerciseEditor}
+                    onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
+                    exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
+                    open={exerciseDrawerOpen}
+                    previousExerciseName={
+                      editingExerciseIndex !== null
+                        ? currentDay?.exercises[editingExerciseIndex - 1]?.name ?? null
+                        : currentDay?.exercises[currentDay.exercises.length - 1]?.name ?? null
+                    }
+                  />
+                </>
+              ) : currentDay ? (
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                {/* Day name & briefing — seamless inline fields, no boxed inputs */}
+                <div className="px-4 sm:px-5 pt-4 pb-3 border-b">
+                  <Input
+                    ref={dayNameInputRef}
+                    value={localDayName}
+                    onChange={(e) => setLocalDayName(e.target.value)}
+                    onBlur={commitDayName}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') dayNameInputRef.current?.blur();
+                      if (e.key === 'Escape') { setLocalDayName(currentDay?.name || ''); dayNameInputRef.current?.blur(); }
+                    }}
+                    placeholder={`Day ${clampedDay + 1} — name this workout`}
+                    maxLength={80}
+                    aria-label="Workout name"
+                    className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-lg font-semibold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                  />
+                  <Textarea
+                    value={localDayDescription}
+                    onChange={(e) => setLocalDayDescription(e.target.value)}
+                    onBlur={commitDayDescription}
+                    placeholder="Add a briefing for your client — what to expect, how to approach it…"
+                    aria-label="Briefing"
+                    className="mt-1 border-0 shadow-none rounded-none px-0 py-0 min-h-0 text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                    rows={2}
+                    maxLength={500}
+                  />
                 </div>
 
                 {/* Exercise count header */}
                 {currentDay.exercises.length > 0 && (
-                  <div className="px-4 py-2.5 border-b flex items-center justify-between">
-                    <span className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
+                  <div className="px-4 sm:px-5 py-2.5 border-b flex items-center justify-between">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
                       Exercises
                     </span>
-                    <span className="text-[11px] tabular-nums text-muted-foreground font-bold">
+                    <span className="font-mono text-[11px] tabular-nums text-muted-foreground font-bold">
                       {currentDay.exercises.length}
                     </span>
                   </div>
@@ -691,42 +755,15 @@ export function PlanEditorDrawer({
                   )}
                 </div>
               </div>
-            ) : (
-              <div className="flex-1 flex flex-col items-center justify-center gap-2 p-8 text-center">
-                <div className="text-4xl select-none mb-1">📭</div>
-                <p className="text-sm font-bold antialiased">Empty week</p>
-                <p className="text-xs text-muted-foreground antialiased">This week has no workout days</p>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center gap-2 p-8 text-center">
+                  <div className="text-4xl select-none mb-1">📭</div>
+                  <p className="text-sm font-bold antialiased">Empty week</p>
+                  <p className="text-xs text-muted-foreground antialiased">This week has no workout days</p>
+                </div>
+              )}
               </div>
-            )}
-          </>
-        )}
-
-        {/* Exercise editor — inline view swap (no stacking sheets) */}
-        {plan && hasWeeks && exerciseDrawerOpen && (
-          <>
-            {/* Back button header */}
-            <div className="px-4 py-2 border-b">
-              <button
-                onClick={closeExerciseEditor}
-                className="group flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground active:text-foreground active:scale-[0.97] transition-[color,transform] min-h-[44px] sm:min-h-[36px]"
-              >
-                <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
-                Back to {currentDay?.name || 'workout'}
-              </button>
             </div>
-            <ExerciseEditorContent
-              exercise={editingExercise || null}
-              onSave={handleSaveExercise}
-              onClose={closeExerciseEditor}
-              onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
-              exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
-              open={exerciseDrawerOpen}
-              previousExerciseName={
-                editingExerciseIndex !== null
-                  ? currentDay?.exercises[editingExerciseIndex - 1]?.name ?? null
-                  : currentDay?.exercises[currentDay.exercises.length - 1]?.name ?? null
-              }
-            />
           </>
         )}
       </SheetContent>
