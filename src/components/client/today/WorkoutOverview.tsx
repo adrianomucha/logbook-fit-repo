@@ -117,7 +117,7 @@ export function WorkoutOverview({
         <section aria-label="Exercises">
           <div className="flex items-baseline justify-between mb-2 px-1">
             <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
-              The work
+              Exercises
             </h3>
             <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
               {exercises.length}

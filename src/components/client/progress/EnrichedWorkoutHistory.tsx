@@ -209,7 +209,7 @@ export function EnrichedWorkoutHistory({
 
   return (
     <section aria-label="Workout history">
-      {/* Section header — same voice as the dashboard's "The work" */}
+      {/* Section header — same voice as the dashboard's exercise list */}
       <div className="flex items-baseline justify-between mb-1 px-1">
         <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
           Workout history
