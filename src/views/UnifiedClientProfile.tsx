@@ -76,6 +76,8 @@ export function UnifiedClientProfile() {
   const [secondaryTab, setSecondaryTab] = useState<'plan' | 'history'>('plan');
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
+  // Optimistic override for the weekly check-in schedule switch (null = follow server)
+  const [scheduleOverride, setScheduleOverride] = useState<boolean | null>(null);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -245,11 +247,19 @@ export function UnifiedClientProfile() {
   };
 
   const handleUnassignPlan = async () => {
-    // TODO: Implement plan unassignment via API when endpoint exists
+    if (!clientId) return;
+    try {
+      await apiFetch(`/api/coach/clients/${clientId}/plan`, { method: 'DELETE' });
+      refreshClient();
+      refreshPlan();
+    } catch {
+      toast.error('Failed to remove the plan. Please try again.');
+    }
+    setShowAssignPlanModal(false);
   };
 
   const handleUpdatePlan = async () => {
-    // TODO: Implement plan update via API when endpoint exists
+    // Drawer edits persist themselves — just re-fetch so this page reflects them
     refreshPlan();
   };
 
@@ -304,8 +314,21 @@ export function UnifiedClientProfile() {
     chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const handleToggleCheckInSchedule = () => {
-    // TODO: Implement schedule toggle via API when endpoint exists
+  const handleToggleCheckInSchedule = async (enabled: boolean) => {
+    if (!clientId) return;
+    setScheduleOverride(enabled);
+    try {
+      await apiFetch(`/api/coach/clients/${clientId}/check-in-schedule`, {
+        method: 'PUT',
+        body: JSON.stringify({ enabled }),
+      });
+      // Enabling may auto-create a due check-in — refetch to show it
+      await refreshClient();
+    } catch {
+      toast.error('Failed to update the check-in schedule. Please try again.');
+    } finally {
+      setScheduleOverride(null);
+    }
   };
 
   // ---- Loading State ----
@@ -725,6 +748,7 @@ export function UnifiedClientProfile() {
                     clientName={client.name}
                     initialCount={3}
                     hasPlan={!!plan}
+                    scheduleEnabled={scheduleOverride ?? apiClient.checkInScheduleEnabled}
                     onToggleSchedule={handleToggleCheckInSchedule}
                   />
                 </div>
@@ -745,6 +769,7 @@ export function UnifiedClientProfile() {
         isOpen={showAssignPlanModal}
         onClose={() => setShowAssignPlanModal(false)}
         onAssign={handleAssignPlan}
+        onUnassign={handleUnassignPlan}
         plans={plansList}
         currentPlanId={plan?.id}
       />

@@ -143,6 +143,9 @@ model CoachClientRelationship {
   coachId   String
   clientId  String       @unique // MVP: one coach per client
   status    ClientStatus @default(ACTIVE)
+  // Weekly check-in automation: when enabled, a new check-in is created
+  // lazily (on coach/client data access) once 7 days pass since the last one
+  checkInScheduleEnabled Boolean @default(false)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 

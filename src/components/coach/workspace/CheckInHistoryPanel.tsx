@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Modal } from '@/components/ui/Modal';
 import { ChevronDown, ChevronUp, CalendarCheck, ChevronRight } from 'lucide-react';
-import { CheckIn, CheckInSchedule } from '@/types';
+import { CheckIn } from '@/types';
 import { format, formatDistanceToNow } from 'date-fns';
 import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
 
@@ -15,8 +15,8 @@ interface CheckInHistoryPanelProps {
   clientName: string;
   /** Number of check-ins to show initially (default: 5) */
   initialCount?: number;
-  /** Optional: show check-in schedule toggle in footer */
-  schedule?: CheckInSchedule;
+  /** Optional: show the weekly auto check-in toggle in the footer */
+  scheduleEnabled?: boolean;
   hasPlan?: boolean;
   onToggleSchedule?: (enabled: boolean) => void;
 }
@@ -26,7 +26,7 @@ export function CheckInHistoryPanel({
   clientId,
   clientName,
   initialCount = 5,
-  schedule,
+  scheduleEnabled = false,
   hasPlan = false,
   onToggleSchedule,
 }: CheckInHistoryPanelProps) {
@@ -45,7 +45,6 @@ export function CheckInHistoryPanel({
   }, [checkIns, clientId]);
 
   const firstName = clientName?.split(' ')[0] || clientName || 'Client';
-  const isScheduleActive = schedule?.status === 'ACTIVE';
 
   const scheduleToggle = hasPlan && onToggleSchedule ? (
     <div className="flex items-center justify-between px-3 py-2 bg-muted/30 rounded-lg">
@@ -54,15 +53,11 @@ export function CheckInHistoryPanel({
         <div>
           <span className="text-sm font-medium">Weekly check-ins</span>
           <p className="text-xs text-muted-foreground">
-            {isScheduleActive
-              ? 'Auto-sends every 7 days'
-              : schedule?.status === 'PAUSED'
-              ? 'Paused'
-              : 'Not active'}
+            {scheduleEnabled ? 'Auto-sends every 7 days' : 'Not active'}
           </p>
         </div>
       </div>
-      <Switch checked={isScheduleActive} onCheckedChange={onToggleSchedule} />
+      <Switch checked={scheduleEnabled} onCheckedChange={onToggleSchedule} />
     </div>
   ) : null;
 

@@ -78,6 +78,7 @@ export interface ClientDetail {
   planStartDate: string | null;
   relationshipStatus: string;
   joinedAt: string;
+  checkInScheduleEnabled: boolean;
   completions: {
     id: string;
     dayId: string;

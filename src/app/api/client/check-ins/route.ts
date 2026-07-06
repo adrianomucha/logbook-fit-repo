@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { ensureScheduledCheckIn } from "@/lib/checkin-schedule";
 
 /**
  * GET /api/client/check-ins
@@ -15,6 +16,15 @@ export const GET = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
+    // Weekly schedule is enforced lazily on both sides — the client opening
+    // their check-ins is enough to materialize a due one
+    const relationship = await prisma.coachClientRelationship.findUnique({
+      where: { clientId: clientProfileId },
+    });
+    if (relationship) {
+      await ensureScheduledCheckIn(relationship);
+    }
+
     const checkIns = await prisma.checkIn.findMany({
       where: { clientId: clientProfileId },
       orderBy: { createdAt: "desc" },

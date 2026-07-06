@@ -80,6 +80,10 @@ export const coachRespondSchema = z.object({
   planAdjustment: z.boolean().optional(),
 });
 
+export const checkInScheduleSchema = z.object({
+  enabled: z.boolean(),
+});
+
 // ──────────────────────────────────────
 // PLANS
 // ──────────────────────────────────────

@@ -9,6 +9,8 @@ interface AssignPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAssign: (planId: string) => void | Promise<void>;
+  /** Optional: offered when a plan is currently assigned, to clear the assignment */
+  onUnassign?: () => void | Promise<void>;
   plans: WorkoutPlan[];
   currentPlanId?: string;
 }
@@ -17,11 +19,13 @@ export function AssignPlanModal({
   isOpen,
   onClose,
   onAssign,
+  onUnassign,
   plans,
   currentPlanId,
 }: AssignPlanModalProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
 
   // Filter to only show templates (not archived)
   const templatePlans = useMemo(() =>
@@ -32,6 +36,7 @@ export function AssignPlanModal({
   const handleClose = () => {
     if (isSubmitting) return;
     setSelectedPlanId(null);
+    setConfirmingRemove(false);
     onClose();
   };
 
@@ -40,6 +45,23 @@ export function AssignPlanModal({
     setIsSubmitting(true);
     try {
       await onAssign(selectedPlanId);
+      setSelectedPlanId(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Two-tap remove: first tap arms the confirmation, second executes
+  const handleRemove = async () => {
+    if (!onUnassign || isSubmitting) return;
+    if (!confirmingRemove) {
+      setConfirmingRemove(true);
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await onUnassign();
+      setConfirmingRemove(false);
       setSelectedPlanId(null);
     } finally {
       setIsSubmitting(false);
@@ -67,8 +89,18 @@ export function AssignPlanModal({
       title="Assign Plan"
       maxWidth="md"
       footer={
-        <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={handleClose} disabled={isSubmitting}>
+        <div className="flex gap-3 items-center">
+          {currentPlanId && onUnassign && (
+            <Button
+              variant="ghost"
+              onClick={handleRemove}
+              disabled={isSubmitting}
+              className="text-destructive hover:text-destructive mr-auto"
+            >
+              {confirmingRemove ? 'Confirm remove?' : 'Remove current plan'}
+            </Button>
+          )}
+          <Button variant="outline" onClick={handleClose} disabled={isSubmitting} className="ml-auto">
             Cancel
           </Button>
           <Button onClick={handleAssign} disabled={!selectedPlanId || isSubmitting} className="flex items-center gap-2">

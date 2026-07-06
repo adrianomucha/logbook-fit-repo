@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { ensureScheduledCheckIn } from "@/lib/checkin-schedule";
 
 /**
  * GET /api/coach/clients/[id]
@@ -28,6 +29,10 @@ export const GET = withCoach(
     if (!relationship) {
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
+
+    // Weekly schedule is enforced lazily — materialize a due check-in
+    // before reading, so it's included in this response
+    await ensureScheduledCheckIn(relationship);
 
     const client = await prisma.clientProfile.findUnique({
       where: { id: clientProfileId },
@@ -94,6 +99,7 @@ export const GET = withCoach(
       relationshipStatus: relationship.status,
       joinedAt: relationship.createdAt,
       planStartDate: client.planStartDate,
+      checkInScheduleEnabled: relationship.checkInScheduleEnabled,
     });
   }
 );
