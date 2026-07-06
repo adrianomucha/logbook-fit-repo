@@ -58,7 +58,7 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
                   className={cn(
                     'inline-flex items-center border-b-2 px-0.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     activeTab === id
-                      ? 'border-foreground text-foreground'
+                      ? 'border-brand text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >

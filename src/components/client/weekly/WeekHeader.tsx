@@ -10,7 +10,7 @@ export function WeekHeader({ plan, currentWeek }: WeekHeaderProps) {
 
   return (
     <div>
-      <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-1">
+      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground mb-1 tabular-nums">
         Week {currentWeek} of {totalWeeks}
       </p>
       <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">

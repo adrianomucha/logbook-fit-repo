@@ -23,9 +23,9 @@ export function DayCard({ day, onClick }: DayCardProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-3 px-3.5 py-3 rounded-lg transition-colors touch-manipulation min-h-[52px]',
-        isCurrent && 'bg-muted/80',
-        isCompleted && 'opacity-70',
+        'flex items-center gap-3 px-3.5 py-3 rounded-xl transition-colors touch-manipulation min-h-[56px]',
+        isCurrent && 'bg-muted/60 ring-1 ring-inset ring-brand/50',
+        isCompleted && 'opacity-60',
         isInteractive && 'cursor-pointer hover:bg-muted/60 active:bg-muted',
       )}
       onClick={handleClick}
@@ -48,21 +48,21 @@ export function DayCard({ day, onClick }: DayCardProps) {
       }
     >
       {/* Position number — fixed width */}
-      <div className="w-10 shrink-0">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 font-medium">
+      <div className="w-9 shrink-0">
+        <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
           Day
         </p>
-        <p className="text-sm font-bold tabular-nums leading-none">
-          {orderIndex}
+        <p className="font-mono text-sm font-bold tabular-nums leading-none mt-0.5">
+          {String(orderIndex).padStart(2, '0')}
         </p>
       </div>
 
       {/* Middle — workout info */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-bold truncate tracking-tight">
+        <p className="text-[15px] font-semibold truncate tracking-tight">
           {workoutDay?.name || 'Workout'}
         </p>
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+        <p className="font-mono text-[10px] text-muted-foreground tabular-nums mt-0.5">
           {exerciseCount} exercises
         </p>
       </div>
@@ -74,7 +74,9 @@ export function DayCard({ day, onClick }: DayCardProps) {
             <Check className="w-3.5 h-3.5 text-success stroke-[3]" />
           </div>
         ) : isCurrent ? (
-          <span className="w-2 h-2 rounded-full bg-info block" />
+          <span className="font-mono text-[9px] uppercase tracking-[0.14em] font-bold bg-brand text-brand-foreground rounded-full px-2 py-1">
+            Up next
+          </span>
         ) : null}
       </div>
     </div>

@@ -112,7 +112,7 @@ export function TodayActionCard({
               </div>
               <div>
                 <h3 className="font-bold text-xl tracking-tight">Rest Day</h3>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide mt-0.5">Recovery &amp; mobility</p>
+                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.14em] mt-1">Recovery &amp; mobility</p>
               </div>
             </div>
             <Button

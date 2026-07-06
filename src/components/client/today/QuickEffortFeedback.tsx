@@ -31,7 +31,7 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
   return (
     <Card className="border-border">
       <CardContent className="p-5 sm:p-6">
-        <p className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-3">
+        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground mb-3">
           How did that feel?
         </p>
 

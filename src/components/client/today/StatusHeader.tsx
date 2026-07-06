@@ -37,21 +37,23 @@ export function StatusHeader({ status, clientName }: StatusHeaderProps) {
   const { label, dot } = statusConfig[status];
 
   return (
-    <div className="pt-1">
-      <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+    <div className="pt-2">
+      <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
         {dateStr || '\u00A0'}
       </p>
-      <h1 className="text-[22px] sm:text-2xl font-bold tracking-tight mt-1">
-        {greeting && firstName ? `${greeting}, ${firstName}` : label}
-      </h1>
-      {greeting && firstName && (
-        <div className="flex items-center gap-1.5 mt-1.5">
-          <span className={`w-1.5 h-1.5 rounded-full ${dot} shrink-0`} />
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-            {label}
+      <div className="flex items-end justify-between gap-3 mt-1.5">
+        <h1 className="text-[26px] sm:text-3xl font-bold tracking-tight leading-tight">
+          {greeting && firstName ? `${greeting}, ${firstName}` : label}
+        </h1>
+        {greeting && firstName && (
+          <span className="flex items-center gap-1.5 shrink-0 rounded-full bg-muted/70 pl-2.5 pr-3 py-1 mb-1">
+            <span className={`w-1.5 h-1.5 rounded-full ${dot} shrink-0`} />
+            <span className="font-mono text-[10px] text-muted-foreground font-medium uppercase tracking-[0.08em] whitespace-nowrap">
+              {label}
+            </span>
           </span>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

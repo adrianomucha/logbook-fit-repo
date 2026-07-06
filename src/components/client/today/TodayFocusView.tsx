@@ -6,8 +6,7 @@ import { CoachContextStrip } from './CoachContextStrip';
 import { QuickEffortFeedback } from './QuickEffortFeedback';
 import { WorkoutOverview } from './WorkoutOverview';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Calendar, Play, RotateCcw } from 'lucide-react';
+import { Calendar, ChevronRight, RotateCcw } from 'lucide-react';
 
 interface TodayFocusViewProps {
   client: Client;
@@ -73,54 +72,23 @@ export function TodayFocusView({
   const showOverview = (actionState === 'scheduled' || actionState === 'in-progress') && todayWorkout?.workoutDay;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Status Header */}
       <div className="animate-fade-in-up">
         <StatusHeader status={statusType} clientName={client.name} />
       </div>
 
-      {/* Workout Overview (scheduled / in-progress) */}
+      {/* Hero session card + exercise list (scheduled / in-progress) */}
       {showOverview && todayWorkout?.workoutDay && (
-        <>
-          <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
-            <WorkoutOverview
-              workoutDay={todayWorkout.workoutDay}
-              coachName={coachName}
-            />
-          </div>
-
-          {/* In-progress: show progress bar (only when there's actual progress) */}
-          {actionState === 'in-progress' && completionPct > 0 && (
-            <div className="space-y-2 animate-fade-in-up" style={{ animationDelay: '120ms' }}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wide tabular-nums">{completionPct}%</span>
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Complete</span>
-              </div>
-              <Progress value={completionPct} className="h-2" />
-            </div>
-          )}
-
-          {/* Start / Resume button — hero CTA */}
-          <div className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
-            <Button
-              onClick={actionState === 'in-progress' ? onResumeWorkout : onStartWorkout}
-              className="w-full h-12 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
-              size="lg"
-            >
-              {actionState === 'in-progress' ? (
-                <>
-                  <RotateCcw className="w-4 h-4 mr-2" />
-                  Continue
-                </>
-              ) : (
-                <>
-                  <Play className="w-4 h-4 mr-2" />
-                  Start Workout
-                </>
-              )}
-            </Button>
-          </div>
-        </>
+        <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
+          <WorkoutOverview
+            workoutDay={todayWorkout.workoutDay}
+            coachName={coachName}
+            actionState={actionState === 'in-progress' ? 'in-progress' : 'scheduled'}
+            completionPct={completionPct}
+            onAction={actionState === 'in-progress' ? onResumeWorkout : onStartWorkout}
+          />
+        </div>
       )}
 
       {/* Fallback to action card for completed / rest states */}
@@ -170,20 +138,16 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* View Week — subtle footer link */}
-      <div className="flex items-center justify-between pt-2 border-t border-border/40 animate-fade-in-up" style={{ animationDelay: '250ms' }}>
-        <span className="text-[11px] text-muted-foreground/70 uppercase tracking-wide">
-          {todayWorkout?.workoutDay ? 'Full schedule' : 'Your schedule'}
-        </span>
-        <Button
-          variant="ghost"
-          size="sm"
+      {/* View Week — one full-width tappable row */}
+      <div className="animate-fade-in-up" style={{ animationDelay: '250ms' }}>
+        <button
           onClick={onViewWeekly}
-          className="text-muted-foreground hover:text-foreground -mr-2 text-xs uppercase tracking-wide"
+          className="w-full h-12 rounded-xl border border-border/70 bg-card flex items-center gap-3 px-4 text-sm font-medium text-foreground hover:bg-muted/50 active:scale-[0.99] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <Calendar className="w-3.5 h-3.5 mr-1.5" />
-          Week View
-        </Button>
+          <Calendar className="w-4 h-4 text-muted-foreground" />
+          <span className="flex-1 text-left">View full week</span>
+          <ChevronRight className="w-4 h-4 text-muted-foreground/60" />
+        </button>
       </div>
     </div>
   );

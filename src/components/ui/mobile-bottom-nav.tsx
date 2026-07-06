@@ -27,13 +27,21 @@ export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavPr
               key={item.id}
               onClick={() => onSelect(item.id)}
               className={cn(
-                'flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[48px] py-2 px-3 transition-colors touch-manipulation',
+                'relative flex flex-col items-center justify-center gap-1 min-w-[64px] min-h-[48px] py-2 px-3 transition-colors touch-manipulation',
                 isActive
                   ? 'text-foreground'
                   : 'text-muted-foreground hover:text-foreground'
               )}
               aria-current={isActive ? 'page' : undefined}
             >
+              {/* Active indicator — volt bar along the top edge */}
+              <span
+                className={cn(
+                  'absolute top-0 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full transition-colors',
+                  isActive ? 'bg-brand' : 'bg-transparent'
+                )}
+                aria-hidden="true"
+              />
               <div className="relative">
                 <Icon
                   className={cn(

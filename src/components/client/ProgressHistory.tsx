@@ -126,11 +126,11 @@ export function ProgressHistory({
         {/* Week progress tracker */}
         {weekProgress && (
           <div className="animate-fade-in-up bg-muted/40 rounded-lg p-5">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+            <div className="flex items-center justify-between mb-4 gap-3">
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground shrink-0">
                 This week
               </span>
-              <p className={`text-[10px] uppercase tracking-[0.12em] font-bold ${toneBlock[weekProgress.tone].text}`}>
+              <p className={`text-[11px] font-semibold text-right ${toneBlock[weekProgress.tone].text}`}>
                 {weekProgress.text}
               </p>
             </div>
@@ -147,13 +147,13 @@ export function ProgressHistory({
               ))}
             </div>
             <div className="flex items-baseline gap-1.5">
-              <span className="text-3xl font-bold tabular-nums leading-none">
+              <span className="font-mono text-3xl font-bold tabular-nums leading-none">
                 {weekProgress.completed}
               </span>
-              <span className="text-lg text-muted-foreground/50 font-bold tabular-nums leading-none">
+              <span className="font-mono text-lg text-muted-foreground/50 font-bold tabular-nums leading-none">
                 / {weekProgress.target}
               </span>
-              <span className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium ml-1">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground ml-1">
                 sessions
               </span>
             </div>
@@ -163,27 +163,27 @@ export function ProgressHistory({
         {/* Overall stats */}
         {progressStats && (
           <div className="animate-fade-in-up grid grid-cols-3 gap-2" style={{ animationDelay: '25ms' }}>
-            <div className="bg-muted/40 rounded-lg px-3 py-4 text-center">
-              <p className="text-2xl font-bold tabular-nums leading-none">
+            <div className="bg-muted/40 rounded-xl px-3 py-4 text-center">
+              <p className="font-mono text-2xl font-bold tabular-nums leading-none">
                 {progressStats.totalWorkouts}
               </p>
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">
                 Total
               </p>
             </div>
-            <div className="bg-muted/40 rounded-lg px-3 py-4 text-center">
-              <p className="text-2xl font-bold tabular-nums leading-none">
+            <div className="bg-muted/40 rounded-xl px-3 py-4 text-center">
+              <p className="font-mono text-2xl font-bold tabular-nums leading-none">
                 {progressStats.currentStreak}
               </p>
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">
                 Streak
               </p>
             </div>
-            <div className="bg-muted/40 rounded-lg px-3 py-4 text-center">
-              <p className="text-2xl font-bold tabular-nums leading-none">
+            <div className="bg-muted/40 rounded-xl px-3 py-4 text-center">
+              <p className="font-mono text-2xl font-bold tabular-nums leading-none">
                 {Math.round(progressStats.avgCompletionPct)}%
               </p>
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">
                 Avg
               </p>
             </div>

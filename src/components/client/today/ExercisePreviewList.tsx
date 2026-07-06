@@ -15,21 +15,21 @@ function formatPrescription(exercise: Exercise): string {
 
 function ExerciseRow({ exercise, label }: { exercise: Exercise; label: string }) {
   return (
-    <div className="py-3 first:pt-0 last:pb-0 flex items-center gap-3">
-      <span className="text-[11px] font-bold text-muted-foreground/50 tabular-nums w-6 text-right shrink-0 uppercase">
+    <div className="py-3.5 first:pt-0 last:pb-0 flex items-center gap-3.5">
+      <span className="font-mono text-[11px] font-medium text-muted-foreground/50 tabular-nums w-7 text-right shrink-0">
         {label}
       </span>
       <div className="flex-1 min-w-0">
-        <span className="text-sm font-semibold text-foreground truncate block">
+        <span className="text-[15px] font-semibold text-foreground truncate block leading-snug">
           {exercise.name}
         </span>
         {exercise.notes && (
-          <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed line-clamp-1">
+          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed line-clamp-1">
             {exercise.notes}
           </p>
         )}
       </div>
-      <span className="text-xs tabular-nums shrink-0 text-foreground/60 font-bold tracking-tight">
+      <span className="font-mono text-xs tabular-nums shrink-0 text-muted-foreground font-medium">
         {formatPrescription(exercise)}
       </span>
     </div>
@@ -40,7 +40,7 @@ export function ExercisePreviewList({ exercises }: ExercisePreviewListProps) {
   if (exercises.length === 0) return null;
 
   return (
-    <div className="divide-y divide-border/40">
+    <div className="divide-y divide-border/50">
       {groupBySuperset(exercises).map((group, groupIndex) => {
         const number = String(groupIndex + 1).padStart(2, '0');
 
@@ -50,14 +50,14 @@ export function ExercisePreviewList({ exercises }: ExercisePreviewListProps) {
 
         // Superset: shared number + letter per member, bracketed by a left rail
         return (
-          <div key={group[0].id} className="py-3 first:pt-0 last:pb-0">
-            <div className="flex items-center gap-1.5 mb-1.5">
+          <div key={group[0].id} className="py-3.5 first:pt-0 last:pb-0">
+            <div className="flex items-center gap-1.5 mb-2">
               <Link2 className="w-3 h-3 text-muted-foreground/60" />
-              <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/60">
                 Superset
               </span>
             </div>
-            <div className="border-l-2 border-foreground/15 pl-2 divide-y divide-border/40">
+            <div className="border-l-2 border-brand/60 pl-3 divide-y divide-border/50">
               {group.map((exercise, memberIndex) => (
                 <ExerciseRow
                   key={exercise.id}

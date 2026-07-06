@@ -1,10 +1,16 @@
 import { WorkoutDay } from '@/types';
 import { ExercisePreviewList } from './ExercisePreviewList';
-import { Card, CardContent } from '@/components/ui/card';
+import { Play, RotateCcw } from 'lucide-react';
 
 interface WorkoutOverviewProps {
   workoutDay: WorkoutDay;
   coachName?: string;
+  /** Whether the session hasn't started yet or is mid-flight */
+  actionState: 'scheduled' | 'in-progress';
+  /** 0–100, only meaningful when in progress */
+  completionPct?: number;
+  /** Start / resume the workout */
+  onAction: () => void;
 }
 
 function estimateDuration(exercises: WorkoutDay['exercises']): number {
@@ -29,70 +35,104 @@ function getUniqueCategories(exercises: WorkoutDay['exercises']): string[] {
 export function WorkoutOverview({
   workoutDay,
   coachName,
+  actionState,
+  completionPct = 0,
+  onAction,
 }: WorkoutOverviewProps) {
   const exercises = workoutDay.exercises;
   const duration = estimateDuration(exercises);
   const totalSets = exercises.reduce((sum, e) => sum + e.sets, 0);
   const categories = getUniqueCategories(exercises);
+  const inProgress = actionState === 'in-progress';
 
   return (
-    <div className="space-y-4">
-      {/* Workout Name */}
-      <div>
-        <h2 className="text-[17px] sm:text-lg font-bold tracking-tight leading-snug">
-          {workoutDay.name || 'Today\u2019s Workout'}
-        </h2>
-        {coachName && (
-          <p className="text-xs text-muted-foreground mt-1 uppercase tracking-wide">
-            By {coachName}
+    <div className="space-y-6">
+      {/* Hero session card — single focal point: what, how big, go */}
+      <div className="relative overflow-hidden rounded-2xl bg-foreground text-background p-5 sm:p-6">
+        {/* Volt corner glow — pure decoration, keeps the dark card from feeling flat */}
+        <div
+          className="pointer-events-none absolute -top-24 -right-24 w-56 h-56 rounded-full bg-brand/20 blur-3xl"
+          aria-hidden="true"
+        />
+
+        <div className="relative">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-background/50">
+            Today&rsquo;s session{coachName ? ` · Coach ${coachName.split(' ')[0]}` : ''}
           </p>
-        )}
+
+          <h2 className="text-2xl sm:text-[28px] font-bold tracking-tight leading-tight mt-2">
+            {workoutDay.name || 'Today’s Workout'}
+          </h2>
+
+          {categories.length > 0 && (
+            <p className="text-sm text-background/60 mt-1">
+              {categories.join(' · ')}
+            </p>
+          )}
+
+          {/* Stat line — mono is the data voice */}
+          <p className="font-mono text-xs tracking-wide text-background/70 tabular-nums mt-4">
+            {duration} min&ensp;·&ensp;{exercises.length} exercises&ensp;·&ensp;{totalSets} sets
+          </p>
+
+          {workoutDay.description && (
+            <p className="text-sm leading-relaxed text-background/70 mt-3">
+              {workoutDay.description}
+            </p>
+          )}
+
+          {/* Progress — only when there's actual progress to show */}
+          {inProgress && completionPct > 0 && (
+            <div className="mt-5">
+              <div className="flex items-baseline justify-between mb-1.5">
+                <span className="font-mono text-xs font-bold tabular-nums text-brand">
+                  {completionPct}%
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-background/50">
+                  complete
+                </span>
+              </div>
+              <div className="h-1.5 rounded-full bg-background/15 overflow-hidden">
+                <div
+                  className="h-full rounded-full bg-brand transition-all duration-500"
+                  style={{ width: `${completionPct}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          <button
+            onClick={onAction}
+            className="mt-5 w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-foreground"
+          >
+            {inProgress ? (
+              <>
+                <RotateCcw className="w-4 h-4" strokeWidth={2.5} />
+                Continue workout
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 fill-current" />
+                Start workout
+              </>
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Stat Blocks — gym-counter style */}
-      <div className="flex gap-2 sm:gap-3">
-        <div className="flex-1 bg-muted/60 rounded-lg px-2 sm:px-3 py-4 text-center">
-          <p className="text-xl font-bold tabular-nums leading-none">{duration}</p>
-          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Minutes</p>
-        </div>
-        <div className="flex-1 bg-muted/60 rounded-lg px-2 sm:px-3 py-4 text-center">
-          <p className="text-xl font-bold tabular-nums leading-none">{exercises.length}</p>
-          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Exercises</p>
-        </div>
-        <div className="flex-1 bg-muted/60 rounded-lg px-2 sm:px-3 py-4 text-center">
-          <p className="text-xl font-bold tabular-nums leading-none">{totalSets}</p>
-          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-1.5 font-medium">Total Sets</p>
-        </div>
-      </div>
-
-      {/* Categories */}
-      {categories.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {categories.map((cat) => (
-            <span
-              key={cat}
-              className="text-[11px] uppercase tracking-wide font-medium text-muted-foreground bg-muted/80 px-2 py-1 rounded"
-            >
-              {cat}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Coach Description */}
-      {workoutDay.description && (
-        <p className="text-sm leading-relaxed text-foreground/80">
-          {workoutDay.description}
-        </p>
-      )}
-
-      {/* Exercise List */}
+      {/* Exercise list — open list, no boxed-in card */}
       {exercises.length > 0 && (
-        <Card className="border-border/60">
-          <CardContent className="p-4 sm:p-5">
-            <ExercisePreviewList exercises={exercises} />
-          </CardContent>
-        </Card>
+        <section aria-label="Exercises">
+          <div className="flex items-baseline justify-between mb-2 px-1">
+            <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
+              The work
+            </h3>
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+              {exercises.length}
+            </span>
+          </div>
+          <ExercisePreviewList exercises={exercises} />
+        </section>
       )}
     </div>
   );

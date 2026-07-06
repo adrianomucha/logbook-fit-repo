@@ -26,9 +26,8 @@ import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, AlertCircle } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 // ---- Component ----
 
@@ -301,23 +300,23 @@ export function ClientDashboard() {
       />
 
       <div className={cn(
-        'max-w-2xl mx-auto w-full px-3 pt-3 sm:px-4 sm:pt-7',
+        'max-w-2xl mx-auto w-full px-4 pt-4 sm:pt-7',
         currentView === 'chat'
           ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
-          : 'space-y-4 sm:space-y-6'
+          : 'space-y-5 sm:space-y-6 pb-24 sm:pb-8'
       )}>
 
         {/* Check-in prompt banner */}
         {pendingCheckIn && (
           <section aria-label="Pending check-in">
-            <div className="rounded-lg bg-muted/40 px-4 py-3.5">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-2 antialiased">
-                Check-in
+            <div className="rounded-xl border border-brand/40 bg-brand/10 px-4 py-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased">
+                Weekly check-in
               </p>
-              <p className="text-sm font-bold tracking-tight mb-1 antialiased">Your coach wants to hear how training is going</p>
+              <p className="text-[15px] font-bold tracking-tight antialiased">Your coach wants to hear how training is going</p>
               <Button
                 onClick={() => router.push(`/client/checkin/${pendingCheckIn.id}`)}
-                className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150 mt-2.5"
+                className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150 mt-3"
                 size="sm"
               >
                 Complete Check-in
@@ -352,7 +351,7 @@ export function ClientDashboard() {
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setWorkoutViewMode('today')}
-                className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation"
+                className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation py-1"
               >
                 ← Today
               </button>
@@ -376,8 +375,8 @@ export function ClientDashboard() {
         {currentView === 'chat' && coachUserId && (
           <>
             <div className="shrink-0 py-4">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">Messages</p>
-              <h1 className="text-[22px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
+              <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
             </div>
             <ChatView
               client={client}
@@ -399,8 +398,8 @@ export function ClientDashboard() {
         {currentView === 'progress' && (
           <>
             <div className="py-4">
-              <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">History</p>
-              <h1 className="text-[22px] sm:text-2xl font-bold tracking-tight">Progress</h1>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">History</p>
+              <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">Progress</h1>
             </div>
             <ProgressHistory
               completedWorkouts={[]}
