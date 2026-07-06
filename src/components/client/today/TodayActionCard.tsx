@@ -131,9 +131,9 @@ export function TodayActionCard({
 
   return (
     <Card className={cn(
-      'transition-[color,background-color,border-color,box-shadow]',
-      state === 'scheduled' && 'border-info/20 shadow-md shadow-info/5',
-      state === 'in-progress' && 'border-warning/20 shadow-md shadow-warning/5',
+      'shadow-none transition-[color,background-color,border-color]',
+      state === 'scheduled' && 'border-info/20',
+      state === 'in-progress' && 'border-warning/20',
       state === 'completed' && 'border-success/20 bg-success/[0.03]',
       state === 'rest' && 'border-border'
     )}>

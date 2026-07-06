@@ -48,7 +48,7 @@ export function WorkoutOverview({
   return (
     <div className="space-y-6">
       {/* Hero session card — single focal point: what, how big, go */}
-      <div className="rounded-2xl bg-card border border-border/70 shadow-sm p-5 sm:p-6">
+      <div className="rounded-2xl bg-card border border-border/70 p-5 sm:p-6">
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
           Today&rsquo;s session{coachName ? ` · Coach ${coachName.split(' ')[0]}` : ''}
         </p>

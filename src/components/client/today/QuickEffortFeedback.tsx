@@ -29,7 +29,7 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
   };
 
   return (
-    <Card className="border-border">
+    <Card className="border-border shadow-none">
       <CardContent className="p-5 sm:p-6">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground mb-3">
           How did that feel?

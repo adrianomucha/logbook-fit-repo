@@ -254,7 +254,7 @@ export function ClientDashboard() {
   if (hasDataError && !client && !plan) {
     return (
       <div className="min-h-screen bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+        <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
           <div className="py-10 px-6 text-center">
             <div className="text-4xl select-none mb-4 animate-bounce-once">😵</div>
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Something went wrong</h2>
@@ -309,7 +309,7 @@ export function ClientDashboard() {
         {/* Check-in prompt banner */}
         {pendingCheckIn && (
           <section aria-label="Pending check-in">
-            <div className="rounded-xl border border-border/70 bg-card shadow-sm px-4 py-4">
+            <div className="rounded-xl border border-border/70 bg-card px-4 py-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />
                 Weekly check-in

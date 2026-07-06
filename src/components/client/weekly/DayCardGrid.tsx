@@ -9,7 +9,7 @@ interface DayCardGridProps {
 
 export function DayCardGrid({ days, onDayClick }: DayCardGridProps) {
   return (
-    <Card className="border-border/60">
+    <Card className="border-border/60 shadow-none">
       <CardContent className="p-2 sm:p-3">
         <div className="divide-y divide-border/40">
           {days.map((day) => (
