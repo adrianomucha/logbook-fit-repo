@@ -257,7 +257,7 @@ export function ChatView({
                     {/* Date separator */}
                     {showDateSep && (
                       <div className="flex justify-center py-4">
-                        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
                           {format(msgDate, 'EEEE, MMM d')}
                         </span>
                       </div>
@@ -334,8 +334,8 @@ export function ChatView({
           </div>
         )}
 
-        {/* Input bar */}
-        <div className="px-3 sm:px-4 py-2.5">
+        {/* Input bar — hairline separator anchors the composer, like card footers elsewhere */}
+        <div className="px-3 sm:px-4 py-2.5 border-t border-border/50">
           <div className="flex gap-2 items-center">
             <label htmlFor="chat-message-input" className="sr-only">
               Message to {client.name}
