@@ -228,6 +228,36 @@ class WorkoutServiceImpl {
     return updated;
   }
 
+  async cancel(caller: Caller, params: { completionId: string }) {
+    const clientId = this.getClientId(caller);
+    const completion = await this.verifyOwnership(
+      clientId,
+      params.completionId,
+    );
+
+    if (completion.status === "COMPLETED") {
+      throw new InvalidStateError("Completed workouts cannot be cancelled");
+    }
+
+    // Only untouched sessions can be cancelled — once sets are logged, the
+    // client should finish (partial) or restart instead of silently losing work.
+    const completedSets = await this.db.setCompletion.count({
+      where: { workoutCompletionId: params.completionId, completed: true },
+    });
+    if (completedSets > 0) {
+      throw new InvalidStateError(
+        "Workouts with completed sets cannot be cancelled",
+      );
+    }
+
+    // Hard delete — sets and flags cascade, and the day returns to "not started"
+    await this.db.workoutCompletion.delete({
+      where: { id: params.completionId },
+    });
+
+    return { id: params.completionId, cancelled: true };
+  }
+
   async finish(
     caller: Caller,
     params: { completionId: string; effortRating?: string },

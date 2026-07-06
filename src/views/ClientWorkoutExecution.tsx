@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount, isExerciseComplete } from '@/hooks/api/useWorkoutExecution';
+import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount, hasLoggedProgress, isExerciseComplete } from '@/hooks/api/useWorkoutExecution';
 import { RotateCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
@@ -35,6 +35,7 @@ export function ClientWorkoutExecution() {
     isLoading,
     startWorkout,
     restartWorkout,
+    cancelWorkout,
     toggleSet,
     updateSet,
     toggleFlag,
@@ -236,8 +237,25 @@ export function ClientWorkoutExecution() {
     }
   };
 
-  // Handle back navigation
-  const handleBack = () => {
+  // Handle back navigation. Opening the page auto-starts the workout, so if
+  // the client leaves without logging anything, discard the untouched session —
+  // the day goes back to "not started" instead of lingering in progress.
+  const leavingRef = useRef(false);
+  const handleBack = async () => {
+    if (leavingRef.current) return;
+    leavingRef.current = true;
+
+    if (
+      !isReadOnly &&
+      completion?.status === 'IN_PROGRESS' &&
+      !hasLoggedProgress(exercises)
+    ) {
+      try {
+        await cancelWorkout();
+      } catch {
+        // Best effort — the session stays resumable if the discard fails
+      }
+    }
     router.push('/client');
   };
 

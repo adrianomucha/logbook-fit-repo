@@ -7,7 +7,12 @@ vi.mock("@/lib/prisma", () => ({
 
 // Now we can import the service module — the singleton won't try to connect
 // We test calculateStreak directly since it's a pure function on the class
-import { workoutService } from "../workout";
+import {
+  workoutService,
+  WorkoutNotFoundError,
+  InvalidStateError,
+} from "../workout";
+import prisma from "@/lib/prisma";
 
 describe("calculateStreak", () => {
   beforeEach(() => {
@@ -83,5 +88,76 @@ describe("calculateStreak", () => {
       return d;
     });
     expect(workoutService.calculateStreak(dates)).toBe(30);
+  });
+});
+
+describe("cancel", () => {
+  // The mocked prisma module is a plain object — stub the models per test
+  const db = prisma as unknown as {
+    workoutCompletion: {
+      findFirst: ReturnType<typeof vi.fn>;
+      delete: ReturnType<typeof vi.fn>;
+    };
+    setCompletion: { count: ReturnType<typeof vi.fn> };
+  };
+  const caller = { role: "client" as const, clientProfileId: "client-1" };
+
+  beforeEach(() => {
+    db.workoutCompletion = { findFirst: vi.fn(), delete: vi.fn() };
+    db.setCompletion = { count: vi.fn() };
+  });
+
+  it("deletes an in-progress workout with no completed sets", async () => {
+    db.workoutCompletion.findFirst.mockResolvedValue({
+      id: "wc-1",
+      status: "IN_PROGRESS",
+    });
+    db.setCompletion.count.mockResolvedValue(0);
+
+    const result = await workoutService.cancel(caller, {
+      completionId: "wc-1",
+    });
+
+    expect(db.workoutCompletion.findFirst).toHaveBeenCalledWith({
+      where: { id: "wc-1", clientId: "client-1" },
+    });
+    expect(db.workoutCompletion.delete).toHaveBeenCalledWith({
+      where: { id: "wc-1" },
+    });
+    expect(result).toEqual({ id: "wc-1", cancelled: true });
+  });
+
+  it("rejects cancelling a completed workout", async () => {
+    db.workoutCompletion.findFirst.mockResolvedValue({
+      id: "wc-1",
+      status: "COMPLETED",
+    });
+
+    await expect(
+      workoutService.cancel(caller, { completionId: "wc-1" }),
+    ).rejects.toThrow(InvalidStateError);
+    expect(db.workoutCompletion.delete).not.toHaveBeenCalled();
+  });
+
+  it("rejects cancelling once sets have been completed", async () => {
+    db.workoutCompletion.findFirst.mockResolvedValue({
+      id: "wc-1",
+      status: "IN_PROGRESS",
+    });
+    db.setCompletion.count.mockResolvedValue(3);
+
+    await expect(
+      workoutService.cancel(caller, { completionId: "wc-1" }),
+    ).rejects.toThrow(InvalidStateError);
+    expect(db.workoutCompletion.delete).not.toHaveBeenCalled();
+  });
+
+  it("throws not-found for another client's workout", async () => {
+    db.workoutCompletion.findFirst.mockResolvedValue(null);
+
+    await expect(
+      workoutService.cancel(caller, { completionId: "wc-other" }),
+    ).rejects.toThrow(WorkoutNotFoundError);
+    expect(db.workoutCompletion.delete).not.toHaveBeenCalled();
   });
 });

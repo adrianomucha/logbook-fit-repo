@@ -291,6 +291,25 @@ export function useWorkoutExecution(dayId: string | null) {
     return result;
   }, [completionId, mutate]);
 
+  /**
+   * Cancel an untouched workout — deletes the completion so the day returns to
+   * "not started". The server rejects this once any set is completed.
+   */
+  const cancelWorkout = useCallback(async () => {
+    if (!completionId || isReadOnly) return null;
+
+    // Drop any pending debounced writes — the completion is being discarded
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    pendingSetsRef.current.clear();
+
+    const result = await apiFetch<{ id: string; cancelled: boolean }>(
+      `/api/client/workout/${completionId}/cancel`,
+      { method: 'POST' }
+    );
+    await mutate();
+    return result;
+  }, [completionId, isReadOnly, mutate]);
+
   /** Finish the workout — throws on failure so callers can handle */
   const finishWorkout = useCallback(
     async (effortRating?: string) => {
@@ -337,6 +356,7 @@ export function useWorkoutExecution(dayId: string | null) {
     isLoading,
     startWorkout,
     restartWorkout,
+    cancelWorkout,
     toggleSet,
     updateSet,
     toggleFlag,
@@ -360,6 +380,21 @@ function getCompletionStats(exercises: WorkoutExercise[]) {
   }
 
   return { exercisesDone, exercisesTotal };
+}
+
+/**
+ * True once the client has logged anything at all — a completed set, actual
+ * reps/weight, or a flag. Used to decide whether an in-progress workout is
+ * still untouched and can be silently discarded on exit.
+ */
+export function hasLoggedProgress(exercises: WorkoutExercise[]): boolean {
+  return exercises.some(
+    (ex) =>
+      !!ex.flag ||
+      ex.setCompletions.some(
+        (s) => s.completed || s.actualReps != null || s.actualWeight != null
+      )
+  );
 }
 
 /** Check if a specific set is completed */
