@@ -433,8 +433,8 @@ export function UnifiedClientProfile() {
   // Section label helper — consistent uppercase tracking with antialiased rendering.
   // Real <h2> so the page has a navigable heading outline, styled down to a label.
   const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-    <div className="px-1 pb-2">
-      <h2 className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
+    <div className="px-1 pb-2.5">
+      <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
         {children}
       </h2>
     </div>
@@ -443,7 +443,7 @@ export function UnifiedClientProfile() {
   // Card surface helper — shadows over borders, concentric radii (outer 12px, inner content inherits)
   const SectionCard = ({ children, className: cardClassName }: { children: React.ReactNode; className?: string }) => (
     <div className={cn(
-      "bg-card rounded-xl overflow-hidden p-3 sm:p-4",
+      "bg-card rounded-xl overflow-hidden p-4 sm:p-5",
       "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
       "transition-shadow duration-200",
       cardClassName
@@ -456,10 +456,10 @@ export function UnifiedClientProfile() {
     <div className="min-h-screen bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="clients" />
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
-        <main className="space-y-4 sm:space-y-6">
+      <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
+        <main className="space-y-6 sm:space-y-8">
         {/* Page header — path-style title; "Clients /" crumb is the way back */}
-        <div className="animate-enter mb-1.5 sm:mb-3" style={{ animationDelay: '0ms' }}>
+        <div className="animate-enter" style={{ animationDelay: '0ms' }}>
           <PageHeader
             title={client.name}
             subtitle={headerSubtitle}
@@ -501,15 +501,15 @@ export function UnifiedClientProfile() {
         {plan && weekProgress && (
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
           <SectionCard>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">This week</p>
-                <div className="flex items-center gap-2.5">
-                  <p className="text-sm font-bold tabular-nums antialiased">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">This week</p>
+                <div className="flex items-center gap-3">
+                  <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">
                     {weekProgress.completed}
                     <span className="text-muted-foreground font-normal">/{weekProgress.total}</span>
                   </p>
-                  <div className="flex gap-1 w-full max-w-[64px]" aria-hidden="true">
+                  <div className="flex gap-1 w-full max-w-[72px]" aria-hidden="true">
                     {Array.from({ length: weekProgress.total }, (_, i) => (
                       <div
                         key={i}
@@ -523,18 +523,18 @@ export function UnifiedClientProfile() {
                 </div>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">Plan week</p>
-                <p className="text-sm font-bold tabular-nums antialiased">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Plan week</p>
+                <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">
                   {currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span>
                 </p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">Last workout</p>
-                <p className="text-sm font-bold tabular-nums antialiased">{daysAgoLabel(lastWorkoutAt) ?? '—'}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Last workout</p>
+                <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">{daysAgoLabel(lastWorkoutAt) ?? '—'}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased mb-1">Last check-in</p>
-                <p className="text-sm font-bold tabular-nums antialiased">{daysAgoLabel(lastCheckInAt) ?? 'None yet'}</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Last check-in</p>
+                <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">{daysAgoLabel(lastCheckInAt) ?? 'None yet'}</p>
               </div>
             </div>
           </SectionCard>
@@ -633,9 +633,9 @@ export function UnifiedClientProfile() {
               "bg-card rounded-xl overflow-hidden md:h-[480px] flex flex-col",
               "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
             )}>
-              <div className="px-3 sm:px-4 pt-3 sm:pt-4 pb-0 shrink-0">
+              <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 shrink-0">
                 <div className="flex gap-1 border-b border-border mb-0 -mt-1">
-                  <h2 className="pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
+                  <h2 className="pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
                     Messages
                     <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
                   </h2>
@@ -668,7 +668,7 @@ export function UnifiedClientProfile() {
                     key={tab.id}
                     onClick={() => setSecondaryTab(tab.id)}
                     className={cn(
-                      'pb-2 px-2 text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target',
+                      'pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target',
                       secondaryTab === tab.id
                         ? 'text-foreground'
                         : 'text-muted-foreground hover:text-foreground'
@@ -700,7 +700,7 @@ export function UnifiedClientProfile() {
                             <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
                             <span className="truncate">{plan.name}</span>
                           </h3>
-                          <p className="text-[11px] text-muted-foreground tabular-nums antialiased mt-0.5">
+                          <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground tabular-nums antialiased mt-1">
                             Week {currentWeekNum ?? 1} of {planTotalWeeks}
                           </p>
                         </div>

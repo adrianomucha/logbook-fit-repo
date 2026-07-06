@@ -66,10 +66,10 @@ export function CoachNav({
               className="flex items-baseline gap-1.5 rounded-sm group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               aria-label="Logbook Fitness home"
             >
-              <span className="text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-foreground">
+              <span className="font-mono text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-foreground">
                 Logbook
               </span>
-              <span className="text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
+              <span className="font-mono text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground/60 group-hover:text-muted-foreground transition-colors">
                 Fitness
               </span>
             </button>
@@ -85,7 +85,7 @@ export function CoachNav({
                   onClick={() => handleTabClick(id)}
                   aria-current={activeTab === id ? 'page' : undefined}
                   className={cn(
-                    'inline-flex items-center gap-1.5 border-b-2 px-0.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    'inline-flex items-center gap-1.5 border-b-2 px-0.5 font-mono text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     activeTab === id
                       ? 'border-foreground text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'

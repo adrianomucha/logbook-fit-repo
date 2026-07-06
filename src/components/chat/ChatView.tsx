@@ -257,7 +257,7 @@ export function ChatView({
                     {/* Date separator */}
                     {showDateSep && (
                       <div className="flex justify-center py-4">
-                        <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+                        <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
                           {format(msgDate, 'EEEE, MMM d')}
                         </span>
                       </div>
@@ -307,7 +307,7 @@ export function ChatView({
                     {/* Timestamp — only after last message in a group */}
                     {isLastInGroup && (
                       <p className={cn(
-                        'text-[10px] text-muted-foreground mt-1.5 px-0.5',
+                        'font-mono text-[10px] text-muted-foreground mt-1.5 px-0.5',
                         isCurrentUser ? 'text-right' : 'text-left'
                       )}>
                         {format(msgDate, 'h:mm a')}

@@ -355,7 +355,7 @@ export function InlineCheckInReview({
           <div className="grid grid-cols-2 gap-2 sm:gap-3">
             {workoutFeeling && (
               <div className="bg-muted/40 rounded-xl p-3 sm:p-4">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Workouts felt</p>
+                <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Workouts felt</p>
                 <p className="text-lg font-bold">
                   <span className="text-xl mr-1">{workoutFeeling.emoji}</span> {workoutFeeling.label}
                 </p>
@@ -363,7 +363,7 @@ export function InlineCheckInReview({
             )}
             {bodyFeeling && (
               <div className="bg-muted/40 rounded-xl p-3 sm:p-4">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Body feels</p>
+                <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Body feels</p>
                 <p className="text-lg font-bold">
                   <span className="text-xl mr-1">{bodyFeeling.emoji}</span> {bodyFeeling.label}
                 </p>

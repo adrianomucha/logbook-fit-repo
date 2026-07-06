@@ -66,10 +66,13 @@ module.exports = {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ['var(--font-ibm-plex-mono)', 'IBM Plex Mono', 'monospace'],
-        heading: ['var(--font-ibm-plex-mono)', 'IBM Plex Mono', 'monospace'],
-        // Proportional face for conversational/long-form text (font-prose).
-        // Mono stays the default for all UI chrome, data, labels, and numbers.
+        // Proportional sans is the default UI face (headings, body, controls) —
+        // how Nike Training / Apple Fitness / Google products set product UI.
+        sans: ['var(--font-ibm-plex-sans)', 'IBM Plex Sans', 'sans-serif'],
+        heading: ['var(--font-ibm-plex-sans)', 'IBM Plex Sans', 'sans-serif'],
+        // Mono is the brand's data voice: stats, timestamps, eyebrow labels.
+        mono: ['var(--font-ibm-plex-mono)', 'IBM Plex Mono', 'monospace'],
+        // Legacy alias — long-form text now shares the default sans.
         prose: ['var(--font-ibm-plex-sans)', 'IBM Plex Sans', 'sans-serif'],
       },
       keyframes: {

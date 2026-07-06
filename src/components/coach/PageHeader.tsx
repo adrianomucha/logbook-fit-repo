@@ -6,8 +6,7 @@ interface PageHeaderProps {
   /** String subtitles render as uppercase tracked labels; pass a node for custom metadata styling */
   subtitle?: ReactNode;
   action?: ReactNode;
-  /** Renders a muted clickable path crumb before the title (e.g. "Clients / Emma Wilson").
-      On mobile it becomes a "‹ Clients" back link above the title so long names don't truncate. */
+  /** Renders a small "‹ Clients" back link above the title. */
   breadcrumb?: { label: string; onClick: () => void };
 }
 
@@ -18,35 +17,22 @@ export function PageHeader({ title, subtitle, action, breadcrumb }: PageHeaderPr
         {breadcrumb && (
           <button
             onClick={breadcrumb.onClick}
-            className="sm:hidden flex items-center gap-0.5 -ml-1 mb-0.5 text-[13px] text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
+            className="flex items-center gap-0.5 -ml-1.5 mb-1 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
           >
-            <ChevronLeft className="w-4 h-4" aria-hidden="true" />
+            <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
             {breadcrumb.label}
           </button>
         )}
-        <h1 className="text-xl sm:text-2xl font-bold tracking-tight antialiased truncate">
-          {breadcrumb && (
-            <span className="hidden sm:inline">
-              <button
-                onClick={breadcrumb.onClick}
-                className="font-normal text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {breadcrumb.label}
-              </button>
-              <span className="font-normal text-muted-foreground/40 mx-2.5" aria-hidden="true">
-                /
-              </span>
-            </span>
-          )}
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight antialiased truncate">
           {title}
         </h1>
         {subtitle != null && (
           typeof subtitle === 'string' ? (
-            <p className="text-xs uppercase tracking-[0.15em] text-muted-foreground mt-1 antialiased">
+            <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground mt-1.5 antialiased">
               {subtitle}
             </p>
           ) : (
-            <div className="mt-1">{subtitle}</div>
+            <div className="mt-1.5">{subtitle}</div>
           )
         )}
       </div>

@@ -216,7 +216,7 @@ export function InteractiveWeeklyStrip({
                           className="flex items-center text-[13px] py-1.5"
                         >
                           <span className="flex-1 truncate antialiased">{exercise.name}</span>
-                          <span className="text-xs text-muted-foreground shrink-0 tabular-nums antialiased ml-3">
+                          <span className="font-mono text-xs text-muted-foreground shrink-0 tabular-nums antialiased ml-3">
                             {exercise.sets}×{exercise.reps || '—'}
                             {exercise.weight && ` · ${exercise.weight}`}
                           </span>
@@ -325,11 +325,11 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
 
       {/* Position number */}
       <div className="w-10 shrink-0">
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
           Day
         </p>
         <p className={cn(
-          'text-sm font-black tabular-nums leading-none antialiased',
+          'font-mono text-sm font-bold tabular-nums leading-none antialiased',
           isCurrent ? 'text-foreground' : 'text-muted-foreground'
         )}>
           {day.orderIndex}
@@ -344,7 +344,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
         )}>
           {day.workoutDay?.name || 'Workout'}
         </p>
-        <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased">
+        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased">
           {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
         </p>
       </div>
@@ -357,7 +357,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
           </svg>
         )}
         {isCurrent && (
-          <span className="text-[10px] uppercase tracking-wide text-info font-bold antialiased">
+          <span className="font-mono text-[10px] uppercase tracking-wide text-info font-bold antialiased">
             Up next
           </span>
         )}
