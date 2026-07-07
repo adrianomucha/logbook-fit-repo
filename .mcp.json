@@ -7,10 +7,6 @@
         "mcp"
       ]
     },
-    "framer": {
-      "type": "sse",
-      "url": "https://mcp.unframer.co/sse?id=92ec51e4739212bd77da254d448222b470d6451961b9c00b7113db2f89000327&secret=gII5qa3ZLIGhlZqJHO8KBv1LD5r24kut"
-    },
     "supabase": {
       "command": "npx",
       "args": [
@@ -18,7 +14,7 @@
         "@supabase/mcp-server-supabase@latest"
       ],
       "env": {
-        "SUPABASE_ACCESS_TOKEN": "sbp_b584bed2388938b6a7603dd731e8e354cd74960b",
+        "SUPABASE_ACCESS_TOKEN": "${SUPABASE_ACCESS_TOKEN}",
         "SUPABASE_PROJECT_REF": "lbpuqjwmvwzdfzykxlci"
       }
     }
