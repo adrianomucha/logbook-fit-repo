@@ -1,5 +1,15 @@
 # CLAUDE.md
 
+## Git commit authorship
+
+Author all commits as the repo owner so they count toward his GitHub contribution graph:
+
+```
+git commit --author "Adrian Mucha <adrianomucha@gmail.com>" ...
+```
+
+Credit Claude via a `Co-Authored-By` trailer in the commit message instead of as the commit author.
+
 ## gstack
 
 Use the `/browse` skill from gstack for all web browsing. Never use `mcp__Claude_in_Chrome__*` tools.
