@@ -6,7 +6,7 @@
 
 Plan workouts. Track progress. Stay connected — all in one place.
 
-[What is Logbook.fit?](#what-is-logbookfit) &middot; [Features](#features) &middot; [Try It](#try-it)
+[What is Logbook.fit?](#what-is-logbookfit) &middot; [Features](#features)
 
 </div>
 
@@ -45,22 +45,6 @@ The heart of Logbook.fit is a structured two-way check-in:
 4. **Coach replies** with feedback and optionally marks "I'll adjust the plan"
 
 This loop replaces scattered WhatsApp messages with a focused, contextual conversation that lives right inside the client workspace.
-
-## Try It
-
-Visit the live app at [logbook-fit-new.vercel.app](https://logbook-fit-new.vercel.app) and log in with a demo account:
-
-| Role | Email | Password |
-|------|-------|----------|
-| Coach | `coach@logbook.fit` | `demo1234` |
-| Client | `client@logbook.fit` | `demo1234` |
-
-## For Developers
-
-Setup instructions, tech stack, and architecture details live in separate docs:
-
-- [QUICKSTART.md](QUICKSTART.md) — Get the app running locally
-- [DEVELOPMENT.md](DEVELOPMENT.md) — Project structure and database schema
 
 ## License
 
