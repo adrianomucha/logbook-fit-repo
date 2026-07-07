@@ -722,6 +722,7 @@ export function UnifiedClientProfile() {
         onUnassign={handleUnassignPlan}
         plans={plansList}
         currentPlanId={plan?.id}
+        clientName={client.name}
       />
       <PlanEditorDrawer
         open={showPlanDrawer}

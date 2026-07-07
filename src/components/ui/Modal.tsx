@@ -29,7 +29,6 @@ export function Modal({
   const descriptionId = useId();
   const modalRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
-  const closeButtonRef = useRef<HTMLButtonElement>(null);
   const onCloseRef = useRef(onClose);
 
   // Keep onClose ref current without triggering re-renders
@@ -54,14 +53,16 @@ export function Modal({
 
       const firstEl = focusableEls[0];
       const lastEl = focusableEls[focusableEls.length - 1];
+      // -1 when focus sits on the container itself (initial state)
+      const activeIndex = Array.prototype.indexOf.call(focusableEls, document.activeElement);
 
       if (e.shiftKey) {
-        if (document.activeElement === firstEl) {
+        if (activeIndex <= 0) {
           e.preventDefault();
           lastEl.focus();
         }
       } else {
-        if (document.activeElement === lastEl) {
+        if (activeIndex === focusableEls.length - 1) {
           e.preventDefault();
           firstEl.focus();
         }
@@ -75,9 +76,10 @@ export function Modal({
 
     document.addEventListener('keydown', handleKeyDown);
 
-    // Auto-focus close button only on initial open
+    // Focus the dialog container itself so keyboard users start inside the
+    // modal without a visible focus ring lighting up the close button
     requestAnimationFrame(() => {
-      closeButtonRef.current?.focus();
+      modalRef.current?.focus();
     });
 
     return () => {
@@ -109,7 +111,8 @@ export function Modal({
     >
       <div
         ref={modalRef}
-        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[90vh] overflow-y-auto bg-background sm:rounded-lg shadow-xl animate-in fade-in-0 sm:zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200`}
+        tabIndex={-1}
+        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[90vh] overflow-y-auto bg-background sm:rounded-2xl shadow-xl focus:outline-none animate-in fade-in-0 sm:zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
@@ -121,11 +124,10 @@ export function Modal({
             {title}
           </h2>
           <Button
-            ref={closeButtonRef}
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
             aria-label="Close modal"
           >
             <X className="h-4 w-4" />

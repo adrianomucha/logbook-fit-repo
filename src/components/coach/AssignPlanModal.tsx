@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type ReactNode } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Check, Dumbbell, Loader2 } from 'lucide-react';
@@ -13,7 +13,30 @@ interface AssignPlanModalProps {
   onUnassign?: () => void | Promise<void>;
   plans: WorkoutPlan[];
   currentPlanId?: string;
+  /** Client receiving the plan — named in the header and the confirm button */
+  clientName?: string;
 }
+
+const metaLine = (plan: WorkoutPlan) =>
+  `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'week' : 'weeks'} · ${plan.workoutsPerWeek}×/week`;
+
+const GroupLabel = ({ children }: { children: ReactNode }) => (
+  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium antialiased mb-2 px-1">
+    {children}
+  </p>
+);
+
+const EmojiTile = ({ emoji }: { emoji?: string }) => (
+  <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center text-lg leading-none select-none shrink-0">
+    {emoji || '💪'}
+  </div>
+);
+
+const PlanMeta = ({ plan }: { plan: WorkoutPlan }) => (
+  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mt-0.5">
+    {metaLine(plan)}
+  </p>
+);
 
 export function AssignPlanModal({
   isOpen,
@@ -22,15 +45,37 @@ export function AssignPlanModal({
   onUnassign,
   plans,
   currentPlanId,
+  clientName,
 }: AssignPlanModalProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
 
-  // Filter to only show templates (not archived)
-  const templatePlans = useMemo(() =>
-    plans.filter(p => p.isTemplate && !p.archivedAt),
+  // Assignable templates (not archived), excluding whatever is already assigned
+  const templatePlans = useMemo(
+    () => plans.filter((p) => p.isTemplate && !p.archivedAt),
     [plans]
+  );
+  const currentPlan = useMemo(
+    () => plans.find((p) => p.id === currentPlanId) ?? null,
+    [plans, currentPlanId]
+  );
+  const selectablePlans = useMemo(
+    () => templatePlans.filter((p) => p.id !== currentPlanId),
+    [templatePlans, currentPlanId]
+  );
+
+  const firstName = clientName?.trim().split(/\s+/)[0];
+
+  const title = (
+    <>
+      <span className="block font-mono text-[10px] font-normal uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+        Assign plan
+      </span>
+      <span className="block text-lg sm:text-xl font-bold tracking-tight">
+        {clientName ?? 'Choose a plan'}
+      </span>
+    </>
   );
 
   const handleClose = () => {
@@ -68,9 +113,10 @@ export function AssignPlanModal({
     }
   };
 
-  if (templatePlans.length === 0) {
+  // Nothing assigned and nothing to assign — a single quiet empty state
+  if (selectablePlans.length === 0 && !currentPlan) {
     return (
-      <Modal isOpen={isOpen} onClose={handleClose} title="Assign Plan" maxWidth="md">
+      <Modal isOpen={isOpen} onClose={handleClose} title={title} maxWidth="md">
         <div className="text-center py-10">
           <div className="w-11 h-11 rounded-lg bg-muted/60 flex items-center justify-center mx-auto mb-3">
             <Dumbbell className="w-5 h-5 text-muted-foreground" />
@@ -88,25 +134,15 @@ export function AssignPlanModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="Assign Plan"
+      title={title}
       maxWidth="md"
       footer={
-        <div className="flex gap-3 items-center">
-          {currentPlanId && onUnassign && (
-            <Button
-              variant="ghost"
-              onClick={handleRemove}
-              disabled={isSubmitting}
-              className="text-destructive hover:text-destructive mr-auto"
-            >
-              {confirmingRemove ? 'Confirm remove?' : 'Remove current plan'}
-            </Button>
-          )}
+        <div className="flex items-center justify-end gap-1.5">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="ml-auto active:scale-[0.96] transition-transform duration-150 tap-target"
+            className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
           >
             Cancel
           </Button>
@@ -116,56 +152,95 @@ export function AssignPlanModal({
             className="flex items-center gap-2 active:scale-[0.96] transition-transform duration-150 tap-target"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            Assign Plan
+            {selectedPlanId && firstName ? `Assign to ${firstName}` : 'Assign plan'}
           </Button>
         </div>
       }
     >
-      <div className="space-y-2">
-        {templatePlans.map((plan) => {
-          const isCurrent = plan.id === currentPlanId;
-          const isSelected = plan.id === selectedPlanId;
-
-          return (
-            <button
-              key={plan.id}
-              disabled={isCurrent}
-              onClick={() => setSelectedPlanId(plan.id)}
-              className={cn(
-                'w-full text-left rounded-xl p-3 sm:p-3.5 bg-card transition-all duration-150',
-                'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]',
-                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                isCurrent
-                  ? 'opacity-50 cursor-not-allowed'
-                  : isSelected
-                    ? 'ring-2 ring-brand'
-                    : 'cursor-pointer active:scale-[0.98] hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)]'
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-muted/60 flex items-center justify-center text-xl leading-none select-none shrink-0">
-                  {plan.emoji || '💪'}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold truncate antialiased">{plan.name}</div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mt-0.5">
-                    {plan.durationWeeks} {plan.durationWeeks === 1 ? 'week' : 'weeks'} · {plan.workoutsPerWeek}×/week
-                  </p>
-                </div>
-                {isCurrent && (
-                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased shrink-0">
-                    Current
-                  </span>
-                )}
-                {isSelected && !isCurrent && (
-                  <span className="w-5 h-5 rounded-full bg-brand flex items-center justify-center shrink-0" aria-hidden="true">
-                    <Check className="w-3 h-3 text-brand-foreground" strokeWidth={3} />
-                  </span>
-                )}
+      <div className="space-y-5">
+        {/* What's assigned now, with its removal action in context */}
+        {currentPlan && (
+          <div>
+            <GroupLabel>Current plan</GroupLabel>
+            <div className="flex items-center gap-3 rounded-xl bg-muted/40 p-3">
+              <EmojiTile emoji={currentPlan.emoji} />
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold truncate antialiased">{currentPlan.name}</p>
+                <PlanMeta plan={currentPlan} />
               </div>
-            </button>
-          );
-        })}
+              {onUnassign && (
+                <button
+                  onClick={handleRemove}
+                  disabled={isSubmitting}
+                  className={cn(
+                    'shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] font-medium antialiased',
+                    'underline underline-offset-2 transition-colors tap-target disabled:opacity-50',
+                    confirmingRemove
+                      ? 'text-destructive'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  {confirmingRemove ? 'Confirm remove?' : 'Remove'}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Picker */}
+        <div>
+          {currentPlan && <GroupLabel>Switch to</GroupLabel>}
+          {selectablePlans.length > 0 ? (
+            <div className="space-y-2" role="radiogroup" aria-label="Plan templates">
+              {selectablePlans.map((plan) => {
+                const isSelected = plan.id === selectedPlanId;
+                return (
+                  <button
+                    key={plan.id}
+                    role="radio"
+                    aria-checked={isSelected}
+                    onClick={() => setSelectedPlanId(isSelected ? null : plan.id)}
+                    className={cn(
+                      'w-full text-left rounded-xl p-3 bg-card transition-all duration-150',
+                      'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      'cursor-pointer active:scale-[0.98]',
+                      isSelected
+                        ? 'ring-2 ring-brand'
+                        : 'hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)]'
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <EmojiTile emoji={plan.emoji} />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold truncate antialiased">{plan.name}</p>
+                        <PlanMeta plan={plan} />
+                      </div>
+                      {/* Radio affordance — hairline circle, filled lime when picked */}
+                      <span
+                        className={cn(
+                          'w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors',
+                          isSelected
+                            ? 'bg-brand'
+                            : 'shadow-[inset_0_0_0_1.5px_hsl(var(--border))]'
+                        )}
+                        aria-hidden="true"
+                      >
+                        {isSelected && (
+                          <Check className="w-3 h-3 text-brand-foreground" strokeWidth={3} />
+                        )}
+                      </span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-[13px] text-muted-foreground antialiased px-1">
+              No other templates yet — create one on the Plans page first.
+            </p>
+          )}
+        </div>
       </div>
     </Modal>
   );
