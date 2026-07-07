@@ -7,10 +7,6 @@
         "mcp"
       ]
     },
-    "framer": {
-      "type": "sse",
-      "url": "${FRAMER_MCP_URL}"
-    },
     "supabase": {
       "command": "npx",
       "args": [
