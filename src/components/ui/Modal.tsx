@@ -109,17 +109,20 @@ export function Modal({
       className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/50 sm:p-4 animate-in fade-in-0 duration-200"
       onClick={handleBackdropClick}
     >
+      {/* Flex-column dialog: header and footer stay put, only the body scrolls.
+          More reliable than sticky-inside-scroller (Safari) and keeps the
+          scrollbar inside the rounded corners. */}
       <div
         ref={modalRef}
         tabIndex={-1}
-        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[90vh] overflow-y-auto bg-background sm:rounded-2xl shadow-xl focus:outline-none animate-in fade-in-0 sm:zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200`}
+        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[85vh] flex flex-col overflow-hidden bg-background sm:rounded-2xl shadow-xl focus:outline-none animate-in fade-in-0 sm:zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
         aria-describedby={description ? descriptionId : undefined}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-background border-b border-border px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
+        <div className="shrink-0 bg-background border-b border-border px-4 sm:px-8 py-3 sm:py-4 flex items-center justify-between">
           <h2 id={titleId} className="text-lg sm:text-xl font-semibold text-foreground">
             {title}
           </h2>
@@ -134,8 +137,9 @@ export function Modal({
           </Button>
         </div>
 
-        {/* Body */}
-        <div className="px-4 sm:px-8 py-4 sm:py-5">
+        {/* Body — the only scroll container; overscroll-contain stops the
+            page behind from scrolling when the list hits its end */}
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-8 py-4 sm:py-5">
           {description && (
             <p id={descriptionId} className="sr-only">{description}</p>
           )}
@@ -144,7 +148,7 @@ export function Modal({
 
         {/* Footer */}
         {footer && (
-          <div className="sticky bottom-0 bg-background border-t border-border px-4 sm:px-8 py-3 sm:py-4">
+          <div className="shrink-0 bg-background border-t border-border px-4 sm:px-8 py-3 sm:py-4">
             {footer}
           </div>
         )}
