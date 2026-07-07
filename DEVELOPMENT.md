@@ -2,21 +2,6 @@
 
 Technical reference for Logbook.fit. For step-by-step local setup, see [QUICKSTART.md](QUICKSTART.md).
 
-## Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| Framework | Next.js 15 (App Router) + React + TypeScript |
-| Database | PostgreSQL (Supabase) via Prisma v6 |
-| Auth | NextAuth.js — Credentials provider, JWT sessions |
-| UI | shadcn/ui + Tailwind CSS + Radix UI |
-| Data Fetching | SWR v2 |
-| Font | IBM Plex Mono |
-| Icons | Lucide React |
-| Deployment | Vercel |
-
-**Database extras:** PostgreSQL triggers for automatic workout completion stats, partial unique indexes for soft-delete support, and check constraints for data integrity.
-
 ## Getting Started
 
 ### Prerequisites

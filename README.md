@@ -60,7 +60,7 @@ Visit the live app at [logbook-fit-new.vercel.app](https://logbook-fit-new.verce
 Setup instructions, tech stack, and architecture details live in separate docs:
 
 - [QUICKSTART.md](QUICKSTART.md) — Get the app running locally
-- [DEVELOPMENT.md](DEVELOPMENT.md) — Tech stack, project structure, and database schema
+- [DEVELOPMENT.md](DEVELOPMENT.md) — Project structure and database schema
 
 ## License
 
