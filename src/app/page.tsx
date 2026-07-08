@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { getServerSession } from 'next-auth';
 import {
   ClipboardList,
   Dumbbell,
@@ -12,7 +12,6 @@ import {
   MessageCircle,
   Sun,
 } from 'lucide-react';
-import { authOptions } from '@/lib/auth';
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
@@ -127,10 +126,17 @@ function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
 }
 
 export default async function HomePage() {
-  const session = await getServerSession(authOptions);
-  if (session) {
-    const role = (session.user as { role?: string })?.role;
-    redirect(role === 'COACH' ? '/coach' : role === 'CLIENT' ? '/client' : '/login');
+  // Signed-in visitors go straight to the app (PWA start_url is "/").
+  // Only the cookie's *presence* is checked — no secret, no database —
+  // so the landing page renders in any environment. The middleware on
+  // /coach verifies the token and bounces clients to /client and
+  // stale sessions to /login.
+  const cookieStore = await cookies();
+  const hasSession =
+    cookieStore.has('__Secure-next-auth.session-token') ||
+    cookieStore.has('next-auth.session-token');
+  if (hasSession) {
+    redirect('/coach');
   }
 
   return (
