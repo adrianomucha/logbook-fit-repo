@@ -85,6 +85,11 @@ export const inviteLimiter = rateLimit("invite", {
   maxRequests: 20,
 });
 
+export const earlyAccessLimiter = rateLimit("early-access", {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 5,
+});
+
 // Periodic cleanup of expired entries (every 5 minutes)
 if (typeof setInterval !== "undefined") {
   setInterval(() => {

@@ -3,32 +3,25 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { EarlyAccessLanding } from '@/views/EarlyAccessLanding';
 
 export default function HomePage() {
   const router = useRouter();
   const { data: session, status } = useSession();
 
+  // Signed-in users go straight to their dashboard; everyone else
+  // (including visitors while the session check is in flight) sees
+  // the early-access landing page.
   useEffect(() => {
-    if (status === 'loading') return;
-
-    if (status === 'unauthenticated') {
-      router.replace('/login');
-      return;
-    }
+    if (status !== 'authenticated') return;
 
     const role = (session?.user as { role?: string })?.role;
     if (role === 'COACH') {
       router.replace('/coach');
     } else if (role === 'CLIENT') {
       router.replace('/client');
-    } else {
-      router.replace('/login');
     }
   }, [status, session, router]);
 
-  return (
-    <div className="min-h-dvh bg-background flex items-center justify-center">
-      <p className="text-muted-foreground">Loading...</p>
-    </div>
-  );
+  return <EarlyAccessLanding />;
 }
