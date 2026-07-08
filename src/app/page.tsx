@@ -15,12 +15,20 @@ import {
 import { authOptions } from '@/lib/auth';
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
+import { ImageSlot } from '@/components/landing/ImageSlot';
 
 export const metadata: Metadata = {
   title: 'Logbook.fit — The coaching platform that puts your clients first',
   description:
     'Plan workouts, track progress, and stay connected to every client through a structured check-in loop. Join the waitlist for early access.',
 };
+
+const MARQUEE_ITEMS = [
+  'Coach-first training platform',
+  'Private beta',
+  'Plan · Train · Check in',
+  'Join the waitlist',
+];
 
 const CHECK_IN_LOOP = [
   {
@@ -91,6 +99,33 @@ const CLIENT_FEATURES = [
   },
 ];
 
+const SESSION_TILES = [
+  { label: 'Photo — push day, logged in three taps', caption: 'Log it live' },
+  { label: 'Photo — client filling in a check-in', caption: 'Check in, not check up' },
+  { label: 'Photo — coach reading the week’s progress', caption: 'See the week turn' },
+];
+
+function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
+  return (
+    <ul className="divide-y divide-border/70 border-t border-border/70">
+      {features.map((feature) => (
+        <li key={feature.title} className="flex gap-4 py-5">
+          <feature.icon
+            className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <div>
+            <h3 className="text-sm font-semibold antialiased">{feature.title}</h3>
+            <p className="mt-1 text-sm text-muted-foreground antialiased">
+              {feature.body}
+            </p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
   if (session) {
@@ -99,158 +134,213 @@ export default async function HomePage() {
   }
 
   return (
-    <div className="min-h-dvh bg-background">
-      {/* Nav */}
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 sm:px-6">
-        <Logo markSize={24} />
-        <Link
-          href="/login"
-          className="rounded-lg border border-border/70 px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
-        >
-          Sign in
-        </Link>
-      </header>
+    <div className="bg-background">
+      {/* Hero — dark brand canvas, giant display type */}
+      <section className="dark bg-background text-foreground">
+        <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
+          <Logo markSize={24} />
+          <Link
+            href="/login"
+            className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
+          >
+            Sign in
+          </Link>
+        </header>
 
-      <main>
-        {/* Hero */}
-        <section className="mx-auto max-w-5xl px-4 pb-16 pt-12 sm:px-6 sm:pb-24 sm:pt-20">
-          <div className="max-w-2xl animate-enter">
-            <p className="mb-4 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+        <div className="mx-auto max-w-6xl px-4 pb-14 pt-10 sm:px-6 sm:pb-20 sm:pt-16">
+          <div className="animate-enter">
+            <p className="mb-6 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
               Private beta — coming soon
             </p>
-            <h1 className="text-4xl font-bold tracking-tight antialiased sm:text-5xl">
-              The coaching platform that puts your clients first.
+            <h1 className="text-[clamp(3.5rem,12vw,9rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
+              Plan.
+              <br />
+              Train.
+              <br />
+              <span className="text-brand">Check in.</span>
             </h1>
-            <p className="mt-4 max-w-xl text-base text-muted-foreground antialiased sm:text-lg">
-              Logbook.fit is built around the coach–client relationship: you build the
-              plans, your clients execute them, and a structured check-in loop keeps you
-              both in sync. No spreadsheets. No scattered chat threads.
-            </p>
-            <div id="waitlist" className="mt-8 max-w-md scroll-mt-24">
-              <WaitlistForm />
-              <p className="mt-3 text-sm text-muted-foreground antialiased">
-                Free during the beta. No spam — just an invite when it&rsquo;s ready.
+            <div className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-end">
+              <p className="max-w-xl text-base text-muted-foreground antialiased sm:text-lg">
+                Logbook.fit is built around the coach–client relationship: you build
+                the plans, your clients execute them, and a structured check-in loop
+                keeps you both in sync. No spreadsheets. No scattered chat threads.
               </p>
+              <div id="waitlist" className="w-full max-w-md scroll-mt-24 lg:justify-self-end">
+                <WaitlistForm />
+                <p className="mt-3 text-sm text-muted-foreground antialiased">
+                  Free during the beta. No spam — just an invite when it&rsquo;s ready.
+                </p>
+              </div>
             </div>
           </div>
-        </section>
 
+          <ImageSlot
+            label="Hero photo — athlete mid-set, coach in frame"
+            className="mt-14 aspect-[4/3] rounded-xl sm:aspect-[21/9]"
+          />
+        </div>
+      </section>
+
+      {/* Volt ticker */}
+      <div className="overflow-hidden border-y border-border/70 bg-brand py-3" aria-hidden="true">
+        <div className="flex w-max animate-marquee">
+          {[0, 1].map((copy) => (
+            <div
+              key={copy}
+              className="flex shrink-0 items-center font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-brand-foreground antialiased"
+            >
+              {MARQUEE_ITEMS.map((item) => (
+                <span key={item} className="flex items-center">
+                  <span className="px-6">{item}</span>
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand-foreground/70" />
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <main>
         {/* Check-in loop */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-              The north star
-            </p>
-            <h2 className="max-w-xl text-2xl font-bold tracking-tight antialiased sm:text-3xl">
-              A check-in loop that replaces the scattered group chat.
-            </h2>
-            <p className="mt-3 max-w-xl text-muted-foreground antialiased">
-              A focused, contextual conversation that lives right inside the client
-              workspace — not buried in WhatsApp.
-            </p>
-            <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+            The north star
+          </p>
+          <h2 className="max-w-3xl text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+            A loop, not a group chat.
+          </h2>
+          <p className="mt-4 max-w-xl text-muted-foreground antialiased sm:text-lg">
+            A focused, contextual conversation that lives right inside the client
+            workspace — not buried in WhatsApp.
+          </p>
+
+          <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-14">
+            <ol>
               {CHECK_IN_LOOP.map((item) => (
                 <li
                   key={item.step}
-                  className="rounded-xl border border-border/70 bg-card p-5"
+                  className="flex gap-6 border-t border-border/70 py-6 sm:gap-8"
                 >
-                  <span className="inline-block rounded bg-brand px-1.5 py-0.5 font-mono text-sm font-bold tabular-nums text-brand-foreground antialiased">
+                  <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
                     {item.step}
                   </span>
-                  <h3 className="mt-4 text-sm font-semibold antialiased">{item.title}</h3>
-                  <p className="mt-1.5 text-sm text-muted-foreground antialiased">
-                    {item.body}
-                  </p>
+                  <div>
+                    <h3 className="text-base font-semibold antialiased sm:text-lg">
+                      {item.title}
+                    </h3>
+                    <p className="mt-1.5 text-sm text-muted-foreground antialiased sm:text-base">
+                      {item.body}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ol>
+            <ImageSlot
+              label="Photo — coach reviewing a check-in response"
+              className="aspect-[4/5] rounded-xl lg:sticky lg:top-8 lg:h-fit"
+            />
           </div>
         </section>
 
-        {/* Features */}
+        {/* For coaches */}
         <section className="border-t border-border/70">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="rounded-xl border border-border/70 bg-card p-6 sm:p-8">
-                <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                  For coaches
-                </p>
-                <ul className="space-y-6">
-                  {COACH_FEATURES.map((feature) => (
-                    <li key={feature.title} className="flex gap-3.5">
-                      <feature.icon
-                        className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <h3 className="text-sm font-semibold antialiased">
-                          {feature.title}
-                        </h3>
-                        <p className="mt-1 text-sm text-muted-foreground antialiased">
-                          {feature.body}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-card p-6 sm:p-8">
-                <p className="mb-6 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                  For clients
-                </p>
-                <ul className="space-y-6">
-                  {CLIENT_FEATURES.map((feature) => (
-                    <li key={feature.title} className="flex gap-3.5">
-                      <feature.icon
-                        className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-                        aria-hidden="true"
-                      />
-                      <div>
-                        <h3 className="text-sm font-semibold antialiased">
-                          {feature.title}
-                        </h3>
-                        <p className="mt-1 text-sm text-muted-foreground antialiased">
-                          {feature.body}
-                        </p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
+            <ImageSlot
+              label="Photo — coach building a plan at the desk"
+              className="aspect-[4/5] rounded-xl"
+            />
+            <div>
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                For coaches
+              </p>
+              <h2 className="text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+                Built for coaches.
+              </h2>
+              <p className="mt-4 max-w-lg text-muted-foreground antialiased sm:text-lg">
+                No manual triage. A workspace that surfaces the right client at the
+                right time.
+              </p>
+              <div className="mt-8">
+                <FeatureList features={COACH_FEATURES} />
               </div>
             </div>
           </div>
         </section>
 
-        {/* Final CTA */}
-        <section className="border-t border-border/70 bg-foreground text-background">
-          <div className="mx-auto max-w-5xl px-4 py-16 text-center sm:px-6 sm:py-20">
-            <div className="mb-5 flex justify-center">
-              <LogoMark
-                size={40}
-                className="[&_rect]:fill-background [&_path:not(.stroke-brand)]:stroke-foreground"
+        {/* For clients — mirrored */}
+        <section className="border-t border-border/70">
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
+            <div className="lg:order-2">
+              <ImageSlot
+                label="Photo — client logging a set mid-workout"
+                className="aspect-[4/5] rounded-xl"
               />
             </div>
-            <h2 className="mx-auto max-w-lg text-2xl font-bold tracking-tight antialiased sm:text-3xl">
-              Be first in line when Logbook.fit opens up.
+            <div className="lg:order-1">
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                For clients
+              </p>
+              <h2 className="text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+                Made for clients.
+              </h2>
+              <p className="mt-4 max-w-lg text-muted-foreground antialiased sm:text-lg">
+                Open the app, see today&rsquo;s session, train. Everything else gets
+                out of the way.
+              </p>
+              <div className="mt-8">
+                <FeatureList features={CLIENT_FEATURES} />
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Session tiles */}
+        <section className="border-t border-border/70">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+            <h2 className="text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+              Every session, logged.
             </h2>
-            <p className="mx-auto mt-3 max-w-md text-background/70 antialiased">
-              We&rsquo;re onboarding coaches in small batches. Grab a spot and we&rsquo;ll
-              send your invite.
-            </p>
-            <a
-              href="#waitlist"
-              className="mt-8 inline-flex h-11 items-center rounded-md bg-brand px-8 text-sm font-bold uppercase tracking-wider text-brand-foreground transition-transform duration-150 hover:bg-brand/90 active:scale-[0.97]"
-            >
-              Join the waitlist
-            </a>
+            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+              {SESSION_TILES.map((tile) => (
+                <div key={tile.caption}>
+                  <ImageSlot label={tile.label} className="aspect-[3/4] rounded-xl" />
+                  <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                    {tile.caption}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Final CTA — dark */}
+        <section className="dark border-t border-border/70 bg-background text-foreground">
+          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
+            <div className="mx-auto max-w-2xl text-center">
+              <div className="mb-8 flex justify-center">
+                <LogoMark size={44} />
+              </div>
+              <h2 className="text-[clamp(2.75rem,9vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
+                Get on
+                <br />
+                the list<span className="text-brand">.</span>
+              </h2>
+              <p className="mx-auto mt-5 max-w-md text-muted-foreground antialiased sm:text-lg">
+                We&rsquo;re onboarding coaches in small batches. Grab a spot and
+                we&rsquo;ll send your invite.
+              </p>
+              <div className="mx-auto mt-9 max-w-md text-left">
+                <WaitlistForm />
+              </div>
+            </div>
           </div>
         </section>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/70">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
+      <footer className="dark border-t border-border bg-background text-foreground">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
             © 2026 Logbook.fit — All rights reserved
           </p>

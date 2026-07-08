@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Check, Loader2 } from 'lucide-react';
@@ -10,6 +10,7 @@ import { Check, Loader2 } from 'lucide-react';
  * and collapses into a confirmation once the email is accepted.
  */
 export function WaitlistForm() {
+  const inputId = useId();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'done'>('idle');
   const [error, setError] = useState('');
@@ -68,11 +69,11 @@ export function WaitlistForm() {
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-2">
       <div className="flex flex-col gap-2 sm:flex-row">
-        <label htmlFor="waitlist-email" className="sr-only">
+        <label htmlFor={inputId} className="sr-only">
           Email address
         </label>
         <Input
-          id="waitlist-email"
+          id={inputId}
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
