@@ -99,10 +99,14 @@ const CLIENT_FEATURES = [
 ];
 
 const SESSION_TILES = [
-  { label: 'Photo — push day, logged in three taps', caption: 'Log it live' },
-  { label: 'Photo — client filling in a check-in', caption: 'Check in, not check up' },
-  { label: 'Photo — coach reading the week’s progress', caption: 'See the week turn' },
-];
+  { variant: 'log', label: 'Set 3 of 3 — complete', caption: 'Log it live' },
+  {
+    variant: 'checkin',
+    label: 'Effort: hard · Body: good',
+    caption: 'Check in, not check up',
+  },
+  { variant: 'progress', label: 'Week over week', caption: 'See the week turn' },
+] as const;
 
 function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
   return (
@@ -182,7 +186,8 @@ export default async function HomePage() {
           </div>
 
           <ImageSlot
-            label="Hero photo — athlete mid-set, coach in frame"
+            variant="hero"
+            label="Every set, tallied"
             className="mt-14 aspect-[4/3] rounded-xl sm:aspect-[21/9]"
           />
         </div>
@@ -243,7 +248,8 @@ export default async function HomePage() {
               ))}
             </ol>
             <ImageSlot
-              label="Photo — coach reviewing a check-in response"
+              variant="loop"
+              label="Coach to client and back"
               className="aspect-[4/5] rounded-xl lg:sticky lg:top-8 lg:h-fit"
             />
           </div>
@@ -253,7 +259,8 @@ export default async function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <ImageSlot
-              label="Photo — coach building a plan at the desk"
+              variant="coach"
+              label="Week 3 — four training days"
               className="aspect-[4/5] rounded-xl"
             />
             <div>
@@ -279,7 +286,8 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
               <ImageSlot
-                label="Photo — client logging a set mid-workout"
+                variant="client"
+                label="Today — sets logged live"
                 className="aspect-[4/5] rounded-xl"
               />
             </div>
@@ -310,7 +318,11 @@ export default async function HomePage() {
             <div className="mt-10 grid gap-4 sm:grid-cols-3">
               {SESSION_TILES.map((tile) => (
                 <div key={tile.caption}>
-                  <ImageSlot label={tile.label} className="aspect-[3/4] rounded-xl" />
+                  <ImageSlot
+                    variant={tile.variant}
+                    label={tile.label}
+                    className="aspect-[3/4] rounded-xl"
+                  />
                   <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                     {tile.caption}
                   </p>
