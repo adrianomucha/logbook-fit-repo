@@ -22,6 +22,18 @@ export const signupSchema = z
   });
 
 // ──────────────────────────────────────
+// EARLY ACCESS (Marketing waitlist)
+// ──────────────────────────────────────
+
+export const earlyAccessSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  name: z.string().trim().max(100).optional(),
+  role: z.enum(["COACH", "CLIENT"]).optional(),
+  // Optional attribution captured from the client (referrer / utm path).
+  referrer: z.string().max(500).optional(),
+});
+
+// ──────────────────────────────────────
 // EXERCISES
 // ──────────────────────────────────────
 

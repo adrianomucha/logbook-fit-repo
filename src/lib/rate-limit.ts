@@ -85,6 +85,12 @@ export const inviteLimiter = rateLimit("invite", {
   maxRequests: 20,
 });
 
+// Public marketing form — generous but abuse-resistant.
+export const earlyAccessLimiter = rateLimit("early-access", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 15,
+});
+
 // Periodic cleanup of expired entries (every 5 minutes)
 if (typeof setInterval !== "undefined") {
   setInterval(() => {

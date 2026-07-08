@@ -173,6 +173,72 @@
   }
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Marketing / early-access landing page
+   Scoped visuals for the public landing page. Kept out of the app
+   chrome; every animation degrades to a static end-state under
+   prefers-reduced-motion (see the block at the bottom of this file).
+   ────────────────────────────────────────────────────────────── */
+@layer utilities {
+  /* Faint dot grid used behind hero / band backgrounds. */
+  .bg-dot-grid {
+    background-image: radial-gradient(
+      hsl(0 0% 100% / 0.05) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
+
+  /* Soft volt radial bleed — layered behind hero mocks and bands. */
+  .volt-glow {
+    background: radial-gradient(
+      60% 60% at 70% 0%,
+      hsl(var(--brand) / 0.16) 0%,
+      transparent 70%
+    );
+  }
+
+  /* The check-in loop's travelling pulse. A short lit dash segment
+     rides the SVG path forever, gently — the one sanctioned loop. */
+  .loop-pulse {
+    stroke-dasharray: 14 86;
+    animation: loopPulse 4.5s linear infinite;
+  }
+  @keyframes loopPulse {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  /* One-time volt border breath on the hero's primary mock CTA. */
+  .cta-breathe {
+    animation: ctaBreathe 2.4s ease-in-out 0.6s 2 both;
+  }
+  @keyframes ctaBreathe {
+    0%,
+    100% {
+      box-shadow: 0 0 0 0 hsl(var(--brand) / 0);
+    }
+    50% {
+      box-shadow: 0 0 0 3px hsl(var(--brand) / 0.28);
+    }
+  }
+
+  /* Segmented meter / progress fill grow-in (runs once on reveal). */
+  .meter-grow {
+    transform-origin: left center;
+    animation: meterGrow 0.9s cubic-bezier(0.25, 1, 0.5, 1) both;
+  }
+  @keyframes meterGrow {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
@@ -180,7 +246,18 @@
   .animate-enter,
   .animate-draw-check,
   .animate-bounce-once,
+  .loop-pulse,
+  .cta-breathe,
+  .meter-grow,
   [class*="animate-[completionPop"] {
     animation: none !important;
+  }
+  .loop-pulse {
+    /* Keep the segment visible but static rather than travelling. */
+    stroke-dasharray: 14 86;
+    stroke-dashoffset: -30;
+  }
+  .meter-grow {
+    transform: none !important;
   }
 }

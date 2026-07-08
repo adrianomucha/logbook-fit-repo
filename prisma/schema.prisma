@@ -66,6 +66,12 @@ enum ExerciseCategory {
   OTHER
 }
 
+// Which side of the coach-client relationship an early-access signup came from.
+enum EarlyAccessRole {
+  COACH
+  CLIENT
+}
+
 // ──────────────────────────────────────
 // AUTH & USERS
 // ──────────────────────────────────────
@@ -421,4 +427,24 @@ model Message {
   @@index([recipientId, senderId, createdAt])    // Chat thread (recipient's view)
   @@index([recipientId, readAt])                  // Unread count
   @@map("messages")
+}
+
+// ──────────────────────────────────────
+// EARLY ACCESS (Marketing waitlist)
+// ──────────────────────────────────────
+
+// Captures early-access / waitlist signups from the public marketing landing
+// page. Standalone from the auth graph — no relations, no password, no account
+// yet. Email is stored lowercased (enforced by the API's zod schema) and unique
+// so re-submitting the same address is idempotent ("already on the list").
+model EarlyAccessSignup {
+  id        String           @id @default(uuid())
+  email     String           @unique
+  name      String?
+  role      EarlyAccessRole? // Which side of the platform they're here for
+  referrer  String?          // Optional attribution (utm / referring page)
+  createdAt DateTime         @default(now())
+
+  @@index([createdAt])
+  @@map("early_access_signups")
 }
