@@ -2,9 +2,9 @@
 
 # Logbook.fit
 
-**The coaching platform that puts your clients first.**
+**Your quietest client is your next cancellation. Logbook.fit surfaces them first.**
 
-Plan workouts. Track progress. Stay connected — all in one place.
+The coaching platform that ranks your clients by who needs you *today* — so you catch the fade before it becomes a refund.
 
 [What is Logbook.fit?](#what-is-logbookfit) &middot; [Features](#features)
 
@@ -14,9 +14,13 @@ Plan workouts. Track progress. Stay connected — all in one place.
 
 ## What is Logbook.fit?
 
-Logbook.fit is a **coach-first fitness platform** built for personal trainers who want to stay deeply connected to their clients' progress. Unlike generic fitness trackers, Logbook.fit is designed around the coach-client relationship — coaches build plans, clients execute them, and a built-in check-in loop keeps both sides in sync.
+Clients don't quit their coach because of a bad workout. They quit because they went quiet for two weeks and nobody noticed.
 
-No spreadsheets. No guessing who needs attention. Just a clean workspace that surfaces the right client at the right time.
+Logbook.fit is a **retention-first platform for independent coaches** — not a workout tracker for lifters, but the tool for the trainers who coach them. Most coaching apps hand you a wall of workout data and leave you to figure out who's struggling. Logbook.fit does the opposite: it tells you *who to worry about* the moment you open the app.
+
+It's deliberately not for everyone. If you work out alone, it's useless to you. It's built for one person: **the independent coach who actually gives a damn about every client** — who builds the plans, runs the check-ins, and today keeps it all straight in a mess of spreadsheets and WhatsApp threads.
+
+No spreadsheets. No guessing who needs attention. Just a clean workspace that surfaces the right client at the right time — and never lets you lose one to silence.
 
 ## Features
 
