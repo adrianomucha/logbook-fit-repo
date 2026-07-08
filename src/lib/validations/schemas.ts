@@ -150,3 +150,11 @@ export const flagExerciseSchema = z.object({
 export const createInviteSchema = z.object({
   email: z.string().email().optional(),
 });
+
+// ──────────────────────────────────────
+// WAITLIST
+// ──────────────────────────────────────
+
+export const waitlistSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(255),
+});
