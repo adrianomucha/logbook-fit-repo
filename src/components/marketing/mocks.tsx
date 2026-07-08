@@ -32,18 +32,26 @@ function StatusText({ status }: { status: StatusKey }) {
   );
 }
 
-/** A segmented effort/intensity meter — volt fill on muted track. */
-function SegMeter({ value, total = 10 }: { value: number; total?: number }) {
+/**
+ * Effort rating — three states, matching the product's EffortRating enum
+ * (EASY / MEDIUM / HARD), not a numeric score. The selected level fills volt.
+ */
+const EFFORT_LEVELS = ['Easy', 'Medium', 'Hard'] as const;
+function EffortPills({ level }: { level: (typeof EFFORT_LEVELS)[number] }) {
   return (
-    <div className="flex items-center gap-[3px]" aria-hidden="true">
-      {Array.from({ length: total }).map((_, i) => (
+    <div className="flex items-center gap-1" aria-hidden="true">
+      {EFFORT_LEVELS.map((l) => (
         <span
-          key={i}
+          key={l}
           className={cn(
-            'h-2.5 w-1.5 rounded-full',
-            i < value ? 'bg-brand' : 'bg-muted'
+            'rounded-full px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em]',
+            l === level
+              ? 'bg-brand text-brand-foreground'
+              : 'border border-border text-muted-foreground/60'
           )}
-        />
+        >
+          {l}
+        </span>
       ))}
     </div>
   );
@@ -121,7 +129,11 @@ export function DashboardMock() {
               meta="Hypertrophy Block 2 · 6d since last workout"
               delay={0}
               action={
-                <button className="hidden shrink-0 items-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-brand-foreground sm:inline-flex">
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="hidden shrink-0 items-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-brand-foreground sm:inline-flex"
+                >
                   Send reminder
                 </button>
               }
@@ -142,7 +154,11 @@ export function DashboardMock() {
               meta="Fat Loss Phase 1 · responded 2h ago"
               delay={140}
               action={
-                <button className="cta-breathe hidden shrink-0 items-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-brand-foreground sm:inline-flex">
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="cta-breathe hidden shrink-0 items-center gap-1.5 rounded-md bg-brand px-2.5 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.1em] text-brand-foreground sm:inline-flex"
+                >
                   Review check-in
                 </button>
               }
@@ -396,28 +412,15 @@ export function LoopDiagram() {
 
         <LoopNode step="02" title="Client replies">
           <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 Effort
               </span>
-              <SegMeter value={8} />
+              <EffortPills level="Hard" />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                Body
-              </span>
-              <span className="flex items-center gap-1.5">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <span
-                    key={i}
-                    className={cn(
-                      'h-2.5 w-2.5 rounded-full',
-                      i === 2 ? 'bg-brand ring-2 ring-brand/30' : 'bg-muted'
-                    )}
-                  />
-                ))}
-              </span>
-            </div>
+            <p className="rounded-md border border-border/60 bg-secondary/40 px-2.5 py-1.5 text-xs text-muted-foreground">
+              &ldquo;Legs still smoked from Monday.&rdquo;
+            </p>
             <div className="flex items-center gap-1.5 rounded-md border border-amber-400/40 bg-amber-400/10 px-2 py-1">
               <Flag className="h-3 w-3 text-amber-300" />
               <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-amber-200">
@@ -526,7 +529,11 @@ export function PhoneToday() {
             </div>
           </div>
 
-          <button className="mt-4 flex h-11 w-full items-center justify-center rounded-xl bg-brand font-semibold text-brand-foreground">
+          <button
+            type="button"
+            tabIndex={-1}
+            className="mt-4 flex h-11 w-full items-center justify-center rounded-xl bg-brand font-semibold text-brand-foreground"
+          >
             Start workout
           </button>
         </div>
@@ -542,29 +549,28 @@ export function CoachReviewMock() {
   return (
     <div className="relative" aria-hidden="true">
       <p className="sr-only">
-        The coach review view: the client&apos;s check-in (effort and body scores plus a note) shown beside
-        the flagged exercise in the plan, with an inline &quot;adjust plan&quot; reply.
+        The coach review view: the client&apos;s check-in — their effort rating and how their body feels, plus
+        a note — shown beside the flagged exercise in the plan, with an inline &quot;adjust plan&quot; reply.
       </p>
       <div className="grid gap-4 sm:grid-cols-2 sm:items-start">
         {/* incoming check-in */}
         <div className="rounded-xl border border-border bg-card p-4">
           <Eyebrow className="mb-3">Check-in · Aisha T.</Eyebrow>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2">
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                Effort 8/10
+                Effort
               </span>
-              <SegMeter value={8} />
+              <EffortPills level="Hard" />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                Body 6/10
-              </span>
-              <SegMeter value={6} />
+            <div>
+              <p className="mb-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                How it feels
+              </p>
+              <blockquote className="rounded-lg border border-border/60 bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
+                &ldquo;Left knee twinged on RDLs.&rdquo;
+              </blockquote>
             </div>
-            <blockquote className="rounded-lg border border-border/60 bg-secondary/40 px-3 py-2 text-sm text-muted-foreground">
-              &ldquo;Left knee twinged on RDLs.&rdquo;
-            </blockquote>
           </div>
         </div>
 

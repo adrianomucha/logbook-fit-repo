@@ -61,7 +61,7 @@ export function MarketingNav() {
           <a
             href="#top"
             onClick={(e) => scrollTo(e, '#top')}
-            className="inline-flex h-9 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-brand-foreground transition-[background-color,transform] hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            className="tap-target inline-flex h-9 items-center justify-center rounded-full bg-brand px-4 text-sm font-semibold text-brand-foreground transition-[background-color,transform] hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           >
             <span className="sm:hidden">Early access</span>
             <span className="hidden sm:inline">Request early access</span>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { Loader2, ArrowRight, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +20,8 @@ const ROLES: { value: Role; label: string }[] = [
   { value: 'CLIENT', label: 'Client' },
 ];
 
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
 export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAccessFormProps) {
   const uid = useId();
   const emailId = `ea-email-${uid}`;
@@ -31,14 +33,21 @@ export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAcces
   const [message, setMessage] = useState('');
   const [alreadyOnList, setAlreadyOnList] = useState(false);
 
+  const successRef = useRef<HTMLDivElement | null>(null);
   const submitting = status === 'submitting';
+
+  // Move focus to the confirmation so screen readers reliably announce it
+  // (a live region inserted together with its text is often not read out).
+  useEffect(() => {
+    if (status === 'success') successRef.current?.focus();
+  }, [status]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return;
 
     const trimmed = email.trim();
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(trimmed)) {
+    if (!EMAIL_RE.test(trimmed)) {
       setStatus('error');
       setMessage('Please enter a valid email address.');
       return;
@@ -62,7 +71,12 @@ export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAcces
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setStatus('error');
-        setMessage(data.error || 'Something went wrong. Please try again.');
+        // A 400 is always an email-validation issue — keep it human.
+        setMessage(
+          res.status === 400
+            ? 'Please enter a valid email address.'
+            : data.error || 'Something went wrong. Please try again.'
+        );
         return;
       }
 
@@ -79,9 +93,11 @@ export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAcces
     return (
       <div className={cn('w-full', className)}>
         <div
+          ref={successRef}
           role="status"
           aria-live="polite"
-          className="flex items-start gap-3 rounded-xl border border-brand/40 bg-brand/[0.07] px-4 py-4 animate-fade-in-up"
+          tabIndex={-1}
+          className="flex items-start gap-3 rounded-xl border border-brand/40 bg-brand/[0.07] px-4 py-4 outline-none animate-fade-in-up"
         >
           <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-brand-foreground">
             <Check className="h-4 w-4" strokeWidth={3} />
@@ -106,9 +122,9 @@ export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAcces
 
   return (
     <form onSubmit={handleSubmit} noValidate className={cn('w-full', className)}>
-      {/* Role segment — pre-selected, low-friction, useful signal */}
+      {/* Role toggle — pre-selected, low-friction, useful signal */}
       <div
-        role="radiogroup"
+        role="group"
         aria-label="I am a"
         className="mb-3 inline-flex items-center gap-1 rounded-full border border-border bg-secondary/50 p-1"
       >
@@ -121,11 +137,10 @@ export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAcces
             <button
               key={r.value}
               type="button"
-              role="radio"
-              aria-checked={selected}
+              aria-pressed={selected}
               onClick={() => setRole(r.value)}
               className={cn(
-                'rounded-full px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                'tap-target rounded-full px-3.5 py-1.5 font-mono text-[11px] uppercase tracking-[0.12em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 selected
                   ? 'bg-brand text-brand-foreground'
                   : 'text-muted-foreground hover:text-foreground'
@@ -142,7 +157,7 @@ export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAcces
       </label>
       <div
         className={cn(
-          'flex flex-col gap-2 rounded-2xl border border-border bg-card/60 p-1.5 backdrop-blur sm:flex-row sm:items-center',
+          'flex flex-col gap-2 rounded-2xl border border-border bg-card/60 p-1.5 backdrop-blur transition-shadow focus-within:ring-2 focus-within:ring-brand focus-within:ring-offset-2 focus-within:ring-offset-background sm:flex-row sm:items-center',
           status === 'error' && 'border-destructive/60'
         )}
       >
@@ -187,7 +202,7 @@ export function EarlyAccessForm({ location, className, size = 'lg' }: EarlyAcces
 
       <p id={hintId} className="mt-2.5 text-xs text-muted-foreground">
         {status === 'error' ? (
-          <span role="alert" className="text-destructive">
+          <span role="alert" className="text-red-400">
             {message}
           </span>
         ) : (

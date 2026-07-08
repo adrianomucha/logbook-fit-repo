@@ -41,7 +41,7 @@ const FAQ: { q: string; a: string }[] = [
   },
   {
     q: 'How do my clients get set up?',
-    a: 'You generate an invite link and send it however you already talk to your clients. The moment they sign up they are connected to you — plan assigned, check-ins live, first workout ready. No CSV imports, no account codes, no manual matching.',
+    a: 'You generate an invite link and send it however you already talk to your clients. The moment they sign up they are connected to you — ready for the plan and check-ins you set up. No CSV imports, no account codes, no manual matching.',
   },
   {
     q: 'What is the check-in loop?',
@@ -95,8 +95,13 @@ function SectionHeading({
 
 export default function EarlyAccessPage() {
   return (
-    <div className="dark min-h-dvh scroll-smooth bg-background font-sans text-foreground antialiased">
-      <MarketingNav />
+    <>
+      {/* Force the dark canvas onto the root element too, so mobile overscroll
+          and any pre-hydration paint stay near-black rather than flashing the
+          app's light default (which only the shared root layout sets). */}
+      <style dangerouslySetInnerHTML={{ __html: 'html,body{background-color:hsl(0 0% 3.9%)}' }} />
+      <div className="dark min-h-dvh scroll-smooth bg-background font-sans text-foreground antialiased">
+        <MarketingNav />
 
       <main id="top">
         {/* ── HERO ─────────────────────────────────────────── */}
@@ -155,7 +160,7 @@ export default function EarlyAccessPage() {
         <section
           id="problem"
           aria-labelledby="problem-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-2">
             <Reveal>
@@ -176,7 +181,7 @@ export default function EarlyAccessPage() {
         <section
           id="urgency"
           aria-labelledby="urgency-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-2">
             <Reveal className="lg:order-2">
@@ -219,7 +224,7 @@ export default function EarlyAccessPage() {
         <section
           id="client"
           aria-labelledby="client-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 py-20 sm:px-8 sm:py-28 lg:grid-cols-2">
             <Reveal>
@@ -245,7 +250,7 @@ export default function EarlyAccessPage() {
         <section
           id="review"
           aria-labelledby="review-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-28">
             <Reveal className="mb-12">
@@ -267,7 +272,7 @@ export default function EarlyAccessPage() {
         <section
           id="features"
           aria-labelledby="features-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
             <Reveal className="mb-12">
@@ -287,7 +292,7 @@ export default function EarlyAccessPage() {
         <section
           id="invite"
           aria-labelledby="invite-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto max-w-5xl px-5 py-20 sm:px-8 sm:py-28">
             <Reveal className="mb-12">
@@ -296,7 +301,7 @@ export default function EarlyAccessPage() {
                 align="center"
                 eyebrow="Onboarding"
                 heading="Onboard a client with one link."
-                copy="Generate an invite link, send it however you already talk to your clients, and the moment they sign up they're connected to you — plan assigned, check-ins live, first workout ready. No CSV imports, no account codes, no 'what's your email again?'"
+                copy="Generate an invite link, send it however you already talk to your clients, and the moment they sign up they're connected to you — ready for the plan and check-ins you set up. No CSV imports, no account codes, no 'what's your email again?'"
               />
             </Reveal>
             <Reveal delay={80}>
@@ -309,7 +314,7 @@ export default function EarlyAccessPage() {
         <section
           id="proof"
           aria-labelledby="proof-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 sm:py-28">
             <Reveal className="mb-10">
@@ -331,7 +336,7 @@ export default function EarlyAccessPage() {
         <section
           id="faq"
           aria-labelledby="faq-heading"
-          className="scroll-mt-24 border-b border-border/60"
+          className="scroll-mt-24 overflow-hidden border-b border-border/60"
         >
           <div className="mx-auto max-w-3xl px-5 py-20 sm:px-8 sm:py-28">
             <Reveal className="mb-10">
@@ -426,6 +431,7 @@ export default function EarlyAccessPage() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }
