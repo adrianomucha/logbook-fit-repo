@@ -175,18 +175,23 @@ export default async function HomePage() {
 
       {/* Volt ticker */}
       <div className="overflow-hidden border-y border-border/70 bg-brand py-3" aria-hidden="true">
+        {/* Two identical halves; the track scrolls by exactly one half (-50%)
+            for a seamless loop. Each half repeats the items enough times to
+            stay wider than any viewport, so the loop never reveals a gap. */}
         <div className="flex w-max animate-marquee">
-          {[0, 1].map((copy) => (
+          {[0, 1].map((half) => (
             <div
-              key={copy}
+              key={half}
               className="flex shrink-0 items-center font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-brand-foreground antialiased"
             >
-              {MARQUEE_ITEMS.map((item) => (
-                <span key={item} className="flex items-center">
-                  <span className="px-6">{item}</span>
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand-foreground/70" />
-                </span>
-              ))}
+              {Array.from({ length: 4 }).flatMap((_, rep) =>
+                MARQUEE_ITEMS.map((item, i) => (
+                  <span key={`${rep}-${i}`} className="flex items-center">
+                    <span className="px-6">{item}</span>
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand-foreground/70" />
+                  </span>
+                ))
+              )}
             </div>
           ))}
         </div>
