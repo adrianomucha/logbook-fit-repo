@@ -10,6 +10,12 @@ interface ImageSlotProps {
   /** Real photo — drop a file in /public and pass its path to replace the placeholder */
   src?: string;
   alt?: string;
+  /** object-position for the photo crop, e.g. "center 30%" (default: center) */
+  objectPosition?: string;
+  /** Hide the mono caption overlay (e.g. when the photo speaks for itself) */
+  hideCaption?: boolean;
+  /** Priority-load the image (use for the above-the-fold hero) */
+  priority?: boolean;
 }
 
 /**
@@ -18,7 +24,15 @@ interface ImageSlotProps {
  * the label describes the shot it's holding room for. The volt slash
  * echoes the logo mark.
  */
-export function ImageSlot({ label, className, src, alt }: ImageSlotProps) {
+export function ImageSlot({
+  label,
+  className,
+  src,
+  alt,
+  objectPosition,
+  hideCaption,
+  priority,
+}: ImageSlotProps) {
   if (src) {
     return (
       <div className={cn('relative overflow-hidden', className)}>
@@ -26,16 +40,22 @@ export function ImageSlot({ label, className, src, alt }: ImageSlotProps) {
           src={src}
           alt={alt ?? label}
           fill
+          priority={priority}
           sizes="(min-width: 1024px) 50vw, 100vw"
           className="object-cover"
+          style={objectPosition ? { objectPosition } : undefined}
         />
-        <div
-          className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent"
-          aria-hidden="true"
-        />
-        <p className="absolute inset-x-0 bottom-0 p-4 font-mono text-[10px] uppercase tracking-[0.16em] text-white/80 antialiased">
-          {label}
-        </p>
+        {!hideCaption && (
+          <>
+            <div
+              className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-black/60 to-transparent"
+              aria-hidden="true"
+            />
+            <p className="absolute inset-x-0 bottom-0 p-4 font-mono text-[10px] uppercase tracking-[0.16em] text-white/80 antialiased">
+              {label}
+            </p>
+          </>
+        )}
       </div>
     );
   }

@@ -176,8 +176,12 @@ export default async function HomePage() {
           </div>
 
           <ImageSlot
-            label="Hero photo — athlete mid-set, coach in frame"
-            className="mt-14 aspect-[4/3] rounded-xl sm:aspect-[21/9]"
+            src="/photo_1.jpg"
+            alt="Athlete resting between sets in the gym"
+            label="Train with intent"
+            priority
+            objectPosition="center 35%"
+            className="mt-14 aspect-[4/3] rounded-xl sm:aspect-[16/9]"
           />
         </div>
       </section>
