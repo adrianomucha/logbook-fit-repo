@@ -109,7 +109,7 @@ function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
           />
           <div>
             <h3 className="text-sm font-semibold antialiased">{feature.title}</h3>
-            <p className="mt-1 text-sm text-muted-foreground antialiased">
+            <p className="mt-1 text-pretty text-sm text-muted-foreground antialiased">
               {feature.body}
             </p>
           </div>
@@ -203,10 +203,10 @@ export default async function HomePage() {
           <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
             The north star
           </p>
-          <h2 className="max-w-3xl text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+          <h2 className="max-w-3xl text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
             A loop, not a group chat.
           </h2>
-          <p className="mt-4 max-w-xl text-muted-foreground antialiased sm:text-lg">
+          <p className="mt-4 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
             A focused, contextual conversation that lives right inside the client
             workspace — not buried in WhatsApp.
           </p>
@@ -225,7 +225,7 @@ export default async function HomePage() {
                     <h3 className="text-base font-semibold antialiased sm:text-lg">
                       {item.title}
                     </h3>
-                    <p className="mt-1.5 text-sm text-muted-foreground antialiased sm:text-base">
+                    <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased sm:text-base">
                       {item.body}
                     </p>
                   </div>
@@ -250,10 +250,10 @@ export default async function HomePage() {
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 For coaches
               </p>
-              <h2 className="text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
                 Built for coaches.
               </h2>
-              <p className="mt-4 max-w-lg text-muted-foreground antialiased sm:text-lg">
+              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
                 No manual triage. A workspace that surfaces the right client at the
                 right time.
               </p>
@@ -277,10 +277,10 @@ export default async function HomePage() {
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 For clients
               </p>
-              <h2 className="text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
                 Made for clients.
               </h2>
-              <p className="mt-4 max-w-lg text-muted-foreground antialiased sm:text-lg">
+              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
                 Open the app, see today&rsquo;s session, train. Everything else gets
                 out of the way.
               </p>
@@ -303,7 +303,7 @@ export default async function HomePage() {
                 <br />
                 the list<span className="text-brand">.</span>
               </h2>
-              <p className="mx-auto mt-5 max-w-md text-muted-foreground antialiased sm:text-lg">
+              <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
                 We&rsquo;re onboarding coaches in small batches. Grab a spot and
                 we&rsquo;ll send your invite.
               </p>
