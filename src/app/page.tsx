@@ -135,9 +135,9 @@ export default async function HomePage() {
 
   return (
     <div className="bg-background">
-      {/* Hero — dark brand canvas, giant display type */}
-      <section className="dark bg-background text-foreground">
-        <header className="mx-auto flex max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
+      {/* Hero — dark brand canvas, centered display type */}
+      <section className="dark flex min-h-dvh flex-col bg-background text-foreground">
+        <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
           <Logo markSize={24} />
           <Link
             href="/login"
@@ -147,39 +147,29 @@ export default async function HomePage() {
           </Link>
         </header>
 
-        <div className="mx-auto max-w-6xl px-4 pb-14 pt-10 sm:px-6 sm:pb-20 sm:pt-16">
-          <div className="animate-enter">
-            <p className="mb-6 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
+          <div className="animate-enter flex flex-col items-center">
+            <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
               Private beta — coming soon
             </p>
-            {/* Two-column hero: display type left, pitch + form right */}
-            <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-14">
-              <h1 className="text-[clamp(3.5rem,12vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased lg:text-[clamp(4rem,7.5vw,7rem)]">
-                Plan.
-                <br />
-                Train.
-                <br />
-                <span className="text-brand">Check in.</span>
-              </h1>
-              <div className="max-w-xl">
-                <p className="text-base text-muted-foreground antialiased sm:text-lg">
-                  Logbook.fit is built around the coach–client relationship: you
-                  build the plans, your clients execute them, and a structured
-                  check-in loop keeps you both in sync. No spreadsheets. No
-                  scattered chat threads.
-                </p>
-                <div id="waitlist" className="mt-8 scroll-mt-24">
-                  <WaitlistForm />
-                  <p className="mt-3 text-sm text-muted-foreground antialiased">
-                    Free during the beta. No spam — just an invite when it&rsquo;s
-                    ready.
-                  </p>
-                </div>
-              </div>
+            <h1 className="text-[clamp(3.25rem,13vw,8rem)] font-bold uppercase leading-[0.88] tracking-tight antialiased">
+              Plan. Train.
+              <br />
+              <span className="text-brand">Check in.</span>
+            </h1>
+            <p className="mt-8 max-w-2xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
+              The coaching platform built around the coach–client relationship: you
+              build the plans, your clients execute them, and a structured check-in
+              loop keeps you both in sync. No spreadsheets. No scattered chat threads.
+            </p>
+            <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
+              <WaitlistForm />
+              <p className="mt-3 text-sm text-muted-foreground antialiased">
+                Free during the beta. No spam — just an invite when it&rsquo;s ready.
+              </p>
             </div>
           </div>
-
         </div>
       </section>
 
