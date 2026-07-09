@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { parseBody } from "@/lib/validations/parseBody";
 import { waitlistSchema } from "@/lib/validations/schemas";
 import { waitlistLimiter, getClientIp } from "@/lib/rate-limit";
+import { sendWaitlistWelcome } from "@/lib/services/waitlist-email";
 
 export async function POST(req: Request) {
   try {
@@ -20,13 +21,19 @@ export async function POST(req: Request) {
 
     const { email } = result.data;
 
-    // Upsert so repeat signups succeed quietly — the response never
-    // reveals whether an email was already on the list.
-    await prisma.waitlistEntry.upsert({
-      where: { email },
-      update: {},
-      create: { email },
+    // Only the first signup for an email creates a row; repeats are quiet
+    // no-ops so the response never reveals whether an email was already on
+    // the list. `createMany({ skipDuplicates })` tells us if a row was added.
+    const { count } = await prisma.waitlistEntry.createMany({
+      data: [{ email }],
+      skipDuplicates: true,
     });
+
+    // Send the confirmation only on a genuinely new signup, and only as a
+    // best-effort side effect — a mail failure must not fail the request.
+    if (count > 0) {
+      await sendWaitlistWelcome(email);
+    }
 
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
