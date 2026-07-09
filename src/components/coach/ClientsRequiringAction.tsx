@@ -19,8 +19,7 @@ function ctaForUrgency(urgency: DashboardClient['urgency']): { label: string; va
     case 'AWAITING_RESPONSE':
       return { label: 'Review Check-in', variant: 'default' };
     case 'AT_RISK':
-      // The most urgent client gets the strongest, single obvious action.
-      return { label: 'Send Reminder', variant: 'default' };
+      return { label: 'Send Reminder', variant: 'outline' };
     case 'CHECKIN_DUE':
       return { label: 'View', variant: 'outline' };
     default:
@@ -51,13 +50,10 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
     <div className="space-y-6">
       {needsAction.length > 0 && (
         <section>
-          <div className="flex items-baseline justify-between gap-3 px-1 pb-2.5">
+          <div className="px-1 pb-2.5">
             <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
               Needs Attention · {needsAction.length}
             </h2>
-            <p className="text-[11px] text-muted-foreground/70 antialiased hidden sm:block">
-              Sorted by who&rsquo;s slipping fastest
-            </p>
           </div>
           <div className={cn('bg-card rounded-xl divide-y divide-border overflow-hidden', cardShadow)}>
             {needsAction.map((client) => {
