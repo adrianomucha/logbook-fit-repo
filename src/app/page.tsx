@@ -176,8 +176,7 @@ export default async function HomePage() {
           </div>
 
           <ImageSlot
-            variant="hero"
-            label="Every set, tallied"
+            label="Hero photo — athlete mid-set, coach in frame"
             className="mt-14 aspect-[4/3] rounded-xl sm:aspect-[21/9]"
           />
         </div>
@@ -238,8 +237,7 @@ export default async function HomePage() {
               ))}
             </ol>
             <ImageSlot
-              variant="loop"
-              label="Coach to client and back"
+              label="Photo — coach reviewing a check-in response"
               className="aspect-[4/5] rounded-xl lg:sticky lg:top-8 lg:h-fit"
             />
           </div>
@@ -249,8 +247,7 @@ export default async function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <ImageSlot
-              variant="coach"
-              label="Week 3 — four training days"
+              label="Photo — coach building a plan at the desk"
               className="aspect-[4/5] rounded-xl"
             />
             <div>
@@ -276,8 +273,7 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
               <ImageSlot
-                variant="client"
-                label="Today — sets logged live"
+                label="Photo — client logging a set mid-workout"
                 className="aspect-[4/5] rounded-xl"
               />
             </div>
