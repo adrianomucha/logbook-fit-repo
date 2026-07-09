@@ -98,16 +98,6 @@ const CLIENT_FEATURES = [
   },
 ];
 
-const SESSION_TILES = [
-  { variant: 'log', label: 'Set 3 of 3 — complete', caption: 'Log it live' },
-  {
-    variant: 'checkin',
-    label: 'Effort: hard · Body: good',
-    caption: 'Check in, not check up',
-  },
-  { variant: 'progress', label: 'Week over week', caption: 'See the week turn' },
-] as const;
-
 function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
   return (
     <ul className="divide-y divide-border/70 border-t border-border/70">
@@ -305,29 +295,6 @@ export default async function HomePage() {
               <div className="mt-8">
                 <FeatureList features={CLIENT_FEATURES} />
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Session tiles */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-            <h2 className="text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
-              Every session, logged.
-            </h2>
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
-              {SESSION_TILES.map((tile) => (
-                <div key={tile.caption}>
-                  <ImageSlot
-                    variant={tile.variant}
-                    label={tile.label}
-                    className="aspect-[3/4] rounded-xl"
-                  />
-                  <p className="mt-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                    {tile.caption}
-                  </p>
-                </div>
-              ))}
             </div>
           </div>
         </section>

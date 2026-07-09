@@ -9,14 +9,7 @@
  * `src` escape hatch (see ImageSlot).
  */
 
-export type BrandArtVariant =
-  | 'hero'
-  | 'loop'
-  | 'coach'
-  | 'client'
-  | 'log'
-  | 'checkin'
-  | 'progress';
+export type BrandArtVariant = 'hero' | 'loop' | 'coach' | 'client';
 
 const VOLT = 'hsl(var(--brand))';
 const GHOST = 'hsl(var(--secondary))';
@@ -192,91 +185,11 @@ function ClientArt() {
   );
 }
 
-function LogArt() {
-  // The logo mark blown up past the frame — tally + volt slash.
-  return (
-    <svg
-      viewBox="0 0 600 800"
-      preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 h-full w-full"
-      aria-hidden="true"
-    >
-      <Dots id="log-dots" />
-      <g stroke={GHOST} strokeWidth="52" strokeLinecap="round">
-        <path d="M155 200v400" />
-        <path d="M300 200v400" />
-        <path d="M445 200v400" />
-      </g>
-      <path
-        d="M60 560 540 240"
-        stroke={VOLT}
-        strokeWidth="56"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
-function CheckinArt() {
-  // Speech bubble with an effort scale inside.
-  return (
-    <svg
-      viewBox="0 0 600 800"
-      preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 h-full w-full"
-      aria-hidden="true"
-    >
-      <Dots id="checkin-dots" />
-      <path
-        d="M120 230 h360 a40 40 0 0 1 40 40 v220 a40 40 0 0 1 -40 40 H300 l-90 90 v-90 h-90 a40 40 0 0 1 -40 -40 V270 a40 40 0 0 1 40 -40 Z"
-        fill="none"
-        stroke={GHOST}
-        strokeWidth="14"
-        strokeLinejoin="round"
-      />
-      <g strokeWidth="18" strokeLinecap="round">
-        <path d="M185 330 h230" stroke={GHOST} />
-        <path d="M185 390 h130" stroke={GHOST} />
-        <path d="M185 450 h180" stroke={VOLT} />
-      </g>
-      <circle cx="470" cy="450" r="22" fill={VOLT} />
-    </svg>
-  );
-}
-
-function ProgressArt() {
-  const heights = [130, 200, 170, 260, 310, 400];
-  return (
-    <svg
-      viewBox="0 0 600 800"
-      preserveAspectRatio="xMidYMid slice"
-      className="absolute inset-0 h-full w-full"
-      aria-hidden="true"
-    >
-      <Dots id="progress-dots" />
-      {heights.map((h, i) => (
-        <rect
-          key={i}
-          x={80 + i * 78}
-          y={620 - h}
-          width="52"
-          height={h}
-          rx="16"
-          fill={i === heights.length - 1 ? VOLT : GHOST}
-        />
-      ))}
-    </svg>
-  );
-}
-
 const ART: Record<BrandArtVariant, () => JSX.Element> = {
   hero: HeroArt,
   loop: LoopArt,
   coach: CoachArt,
   client: ClientArt,
-  log: LogArt,
-  checkin: CheckinArt,
-  progress: ProgressArt,
 };
 
 export function BrandArt({ variant }: { variant: BrandArtVariant }) {
