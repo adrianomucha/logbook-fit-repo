@@ -70,7 +70,7 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
   const atRisk = clients.filter((c) => bucketOf(c) === 'risk').length;
 
   // One face per client, ordered ok → pending → risk so the row reads
-  // left-to-right like the meter it replaces — same avatars as the roster below.
+  // left-to-right like a meter — same avatars as the roster below.
   const ordered = [...clients].sort((a, b) => ORDER[bucketOf(a)] - ORDER[bucketOf(b)]);
   const faces = ordered.slice(0, MAX_FACES);
   const overflow = ordered.length - faces.length;
@@ -97,7 +97,7 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
       'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]'
     )}>
       {/* Eyebrow + verdict */}
-      <div className="flex items-baseline justify-between gap-3 mb-3">
+      <div className="flex items-baseline justify-between gap-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
           This week
         </p>
@@ -109,75 +109,67 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
         </p>
       </div>
 
-      <div className="flex items-center gap-5 sm:gap-6">
-        {/* Client count */}
-        <div className="shrink-0">
-          <p className="font-mono text-3xl font-semibold tabular-nums leading-none antialiased">
-            {total}
-          </p>
-          <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mt-1.5">
-            {total === 1 ? 'Client' : 'Clients'}
-          </p>
-        </div>
-
-        {/* Faces + legend — one avatar per client, status as a presence dot */}
-        <div className="flex-1 min-w-0 space-y-2.5">
-          {total > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {faces.map((client, i) => {
-                const bucket = bucketOf(client);
-                const displayName = client.user.name || client.user.email;
-                return (
-                  <div
-                    key={client.clientProfileId}
-                    className="transition-[transform,opacity] duration-300 ease-out"
-                    style={{
-                      transform: mounted ? 'scale(1)' : 'scale(0)',
-                      opacity: mounted ? 1 : 0,
-                      transitionDelay: `${i * 40}ms`,
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => router.push(`/coach/clients/${client.clientProfileId}`)}
-                      title={`${displayName} — ${BUCKET_LABEL[bucket]}`}
-                      aria-label={`${displayName}, ${BUCKET_LABEL[bucket]}`}
-                      className={cn(
-                        'relative w-7 h-7 rounded-full flex items-center justify-center select-none',
-                        'text-[10px] font-bold antialiased',
-                        'transition-transform duration-150 hover:scale-110 active:scale-95',
-                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-                        avatarColor(displayName)
-                      )}
-                    >
-                      {displayName.charAt(0).toUpperCase()}
-                      <span
-                        className={cn(
-                          'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-card',
-                          STATUS_DOT[bucket]
-                        )}
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </div>
-                );
-              })}
-              {overflow > 0 && (
-                <div
-                  className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground tabular-nums select-none"
-                  title={`${overflow} more ${overflow === 1 ? 'client' : 'clients'}`}
+      {/* Faces — one avatar per client, status as a presence dot */}
+      {total > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          {faces.map((client, i) => {
+            const bucket = bucketOf(client);
+            const displayName = client.user.name || client.user.email;
+            return (
+              <div
+                key={client.clientProfileId}
+                className="transition-[transform,opacity] duration-300 ease-out"
+                style={{
+                  transform: mounted ? 'scale(1)' : 'scale(0)',
+                  opacity: mounted ? 1 : 0,
+                  transitionDelay: `${i * 40}ms`,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => router.push(`/coach/clients/${client.clientProfileId}`)}
+                  title={`${displayName} — ${BUCKET_LABEL[bucket]}`}
+                  aria-label={`${displayName}, ${BUCKET_LABEL[bucket]}`}
+                  className={cn(
+                    'relative w-9 h-9 rounded-full flex items-center justify-center select-none',
+                    'text-xs font-bold antialiased',
+                    'transition-transform duration-150 hover:scale-110 active:scale-95',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                    avatarColor(displayName)
+                  )}
                 >
-                  +{overflow}
-                </div>
-              )}
+                  {displayName.charAt(0).toUpperCase()}
+                  <span
+                    className={cn(
+                      'absolute -bottom-px -right-px w-3 h-3 rounded-full ring-2 ring-card',
+                      STATUS_DOT[bucket]
+                    )}
+                    aria-hidden="true"
+                  />
+                </button>
+              </div>
+            );
+          })}
+          {overflow > 0 && (
+            <div
+              className="w-9 h-9 rounded-full bg-muted flex items-center justify-center text-xs font-semibold text-muted-foreground tabular-nums select-none"
+              title={`${overflow} more ${overflow === 1 ? 'client' : 'clients'}`}
+            >
+              +{overflow}
             </div>
           )}
-          <div className="flex items-center gap-4 font-mono text-[11px] antialiased">
-            <Key dot="bg-success" value={onTrack} label="on track" active={onTrack > 0} />
-            <Key dot="bg-warning" value={needsAction} label="pending" active={needsAction > 0} />
-            <Key dot="bg-destructive" value={atRisk} label="at risk" active={atRisk > 0} />
-          </div>
         </div>
+      )}
+
+      {/* Footer — count + legend on one quiet line */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[11px] antialiased border-t border-border mt-4 pt-3">
+        <span>
+          <span className="font-semibold tabular-nums">{total}</span>{' '}
+          <span className="text-muted-foreground">{total === 1 ? 'client' : 'clients'}</span>
+        </span>
+        <Key dot="bg-success" value={onTrack} label="on track" active={onTrack > 0} />
+        <Key dot="bg-warning" value={needsAction} label="pending" active={needsAction > 0} />
+        <Key dot="bg-destructive" value={atRisk} label="at risk" active={atRisk > 0} />
       </div>
     </div>
   );
