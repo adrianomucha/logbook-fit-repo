@@ -1,3 +1,6 @@
+import { cn } from '@/lib/utils';
+import { avatarColor } from '@/lib/avatar-colors';
+
 interface CoachContextStripProps {
   coachName: string;
   coachAvatar?: string;
@@ -8,11 +11,18 @@ interface CoachContextStripProps {
 export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContextStripProps) {
   return (
     <div className="flex items-start gap-3 pl-3.5 border-l-2 border-brand">
-      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0 overflow-hidden">
+      <div
+        className={cn(
+          'w-7 h-7 rounded-full flex items-center justify-center shrink-0 overflow-hidden',
+          // Same deterministic avatar color the coach surfaces use — the client
+          // sees their coach in the identical visual language.
+          coachAvatar ? 'bg-muted' : avatarColor(coachName)
+        )}
+      >
         {coachAvatar ? (
           <img src={coachAvatar} alt="" className="w-full h-full object-cover" />
         ) : (
-          <span className="text-[10px] font-bold text-muted-foreground uppercase">
+          <span className="text-[10px] font-bold uppercase">
             {coachName.charAt(0)}
           </span>
         )}

@@ -42,7 +42,7 @@ export function TodayActionCard({
             </div>
             <Button
               onClick={onAction}
-              className="w-full bg-info hover:bg-info/90 text-info-foreground"
+              className="w-full bg-brand hover:bg-brand/90 text-brand-foreground font-bold uppercase tracking-wider"
               size="lg"
             >
               <Play className="w-5 h-5 mr-2" />
@@ -66,7 +66,7 @@ export function TodayActionCard({
             <Progress value={completionPct} className="mb-4 h-2" />
             <Button
               onClick={onAction}
-              className="w-full bg-warning hover:bg-warning/90 text-warning-foreground"
+              className="w-full bg-brand hover:bg-brand/90 text-brand-foreground font-bold uppercase tracking-wider"
               size="lg"
             >
               <RotateCcw className="w-5 h-5 mr-2" />
