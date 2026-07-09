@@ -153,24 +153,29 @@ export default async function HomePage() {
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
               Private beta — coming soon
             </p>
-            <h1 className="text-[clamp(3.5rem,12vw,9rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
-              Plan.
-              <br />
-              Train.
-              <br />
-              <span className="text-brand">Check in.</span>
-            </h1>
-            <div className="mt-10 grid gap-8 lg:grid-cols-2 lg:items-end">
-              <p className="max-w-xl text-base text-muted-foreground antialiased sm:text-lg">
-                Logbook.fit is built around the coach–client relationship: you build
-                the plans, your clients execute them, and a structured check-in loop
-                keeps you both in sync. No spreadsheets. No scattered chat threads.
-              </p>
-              <div id="waitlist" className="w-full max-w-md scroll-mt-24 lg:justify-self-end">
-                <WaitlistForm />
-                <p className="mt-3 text-sm text-muted-foreground antialiased">
-                  Free during the beta. No spam — just an invite when it&rsquo;s ready.
+            {/* Two-column hero: display type left, pitch + form right */}
+            <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr] lg:items-center lg:gap-14">
+              <h1 className="text-[clamp(3.5rem,12vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased lg:text-[clamp(4rem,7.5vw,7rem)]">
+                Plan.
+                <br />
+                Train.
+                <br />
+                <span className="text-brand">Check in.</span>
+              </h1>
+              <div className="max-w-xl">
+                <p className="text-base text-muted-foreground antialiased sm:text-lg">
+                  Logbook.fit is built around the coach–client relationship: you
+                  build the plans, your clients execute them, and a structured
+                  check-in loop keeps you both in sync. No spreadsheets. No
+                  scattered chat threads.
                 </p>
+                <div id="waitlist" className="mt-8 scroll-mt-24">
+                  <WaitlistForm />
+                  <p className="mt-3 text-sm text-muted-foreground antialiased">
+                    Free during the beta. No spam — just an invite when it&rsquo;s
+                    ready.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
