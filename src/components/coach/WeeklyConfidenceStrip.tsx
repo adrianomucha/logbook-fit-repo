@@ -29,6 +29,12 @@ const VERDICT_TEXT: Record<Bucket, string> = {
   risk: 'text-destructive',
 };
 
+const VERDICT_DOT: Record<Bucket, string> = {
+  ok: 'bg-success',
+  pending: 'bg-warning',
+  risk: 'bg-destructive',
+};
+
 function Key({
   dot,
   value,
@@ -77,20 +83,36 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
         ? `${needsAction} pending · awaiting replies`
         : 'All clear';
 
+  // The verdict pulses only when a client actually needs the coach.
+  const pulsing = dominant !== 'ok';
+
   return (
     <div className={cn(
-      'bg-card rounded-xl overflow-hidden p-4 sm:p-5',
+      'relative bg-card rounded-xl overflow-hidden p-4 sm:p-5',
       'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]'
     )}>
+      {/* Spectrum hairline — the roster's health as a single band across the top */}
+      <div
+        className="absolute inset-x-0 top-0 h-[3px]"
+        style={{ background: 'linear-gradient(90deg, hsl(var(--destructive)), hsl(var(--warning)) 55%, hsl(var(--success)))' }}
+        aria-hidden="true"
+      />
+
       {/* Eyebrow + verdict */}
       <div className="flex items-baseline justify-between gap-3 mb-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
           This week
         </p>
         <p className={cn(
-          'font-mono text-[10px] uppercase tracking-[0.14em] font-medium tabular-nums antialiased truncate',
+          'flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] font-medium tabular-nums antialiased truncate',
           VERDICT_TEXT[dominant]
         )}>
+          <span className="relative flex h-2 w-2 shrink-0" aria-hidden="true">
+            {pulsing && (
+              <span className={cn('absolute inline-flex h-full w-full rounded-full opacity-60 animate-ping', VERDICT_DOT[dominant])} />
+            )}
+            <span className={cn('relative inline-flex rounded-full h-2 w-2', VERDICT_DOT[dominant])} />
+          </span>
           {verdict}
         </p>
       </div>
