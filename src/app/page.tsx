@@ -15,7 +15,6 @@ import {
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
-import { PhoneMockup } from '@/components/landing/PhoneMockup';
 
 export const metadata: Metadata = {
   title: 'Logbook.fit — The coaching platform that puts your clients first',
@@ -176,16 +175,10 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* Showcase — real app screen overlapping a lifestyle photo */}
-          <div className="relative mt-16 lg:mt-20 lg:min-h-[500px]">
-            <ImageSlot
-              label="Hero photo — athlete mid-set, coach in frame"
-              className="aspect-[16/10] w-full rounded-xl sm:aspect-[16/9] lg:absolute lg:inset-y-0 lg:right-0 lg:aspect-auto lg:h-full lg:w-[74%]"
-            />
-            <div className="relative z-10 mx-auto -mt-28 flex w-fit justify-center sm:-mt-32 lg:absolute lg:inset-y-0 lg:left-0 lg:mt-0 lg:mx-0 lg:items-center">
-              <PhoneMockup />
-            </div>
-          </div>
+          <ImageSlot
+            label="Hero photo — athlete mid-set, coach in frame"
+            className="mt-14 aspect-[4/3] rounded-xl sm:aspect-[21/9]"
+          />
         </div>
       </section>
 
