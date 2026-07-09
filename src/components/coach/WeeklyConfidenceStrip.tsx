@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import type { DashboardClient } from '@/types/api';
 import { cn } from '@/lib/utils';
+import { avatarColor } from '@/components/coach/shared/clientSignals';
 
 interface WeeklyConfidenceStripProps {
   clients: DashboardClient[];
@@ -17,7 +19,7 @@ function bucketOf(c: DashboardClient): Bucket {
 const ORDER: Record<Bucket, number> = { ok: 0, pending: 1, risk: 2 };
 
 // Flat status fills — same palette the rest of the app uses.
-const SEG_FILL: Record<Bucket, string> = {
+const STATUS_DOT: Record<Bucket, string> = {
   ok: 'bg-success',
   pending: 'bg-warning',
   risk: 'bg-destructive',
@@ -28,6 +30,15 @@ const VERDICT_TEXT: Record<Bucket, string> = {
   pending: 'text-warning',
   risk: 'text-destructive',
 };
+
+const BUCKET_LABEL: Record<Bucket, string> = {
+  ok: 'on track',
+  pending: 'pending',
+  risk: 'at risk',
+};
+
+// Cap the face row so a big roster wraps into a "+N" chip instead of sprawling.
+const MAX_FACES = 14;
 
 function Key({
   dot,
@@ -52,16 +63,19 @@ function Key({
 }
 
 export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
+  const router = useRouter();
   const total = clients.length;
-  const buckets = clients.map(bucketOf);
-  const onTrack = buckets.filter((b) => b === 'ok').length;
-  const needsAction = buckets.filter((b) => b === 'pending').length;
-  const atRisk = buckets.filter((b) => b === 'risk').length;
+  const onTrack = clients.filter((c) => bucketOf(c) === 'ok').length;
+  const needsAction = clients.filter((c) => bucketOf(c) === 'pending').length;
+  const atRisk = clients.filter((c) => bucketOf(c) === 'risk').length;
 
-  // One cell per client, ordered ok → pending → risk so the meter reads left-to-right.
-  const cells = [...buckets].sort((a, b) => ORDER[a] - ORDER[b]);
+  // One face per client, ordered ok → pending → risk so the row reads
+  // left-to-right like the meter it replaces — same avatars as the roster below.
+  const ordered = [...clients].sort((a, b) => ORDER[bucketOf(a)] - ORDER[bucketOf(b)]);
+  const faces = ordered.slice(0, MAX_FACES);
+  const overflow = ordered.length - faces.length;
 
-  // Animate cells growing in on mount, staggered.
+  // Faces pop in on mount, staggered.
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
@@ -106,22 +120,56 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
           </p>
         </div>
 
-        {/* Meter + legend — one cell per client */}
+        {/* Faces + legend — one avatar per client, status as a presence dot */}
         <div className="flex-1 min-w-0 space-y-2.5">
           {total > 0 && (
-            <div className="flex gap-1" aria-hidden="true">
-              {cells.map((b, i) => (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {faces.map((client, i) => {
+                const bucket = bucketOf(client);
+                const displayName = client.user.name || client.user.email;
+                return (
+                  <div
+                    key={client.clientProfileId}
+                    className="transition-[transform,opacity] duration-300 ease-out"
+                    style={{
+                      transform: mounted ? 'scale(1)' : 'scale(0)',
+                      opacity: mounted ? 1 : 0,
+                      transitionDelay: `${i * 40}ms`,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => router.push(`/coach/clients/${client.clientProfileId}`)}
+                      title={`${displayName} — ${BUCKET_LABEL[bucket]}`}
+                      aria-label={`${displayName}, ${BUCKET_LABEL[bucket]}`}
+                      className={cn(
+                        'relative w-7 h-7 rounded-full flex items-center justify-center select-none',
+                        'text-[10px] font-bold antialiased',
+                        'transition-transform duration-150 hover:scale-110 active:scale-95',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+                        avatarColor(displayName)
+                      )}
+                    >
+                      {displayName.charAt(0).toUpperCase()}
+                      <span
+                        className={cn(
+                          'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full ring-2 ring-card',
+                          STATUS_DOT[bucket]
+                        )}
+                        aria-hidden="true"
+                      />
+                    </button>
+                  </div>
+                );
+              })}
+              {overflow > 0 && (
                 <div
-                  key={i}
-                  className={cn('flex-1 h-2.5 rounded-full transition-[transform,opacity] duration-500 ease-out', SEG_FILL[b])}
-                  style={{
-                    transform: mounted ? 'scaleX(1)' : 'scaleX(0)',
-                    transformOrigin: 'left',
-                    opacity: mounted ? 1 : 0,
-                    transitionDelay: `${i * 55}ms`,
-                  }}
-                />
-              ))}
+                  className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-[10px] font-semibold text-muted-foreground tabular-nums select-none"
+                  title={`${overflow} more ${overflow === 1 ? 'client' : 'clients'}`}
+                >
+                  +{overflow}
+                </div>
+              )}
             </div>
           )}
           <div className="flex items-center gap-4 font-mono text-[11px] antialiased">
