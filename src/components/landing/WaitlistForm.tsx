@@ -31,7 +31,7 @@ export function WaitlistForm() {
         const body = await res.json().catch(() => null);
         setError(
           res.status === 429
-            ? 'Too many attempts — please try again in a bit.'
+            ? 'Too many attempts. Please try again in a bit.'
             : body?.error === 'Validation failed'
               ? 'That doesn’t look like a valid email address.'
               : 'Something went wrong. Please try again.'

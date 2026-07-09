@@ -156,7 +156,7 @@
   /* Continuous horizontal ticker for the landing-page marquee strip.
      The content is rendered twice, so -50% loops seamlessly. */
   .animate-marquee {
-    animation: marquee 28s linear infinite;
+    animation: marquee 110s linear infinite;
   }
   @keyframes marquee {
     from {

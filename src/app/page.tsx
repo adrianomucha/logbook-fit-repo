@@ -17,7 +17,7 @@ import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 
 export const metadata: Metadata = {
-  title: 'Logbook.fit — The coaching platform that puts your clients first',
+  title: 'Logbook.fit · The coaching platform that puts your clients first',
   description:
     'Plan workouts, track progress, and stay connected to every client through a structured check-in loop. Join the waitlist for early access.',
 };
@@ -33,12 +33,12 @@ const CHECK_IN_LOOP = [
   {
     step: '01',
     title: 'Coach sends a check-in',
-    body: 'One tap opens a structured check-in for the client — no chasing, no copy-pasted questions.',
+    body: 'One tap opens a structured check-in for the client. No chasing, no copy-pasted questions.',
   },
   {
     step: '02',
     title: 'Client responds',
-    body: 'Effort rating, how their body feels, and notes — captured in seconds, right after training.',
+    body: 'Effort rating, how their body feels, and notes, captured in seconds, right after training.',
   },
   {
     step: '03',
@@ -48,7 +48,7 @@ const CHECK_IN_LOOP = [
   {
     step: '04',
     title: 'Coach replies & adjusts',
-    body: 'Send feedback and mark “I’ll adjust the plan” — the loop closes where the plan lives.',
+    body: 'Send feedback and mark “I’ll adjust the plan.” The loop closes where the plan lives.',
   },
 ];
 
@@ -56,7 +56,7 @@ const COACH_FEATURES = [
   {
     icon: LayoutDashboard,
     title: 'Urgency-sorted dashboard',
-    body: 'Clients ranked by who needs attention most — at-risk, check-in due, awaiting response, on track.',
+    body: 'Clients ranked by who needs attention most: at-risk, check-in due, awaiting response, on track.',
   },
   {
     icon: ClipboardList,
@@ -89,7 +89,7 @@ const CLIENT_FEATURES = [
   {
     icon: MessageCircle,
     title: 'A direct line to the coach',
-    body: 'Flags and check-ins turn into focused conversations — not another group chat.',
+    body: 'Flags and check-ins turn into focused conversations, not another group chat.',
   },
   {
     icon: LineChart,
@@ -151,7 +151,7 @@ export default async function HomePage() {
           <div className="animate-enter flex flex-col items-center">
             <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-              Private beta — coming soon
+              Private beta · coming soon
             </p>
             <h1 className="text-[clamp(3.25rem,13vw,8rem)] font-bold uppercase leading-[0.88] tracking-tight antialiased">
               Plan. Train.
@@ -159,14 +159,14 @@ export default async function HomePage() {
               <span className="text-brand">Check in.</span>
             </h1>
             <p className="mt-8 max-w-2xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
-              The coaching platform built around the coach–client relationship: you
-              build the plans, your clients execute them, and a structured check-in
-              loop keeps you both in sync. No spreadsheets. No scattered chat threads.
+              The coaching platform built around the coach and client: you build the
+              plans, your clients execute them, and a structured check-in loop keeps
+              you both in sync. No spreadsheets. No scattered chat threads.
             </p>
             <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
               <WaitlistForm />
               <p className="mt-3 text-sm text-muted-foreground antialiased">
-                Free during the beta. No spam — just an invite when it&rsquo;s ready.
+                Free during the beta. No spam, just an invite when it&rsquo;s ready.
               </p>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default async function HomePage() {
           </h2>
           <p className="mt-4 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
             A focused, contextual conversation that lives right inside the client
-            workspace — not buried in WhatsApp.
+            workspace, not buried in WhatsApp.
           </p>
 
           <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-14">
@@ -233,7 +233,7 @@ export default async function HomePage() {
               ))}
             </ol>
             <ImageSlot
-              label="Photo — coach reviewing a check-in response"
+              label="Photo: coach reviewing a check-in response"
               className="aspect-[4/5] rounded-xl lg:sticky lg:top-8 lg:h-fit"
             />
           </div>
@@ -243,7 +243,7 @@ export default async function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <ImageSlot
-              label="Photo — coach building a plan at the desk"
+              label="Photo: coach building a plan at the desk"
               className="aspect-[4/5] rounded-xl"
             />
             <div>
@@ -269,7 +269,7 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
               <ImageSlot
-                label="Photo — client logging a set mid-workout"
+                label="Photo: client logging a set mid-workout"
                 className="aspect-[4/5] rounded-xl"
               />
             </div>
@@ -319,7 +319,7 @@ export default async function HomePage() {
       <footer className="dark border-t border-border bg-background text-foreground">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-            © 2026 Logbook.fit — All rights reserved
+            © 2026 Logbook.fit · All rights reserved
           </p>
           <Link
             href="/login"
