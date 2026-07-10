@@ -105,28 +105,48 @@ export function PlanTemplateCard({
         </div>
 
         {/* Plan name */}
-        <h3 className="text-base sm:text-lg font-semibold leading-tight truncate mb-1.5 antialiased">
+        <h3 className="text-base sm:text-lg font-black tracking-tight leading-tight truncate mb-4 antialiased">
           {plan.name}
         </h3>
 
-        {/* Metadata — same data voice as the profile page's plan footer */}
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mb-4">
-          {[
-            plan.durationWeeks && `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'week' : 'weeks'}`,
-            plan.workoutsPerWeek && `${plan.workoutsPerWeek}\u00D7/week`,
-            isArchived && 'Archived',
-          ].filter(Boolean).join(' \u00B7 ')}
-        </p>
+        {/* Stat blocks — big tabular numbers with mono eyebrow labels */}
+        <div className="flex items-end gap-6 mb-4">
+          <div>
+            <p className="text-xl font-black tabular-nums leading-none antialiased">
+              {plan.durationWeeks ?? '\u2014'}
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium mt-1 antialiased">
+              {plan.durationWeeks === 1 ? 'Week' : 'Weeks'}
+            </p>
+          </div>
+          <div>
+            <p className="text-xl font-black tabular-nums leading-none antialiased">
+              {plan.workoutsPerWeek ? `${plan.workoutsPerWeek}\u00D7` : '\u2014'}
+            </p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium mt-1 antialiased">
+              Per week
+            </p>
+          </div>
+        </div>
 
-        {/* Client count footer */}
+        {/* Footer — volt dot marks plans with clients actively on them */}
         <div className="pt-3 border-t border-border/40">
-          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased">
-            <Users className="w-3.5 h-3.5" />
-            <span className="font-medium">
-              {clientCount === 0
-                ? 'No clients'
-                : `${clientCount} ${clientCount === 1 ? 'client' : 'clients'}`}
-            </span>
+          <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] antialiased">
+            {isArchived ? (
+              <span className="font-medium text-muted-foreground/60">Archived</span>
+            ) : clientCount > 0 ? (
+              <>
+                <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25 shrink-0" aria-hidden="true" />
+                <span className="font-medium text-muted-foreground">
+                  {clientCount} {clientCount === 1 ? 'client' : 'clients'} on this plan
+                </span>
+              </>
+            ) : (
+              <>
+                <Users className="w-3.5 h-3.5 text-muted-foreground/50" />
+                <span className="font-medium text-muted-foreground/60">Not assigned yet</span>
+              </>
+            )}
           </div>
         </div>
       </div>
