@@ -1,16 +1,18 @@
 import { CheckIn, WorkoutCompletion, WorkoutPlan } from '@/types';
+import { cn } from '@/lib/utils';
 import { Modal } from '@/components/ui/Modal';
 import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
 import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 
-const FEELING_LABELS: Record<string, { label: string }> = {
-  EASY: { label: 'Too Easy' },
-  MEDIUM: { label: 'About Right' },
-  HARD: { label: 'Too Hard' },
-  FRESH: { label: 'Fresh' },
-  NORMAL: { label: 'Normal' },
-  TIRED: { label: 'Tired' },
-  RUN_DOWN: { label: 'Run Down' },
+// Same effort color semantics as the check-in form and workout history.
+const FEELING_LABELS: Record<string, { label: string; color: string }> = {
+  EASY: { label: 'Too Easy', color: 'text-success' },
+  MEDIUM: { label: 'About Right', color: 'text-foreground' },
+  HARD: { label: 'Too Hard', color: 'text-warning' },
+  FRESH: { label: 'Fresh', color: 'text-success' },
+  NORMAL: { label: 'Normal', color: 'text-foreground' },
+  TIRED: { label: 'Tired', color: 'text-warning' },
+  RUN_DOWN: { label: 'Run Down', color: 'text-destructive' },
 };
 
 interface CheckInDetailModalProps {
@@ -112,13 +114,13 @@ export function CheckInDetailModal({
             {workoutFeeling && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Workouts felt</span>
-                <span className="font-bold">{workoutFeeling.label}</span>
+                <span className={cn('font-bold', workoutFeeling.color)}>{workoutFeeling.label}</span>
               </div>
             )}
             {bodyFeeling && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Body feels</span>
-                <span className="font-bold">{bodyFeeling.label}</span>
+                <span className={cn('font-bold', bodyFeeling.color)}>{bodyFeeling.label}</span>
               </div>
             )}
             {flaggedWorkout && (
