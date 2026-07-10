@@ -33,8 +33,9 @@ export const POST = withCoach(
     }
 
     const body = await req.json();
-    const { exerciseId, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
+    const { exerciseId, trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
       exerciseId?: string;
+      trackingType?: "REPS" | "TIME";
       sets?: number;
       reps?: number;
       repsMax?: number | null;
@@ -79,6 +80,10 @@ export const POST = withCoach(
         dayId,
         exerciseId,
         orderIndex: idx,
+        trackingType:
+          trackingType === "REPS" || trackingType === "TIME"
+            ? trackingType
+            : exercise.trackingType,
         sets: sets ?? exercise.defaultSets ?? 3,
         reps: reps ?? exercise.defaultReps ?? 10,
         repsMax: repsMax ?? null,

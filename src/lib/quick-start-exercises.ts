@@ -11,6 +11,8 @@ export type QuickStartExercise = {
   name: string;
   /** Must match the ExerciseCategory enum values */
   category: "CHEST" | "BACK" | "SHOULDERS" | "BICEPS" | "TRICEPS" | "LEGS" | "GLUTES" | "CORE" | "CARDIO" | "FULL_BODY" | "OTHER";
+  /** TIME exercises store seconds in defaultReps. Defaults to REPS. */
+  trackingType?: "REPS" | "TIME";
   defaultSets: number;
   defaultReps: number;
   defaultRest?: number;
@@ -35,7 +37,7 @@ export const QUICK_START_EXERCISES: QuickStartExercise[] = [
   { name: "Bulgarian Split Squat", category: "LEGS", defaultSets: 3, defaultReps: 10 },
   { name: "Cable Row", category: "BACK", defaultSets: 3, defaultReps: 12 },
   { name: "Face Pull", category: "SHOULDERS", defaultSets: 3, defaultReps: 15 },
-  { name: "Plank", category: "CORE", defaultSets: 3, defaultReps: 60, defaultRest: 30 },
+  { name: "Plank", category: "CORE", trackingType: "TIME", defaultSets: 3, defaultReps: 60, defaultRest: 30 },
   { name: "Cable Crunch", category: "CORE", defaultSets: 3, defaultReps: 15 },
   { name: "Pull-Up", category: "BACK", defaultSets: 3, defaultReps: 8 },
   { name: "Dumbbell Bench Press", category: "CHEST", defaultSets: 3, defaultReps: 10 },

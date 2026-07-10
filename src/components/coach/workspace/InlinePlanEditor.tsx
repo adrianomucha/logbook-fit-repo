@@ -236,7 +236,8 @@ function ExerciseRow({ exercise }: { exercise: Exercise }) {
   if (exercise.sets && exercise.reps) {
     parts.push(`${exercise.sets}×${exercise.reps}`);
   } else if (exercise.reps) {
-    parts.push(`${exercise.reps} reps`);
+    // Time-based prescriptions already carry their unit ("60s", "2 min")
+    parts.push(exercise.trackingType === 'TIME' ? exercise.reps : `${exercise.reps} reps`);
   } else if (exercise.sets) {
     parts.push(`${exercise.sets} sets`);
   }

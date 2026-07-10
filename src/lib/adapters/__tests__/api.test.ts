@@ -41,6 +41,7 @@ describe("apiPlanToWorkoutPlan", () => {
               {
                 id: "we-1",
                 orderIndex: 0,
+                trackingType: "REPS" as const,
                 sets: 3,
                 reps: 8,
                 repsMax: 10,
@@ -83,7 +84,35 @@ describe("apiPlanToWorkoutPlan", () => {
     expect(result.weeks[0].days[0].exercises[0].name).toBe("Bench Press");
     expect(result.weeks[0].days[0].exercises[0].sets).toBe(3);
     expect(result.weeks[0].days[0].exercises[0].reps).toBe("8-10");
+    expect(result.weeks[0].days[0].exercises[0].trackingType).toBe("REPS");
     expect(result.weeks[0].days[0].exercises[0].supersetWithPrevious).toBeUndefined();
+  });
+
+  it("formats time-based exercises as durations", () => {
+    const plan = {
+      ...basePlan,
+      weeks: [
+        {
+          ...basePlan.weeks[0],
+          days: [
+            {
+              ...basePlan.weeks[0].days[0],
+              exercises: [
+                {
+                  ...basePlan.weeks[0].days[0].exercises[0],
+                  trackingType: "TIME" as const,
+                  reps: 60,
+                  repsMax: null,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const result = apiPlanToWorkoutPlan(plan);
+    expect(result.weeks[0].days[0].exercises[0].reps).toBe("1 min");
+    expect(result.weeks[0].days[0].exercises[0].trackingType).toBe("TIME");
   });
 
   it("maps supersetWithPrevious when set", () => {

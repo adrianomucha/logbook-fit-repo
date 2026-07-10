@@ -24,6 +24,7 @@ export interface PlanDetail {
       exercises: {
         id: string;
         orderIndex: number;
+        trackingType: 'REPS' | 'TIME';
         sets: number;
         reps: number;
         repsMax: number | null;

@@ -39,11 +39,15 @@ const exerciseCategoryEnum = z.enum([
   "OTHER",
 ]);
 
+const trackingTypeEnum = z.enum(["REPS", "TIME"]);
+
 export const createExerciseSchema = z.object({
   name: z.string().min(1, "Exercise name is required").max(100),
   category: exerciseCategoryEnum.optional().default("OTHER"),
+  trackingType: trackingTypeEnum.optional().default("REPS"),
   defaultSets: z.number().int().min(1).max(20).optional(),
-  defaultReps: z.number().int().min(1).max(100).optional(),
+  // Rep count, or seconds when trackingType = TIME (up to 1 hour)
+  defaultReps: z.number().int().min(1).max(3600).optional(),
   defaultWeight: z.number().min(0).max(1000).optional(),
   defaultRest: z.number().int().min(0).max(600).optional(),
   instructions: z.string().max(1000).optional(),
@@ -52,8 +56,9 @@ export const createExerciseSchema = z.object({
 export const updateExerciseSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   category: exerciseCategoryEnum.optional(),
+  trackingType: trackingTypeEnum.optional(),
   defaultSets: z.number().int().min(1).max(20).optional(),
-  defaultReps: z.number().int().min(1).max(100).optional(),
+  defaultReps: z.number().int().min(1).max(3600).optional(),
   defaultWeight: z.number().min(0).max(1000).nullable().optional(),
   defaultRest: z.number().int().min(0).max(600).nullable().optional(),
   instructions: z.string().max(1000).nullable().optional(),

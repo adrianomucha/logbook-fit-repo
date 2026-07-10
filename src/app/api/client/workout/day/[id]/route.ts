@@ -145,8 +145,9 @@ export const GET = withClient(
       exercises: day.exercises.map((we) => ({
         workoutExerciseId: we.id,
         orderIndex: we.orderIndex,
+        trackingType: we.trackingType,
         sets: we.sets,
-        reps: formatReps(we.reps, we.repsMax),
+        reps: formatReps(we.reps, we.repsMax, we.trackingType),
         weight: we.weight,
         restSeconds: we.restSeconds,
         coachNotes: we.coachNotes,

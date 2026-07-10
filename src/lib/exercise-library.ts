@@ -3,6 +3,8 @@ export interface ExerciseTemplate {
   name: string;
   category: 'chest' | 'back' | 'shoulders' | 'arms' | 'legs' | 'core' | 'cardio';
   equipment?: string;
+  /** TIME exercises put a duration string in defaultReps ("60s", "20-30 min") */
+  trackingType?: 'REPS' | 'TIME';
   defaultSets?: number;
   defaultReps?: string;
   notes?: string;
@@ -54,18 +56,18 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   { id: 'calf-raises', name: 'Calf Raises', category: 'legs', equipment: 'Machine', defaultSets: 4, defaultReps: '15-20' },
 
   // Core
-  { id: 'plank', name: 'Plank', category: 'core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: '60 sec' },
+  { id: 'plank', name: 'Plank', category: 'core', equipment: 'Bodyweight', trackingType: 'TIME', defaultSets: 3, defaultReps: '60s' },
   { id: 'crunches', name: 'Crunches', category: 'core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: '20-25' },
   { id: 'russian-twists', name: 'Russian Twists', category: 'core', equipment: 'Bodyweight', defaultSets: 3, defaultReps: '20-30' },
   { id: 'hanging-leg-raises', name: 'Hanging Leg Raises', category: 'core', equipment: 'Bar', defaultSets: 3, defaultReps: '12-15' },
   { id: 'ab-wheel', name: 'Ab Wheel Rollout', category: 'core', equipment: 'Ab Wheel', defaultSets: 3, defaultReps: '10-12' },
 
   // Cardio
-  { id: 'treadmill', name: 'Treadmill Run', category: 'cardio', equipment: 'Treadmill', defaultSets: 1, defaultReps: '20-30 min' },
-  { id: 'bike', name: 'Stationary Bike', category: 'cardio', equipment: 'Bike', defaultSets: 1, defaultReps: '20-30 min' },
+  { id: 'treadmill', name: 'Treadmill Run', category: 'cardio', equipment: 'Treadmill', trackingType: 'TIME', defaultSets: 1, defaultReps: '20-30 min' },
+  { id: 'bike', name: 'Stationary Bike', category: 'cardio', equipment: 'Bike', trackingType: 'TIME', defaultSets: 1, defaultReps: '20-30 min' },
   { id: 'burpees', name: 'Burpees', category: 'cardio', equipment: 'Bodyweight', defaultSets: 4, defaultReps: '15-20' },
-  { id: 'jump-rope', name: 'Jump Rope', category: 'cardio', equipment: 'Jump Rope', defaultSets: 3, defaultReps: '2 min' },
-  { id: 'mountain-climbers', name: 'Mountain Climbers', category: 'cardio', equipment: 'Bodyweight', defaultSets: 3, defaultReps: '30 sec' },
+  { id: 'jump-rope', name: 'Jump Rope', category: 'cardio', equipment: 'Jump Rope', trackingType: 'TIME', defaultSets: 3, defaultReps: '2 min' },
+  { id: 'mountain-climbers', name: 'Mountain Climbers', category: 'cardio', equipment: 'Bodyweight', trackingType: 'TIME', defaultSets: 3, defaultReps: '30s' },
 ];
 
 export const getExercisesByCategory = (category: string) => {
