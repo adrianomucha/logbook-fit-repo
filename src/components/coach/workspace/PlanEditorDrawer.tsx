@@ -340,7 +340,7 @@ export function PlanEditorDrawer({
       if (!o) closeExerciseEditor();
       onOpenChange(o);
     }}>
-      <SheetContent side="right" className="w-full sm:max-w-[840px] p-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
+      <SheetContent side="right" className="w-full sm:max-w-[840px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
         {/* Loading state — skeleton */}
         {isLoading && !plan && (
           <>
