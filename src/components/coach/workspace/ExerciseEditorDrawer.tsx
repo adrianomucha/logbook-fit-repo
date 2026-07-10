@@ -187,10 +187,10 @@ export function ExerciseEditorContent({
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
           </button>
           <div className="flex-1 min-w-0">
-            <h2 className="text-sm font-bold leading-tight truncate">
+            <h2 className="text-[15px] font-black tracking-tight leading-tight truncate">
               {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` ${exerciseNumber}` : ''}`}
             </h2>
-            <p className="text-[11px] text-muted-foreground truncate mt-px">
+            <p className="text-[11px] text-muted-foreground/80 truncate mt-px">
               {isNew ? 'Choose from library or create custom' : dayName || 'Modify exercise details'}
             </p>
           </div>
@@ -314,10 +314,10 @@ export function ExerciseEditorContent({
           </div>
         ) : (
           /* Custom / Edit form */
-          <div className="p-4 space-y-4">
+          <div className="p-4 space-y-5">
             {/* Exercise Name */}
             <div>
-              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 block">
                 Exercise Name
               </label>
               <Input
@@ -325,7 +325,7 @@ export function ExerciseEditorContent({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Barbell Squat"
                 maxLength={100}
-                className="font-bold"
+                className="h-11 font-bold text-[15px] tracking-tight"
               />
             </div>
 
@@ -333,7 +333,7 @@ export function ExerciseEditorContent({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex items-center h-6 mb-1">
-                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
                     Sets
                   </label>
                 </div>
@@ -348,7 +348,7 @@ export function ExerciseEditorContent({
               </div>
               <div>
                 <div className="flex items-center justify-between gap-2 h-6 mb-1">
-                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
                     {trackingType === 'TIME' ? 'Time' : 'Reps'}
                   </label>
                   <div className="flex rounded-md bg-muted p-0.5" role="group" aria-label="Measure by">
@@ -384,7 +384,7 @@ export function ExerciseEditorContent({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex items-center h-6 mb-1">
-                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
                     Weight
                   </label>
                 </div>
@@ -410,7 +410,7 @@ export function ExerciseEditorContent({
               </div>
               <div>
                 <div className="flex items-center h-6 mb-1">
-                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
                     Rest (sec)
                   </label>
                 </div>
@@ -451,7 +451,7 @@ export function ExerciseEditorContent({
 
             {/* Coaching Notes */}
             <div>
-              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
+              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 block">
                 Notes
               </label>
               <Textarea
