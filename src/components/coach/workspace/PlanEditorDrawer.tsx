@@ -340,7 +340,7 @@ export function PlanEditorDrawer({
       if (!o) closeExerciseEditor();
       onOpenChange(o);
     }}>
-      <SheetContent side="right" className="w-full sm:max-w-[840px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
+      <SheetContent side="right" className="w-full sm:max-w-[880px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
         {/* Loading state — skeleton */}
         {isLoading && !plan && (
           <>
@@ -496,7 +496,7 @@ export function PlanEditorDrawer({
               {/* Week/day rail — on mobile it collapses to a stepper + pill row,
                   and hides entirely while the exercise editor is open */}
               <div className={cn(
-                'shrink-0 border-b sm:border-b-0 sm:border-r sm:w-[220px] sm:bg-muted/30 flex flex-col',
+                'shrink-0 border-b sm:border-b-0 sm:border-r sm:w-[264px] sm:bg-muted/30 flex flex-col',
                 exerciseDrawerOpen && 'hidden sm:flex'
               )}>
                 {/* Week stepper — one grouped control instead of chevrons floating at the rail edges */}
@@ -552,18 +552,26 @@ export function PlanEditorDrawer({
                             key={day.id}
                             onClick={() => handleSelectDay(day.id)}
                             className={cn(
-                              'w-full flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-left transition-[background-color,color] duration-150',
+                              'w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left transition-[background-color,color] duration-150',
                               isActive
                                 ? 'bg-foreground text-background'
                                 : 'hover:bg-muted text-foreground'
                             )}
                           >
-                            <span className="flex-1 min-w-0 text-[13px] font-medium truncate antialiased">
+                            <span className={cn(
+                              'text-[11px] font-black tabular-nums w-5 shrink-0 select-none',
+                              isActive ? 'text-background/50' : 'text-muted-foreground'
+                            )}>
+                              {String(idx + 1).padStart(2, '0')}
+                            </span>
+                            <span className="flex-1 min-w-0 text-[13px] font-bold leading-snug truncate antialiased">
                               {day.name || `Day ${idx + 1}`}
                             </span>
                             <span className={cn(
-                              'font-mono text-[10px] tabular-nums shrink-0',
-                              isActive ? 'text-background/60' : 'text-muted-foreground'
+                              'text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md shrink-0',
+                              isActive
+                                ? 'bg-background/20 text-background'
+                                : 'bg-muted/80 text-muted-foreground'
                             )}>
                               {exerciseCount || '—'}
                             </span>
