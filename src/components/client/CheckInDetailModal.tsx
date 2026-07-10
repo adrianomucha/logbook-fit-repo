@@ -1,19 +1,9 @@
 import { CheckIn, WorkoutCompletion, WorkoutPlan } from '@/types';
 import { cn } from '@/lib/utils';
+import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { Modal } from '@/components/ui/Modal';
 import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
 import { endOfDay, format, startOfDay, subDays } from 'date-fns';
-
-// Same effort color semantics as the check-in form and workout history.
-const FEELING_LABELS: Record<string, { label: string; color: string }> = {
-  EASY: { label: 'Too Easy', color: 'text-success' },
-  MEDIUM: { label: 'About Right', color: 'text-foreground' },
-  HARD: { label: 'Too Hard', color: 'text-warning' },
-  FRESH: { label: 'Fresh', color: 'text-success' },
-  NORMAL: { label: 'Normal', color: 'text-foreground' },
-  TIRED: { label: 'Tired', color: 'text-warning' },
-  RUN_DOWN: { label: 'Run Down', color: 'text-destructive' },
-};
 
 interface CheckInDetailModalProps {
   isOpen: boolean;
@@ -42,10 +32,10 @@ export function CheckInDetailModal({
   );
 
   const workoutFeeling = checkIn.workoutFeeling
-    ? FEELING_LABELS[checkIn.workoutFeeling]
+    ? FEELING_DISPLAY[checkIn.workoutFeeling]
     : null;
   const bodyFeeling = checkIn.bodyFeeling
-    ? FEELING_LABELS[checkIn.bodyFeeling]
+    ? FEELING_DISPLAY[checkIn.bodyFeeling]
     : null;
 
   // Workouts completed in the 7 days ending on the check-in day (day-inclusive,
@@ -114,13 +104,13 @@ export function CheckInDetailModal({
             {workoutFeeling && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Workouts felt</span>
-                <span className={cn('font-bold', workoutFeeling.color)}>{workoutFeeling.label}</span>
+                <span className={cn('font-bold', workoutFeeling.text)}>{workoutFeeling.emoji} {workoutFeeling.label}</span>
               </div>
             )}
             {bodyFeeling && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Body feels</span>
-                <span className={cn('font-bold', bodyFeeling.color)}>{bodyFeeling.label}</span>
+                <span className={cn('font-bold', bodyFeeling.text)}>{bodyFeeling.emoji} {bodyFeeling.label}</span>
               </div>
             )}
             {flaggedWorkout && (
