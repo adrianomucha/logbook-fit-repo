@@ -2,13 +2,12 @@ import type { DashboardClient } from '@/types/api';
 
 /**
  * Shared visual language for client urgency across coach surfaces
- * (dashboard roster, all-clients list): rail + chip styles, the
- * "signal" line explaining *why* a client is flagged, and avatar colors.
+ * (dashboard roster, all-clients list): chip styles, the "signal" line
+ * explaining *why* a client is flagged, and avatar colors.
  */
 
 export type UrgencyStyle = {
   label: string;
-  rail: string;
   chip: string;
   dot: string;
 };
@@ -18,28 +17,24 @@ export function urgencyStyle(urgency: DashboardClient['urgency']): UrgencyStyle 
     case 'AT_RISK':
       return {
         label: 'At Risk',
-        rail: 'bg-red-500',
         chip: 'bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300',
         dot: 'bg-red-500',
       };
     case 'AWAITING_RESPONSE':
       return {
         label: 'Check-in Ready',
-        rail: 'bg-blue-500',
         chip: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300',
         dot: 'bg-blue-500',
       };
     case 'CHECKIN_DUE':
       return {
         label: 'Check-in Due',
-        rail: 'bg-amber-500',
         chip: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
         dot: 'bg-amber-500',
       };
     case 'ON_TRACK':
       return {
         label: 'On Track',
-        rail: 'bg-transparent',
         chip: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
         dot: 'bg-emerald-500',
       };

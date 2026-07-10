@@ -63,7 +63,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
               return (
                 <div
                   key={client.clientProfileId}
-                  className="relative flex items-center gap-2.5 sm:gap-3 py-2.5 pl-4 pr-3 sm:py-3 sm:pl-5 sm:pr-4 hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] transition-[background-color,transform] duration-150 cursor-pointer"
+                  className="flex items-center gap-2.5 sm:gap-3 py-2.5 px-3 sm:py-3 sm:px-4 hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] transition-[background-color,transform] duration-150 cursor-pointer"
                   onClick={() => handleClientAction(client)}
                   role="link"
                   tabIndex={0}
@@ -74,9 +74,6 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                     }
                   }}
                 >
-                  {/* Urgency rail — state encoded in form, readable at a glance */}
-                  <span className={cn('absolute left-0 inset-y-0 w-[3px]', style.rail)} aria-hidden="true" />
-
                   <div className={cn(
                     'w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center select-none text-xs sm:text-sm font-bold flex-shrink-0',
                     avatarColor(displayName)

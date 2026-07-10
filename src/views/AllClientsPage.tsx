@@ -26,7 +26,7 @@ function ClientRow({ client }: { client: DashboardClient }) {
   return (
     <div
       onClick={() => router.push(`/coach/clients/${client.clientProfileId}`)}
-      className="relative flex items-center gap-3 sm:gap-4 py-3.5 pl-4 pr-3 sm:py-4 sm:pl-5 sm:pr-4 hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] transition-[background-color,transform] duration-150 cursor-pointer"
+      className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4 hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] transition-[background-color,transform] duration-150 cursor-pointer"
       role="link"
       tabIndex={0}
       onKeyDown={(e) => {
@@ -36,9 +36,6 @@ function ClientRow({ client }: { client: DashboardClient }) {
         }
       }}
     >
-      {/* Urgency rail — state encoded in form, readable at a glance */}
-      <span className={cn('absolute left-0 inset-y-0 w-[3px]', style.rail)} aria-hidden="true" />
-
       <div className={cn(
         'w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center select-none text-sm sm:text-base font-bold flex-shrink-0',
         avatarColor(displayName),
