@@ -4,6 +4,8 @@ import type { WorkoutPlan } from '@/types';
 interface PlanTemplateListProps {
   templates: WorkoutPlan[];
   getClientCount: (planId: string) => number;
+  /** Names of clients on a plan — rendered as a mini-avatar stack on live rows */
+  getClientNames?: (planId: string) => string[];
   onEdit: (planId: string) => void;
   onDelete: (planId: string) => void;
 }
@@ -19,6 +21,7 @@ const cardShadow =
 export function PlanTemplateList({
   templates,
   getClientCount,
+  getClientNames,
   onEdit,
   onDelete,
 }: PlanTemplateListProps) {
@@ -62,6 +65,7 @@ export function PlanTemplateList({
                 key={plan.id}
                 plan={plan}
                 clientCount={getClientCount(plan.id)}
+                clientNames={getClientNames?.(plan.id)}
                 onEdit={() => onEdit(plan.id)}
                 onDelete={() => onDelete(plan.id)}
               />

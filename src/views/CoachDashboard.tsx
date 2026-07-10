@@ -114,6 +114,12 @@ export function CoachDashboard() {
     return plan?.assignedTo.length ?? 0;
   };
 
+  // Names of clients on each plan — feeds the avatar stack on live rows
+  const getClientNamesForTemplate = (planId: string) => {
+    const plan = apiPlans.find((p) => p.id === planId);
+    return plan?.assignedTo.map((a) => a.user.name || 'Client') ?? [];
+  };
+
   // Plan name for delete confirmation
   const planToDeleteName = useMemo(() => {
     if (!planToDelete) return '';
@@ -305,6 +311,7 @@ export function CoachDashboard() {
                 <PlanTemplateList
                   templates={templates}
                   getClientCount={getClientCountForTemplate}
+                  getClientNames={getClientNamesForTemplate}
                   onEdit={setEditingPlanId}
                   onDelete={setPlanToDelete}
                 />
