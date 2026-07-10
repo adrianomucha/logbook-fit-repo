@@ -8,7 +8,7 @@ import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip'
 import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
-import { PlanTemplateCard } from '@/components/coach/plans/PlanTemplateCard';
+import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
 import { Plus, Loader2, PartyPopper } from 'lucide-react';
@@ -302,22 +302,12 @@ export function CoachDashboard() {
                   <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
                 </div>
               ) : templates.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-                  {templates.map((plan, i) => (
-                    <div
-                      key={plan.id}
-                      className="animate-in fade-in slide-in-from-bottom-2"
-                      style={{ animationDelay: `${i * 75}ms`, animationFillMode: 'both' }}
-                    >
-                      <PlanTemplateCard
-                        plan={plan}
-                        clientCount={getClientCountForTemplate(plan.id)}
-                        onEdit={() => setEditingPlanId(plan.id)}
-                        onDelete={() => setPlanToDelete(plan.id)}
-                      />
-                    </div>
-                  ))}
-                </div>
+                <PlanTemplateList
+                  templates={templates}
+                  getClientCount={getClientCountForTemplate}
+                  onEdit={setEditingPlanId}
+                  onDelete={setPlanToDelete}
+                />
               ) : (
                 <div className="flex flex-col items-center text-center pt-8 sm:pt-16 pb-8 animate-enter">
                   <div className="text-6xl sm:text-7xl select-none mb-6 animate-bounce-once">📋</div>
