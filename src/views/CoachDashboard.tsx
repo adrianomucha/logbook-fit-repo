@@ -67,8 +67,9 @@ function planDetailToWorkoutPlan(p: PlanDetail): WorkoutPlan {
         exercises: d.exercises.map((e) => ({
           id: e.id,
           name: e.exercise.name,
+          trackingType: e.trackingType,
           sets: e.sets,
-          reps: formatReps(e.reps, e.repsMax),
+          reps: formatReps(e.reps, e.repsMax, e.trackingType),
           weight: e.weight ?? undefined,
           notes: e.coachNotes ?? undefined,
         })),

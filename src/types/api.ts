@@ -205,6 +205,8 @@ export interface WorkoutDayDetail {
 export interface WorkoutExercise {
   workoutExerciseId: string;
   orderIndex: number;
+  /** When TIME, `reps` is a formatted duration ("60s") and actualReps are seconds. */
+  trackingType: 'REPS' | 'TIME';
   sets: number;
   reps: string | null;
   weight: string | null;

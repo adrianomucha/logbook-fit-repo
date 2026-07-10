@@ -49,7 +49,8 @@ export const PUT = withCoach(
     }
 
     const body = await req.json();
-    const { sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
+    const { trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
+      trackingType?: "REPS" | "TIME";
       sets?: number;
       reps?: number;
       repsMax?: number | null;
@@ -63,6 +64,7 @@ export const PUT = withCoach(
     const updated = await prisma.workoutExercise.update({
       where: { id: weId },
       data: {
+        ...(trackingType === "REPS" || trackingType === "TIME" ? { trackingType } : {}),
         ...(sets !== undefined ? { sets } : {}),
         ...(reps !== undefined ? { reps } : {}),
         ...(repsMax !== undefined ? { repsMax } : {}),

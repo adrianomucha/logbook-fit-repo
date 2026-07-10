@@ -62,6 +62,7 @@ export function ExerciseEditorContent({
 
   // Form state
   const [name, setName] = useState(exercise?.name || '');
+  const [trackingType, setTrackingType] = useState<'REPS' | 'TIME'>(exercise?.trackingType || 'REPS');
   const [sets, setSets] = useState(exercise?.sets?.toString() || '3');
   const [reps, setReps] = useState(exercise?.reps || '10');
   const [weight, setWeight] = useState(exercise?.weight || '');
@@ -74,6 +75,7 @@ export function ExerciseEditorContent({
   useEffect(() => {
     if (exercise) {
       setName(exercise.name || '');
+      setTrackingType(exercise.trackingType || 'REPS');
       setSets(exercise.sets?.toString() || '3');
       setReps(exercise.reps || '10');
       setWeight(exercise.weight || '');
@@ -84,6 +86,7 @@ export function ExerciseEditorContent({
       setMode('custom');
     } else {
       setName('');
+      setTrackingType('REPS');
       setSets('3');
       setReps('10');
       setWeight('');
@@ -113,6 +116,7 @@ export function ExerciseEditorContent({
   // Select from library (for new exercises)
   const handleSelectFromLibrary = (template: ExerciseTemplate) => {
     setName(template.name);
+    setTrackingType(template.trackingType || 'REPS');
     if (template.defaultSets) setSets(template.defaultSets.toString());
     if (template.defaultReps) setReps(template.defaultReps);
     if (template.notes) setNotes(template.notes);
@@ -122,9 +126,24 @@ export function ExerciseEditorContent({
   // Replace with library exercise (for existing)
   const handleReplaceWithLibrary = (template: ExerciseTemplate) => {
     setName(template.name);
+    const templateType = template.trackingType || 'REPS';
+    if (templateType !== trackingType) {
+      // The old prescription is in the wrong unit — take the template's
+      setTrackingType(templateType);
+      setReps(template.defaultReps || (templateType === 'TIME' ? '60s' : '10'));
+    } else if (!reps) {
+      setReps(template.defaultReps || '10');
+    }
     if (!sets || sets === '0') setSets(template.defaultSets?.toString() || '3');
-    if (!reps) setReps(template.defaultReps || '10');
     setMode('custom');
+  };
+
+  // Toggle between rep-based and time-based prescriptions. The current value
+  // is in the other unit, so swap in that mode's default.
+  const handleTrackingTypeChange = (next: 'REPS' | 'TIME') => {
+    if (next === trackingType) return;
+    setTrackingType(next);
+    setReps(next === 'TIME' ? '60s' : '10');
   };
 
   const handleSave = async () => {
@@ -133,6 +152,7 @@ export function ExerciseEditorContent({
     const savedExercise: Exercise = {
       id: exercise?.id || `ex-${Date.now()}`,
       name: name.trim(),
+      trackingType,
       sets: Math.max(1, parseInt(sets) || 3),
       reps,
       weight: weight || undefined,
@@ -321,13 +341,33 @@ export function ExerciseEditorContent({
                 />
               </div>
               <div>
-                <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                  Reps
-                </label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium block">
+                    {trackingType === 'TIME' ? 'Time' : 'Reps'}
+                  </label>
+                  <div className="flex rounded-md border border-border/60 p-0.5 gap-0.5" role="group" aria-label="Measure by">
+                    {(['REPS', 'TIME'] as const).map((t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => handleTrackingTypeChange(t)}
+                        aria-pressed={trackingType === t}
+                        className={cn(
+                          'px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors',
+                          trackingType === t
+                            ? 'bg-foreground text-background'
+                            : 'text-muted-foreground hover:text-foreground'
+                        )}
+                      >
+                        {t === 'REPS' ? 'Reps' : 'Time'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <Input
                   value={reps}
                   onChange={(e) => setReps(e.target.value)}
-                  placeholder="10 or 8-12"
+                  placeholder={trackingType === 'TIME' ? '60s or 30-60s' : '10 or 8-12'}
                   maxLength={20}
                   className="tabular-nums"
                 />

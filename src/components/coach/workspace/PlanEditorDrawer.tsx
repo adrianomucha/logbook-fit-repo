@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
-import { parseRepsInput } from '@/lib/reps';
+import { parsePrescriptionInput } from '@/lib/reps';
 import { groupBySuperset, isSuperset } from '@/lib/superset';
 import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
@@ -157,8 +157,10 @@ export function PlanEditorDrawer({
     const dayId = currentDay.id;
     setIsSaving(true);
 
-    // Parse the reps string ("6-8", "8") into a stored min + optional max.
-    const { reps, repsMax } = parseRepsInput(exercise.reps);
+    // Parse the prescription string into a stored min + optional max —
+    // "6-8" reps, or "30-60s" seconds for time-based exercises.
+    const trackingType = exercise.trackingType ?? 'REPS';
+    const { reps, repsMax } = parsePrescriptionInput(exercise.reps, trackingType);
 
     try {
       if (editingExerciseIndex !== null) {
@@ -167,6 +169,7 @@ export function PlanEditorDrawer({
         await apiFetch(`/api/workout-exercises/${existingExercise.id}`, {
           method: 'PUT',
           body: JSON.stringify({
+            trackingType,
             sets: exercise.sets,
             reps: reps ?? undefined,
             repsMax,
@@ -182,7 +185,7 @@ export function PlanEditorDrawer({
         try {
           const created = await apiFetch<{ id: string }>('/api/exercises', {
             method: 'POST',
-            body: JSON.stringify({ name: exercise.name }),
+            body: JSON.stringify({ name: exercise.name, trackingType }),
           });
           libraryExerciseId = created.id;
         } catch {
@@ -201,6 +204,7 @@ export function PlanEditorDrawer({
           method: 'POST',
           body: JSON.stringify({
             exerciseId: libraryExerciseId,
+            trackingType,
             sets: exercise.sets,
             reps: reps ?? undefined,
             repsMax: repsMax ?? undefined,

@@ -144,9 +144,9 @@ async function seed() {
     { name: "Push-Up", category: "CHEST" as const, defaultSets: 4, defaultReps: 15 },
     { name: "Kettlebell Swing", category: "FULL_BODY" as const, defaultSets: 4, defaultReps: 15 },
     { name: "Box Jump", category: "LEGS" as const, defaultSets: 4, defaultReps: 12 },
-    { name: "Battle Rope", category: "FULL_BODY" as const, defaultSets: 4, defaultReps: 20 },
-    { name: "Rowing Machine", category: "CARDIO" as const, defaultSets: 5, defaultReps: 1 },
-    { name: "Assault Bike", category: "CARDIO" as const, defaultSets: 5, defaultReps: 1 },
+    { name: "Battle Rope", category: "FULL_BODY" as const, trackingType: "TIME" as const, defaultSets: 4, defaultReps: 30 },
+    { name: "Rowing Machine", category: "CARDIO" as const, trackingType: "TIME" as const, defaultSets: 5, defaultReps: 300 },
+    { name: "Assault Bike", category: "CARDIO" as const, trackingType: "TIME" as const, defaultSets: 5, defaultReps: 300 },
     { name: "Thrusters", category: "FULL_BODY" as const, defaultSets: 4, defaultReps: 12 },
   ];
 
@@ -188,7 +188,7 @@ async function seed() {
   // ─────────────────────────────────────────────
   // 4. PLANS
   // ─────────────────────────────────────────────
-  type ExTemplate = { name: string; sets: number; reps: number; weight?: number };
+  type ExTemplate = { name: string; sets: number; reps: number; weight?: number; trackingType?: "REPS" | "TIME" };
   type DayTemplate = { name: string; exercises: ExTemplate[] };
 
   async function ensurePlan(data: { name: string; description: string; durationWeeks: number }) {
@@ -245,6 +245,7 @@ async function seed() {
               dayId: day.id,
               exerciseId,
               orderIndex: i,
+              trackingType: ex.trackingType ?? "REPS",
               sets: ex.sets,
               reps: ex.reps,
               weight: weightProgression,
@@ -337,15 +338,15 @@ async function seed() {
       exercises: [
         { name: "Kettlebell Swing", sets: 4, reps: 15 },
         { name: "Box Jump", sets: 4, reps: 12 },
-        { name: "Battle Rope", sets: 4, reps: 20 },
-        { name: "Plank", sets: 3, reps: 1 },
+        { name: "Battle Rope", sets: 4, reps: 30, trackingType: "TIME" },
+        { name: "Plank", sets: 3, reps: 60, trackingType: "TIME" },
       ],
     },
     {
       name: "Conditioning",
       exercises: [
-        { name: "Rowing Machine", sets: 5, reps: 1 },
-        { name: "Assault Bike", sets: 5, reps: 1 },
+        { name: "Rowing Machine", sets: 5, reps: 300, trackingType: "TIME" },
+        { name: "Assault Bike", sets: 5, reps: 300, trackingType: "TIME" },
       ],
     },
     {

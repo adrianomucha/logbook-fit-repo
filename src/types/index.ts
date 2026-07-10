@@ -2,9 +2,10 @@ export interface Exercise {
   id: string;
   name: string;
   category?: string;
+  /** How the exercise is measured — reps holds a duration string ("60s", "2 min") when TIME */
+  trackingType?: 'REPS' | 'TIME';
   sets: number;
   reps?: string;
-  time?: string;
   weight?: string;
   weightUnit?: string;
   restSeconds?: number;

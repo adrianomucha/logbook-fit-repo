@@ -52,6 +52,14 @@ enum InviteStatus {
   EXPIRED
 }
 
+// How an exercise is measured. When TIME, the reps-shaped integer columns
+// (Exercise.defaultReps, WorkoutExercise.reps/repsMax, SetCompletion.actualReps)
+// hold a duration in seconds instead of a rep count.
+enum TrackingType {
+  REPS
+  TIME
+}
+
 enum ExerciseCategory {
   CHEST
   BACK
@@ -183,8 +191,9 @@ model Exercise {
   coachId       String
   name          String
   category      ExerciseCategory @default(OTHER)
+  trackingType  TrackingType     @default(REPS)
   defaultSets   Int?             @default(3)
-  defaultReps   Int?             @default(10)
+  defaultReps   Int?             @default(10) // Seconds when trackingType = TIME
   defaultWeight Float?
   defaultRest   Int?             // seconds
   instructions  String?          // Coach's cue notes
@@ -269,6 +278,7 @@ model WorkoutExercise {
   dayId       String
   exerciseId  String
   orderIndex  Int     // Sort order within the day — unique per day
+  trackingType TrackingType @default(REPS) // When TIME, reps/repsMax hold seconds
   sets        Int     @default(3)
   reps        Int     @default(10) // Lower bound of the prescribed rep range (or the exact count)
   repsMax     Int?    // Upper bound when the coach prescribes a range, e.g. 6-8 → reps=6, repsMax=8

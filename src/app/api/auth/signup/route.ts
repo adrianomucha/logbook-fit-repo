@@ -98,6 +98,7 @@ export async function POST(req: Request) {
             coachId: newUser.coachProfile!.id,
             name: ex.name,
             category: ex.category,
+            trackingType: ex.trackingType ?? "REPS",
             defaultSets: ex.defaultSets,
             defaultReps: ex.defaultReps,
             defaultRest: ex.defaultRest,

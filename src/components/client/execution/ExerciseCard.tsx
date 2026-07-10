@@ -1,6 +1,7 @@
 import { Input } from '@/components/ui/input';
 import { Check, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatDuration } from '@/lib/reps';
 import type { LastPerformance, WorkoutExercise } from '@/types/api';
 import { SetRow, SET_GRID } from './SetRow';
 import {
@@ -14,12 +15,13 @@ function weightUnit(weightTarget?: string | null): string {
   return weightTarget && /kg/i.test(weightTarget) ? 'kg' : 'lbs';
 }
 
-/** Compact last-session cell for the set table: "52.5×8" / "12" — empty if nothing logged. */
-function formatLastCompact(p: LastPerformance): string {
+/** Compact last-session cell for the set table: "52.5×8" / "12" / "60s" — empty if nothing logged. */
+function formatLastCompact(p: LastPerformance, isTime: boolean): string {
+  const repsPart = p.reps != null ? (isTime ? formatDuration(p.reps) : String(p.reps)) : null;
   if (p.weight != null) {
-    return p.reps != null ? `${p.weight}×${p.reps}` : String(p.weight);
+    return repsPart != null ? `${p.weight}×${repsPart}` : String(p.weight);
   }
-  return p.reps != null ? String(p.reps) : '';
+  return repsPart ?? '';
 }
 
 interface ExerciseCardProps {
@@ -246,7 +248,7 @@ export function ExerciseCard({
                 {weightUnit(exercise.weight)}
               </span>
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
-                Reps
+                {exercise.trackingType === 'TIME' ? 'Sec' : 'Reps'}
               </span>
               <span aria-hidden="true" />
             </div>
@@ -258,13 +260,17 @@ export function ExerciseCard({
                 <SetRow
                   key={setNumber}
                   setNumber={setNumber}
+                  trackingType={exercise.trackingType}
                   repsTarget={exercise.reps ?? undefined}
                   weightTarget={exercise.weight ?? undefined}
                   actualReps={sc?.actualReps ?? null}
                   actualWeight={sc?.actualWeight ?? null}
                   previous={
                     exercise.lastPerformance
-                      ? formatLastCompact(exercise.lastPerformance)
+                      ? formatLastCompact(
+                          exercise.lastPerformance,
+                          exercise.trackingType === 'TIME'
+                        )
                       : undefined
                   }
                   completed={!!sc?.completed}

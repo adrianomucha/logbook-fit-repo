@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { parseDurationInput, type TrackingType } from '@/lib/reps';
 
 /**
  * Shared grid template for the set table: SET · LAST · WEIGHT · REPS · ✓.
@@ -10,7 +11,9 @@ export const SET_GRID = 'grid grid-cols-[1.75rem_1fr_4.25rem_3.5rem_2rem] gap-x-
 
 interface SetRowProps {
   setNumber: number;
-  /** Coach-prescribed reps. Usually a number, but tolerate a range string like "6-8". */
+  /** REPS (default) logs a rep count; TIME logs seconds held/worked. */
+  trackingType?: TrackingType;
+  /** Coach-prescribed reps ("6-8") — or a duration ("60s", "30-60s") when TIME. */
   repsTarget?: string | number;
   /** Coach-prescribed weight. Usually a number, but tolerate a string like "50 lbs". */
   weightTarget?: string | number;
@@ -37,6 +40,13 @@ function parseTargetReps(target?: string | number): number | undefined {
   return Math.max(...nums.map(Number));
 }
 
+/** Top of a prescribed duration range in seconds ("30-60s" → 60, "1m 30s" → 90). */
+function parseTargetSeconds(target?: string | number): number | undefined {
+  if (target == null) return undefined;
+  const { reps, repsMax } = parseDurationInput(target);
+  return repsMax ?? reps ?? undefined;
+}
+
 /** First number in the target weight ("50 lbs" → 50, 50 → 50). */
 function parseTargetWeight(target?: string | number): number | undefined {
   if (target == null) return undefined;
@@ -46,6 +56,7 @@ function parseTargetWeight(target?: string | number): number | undefined {
 
 export function SetRow({
   setNumber,
+  trackingType = 'REPS',
   repsTarget,
   weightTarget,
   actualReps,
@@ -58,7 +69,9 @@ export function SetRow({
   isReadOnly = false,
   showDivider = false,
 }: SetRowProps) {
-  const defaultReps = parseTargetReps(repsTarget);
+  const isTime = trackingType === 'TIME';
+  // For TIME the "reps" cell holds seconds ("1m 30s" target → 90).
+  const defaultReps = isTime ? parseTargetSeconds(repsTarget) : parseTargetReps(repsTarget);
   const defaultWeight = parseTargetWeight(weightTarget);
 
   // Local input state seeded from the logged value, falling back to the
@@ -158,7 +171,7 @@ export function SetRow({
         placeholder: defaultReps != null ? String(defaultReps) : undefined,
         onChange: commitReps,
         inputMode: 'numeric',
-        label: 'reps',
+        label: isTime ? 'seconds' : 'reps',
       })}
 
       <button

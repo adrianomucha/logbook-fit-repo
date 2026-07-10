@@ -91,7 +91,7 @@ export const GET = withClient(
           select: {
             actualWeight: true,
             actualReps: true,
-            workoutExercise: { select: { exerciseId: true } },
+            workoutExercise: { select: { exerciseId: true, trackingType: true } },
             workoutCompletion: { select: { id: true, completedAt: true } },
           },
           orderBy: [
@@ -100,6 +100,12 @@ export const GET = withClient(
           ],
         })
       : [];
+
+    // Prior sets only count when they were logged in the unit the exercise uses
+    // today — after a reps↔time switch, a 12-rep set must not resurface as "12s".
+    const currentTypeByExercise = new Map(
+      day.exercises.map((we) => [we.exerciseId, we.trackingType])
+    );
 
     // Reduce to one "top set" per exercise from its most recent session. Rows are
     // newest-first, so the first row seen for an exercise fixes that session; later
@@ -115,6 +121,7 @@ export const GET = withClient(
     >();
     for (const s of priorSets) {
       const exId = s.workoutExercise.exerciseId;
+      if (s.workoutExercise.trackingType !== currentTypeByExercise.get(exId)) continue;
       const cur = lastByExercise.get(exId);
       if (!cur) {
         lastByExercise.set(exId, {
@@ -145,8 +152,9 @@ export const GET = withClient(
       exercises: day.exercises.map((we) => ({
         workoutExerciseId: we.id,
         orderIndex: we.orderIndex,
+        trackingType: we.trackingType,
         sets: we.sets,
-        reps: formatReps(we.reps, we.repsMax),
+        reps: formatReps(we.reps, we.repsMax, we.trackingType),
         weight: we.weight,
         restSeconds: we.restSeconds,
         coachNotes: we.coachNotes,
