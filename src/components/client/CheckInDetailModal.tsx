@@ -1,17 +1,9 @@
 import { CheckIn, WorkoutCompletion, WorkoutPlan } from '@/types';
+import { cn } from '@/lib/utils';
+import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { Modal } from '@/components/ui/Modal';
 import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
 import { endOfDay, format, startOfDay, subDays } from 'date-fns';
-
-const FEELING_LABELS: Record<string, { label: string }> = {
-  EASY: { label: 'Too Easy' },
-  MEDIUM: { label: 'About Right' },
-  HARD: { label: 'Too Hard' },
-  FRESH: { label: 'Fresh' },
-  NORMAL: { label: 'Normal' },
-  TIRED: { label: 'Tired' },
-  RUN_DOWN: { label: 'Run Down' },
-};
 
 interface CheckInDetailModalProps {
   isOpen: boolean;
@@ -40,10 +32,10 @@ export function CheckInDetailModal({
   );
 
   const workoutFeeling = checkIn.workoutFeeling
-    ? FEELING_LABELS[checkIn.workoutFeeling]
+    ? FEELING_DISPLAY[checkIn.workoutFeeling]
     : null;
   const bodyFeeling = checkIn.bodyFeeling
-    ? FEELING_LABELS[checkIn.bodyFeeling]
+    ? FEELING_DISPLAY[checkIn.bodyFeeling]
     : null;
 
   // Workouts completed in the 7 days ending on the check-in day (day-inclusive,
@@ -112,13 +104,13 @@ export function CheckInDetailModal({
             {workoutFeeling && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Workouts felt</span>
-                <span className="font-bold">{workoutFeeling.label}</span>
+                <span className={cn('font-bold', workoutFeeling.text)}>{workoutFeeling.emoji} {workoutFeeling.label}</span>
               </div>
             )}
             {bodyFeeling && (
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Body feels</span>
-                <span className="font-bold">{bodyFeeling.label}</span>
+                <span className={cn('font-bold', bodyFeeling.text)}>{bodyFeeling.emoji} {bodyFeeling.label}</span>
               </div>
             )}
             {flaggedWorkout && (

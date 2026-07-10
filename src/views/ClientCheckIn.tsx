@@ -10,20 +10,10 @@ import {
   Dumbbell, Send, Loader2,
 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
+import { cn } from '@/lib/utils';
+import { FEELING_DISPLAY } from '@/lib/feeling-display';
+import { avatarColor } from '@/lib/avatar-colors';
 import { format, formatDistanceToNow } from 'date-fns';
-
-const EFFORT_DISPLAY: Record<string, { label: string; emoji: string }> = {
-  EASY: { label: 'Too Easy', emoji: '😴' },
-  MEDIUM: { label: 'About Right', emoji: '💪' },
-  HARD: { label: 'Too Hard', emoji: '😰' },
-};
-
-const FEELING_DISPLAY: Record<string, { label: string; emoji: string }> = {
-  FRESH: { label: 'Fresh', emoji: '✨' },
-  NORMAL: { label: 'Normal', emoji: '👍' },
-  TIRED: { label: 'Tired', emoji: '😓' },
-  RUN_DOWN: { label: 'Run Down', emoji: '🥴' },
-};
 
 export function ClientCheckIn() {
   const params = useParams<{ clientId: string }>();
@@ -126,7 +116,7 @@ export function ClientCheckIn() {
         <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
-              <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success" />
+              <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success animate-bounce-once" />
               <h2 className="text-2xl font-bold mb-2">Check-in Complete!</h2>
               <p className="text-muted-foreground mb-6">
                 Your response has been recorded for {clientName}.
@@ -168,6 +158,9 @@ export function ClientCheckIn() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
+            <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 select-none', avatarColor(clientName))}>
+              {clientName.charAt(0).toUpperCase()}
+            </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
               Check-in for {clientName}
             </h1>
@@ -219,6 +212,9 @@ export function ClientCheckIn() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
+            <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 select-none', avatarColor(clientName))}>
+              {clientName.charAt(0).toUpperCase()}
+            </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
               Check-in for {clientName}
             </h1>
@@ -250,7 +246,7 @@ export function ClientCheckIn() {
 
   // State B: Client responded — coach needs to review
   const effortDisplay = activeCheckIn?.effortRating
-    ? EFFORT_DISPLAY[activeCheckIn.effortRating]
+    ? FEELING_DISPLAY[activeCheckIn.effortRating]
     : null;
   const feelingDisplay = activeCheckIn?.clientFeeling
     ? FEELING_DISPLAY[activeCheckIn.clientFeeling]
@@ -273,6 +269,9 @@ export function ClientCheckIn() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
+            <div className={cn('w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 select-none', avatarColor(clientName))}>
+              {clientName.charAt(0).toUpperCase()}
+            </div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight truncate">
               Check-in for {clientName}
             </h1>
@@ -301,7 +300,7 @@ export function ClientCheckIn() {
                   {effortDisplay && (
                     <div className="bg-background rounded-lg p-3 border">
                       <p className="text-xs text-muted-foreground mb-1">Workouts felt</p>
-                      <p className="text-sm font-medium">
+                      <p className={cn('text-sm font-semibold', effortDisplay.text)}>
                         {effortDisplay.emoji} {effortDisplay.label}
                       </p>
                     </div>
@@ -309,7 +308,7 @@ export function ClientCheckIn() {
                   {feelingDisplay && (
                     <div className="bg-background rounded-lg p-3 border">
                       <p className="text-xs text-muted-foreground mb-1">Body feels</p>
-                      <p className="text-sm font-medium">
+                      <p className={cn('text-sm font-semibold', feelingDisplay.text)}>
                         {feelingDisplay.emoji} {feelingDisplay.label}
                       </p>
                     </div>
@@ -353,7 +352,7 @@ export function ClientCheckIn() {
                     onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
                     rows={4}
                   />
-                  <p className="text-xs text-muted-foreground mt-1 text-right">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1 text-right tabular-nums">
                     {coachResponse.length}/1000
                   </p>
                 </div>
@@ -466,7 +465,7 @@ function PreviousCheckInsList({ checkIns }: {
       <CardContent className="space-y-3">
         {checkIns.map((checkIn, index) => {
           const effort = checkIn.effortRating
-            ? EFFORT_DISPLAY[checkIn.effortRating]
+            ? FEELING_DISPLAY[checkIn.effortRating]
             : null;
           return (
             <div
@@ -479,7 +478,7 @@ function PreviousCheckInsList({ checkIns }: {
                 {format(new Date(checkIn.completedAt || checkIn.createdAt), 'MMM d, yyyy')}
               </p>
               {effort && (
-                <p className="text-muted-foreground">
+                <p className={cn('font-medium', effort.text)}>
                   <span className="mr-1">{effort.emoji}</span>
                   {effort.label}
                 </p>

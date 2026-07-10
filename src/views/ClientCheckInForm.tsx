@@ -8,17 +8,19 @@ import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-const EFFORT_OPTIONS: { value: string; label: string; emoji: string }[] = [
-  { value: 'EASY', label: 'Too Easy', emoji: '😴' },
-  { value: 'MEDIUM', label: 'About Right', emoji: '💪' },
-  { value: 'HARD', label: 'Too Hard', emoji: '😰' },
+// Selected states reuse the app's effort color semantics (QuickEffortFeedback,
+// workout history): easy/fresh = success, strained = warning, run down = destructive.
+const EFFORT_OPTIONS: { value: string; label: string; emoji: string; selectedClass: string }[] = [
+  { value: 'EASY', label: 'Too Easy', emoji: '😴', selectedClass: 'text-success bg-success/10 border-success/40 ring-1 ring-success/20' },
+  { value: 'MEDIUM', label: 'About Right', emoji: '💪', selectedClass: 'text-foreground bg-muted border-foreground/25 ring-1 ring-foreground/10' },
+  { value: 'HARD', label: 'Too Hard', emoji: '😰', selectedClass: 'text-warning bg-warning/10 border-warning/40 ring-1 ring-warning/20' },
 ];
 
-const FEELING_OPTIONS: { value: string; label: string; emoji: string }[] = [
-  { value: 'FRESH', label: 'Fresh', emoji: '✨' },
-  { value: 'NORMAL', label: 'Normal', emoji: '👍' },
-  { value: 'TIRED', label: 'Tired', emoji: '😓' },
-  { value: 'RUN_DOWN', label: 'Run Down', emoji: '🥴' },
+const FEELING_OPTIONS: { value: string; label: string; emoji: string; selectedClass: string }[] = [
+  { value: 'FRESH', label: 'Fresh', emoji: '✨', selectedClass: 'text-success bg-success/10 border-success/40 ring-1 ring-success/20' },
+  { value: 'NORMAL', label: 'Normal', emoji: '👍', selectedClass: 'text-foreground bg-muted border-foreground/25 ring-1 ring-foreground/10' },
+  { value: 'TIRED', label: 'Tired', emoji: '😓', selectedClass: 'text-warning bg-warning/10 border-warning/40 ring-1 ring-warning/20' },
+  { value: 'RUN_DOWN', label: 'Run Down', emoji: '🥴', selectedClass: 'text-destructive bg-destructive/10 border-destructive/40 ring-1 ring-destructive/20' },
 ];
 
 export function ClientCheckInForm() {
@@ -90,7 +92,7 @@ export function ClientCheckInForm() {
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
-            <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success" />
+            <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success animate-bounce-once" />
             <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach!</h2>
             <p className="text-sm text-muted-foreground antialiased">They'll review and get back to you soon.</p>
           </div>
@@ -136,29 +138,32 @@ export function ClientCheckInForm() {
         <div className="py-4">
           <button
             onClick={() => router.push('/client')}
-            className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation mb-3 block"
+            className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium hover:text-foreground transition-colors touch-manipulation mb-3 block"
           >
             ← Back
           </button>
-          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1">Check-in</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium mb-1">Check-in</p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Weekly Check-in</h1>
         </div>
 
         {/* Question 1: Effort Rating */}
         <div>
-          <p className="text-[11px] uppercase tracking-wide font-bold mb-3">How did your workouts feel?</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">How did your workouts feel?</p>
           <div className="grid grid-cols-3 gap-2">
-            {EFFORT_OPTIONS.map(({ value, label }) => (
+            {EFFORT_OPTIONS.map(({ value, label, emoji, selectedClass }) => (
               <button
                 key={value}
                 onClick={() => { setEffortRating(value); setErrors(e => ({ ...e, effortRating: '' })); }}
+                aria-pressed={effortRating === value}
                 className={cn(
-                  'py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors touch-manipulation min-h-[44px]',
+                  'flex flex-col items-center gap-1 py-3 px-1 rounded-lg border-2 transition-all touch-manipulation min-h-[64px]',
+                  'text-xs font-bold uppercase tracking-wide',
                   effortRating === value
-                    ? 'bg-foreground text-background'
-                    : 'bg-muted/60 text-foreground hover:bg-muted'
+                    ? selectedClass
+                    : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
+                <span className="text-xl leading-none select-none" aria-hidden="true">{emoji}</span>
                 {label}
               </button>
             ))}
@@ -170,19 +175,22 @@ export function ClientCheckInForm() {
 
         {/* Question 2: Body Feeling */}
         <div>
-          <p className="text-[11px] uppercase tracking-wide font-bold mb-3">How does your body feel?</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">How does your body feel?</p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {FEELING_OPTIONS.map(({ value, label }) => (
+            {FEELING_OPTIONS.map(({ value, label, emoji, selectedClass }) => (
               <button
                 key={value}
                 onClick={() => { setClientFeeling(value); setErrors(e => ({ ...e, clientFeeling: '' })); }}
+                aria-pressed={clientFeeling === value}
                 className={cn(
-                  'py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors touch-manipulation min-h-[44px]',
+                  'flex flex-col items-center gap-1 py-3 px-1 rounded-lg border-2 transition-all touch-manipulation min-h-[64px]',
+                  'text-xs font-bold uppercase tracking-wide',
                   clientFeeling === value
-                    ? 'bg-foreground text-background'
-                    : 'bg-muted/60 text-foreground hover:bg-muted'
+                    ? selectedClass
+                    : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
+                <span className="text-xl leading-none select-none" aria-hidden="true">{emoji}</span>
                 {label}
               </button>
             ))}
@@ -194,20 +202,20 @@ export function ClientCheckInForm() {
 
         {/* Optional Notes */}
         <div>
-          <p className="text-[11px] uppercase tracking-wide font-bold mb-3">Anything else for your coach?</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">Anything else for your coach?</p>
           <Textarea
             placeholder="Pain, blockers, schedule changes, or just how your week went..."
             value={painBlockers}
             onChange={(e) => setPainBlockers(e.target.value.slice(0, 500))}
             rows={3}
           />
-          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1 text-right tabular-nums">{painBlockers.length}/500</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1 text-right tabular-nums">{painBlockers.length}/500</p>
         </div>
 
         {/* Recent Workouts Summary */}
         {recentCompletions.length > 0 && (
           <div>
-            <p className="text-[11px] uppercase tracking-wide font-bold mb-3">Recent Workouts</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">Recent Workouts</p>
             <div className="space-y-1.5">
               {recentCompletions.map((completion) => (
                 <div
@@ -251,7 +259,7 @@ export function ClientCheckInForm() {
         <Button
           onClick={handleSubmit}
           disabled={!canSubmit}
-          className="w-full h-14 text-base font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
+          className="w-full h-14 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
           size="lg"
         >
           {isSubmitting ? (
