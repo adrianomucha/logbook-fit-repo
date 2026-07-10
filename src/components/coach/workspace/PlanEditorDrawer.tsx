@@ -613,31 +613,20 @@ export function PlanEditorDrawer({
               {/* Main pane */}
               <div className="flex-1 min-w-0 min-h-0 flex flex-col">
               {exerciseDrawerOpen ? (
-                <>
-                  {/* Back button header */}
-                  <div className="px-4 py-2 border-b shrink-0">
-                    <button
-                      onClick={closeExerciseEditor}
-                      className="group flex items-center gap-1.5 text-xs font-bold text-muted-foreground hover:text-foreground active:text-foreground active:scale-[0.97] transition-[color,transform] min-h-[44px] sm:min-h-[36px]"
-                    >
-                      <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
-                      Back to {currentDay?.name || 'workout'}
-                    </button>
-                  </div>
-                  <ExerciseEditorContent
-                    exercise={editingExercise || null}
-                    onSave={handleSaveExercise}
-                    onClose={closeExerciseEditor}
-                    onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
-                    exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
-                    open={exerciseDrawerOpen}
-                    previousExerciseName={
-                      editingExerciseIndex !== null
-                        ? currentDay?.exercises[editingExerciseIndex - 1]?.name ?? null
-                        : currentDay?.exercises[currentDay.exercises.length - 1]?.name ?? null
-                    }
-                  />
-                </>
+                <ExerciseEditorContent
+                  exercise={editingExercise || null}
+                  onSave={handleSaveExercise}
+                  onClose={closeExerciseEditor}
+                  onDelete={editingExerciseIndex !== null ? handleDeleteExercise : undefined}
+                  exerciseNumber={editingExerciseIndex !== null ? editingExerciseIndex + 1 : undefined}
+                  open={exerciseDrawerOpen}
+                  previousExerciseName={
+                    editingExerciseIndex !== null
+                      ? currentDay?.exercises[editingExerciseIndex - 1]?.name ?? null
+                      : currentDay?.exercises[currentDay.exercises.length - 1]?.name ?? null
+                  }
+                  dayName={currentDay?.name || (currentDay ? `Day ${clampedDay + 1}` : null)}
+                />
               ) : currentDay ? (
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {/* Day name & briefing — seamless inline fields, no boxed inputs */}

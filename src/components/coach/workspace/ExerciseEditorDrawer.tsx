@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Library, Link2, Loader2, Plus, Search, Trash2 } from 'lucide-react';
+import { ChevronLeft, Library, Link2, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
 import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
@@ -31,6 +31,8 @@ interface ExerciseEditorContentProps {
   open?: boolean;
   /** Name of the exercise directly above this one, when there is one — enables the superset toggle */
   previousExerciseName?: string | null;
+  /** Name of the day this exercise belongs to — shown for context in the header */
+  dayName?: string | null;
 }
 
 /**
@@ -45,6 +47,7 @@ export function ExerciseEditorContent({
   exerciseNumber,
   open = true,
   previousExerciseName,
+  dayName,
 }: ExerciseEditorContentProps) {
   const isNew = !exercise;
   const [mode, setMode] = useState<'library' | 'custom'>(isNew ? 'library' : 'custom');
@@ -173,43 +176,54 @@ export function ExerciseEditorContent({
 
   return (
     <>
-      {/* Header */}
-      <div className="p-4 border-b">
-        <div className="mb-1">
-          <h2 className="text-base font-bold">
-            {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` #${String(exerciseNumber).padStart(2, '0')}` : ''}`}
-          </h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {isNew ? 'Choose from library or create custom' : 'Modify exercise details'}
-          </p>
-        </div>
+      {/* Header — back button, title and mode switch in a single compact row */}
+      <div className="px-3 sm:px-4 py-3 border-b shrink-0">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onClose}
+            aria-label={`Back to ${dayName || 'workout'}`}
+            className="group p-2 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.94] transition-[color,background-color,transform] shrink-0"
+          >
+            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
+          </button>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-bold leading-tight truncate">
+              {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` ${exerciseNumber}` : ''}`}
+            </h2>
+            <p className="text-[11px] text-muted-foreground truncate mt-px">
+              {isNew ? 'Choose from library or create custom' : dayName || 'Modify exercise details'}
+            </p>
+          </div>
 
-        {/* Mode toggle */}
-        <div className="mt-3 flex gap-1.5">
-          <button
-            className={cn(
-              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-[background-color,color,box-shadow] flex items-center justify-center gap-1.5',
-              mode === 'library'
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            )}
-            onClick={() => setMode('library')}
-          >
-            <Library className="w-3.5 h-3.5" />
-            {isNew ? 'Library' : 'Replace'}
-          </button>
-          <button
-            className={cn(
-              'flex-1 text-xs font-medium px-3 py-1.5 rounded-md transition-[background-color,color,box-shadow] flex items-center justify-center gap-1.5',
-              mode === 'custom'
-                ? 'bg-foreground text-background'
-                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-            )}
-            onClick={() => setMode('custom')}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {isNew ? 'Custom' : 'Details'}
-          </button>
+          {/* Mode switch — segmented control */}
+          <div className="flex rounded-lg bg-muted p-0.5 shrink-0" role="group" aria-label="Editor mode">
+            <button
+              aria-pressed={mode === 'library'}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-[background-color,color,box-shadow]',
+                mode === 'library'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setMode('library')}
+            >
+              <Library className="w-3.5 h-3.5" />
+              {isNew ? 'Library' : 'Replace'}
+            </button>
+            <button
+              aria-pressed={mode === 'custom'}
+              className={cn(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-[background-color,color,box-shadow]',
+                mode === 'custom'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+              onClick={() => setMode('custom')}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {isNew ? 'Custom' : 'Details'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -306,31 +320,23 @@ export function ExerciseEditorContent({
               <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
                 Exercise Name
               </label>
-              <div className="flex gap-2">
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g., Barbell Squat"
-                  maxLength={100}
-                  className="flex-1 font-bold"
-                />
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setMode('library')}
-                  title="Pick from library"
-                >
-                  <Library className="w-4 h-4" />
-                </Button>
-              </div>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Barbell Squat"
+                maxLength={100}
+                className="font-bold"
+              />
             </div>
 
             {/* Sets & Reps */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                  Sets
-                </label>
+                <div className="flex items-center h-6 mb-1">
+                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                    Sets
+                  </label>
+                </div>
                 <Input
                   type="number"
                   value={sets}
@@ -341,11 +347,11 @@ export function ExerciseEditorContent({
                 />
               </div>
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium block">
+                <div className="flex items-center justify-between gap-2 h-6 mb-1">
+                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
                     {trackingType === 'TIME' ? 'Time' : 'Reps'}
                   </label>
-                  <div className="flex rounded-md border border-border/60 p-0.5 gap-0.5" role="group" aria-label="Measure by">
+                  <div className="flex rounded-md bg-muted p-0.5" role="group" aria-label="Measure by">
                     {(['REPS', 'TIME'] as const).map((t) => (
                       <button
                         key={t}
@@ -353,9 +359,9 @@ export function ExerciseEditorContent({
                         onClick={() => handleTrackingTypeChange(t)}
                         aria-pressed={trackingType === t}
                         className={cn(
-                          'px-1.5 py-0.5 rounded text-[10px] font-medium transition-colors',
+                          'px-2 py-0.5 rounded text-[10px] font-medium transition-[background-color,color,box-shadow]',
                           trackingType === t
-                            ? 'bg-foreground text-background'
+                            ? 'bg-background text-foreground shadow-sm'
                             : 'text-muted-foreground hover:text-foreground'
                         )}
                       >
@@ -374,46 +380,50 @@ export function ExerciseEditorContent({
               </div>
             </div>
 
-            {/* Weight */}
-            <div>
-              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                Weight
-              </label>
-              <div className="flex gap-2">
-                <Input
-                  value={weight}
-                  onChange={(e) => setWeight(e.target.value)}
-                  placeholder="135"
-                  maxLength={20}
-                  className="flex-1 tabular-nums"
-                />
-                <Select value={weightUnit} onValueChange={setWeightUnit}>
-                  <SelectTrigger className="w-20">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lbs">lbs</SelectItem>
-                    <SelectItem value="kg">kg</SelectItem>
-                    <SelectItem value="bw">BW</SelectItem>
-                  </SelectContent>
-                </Select>
+            {/* Weight & Rest */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <div className="flex items-center h-6 mb-1">
+                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                    Weight
+                  </label>
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={weight}
+                    onChange={(e) => setWeight(e.target.value)}
+                    placeholder="135"
+                    maxLength={20}
+                    className="flex-1 min-w-0 tabular-nums"
+                  />
+                  <Select value={weightUnit} onValueChange={setWeightUnit}>
+                    <SelectTrigger className="w-[72px] shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="lbs">lbs</SelectItem>
+                      <SelectItem value="kg">kg</SelectItem>
+                      <SelectItem value="bw">BW</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-            </div>
-
-            {/* Rest */}
-            <div>
-              <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium mb-1.5 block">
-                Rest (seconds)
-              </label>
-              <Input
-                type="number"
-                value={restSeconds}
-                onChange={(e) => setRestSeconds(e.target.value)}
-                placeholder="60"
-                min={0}
-                max={600}
-                className="tabular-nums"
-              />
+              <div>
+                <div className="flex items-center h-6 mb-1">
+                  <label className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                    Rest (sec)
+                  </label>
+                </div>
+                <Input
+                  type="number"
+                  value={restSeconds}
+                  onChange={(e) => setRestSeconds(e.target.value)}
+                  placeholder="60"
+                  min={0}
+                  max={600}
+                  className="tabular-nums"
+                />
+              </div>
             </div>
 
             {/* Superset toggle — only when there's an exercise above to pair with */}
@@ -427,7 +437,7 @@ export function ExerciseEditorContent({
                     <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
                     Superset with previous
                   </label>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
                     Pairs with {previousExerciseName} — client alternates sets
                   </p>
                 </div>
