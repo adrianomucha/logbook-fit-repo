@@ -620,7 +620,9 @@ export function UnifiedClientProfile() {
                   >
                     {tab.label}
                     {'count' in tab && tab.count > 0 && (
-                      <span className="ml-1.5 text-[10px] tabular-nums text-muted-foreground">{tab.count}</span>
+                      <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
+                        {tab.count}
+                      </span>
                     )}
                     {secondaryTab === tab.id && (
                       <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
