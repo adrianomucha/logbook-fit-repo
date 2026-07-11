@@ -34,8 +34,11 @@ function SignupContent() {
   const router = useRouter();
   const inviteToken = searchParams?.get('invite') ?? null;
 
+  // No invite token → coach signup. With a token → invited-client signup.
+  const isCoachSignup = !inviteToken;
+
   const [inviteInfo, setInviteInfo] = useState<InviteInfo | null>(null);
-  const [isValidating, setIsValidating] = useState(true);
+  const [isValidating, setIsValidating] = useState(!isCoachSignup);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -46,7 +49,6 @@ function SignupContent() {
   // Validate invite token on mount
   useEffect(() => {
     if (!inviteToken) {
-      setInviteInfo({ valid: false, reason: 'not_found' });
       setIsValidating(false);
       return;
     }
@@ -85,7 +87,7 @@ function SignupContent() {
           email: email.trim().toLowerCase(),
           password,
           name: name.trim(),
-          inviteToken,
+          ...(isCoachSignup ? { role: 'COACH' } : { inviteToken }),
         }),
       });
 
@@ -109,8 +111,8 @@ function SignupContent() {
         return;
       }
 
-      // Redirect to client dashboard
-      router.push('/client');
+      // Land coaches in their workspace, clients in theirs
+      router.push(isCoachSignup ? '/coach' : '/client');
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
@@ -127,8 +129,8 @@ function SignupContent() {
     );
   }
 
-  // Invalid or expired invite
-  if (!inviteInfo?.valid) {
+  // Invalid or expired invite (coach signup has no token to validate)
+  if (!isCoachSignup && !inviteInfo?.valid) {
     const errorContent = inviteInfo?.reason === 'expired'
       ? { emoji: '😅', title: 'Link expired', message: 'This invite is past its 7-day window. Ask your coach to send a fresh one — it only takes them a second.' }
       : inviteInfo?.reason === 'used'
@@ -165,7 +167,7 @@ function SignupContent() {
     );
   }
 
-  // Valid invite — show signup form
+  // Coach signup or valid invite — show signup form
   return (
     <div className="min-h-dvh bg-background p-4 pt-12 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md w-full space-y-6">
@@ -177,15 +179,23 @@ function SignupContent() {
             Logbook<span className="text-muted-foreground/60">.fit</span>
           </h1>
           <p className="text-muted-foreground">
-            <strong>{inviteInfo.coachName}</strong> invited you to train together
+            {isCoachSignup ? (
+              <>Know who needs you today — before they go quiet</>
+            ) : (
+              <><strong>{inviteInfo?.coachName}</strong> invited you to train together</>
+            )}
           </p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Let's get you started</CardTitle>
+            <CardTitle className="text-lg">
+              {isCoachSignup ? 'Create your coach account' : "Let's get you started"}
+            </CardTitle>
             <CardDescription>
-              Create your account and you're in — takes 30 seconds.
+              {isCoachSignup
+                ? 'Your workspace comes ready with a starter exercise library.'
+                : "Create your account and you're in — takes 30 seconds."}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -212,7 +222,7 @@ function SignupContent() {
                   placeholder="you@example.com"
                   required
                 />
-                {inviteInfo.email && (
+                {inviteInfo?.email && (
                   <p className="text-xs text-muted-foreground">
                     Pre-filled from your invite — change it if it&apos;s not right
                   </p>

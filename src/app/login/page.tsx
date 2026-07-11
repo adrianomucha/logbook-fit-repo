@@ -135,6 +135,16 @@ export default function LoginPage() {
             })}
           </div>
         </div>
+
+        <p className="text-center text-xs text-muted-foreground antialiased">
+          Coaching clients?{' '}
+          <button
+            onClick={() => router.push('/signup')}
+            className="underline hover:text-foreground transition-colors"
+          >
+            Create a coach account
+          </button>
+        </p>
       </div>
     </div>
   );
