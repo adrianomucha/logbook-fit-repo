@@ -20,6 +20,7 @@ import {
 import { cn } from '@/lib/utils';
 import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
 import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
+import { WorkoutHistoryPanel } from '@/components/coach/workspace/WorkoutHistoryPanel';
 import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
@@ -72,7 +73,7 @@ export function UnifiedClientProfile() {
   const [showAssignPlanModal, setShowAssignPlanModal] = useState(false);
   const [showPlanDrawer, setShowPlanDrawer] = useState(false);
   const [chatPrefill, setChatPrefill] = useState<string | undefined>(undefined);
-  const [secondaryTab, setSecondaryTab] = useState<'plan' | 'history'>('plan');
+  const [secondaryTab, setSecondaryTab] = useState<'plan' | 'workouts' | 'history'>('plan');
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
   // Optimistic override for the weekly check-in schedule switch (null = follow server)
@@ -604,7 +605,8 @@ export function UnifiedClientProfile() {
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
                 {([
                   { id: 'plan' as const, label: 'Training Plan' },
-                  { id: 'history' as const, label: 'History', count: checkIns.filter(c => c.status === 'completed').length },
+                  { id: 'workouts' as const, label: 'Workouts', count: apiClient.completions.length },
+                  { id: 'history' as const, label: 'Check-ins', count: checkIns.filter(c => c.status === 'completed').length },
                 ] as const).map((tab) => (
                   <button
                     key={tab.id}
@@ -618,7 +620,9 @@ export function UnifiedClientProfile() {
                   >
                     {tab.label}
                     {'count' in tab && tab.count > 0 && (
-                      <span className="ml-1.5 text-[10px] tabular-nums text-muted-foreground">{tab.count}</span>
+                      <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
+                        {tab.count}
+                      </span>
                     )}
                     {secondaryTab === tab.id && (
                       <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
@@ -689,6 +693,14 @@ export function UnifiedClientProfile() {
                       variant="flat"
                     />
                   )}
+                </div>
+              ) : secondaryTab === 'workouts' ? (
+                <div className="md:flex-1 md:min-h-0 md:overflow-y-auto">
+                  <WorkoutHistoryPanel
+                    completions={apiClient.completions}
+                    clientName={client.name}
+                    initialCount={5}
+                  />
                 </div>
               ) : (
                 <div className="md:flex-1 md:min-h-0">
