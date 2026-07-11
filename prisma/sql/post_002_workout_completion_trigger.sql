@@ -23,7 +23,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public;
 
 -- Idempotent: drop then create (CREATE OR REPLACE not available for triggers)
 DROP TRIGGER IF EXISTS trg_workout_completion_plan_check ON "workout_completions";
