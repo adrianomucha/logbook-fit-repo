@@ -14,6 +14,12 @@ export type UrgencyStyle = {
 
 export function urgencyStyle(urgency: DashboardClient['urgency']): UrgencyStyle {
   switch (urgency) {
+    case 'NEEDS_PLAN':
+      return {
+        label: 'Just Joined',
+        chip: 'bg-brand/25 text-brand-foreground dark:bg-brand/15 dark:text-brand',
+        dot: 'bg-brand',
+      };
     case 'AT_RISK':
       return {
         label: 'At Risk',
@@ -55,6 +61,9 @@ export function getSignal(client: DashboardClient): ClientSignal {
   const plan = client.activePlan?.name;
 
   switch (client.urgency) {
+    case 'NEEDS_PLAN': {
+      return { lead: 'Waiting on their first plan', rest };
+    }
     case 'AT_RISK': {
       const lead = client.lastWorkoutAt
         ? `${daysSince(client.lastWorkoutAt)}d silent`

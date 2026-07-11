@@ -211,12 +211,10 @@ function SignupContent() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
                   required
-                  readOnly={!!inviteInfo.email}
-                  className={inviteInfo.email ? 'bg-muted' : ''}
                 />
                 {inviteInfo.email && (
                   <p className="text-xs text-muted-foreground">
-                    Email is pre-set by your coach
+                    Pre-filled from your invite — change it if it&apos;s not right
                   </p>
                 )}
               </div>

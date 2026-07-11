@@ -19,7 +19,7 @@ export interface DashboardClient {
     status: string;
     createdAt: string;
   } | null;
-  urgency: 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';
+  urgency: 'NEEDS_PLAN' | 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';
   urgencyOrder: number;
 }
 

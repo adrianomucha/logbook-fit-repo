@@ -16,6 +16,8 @@ interface ClientsRequiringActionProps {
 
 function ctaForUrgency(urgency: DashboardClient['urgency']): { label: string; variant: 'default' | 'outline' | 'ghost' } {
   switch (urgency) {
+    case 'NEEDS_PLAN':
+      return { label: 'Assign Plan', variant: 'default' };
     case 'AWAITING_RESPONSE':
       return { label: 'Review Check-in', variant: 'default' };
     case 'AT_RISK':

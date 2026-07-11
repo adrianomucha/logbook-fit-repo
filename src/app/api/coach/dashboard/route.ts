@@ -51,18 +51,23 @@ export const GET = withCoach(
       let urgency: string;
       let urgencyOrder: number;
 
-      if (client.activePlan && (!lastWorkout || lastWorkout < sevenDaysAgo)) {
-        urgency = "AT_RISK";
+      if (!client.activePlan) {
+        // Fresh signup waiting on their first plan — the coach's next move,
+        // and the window where new clients churn if nothing happens
+        urgency = "NEEDS_PLAN";
         urgencyOrder = 0;
+      } else if (!lastWorkout || lastWorkout < sevenDaysAgo) {
+        urgency = "AT_RISK";
+        urgencyOrder = 1;
       } else if (pendingCheckIn?.status === "CLIENT_RESPONDED") {
         urgency = "AWAITING_RESPONSE";
-        urgencyOrder = 2;
+        urgencyOrder = 3;
       } else if (pendingCheckIn?.status === "PENDING") {
         urgency = "CHECKIN_DUE";
-        urgencyOrder = 1;
+        urgencyOrder = 2;
       } else {
         urgency = "ON_TRACK";
-        urgencyOrder = 3;
+        urgencyOrder = 4;
       }
 
       return {

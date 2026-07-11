@@ -39,14 +39,9 @@ export async function POST(req: Request) {
         );
       }
 
-      // If invite has a pre-filled email, it must match
-      if (found.email && found.email.toLowerCase() !== email) {
-        return NextResponse.json(
-          { error: "Email does not match the invite" },
-          { status: 400 }
-        );
-      }
-
+      // The token is the credential (single-use, expiring) — a coach-typed
+      // email is a convenience pre-fill, not an identity check. Enforcing an
+      // exact match would strand clients behind a coach's typo.
       invite = { id: found.id, coachId: found.coachId, email: found.email };
       effectiveRole = "CLIENT"; // Always CLIENT when using invite
     }

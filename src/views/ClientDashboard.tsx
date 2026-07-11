@@ -26,6 +26,7 @@ import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
+import { WelcomeAwaitingPlan } from '@/components/client/WelcomeAwaitingPlan';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -279,7 +280,7 @@ export function ClientDashboard() {
     );
   }
 
-  if (!client || !plan) {
+  if (!client) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="text-center animate-enter">
@@ -288,6 +289,67 @@ export function ClientDashboard() {
           <p className="text-sm text-muted-foreground antialiased">
             Your coach will assign a workout plan — hang tight.
           </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Signed up, no plan assigned yet — welcome them and keep chat open so the
+  // wait isn't a dead end (and the coach gets nudged)
+  if (!plan) {
+    const isChat = currentView === 'chat' && !!coachUserId;
+    return (
+      <div className={cn(
+        'bg-background',
+        isChat
+          ? 'fixed inset-0 pb-[calc(50px+env(safe-area-inset-bottom))] flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-dvh'
+          : 'min-h-dvh sm:pb-4'
+      )}>
+        <ClientNav
+          activeTab={isChat ? 'chat' : 'workout'}
+          onTabChange={(tab) => {
+            // Progress has nothing to show before the first plan — land on the welcome
+            setCurrentView(tab === 'progress' ? 'workout' : tab);
+            window.scrollTo(0, 0);
+          }}
+        />
+        <div className={cn(
+          'max-w-2xl mx-auto w-full px-4 pt-4 sm:pt-7',
+          isChat
+            ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
+            : 'space-y-5 sm:space-y-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:pb-8'
+        )}>
+          {isChat ? (
+            <>
+              <div className="shrink-0 py-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
+                <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
+              </div>
+              <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
+                <ChatView
+                  client={client}
+                  messages={messages}
+                  currentUserId={user?.id ?? ''}
+                  currentUserName={client.name}
+                  onSendMessage={handleSendMessage}
+                  heightClass="flex-1 min-h-0"
+                  peerName={coach?.user.name ?? 'Coach'}
+                  conversationStarters={[
+                    'Hi! Just signed up 👋',
+                    'Here’s what I want to work on…',
+                    'Anything you need from me?',
+                  ]}
+                />
+              </div>
+            </>
+          ) : (
+            <WelcomeAwaitingPlan
+              clientName={client.name}
+              coachName={coach?.user.name ?? 'Your coach'}
+              canMessage={!!coachUserId}
+              onMessageCoach={handleMessageCoach}
+            />
+          )}
         </div>
       </div>
     );
