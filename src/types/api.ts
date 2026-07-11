@@ -23,6 +23,17 @@ export interface DashboardClient {
   urgencyOrder: number;
 }
 
+// GET /api/invites
+export interface CoachInvite {
+  id: string;
+  email: string | null;
+  status: 'PENDING' | 'ACCEPTED' | 'EXPIRED';
+  expiresAt: string;
+  createdAt: string;
+  /** Only present while the invite is still shareable (PENDING and unexpired) */
+  inviteLink?: string;
+}
+
 // GET /api/plans
 export interface PlanSummary {
   id: string;
