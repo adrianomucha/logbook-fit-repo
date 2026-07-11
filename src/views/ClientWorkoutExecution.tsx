@@ -33,7 +33,6 @@ export function ClientWorkoutExecution() {
     stats,
     error,
     isLoading,
-    startWorkout,
     restartWorkout,
     toggleSet,
     updateSet,
@@ -56,25 +55,15 @@ export function ClientWorkoutExecution() {
     durationMin: number;
   } | null>(null);
   const celebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const startedRef = useRef(false);
 
-  // Start workout if not already started
+  // Auto-expand first incomplete exercise on load. Viewing the page does NOT
+  // start the workout — the completion is created on the first interaction.
   useEffect(() => {
-    if (day && !completion && !isReadOnly && !startedRef.current) {
-      startedRef.current = true;
-      startWorkout().catch(() => {
-        toast.error('Failed to start workout. Please go back and try again.');
-      });
-    }
-  }, [day, completion, isReadOnly, startWorkout]);
-
-  // Auto-expand first incomplete exercise on load
-  useEffect(() => {
-    if (completion && !isReadOnly && exercises.length > 0 && !expandedExerciseId) {
+    if (day && !isReadOnly && exercises.length > 0 && !expandedExerciseId) {
       const nextIncomplete = getNextIncompleteExerciseId(exercises);
       setExpandedExerciseId(nextIncomplete || exercises[0].workoutExerciseId);
     }
-  }, [completion, exercises, expandedExerciseId, isReadOnly]);
+  }, [day, exercises, expandedExerciseId, isReadOnly]);
 
   // Cleanup celebration timeout on unmount
   useEffect(() => {
@@ -202,12 +191,12 @@ export function ClientWorkoutExecution() {
     }
   };
 
-  // Complete the workout
+  // Complete the workout (starts it first if the user hasn't logged anything)
   const completeWorkout = async () => {
-    if (!completionId || !completion || isFinishing) return;
+    if (isFinishing) return;
     setIsFinishing(true);
 
-    const startTime = completion.startedAt
+    const startTime = completion?.startedAt
       ? new Date(completion.startedAt).getTime()
       : Date.now();
     const durationMin = Math.round((Date.now() - startTime) / 60000);
@@ -261,7 +250,6 @@ export function ClientWorkoutExecution() {
       await restartWorkout();
       setShowRestartConfirm(false);
       setExpandedExerciseId(null);
-      startedRef.current = false;
       toast.success('Workout restarted');
     } catch {
       toast.error('Failed to restart workout. Please try again.');

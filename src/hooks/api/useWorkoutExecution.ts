@@ -29,32 +29,83 @@ export function useWorkoutExecution(dayId: string | null) {
   const completionId = data?.completion?.id ?? null;
   const isReadOnly = data?.completion?.status === 'COMPLETED';
 
-  /** Start the workout (creates WorkoutCompletion + pre-creates SetCompletion rows) */
-  const startWorkout = useCallback(async () => {
-    if (!dayId || completionId) return null;
-    try {
-      const result = await apiFetch<{ id: string; status: string }>(
-        '/api/client/workout/start',
-        { method: 'POST', body: JSON.stringify({ dayId }) }
-      );
-      await mutate();
-      return result;
-    } catch (err) {
-      // Revalidate to check if workout was actually started (race condition)
-      await mutate();
-      throw err;
-    }
-  }, [dayId, completionId, mutate]);
+  // Single-flight guard so concurrent first interactions trigger one start call
+  const startPromiseRef = useRef<Promise<string> | null>(null);
 
-  /** Flush pending set changes to the API */
+  /**
+   * Create the WorkoutCompletion if it doesn't exist yet and return its id.
+   * The workout only counts as started on the first real interaction (set
+   * toggle, weight/reps edit, flag, finish) — never from merely viewing the
+   * page, so the dashboard doesn't show "Continue workout" after a peek.
+   */
+  const ensureStarted = useCallback(async (): Promise<string> => {
+    const existingId = data?.completion?.id;
+    if (existingId) return existingId;
+    if (!dayId) throw new Error('No workout day');
+
+    if (!startPromiseRef.current) {
+      startPromiseRef.current = (async () => {
+        try {
+          const result = await apiFetch<{
+            id: string;
+            status: string;
+            startedAt?: string;
+          }>('/api/client/workout/start', {
+            method: 'POST',
+            body: JSON.stringify({ dayId }),
+          });
+          // Patch the cache in place (no revalidate) so the optimistic set
+          // state from the interaction that triggered the start survives.
+          await mutate(
+            (prev) =>
+              prev
+                ? {
+                    ...prev,
+                    completion: prev.completion ?? {
+                      id: result.id,
+                      status: result.status ?? 'IN_PROGRESS',
+                      startedAt: result.startedAt ?? new Date().toISOString(),
+                      completedAt: null,
+                      completionPct: 0,
+                      effortRating: null,
+                      durationSec: null,
+                    },
+                  }
+                : prev,
+            { revalidate: false }
+          );
+          return result.id;
+        } catch (err) {
+          // Allow a retry on the next interaction; revalidate in case the
+          // start actually landed server-side (race condition)
+          startPromiseRef.current = null;
+          await mutate();
+          throw err;
+        }
+      })();
+    }
+    return startPromiseRef.current;
+  }, [data, dayId, mutate]);
+
+  /** Flush pending set changes to the API (starting the workout if needed) */
   const flushSets = useCallback(async () => {
-    if (!completionId || pendingSetsRef.current.size === 0) return;
+    if (pendingSetsRef.current.size === 0) return;
+
+    let id = completionId;
+    if (!id) {
+      try {
+        id = await ensureStarted();
+      } catch {
+        // Keep the sets queued — the next interaction retries the start
+        return;
+      }
+    }
 
     const sets = Array.from(pendingSetsRef.current.values());
     pendingSetsRef.current.clear();
 
     try {
-      await apiFetch(`/api/client/workout/${completionId}/sets`, {
+      await apiFetch(`/api/client/workout/${id}/sets`, {
         method: 'PUT',
         body: JSON.stringify({ sets }),
       });
@@ -62,7 +113,7 @@ export function useWorkoutExecution(dayId: string | null) {
       // On failure, revalidate to get server truth
       mutate();
     }
-  }, [completionId, mutate]);
+  }, [completionId, ensureStarted, mutate]);
 
   /**
    * Queue a set write, merging with any pending write for the same set so a
@@ -104,7 +155,7 @@ export function useWorkoutExecution(dayId: string | null) {
   /** Toggle a set's completion — optimistic update + debounced API save */
   const toggleSet = useCallback(
     (workoutExerciseId: string, setNumber: number) => {
-      if (!completionId || isReadOnly || !data) return;
+      if (isReadOnly || !data) return;
 
       const exercise = data.exercises.find(
         (e) => e.workoutExerciseId === workoutExerciseId
@@ -125,11 +176,9 @@ export function useWorkoutExecution(dayId: string | null) {
               if (ex.workoutExerciseId !== workoutExerciseId) return ex;
               return {
                 ...ex,
-                setCompletions: ex.setCompletions.map((sc) =>
-                  sc.setNumber === setNumber
-                    ? { ...sc, completed: newCompleted }
-                    : sc
-                ),
+                setCompletions: upsertLocalSet(ex.setCompletions, setNumber, {
+                  completed: newCompleted,
+                }),
               };
             }),
           };
@@ -139,7 +188,7 @@ export function useWorkoutExecution(dayId: string | null) {
 
       enqueueSetWrite(workoutExerciseId, setNumber, { completed: newCompleted });
     },
-    [completionId, isReadOnly, data, mutate, enqueueSetWrite]
+    [isReadOnly, data, mutate, enqueueSetWrite]
   );
 
   /** Update a set's logged reps and/or weight — optimistic update + debounced save */
@@ -149,7 +198,7 @@ export function useWorkoutExecution(dayId: string | null) {
       setNumber: number,
       patch: { actualReps?: number; actualWeight?: number }
     ) => {
-      if (!completionId || isReadOnly || !data) return;
+      if (isReadOnly || !data) return;
 
       mutate(
         (prev) => {
@@ -160,9 +209,7 @@ export function useWorkoutExecution(dayId: string | null) {
               if (ex.workoutExerciseId !== workoutExerciseId) return ex;
               return {
                 ...ex,
-                setCompletions: ex.setCompletions.map((sc) =>
-                  sc.setNumber === setNumber ? { ...sc, ...patch } : sc
-                ),
+                setCompletions: upsertLocalSet(ex.setCompletions, setNumber, patch),
               };
             }),
           };
@@ -172,13 +219,13 @@ export function useWorkoutExecution(dayId: string | null) {
 
       enqueueSetWrite(workoutExerciseId, setNumber, patch);
     },
-    [completionId, isReadOnly, data, mutate, enqueueSetWrite]
+    [isReadOnly, data, mutate, enqueueSetWrite]
   );
 
   /** Flag/update an exercise */
   const flagExercise = useCallback(
     async (workoutExerciseId: string, note?: string) => {
-      if (!completionId || isReadOnly) return;
+      if (isReadOnly) return;
 
       // Optimistic update
       mutate(
@@ -201,7 +248,8 @@ export function useWorkoutExecution(dayId: string | null) {
       );
 
       try {
-        await apiFetch(`/api/client/workout/${completionId}/flag`, {
+        const id = completionId ?? (await ensureStarted());
+        await apiFetch(`/api/client/workout/${id}/flag`, {
           method: 'POST',
           body: JSON.stringify({ workoutExerciseId, note }),
         });
@@ -210,13 +258,13 @@ export function useWorkoutExecution(dayId: string | null) {
       }
       mutate();
     },
-    [completionId, isReadOnly, mutate]
+    [completionId, isReadOnly, ensureStarted, mutate]
   );
 
   /** Unflag an exercise (optimistic only — no delete API, toggle by removing from local) */
   const unflagExercise = useCallback(
     (workoutExerciseId: string) => {
-      if (!completionId || isReadOnly) return;
+      if (isReadOnly) return;
 
       mutate(
         (prev) => {
@@ -232,7 +280,7 @@ export function useWorkoutExecution(dayId: string | null) {
         { revalidate: false }
       );
     },
-    [completionId, isReadOnly, mutate]
+    [isReadOnly, mutate]
   );
 
   /** Toggle flag on/off */
@@ -256,7 +304,7 @@ export function useWorkoutExecution(dayId: string | null) {
   /** Update flag note */
   const updateFlagNote = useCallback(
     (workoutExerciseId: string, note: string) => {
-      if (!completionId || isReadOnly) return;
+      if (isReadOnly) return;
 
       // Optimistic local update only — actual save happens on flag creation
       mutate(
@@ -276,7 +324,7 @@ export function useWorkoutExecution(dayId: string | null) {
       // Debounce save the note via the flag endpoint
       flagExercise(workoutExerciseId, note);
     },
-    [completionId, isReadOnly, mutate, flagExercise]
+    [isReadOnly, mutate, flagExercise]
   );
 
   /** Restart the workout — resets all sets/flags and starts fresh */
@@ -294,12 +342,13 @@ export function useWorkoutExecution(dayId: string | null) {
   /** Finish the workout — throws on failure so callers can handle */
   const finishWorkout = useCallback(
     async (effortRating?: string) => {
-      if (!completionId || isReadOnly) return null;
+      if (isReadOnly) return null;
 
       // Flush any pending sets first
       await flushSets();
 
       try {
+        const id = completionId ?? (await ensureStarted());
         const result = await apiFetch<{
           id: string;
           status: string;
@@ -308,7 +357,7 @@ export function useWorkoutExecution(dayId: string | null) {
           exercisesDone: number;
           exercisesTotal: number;
           durationSec: number | null;
-        }>(`/api/client/workout/${completionId}/finish`, {
+        }>(`/api/client/workout/${id}/finish`, {
           method: 'POST',
           body: JSON.stringify(effortRating ? { effortRating } : {}),
         });
@@ -319,7 +368,7 @@ export function useWorkoutExecution(dayId: string | null) {
         throw err;
       }
     },
-    [completionId, isReadOnly, flushSets, mutate]
+    [completionId, isReadOnly, ensureStarted, flushSets, mutate]
   );
 
   // Derived stats
@@ -335,7 +384,6 @@ export function useWorkoutExecution(dayId: string | null) {
     stats,
     error,
     isLoading,
-    startWorkout,
     restartWorkout,
     toggleSet,
     updateSet,
@@ -345,6 +393,33 @@ export function useWorkoutExecution(dayId: string | null) {
     flagExercise,
     refresh: mutate,
   };
+}
+
+/**
+ * Update a set in the local cache, creating a placeholder row when the server
+ * hasn't materialized one yet (the completion is only created on the first
+ * interaction, so early toggles land before any rows exist).
+ */
+function upsertLocalSet(
+  sets: WorkoutSetCompletion[],
+  setNumber: number,
+  patch: Partial<Pick<WorkoutSetCompletion, 'completed' | 'actualReps' | 'actualWeight'>>
+): WorkoutSetCompletion[] {
+  if (sets.some((s) => s.setNumber === setNumber)) {
+    return sets.map((s) => (s.setNumber === setNumber ? { ...s, ...patch } : s));
+  }
+  return [
+    ...sets,
+    {
+      id: `local-${setNumber}`,
+      setNumber,
+      completed: false,
+      actualWeight: null,
+      actualReps: null,
+      completedAt: null,
+      ...patch,
+    },
+  ];
 }
 
 /** Compute exercisesDone / exercisesTotal from the exercise list */
