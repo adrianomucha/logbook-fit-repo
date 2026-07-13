@@ -108,14 +108,20 @@ export function PlanEditorDrawer({
     setLocalDayDescription(currentDayDesc || '');
   }, [currentDayId, currentDayName, currentDayDesc]);
 
-  // Reset selection when plan changes (e.g. opening a different plan)
+  // Reset selection when a different plan opens (or the initial position
+  // changes). Guarded by a key so data refreshes of the same plan — which
+  // produce a new `plan` object — don't yank the coach back to the first day.
+  const resetKey = `${plan?.id ?? ''}:${initialWeekIndex}:${initialDayIndex}`;
+  const lastResetKey = useRef<string | null>(null);
   useEffect(() => {
+    if (lastResetKey.current === resetKey) return;
+    lastResetKey.current = resetKey;
     setSelectedWeek(initialWeekIndex);
     // Resolve initial day index to an ID
     const week = plan?.weeks[initialWeekIndex];
     const day = week?.days[initialDayIndex];
     setSelectedDayId(day?.id ?? null);
-  }, [plan?.id, initialWeekIndex, initialDayIndex]);
+  }, [resetKey, plan, initialWeekIndex, initialDayIndex]);
 
   // Navigate weeks — abandon any in-flight exercise edit, it belongs to the old day
   const goToPrevWeek = () => {
