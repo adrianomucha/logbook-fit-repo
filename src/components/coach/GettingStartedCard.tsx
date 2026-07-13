@@ -158,7 +158,7 @@ export function GettingStartedCard({
   ];
 
   return (
-    <section className="max-w-2xl mx-auto rounded-2xl border border-border/70 bg-card px-5 py-6 sm:px-8 sm:py-8">
+    <section className="max-w-2xl lg:max-w-5xl mx-auto rounded-2xl border border-border/70 bg-card px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-9">
       <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased flex items-center gap-1.5">
         <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />
         Getting started
@@ -166,12 +166,13 @@ export function GettingStartedCard({
       <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-1.5 antialiased">
         Get your first client on your radar
       </h2>
-      <p className="text-sm text-muted-foreground mb-6 sm:mb-8 antialiased">
+      <p className="text-sm text-muted-foreground mb-6 sm:mb-8 max-w-xl antialiased">
         Logbook ranks your roster by who needs attention — it starts working the
         moment your first client joins.
       </p>
 
-      <ol className="space-y-5 sm:space-y-6">
+      {/* Vertical checklist on small screens, three columns once there's room */}
+      <ol className="space-y-5 sm:space-y-6 lg:grid lg:grid-cols-3 lg:gap-8 lg:space-y-0">
         {steps.map((step, i) => (
           <li key={step.key} className="flex gap-3.5 sm:gap-4">
             <div

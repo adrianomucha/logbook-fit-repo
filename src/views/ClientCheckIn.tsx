@@ -94,7 +94,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-dvh bg-background pb-8 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+        <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
@@ -113,7 +113,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-dvh bg-background pb-8 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+        <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success animate-bounce-once" />
@@ -146,7 +146,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-dvh bg-background pb-8 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+        <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
           <div className="flex items-center gap-3">
             <Button
@@ -200,7 +200,7 @@ export function ClientCheckIn() {
     return (
       <div className="min-h-dvh bg-background pb-8 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+        <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
           <div className="flex items-center gap-3">
             <Button
@@ -255,7 +255,7 @@ export function ClientCheckIn() {
   return (
     <div className="min-h-dvh bg-background pb-8 sm:pb-4">
       <CoachNav activeTab="clients" />
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+      <div className="max-w-5xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
 
         {/* Header */}
         <div>
@@ -385,14 +385,15 @@ export function ClientCheckIn() {
             </Button>
           </div>
 
-          {/* Right sidebar: Previous check-ins (desktop only) */}
-          <div className="hidden lg:block lg:w-80 lg:shrink-0">
-            <div className="sticky top-4">
-              {completedCheckIns.length > 0 && (
+          {/* Right sidebar: Previous check-ins (desktop only). Rendered only
+              when there is content, so the main column stays centered otherwise */}
+          {completedCheckIns.length > 0 && (
+            <div className="hidden lg:block lg:w-80 lg:shrink-0">
+              <div className="sticky top-4">
                 <PreviousCheckInsList checkIns={completedCheckIns} />
-              )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>
