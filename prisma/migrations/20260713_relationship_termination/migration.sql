@@ -7,3 +7,10 @@
 ALTER TABLE "coach_client_relationships"
   ADD COLUMN IF NOT EXISTS "endedAt" TIMESTAMP(3),
   ADD COLUMN IF NOT EXISTS "endedBy" "UserRole";
+
+-- Snapshot of the plan assignment at termination time so Restore can put the
+-- client back exactly where they left off. Deliberately no FK — the plan may
+-- be soft- or hard-deleted while the relationship sits in the archive.
+ALTER TABLE "coach_client_relationships"
+  ADD COLUMN IF NOT EXISTS "endedPlanId" TEXT,
+  ADD COLUMN IF NOT EXISTS "endedPlanStartDate" TIMESTAMP(3);

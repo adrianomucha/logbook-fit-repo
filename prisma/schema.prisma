@@ -161,6 +161,11 @@ model CoachClientRelationship {
   // client unsubscribes. status becomes INACTIVE; the row is kept as history.
   endedAt   DateTime?
   endedBy   UserRole?
+  // Plan assignment at the moment the relationship ended — lets Restore put
+  // the client back exactly where they left off. No FK: the plan may be
+  // deleted while the relationship sits in the archive.
+  endedPlanId        String?
+  endedPlanStartDate DateTime?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 

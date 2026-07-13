@@ -780,7 +780,7 @@ export function UnifiedClientProfile() {
         warningMessage={
           apiClient.isSample
             ? 'This is your sample client — it and all its generated data will be deleted.'
-            : 'Their assigned plan is removed and messaging closes for both of you. Workout history and completed check-ins are kept.'
+            : 'Their plan is removed and messaging closes for both of you. Nothing is deleted — you can restore them from Past clients on the Clients page.'
         }
         confirmLabel="End Coaching"
         confirmVariant="destructive"
