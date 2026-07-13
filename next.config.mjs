@@ -37,11 +37,6 @@ const nextConfig = {
   // ".nosync" suffix keeps the dir in place but tells iCloud Drive to leave it
   // alone. Covered by `tmp/` in .gitignore.
   ...(isVercel ? {} : { distDir: "tmp/logbook-next.nosync" }),
-  eslint: {
-    // Pre-existing ESLint errors (unescaped entities, unused vars) from the Vite era.
-    // Allow build to succeed while we clean these up separately.
-    ignoreDuringBuilds: true,
-  },
   async headers() {
     return [
       {

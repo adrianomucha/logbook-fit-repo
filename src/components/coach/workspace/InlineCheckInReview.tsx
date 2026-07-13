@@ -1,14 +1,11 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Clock,
   CheckCircle2,
   ClipboardCheck,
-  AlertTriangle,
   Dumbbell,
   Send,
   SendHorizonal,

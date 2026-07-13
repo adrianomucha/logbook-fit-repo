@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import { Client, CheckIn } from '@/types';
 import { ClientStatus } from '@/lib/client-status';
 import { formatDistanceToNow } from 'date-fns';
-import { FEELING_LABELS } from '@/lib/checkin-helpers';
 
 interface ContextualStatusHeaderProps {
   client: Client;
@@ -20,7 +19,6 @@ export function ContextualStatusHeader({
   client,
   status,
   lastCheckIn,
-  respondedCheckIn,
   activeCheckIn,
   onScrollToCheckIn,
   onStartCheckIn,
@@ -48,7 +46,7 @@ export function ContextualStatusHeader({
             {daysSinceCheckIn} {daysSinceCheckIn === 1 ? 'day' : 'days'} since last check-in.
             {lastCheckIn?.clientNotes && (
               <span className="text-muted-foreground">
-                {' '}Last note: "{truncate(lastCheckIn.clientNotes, 50)}"
+                {' '}Last note: &quot;{truncate(lastCheckIn.clientNotes, 50)}&quot;
               </span>
             )}
           </p>
@@ -97,7 +95,7 @@ export function ContextualStatusHeader({
       // Note: Removed 'pending-checkin' case per Fix 17.
       // The check-in review UI is already visible in InlineCheckInReview below.
       case 'overdue':
-      case 'at-risk':
+      case 'at-risk': {
         // Disable the button if there's already an active check-in
         const hasActiveCheckIn = !!activeCheckIn;
         return {
@@ -106,6 +104,7 @@ export function ContextualStatusHeader({
           variant: 'default' as const,
           disabled: hasActiveCheckIn,
         };
+      }
       case 'unread':
         return {
           label: 'View Messages',

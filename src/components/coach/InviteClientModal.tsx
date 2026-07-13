@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2, Copy, Check, Share2, RefreshCw } from 'lucide-react';
+import { Copy, Check, Share2, RefreshCw } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';

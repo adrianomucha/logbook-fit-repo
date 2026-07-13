@@ -26,7 +26,6 @@ export function RecentMessagesSection({
   client,
   messages,
   currentUserId,
-  currentUserName,
   onSendMessage,
   initialMessage,
 }: RecentMessagesSectionProps) {

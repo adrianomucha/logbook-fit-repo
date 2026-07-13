@@ -30,7 +30,7 @@ export function LastCheckInSnippet({ checkIn, clientName }: LastCheckInSnippetPr
           <MessageCircle className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="text-xs text-muted-foreground mb-1">
-              {clientName}'s last check-in · {formatDistanceToNow(new Date(checkIn.completedAt || checkIn.date), { addSuffix: true })}
+              {clientName}&apos;s last check-in · {formatDistanceToNow(new Date(checkIn.completedAt || checkIn.date), { addSuffix: true })}
             </p>
             {(workoutFeeling || bodyFeeling) && (
               <div className="flex items-center gap-2 mb-1">
@@ -48,7 +48,7 @@ export function LastCheckInSnippet({ checkIn, clientName }: LastCheckInSnippetPr
             )}
             {notes && (
               <p className="text-sm italic line-clamp-2">
-                "{notes}"
+                &quot;{notes}&quot;
               </p>
             )}
           </div>

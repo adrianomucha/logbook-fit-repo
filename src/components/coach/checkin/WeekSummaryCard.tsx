@@ -28,7 +28,7 @@ export function WeekSummaryCard({ clientId, completedWorkouts, plan }: WeekSumma
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2">
           <Dumbbell className="w-4 h-4" />
-          This Week's Workouts
+          This Week&apos;s Workouts
         </CardTitle>
         {targetPerWeek > 0 && (
           <p className="text-xs text-muted-foreground">

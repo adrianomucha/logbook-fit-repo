@@ -18,7 +18,7 @@ function getProgressLabel(completed: number, scheduled: number): { text: string;
   return { text: `${remaining} remaining this week`, color: 'text-muted-foreground' };
 }
 
-export function WeeklyActivityCard({ client, plan, weeklyActivity }: WeeklyActivityCardProps) {
+export function WeeklyActivityCard({ plan, weeklyActivity }: WeeklyActivityCardProps) {
   const { completed, scheduled, lastWorkout } = weeklyActivity;
   const percentage = scheduled > 0 ? (completed / scheduled) * 100 : 0;
   const progressLabel = getProgressLabel(completed, scheduled);
@@ -26,7 +26,7 @@ export function WeeklyActivityCard({ client, plan, weeklyActivity }: WeeklyActiv
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">This Week's Activity</CardTitle>
+        <CardTitle className="text-base">This Week&apos;s Activity</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

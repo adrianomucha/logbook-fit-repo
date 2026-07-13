@@ -54,7 +54,6 @@ export function ChatView({
   client,
   messages,
   currentUserId,
-  currentUserName,
   onSendMessage,
   initialPrefill,
   heightClass = 'h-[350px] sm:h-[600px]',

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { Exercise, CoachExercise, ExerciseCategory, ExerciseEquipment } from '@/types';
+import { Exercise, CoachExercise } from '@/types';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -148,7 +148,6 @@ export function EnhancedExercisePicker({
   if (!isOpen) return null;
 
   const allSelected = filteredExercises.length > 0 && selectedIds.size === filteredExercises.length;
-  const someSelected = selectedIds.size > 0 && !allSelected;
 
   return (
     <div

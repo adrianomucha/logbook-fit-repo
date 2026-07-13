@@ -66,15 +66,6 @@ export function InteractiveWeeklyStrip({
 
   const progress = useMemo(() => getWeekProgress(weekDays), [weekDays]);
 
-  // Get expanded day's info
-  const expandedDayInfo = useMemo(() => {
-    if (expandedOrderIndex === null) return null;
-    return weekDays.find((d) => d.orderIndex === expandedOrderIndex);
-  }, [expandedOrderIndex, weekDays]);
-
-  // Get expanded workout from workoutDay
-  const expandedWorkout = expandedDayInfo?.workoutDay;
-
   const isFlat = variant === 'flat';
 
   if (!plan || weekDays.length === 0) {
@@ -171,7 +162,6 @@ export function InteractiveWeeklyStrip({
     );
   }
 
-  const Wrapper = isFlat ? 'div' : Card;
   const editHandler = onEditPlan || (onScrollToPlanEditor ? () => onScrollToPlanEditor('') : undefined);
 
   const content = (
@@ -210,7 +200,7 @@ export function InteractiveWeeklyStrip({
                   {/* Exercise list */}
                   {dayWorkout.exercises && dayWorkout.exercises.length > 0 ? (
                     <div className="space-y-0">
-                      {dayWorkout.exercises.map((exercise, idx) => (
+                      {dayWorkout.exercises.map((exercise) => (
                         <div
                           key={exercise.id}
                           className="flex items-center text-[13px] py-1.5"
