@@ -57,3 +57,44 @@ export const POST = withCoach(
     );
   }
 );
+
+/**
+ * GET /api/invites
+ * Lists the coach's recent invites, newest first. PENDING invites past
+ * their expiry are reported as EXPIRED. inviteLink is only included for
+ * still-shareable (pending, unexpired) invites.
+ */
+export const GET = withCoach(
+  async (
+    _req: Request,
+    _ctx: { params: Record<string, string> },
+    _session: Session,
+    coachProfileId: string
+  ) => {
+    const invites = await prisma.clientInvite.findMany({
+      where: { coachId: coachProfileId },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+    });
+
+    const now = new Date();
+    return NextResponse.json(
+      invites.map((invite) => {
+        const status =
+          invite.status === "PENDING" && invite.expiresAt < now
+            ? "EXPIRED"
+            : invite.status;
+        return {
+          id: invite.id,
+          email: invite.email,
+          status,
+          expiresAt: invite.expiresAt,
+          createdAt: invite.createdAt,
+          ...(status === "PENDING"
+            ? { inviteLink: `/signup?invite=${invite.token}` }
+            : {}),
+        };
+      })
+    );
+  }
+);

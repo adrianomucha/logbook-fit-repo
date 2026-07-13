@@ -14,6 +14,14 @@ interface ClientsRequiringActionProps {
   clients: DashboardClient[];
 }
 
+function SampleChip() {
+  return (
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-dashed border-border font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.1em] text-muted-foreground leading-none whitespace-nowrap flex-shrink-0">
+      Sample
+    </span>
+  );
+}
+
 function ctaForUrgency(urgency: DashboardClient['urgency']): { label: string; variant: 'default' | 'outline' | 'ghost' } {
   switch (urgency) {
     case 'NEEDS_PLAN':
@@ -87,6 +95,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                       <span className="text-sm sm:text-[15px] font-semibold truncate leading-tight">
                         {displayName}
                       </span>
+                      {client.isSample && <SampleChip />}
                       <span className={cn(
                         'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0',
                         style.chip
@@ -154,6 +163,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                       <p className="text-sm sm:text-[15px] font-semibold truncate">
                         {displayName}
                       </p>
+                      {client.isSample && <SampleChip />}
                       <span className={cn(
                         'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0',
                         style.chip

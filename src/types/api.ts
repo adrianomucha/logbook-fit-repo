@@ -19,8 +19,21 @@ export interface DashboardClient {
     status: string;
     createdAt: string;
   } | null;
+  /** Coach-created demo client (sample mode) */
+  isSample: boolean;
   urgency: 'NEEDS_PLAN' | 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';
   urgencyOrder: number;
+}
+
+// GET /api/invites
+export interface CoachInvite {
+  id: string;
+  email: string | null;
+  status: 'PENDING' | 'ACCEPTED' | 'EXPIRED';
+  expiresAt: string;
+  createdAt: string;
+  /** Only present while the invite is still shareable (PENDING and unexpired) */
+  inviteLink?: string;
 }
 
 // GET /api/plans

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlanSetupFormData } from '@/types';
 import { formatReps } from '@/lib/reps';
@@ -11,11 +11,14 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, PartyPopper } from 'lucide-react';
+import { Plus, Loader2, PartyPopper, FlaskConical } from 'lucide-react';
+import { apiFetch } from '@/lib/api-client';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
+import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
+import { useCoachInvites } from '@/hooks/api/useCoachInvites';
 import { useCoachPlans } from '@/hooks/api/useCoachPlans';
 import { usePlanDetail } from '@/hooks/api/usePlanDetail';
 import type { PlanDetail } from '@/hooks/api/usePlanDetail';
@@ -90,11 +93,25 @@ export function CoachDashboard() {
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [isAddingSample, setIsAddingSample] = useState(false);
+  const [showRemoveSampleConfirm, setShowRemoveSampleConfirm] = useState(false);
 
   // --- API hooks ---
-  const { clients: dashboardClients, isLoading: isDashboardLoading } = useCoachDashboard();
+  const { clients: dashboardClients, isLoading: isDashboardLoading, refresh: refreshDashboard } = useCoachDashboard();
   const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
+  const { invites, isLoading: isInvitesLoading, refresh: refreshInvites } = useCoachInvites();
   const { plan: editingPlanDetail, isLoading: isEditingPlanLoading, error: editingPlanError, refresh: refreshEditingPlan } = usePlanDetail(editingPlanId);
+
+  // Set when plan creation starts from the getting-started guide, so the new
+  // plan opens straight in the editor instead of just landing in the list
+  const openEditorAfterCreate = useRef(false);
+
+  // Latest still-shareable invite feeds the getting-started guide
+  const pendingInvite = useMemo(
+    () => invites.find((inv) => inv.status === 'PENDING') ?? null,
+    [invites]
+  );
+  const lastInviteExpired = !pendingInvite && invites.some((inv) => inv.status === 'EXPIRED');
 
   // Adapt plans for display
   const templates = useMemo(
@@ -144,7 +161,7 @@ export function CoachDashboard() {
 
   const handlePlanCreated = async (formData: PlanSetupFormData) => {
     try {
-      await createPlan({
+      const newPlan = await createPlan({
         name: formData.name,
         description: formData.description,
         emoji: formData.emoji,
@@ -154,6 +171,35 @@ export function CoachDashboard() {
       setShowPlanSetupModal(false);
       setShowSuccessToast(true);
       setTimeout(() => setShowSuccessToast(false), 3000);
+      if (openEditorAfterCreate.current) {
+        openEditorAfterCreate.current = false;
+        setEditingPlanId(newPlan.id);
+      }
+    } catch {
+      // Error handled by apiFetch
+    }
+  };
+
+  const hasSampleClient = dashboardClients.some((c) => c.isSample);
+
+  const handleAddSampleClient = async () => {
+    if (isAddingSample) return;
+    setIsAddingSample(true);
+    try {
+      await apiFetch('/api/coach/sample-client', { method: 'POST' });
+      await Promise.all([refreshDashboard(), refreshPlans()]);
+    } catch {
+      // Error handled by apiFetch
+    } finally {
+      setIsAddingSample(false);
+    }
+  };
+
+  const handleRemoveSampleClient = async () => {
+    try {
+      await apiFetch('/api/coach/sample-client', { method: 'DELETE' });
+      setShowRemoveSampleConfirm(false);
+      await Promise.all([refreshDashboard(), refreshPlans()]);
     } catch {
       // Error handled by apiFetch
     }
@@ -192,14 +238,33 @@ export function CoachDashboard() {
       {/* Invite Client Modal */}
       <InviteClientModal
         isOpen={showInviteModal}
-        onClose={() => setShowInviteModal(false)}
+        onClose={() => {
+          setShowInviteModal(false);
+          // The modal generates a link on open — reflect it in the guide
+          refreshInvites();
+        }}
       />
 
       {/* Plan Setup Modal */}
       <PlanSetupModal
         isOpen={showPlanSetupModal}
-        onClose={() => setShowPlanSetupModal(false)}
+        onClose={() => {
+          setShowPlanSetupModal(false);
+          openEditorAfterCreate.current = false;
+        }}
         onSubmit={handlePlanCreated}
+      />
+
+      {/* Remove Sample Client Confirmation */}
+      <ConfirmationModal
+        isOpen={showRemoveSampleConfirm}
+        onClose={() => setShowRemoveSampleConfirm(false)}
+        onConfirm={handleRemoveSampleClient}
+        title="Remove Sample Client"
+        message="Remove Riley Chen and all their generated data?"
+        warningMessage="The sample plan, workouts, check-ins, and messages will be deleted. Your own plans and exercises stay untouched."
+        confirmLabel="Remove"
+        confirmVariant="destructive"
       />
 
       {/* Delete Template Confirmation */}
@@ -246,26 +311,49 @@ export function CoachDashboard() {
                 subtitle={dashboardClients.length > 0 ? 'Here\u2019s your roster' : undefined}
               />
             </div>
-            {isDashboardLoading ? (
+            {isDashboardLoading || (dashboardClients.length === 0 && (isPlansLoading || isInvitesLoading)) ? (
               <div className="flex items-center justify-center py-12 animate-enter">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : dashboardClients.length === 0 ? (
-              <div className="animate-enter flex flex-col items-center text-center pt-8 sm:pt-16 pb-8" style={{ animationDelay: '60ms' }}>
-                <div className="text-5xl sm:text-6xl select-none mb-5 animate-bounce-once">🏋️</div>
-                <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-1.5 antialiased">
-                  Your roster is empty
-                </h2>
-                <p className="text-sm text-muted-foreground max-w-[280px] mb-6 antialiased">
-                  Invite your first client to get started.
-                </p>
-                <Button onClick={() => setShowInviteModal(true)} size="lg" className="text-sm tracking-wide px-8 active:scale-[0.96] transition-transform duration-150">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Invite Client
-                </Button>
+              <div className="animate-enter pt-2 sm:pt-6" style={{ animationDelay: '60ms' }}>
+                <GettingStartedCard
+                  hasPlan={apiPlans.length > 0}
+                  planName={apiPlans[0]?.name}
+                  planEmoji={apiPlans[0]?.emoji}
+                  pendingInvite={pendingInvite}
+                  lastInviteExpired={lastInviteExpired}
+                  onCreatePlan={() => {
+                    openEditorAfterCreate.current = true;
+                    setShowPlanSetupModal(true);
+                  }}
+                  onInviteClient={() => setShowInviteModal(true)}
+                  onAddSampleClient={handleAddSampleClient}
+                  isAddingSample={isAddingSample}
+                />
               </div>
             ) : (
               <>
+                {/* Sample-mode strip — persistent reminder + exit while exploring */}
+                {hasSampleClient && (
+                  <div className="animate-enter flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-3">
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <FlaskConical className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <p className="text-sm text-muted-foreground antialiased">
+                        You&apos;re exploring with a sample client — the history is
+                        generated, everything else is the real product.
+                      </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button size="sm" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
+                        Invite real client
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setShowRemoveSampleConfirm(true)}>
+                        Remove sample
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <div className="animate-enter" style={{ animationDelay: '60ms' }}>
                   <WeeklyConfidenceStrip clients={dashboardClients} />
                 </div>
