@@ -11,7 +11,8 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, PartyPopper } from 'lucide-react';
+import { Plus, Loader2, PartyPopper, FlaskConical } from 'lucide-react';
+import { apiFetch } from '@/lib/api-client';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
@@ -92,9 +93,11 @@ export function CoachDashboard() {
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [isAddingSample, setIsAddingSample] = useState(false);
+  const [showRemoveSampleConfirm, setShowRemoveSampleConfirm] = useState(false);
 
   // --- API hooks ---
-  const { clients: dashboardClients, isLoading: isDashboardLoading } = useCoachDashboard();
+  const { clients: dashboardClients, isLoading: isDashboardLoading, refresh: refreshDashboard } = useCoachDashboard();
   const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
   const { invites, isLoading: isInvitesLoading, refresh: refreshInvites } = useCoachInvites();
   const { plan: editingPlanDetail, isLoading: isEditingPlanLoading, error: editingPlanError, refresh: refreshEditingPlan } = usePlanDetail(editingPlanId);
@@ -177,6 +180,31 @@ export function CoachDashboard() {
     }
   };
 
+  const hasSampleClient = dashboardClients.some((c) => c.isSample);
+
+  const handleAddSampleClient = async () => {
+    if (isAddingSample) return;
+    setIsAddingSample(true);
+    try {
+      await apiFetch('/api/coach/sample-client', { method: 'POST' });
+      await Promise.all([refreshDashboard(), refreshPlans()]);
+    } catch {
+      // Error handled by apiFetch
+    } finally {
+      setIsAddingSample(false);
+    }
+  };
+
+  const handleRemoveSampleClient = async () => {
+    try {
+      await apiFetch('/api/coach/sample-client', { method: 'DELETE' });
+      setShowRemoveSampleConfirm(false);
+      await Promise.all([refreshDashboard(), refreshPlans()]);
+    } catch {
+      // Error handled by apiFetch
+    }
+  };
+
   const handleDeleteTemplate = async () => {
     if (!planToDelete) return;
     try {
@@ -225,6 +253,18 @@ export function CoachDashboard() {
           openEditorAfterCreate.current = false;
         }}
         onSubmit={handlePlanCreated}
+      />
+
+      {/* Remove Sample Client Confirmation */}
+      <ConfirmationModal
+        isOpen={showRemoveSampleConfirm}
+        onClose={() => setShowRemoveSampleConfirm(false)}
+        onConfirm={handleRemoveSampleClient}
+        title="Remove Sample Client"
+        message="Remove Riley Chen and all their generated data?"
+        warningMessage="The sample plan, workouts, check-ins, and messages will be deleted. Your own plans and exercises stay untouched."
+        confirmLabel="Remove"
+        confirmVariant="destructive"
       />
 
       {/* Delete Template Confirmation */}
@@ -288,10 +328,32 @@ export function CoachDashboard() {
                     setShowPlanSetupModal(true);
                   }}
                   onInviteClient={() => setShowInviteModal(true)}
+                  onAddSampleClient={handleAddSampleClient}
+                  isAddingSample={isAddingSample}
                 />
               </div>
             ) : (
               <>
+                {/* Sample-mode strip — persistent reminder + exit while exploring */}
+                {hasSampleClient && (
+                  <div className="animate-enter flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-3">
+                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                      <FlaskConical className="w-4 h-4 text-muted-foreground shrink-0" />
+                      <p className="text-sm text-muted-foreground antialiased">
+                        You&apos;re exploring with a sample client — the history is
+                        generated, everything else is the real product.
+                      </p>
+                    </div>
+                    <div className="flex gap-2 shrink-0">
+                      <Button size="sm" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
+                        Invite real client
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setShowRemoveSampleConfirm(true)}>
+                        Remove sample
+                      </Button>
+                    </div>
+                  </div>
+                )}
                 <div className="animate-enter" style={{ animationDelay: '60ms' }}>
                   <WeeklyConfidenceStrip clients={dashboardClients} />
                 </div>

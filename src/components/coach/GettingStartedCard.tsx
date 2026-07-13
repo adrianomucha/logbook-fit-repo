@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, Plus, UserPlus } from 'lucide-react';
+import { Check, Copy, FlaskConical, Loader2, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { QUICK_START_EXERCISES } from '@/lib/quick-start-exercises';
 import type { CoachInvite } from '@/types/api';
@@ -18,6 +18,8 @@ interface GettingStartedCardProps {
   lastInviteExpired: boolean;
   onCreatePlan: () => void;
   onInviteClient: () => void;
+  onAddSampleClient: () => void;
+  isAddingSample: boolean;
 }
 
 function daysUntil(iso: string): number {
@@ -37,6 +39,8 @@ export function GettingStartedCard({
   lastInviteExpired,
   onCreatePlan,
   onInviteClient,
+  onAddSampleClient,
+  isAddingSample,
 }: GettingStartedCardProps) {
   const [copied, setCopied] = useState(false);
 
@@ -200,6 +204,28 @@ export function GettingStartedCard({
           </li>
         ))}
       </ol>
+
+      {/* Sample-client escape hatch — feel the product before anyone joins */}
+      <div className="mt-6 sm:mt-8 pt-5 border-t border-border/60 flex flex-col sm:flex-row sm:items-center gap-3">
+        <p className="text-sm text-muted-foreground antialiased flex-1">
+          Want to see it working first? Add a demo client with a week of
+          training and a check-in to review — remove them anytime.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onAddSampleClient}
+          disabled={isAddingSample}
+          className="shrink-0 active:scale-[0.96] transition-transform duration-150"
+        >
+          {isAddingSample ? (
+            <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+          ) : (
+            <FlaskConical className="w-4 h-4 mr-1.5" />
+          )}
+          {isAddingSample ? 'Setting up…' : 'Try a sample client'}
+        </Button>
+      </div>
     </section>
   );
 }

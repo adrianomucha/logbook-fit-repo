@@ -19,6 +19,8 @@ export interface DashboardClient {
     status: string;
     createdAt: string;
   } | null;
+  /** Coach-created demo client (sample mode) */
+  isSample: boolean;
   urgency: 'NEEDS_PLAN' | 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';
   urgencyOrder: number;
 }

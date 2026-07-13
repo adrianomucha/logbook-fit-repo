@@ -127,6 +127,9 @@ model ClientProfile {
   userId        String    @unique
   activePlanId  String?
   planStartDate DateTime?
+  // Coach-created demo client for exploring the product before real clients
+  // join; surfaced with a badge and removable in one action
+  isSample      Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

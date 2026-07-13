@@ -76,6 +76,7 @@ export const GET = withCoach(
         activePlan: client.activePlan,
         lastWorkoutAt: lastWorkout,
         pendingCheckIn: pendingCheckIn || null,
+        isSample: client.isSample,
         urgency,
         urgencyOrder,
       };
