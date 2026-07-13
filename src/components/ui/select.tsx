@@ -184,20 +184,21 @@ interface SelectItemProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
 }
 
+// Helper to extract text from children — module-scope so it's referentially
+// stable and doesn't need to be an effect dependency
+const getTextFromChildren = (node: React.ReactNode): string => {
+  if (typeof node === 'string') return node
+  if (typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(getTextFromChildren).join('')
+  if (React.isValidElement(node) && node.props.children) {
+    return getTextFromChildren(node.props.children)
+  }
+  return ''
+}
+
 const SelectItem = React.forwardRef<HTMLDivElement, SelectItemProps>(
   ({ className, value, children, ...props }, ref) => {
     const { value: selectedValue, onValueChange, setIsOpen, setSelectedLabel } = React.useContext(SelectContext)
-
-    // Helper to extract text from children
-    const getTextFromChildren = (node: React.ReactNode): string => {
-      if (typeof node === 'string') return node
-      if (typeof node === 'number') return String(node)
-      if (Array.isArray(node)) return node.map(getTextFromChildren).join('')
-      if (React.isValidElement(node) && node.props.children) {
-        return getTextFromChildren(node.props.children)
-      }
-      return ''
-    }
 
     // Update the selected label when this item is selected
     React.useEffect(() => {
