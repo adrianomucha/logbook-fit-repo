@@ -27,10 +27,11 @@ import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer'
 import { ChatView } from '@/components/chat/ChatView';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
+import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftRight, Loader2, Pencil } from 'lucide-react';
+import { ArrowLeftRight, Loader2, Pencil, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { getClientStatus } from '@/lib/client-status';
@@ -76,6 +77,7 @@ export function UnifiedClientProfile() {
   const [secondaryTab, setSecondaryTab] = useState<'plan' | 'workouts' | 'history'>('plan');
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
   // Optimistic override for the weekly check-in schedule switch (null = follow server)
   const [scheduleOverride, setScheduleOverride] = useState<boolean | null>(null);
 
@@ -312,6 +314,18 @@ export function UnifiedClientProfile() {
     const prefillMessage = `Regarding ${exerciseName}${flag.note ? `: "${flag.note}"` : ''} - `;
     setChatPrefill(prefillMessage);
     chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleEndRelationship = async () => {
+    if (!clientId) return;
+    try {
+      await apiFetch(`/api/coach/clients/${clientId}`, { method: 'DELETE' });
+      setShowEndConfirm(false);
+      toast.success(`Ended coaching with ${client?.name ?? 'this client'}`);
+      router.push('/coach/clients');
+    } catch {
+      toast.error('Failed to end the coaching relationship. Please try again.');
+    }
   };
 
   const handleToggleCheckInSchedule = async (enabled: boolean) => {
@@ -718,6 +732,20 @@ export function UnifiedClientProfile() {
             </SectionCard>
           </section>
         </div>
+
+        {/* Offboarding — kept quiet at the page's end so it never competes
+            with coaching actions, but findable when the roster changes */}
+        <div className="animate-enter flex justify-end pt-2" style={{ animationDelay: '260ms' }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowEndConfirm(true)}
+            className="text-muted-foreground hover:text-destructive active:scale-[0.96] transition-transform duration-150 tap-target"
+          >
+            <UserMinus className="w-3.5 h-3.5 mr-1.5" />
+            End coaching relationship
+          </Button>
+        </div>
         </main>
       </div>
 
@@ -742,6 +770,20 @@ export function UnifiedClientProfile() {
         plan={plan ?? null}
         onUpdatePlan={handleUpdatePlan}
         onRefresh={() => { refreshPlan(); refreshCoachPlans(); }}
+      />
+      <ConfirmationModal
+        isOpen={showEndConfirm}
+        onClose={() => setShowEndConfirm(false)}
+        onConfirm={handleEndRelationship}
+        title="End Coaching Relationship"
+        message={`Stop coaching ${client.name}? They'll be removed from your roster.`}
+        warningMessage={
+          apiClient.isSample
+            ? 'This is your sample client — it and all its generated data will be deleted.'
+            : 'Their assigned plan is removed and messaging closes for both of you. Workout history and completed check-ins are kept.'
+        }
+        confirmLabel="End Coaching"
+        confirmVariant="destructive"
       />
     </div>
   );

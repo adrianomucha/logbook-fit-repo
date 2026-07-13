@@ -92,6 +92,7 @@ export interface ClientDetail {
   relationshipStatus: string;
   joinedAt: string;
   checkInScheduleEnabled: boolean;
+  isSample: boolean;
   completions: {
     id: string;
     dayId: string;

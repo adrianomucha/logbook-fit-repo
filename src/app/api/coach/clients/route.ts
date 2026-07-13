@@ -15,7 +15,8 @@ export const GET = withCoach(
     coachProfileId: string
   ) => {
     const relationships = await prisma.coachClientRelationship.findMany({
-      where: { coachId: coachProfileId },
+      // Ended relationships are history, not roster
+      where: { coachId: coachProfileId, status: "ACTIVE" },
       include: {
         client: {
           include: {

@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useSWRConfig } from 'swr';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
 import { getCurrentWeekNumber, getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -28,8 +29,9 @@ import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
 import { WelcomeAwaitingPlan } from '@/components/client/WelcomeAwaitingPlan';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
+import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserMinus } from 'lucide-react';
 
 // ---- Component ----
 
@@ -44,6 +46,8 @@ export function ClientDashboard() {
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const { mutate } = useSWRConfig();
 
   // ---- API Hooks ----
   const { user, coach, isLoading: isLoadingUser, error: userError } = useCurrentUser();
@@ -252,6 +256,32 @@ export function ClientDashboard() {
     requestAnimationFrame(() => window.scrollTo(0, 0));
   };
 
+  const handleLeaveCoach = async () => {
+    try {
+      await apiFetch('/api/client/coach', { method: 'DELETE' });
+      setShowLeaveConfirm(false);
+      toast.success('You’ve left your coach');
+      // Refetch the profile — the dashboard re-renders into the no-coach state
+      await mutate('/api/me');
+    } catch {
+      toast.error('Failed to leave your coach. Please try again.');
+    }
+  };
+
+  // Shared between the awaiting-plan and full dashboard branches
+  const leaveCoachModal = (
+    <ConfirmationModal
+      isOpen={showLeaveConfirm}
+      onClose={() => setShowLeaveConfirm(false)}
+      onConfirm={handleLeaveCoach}
+      title="Leave Your Coach"
+      message={`Stop training with ${coach?.user.name ?? 'your coach'}?`}
+      warningMessage="Your assigned plan is removed and messaging closes for both of you. Your workout history stays on your account."
+      confirmLabel="Leave Coach"
+      confirmVariant="destructive"
+    />
+  );
+
   // ---- Loading/Empty States ----
   if (isLoadingUser || isLoadingWeek) {
     return (
@@ -288,6 +318,25 @@ export function ClientDashboard() {
           <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">No plan yet</h1>
           <p className="text-sm text-muted-foreground antialiased">
             Your coach will assign a workout plan — hang tight.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // No coach — either side ended the relationship. History stays on the
+  // account; there's nothing coached to show until a new invite is accepted.
+  if (!coach) {
+    return (
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
+        <div className="text-center animate-enter max-w-sm">
+          <div className="text-5xl select-none mb-4 animate-bounce-once">🤝</div>
+          <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">
+            You&apos;re not connected to a coach
+          </h1>
+          <p className="text-sm text-muted-foreground antialiased">
+            Your workout history is saved on your account. Ask a coach for a new
+            invite link when you&apos;re ready to train again.
           </p>
         </div>
       </div>
@@ -343,14 +392,29 @@ export function ClientDashboard() {
               </div>
             </>
           ) : (
-            <WelcomeAwaitingPlan
-              clientName={client.name}
-              coachName={coach?.user.name ?? 'Your coach'}
-              canMessage={!!coachUserId}
-              onMessageCoach={handleMessageCoach}
-            />
+            <>
+              <WelcomeAwaitingPlan
+                clientName={client.name}
+                coachName={coach?.user.name ?? 'Your coach'}
+                canMessage={!!coachUserId}
+                onMessageCoach={handleMessageCoach}
+              />
+              {/* Quiet exit — wrong coach or changed your mind before day one */}
+              <div className="flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowLeaveConfirm(true)}
+                  className="text-muted-foreground hover:text-destructive"
+                >
+                  <UserMinus className="w-3.5 h-3.5 mr-1.5" />
+                  Leave this coach
+                </Button>
+              </div>
+            </>
           )}
         </div>
+        {leaveCoachModal}
       </div>
     );
   }
@@ -485,6 +549,25 @@ export function ClientDashboard() {
               measurements={[]}
               progressStats={progress?.stats}
             />
+
+            {/* Coaching membership — quiet, at the very end of the page */}
+            <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card px-4 py-3">
+              <div className="min-w-0">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">Coaching</p>
+                <p className="text-sm font-medium truncate antialiased">
+                  Coached by {coach?.user.name ?? 'your coach'}
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowLeaveConfirm(true)}
+                className="text-muted-foreground hover:text-destructive shrink-0"
+              >
+                <UserMinus className="w-3.5 h-3.5 mr-1.5" />
+                Leave coach
+              </Button>
+            </div>
           </>
         )}
       </div>
@@ -497,6 +580,7 @@ export function ClientDashboard() {
         completedWorkouts={allWorkoutCompletions}
         plan={plan}
       />
+      {leaveCoachModal}
     </div>
   );
 }

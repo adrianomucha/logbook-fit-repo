@@ -48,5 +48,17 @@ export async function GET() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  return NextResponse.json(user);
+  // An ended relationship means "no coach" everywhere in the client app —
+  // don't leak the old coach into the payload
+  const clientProfile = user.clientProfile
+    ? {
+        ...user.clientProfile,
+        coachRelationship:
+          user.clientProfile.coachRelationship?.status === "ACTIVE"
+            ? user.clientProfile.coachRelationship
+            : null,
+      }
+    : null;
+
+  return NextResponse.json({ ...user, clientProfile });
 }
