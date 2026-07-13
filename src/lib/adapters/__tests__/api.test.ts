@@ -387,6 +387,7 @@ describe("apiClientDetailToClient", () => {
       relationshipStatus: "ACTIVE",
       joinedAt: "2025-01-15T00:00:00Z",
       checkInScheduleEnabled: false,
+      isSample: false,
       completions: [],
       checkIns: [
         { id: "ci-1", status: "COMPLETED", effortRating: null, createdAt: "2025-03-01T00:00:00Z", completedAt: "2025-03-02T00:00:00Z" },
@@ -417,6 +418,7 @@ describe("apiClientDetailToClient", () => {
       relationshipStatus: "INACTIVE",
       joinedAt: "2025-01-15T00:00:00Z",
       checkInScheduleEnabled: false,
+      isSample: false,
       completions: [],
       checkIns: [],
     };

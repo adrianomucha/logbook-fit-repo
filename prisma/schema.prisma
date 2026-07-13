@@ -157,6 +157,15 @@ model CoachClientRelationship {
   // Weekly check-in automation: when enabled, a new check-in is created
   // lazily (on coach/client data access) once 7 days pass since the last one
   checkInScheduleEnabled Boolean @default(false)
+  // Termination audit: set when the coach ends the relationship or the
+  // client unsubscribes. status becomes INACTIVE; the row is kept as history.
+  endedAt   DateTime?
+  endedBy   UserRole?
+  // Plan assignment at the moment the relationship ended — lets Restore put
+  // the client back exactly where they left off. No FK: the plan may be
+  // deleted while the relationship sits in the archive.
+  endedPlanId        String?
+  endedPlanStartDate DateTime?
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
 

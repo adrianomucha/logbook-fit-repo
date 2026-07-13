@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
+import { usePastClients } from '@/hooks/api/useCoachClients';
 import type { DashboardClient } from '@/types/api';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
@@ -74,7 +75,9 @@ function ClientRow({ client }: { client: DashboardClient }) {
 }
 
 export function AllClientsPage() {
+  const router = useRouter();
   const { clients, isLoading } = useCoachDashboard();
+  const { pastClients } = usePastClients();
   const [showInviteModal, setShowInviteModal] = useState(false);
 
   return (
@@ -107,6 +110,19 @@ export function AllClientsPage() {
             {clients.map((client) => (
               <ClientRow key={client.clientProfileId} client={client} />
             ))}
+          </div>
+        )}
+
+        {/* The archive lives on its own page — just a quiet pointer here,
+            so the roster stays a roster no matter how much history piles up */}
+        {pastClients.length > 0 && (
+          <div className="animate-enter flex justify-center pt-4">
+            <button
+              onClick={() => router.push('/coach/clients/past')}
+              className="text-xs text-muted-foreground/70 hover:text-foreground transition-colors tap-target antialiased"
+            >
+              Past clients ({pastClients.length})
+            </button>
           </div>
         )}
       </div>

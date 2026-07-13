@@ -72,6 +72,20 @@ export interface CoachClient {
   joinedAt: string;
 }
 
+// GET /api/coach/clients?status=ended
+export interface PastClient {
+  clientProfileId: string;
+  user: {
+    id: string;
+    name: string | null;
+    email: string;
+    avatarUrl: string | null;
+  };
+  joinedAt: string;
+  endedAt: string | null;
+  endedBy: 'COACH' | 'CLIENT' | null;
+}
+
 // GET /api/coach/clients/[id]
 export interface ClientDetail {
   id: string;
@@ -92,6 +106,7 @@ export interface ClientDetail {
   relationshipStatus: string;
   joinedAt: string;
   checkInScheduleEnabled: boolean;
+  isSample: boolean;
   completions: {
     id: string;
     dayId: string;

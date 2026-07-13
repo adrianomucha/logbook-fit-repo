@@ -3,6 +3,8 @@ import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
 import { ensureScheduledCheckIn } from "@/lib/checkin-schedule";
+import { endCoachClientRelationship } from "@/lib/relationship-termination";
+import { deleteSampleClient } from "@/lib/sample-client";
 
 /**
  * GET /api/coach/clients/[id]
@@ -18,11 +20,13 @@ export const GET = withCoach(
   ) => {
     const clientProfileId = ctx.params.id;
 
-    // Verify coach-client relationship
+    // Verify coach-client relationship — an ended relationship closes the
+    // workspace, so this behaves like the client no longer exists
     const relationship = await prisma.coachClientRelationship.findFirst({
       where: {
         coachId: coachProfileId,
         clientId: clientProfileId,
+        status: "ACTIVE",
       },
     });
 
@@ -101,5 +105,49 @@ export const GET = withCoach(
       planStartDate: client.planStartDate,
       checkInScheduleEnabled: relationship.checkInScheduleEnabled,
     });
+  }
+);
+
+/**
+ * DELETE /api/coach/clients/[id]
+ * Coach ends the coaching relationship with this client. The relationship is
+ * kept as INACTIVE history; the client keeps their account and workout
+ * history but loses the assigned plan and the messaging channel.
+ * Idempotent — ending an already-ended relationship returns 200.
+ */
+export const DELETE = withCoach(
+  async (
+    _req: Request,
+    ctx: { params: Record<string, string> },
+    _session: Session,
+    coachProfileId: string
+  ) => {
+    const clientProfileId = ctx.params.id;
+
+    const relationship = await prisma.coachClientRelationship.findFirst({
+      where: {
+        coachId: coachProfileId,
+        clientId: clientProfileId,
+      },
+      include: { client: { select: { isSample: true } } },
+    });
+
+    if (!relationship) {
+      return NextResponse.json({ error: "Client not found" }, { status: 404 });
+    }
+
+    // A sample client isn't a real person — "ending" it removes the demo and
+    // all its generated data instead of leaving an orphaned fake account
+    if (relationship.client.isSample) {
+      await deleteSampleClient(coachProfileId);
+      return NextResponse.json({ ended: true, sampleRemoved: true });
+    }
+
+    if (relationship.status === "INACTIVE") {
+      return NextResponse.json({ ended: true, endedAt: relationship.endedAt });
+    }
+
+    const ended = await endCoachClientRelationship(relationship, "COACH");
+    return NextResponse.json({ ended: true, endedAt: ended.endedAt });
   }
 );
