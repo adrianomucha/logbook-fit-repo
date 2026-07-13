@@ -192,7 +192,7 @@ export function LastCheckInCard({
               )}
               {checkIn.clientNotes && (
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  "{isExpanded ? checkIn.clientNotes : truncateText(checkIn.clientNotes, 100)}"
+                  &quot;{isExpanded ? checkIn.clientNotes : truncateText(checkIn.clientNotes, 100)}&quot;
                 </p>
               )}
               {!checkIn.clientNotes && !getWorkoutFeelingLabel() && (
@@ -301,7 +301,7 @@ function FlaggedExercisesSubsection({
                 </div>
                 {flag.note && (
                   <p className="text-sm text-muted-foreground truncate">
-                    "{flag.note}"
+                    &quot;{flag.note}&quot;
                   </p>
                 )}
                 <p className="text-xs text-muted-foreground">{exerciseDetails}</p>

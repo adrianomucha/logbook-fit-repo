@@ -23,7 +23,7 @@ export function ExerciseOnboarding({
 
         {/* Description */}
         <p className="text-muted-foreground">
-          Add exercises you commonly use. You'll reuse them across all plans.
+          Add exercises you commonly use. You&apos;ll reuse them across all plans.
         </p>
 
         {/* Quick Start Card */}

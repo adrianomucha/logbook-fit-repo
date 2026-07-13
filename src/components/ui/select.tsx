@@ -139,7 +139,7 @@ const SelectValue = ({ placeholder }: { placeholder?: string }) => {
 const SelectContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => {
+>(({ className, children, ...props }, _ref) => {
   const { isOpen, setIsOpen } = React.useContext(SelectContext)
   const contentRef = React.useRef<HTMLDivElement>(null)
 

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  ArrowLeft, Clock, CheckCircle2, ClipboardCheck, AlertCircle,
+  ArrowLeft, Clock, CheckCircle2, ClipboardCheck,
   Dumbbell, Send, Loader2,
 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
@@ -226,7 +226,7 @@ export function ClientCheckIn() {
                 <Clock className="w-12 h-12 mx-auto mb-4 text-warning" />
                 <h2 className="text-xl font-bold mb-2">Waiting for {clientName}</h2>
                 <p className="text-muted-foreground">
-                  Check-in sent {sentAgo}. {clientName} hasn't responded yet.
+                  Check-in sent {sentAgo}. {clientName} hasn&apos;t responded yet.
                 </p>
               </div>
             </CardContent>
@@ -291,7 +291,7 @@ export function ClientCheckIn() {
             <Card className="border-info/20 bg-info/5">
               <CardHeader>
                 <CardTitle className="text-base">
-                  {clientName}'s Response
+                  {clientName}&apos;s Response
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -364,7 +364,7 @@ export function ClientCheckIn() {
                     onChange={(e) => setPlanAdjustment(e.target.checked)}
                     className="rounded border-input"
                   />
-                  <span className="text-sm">I'll adjust the plan based on this feedback</span>
+                  <span className="text-sm">I&apos;ll adjust the plan based on this feedback</span>
                 </label>
               </CardContent>
             </Card>

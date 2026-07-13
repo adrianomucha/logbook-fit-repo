@@ -1,5 +1,5 @@
 import { Client, Message, CheckIn } from '@/types';
-import { AlertCircle, Clock, MessageSquare, CheckCircle2, ClipboardCheck, LucideIcon } from 'lucide-react';
+import { AlertCircle, MessageSquare, CheckCircle2, ClipboardCheck, LucideIcon } from 'lucide-react';
 
 export interface ClientStatus {
   type: 'pending-checkin' | 'at-risk' | 'overdue' | 'unread' | 'ok';

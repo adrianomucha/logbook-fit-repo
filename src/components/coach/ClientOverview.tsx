@@ -34,10 +34,7 @@ export function ClientOverview({
   plan,
   measurements,
   completedWorkouts,
-  messages,
-  onViewPlans,
-  onViewProgress,
-  onViewChat
+  messages
 }: ClientOverviewProps) {
   const [showMeasurementsModal, setShowMeasurementsModal] = useState(false);
   const [showMessagesModal, setShowMessagesModal] = useState(false);
@@ -157,7 +154,7 @@ export function ClientOverview({
                 {latestMeasurement.waist && (
                   <div className="flex items-center justify-between">
                     <span className="text-sm">Waist</span>
-                    <span className="font-bold">{latestMeasurement.waist}"</span>
+                    <span className="font-bold">{latestMeasurement.waist}&quot;</span>
                   </div>
                 )}
               </div>

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCheckIn } from '@/hooks/api/useCheckIn';
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
@@ -62,7 +61,7 @@ export function ClientCheckInForm() {
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in Not Found</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in doesn't exist or has expired.</p>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in doesn&apos;t exist or has expired.</p>
             <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
           </div>
         </div>
@@ -78,7 +77,7 @@ export function ClientCheckInForm() {
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-10 h-10 mx-auto mb-4 text-success" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Already Submitted</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">You've already responded to this check-in.</p>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">You&apos;ve already responded to this check-in.</p>
             <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
           </div>
         </div>
@@ -94,7 +93,7 @@ export function ClientCheckInForm() {
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success animate-bounce-once" />
             <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach!</h2>
-            <p className="text-sm text-muted-foreground antialiased">They'll review and get back to you soon.</p>
+            <p className="text-sm text-muted-foreground antialiased">They&apos;ll review and get back to you soon.</p>
           </div>
         </div>
       </div>

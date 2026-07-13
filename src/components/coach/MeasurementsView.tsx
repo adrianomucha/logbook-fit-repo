@@ -104,7 +104,7 @@ export function MeasurementsView({ client, measurements, onAddMeasurement }: Mea
                     <div className="grid grid-cols-3 gap-2 text-xs">
                       {measurement.weight && <div>Weight: {measurement.weight} lbs</div>}
                       {measurement.bodyFat && <div>BF: {measurement.bodyFat}%</div>}
-                      {measurement.waist && <div>Waist: {measurement.waist}"</div>}
+                      {measurement.waist && <div>Waist: {measurement.waist}&quot;</div>}
                     </div>
                     {measurement.notes && (
                       <p className="text-xs text-muted-foreground mt-1">{measurement.notes}</p>

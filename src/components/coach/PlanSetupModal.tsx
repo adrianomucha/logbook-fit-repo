@@ -150,7 +150,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
         }
       >
         <p className="text-foreground">
-          Your plan hasn't been saved yet. Are you sure you want to discard your changes?
+          Your plan hasn&apos;t been saved yet. Are you sure you want to discard your changes?
         </p>
       </Modal>
     );

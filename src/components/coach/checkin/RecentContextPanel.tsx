@@ -54,7 +54,7 @@ export function RecentContextPanel({
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            This is {clientName}'s first check-in!
+            This is {clientName}&apos;s first check-in!
           </p>
           <p className="text-xs text-muted-foreground mt-1">
             Set the tone for future check-ins.
@@ -127,7 +127,7 @@ export function RecentContextPanel({
                 {/* Coach response preview */}
                 {checkIn.coachResponse && (
                   <p className="text-muted-foreground italic line-clamp-2">
-                    You said: "{truncateText(checkIn.coachResponse, 60)}"
+                    You said: &quot;{truncateText(checkIn.coachResponse, 60)}&quot;
                   </p>
                 )}
 
@@ -176,7 +176,6 @@ export function RecentContextPanel({
  */
 export function RecentContextPanelMobile({
   clientId,
-  clientName,
   checkIns,
   completedWorkouts,
   currentCheckInId,
@@ -249,7 +248,7 @@ export function RecentContextPanelMobile({
                 </p>
                 {checkIn.coachResponse && (
                   <p className="text-muted-foreground italic line-clamp-2">
-                    You said: "{truncateText(checkIn.coachResponse, 60)}"
+                    You said: &quot;{truncateText(checkIn.coachResponse, 60)}&quot;
                   </p>
                 )}
                 {checkIn.planAdjustment && (

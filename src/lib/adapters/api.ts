@@ -10,7 +10,6 @@ import type {
 } from '@/types';
 import type {
   ClientDetail,
-  ClientCheckIn,
   ClientProgressCompletion,
   ApiMessage,
 } from '@/types/api';

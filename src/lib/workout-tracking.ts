@@ -24,7 +24,7 @@ export function getConsecutiveMissedWorkouts(
   let missedWeeks = 0;
   // IMPORTANT: Set week to start on Monday (weekStartsOn: 1), not Sunday (default 0)
   const weekOptions = { weekStartsOn: 1 as const };
-  let currentWeekStart = startOfWeek(new Date(), weekOptions);
+  const currentWeekStart = startOfWeek(new Date(), weekOptions);
 
   const weeklyData: any[] = [];
 
