@@ -2,6 +2,8 @@
 -- (coach terminates the client, or the client unsubscribes). The row is kept
 -- with status INACTIVE as history; these columns record when and by whom.
 -- Additive and nullable: existing rows are unaffected.
+-- IF NOT EXISTS: preview deployments run new code against the shared DB
+-- before migrate deploy runs there, so this may be applied out-of-band first.
 ALTER TABLE "coach_client_relationships"
-  ADD COLUMN "endedAt" TIMESTAMP(3),
-  ADD COLUMN "endedBy" "UserRole";
+  ADD COLUMN IF NOT EXISTS "endedAt" TIMESTAMP(3),
+  ADD COLUMN IF NOT EXISTS "endedBy" "UserRole";

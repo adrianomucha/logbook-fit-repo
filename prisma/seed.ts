@@ -175,12 +175,13 @@ async function seed() {
   const alex = await ensureClient("alex@demo.logbook.fit", "Alex Rodriguez");
   const jordan = await ensureClient("jordan@demo.logbook.fit", "Jordan Lee");
 
-  // Coach-client relationships
+  // Coach-client relationships — converge to ACTIVE so re-seeding revives a
+  // demo roster where relationships were ended via terminate/unsubscribe
   for (const client of [mike, emma, alex, jordan]) {
     await prisma.coachClientRelationship.upsert({
       where: { coachId_clientId: { coachId: coachProfileId, clientId: client.profile.id } },
       create: { coachId: coachProfileId, clientId: client.profile.id, status: "ACTIVE" },
-      update: {},
+      update: { status: "ACTIVE", endedAt: null, endedBy: null },
     });
   }
   console.log(`✓ 4 clients ensured & linked to coach`);
