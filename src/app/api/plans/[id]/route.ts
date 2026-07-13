@@ -133,6 +133,8 @@ export const PUT = withCoach(
 /**
  * DELETE /api/plans/[id]
  * Soft-deletes a plan (sets deletedAt).
+ * Blocked while any client is assigned to it — plans are shared by reference,
+ * so deleting one would silently strand every assigned client with no plan.
  */
 export const DELETE = withCoach(
   async (
@@ -148,9 +150,28 @@ export const DELETE = withCoach(
         id: planId,
         ...coachScope(coachProfileId),
       },
+      include: {
+        assignedTo: {
+          select: { user: { select: { name: true } } },
+        },
+      },
     });
     if (!existing) {
       return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+    }
+
+    if (existing.assignedTo.length > 0) {
+      const names = existing.assignedTo
+        .map((c) => c.user.name || "a client")
+        .slice(0, 3)
+        .join(", ");
+      const extra = existing.assignedTo.length > 3 ? ` and ${existing.assignedTo.length - 3} more` : "";
+      return NextResponse.json(
+        {
+          error: `This plan is assigned to ${names}${extra}. Change their plan first, then delete it.`,
+        },
+        { status: 409 }
+      );
     }
 
     await prisma.plan.update({

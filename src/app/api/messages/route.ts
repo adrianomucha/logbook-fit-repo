@@ -18,7 +18,8 @@ export async function POST(req: Request) {
 
   const result = await parseBody(req, sendMessageSchema);
   if (!result.success) return result.response;
-  const { recipientId, content, workoutReferenceId, exerciseReferenceId } = result.data;
+  const { content, workoutReferenceId, exerciseReferenceId } = result.data;
+  let { recipientId } = result.data;
 
   const senderId = session.user.id;
 
@@ -31,6 +32,29 @@ export async function POST(req: Request) {
       clientProfile: { select: { id: true } },
     },
   });
+
+  // A client's messages can only go to their coach — resolve the recipient
+  // server-side when it's omitted, so client surfaces don't need to know
+  // the coach's user id
+  if (!recipientId) {
+    if (!senderProfile?.clientProfile) {
+      return NextResponse.json(
+        { error: "recipientId is required" },
+        { status: 400 }
+      );
+    }
+    const rel = await prisma.coachClientRelationship.findFirst({
+      where: { clientId: senderProfile.clientProfile.id, status: "ACTIVE" },
+      include: { coach: { select: { userId: true } } },
+    });
+    if (!rel) {
+      return NextResponse.json(
+        { error: "No active relationship with recipient" },
+        { status: 403 }
+      );
+    }
+    recipientId = rel.coach.userId;
+  }
 
   const recipientProfile = await prisma.user.findUnique({
     where: { id: recipientId },

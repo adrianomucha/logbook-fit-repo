@@ -5,6 +5,7 @@ import type {
   WorkoutWeek,
   WorkoutDay,
   Exercise,
+  ExerciseFlag,
   WorkoutCompletion,
   Message,
 } from '@/types';
@@ -172,6 +173,22 @@ export function apiClientDetailToWorkoutCompletions(
     durationSec: c.durationSec ?? undefined,
     effortRating: (c.effortRating as WorkoutCompletion['effortRating']) ?? undefined,
   }));
+}
+
+/** Flatten coach client-detail completion flags → domain ExerciseFlag[]. */
+export function apiClientDetailToExerciseFlags(
+  completions: ClientDetail['completions'],
+): ExerciseFlag[] {
+  return completions.flatMap((c) =>
+    (c.flags ?? []).map((f) => ({
+      id: f.id,
+      workoutCompletionId: c.id,
+      // Domain flags key exercises by WorkoutExercise id, matching plan rows
+      exerciseId: f.workoutExerciseId,
+      note: f.note ?? undefined,
+      flaggedAt: f.createdAt,
+    })),
+  );
 }
 
 // ---------------------------------------------------------------------------

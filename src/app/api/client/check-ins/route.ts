@@ -26,7 +26,8 @@ export const GET = withClient(
     }
 
     const checkIns = await prisma.checkIn.findMany({
-      where: { clientId: clientProfileId },
+      // Expired check-ins were never answered — noise, not history
+      where: { clientId: clientProfileId, status: { not: "EXPIRED" } },
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

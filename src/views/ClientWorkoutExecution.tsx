@@ -147,32 +147,32 @@ export function ClientWorkoutExecution() {
       if (messageSheetExercise.weight) parts.push(`@ ${messageSheetExercise.weight}`);
       const prescription = parts.join(' ');
 
-      const messageContent =
-        content ||
-        `I have a question about ${messageSheetExercise.exercise.name}`;
+      // Exercise context travels inside the message text so the coach sees it
+      // in any chat surface; the reference ids link it to the workout data
+      const contextLine = `🚩 ${messageSheetExercise.exercise.name} — ${prescription} · ${setsCompleted}/${messageSheetExercise.sets} sets done`;
+      const flagNote = messageSheetExercise.flag?.note ? `\n“${messageSheetExercise.flag.note}”` : '';
+      const question =
+        content.trim() || `I have a question about ${messageSheetExercise.exercise.name}`;
+      const messageContent = `${contextLine}${flagNote}\n\n${question}`;
 
-      // Send via messages API
+      // Send via messages API — recipient (the coach) is resolved server-side
       try {
         await apiFetch('/api/messages', {
           method: 'POST',
           body: JSON.stringify({
             content: messageContent,
-            exerciseContext: {
-              exerciseName: messageSheetExercise.exercise.name,
-              prescription,
-              setsCompleted,
-              totalSets: messageSheetExercise.sets,
-              flagNote: messageSheetExercise.flag?.note,
-            },
+            exerciseReferenceId: messageSheetExercise.workoutExerciseId,
+            ...(completionId ? { workoutReferenceId: completionId } : {}),
           }),
         });
+        setMessageSheetExercise(null);
+        toast.success('Sent to your coach');
       } catch {
-        toast.error('Message failed to send. You can try again from the chat tab.');
+        toast.error('Message failed to send. Please try again.');
+        throw new Error('send-failed'); // keeps the draft in the sheet
       }
-
-      setMessageSheetExercise(null);
     },
-    [messageSheetExercise]
+    [messageSheetExercise, completionId]
   );
 
   // Handle exercise expand toggle

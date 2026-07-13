@@ -110,7 +110,9 @@ export const assignPlanSchema = z.object({
 // ──────────────────────────────────────
 
 export const sendMessageSchema = z.object({
-  recipientId: z.string().uuid(),
+  // Optional for client senders — their only possible recipient is their
+  // coach, which the server resolves. Coaches must always specify one.
+  recipientId: z.string().uuid().optional(),
   content: z.string().min(1, "Message cannot be empty").max(5000),
   workoutReferenceId: z.string().uuid().optional(),
   exerciseReferenceId: z.string().uuid().optional(),

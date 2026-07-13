@@ -247,7 +247,7 @@ export function InlineCheckInReview({
                 Sent to {firstName}
               </h3>
               <p className="text-sm text-muted-foreground antialiased">
-                They&apos;ll get a notification to share how training is going.
+                They&apos;ll see it next time they open the app.
               </p>
             </div>
           </div>
@@ -280,7 +280,7 @@ export function InlineCheckInReview({
                   Check-in sent <span className="text-muted-foreground font-normal tabular-nums">{sentAgo}</span>
                 </p>
                 <p className="font-prose text-[13px] text-muted-foreground mt-0.5 antialiased">
-                  {firstName} got a notification to share how training is going.
+                  {firstName} will see it next time they open the app.
                 </p>
               </div>
               <div>

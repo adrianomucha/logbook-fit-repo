@@ -117,6 +117,12 @@ export interface ClientDetail {
     effortRating: string | null;
     durationSec: number | null;
     day: { name: string | null; orderIndex: number; week: { id: string } | null } | null;
+    flags: {
+      id: string;
+      workoutExerciseId: string;
+      note: string | null;
+      createdAt: string;
+    }[];
   }[];
   checkIns: {
     id: string;

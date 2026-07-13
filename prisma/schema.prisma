@@ -32,6 +32,9 @@ enum CheckInStatus {
   PENDING
   CLIENT_RESPONDED
   COMPLETED
+  // A PENDING check-in the client never answered, closed out after two full
+  // cadences so it stops blocking the weekly schedule. Hidden from history.
+  EXPIRED
 }
 
 enum EffortRating {
