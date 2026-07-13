@@ -30,19 +30,15 @@ To generate NEXTAUTH_SECRET, run:
 openssl rand -base64 32
 ```
 
-## 3. Run Database Migration
+## 3. Run Database Migrations
 
 ```bash
-npx prisma migrate dev --name init
+npx prisma migrate deploy
 ```
 
-This creates all 16 tables. Then apply the extra SQL:
-
-```bash
-npx prisma db execute --file prisma/sql/post_001_partial_unique_indexes.sql
-npx prisma db execute --file prisma/sql/post_002_workout_completion_trigger.sql
-npx prisma db execute --file prisma/sql/post_003_check_constraints.sql
-```
+This replays the full migration history — tables, partial unique indexes,
+triggers, check constraints, and RLS — onto a fresh database. No extra SQL
+steps needed.
 
 ## 4. Seed Demo Data
 
