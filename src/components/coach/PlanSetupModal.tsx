@@ -284,7 +284,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               ))}
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground mt-1">Rest days will be auto-calculated</p>
+          <p className="text-xs text-muted-foreground mt-1">Clients work through workouts in order — rest days are whenever they don&apos;t train</p>
           {errors.workoutsPerWeek && touched.workoutsPerWeek && (
             <p id={errorIds.workoutsPerWeek} className="text-destructive text-sm mt-1" role="alert">{errors.workoutsPerWeek}</p>
           )}

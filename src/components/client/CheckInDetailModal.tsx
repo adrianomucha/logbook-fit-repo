@@ -148,7 +148,7 @@ export function CheckInDetailModal({
               {checkIn.planAdjustment && (
                 <div className="flex items-center gap-2 text-success">
                   <CheckSquare className="w-4 h-4" />
-                  <span className="text-sm font-medium">Your plan was updated based on this check-in</span>
+                  <span className="text-sm font-medium">Your coach is adjusting your plan based on this check-in</span>
                 </div>
               )}
             </div>
