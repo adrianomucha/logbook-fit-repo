@@ -55,7 +55,7 @@ function PageFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function SignupPage() {
+export default function SignupClient() {
   return (
     <Suspense fallback={
       <div className="min-h-dvh bg-background p-4 flex items-center justify-center">
