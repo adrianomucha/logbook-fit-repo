@@ -556,7 +556,7 @@ export function UnifiedClientProfile() {
             subtitle={headerSubtitle}
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
             action={
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-2.5 shrink-0">
                 <Button
                   variant="default"
                   size="sm"
@@ -573,7 +573,7 @@ export function UnifiedClientProfile() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      className="h-9 w-9 text-muted-foreground hover:text-foreground"
                       aria-label="More actions"
                     >
                       <MoreVertical className="w-4 h-4" />
