@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, ExerciseFlag, Message } from '@/types';
 import { useClientProfile } from '@/hooks/api/useClientProfile';
 import { usePlanDetail } from '@/hooks/api/usePlanDetail';
@@ -56,6 +56,7 @@ export function UnifiedClientProfile() {
   const params = useParams<{ clientId: string }>();
   const clientId = params?.clientId ?? null;
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useCurrentUser();
 
   // API hooks
@@ -97,6 +98,17 @@ export function UnifiedClientProfile() {
   const planEditorRef = useRef<HTMLDivElement>(null);
   const chatRef = useRef<HTMLDivElement>(null);
   const secondaryRef = useRef<HTMLDivElement>(null);
+
+  // ?chat=1 deep link (e.g. the dashboard's "Say hello" nudge) — bring the
+  // chat into view once the profile has actually rendered
+  const wantsChat = searchParams?.get('chat') != null;
+  useEffect(() => {
+    if (!wantsChat || isLoadingClient || !apiClient) return;
+    const raf = requestAnimationFrame(() => {
+      chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(raf);
+  }, [wantsChat, isLoadingClient, apiClient]);
 
   // Timer ref for cleanup
   const sentTimerRef = useRef<ReturnType<typeof setTimeout>>();
