@@ -54,7 +54,9 @@ export function Logo({ markSize = 20, className }: LogoProps) {
         <span className="font-mono text-xs sm:text-sm font-bold uppercase tracking-[0.15em] text-foreground">
           Logbook
         </span>
-        <span className="font-mono text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground/60">
+        {/* Full-strength muted-foreground: the /60-faded version failed WCAG AA
+            contrast for small text — size and weight already set the hierarchy */}
+        <span className="font-mono text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground">
           Fitness
         </span>
       </span>
