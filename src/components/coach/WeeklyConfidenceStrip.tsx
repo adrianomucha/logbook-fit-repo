@@ -22,13 +22,13 @@ const ORDER: Record<Bucket, number> = { ok: 0, pending: 1, risk: 2 };
 const STATUS_DOT: Record<Bucket, string> = {
   ok: 'bg-success',
   pending: 'bg-warning',
-  risk: 'bg-destructive',
+  risk: 'bg-destructive dark:bg-red-500',
 };
 
-const VERDICT_TEXT: Record<Bucket, string> = {
-  ok: 'text-success',
-  pending: 'text-warning',
-  risk: 'text-destructive',
+const VERDICT_CHIP: Record<Bucket, string> = {
+  ok: 'bg-success/10 text-success',
+  pending: 'bg-warning/10 text-warning',
+  risk: 'bg-destructive/10 text-destructive dark:bg-red-500/10 dark:text-red-400',
 };
 
 const BUCKET_LABEL: Record<Bucket, string> = {
@@ -96,16 +96,25 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
       'bg-card rounded-xl overflow-hidden p-4 sm:p-5',
       'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]'
     )}>
-      {/* Eyebrow + verdict */}
-      <div className="flex items-baseline justify-between gap-3">
+      {/* Eyebrow + verdict pill */}
+      <div className="flex items-center justify-between gap-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
           This week
         </p>
         <p className={cn(
-          'font-mono text-[10px] uppercase tracking-[0.14em] font-medium tabular-nums antialiased truncate',
-          VERDICT_TEXT[dominant]
+          'flex items-center gap-1.5 min-w-0 rounded-full px-2.5 py-1',
+          'font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased',
+          VERDICT_CHIP[dominant]
         )}>
-          {verdict}
+          <span
+            className={cn(
+              'w-1.5 h-1.5 rounded-full shrink-0',
+              STATUS_DOT[dominant],
+              dominant === 'risk' && 'animate-pulse'
+            )}
+            aria-hidden="true"
+          />
+          <span className="truncate">{verdict}</span>
         </p>
       </div>
 
@@ -161,15 +170,37 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
         </div>
       )}
 
+      {/* Status meter — the divider carries the data: each segment's width
+          is that bucket's share of the roster. */}
+      {total > 0 ? (
+        <div
+          className="flex h-1.5 gap-1 mt-4 origin-left transition-transform duration-500 ease-out"
+          style={{ transform: mounted ? 'scaleX(1)' : 'scaleX(0)' }}
+          aria-hidden="true"
+        >
+          {([['ok', onTrack], ['pending', needsAction], ['risk', atRisk]] as const)
+            .filter(([, count]) => count > 0)
+            .map(([bucket, count]) => (
+              <div
+                key={bucket}
+                className={cn('rounded-full min-w-[10px]', STATUS_DOT[bucket])}
+                style={{ flexGrow: count, flexBasis: 0 }}
+              />
+            ))}
+        </div>
+      ) : (
+        <div className="border-t border-border mt-4" aria-hidden="true" />
+      )}
+
       {/* Footer — count + legend on one quiet line */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[11px] antialiased border-t border-border mt-4 pt-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 font-mono text-[11px] antialiased mt-3">
         <span>
           <span className="font-semibold tabular-nums">{total}</span>{' '}
           <span className="text-muted-foreground">{total === 1 ? 'client' : 'clients'}</span>
         </span>
-        <Key dot="bg-success" value={onTrack} label="on track" active={onTrack > 0} />
-        <Key dot="bg-warning" value={needsAction} label="pending" active={needsAction > 0} />
-        <Key dot="bg-destructive" value={atRisk} label="at risk" active={atRisk > 0} />
+        <Key dot={STATUS_DOT.ok} value={onTrack} label="on track" active={onTrack > 0} />
+        <Key dot={STATUS_DOT.pending} value={needsAction} label="pending" active={needsAction > 0} />
+        <Key dot={STATUS_DOT.risk} value={atRisk} label="at risk" active={atRisk > 0} />
       </div>
     </div>
   );
