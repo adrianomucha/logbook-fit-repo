@@ -263,7 +263,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               maxLength={NOTE_MAX_LENGTH}
             />
           </div>
-          <p className="text-xs text-muted-foreground mt-2 antialiased">
+          <p className="text-xs text-muted-foreground mt-2 antialiased text-pretty">
             Greets them when they open your link, then waits in chat as your first message.
           </p>
         </div>

@@ -182,11 +182,11 @@ function SignupContent() {
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
               Invite link
             </p>
-            <h1 className="text-3xl font-black tracking-tight leading-tight">
+            <h1 className="text-3xl font-black tracking-tight leading-tight text-balance">
               {errorContent.title}
             </h1>
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
+          <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
             {errorContent.message}
           </p>
           <div className="pt-2">
@@ -213,10 +213,10 @@ function SignupContent() {
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
             Get started
           </p>
-          <h1 className="text-3xl font-black tracking-tight leading-tight">
+          <h1 className="text-3xl font-black tracking-tight leading-tight text-balance">
             Create your coach account
           </h1>
-          <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3 text-pretty">
             Know who needs you today — before they go quiet.
           </p>
         </div>
@@ -247,7 +247,7 @@ function SignupContent() {
                 Your coach
               </p>
             </div>
-            <h1 className="text-3xl font-black tracking-tight leading-tight">
+            <h1 className="text-3xl font-black tracking-tight leading-tight text-balance">
               {coachName} is expecting you
             </h1>
           </div>
@@ -257,7 +257,7 @@ function SignupContent() {
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
                 A note from {coachFirstName}
               </p>
-              <p className="text-sm text-foreground/80 leading-relaxed">
+              <p className="text-sm text-foreground/80 leading-relaxed text-pretty">
                 {inviteInfo.note}
               </p>
             </div>
@@ -293,7 +293,7 @@ function SignupContent() {
             required
           />
           {inviteInfo?.email && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground text-pretty">
               Pre-filled from your invite — change it if it&apos;s not right
             </p>
           )}
@@ -338,7 +338,7 @@ function SignupContent() {
             )}
           </Button>
 
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-xs text-muted-foreground text-pretty">
             {isCoachSignup
               ? 'Your workspace comes ready with a starter exercise library.'
               : `Takes 30 seconds — ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`}
