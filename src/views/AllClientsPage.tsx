@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import { usePastClients } from '@/hooks/api/useCoachClients';
@@ -8,8 +8,9 @@ import { PageHeader } from '@/components/coach/PageHeader';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { EmptyStateNoClients } from '@/components/coach/EmptyStates';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Loader2, Plus, RefreshCw } from 'lucide-react';
+import { Loader2, Plus, RefreshCw, Search } from 'lucide-react';
 import {
   urgencyStyle,
   getSignal,
@@ -79,6 +80,27 @@ export function AllClientsPage() {
   const { clients, isLoading, error, refresh } = useCoachDashboard();
   const { pastClients } = usePastClients();
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [query, setQuery] = useState('');
+  const [sortMode, setSortMode] = useState<'urgency' | 'name'>('urgency');
+
+  // Client-side search & sort — the roster arrives whole, so this stays
+  // instant; the API's urgency order is the default
+  const visibleClients = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = q
+      ? clients.filter(
+          (c) =>
+            (c.user.name ?? '').toLowerCase().includes(q) ||
+            c.user.email.toLowerCase().includes(q)
+        )
+      : clients;
+    if (sortMode === 'name') {
+      return [...filtered].sort((a, b) =>
+        (a.user.name || a.user.email).localeCompare(b.user.name || b.user.email)
+      );
+    }
+    return filtered;
+  }, [clients, query, sortMode]);
 
   return (
     <div className="min-h-dvh bg-background pb-24 sm:pb-4">
@@ -89,7 +111,13 @@ export function AllClientsPage() {
         <div className="animate-enter mb-1.5 sm:mb-3">
           <PageHeader
             title="Clients"
-            subtitle={clients.length > 0 ? `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}` : undefined}
+            subtitle={
+              clients.length > 0
+                ? query.trim()
+                  ? `${visibleClients.length} of ${clients.length} ${clients.length === 1 ? 'client' : 'clients'}`
+                  : `${clients.length} ${clients.length === 1 ? 'client' : 'clients'}`
+                : undefined
+            }
             action={
               <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
                 <Plus className="w-4 h-4 mr-1.5" />
@@ -98,6 +126,40 @@ export function AllClientsPage() {
             }
           />
         </div>
+
+        {/* Search + sort — instant, client-side */}
+        {!isLoading && clients.length > 0 && (
+          <div className="animate-enter flex flex-col sm:flex-row gap-2 sm:items-center">
+            <div className="relative flex-1">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
+              <Input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search clients…"
+                aria-label="Search clients by name or email"
+                className="pl-9"
+              />
+            </div>
+            <div className="flex gap-1 shrink-0" role="group" aria-label="Sort clients">
+              {([
+                { mode: 'urgency' as const, label: 'Urgency' },
+                { mode: 'name' as const, label: 'A–Z' },
+              ]).map(({ mode, label }) => (
+                <Button
+                  key={mode}
+                  size="sm"
+                  variant={sortMode === mode ? 'secondary' : 'ghost'}
+                  onClick={() => setSortMode(mode)}
+                  className={cn('tap-target', sortMode !== mode && 'text-muted-foreground')}
+                  aria-pressed={sortMode === mode}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12 animate-enter">
@@ -118,9 +180,19 @@ export function AllClientsPage() {
           </div>
         ) : clients.length === 0 ? (
           <EmptyStateNoClients onInvite={() => setShowInviteModal(true)} />
+        ) : visibleClients.length === 0 ? (
+          <div className="text-center py-10 animate-enter space-y-2">
+            <p className="text-sm font-medium antialiased">No clients match &ldquo;{query.trim()}&rdquo;</p>
+            <button
+              onClick={() => setQuery('')}
+              className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors tap-target"
+            >
+              Clear search
+            </button>
+          </div>
         ) : (
           <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
-            {clients.map((client) => (
+            {visibleClients.map((client) => (
               <ClientRow key={client.clientProfileId} client={client} />
             ))}
           </div>

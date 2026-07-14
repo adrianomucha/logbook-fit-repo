@@ -242,6 +242,31 @@ export function UnifiedClientProfile() {
     }
   };
 
+  const handleCancelCheckIn = async () => {
+    if (!activeCheckInId) return;
+    try {
+      await apiFetch(`/api/check-ins/${activeCheckInId}`, { method: 'DELETE' });
+      toast.success('Check-in withdrawn');
+    } catch {
+      toast.error('Couldn’t withdraw the check-in — they may have just responded.');
+    }
+    refreshClient();
+  };
+
+  const handleEditCheckInResponse = async (checkInId: string, coachFeedback: string) => {
+    try {
+      await apiFetch(`/api/check-ins/${checkInId}/coach-respond`, {
+        method: 'PUT',
+        body: JSON.stringify({ coachFeedback }),
+      });
+      toast.success('Response updated');
+      refreshClient();
+    } catch {
+      toast.error('Failed to update your response. Please try again.');
+      throw new Error('edit-failed'); // keep the editor open with the draft
+    }
+  };
+
   const handleCreateNewPlan = () => {
     setShowPlanSetupModal(true);
   };
@@ -604,6 +629,7 @@ export function UnifiedClientProfile() {
               currentUserId={user?.id ?? ''}
               onCompleteCheckIn={handleCompleteCheckIn}
               onCreateCheckIn={handleCreateCheckIn}
+              onCancelCheckIn={handleCancelCheckIn}
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
               hideTitle={activeCheckIn?.status === 'responded'}
@@ -760,6 +786,7 @@ export function UnifiedClientProfile() {
                     hasPlan={!!plan}
                     scheduleEnabled={scheduleOverride ?? apiClient.checkInScheduleEnabled}
                     onToggleSchedule={handleToggleCheckInSchedule}
+                    onEditResponse={handleEditCheckInResponse}
                   />
                 </div>
               )}

@@ -3,7 +3,8 @@ import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { ChevronDown, ChevronUp, CalendarCheck, ChevronRight } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { ChevronDown, ChevronUp, CalendarCheck, ChevronRight, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { CheckIn } from '@/types';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -19,6 +20,8 @@ interface CheckInHistoryPanelProps {
   scheduleEnabled?: boolean;
   hasPlan?: boolean;
   onToggleSchedule?: (enabled: boolean) => void;
+  /** Optional: let the coach fix typos in a sent response */
+  onEditResponse?: (checkInId: string, coachFeedback: string) => Promise<void> | void;
 }
 
 export function CheckInHistoryPanel({
@@ -29,9 +32,29 @@ export function CheckInHistoryPanel({
   scheduleEnabled = false,
   hasPlan = false,
   onToggleSchedule,
+  onEditResponse,
 }: CheckInHistoryPanelProps) {
   const [showAll, setShowAll] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
+  const startEdit = (checkIn: CheckIn) => {
+    setEditingId(checkIn.id);
+    setDraft(checkIn.coachResponse ?? '');
+  };
+
+  const saveEdit = async (checkInId: string) => {
+    if (!onEditResponse || !draft.trim() || isSavingEdit) return;
+    setIsSavingEdit(true);
+    try {
+      await onEditResponse(checkInId, draft.trim());
+      setEditingId(null);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
 
   // Filter completed check-ins for this client, sorted by date descending
   const completedCheckIns = useMemo(() => {
@@ -188,10 +211,51 @@ export function CheckInHistoryPanel({
 
                   {checkIn.coachResponse && (
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Your response</p>
-                      <div className="text-sm leading-relaxed bg-background/60 rounded-lg p-2.5">
-                        {checkIn.coachResponse}
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs text-muted-foreground">Your response</p>
+                        {onEditResponse && editingId !== checkIn.id && (
+                          <button
+                            onClick={() => startEdit(checkIn)}
+                            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors tap-target"
+                          >
+                            <Pencil className="w-3 h-3" />
+                            Edit
+                          </button>
+                        )}
                       </div>
+                      {editingId === checkIn.id ? (
+                        <div className="space-y-2">
+                          <Textarea
+                            value={draft}
+                            onChange={(e) => setDraft(e.target.value.slice(0, 1000))}
+                            maxLength={1000}
+                            rows={3}
+                            className="bg-background/60 text-sm"
+                            autoFocus
+                          />
+                          <div className="flex justify-end gap-1.5">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={isSavingEdit}
+                              onClick={() => setEditingId(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={!draft.trim() || isSavingEdit}
+                              onClick={() => saveEdit(checkIn.id)}
+                            >
+                              {isSavingEdit ? 'Saving…' : 'Save'}
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-sm leading-relaxed bg-background/60 rounded-lg p-2.5">
+                          {checkIn.coachResponse}
+                        </div>
+                      )}
                     </div>
                   )}
 

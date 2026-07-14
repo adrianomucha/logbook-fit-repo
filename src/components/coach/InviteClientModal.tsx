@@ -34,10 +34,17 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
 
   const fullLink = invite ? `${window.location.origin}${invite.inviteLink}` : '';
 
-  const generate = useCallback(async (emailToBake: string) => {
+  const generate = useCallback(async (emailToBake: string, replacing?: InviteResult | null) => {
     setIsGenerating(true);
     setError(null);
     try {
+      // Replace, don't stack: kill the previous link from this modal so a
+      // regenerated invite doesn't leave a live orphan floating around
+      if (replacing) {
+        await apiFetch(`/api/invites/${replacing.token}`, { method: 'DELETE' }).catch(() => {
+          // Already used or gone — nothing to revoke
+        });
+      }
       const result = await apiFetch<InviteResult>('/api/invites', {
         method: 'POST',
         body: JSON.stringify({ email: emailToBake || undefined }),
@@ -72,7 +79,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const applyEmail = () => {
     const trimmed = email.trim();
     if (isGenerating || trimmed === appliedEmail) return;
-    generate(trimmed);
+    generate(trimmed, invite);
   };
 
   const handleCopy = async () => {
@@ -204,6 +211,22 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                 className="absolute right-1 top-1/2 -translate-y-1/2 p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted active:scale-90 transition-[color,background-color,transform] disabled:opacity-40 disabled:pointer-events-none"
               >
                 {copied ? <Check className="w-4 h-4 text-foreground" /> : <Copy className="w-4 h-4" />}
+              </button>
+            </div>
+          )}
+
+          {/* Escape hatch for a link sent to the wrong person */}
+          {invite && !error && (
+            <div className="flex items-center justify-between gap-2 mt-1.5">
+              <p className="text-xs text-muted-foreground antialiased">
+                Sent to the wrong person?
+              </p>
+              <button
+                onClick={() => generate(appliedEmail, invite)}
+                disabled={isGenerating}
+                className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors tap-target disabled:opacity-50 antialiased"
+              >
+                Revoke &amp; new link
               </button>
             </div>
           )}
