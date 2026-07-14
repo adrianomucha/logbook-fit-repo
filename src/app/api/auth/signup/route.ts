@@ -24,12 +24,19 @@ export async function POST(req: Request) {
     const { email, password, name, role, inviteToken } = result.data;
 
     // If invite token provided, validate it and force CLIENT role
-    let invite: { id: string; coachId: string; email: string | null } | null = null;
+    let invite: {
+      id: string;
+      coachId: string;
+      coachUserId: string;
+      email: string | null;
+      note: string | null;
+    } | null = null;
     let effectiveRole = role;
 
     if (inviteToken) {
       const found = await prisma.clientInvite.findUnique({
         where: { token: inviteToken },
+        include: { coach: { select: { userId: true } } },
       });
 
       if (!found || found.status !== 'PENDING' || found.expiresAt < new Date()) {
@@ -42,7 +49,13 @@ export async function POST(req: Request) {
       // The token is the credential (single-use, expiring) — a coach-typed
       // email is a convenience pre-fill, not an identity check. Enforcing an
       // exact match would strand clients behind a coach's typo.
-      invite = { id: found.id, coachId: found.coachId, email: found.email };
+      invite = {
+        id: found.id,
+        coachId: found.coachId,
+        coachUserId: found.coach.userId,
+        email: found.email,
+        note: found.note,
+      };
       effectiveRole = "CLIENT"; // Always CLIENT when using invite
     }
 
@@ -115,6 +128,18 @@ export async function POST(req: Request) {
           where: { id: invite.id },
           data: { status: 'ACCEPTED' },
         });
+
+        // The coach's invite note becomes their first chat message, so the
+        // client's inbox opens with the coach's own words already waiting
+        if (invite.note) {
+          await tx.message.create({
+            data: {
+              senderId: invite.coachUserId,
+              recipientId: newUser.id,
+              content: invite.note,
+            },
+          });
+        }
       }
 
       return newUser;

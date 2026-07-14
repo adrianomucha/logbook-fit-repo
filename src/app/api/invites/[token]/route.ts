@@ -26,7 +26,7 @@ export async function GET(
     include: {
       coach: {
         include: {
-          user: { select: { name: true } },
+          user: { select: { name: true, avatarUrl: true } },
         },
       },
     },
@@ -56,7 +56,9 @@ export async function GET(
   return NextResponse.json({
     valid: true,
     email: invite.email,
+    note: invite.note,
     coachName: invite.coach.user.name ?? 'Your coach',
+    coachAvatar: invite.coach.user.avatarUrl,
     expiresAt: invite.expiresAt.toISOString(),
   });
 }

@@ -156,4 +156,5 @@ export const flagExerciseSchema = z.object({
 
 export const createInviteSchema = z.object({
   email: z.string().email().optional(),
+  note: z.string().trim().max(280).optional(),
 });
