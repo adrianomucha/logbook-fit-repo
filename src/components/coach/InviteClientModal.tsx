@@ -115,14 +115,23 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Invite Client"
+      title={
+        <>
+          <span className="block font-mono text-[10px] font-normal uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+            Grow your roster
+          </span>
+          <span className="block text-lg sm:text-xl font-bold tracking-tight">
+            Invite Client
+          </span>
+        </>
+      }
       description="Share a signup link to get your client on board."
       maxWidth="md"
       footer={
         <div className="flex gap-2">
           {canNativeShare() && (
             <Button
-              className="flex-1 h-11"
+              className="flex-1 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
               onClick={handleShare}
               disabled={isGenerating || !invite}
             >
@@ -132,7 +141,11 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           )}
           <Button
             variant={canNativeShare() ? 'outline' : 'default'}
-            className="flex-1 h-11"
+            className={
+              canNativeShare()
+                ? 'flex-1 h-11 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform duration-150'
+                : 'flex-1 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150'
+            }
             onClick={handleCopy}
             disabled={isGenerating || !invite}
           >
@@ -175,9 +188,9 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           </p>
         </div>
 
-        {/* Link */}
-        <div>
-          <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2 flex items-center gap-1.5">
+        {/* Link — the hero: this is what the coach came for */}
+        <div className="rounded-xl bg-muted/40 p-4">
+          <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2.5 flex items-center gap-1.5">
             {isGenerating ? (
               <RefreshCw className="w-2.5 h-2.5 animate-spin" />
             ) : (
@@ -202,7 +215,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               <Input
                 readOnly
                 value={isGenerating && !invite ? 'Creating link…' : fullLink}
-                className="h-11 pr-10 text-xs font-mono tabular-nums text-muted-foreground"
+                className="h-11 pr-10 text-xs font-mono tabular-nums text-muted-foreground bg-background"
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
               <button
@@ -216,9 +229,15 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
             </div>
           )}
 
+          {!error && (
+            <p className="text-xs text-muted-foreground mt-2.5 antialiased">
+              They sign up and land on your roster — connected instantly.
+            </p>
+          )}
+
           {/* Escape hatch for a link sent to the wrong person */}
           {invite && !error && (
-            <div className="flex items-center justify-between gap-2 mt-4">
+            <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-border/50">
               <p className="text-xs text-muted-foreground antialiased">
                 Sent to the wrong person?
               </p>
