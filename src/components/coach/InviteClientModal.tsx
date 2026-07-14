@@ -117,12 +117,12 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
       onClose={onClose}
       title="Invite Client"
       description="Share a signup link to get your client on board."
-      maxWidth="sm"
+      maxWidth="md"
       footer={
         <div className="flex gap-2">
           {canNativeShare() && (
             <Button
-              className="flex-1"
+              className="flex-1 h-11"
               onClick={handleShare}
               disabled={isGenerating || !invite}
             >
@@ -132,7 +132,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           )}
           <Button
             variant={canNativeShare() ? 'outline' : 'default'}
-            className="flex-1"
+            className="flex-1 h-11"
             onClick={handleCopy}
             disabled={isGenerating || !invite}
           >
@@ -146,10 +146,10 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         </div>
       }
     >
-      <div className="space-y-5">
+      <div className="space-y-7 py-1 sm:py-2">
         {/* Email — optional pre-fill */}
         <div>
-          <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 block">
+          <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2 block">
             Client email
             <span className="normal-case tracking-normal text-muted-foreground/50 ml-1 font-sans">
               optional
@@ -161,6 +161,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
             onChange={(e) => setEmail(e.target.value)}
             onBlur={applyEmail}
             placeholder="client@example.com"
+            className="h-11"
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 e.preventDefault();
@@ -169,14 +170,14 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               }
             }}
           />
-          <p className="text-xs text-muted-foreground mt-1.5 antialiased">
+          <p className="text-xs text-muted-foreground mt-2 antialiased">
             Pre-fills their signup so they don’t have to type it.
           </p>
         </div>
 
         {/* Link */}
         <div>
-          <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 flex items-center gap-1.5">
+          <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2 flex items-center gap-1.5">
             {isGenerating ? (
               <RefreshCw className="w-2.5 h-2.5 animate-spin" />
             ) : (
@@ -201,7 +202,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               <Input
                 readOnly
                 value={isGenerating && !invite ? 'Creating link…' : fullLink}
-                className="pr-10 text-xs font-mono tabular-nums text-muted-foreground"
+                className="h-11 pr-10 text-xs font-mono tabular-nums text-muted-foreground"
                 onClick={(e) => (e.target as HTMLInputElement).select()}
               />
               <button
@@ -217,7 +218,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
 
           {/* Escape hatch for a link sent to the wrong person */}
           {invite && !error && (
-            <div className="flex items-center justify-between gap-2 mt-1.5">
+            <div className="flex items-center justify-between gap-2 mt-4">
               <p className="text-xs text-muted-foreground antialiased">
                 Sent to the wrong person?
               </p>
