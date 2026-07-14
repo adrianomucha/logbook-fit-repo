@@ -6,7 +6,9 @@ import { Session } from "next-auth";
 /**
  * GET /api/coach/dashboard
  * Returns coach's client list sorted by urgency:
- * AT_RISK > CHECKIN_DUE > AWAITING_RESPONSE > ON_TRACK
+ * NEEDS_PLAN > AT_RISK > AWAITING_RESPONSE > CHECKIN_DUE > ON_TRACK
+ * A client who already responded outranks one who hasn't — they're
+ * actively waiting on the coach.
  */
 export const GET = withCoach(
   async (
@@ -61,10 +63,10 @@ export const GET = withCoach(
         urgencyOrder = 1;
       } else if (pendingCheckIn?.status === "CLIENT_RESPONDED") {
         urgency = "AWAITING_RESPONSE";
-        urgencyOrder = 3;
+        urgencyOrder = 2;
       } else if (pendingCheckIn?.status === "PENDING") {
         urgency = "CHECKIN_DUE";
-        urgencyOrder = 2;
+        urgencyOrder = 3;
       } else {
         urgency = "ON_TRACK";
         urgencyOrder = 4;
@@ -82,8 +84,15 @@ export const GET = withCoach(
       };
     });
 
-    // Sort by urgency (AT_RISK first, ON_TRACK last)
-    clients.sort((a, b) => a.urgencyOrder - b.urgencyOrder);
+    // Sort by urgency, then most-silent first within a bucket (never trained
+    // leads), then by name — so equally urgent clients keep a stable order
+    clients.sort((a, b) => {
+      if (a.urgencyOrder !== b.urgencyOrder) return a.urgencyOrder - b.urgencyOrder;
+      const aWorkout = a.lastWorkoutAt ? a.lastWorkoutAt.getTime() : 0;
+      const bWorkout = b.lastWorkoutAt ? b.lastWorkoutAt.getTime() : 0;
+      if (aWorkout !== bWorkout) return aWorkout - bWorkout;
+      return (a.user.name || a.user.email).localeCompare(b.user.name || b.user.email);
+    });
 
     return NextResponse.json(clients);
   }

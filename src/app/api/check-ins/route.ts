@@ -35,6 +35,22 @@ export const POST = withCoach(
       );
     }
 
+    // One at a time — a double-click or stale tab must not stack a second
+    // check-in on an open one (the UI only ever shows the newest)
+    const openCheckIn = await prisma.checkIn.findFirst({
+      where: {
+        clientId: clientProfileId,
+        status: { in: ["PENDING", "CLIENT_RESPONDED"] },
+      },
+      select: { id: true },
+    });
+    if (openCheckIn) {
+      return NextResponse.json(
+        { error: "A check-in is already in progress for this client" },
+        { status: 409 }
+      );
+    }
+
     const checkIn = await prisma.checkIn.create({
       data: {
         coachId: coachProfileId,

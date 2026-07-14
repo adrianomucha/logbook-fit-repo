@@ -4,7 +4,9 @@ import type { MessageThread, ApiMessage } from '@/types/api';
 
 export function useMessages(otherUserId: string | null) {
   const { data, error, isLoading, mutate } = useSWR<MessageThread>(
-    otherUserId ? `/api/messages/${otherUserId}` : null
+    otherUserId ? `/api/messages/${otherUserId}` : null,
+    // No push channel exists — poll so new messages appear without a reload
+    { refreshInterval: 30_000, revalidateOnFocus: true }
   );
 
   const sendMessage = async (content: string) => {
