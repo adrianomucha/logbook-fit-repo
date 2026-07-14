@@ -267,7 +267,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
                 onChange={(e) => handleFieldChange('name', e.target.value)}
                 onBlur={() => handleBlur('name')}
                 className={cn(
-                  'h-11 text-base font-semibold tracking-tight',
+                  'h-11 text-base font-semibold tracking-tight placeholder:font-normal placeholder:tracking-normal',
                   errors.name && touched.name && 'border-destructive'
                 )}
                 maxLength={50}
@@ -349,7 +349,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               aria-live="polite"
             >
               <span className="inline-flex items-baseline gap-1.5">
-                <span className="text-lg font-black tabular-nums tracking-tight antialiased">
+                <span className="font-mono text-sm font-bold tabular-nums antialiased">
                   {formData.durationWeeks}
                 </span>
                 <span className="font-mono text-[10px] uppercase tracking-[0.12em] font-medium text-muted-foreground antialiased">
