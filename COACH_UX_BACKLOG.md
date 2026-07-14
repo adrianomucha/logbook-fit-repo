@@ -30,7 +30,7 @@ Status: ✅ fixed on this branch · ⬜ open
 | 9 | ⬜ | **Coach can't see what actually happened.** Skipped/abandoned workouts invisible (only last 10 COMPLETED fetched); client weight/rep overrides (`actualWeight`/`actualReps` are stored!) shown nowhere. | High | M |
 | 10 | ✅ | **Double-send creates stacked check-ins.** `POST /api/check-ins` never checks for an open check-in; duplicates become invisible (UI shows only newest). Add a server-side guard. | High | S |
 | 11 | ⬜ | **No edit/delete/cancel on check-ins.** Typos in coach feedback are permanent; a mistakenly sent check-in can't be withdrawn. | Medium | M |
-| 12 | ⬜ | **"I'll adjust the plan" is untracked.** Client is told "your plan was updated" even if nothing changed. Track follow-through or soften client copy. | Medium | S–M |
+| 12 | ⬜ | **"I'll adjust the plan" is untracked.** Client copy softened to "is adjusting" ✅; tracking actual follow-through (link the flag to a real plan edit, remind the coach) still open. | Medium | S–M |
 | 13 | ✅ | Silent message-send failure: input cleared before the request resolves, no maxLength (server caps 5000 → 400), no error toast. | High | S |
 | 14 | ✅ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false` — urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
 | 15 | ⬜ | Unread-message tracking neutralized: fetching a thread marks everything read, so "N unread" ~never triggers. | Medium | M |
@@ -44,10 +44,10 @@ Status: ✅ fixed on this branch · ⬜ open
 | 18 | ⬜ | No pagination/search/filter anywhere; All Clients sorted by urgency not name; no tie-break within urgency buckets (order shuffles between loads). | M |
 | 19 | ⬜ | Timezone-naive "N days silent" math (raw ms from `Date.now()`), server/client disagree at the 7-day boundary. | M |
 | 20 | ✅ | "+ Invite Client" button on the empty roster state has no `onClick`. | S |
-| 21 | ⬜ | Re-assigning a plan silently resets `planStartDate` (restarts week 1, no warning). | S |
+| 21 | ✅ | Re-assigning a plan silently resets `planStartDate` (restarts week 1, no warning). Same-plan re-assign is now a no-op; switching plans still restarts intentionally. | S |
 | 22 | ⬜ | Library exercises can't be deleted/archived (no DELETE endpoint); case-sensitive DB uniqueness vs case-insensitive picker allows near-duplicates. | M |
 | 23 | ⬜ | Plan card Duplicate/Archive/Restore menu items exist but are never wired; `isTemplate`/`archivedAt` aren't DB fields; no way to copy a plan. | M |
-| 24 | ⬜ | No UI to add/remove weeks or reorder/delete days (`POST /plans/[id]/weeks` has no caller); can assign a fully empty plan with no warning; "rest days will be auto-calculated" copy is false (rest days aren't modeled). | M |
+| 24 | ⬜ | No UI to add/remove weeks or reorder/delete days (`POST /plans/[id]/weeks` has no caller); can assign a fully empty plan with no warning. ("Rest days auto-calculated" copy fixed ✅.) | M |
 | 25 | ⬜ | Server validation looser than UI on check-ins (empty responses accepted, arbitrary body-feeling strings, mismatched length caps); several PUTs (`plans/[id]`, `days/[id]`, `workout-exercises/[id]`) skip zod entirely. | M |
 | 26 | ⬜ | Auto check-ins default OFF per client with no cron (lazy materialization only) — coaches likely assume weekly check-ins just happen. | S–M |
 | 27 | ⬜ | Concurrent plan edits are last-write-wins (no version check); sample client pollutes roster counts server-side; invite list capped at 20 with no pagination; "expired" invites never persisted (dead enum value). | M |

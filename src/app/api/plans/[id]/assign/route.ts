@@ -50,6 +50,21 @@ export const POST = withCoach(
       );
     }
 
+    // Re-assigning the plan the client is already on must not restart their
+    // progress — planStartDate drives which week they're in
+    const current = await prisma.clientProfile.findUnique({
+      where: { id: clientProfileId },
+      select: {
+        id: true,
+        activePlanId: true,
+        planStartDate: true,
+        user: { select: { name: true } },
+      },
+    });
+    if (current?.activePlanId === planId) {
+      return NextResponse.json(current);
+    }
+
     // Assign plan and set start date
     const updatedClient = await prisma.clientProfile.update({
       where: { id: clientProfileId },
