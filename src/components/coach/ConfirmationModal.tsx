@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 interface ConfirmationModalProps {
@@ -12,6 +13,9 @@ interface ConfirmationModalProps {
   warningMessage?: string;
   confirmLabel: string;
   confirmVariant?: 'default' | 'destructive';
+  /** When set, the confirm button stays locked until this exact text is
+   * typed — the deliberate-friction rail for weighty actions. */
+  requireText?: string;
 }
 
 export function ConfirmationModal({
@@ -23,8 +27,18 @@ export function ConfirmationModal({
   warningMessage,
   confirmLabel,
   confirmVariant = 'default',
+  requireText,
 }: ConfirmationModalProps) {
   const [isPending, setIsPending] = useState(false);
+  const [typed, setTyped] = useState('');
+
+  // Fresh challenge every time the modal opens
+  useEffect(() => {
+    if (isOpen) setTyped('');
+  }, [isOpen]);
+
+  const textConfirmed =
+    !requireText || typed.trim().toLowerCase() === requireText.trim().toLowerCase();
 
   const handleConfirm = useCallback(async () => {
     if (isPending) return; // double-click guard
@@ -64,7 +78,7 @@ export function ConfirmationModal({
           <Button
             variant={confirmVariant}
             onClick={handleConfirm}
-            disabled={isPending}
+            disabled={isPending || !textConfirmed}
             className={
               confirmVariant === 'destructive'
                 ? 'h-11 px-6 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform duration-150'
@@ -83,6 +97,31 @@ export function ConfirmationModal({
           <div className="flex items-start gap-2.5 p-3.5 bg-warning/[0.07] rounded-xl">
             <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" aria-hidden="true" />
             <p className="text-[13px] leading-relaxed text-foreground/80 antialiased">{warningMessage}</p>
+          </div>
+        )}
+        {requireText && (
+          <div>
+            <label
+              htmlFor="confirmation-modal-text"
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2 block"
+            >
+              Type <span className="text-foreground normal-case tracking-normal font-sans font-semibold">{requireText}</span> to confirm
+            </label>
+            <Input
+              id="confirmation-modal-text"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={requireText}
+              disabled={isPending}
+              autoComplete="off"
+              className="h-11"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && textConfirmed && !isPending) {
+                  e.preventDefault();
+                  handleConfirm();
+                }
+              }}
+            />
           </div>
         )}
       </div>

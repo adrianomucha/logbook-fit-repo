@@ -846,6 +846,9 @@ export function UnifiedClientProfile() {
         }
         confirmLabel="End Coaching"
         confirmVariant="destructive"
+        /* Typing the name makes ending a real coaching relationship a
+           deliberate act — the sample client stays one-tap disposable */
+        requireText={apiClient.isSample ? undefined : client.name}
       />
     </div>
   );
