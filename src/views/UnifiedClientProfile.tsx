@@ -36,7 +36,7 @@ import { ArrowLeftRight, Loader2, Pencil, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { getClientStatus } from '@/lib/client-status';
-import { getCurrentWeekNumber, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
+import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
 function daysAgoLabel(iso?: string | Date | null): string | null {
@@ -423,6 +423,8 @@ export function UnifiedClientProfile() {
   const currentWeekNum = plan && client.planStartDate
     ? getCurrentWeekNumber(client.planStartDate, planTotalWeeks)
     : null;
+  const planEnded = !!plan && !!client.planStartDate
+    && getPlanProgressStatus(client.planStartDate, planTotalWeeks) === 'ENDED';
   const currentWeek = plan
     ? (plan.weeks.find((w) => w.weekNumber === currentWeekNum) ?? plan.weeks[0])
     : null;
@@ -469,6 +471,8 @@ export function UnifiedClientProfile() {
   const primaryAction: { label: string; onClick: () => void; disabled?: boolean; kind: 'assign' | 'review' | 'message' | 'send' } =
     !plan
       ? { label: 'Assign a plan', onClick: handleChangePlan, kind: 'assign' }
+      : planEnded
+      ? { label: 'Assign next plan', onClick: handleChangePlan, kind: 'assign' }
       : activeCheckIn?.status === 'responded'
         ? { label: 'Review check-in', onClick: handleScrollToCheckIn, kind: 'review' }
         : activeCheckIn?.status === 'pending'
@@ -572,7 +576,9 @@ export function UnifiedClientProfile() {
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Plan week</p>
                 <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">
-                  {currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span>
+                  {planEnded
+                    ? <>Done <span className="text-muted-foreground font-normal">· {planTotalWeeks} wks</span></>
+                    : <>{currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span></>}
                 </p>
               </div>
               <div>
@@ -696,7 +702,7 @@ export function UnifiedClientProfile() {
                             <span className="truncate">{plan.name}</span>
                           </h3>
                           <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground tabular-nums antialiased mt-1">
-                            Week {currentWeekNum ?? 1} of {planTotalWeeks}
+                            {planEnded ? 'Plan complete — assign the next block' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
                           </p>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0">

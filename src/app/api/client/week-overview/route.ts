@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { getRawWeekNumber } from "@/lib/workout-week-helpers";
 
 /**
  * GET /api/client/week-overview
  * Returns the current week's days with workout status for the client's active plan.
- * Week number = ceil((daysSincePlanStart + 1) / 7)
+ * Week math comes from the shared helper (Monday-anchored) so this can never
+ * disagree with what the UI shows. Past the last week the response clamps to
+ * the final week and sets planEnded instead of 404ing.
  */
 export const GET = withClient(
   async (
@@ -30,12 +33,24 @@ export const GET = withClient(
       );
     }
 
-    // Calculate current week number
-    const now = new Date();
-    const daysSinceStart = Math.floor(
-      (now.getTime() - client.planStartDate.getTime()) / (1000 * 60 * 60 * 24)
+    const plan = await prisma.plan.findFirst({
+      where: { id: client.activePlanId, deletedAt: null },
+      select: { durationWeeks: true },
+    });
+    if (!plan) {
+      return NextResponse.json(
+        { error: "No active plan assigned" },
+        { status: 404 }
+      );
+    }
+
+    // Current week, clamped to the plan's last week once it has ended
+    const rawWeekNumber = getRawWeekNumber(client.planStartDate);
+    const planEnded = rawWeekNumber > plan.durationWeeks;
+    const currentWeekNumber = Math.max(
+      1,
+      Math.min(rawWeekNumber, plan.durationWeeks)
     );
-    const currentWeekNumber = Math.ceil((daysSinceStart + 1) / 7);
 
     // Get the week from the plan
     const week = await prisma.week.findFirst({
@@ -75,7 +90,7 @@ export const GET = withClient(
 
     if (!week) {
       return NextResponse.json(
-        { error: "Week not found — plan may have ended" },
+        { error: "Week not found in plan" },
         { status: 404 }
       );
     }
@@ -103,6 +118,7 @@ export const GET = withClient(
       weekNumber: currentWeekNumber,
       weekId: week.id,
       planStartDate: client.planStartDate,
+      planEnded,
       days,
     });
   }

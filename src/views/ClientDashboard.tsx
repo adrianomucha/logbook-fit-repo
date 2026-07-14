@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSWRConfig } from 'swr';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
-import { getCurrentWeekNumber, getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
+import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
 import { useClientProgress } from '@/hooks/api/useClientProgress';
@@ -193,6 +193,13 @@ export function ClientDashboard() {
     () => apiMessagesToMessages(apiMessages, client?.id ?? ''),
     [apiMessages, client]
   );
+
+  // Plan has run its course — celebrate instead of replaying the last week
+  const planEnded =
+    weekOverview?.planEnded ??
+    (client?.planStartDate && plan
+      ? getPlanProgressStatus(client.planStartDate, plan.durationWeeks || plan.weeks.length) === 'ENDED'
+      : false);
 
   // ---- Handlers ----
   const handleSendMessage = async (content: string) => {
@@ -461,8 +468,45 @@ export function ClientDashboard() {
           </section>
         )}
 
+        {/* Plan complete — the last week must not replay as if un-started */}
+        {currentView === 'workout' && planEnded && (
+          <section
+            aria-label="Plan complete"
+            className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center"
+          >
+            <div className="text-5xl select-none mb-4 animate-bounce-once">🏁</div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
+              Plan complete
+            </p>
+            <h1 className="text-2xl font-bold tracking-tight mb-2 antialiased">
+              You finished {plan.name}
+            </h1>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto antialiased">
+              All {plan.durationWeeks || plan.weeks.length} weeks are behind you
+              {progress?.stats?.totalWorkouts ? ` — ${progress.stats.totalWorkouts} workouts logged` : ''}.
+              {' '}{coach?.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block.
+            </p>
+            <div className="flex flex-col items-center gap-2 mt-6">
+              <Button
+                onClick={handleMessageCoach}
+                className="min-w-[220px] h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
+              >
+                Message {coach?.user.name?.split(' ')[0] ?? 'Coach'}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setCurrentView('progress')}
+                className="text-muted-foreground"
+              >
+                See your progress
+              </Button>
+            </div>
+          </section>
+        )}
+
         {/* Workout Views */}
-        {currentView === 'workout' && workoutViewMode === 'today' && (
+        {currentView === 'workout' && !planEnded && workoutViewMode === 'today' && (
           <TodayFocusView
             client={client}
             todayWorkout={todayWorkout}
@@ -483,7 +527,7 @@ export function ClientDashboard() {
           />
         )}
 
-        {currentView === 'workout' && workoutViewMode === 'weekly' && (
+        {currentView === 'workout' && !planEnded && workoutViewMode === 'weekly' && (
           <>
             <WorkoutViewToggle
               value="weekly"
