@@ -22,6 +22,10 @@ export interface DashboardClient {
   } | null;
   /** Coach-created demo client (sample mode) */
   isSample: boolean;
+  /** When the coaching relationship was created */
+  joinedAt: string;
+  /** Joined recently and hasn't heard from the coach yet — worth a hello */
+  awaitingHello: boolean;
   /** Where the client is relative to their plan's end */
   planStatus: 'NONE' | 'ACTIVE' | 'FINAL_WEEK' | 'ENDED';
   urgency: 'NEEDS_PLAN' | 'PLAN_ENDED' | 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';

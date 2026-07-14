@@ -30,6 +30,11 @@ function ctaForClient(client: DashboardClient): { label: string; variant: 'defau
   if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
     return { label: 'Review Check-in', variant: 'default' };
   }
+  // A brand-new client who hasn't heard from the coach yet: the relationship
+  // opens with a hello, not a plan assignment
+  if (client.awaitingHello) {
+    return { label: 'Say hello', variant: 'default' };
+  }
   switch (client.urgency) {
     case 'NEEDS_PLAN':
       return { label: 'Assign Plan', variant: 'default' };
@@ -61,6 +66,10 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
   const handleClientAction = (client: DashboardClient) => {
     if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
       router.push(`/coach/clients/${client.clientProfileId}/check-in`);
+      return;
+    }
+    if (client.awaitingHello) {
+      router.push(`/coach/clients/${client.clientProfileId}?chat=1`);
       return;
     }
     router.push(`/coach/clients/${client.clientProfileId}`);

@@ -9,11 +9,14 @@ import { getClientUrgency } from "@/lib/urgency";
  * Returns coach's client list sorted by urgency — see lib/urgency.ts for
  * the ranking, which is shared with the client-detail endpoint.
  */
+// How long a new client counts as "just walked in" for the say-hello nudge
+const HELLO_WINDOW_MS = 48 * 60 * 60 * 1000;
+
 export const GET = withCoach(
   async (
     _req: Request,
     _ctx: { params: Record<string, string> },
-    _session: Session,
+    session: Session,
     coachProfileId: string
   ) => {
     const relationships = await prisma.coachClientRelationship.findMany({
@@ -40,6 +43,27 @@ export const GET = withCoach(
       },
     });
 
+    // Say-hello nudge: real clients who joined inside the window and have
+    // never received a message from this coach. One distinct-recipient query
+    // covers every candidate; an invite note counts as the greeting because
+    // it is delivered as the coach's first chat message.
+    const now = Date.now();
+    const helloCandidates = relationships.filter(
+      (rel) =>
+        !rel.client.isSample && now - rel.createdAt.getTime() < HELLO_WINDOW_MS
+    );
+    const greeted = helloCandidates.length
+      ? await prisma.message.findMany({
+          where: {
+            senderId: session.user.id,
+            recipientId: { in: helloCandidates.map((rel) => rel.client.user.id) },
+          },
+          select: { recipientId: true },
+          distinct: ["recipientId"],
+        })
+      : [];
+    const greetedUserIds = new Set(greeted.map((m) => m.recipientId));
+
     const clients = relationships.map((rel) => {
       const client = rel.client;
       const lastWorkout = client.completions[0]?.completedAt;
@@ -53,6 +77,11 @@ export const GET = withCoach(
         openCheckInStatus: pendingCheckIn?.status ?? null,
       });
 
+      const awaitingHello =
+        !client.isSample &&
+        now - rel.createdAt.getTime() < HELLO_WINDOW_MS &&
+        !greetedUserIds.has(client.user.id);
+
       return {
         clientProfileId: client.id,
         user: client.user,
@@ -60,6 +89,8 @@ export const GET = withCoach(
         lastWorkoutAt: lastWorkout,
         pendingCheckIn: pendingCheckIn || null,
         isSample: client.isSample,
+        joinedAt: rel.createdAt,
+        awaitingHello,
         planStatus,
         urgency,
         urgencyOrder,

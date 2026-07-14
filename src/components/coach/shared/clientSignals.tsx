@@ -69,6 +69,11 @@ export function getSignal(client: DashboardClient): ClientSignal {
 
   switch (client.urgency) {
     case 'NEEDS_PLAN': {
+      // The first message matters more than the first plan — greet them
+      // while joining is still news, then get them training
+      if (client.awaitingHello) {
+        return { lead: 'Say hello while it’s warm', rest: ['waiting on their first plan'] };
+      }
       return { lead: 'Waiting on their first plan', rest };
     }
     case 'PLAN_ENDED': {
