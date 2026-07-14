@@ -110,6 +110,11 @@ export interface ClientDetail {
   joinedAt: string;
   checkInScheduleEnabled: boolean;
   isSample: boolean;
+  /** Most recent COMPLETED workout in the fetched window */
+  lastWorkoutAt: string | null;
+  /** Same server-computed urgency the dashboard ranks by (lib/urgency.ts) */
+  urgency: DashboardClient['urgency'];
+  planStatus: DashboardClient['planStatus'];
   completions: {
     id: string;
     dayId: string;
