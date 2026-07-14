@@ -724,6 +724,7 @@ export function UnifiedClientProfile() {
                         {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'}
                         {plan.workoutsPerWeek ? ` · ${plan.workoutsPerWeek}×/week` : ''}
                         {client.planStartDate ? ` · Started ${format(new Date(client.planStartDate), 'MMM d')}` : ''}
+                        {plan.sourceTemplateId ? ` · ${firstName}’s copy` : ''}
                       </p>
                     </>
                   ) : (
@@ -794,7 +795,8 @@ export function UnifiedClientProfile() {
         onAssign={handleAssignPlan}
         onUnassign={handleUnassignPlan}
         plans={plansList}
-        currentPlanId={plan?.id}
+        /* The client trains on their own copy — match against its template */
+        currentPlanId={plan?.sourceTemplateId ?? plan?.id}
         clientName={client.name}
       />
       <PlanEditorDrawer

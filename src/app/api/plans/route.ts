@@ -8,7 +8,10 @@ import { createPlanSchema } from "@/lib/validations/schemas";
 
 /**
  * GET /api/plans
- * Returns all plans for the authenticated coach (excluding soft-deleted).
+ * Returns the coach's plan TEMPLATES (excluding soft-deleted). Client
+ * instances (clones created at assignment) are hidden from this list; their
+ * assignees are folded into the source template's assignedTo so the Plans
+ * page still shows who's training on each template.
  */
 export const GET = withCoach(
   async (
@@ -18,12 +21,13 @@ export const GET = withCoach(
     coachProfileId: string
   ) => {
     const plans = await prisma.plan.findMany({
-      where: { ...coachScope(coachProfileId) },
+      where: { ...coachScope(coachProfileId), sourceTemplateId: null },
       include: {
         weeks: {
           select: { id: true, weekNumber: true },
           orderBy: { weekNumber: "asc" },
         },
+        // Legacy direct assignments (pre clone-on-assign)
         assignedTo: {
           select: {
             id: true,
@@ -34,7 +38,36 @@ export const GET = withCoach(
       orderBy: { updatedAt: "desc" },
     });
 
-    return NextResponse.json(plans);
+    // Clients training on copies of each template
+    const instances = await prisma.plan.findMany({
+      where: {
+        ...coachScope(coachProfileId),
+        sourceTemplateId: { in: plans.map((p) => p.id) },
+        assignedTo: { some: {} },
+      },
+      select: {
+        sourceTemplateId: true,
+        assignedTo: {
+          select: {
+            id: true,
+            user: { select: { name: true } },
+          },
+        },
+      },
+    });
+
+    const byTemplate = new Map<string, (typeof instances)[number]["assignedTo"]>();
+    for (const instance of instances) {
+      const key = instance.sourceTemplateId!;
+      byTemplate.set(key, [...(byTemplate.get(key) ?? []), ...instance.assignedTo]);
+    }
+
+    return NextResponse.json(
+      plans.map((p) => ({
+        ...p,
+        assignedTo: [...p.assignedTo, ...(byTemplate.get(p.id) ?? [])],
+      }))
+    );
   }
 );
 
@@ -53,10 +86,12 @@ export const POST = withCoach(
     if (!result.success) return result.response;
     const { name, description, emoji, durationWeeks, workoutsPerWeek } = result.data;
 
-    // Check for duplicate name (scoped to coach, non-deleted)
+    // Check for duplicate name (scoped to coach's TEMPLATES — client
+    // instances share their template's name by design)
     const existing = await prisma.plan.findFirst({
       where: {
         ...coachScope(coachProfileId),
+        sourceTemplateId: null,
         name,
       },
     });

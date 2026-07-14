@@ -5,11 +5,13 @@ import { coachScope } from "@/lib/scoping";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { assignPlanSchema } from "@/lib/validations/schemas";
+import { clonePlanForClient } from "@/lib/plan-clone";
 
 /**
  * POST /api/plans/[id]/assign
- * Assigns a plan to a client. Coach must own the plan
- * and have an active relationship with the client.
+ * Gives the client their OWN COPY of the plan (clone-on-assign) — editing
+ * the template later never mutates a plan a client is mid-workout on.
+ * Coach must own the plan and have an active relationship with the client.
  */
 export const POST = withCoach(
   async (
@@ -51,7 +53,8 @@ export const POST = withCoach(
     }
 
     // Re-assigning the plan the client is already on must not restart their
-    // progress — planStartDate drives which week they're in
+    // progress — planStartDate drives which week they're in. "Already on it"
+    // means either a legacy direct assignment or a copy cloned from it.
     const current = await prisma.clientProfile.findUnique({
       where: { id: clientProfileId },
       select: {
@@ -59,17 +62,32 @@ export const POST = withCoach(
         activePlanId: true,
         planStartDate: true,
         user: { select: { name: true } },
+        activePlan: { select: { sourceTemplateId: true } },
       },
     });
-    if (current?.activePlanId === planId) {
-      return NextResponse.json(current);
+    if (
+      current?.activePlanId === planId ||
+      (current?.activePlan?.sourceTemplateId != null &&
+        current.activePlan.sourceTemplateId === planId)
+    ) {
+      return NextResponse.json({
+        id: current.id,
+        activePlanId: current.activePlanId,
+        planStartDate: current.planStartDate,
+        user: current.user,
+      });
     }
 
-    // Assign plan and set start date
+    // Clone-on-assign: the client gets their own copy of the plan
+    const instance = await clonePlanForClient(planId, coachProfileId);
+    if (!instance) {
+      return NextResponse.json({ error: "Plan not found" }, { status: 404 });
+    }
+
     const updatedClient = await prisma.clientProfile.update({
       where: { id: clientProfileId },
       data: {
-        activePlanId: planId,
+        activePlanId: instance.id,
         planStartDate: new Date(),
       },
       select: {

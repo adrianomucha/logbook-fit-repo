@@ -59,6 +59,7 @@ export function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
     ),
     createdAt: plan.createdAt,
     updatedAt: plan.updatedAt,
+    sourceTemplateId: plan.sourceTemplateId ?? undefined,
   };
 }
 
