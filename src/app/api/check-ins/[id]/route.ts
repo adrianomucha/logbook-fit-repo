@@ -1,7 +1,8 @@
-import { getServerSession } from "next-auth";
+import { getServerSession, Session } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { withCoach } from "@/lib/middleware/withAuth";
 
 /**
  * GET /api/check-ins/[id]
@@ -62,3 +63,35 @@ export async function GET(
 
   return NextResponse.json(checkIn);
 }
+
+/**
+ * DELETE /api/check-ins/[id]
+ * Coach withdraws a check-in they sent, while it's still unanswered.
+ * Once the client has responded (or it's completed), it's part of the
+ * conversation and can't be deleted.
+ */
+export const DELETE = withCoach(
+  async (
+    _req: Request,
+    ctx: { params: Record<string, string> },
+    _session: Session,
+    coachProfileId: string
+  ) => {
+    const checkInId = ctx.params.id;
+
+    const checkIn = await prisma.checkIn.findFirst({
+      where: { id: checkInId, coachId: coachProfileId, status: "PENDING" },
+      select: { id: true },
+    });
+
+    if (!checkIn) {
+      return NextResponse.json(
+        { error: "Check-in not found or already answered" },
+        { status: 404 }
+      );
+    }
+
+    await prisma.checkIn.delete({ where: { id: checkIn.id } });
+    return NextResponse.json({ deleted: true });
+  }
+);

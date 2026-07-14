@@ -41,6 +41,8 @@ interface InlineCheckInReviewProps {
   currentUserId: string;
   onCompleteCheckIn: (checkIn: CheckIn) => void;
   onCreateCheckIn: (checkIn: CheckIn) => void;
+  /** Withdraw a still-unanswered check-in (sent by mistake, wrong timing) */
+  onCancelCheckIn?: () => Promise<void> | void;
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
   /** Signal from parent that check-in was just sent (for showing confirmation) */
   justSentFromParent?: boolean;
@@ -59,6 +61,7 @@ export function InlineCheckInReview({
   currentUserId,
   onCompleteCheckIn,
   onCreateCheckIn,
+  onCancelCheckIn,
   onMessageAboutFlag,
   justSentFromParent = false,
   hideTitle = false,
@@ -314,6 +317,29 @@ export function InlineCheckInReview({
                 flags={flaggedExercisesWithContext}
                 onMessageAboutFlag={onMessageAboutFlag}
               />
+            </div>
+          )}
+
+          {/* Escape hatch — sent by mistake or at a bad time */}
+          {onCancelCheckIn && (
+            <div className="flex justify-end pt-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isSubmitting}
+                className="text-muted-foreground hover:text-destructive"
+                onClick={async () => {
+                  if (isSubmitting) return;
+                  setIsSubmitting(true);
+                  try {
+                    await onCancelCheckIn();
+                  } finally {
+                    setIsSubmitting(false);
+                  }
+                }}
+              >
+                Withdraw check-in
+              </Button>
             </div>
           )}
         </div>

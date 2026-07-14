@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useClientProfile } from '@/hooks/api/useClientProfile';
 import { useCheckIn, createCheckInForClient } from '@/hooks/api/useCheckIn';
+import { apiFetch } from '@/lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -62,6 +63,23 @@ export function ClientCheckIn() {
       toast.error('Failed to send check-in. Please try again.');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const handleWithdrawCheckIn = async () => {
+    if (!activeCheckInId || isWithdrawing) return;
+    setIsWithdrawing(true);
+    try {
+      await apiFetch(`/api/check-ins/${activeCheckInId}`, { method: 'DELETE' });
+      toast.success('Check-in withdrawn');
+      await refreshClient();
+    } catch {
+      toast.error('Couldn’t withdraw the check-in — they may have just responded.');
+      await refreshClient();
+    } finally {
+      setIsWithdrawing(false);
     }
   };
 
@@ -229,6 +247,15 @@ export function ClientCheckIn() {
                 <p className="text-muted-foreground">
                   Check-in sent {sentAgo}. {clientName} hasn&apos;t responded yet.
                 </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-4 text-muted-foreground hover:text-destructive"
+                  disabled={isWithdrawing}
+                  onClick={handleWithdrawCheckIn}
+                >
+                  {isWithdrawing ? 'Withdrawing…' : 'Withdraw check-in'}
+                </Button>
               </div>
             </CardContent>
           </Card>

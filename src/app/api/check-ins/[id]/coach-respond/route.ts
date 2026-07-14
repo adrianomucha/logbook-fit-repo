@@ -7,8 +7,9 @@ import { coachRespondSchema } from "@/lib/validations/schemas";
 
 /**
  * PUT /api/check-ins/[id]/coach-respond
- * Coach responds to a client-responded check-in.
- * Transitions status: CLIENT_RESPONDED → COMPLETED
+ * Coach responds to a client-responded check-in
+ * (CLIENT_RESPONDED → COMPLETED), or edits their feedback on an
+ * already-completed one — typos shouldn't be permanent.
  */
 export const PUT = withCoach(
   async (
@@ -23,7 +24,7 @@ export const PUT = withCoach(
       where: {
         id: checkInId,
         coachId: coachProfileId,
-        status: "CLIENT_RESPONDED",
+        status: { in: ["CLIENT_RESPONDED", "COMPLETED"] },
       },
     });
 
@@ -38,14 +39,22 @@ export const PUT = withCoach(
     if (!result.success) return result.response;
     const { coachFeedback, planAdjustment } = result.data;
 
+    // An edit keeps the original completion timestamp and never clobbers
+    // planAdjustment unless it was explicitly sent
+    const isEdit = checkIn.status === "COMPLETED";
+
     const updated = await prisma.checkIn.update({
       where: { id: checkInId },
       data: {
         status: "COMPLETED",
         coachFeedback,
-        planAdjustment: planAdjustment ?? false,
+        ...(planAdjustment !== undefined
+          ? { planAdjustment }
+          : isEdit
+            ? {}
+            : { planAdjustment: false }),
         coachRespondedAt: new Date(),
-        completedAt: new Date(),
+        ...(isEdit ? {} : { completedAt: new Date() }),
       },
     });
 

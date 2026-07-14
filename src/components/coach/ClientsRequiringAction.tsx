@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DashboardClient } from '@/types/api';
 import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   urgencyStyle,
@@ -42,11 +44,17 @@ function ctaForClient(client: DashboardClient): { label: string; variant: 'defau
   }
 }
 
+// On-track clients are reassurance, not work — preview a handful and tuck
+// the rest behind a toggle so the needs-attention list stays the page
+const ON_TRACK_PREVIEW = 8;
+
 export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps) {
   const router = useRouter();
+  const [showAllOnTrack, setShowAllOnTrack] = useState(false);
 
   const needsAction = clients.filter((c) => c.urgency !== 'ON_TRACK');
   const onTrack = clients.filter((c) => c.urgency === 'ON_TRACK');
+  const visibleOnTrack = showAllOnTrack ? onTrack : onTrack.slice(0, ON_TRACK_PREVIEW);
 
   if (needsAction.length === 0 && onTrack.length === 0) return null;
 
@@ -140,7 +148,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
             </h2>
           </div>
           <div className={cn('bg-card rounded-xl divide-y divide-border overflow-hidden', cardShadow)}>
-            {onTrack.map((client) => {
+            {visibleOnTrack.map((client) => {
               const style = urgencyStyle(client.urgency);
               const displayName = client.user.name || client.user.email;
               return (
@@ -186,6 +194,26 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
               );
             })}
           </div>
+          {onTrack.length > ON_TRACK_PREVIEW && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full mt-1.5 text-muted-foreground"
+              onClick={() => setShowAllOnTrack(!showAllOnTrack)}
+            >
+              {showAllOnTrack ? (
+                <>
+                  <ChevronUp className="w-4 h-4 mr-1" />
+                  Show less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4 mr-1" />
+                  Show all ({onTrack.length - ON_TRACK_PREVIEW} more)
+                </>
+              )}
+            </Button>
+          )}
         </section>
       )}
     </div>

@@ -29,19 +29,19 @@ Status: ✅ fixed on this branch · ⬜ open
 | 8 | ✅ | **No "plan ended" state.** Client UI repeats the last week forever; week-overview API 404s and is swallowed; coach gets no "plan ends soon" warning. Highest-churn moment, unhandled. Now: `PLAN_ENDED` urgency + "Assign Next Plan" CTA, "final week" signal, client plan-complete celebration, unified week math. | High | M |
 | 9 | ✅ | **Coach can't see what actually happened.** Now: started-but-unfinished workouts appear in history ("Not finished"), and weight/rep deviations from the prescription show per workout ("Adjusted: Deadlift 185→155"). Flags on abandoned sessions surface in check-in review too. | High | M |
 | 10 | ✅ | **Double-send creates stacked check-ins.** `POST /api/check-ins` never checks for an open check-in; duplicates become invisible (UI shows only newest). Add a server-side guard. | High | S |
-| 11 | ⬜ | **No edit/delete/cancel on check-ins.** Typos in coach feedback are permanent; a mistakenly sent check-in can't be withdrawn. | Medium | M |
+| 11 | ✅ | **No edit/delete/cancel on check-ins.** Now: a still-unanswered check-in can be withdrawn (workspace + standalone page), and sent feedback is editable from check-in history (plan-adjustment flag and completion date preserved). | Medium | M |
 | 12 | ⬜ | **"I'll adjust the plan" is untracked.** Client copy softened to "is adjusting" ✅; tracking actual follow-through (link the flag to a real plan edit, remind the coach) still open. | Medium | S–M |
 | 13 | ✅ | Silent message-send failure: input cleared before the request resolves, no maxLength (server caps 5000 → 400), no error toast. | High | S |
 | 14 | ✅ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false` — urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
 | 15 | ⬜ | Unread-message tracking neutralized: fetching a thread marks everything read, so "N unread" ~never triggers. | Medium | M |
 | 16 | ⬜ | **Churned clients can't come back.** Re-signup 409s, no re-invite-existing-account flow — a returning client loses all history. "Win-back" is a core retention journey. | High | L |
-| 17 | ⬜ | **No invite revocation/resend**; invite email is decorative (anyone with the link can redeem under any address); existing users can't accept an invite at all. | Medium | M |
+| 17 | ⬜ | **No invite revocation/resend** ✅ (DELETE endpoint + "Revoke & new link" in the modal; regenerating replaces instead of stacking). Still open: invite email is decorative (anyone with the link can redeem under any address); existing users can't accept an invite at all. | Medium | M |
 
 ## P2 — Scale, correctness, and polish
 
 | # | Status | Item | Effort |
 |---|--------|------|--------|
-| 18 | ⬜ | No pagination/search/filter anywhere; All Clients sorted by urgency not name; no tie-break within urgency buckets (order shuffles between loads). | M |
+| 18 | ✅ | No pagination/search/filter anywhere. Now: instant search + urgency/A–Z sort toggle on All Clients, dashboard On Track section previews 8 with show-all, stable tie-breaks (from PR #24). Server-side pagination deferred until rosters outgrow a single payload. | M |
 | 19 | ⬜ | Timezone-naive "N days silent" math (raw ms from `Date.now()`), server/client disagree at the 7-day boundary. | M |
 | 20 | ✅ | "+ Invite Client" button on the empty roster state has no `onClick`. | S |
 | 21 | ✅ | Re-assigning a plan silently resets `planStartDate` (restarts week 1, no warning). Same-plan re-assign is now a no-op; switching plans still restarts intentionally. | S |
