@@ -242,6 +242,18 @@ export async function createSampleClient(
     },
   });
 
+  // The flag's story in the set data: the final deadlift set was taken
+  // lighter — shows up as a deviation in the coach's workout history
+  const deadlift = SAMPLE_DAYS[2].exercises[0];
+  await prisma.setCompletion.updateMany({
+    where: {
+      workoutCompletionId: w1d3.id,
+      workoutExerciseId: week1[2].weIds[0],
+      setNumber: deadlift.sets,
+    },
+    data: { actualWeight: (deadlift.weight ?? 185) - 30 },
+  });
+
   // ── Check-in awaiting the coach's reply (the north-star moment) ─
   await prisma.checkIn.create({
     data: {

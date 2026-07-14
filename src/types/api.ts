@@ -113,6 +113,9 @@ export interface ClientDetail {
   completions: {
     id: string;
     dayId: string;
+    /** COMPLETED, or IN_PROGRESS for a workout started and never finished */
+    status: string;
+    startedAt: string | null;
     completedAt: string | null;
     completionPct: number | null;
     exercisesDone: number | null;
@@ -125,6 +128,19 @@ export interface ClientDetail {
       workoutExerciseId: string;
       note: string | null;
       createdAt: string;
+    }[];
+    /** Sets where the client overrode the prescribed weight or reps */
+    sets: {
+      setNumber: number;
+      actualWeight: number | null;
+      actualReps: number | null;
+      workoutExercise: {
+        trackingType: string;
+        weight: number | null;
+        reps: number;
+        repsMax: number | null;
+        exercise: { name: string };
+      };
     }[];
   }[];
   checkIns: {

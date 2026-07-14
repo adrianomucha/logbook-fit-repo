@@ -4,7 +4,8 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ClientDetail } from '@/types/api';
-import { format, formatDistanceToNow } from 'date-fns';
+import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
+import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
 
 interface WorkoutHistoryPanelProps {
   completions: ClientDetail['completions'];
@@ -37,11 +38,14 @@ export function WorkoutHistoryPanel({
 
   const firstName = clientName?.split(' ')[0] || clientName || 'Client';
 
-  // The API already filters to COMPLETED and sorts newest-first; guard the
-  // date anyway so a row without a timestamp can't crash formatting.
-  const completed = completions.filter((c) => c.completedAt);
+  // Completed workouts plus started-but-never-finished ones — abandonment is
+  // a fade signal, not something to hide. Guard the timestamps so a row
+  // without one can't crash formatting.
+  const rows = completions.filter(
+    (c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt)
+  );
 
-  if (completed.length === 0) {
+  if (rows.length === 0) {
     return (
       <div className="text-center py-8 space-y-1.5">
         <div className="text-3xl select-none mb-2">🏋️</div>
@@ -53,14 +57,21 @@ export function WorkoutHistoryPanel({
     );
   }
 
-  const displayed = showAll ? completed : completed.slice(0, initialCount);
-  const hasMore = completed.length > initialCount;
+  const displayed = showAll ? rows : rows.slice(0, initialCount);
+  const hasMore = rows.length > initialCount;
 
   return (
     <div className="h-full flex flex-col">
       <div className="space-y-1.5 flex-1 overflow-y-auto">
         {displayed.map((completion) => {
-          const completedAt = new Date(completion.completedAt as string);
+          const isUnfinished = completion.status === 'IN_PROGRESS';
+          const timestamp = new Date(
+            (completion.completedAt ?? completion.startedAt) as string
+          );
+          // A session started in the last few hours may still be live;
+          // older ones were walked away from
+          const abandoned =
+            isUnfinished && differenceInHours(new Date(), timestamp) >= 6;
           const dayName =
             completion.day?.name ||
             (completion.day ? `Day ${completion.day.orderIndex + 1}` : 'Workout');
@@ -72,6 +83,7 @@ export function WorkoutHistoryPanel({
             completion.exercisesTotal != null &&
             completion.exercisesTotal > 0 &&
             (completion.exercisesDone ?? 0) < completion.exercisesTotal;
+          const deviations = getWorkoutDeviations(completion.sets ?? []);
 
           return (
             <div
@@ -80,28 +92,42 @@ export function WorkoutHistoryPanel({
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium truncate min-w-0">{dayName}</span>
-                {effort && (
+                {isUnfinished ? (
+                  <span className={cn('text-xs font-semibold shrink-0', abandoned ? 'text-warning' : 'text-info')}>
+                    {abandoned ? 'Not finished' : 'In progress'}
+                  </span>
+                ) : effort ? (
                   <span className={cn('text-xs font-semibold shrink-0', effort.text)}>
                     {effort.label}
                   </span>
-                )}
+                ) : null}
               </div>
               <div className="flex items-center justify-between gap-2 mt-0.5">
                 <span className="text-xs text-muted-foreground truncate min-w-0">
-                  {format(completedAt, 'MMM d, yyyy')}
+                  {isUnfinished ? 'Started ' : ''}
+                  {format(timestamp, 'MMM d, yyyy')}
                   {' · '}
-                  {formatDistanceToNow(completedAt, { addSuffix: true })}
+                  {formatDistanceToNow(timestamp, { addSuffix: true })}
                 </span>
                 <span className="font-mono text-[11px] tabular-nums text-muted-foreground shrink-0">
-                  {completion.exercisesTotal ? (
+                  {!isUnfinished && completion.exercisesTotal ? (
                     <span className={cn(partial && 'text-warning')}>
                       {completion.exercisesDone ?? 0}/{completion.exercisesTotal} exercises
                     </span>
                   ) : null}
-                  {completion.exercisesTotal && duration ? ' · ' : null}
-                  {duration}
+                  {!isUnfinished && completion.exercisesTotal && duration ? ' · ' : null}
+                  {!isUnfinished ? duration : null}
                 </span>
               </div>
+              {deviations.length > 0 && (
+                <p
+                  className="text-[11px] text-warning/90 mt-1 truncate antialiased"
+                  title={deviations.map(formatDeviation).join(' · ')}
+                >
+                  Adjusted: {deviations.slice(0, 2).map(formatDeviation).join(' · ')}
+                  {deviations.length > 2 ? ` +${deviations.length - 2} more` : ''}
+                </p>
+              )}
             </div>
           );
         })}
@@ -121,7 +147,7 @@ export function WorkoutHistoryPanel({
             ) : (
               <>
                 <ChevronDown className="w-4 h-4 mr-1" />
-                Show all ({completed.length - initialCount} more)
+                Show all ({rows.length - initialCount} more)
               </>
             )}
           </Button>
