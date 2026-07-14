@@ -64,8 +64,6 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const emailRef = useRef<HTMLInputElement>(null);
 
   const fullLink = invite ? `${window.location.origin}${invite.inviteLink}` : '';
-  // Strip the protocol for display — the copy/share actions carry the real URL
-  const displayLink = fullLink.replace(/^https?:\/\//, '');
 
   const expiresLabel = invite
     ? new Date(invite.expiresAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
@@ -197,8 +195,10 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
             <span className="truncate">
               {expiresLabel ? (
                 <>
-                  Expires <span className="font-medium text-foreground">{expiresLabel}</span>
+                  Link ready · expires <span className="font-medium text-foreground">{expiresLabel}</span>
                 </>
+              ) : error ? (
+                'No link yet'
               ) : (
                 'Creating link…'
               )}
@@ -232,8 +232,8 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         </div>
       }
     >
-      <div className="space-y-7 py-1 sm:py-2">
-        {/* Personal note — the hero: this is what makes the invite theirs */}
+      <div className="space-y-6 py-1 sm:py-2">
+        {/* Personal note — the one real decision in this modal */}
         <div>
           <FieldLabel
             htmlFor="invite-note"
@@ -247,102 +247,87 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               )
             }
           >
-            Note for your client
+            Personal note
           </FieldLabel>
-          {/* Styled like the coach-note block the client will actually see,
-              so writing it feels like writing to them — not filling a form */}
-          <div className="pl-3.5 border-l-2 border-brand">
-            <Textarea
-              id="invite-note"
-              value={note}
-              onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
-              onBlur={applyNote}
-              placeholder="Can’t wait to get you started — first up, we fix that squat."
-              rows={2}
-              className="min-h-[60px] resize-none border-0 bg-transparent px-0 py-0 text-sm leading-relaxed shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
-              maxLength={NOTE_MAX_LENGTH}
-            />
-          </div>
+          <Textarea
+            id="invite-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
+            onBlur={applyNote}
+            placeholder="Can’t wait to get you started — first up, we fix that squat."
+            rows={3}
+            className="resize-none leading-relaxed"
+            maxLength={NOTE_MAX_LENGTH}
+          />
           <p className="text-xs text-muted-foreground mt-2 antialiased text-pretty">
-            Greets them when they open your link, then waits in chat as your first message.
+            Greets them at signup, then lands in chat as your first message.
           </p>
         </div>
 
-        {/* Email pre-fill stays out of the way until it's wanted */}
-        {showEmail ? (
-          <div>
-            <FieldLabel htmlFor="invite-email">Client email</FieldLabel>
-            <Input
-              id="invite-email"
-              ref={emailRef}
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              onBlur={applyEmail}
-              placeholder="client@example.com"
-              className="h-11"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  applyEmail();
-                  (e.target as HTMLInputElement).blur();
-                }
-              }}
-            />
+        {error ? (
+          <div className="flex items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
+            <p className="text-xs text-destructive font-medium antialiased">{error}</p>
+            <Button variant="outline" size="sm" onClick={() => generate(appliedEmail, appliedNote)}>
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              Retry
+            </Button>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={() => setShowEmail(true)}
-            className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
-          >
-            <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-            Pre-fill their email
-          </button>
+          <div className="space-y-3">
+            {/* Email pre-fill stays out of the way until it's wanted */}
+            {showEmail ? (
+              <div>
+                <FieldLabel htmlFor="invite-email">Client email</FieldLabel>
+                <Input
+                  id="invite-email"
+                  ref={emailRef}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={applyEmail}
+                  placeholder="client@example.com"
+                  className="h-11"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      applyEmail();
+                      (e.target as HTMLInputElement).blur();
+                    }
+                  }}
+                />
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowEmail(true)}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
+              >
+                <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                Pre-fill their email
+              </button>
+            )}
+
+            {/* Escape hatch for a link that reached the wrong person. The URL
+                itself never shows — Copy link and Share are the link. */}
+            {invite && (
+              <button
+                type="button"
+                onClick={() => generate(appliedEmail, appliedNote, invite)}
+                disabled={isGenerating}
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={isGenerating ? 'w-3.5 h-3.5 animate-spin' : 'w-3.5 h-3.5'}
+                  aria-hidden="true"
+                />
+                New link
+                <span className="font-normal text-muted-foreground/60">
+                  — the current one stops working
+                </span>
+              </button>
+            )}
+          </div>
         )}
-
-        {/* The link itself — quiet: the footer owns copy/share */}
-        <div>
-          <FieldLabel
-            htmlFor="invite-link"
-            trailing={
-              invite && !error ? (
-                <button
-                  onClick={() => generate(appliedEmail, appliedNote, invite)}
-                  disabled={isGenerating}
-                  className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target disabled:opacity-50 antialiased"
-                >
-                  <RefreshCw
-                    className={isGenerating ? 'w-2.5 h-2.5 animate-spin' : 'w-2.5 h-2.5'}
-                    aria-hidden="true"
-                  />
-                  New link
-                </button>
-              ) : undefined
-            }
-          >
-            Invite link
-          </FieldLabel>
-
-          {error ? (
-            <div className="flex items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
-              <p className="text-xs text-destructive font-medium antialiased">{error}</p>
-              <Button variant="outline" size="sm" onClick={() => generate(appliedEmail, appliedNote)}>
-                <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-                Retry
-              </Button>
-            </div>
-          ) : (
-            <Input
-              id="invite-link"
-              readOnly
-              value={isGenerating && !invite ? 'Creating link…' : displayLink}
-              className="h-11 text-xs font-mono text-muted-foreground bg-muted/40 border-transparent"
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-              aria-label="Invite link"
-            />
-          )}
-        </div>
       </div>
     </Modal>
   );
