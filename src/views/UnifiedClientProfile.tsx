@@ -32,7 +32,13 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { Button } from '@/components/ui/button';
-import { AlertCircle, ArrowLeftRight, Loader2, Pencil, UserMinus } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { AlertCircle, ArrowLeftRight, Loader2, MoreVertical, Pencil, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
@@ -550,15 +556,40 @@ export function UnifiedClientProfile() {
             subtitle={headerSubtitle}
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
             action={
-              <Button
-                variant="default"
-                size="sm"
-                onClick={primaryAction.onClick}
-                disabled={primaryAction.disabled}
-                className="active:scale-[0.96] transition-transform duration-150 tap-target"
-              >
-                {primaryAction.label}
-              </Button>
+              <div className="flex items-center gap-2.5 shrink-0">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={primaryAction.onClick}
+                  disabled={primaryAction.disabled}
+                  className="active:scale-[0.96] transition-transform duration-150 tap-target"
+                >
+                  {primaryAction.label}
+                </Button>
+                {/* Rare/destructive actions live behind the header overflow,
+                    not on the page — the typed-name confirm is the real gate */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                      aria-label="More actions"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      onClick={() => setShowEndConfirm(true)}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <UserMinus className="w-4 h-4 mr-2" />
+                      End coaching relationship
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             }
           />
         </div>
@@ -794,19 +825,6 @@ export function UnifiedClientProfile() {
           </section>
         </div>
 
-        {/* Offboarding — kept quiet at the page's end so it never competes
-            with coaching actions, but findable when the roster changes */}
-        <div className="animate-enter flex justify-end pt-2" style={{ animationDelay: '260ms' }}>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowEndConfirm(true)}
-            className="text-muted-foreground hover:text-destructive active:scale-[0.96] transition-transform duration-150 tap-target"
-          >
-            <UserMinus className="w-3.5 h-3.5 mr-1.5" />
-            End coaching relationship
-          </Button>
-        </div>
         </main>
       </div>
 
