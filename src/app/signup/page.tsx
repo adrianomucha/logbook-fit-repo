@@ -6,10 +6,22 @@ import { signIn } from 'next-auth/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Loader2 } from 'lucide-react';
+import { ArrowRight, Loader2 } from 'lucide-react';
 import { LogoMark } from '@/components/brand/LogoMark';
 import { avatarColor } from '@/lib/avatar-colors';
 import { cn } from '@/lib/utils';
+
+/** Uppercase tracked mono label — the product's data voice */
+function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="block font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
+    >
+      {children}
+    </label>
+  );
+}
 
 interface InviteInfo {
   valid: boolean;
@@ -173,6 +185,9 @@ function SignupContent() {
 
   const coachName = inviteInfo?.coachName ?? 'Your coach';
   const coachFirstName = coachName.split(' ')[0];
+  // 'Your coach' is the API's fallback when the coach has no display name —
+  // "Train with Your" would read broken, so fall back to a neutral CTA
+  const hasRealCoachName = coachName !== 'Your coach';
 
   // Coach signup or valid invite — show signup form
   return (
@@ -195,10 +210,12 @@ function SignupContent() {
           // them — face, name, their own words — leads; the product recedes
           // to a small wordmark.
           <div className="space-y-5">
-            <div className="flex items-center justify-center gap-1.5 text-muted-foreground/70">
+            {/* Full-strength muted-foreground: the /70-faded version failed
+                WCAG AA contrast for small text on white */}
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground">
               <LogoMark size={16} />
               <span className="text-xs font-semibold tracking-tight">
-                Logbook<span className="text-muted-foreground/50">.fit</span>
+                Logbook<span className="font-normal">.fit</span>
               </span>
             </div>
 
@@ -224,7 +241,7 @@ function SignupContent() {
                 <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                   Your coach
                 </p>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                   {coachName} is expecting you
                 </h1>
               </div>
@@ -246,38 +263,40 @@ function SignupContent() {
         )}
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              {isCoachSignup ? 'Create your coach account' : 'Create your account'}
-            </CardTitle>
-            <CardDescription>
-              {isCoachSignup
-                ? 'Your workspace comes ready with a starter exercise library.'
-                : `30 seconds and you're training with ${coachFirstName}.`}
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
+          {/* The invited flow needs no card headline — "{Coach} is expecting
+              you" already carries the page; a second title is just noise */}
+          {isCoachSignup && (
+            <CardHeader>
+              <CardTitle className="text-lg">Create your coach account</CardTitle>
+              <CardDescription>
+                Your workspace comes ready with a starter exercise library.
+              </CardDescription>
+            </CardHeader>
+          )}
+          <CardContent className={isCoachSignup ? undefined : 'pt-6'}>
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <label htmlFor="name" className="text-sm font-medium">Name</label>
+                <FieldLabel htmlFor="name">Name</FieldLabel>
                 <Input
                   id="name"
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Your name"
+                  className="h-11"
                   required
                   autoFocus
                 />
               </div>
               <div className="space-y-2">
-                <label htmlFor="email" className="text-sm font-medium">Email</label>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
+                  className="h-11"
                   required
                 />
                 {inviteInfo?.email && (
@@ -287,30 +306,49 @@ function SignupContent() {
                 )}
               </div>
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium">Password</label>
+                <FieldLabel htmlFor="password">Password</FieldLabel>
                 <Input
                   id="password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="At least 8 characters"
+                  className="h-11"
                   required
                   minLength={8}
                 />
               </div>
 
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full h-12 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.98] transition-transform duration-150"
+              >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Setting up...
                   </>
+                ) : isCoachSignup ? (
+                  <>
+                    Let&apos;s go
+                    <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                  </>
                 ) : (
-                  "Let's go"
+                  <>
+                    {hasRealCoachName ? `Train with ${coachFirstName}` : 'Start training'}
+                    <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                  </>
                 )}
               </Button>
+
+              {!isCoachSignup && (
+                <p className="text-center text-xs text-muted-foreground">
+                  Takes 30 seconds — {hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.
+                </p>
+              )}
             </form>
           </CardContent>
         </Card>
