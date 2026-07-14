@@ -25,14 +25,14 @@ Status: ✅ fixed on this branch · ⬜ open
 | # | Status | Item | Impact | Effort |
 |---|--------|------|--------|--------|
 | 6 | ⬜ | **Two divergent urgency systems.** Dashboard ranks by last *workout* (7d); the profile ranks by last *check-in* (5–6d / 7d+). Same client, different status per screen. Consolidate on one definition. | High | M |
-| 7 | ⬜ | "Check-in ready to review" ranks *below* "check-in due" on the dashboard — a client waiting on the coach sorts lower than one who hasn't answered. Also: at-risk masks a waiting response (only 1 check-in fetched per client). | High | S |
+| 7 | ✅ | "Check-in ready to review" ranks *below* "check-in due" on the dashboard — a client waiting on the coach sorts lower than one who hasn't answered. Also: at-risk masks a waiting response (only 1 check-in fetched per client). | High | S |
 | 8 | ⬜ | **No "plan ended" state.** Client UI repeats the last week forever; week-overview API 404s and is swallowed; coach gets no "plan ends soon" warning. Highest-churn moment, unhandled. | High | M |
 | 9 | ⬜ | **Coach can't see what actually happened.** Skipped/abandoned workouts invisible (only last 10 COMPLETED fetched); client weight/rep overrides (`actualWeight`/`actualReps` are stored!) shown nowhere. | High | M |
-| 10 | ⬜ | **Double-send creates stacked check-ins.** `POST /api/check-ins` never checks for an open check-in; duplicates become invisible (UI shows only newest). Add a server-side guard. | High | S |
+| 10 | ✅ | **Double-send creates stacked check-ins.** `POST /api/check-ins` never checks for an open check-in; duplicates become invisible (UI shows only newest). Add a server-side guard. | High | S |
 | 11 | ⬜ | **No edit/delete/cancel on check-ins.** Typos in coach feedback are permanent; a mistakenly sent check-in can't be withdrawn. | Medium | M |
 | 12 | ⬜ | **"I'll adjust the plan" is untracked.** Client is told "your plan was updated" even if nothing changed. Track follow-through or soften client copy. | Medium | S–M |
 | 13 | ✅ | Silent message-send failure: input cleared before the request resolves, no maxLength (server caps 5000 → 400), no error toast. | High | S |
-| 14 | ⬜ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false` — urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
+| 14 | ✅ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false` — urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
 | 15 | ⬜ | Unread-message tracking neutralized: fetching a thread marks everything read, so "N unread" ~never triggers. | Medium | M |
 | 16 | ⬜ | **Churned clients can't come back.** Re-signup 409s, no re-invite-existing-account flow — a returning client loses all history. "Win-back" is a core retention journey. | High | L |
 | 17 | ⬜ | **No invite revocation/resend**; invite email is decorative (anyone with the link can redeem under any address); existing users can't accept an invite at all. | Medium | M |

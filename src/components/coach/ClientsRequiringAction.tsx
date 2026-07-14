@@ -22,12 +22,15 @@ function SampleChip() {
   );
 }
 
-function ctaForUrgency(urgency: DashboardClient['urgency']): { label: string; variant: 'default' | 'outline' | 'ghost' } {
-  switch (urgency) {
+function ctaForClient(client: DashboardClient): { label: string; variant: 'default' | 'outline' | 'ghost' } {
+  // A submitted response always deserves a review, even when the client is
+  // also at risk — their answer is the coach's opening to re-engage them
+  if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
+    return { label: 'Review Check-in', variant: 'default' };
+  }
+  switch (client.urgency) {
     case 'NEEDS_PLAN':
       return { label: 'Assign Plan', variant: 'default' };
-    case 'AWAITING_RESPONSE':
-      return { label: 'Review Check-in', variant: 'default' };
     case 'AT_RISK':
       return { label: 'Send Reminder', variant: 'outline' };
     case 'CHECKIN_DUE':
@@ -46,7 +49,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
   if (needsAction.length === 0 && onTrack.length === 0) return null;
 
   const handleClientAction = (client: DashboardClient) => {
-    if (client.urgency === 'AWAITING_RESPONSE' && client.pendingCheckIn) {
+    if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
       router.push(`/coach/clients/${client.clientProfileId}/check-in`);
       return;
     }
@@ -68,7 +71,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
           <div className={cn('bg-card rounded-xl divide-y divide-border overflow-hidden', cardShadow)}>
             {needsAction.map((client) => {
               const style = urgencyStyle(client.urgency);
-              const cta = ctaForUrgency(client.urgency);
+              const cta = ctaForClient(client);
               const displayName = client.user.name || client.user.email;
               return (
                 <div

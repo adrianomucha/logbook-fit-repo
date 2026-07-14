@@ -68,7 +68,11 @@ export function getSignal(client: DashboardClient): ClientSignal {
       const lead = client.lastWorkoutAt
         ? `${daysSince(client.lastWorkoutAt)}d silent`
         : 'No workouts yet';
-      if (client.pendingCheckIn) rest.push('no reply to check-in');
+      if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
+        rest.push('check-in ready to review');
+      } else if (client.pendingCheckIn) {
+        rest.push('no reply to check-in');
+      }
       if (plan) rest.push(plan);
       return { lead, rest };
     }

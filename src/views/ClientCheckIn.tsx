@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { avatarColor } from '@/lib/avatar-colors';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -58,7 +59,7 @@ export function ClientCheckIn() {
       await createCheckInForClient(clientId);
       await refreshClient();
     } catch {
-      // Could show an error toast
+      toast.error('Failed to send check-in. Please try again.');
     } finally {
       setIsCreating(false);
     }
@@ -74,7 +75,7 @@ export function ClientCheckIn() {
       });
       setShowSuccess(true);
     } catch {
-      // Could show an error toast
+      toast.error('Failed to submit your response. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

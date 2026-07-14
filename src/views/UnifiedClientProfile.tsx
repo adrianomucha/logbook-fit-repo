@@ -208,8 +208,9 @@ export function UnifiedClientProfile() {
       clearTimeout(sentTimerRef.current);
       sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
       handleScrollToCheckIn();
-    } catch {
-      toast.error('Failed to send check-in. Please try again.');
+    } catch (err) {
+      toast.error(err instanceof ApiError && err.status === 409 ? err.message : 'Failed to send check-in. Please try again.');
+      refreshClient(); // a 409 means one already exists — pull it into view
     } finally {
       setIsSendingCheckIn(false);
     }
@@ -237,8 +238,9 @@ export function UnifiedClientProfile() {
     try {
       await createCheckInForClient(clientId);
       refreshClient();
-    } catch {
-      toast.error('Failed to create check-in. Please try again.');
+    } catch (err) {
+      toast.error(err instanceof ApiError && err.status === 409 ? err.message : 'Failed to create check-in. Please try again.');
+      refreshClient();
     }
   };
 
