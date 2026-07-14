@@ -276,7 +276,7 @@ export function CoachDashboard() {
         onConfirm={handleDeleteTemplate}
         title="Delete Plan"
         message={`Are you sure you want to delete "${planToDeleteName}"?`}
-        warningMessage="This action cannot be undone. A plan that's currently assigned to a client can't be deleted — change their plan first."
+        warningMessage="This action cannot be undone. Clients keep their own copy of any plan you've assigned them."
         confirmLabel="Delete"
         confirmVariant="destructive"
       />

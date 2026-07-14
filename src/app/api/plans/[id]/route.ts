@@ -97,11 +97,13 @@ export const PUT = withCoach(
       workoutsPerWeek?: number;
     };
 
-    // If renaming, check for duplicate name
-    if (name && name !== existing.name) {
+    // If renaming a TEMPLATE, check for duplicate name among templates.
+    // Client instances share (or tailor) names freely — no uniqueness there.
+    if (name && name !== existing.name && existing.sourceTemplateId === null) {
       const duplicate = await prisma.plan.findFirst({
         where: {
           ...coachScope(coachProfileId),
+          sourceTemplateId: null,
           name,
           NOT: { id: planId },
         },

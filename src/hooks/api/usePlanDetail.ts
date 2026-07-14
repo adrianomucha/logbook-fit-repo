@@ -13,6 +13,8 @@ export interface PlanDetail {
   updatedAt: string;
   editedAt: string | null;
   deletedAt: string | null;
+  /** null = template; set = a client's copy, pointing at the root template */
+  sourceTemplateId: string | null;
   weeks: {
     id: string;
     weekNumber: number;

@@ -237,6 +237,11 @@ model Plan {
   emoji           String    @default("💪")
   durationWeeks   Int       @default(4)
   workoutsPerWeek Int       @default(4)
+  // Template/instance split: null = coach-authored template (the Plans page).
+  // Set = a client's own copy created at assignment, pointing at the root
+  // template it was cloned from. No FK — templates are deletable while
+  // clients keep training on their copies.
+  sourceTemplateId String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   editedAt        DateTime? // Last mid-cycle edit timestamp
@@ -248,6 +253,7 @@ model Plan {
   completions WorkoutCompletion[]
 
   @@index([coachId])
+  @@index([sourceTemplateId])
   @@map("plans")
 }
 

@@ -17,8 +17,8 @@ Status: ✅ fixed on this branch · ⬜ open
 | 2 | ✅ | **An unanswered check-in freezes the loop forever.** No expiry/reminder; a stale `PENDING` check-in permanently blocks the auto-scheduler (`checkin-schedule.ts`). The exact client you're worried about stops being checked on. | Critical | M |
 | 3 | ✅ | **UI promises notifications that don't exist.** "They'll get a notification…" — there is no notification system of any kind. | High (trust) | S |
 | 4 | ✅ | **API failures render as empty states.** Dashboard fetch error → "Getting Started" onboarding screen; client-profile fetch error → "Can't find this client". Most mutations swallow errors silently (`catch {}` + misleading "handled by apiFetch" comments). | High | S–M |
-| 5 | ⬜ | **Plans are assigned by reference, not cloned.** Editing a plan mutates it live for every assigned client; deleting an exercise mid-workout cascade-deletes the client's logged sets. Needs clone-on-assign (real templates vs instances). | Critical | L |
-| 5a | ✅ | *Stopgap for #5:* block deleting a plan while it's assigned, and fix the false confirm copy ("client plans will not be affected"). | High | S |
+| 5 | ✅ | **Plans are assigned by reference, not cloned.** Now clone-on-assign: each assignment creates the client's own copy (`sourceTemplateId` links it to the template). Editing a template affects future assignments only; editing from a client's profile tailors only that client. Pre-existing assignments keep legacy shared behavior until their next (re)assignment. | Critical | L |
+| 5a | ✅ | *Stopgap for #5:* block deleting a plan while it's assigned, and fix the false confirm copy. (Superseded by clone-on-assign — the 409 now only guards legacy direct assignments.) | High | S |
 
 ## P1 — High-impact gaps in daily coaching
 
