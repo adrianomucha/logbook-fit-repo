@@ -120,7 +120,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
 
   const stepDuration = (delta: number) => {
     const next = Math.min(MAX_WEEKS, Math.max(MIN_WEEKS, formData.durationWeeks + delta));
-    handleFieldChange('durationWeeks', next);
+    if (next !== formData.durationWeeks) handleFieldChange('durationWeeks', next);
   };
 
   // Standard radio-group keyboard behavior: arrows move and select
@@ -335,12 +335,17 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
         <div role="group" aria-labelledby={ids.durationLabel}>
           <FieldLabel id={ids.durationLabel}>Duration</FieldLabel>
           <div className="inline-flex items-stretch rounded-lg border border-border overflow-hidden">
+            {/* aria-disabled (not disabled) so the button keeps focus when a bound
+                is reached mid-interaction; stepDuration no-ops past the bounds */}
             <button
               type="button"
               onClick={() => stepDuration(-1)}
-              disabled={formData.durationWeeks <= MIN_WEEKS}
+              aria-disabled={formData.durationWeeks <= MIN_WEEKS}
               aria-label="One week shorter"
-              className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted/70 disabled:opacity-30 disabled:pointer-events-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              className={cn(
+                'w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                formData.durationWeeks <= MIN_WEEKS && 'opacity-30 hover:bg-transparent hover:text-muted-foreground active:bg-transparent'
+              )}
             >
               <Minus className="w-4 h-4" aria-hidden="true" />
             </button>
@@ -360,9 +365,12 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             <button
               type="button"
               onClick={() => stepDuration(1)}
-              disabled={formData.durationWeeks >= MAX_WEEKS}
+              aria-disabled={formData.durationWeeks >= MAX_WEEKS}
               aria-label="One week longer"
-              className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted/70 disabled:opacity-30 disabled:pointer-events-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              className={cn(
+                'w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted/70 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                formData.durationWeeks >= MAX_WEEKS && 'opacity-30 hover:bg-transparent hover:text-muted-foreground active:bg-transparent'
+              )}
             >
               <Plus className="w-4 h-4" aria-hidden="true" />
             </button>
