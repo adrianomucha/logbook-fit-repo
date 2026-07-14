@@ -345,14 +345,16 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               <Minus className="w-4 h-4" aria-hidden="true" />
             </button>
             <div
-              className="min-w-[104px] px-3 flex items-baseline justify-center gap-1.5 border-x border-border select-none"
+              className="min-w-[104px] px-3 flex items-center justify-center border-x border-border select-none"
               aria-live="polite"
             >
-              <span className="text-lg font-black tabular-nums tracking-tight antialiased">
-                {formData.durationWeeks}
-              </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] font-medium text-muted-foreground antialiased">
-                {formData.durationWeeks === 1 ? 'week' : 'weeks'}
+              <span className="inline-flex items-baseline gap-1.5">
+                <span className="text-lg font-black tabular-nums tracking-tight antialiased">
+                  {formData.durationWeeks}
+                </span>
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] font-medium text-muted-foreground antialiased">
+                  {formData.durationWeeks === 1 ? 'week' : 'weeks'}
+                </span>
               </span>
             </div>
             <button
