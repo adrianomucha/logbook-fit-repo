@@ -5,6 +5,7 @@ import { Session } from "next-auth";
 import { ensureScheduledCheckIn } from "@/lib/checkin-schedule";
 import { endCoachClientRelationship } from "@/lib/relationship-termination";
 import { deleteSampleClient } from "@/lib/sample-client";
+import { getClientUrgency } from "@/lib/urgency";
 
 /**
  * GET /api/coach/clients/[id]
@@ -140,12 +141,30 @@ export const GET = withCoach(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
+    // Same urgency the dashboard ranks by — computed here too so the
+    // profile can never disagree with the roster
+    const lastWorkoutAt =
+      client.completions.find((c) => c.status === "COMPLETED")?.completedAt ?? null;
+    const openCheckIn = client.checkIns.find(
+      (ci) => ci.status === "PENDING" || ci.status === "CLIENT_RESPONDED"
+    );
+    const { urgency, planStatus } = getClientUrgency({
+      hasPlan: !!client.activePlan,
+      planStartDate: client.planStartDate,
+      planDurationWeeks: client.activePlan?.durationWeeks,
+      lastWorkoutAt,
+      openCheckInStatus: openCheckIn?.status ?? null,
+    });
+
     return NextResponse.json({
       ...client,
       relationshipStatus: relationship.status,
       joinedAt: relationship.createdAt,
       planStartDate: client.planStartDate,
       checkInScheduleEnabled: relationship.checkInScheduleEnabled,
+      lastWorkoutAt,
+      urgency,
+      planStatus,
     });
   }
 );

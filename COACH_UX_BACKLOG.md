@@ -24,7 +24,7 @@ Status: ✅ fixed on this branch · ⬜ open
 
 | # | Status | Item | Impact | Effort |
 |---|--------|------|--------|--------|
-| 6 | ⬜ | **Two divergent urgency systems.** Dashboard ranks by last *workout* (7d); the profile ranks by last *check-in* (5–6d / 7d+). Same client, different status per screen. Consolidate on one definition. | High | M |
+| 6 | ✅ | **Two divergent urgency systems.** Now one server-side definition (`lib/urgency.ts`) computed by both the dashboard and client-detail endpoints; the profile header consumes it. `client-status.ts` and its four orphaned consumers deleted. | High | M |
 | 7 | ✅ | "Check-in ready to review" ranks *below* "check-in due" on the dashboard — a client waiting on the coach sorts lower than one who hasn't answered. Also: at-risk masks a waiting response (only 1 check-in fetched per client). | High | S |
 | 8 | ✅ | **No "plan ended" state.** Client UI repeats the last week forever; week-overview API 404s and is swallowed; coach gets no "plan ends soon" warning. Highest-churn moment, unhandled. Now: `PLAN_ENDED` urgency + "Assign Next Plan" CTA, "final week" signal, client plan-complete celebration, unified week math. | High | M |
 | 9 | ✅ | **Coach can't see what actually happened.** Now: started-but-unfinished workouts appear in history ("Not finished"), and weight/rep deviations from the prescription show per workout ("Adjusted: Deadlift 185→155"). Flags on abandoned sessions surface in check-in review too. | High | M |

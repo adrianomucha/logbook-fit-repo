@@ -1,4 +1,3 @@
-import { ClientStatus } from '@/lib/client-status';
 import { WorkoutPlan } from '@/types';
 import type { LucideIcon } from 'lucide-react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
@@ -23,33 +22,6 @@ export function getTrend(current?: number, prev?: number): TrendResult | null {
   if (Math.abs(diff) < 0.1) return { icon: Minus, text: 'No change', color: 'text-muted-foreground' };
   if (diff > 0) return { icon: TrendingUp, text: `+${diff.toFixed(1)}`, color: 'text-success' };
   return { icon: TrendingDown, text: diff.toFixed(1), color: 'text-destructive' };
-}
-
-/**
- * Shared status badge style mapping.
- * Used by ClientCard, ClientsRequiringAction, and any other status display.
- */
-export function statusBadgeStyles(status: ClientStatus): {
-  dot: string;
-  bg: string;
-  text: string;
-} {
-  switch (status.type) {
-    case 'at-risk':
-    case 'overdue':
-      return { dot: 'bg-warning', bg: 'bg-warning/10', text: 'text-warning' };
-    case 'pending-checkin':
-    case 'unread':
-      return { dot: 'bg-info', bg: 'bg-info/10', text: 'text-info' };
-    case 'ok':
-      return { dot: 'bg-success', bg: 'bg-success/10', text: 'text-success' };
-    default:
-      return {
-        dot: 'bg-muted-foreground',
-        bg: 'bg-muted-foreground/10',
-        text: 'text-muted-foreground',
-      };
-  }
 }
 
 /**

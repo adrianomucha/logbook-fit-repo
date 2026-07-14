@@ -32,10 +32,9 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { Button } from '@/components/ui/button';
-import { ArrowLeftRight, Loader2, Pencil, UserMinus } from 'lucide-react';
+import { AlertCircle, ArrowLeftRight, Loader2, Pencil, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { getClientStatus } from '@/lib/client-status';
 import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -185,13 +184,12 @@ export function UnifiedClientProfile() {
     };
   }, [activeCheckInDetail, apiClient, user]);
 
-  const priorityMode: 'A' | 'B' = activeCheckIn ? 'A' : 'B';
-
-  // Status computation — uses full getClientStatus for ContextualStatusHeader
-  const status = useMemo(() => {
-    if (!client) return null;
-    return getClientStatus(client, messages, checkIns);
-  }, [client, messages, checkIns]);
+  // Unread = messages from the client's user not yet marked read. Best-effort:
+  // the messages API stamps the thread read on fetch (backlog #15).
+  const hasUnread = useMemo(
+    () => !!apiClient && messages.some((m) => m.senderId === apiClient.user.id && !m.read),
+    [messages, apiClient]
+  );
 
   // ---- Handlers ----
   const handleScrollToCheckIn = () => {
@@ -442,26 +440,21 @@ export function UnifiedClientProfile() {
   // lastCheckInDate isn't always populated on the client record — fall back to history
   const lastCheckInAt = client.lastCheckInDate ?? lastCompletedCheckIn?.completedAt ?? lastCompletedCheckIn?.date;
 
-  // Derive inline status info
-  // Suppress urgent badges when coach already sent a check-in — "Waiting for X" section is the real status
+  // Derive inline status info from the same server-computed urgency the
+  // dashboard ranks by, so this page can never disagree with the roster.
+  // Suppress the urgent banner while a check-in is in flight — the
+  // "Waiting for X" section is the real status then.
   const hasActiveCheckIn = !!activeCheckIn;
-  const rawUrgent = status && (status.type === 'overdue' || status.type === 'at-risk');
-  const showStatusBanner = status
-    && !(priorityMode === 'B' && status.type === 'ok')
-    && status.type !== 'pending-checkin'
-    && !(rawUrgent && hasActiveCheckIn);
-  const statusLabel = showStatusBanner ? status!.label : null;
-  const StatusIcon = showStatusBanner ? status!.icon : null;
-  const statusIsUrgent = showStatusBanner && (status!.type === 'overdue' || status!.type === 'at-risk');
+  const statusIsUrgent = apiClient.urgency === 'AT_RISK' && !hasActiveCheckIn;
+  const statusLabel = statusIsUrgent ? 'At Risk' : null;
 
-  // Days-since detail for urgent statuses — shown inline in the subtitle
-  // instead of a separate alert strip, so "overdue" is said once, in one place.
-  const urgentDetail: string | null = (() => {
-    if (!statusIsUrgent || !client.lastCheckInDate) return null;
-    const days = Math.floor((Date.now() - new Date(client.lastCheckInDate).getTime()) / (1000 * 60 * 60 * 24));
-    if (status!.type === 'overdue') return `${Math.max(1, days)}d since last check-in`;
-    return `${Math.max(1, 7 - days)}d until overdue`;
-  })();
+  // Days-silent detail folded into the subtitle — the same signal ("Nd
+  // silent" since the last workout) the roster row shows.
+  const urgentDetail: string | null = statusIsUrgent
+    ? lastWorkoutAt
+      ? `${Math.max(1, Math.floor((Date.now() - lastWorkoutAt.getTime()) / (1000 * 60 * 60 * 24)))}d since last workout`
+      : 'no workouts logged yet'
+    : null;
 
   // Primary action — always give the coach one obvious next move, chosen by the
   // client's state, so the page is never just a passive read-out. `kind` lets
@@ -477,26 +470,25 @@ export function UnifiedClientProfile() {
         ? { label: 'Review check-in', onClick: handleScrollToCheckIn, kind: 'review' }
         : activeCheckIn?.status === 'pending'
           ? { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' }
-          : statusIsUrgent || !status?.hasUnread
+          : statusIsUrgent || !hasUnread
             ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn, kind: 'send' }
             : { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' };
 
   // Build subtitle from status or plan. Urgent statuses get the warning voice
   // with the days detail folded in; everything else keeps a quiet metadata line.
-  const headerSubtitle: React.ReactNode = statusIsUrgent && statusLabel && StatusIcon
+  const headerSubtitle: React.ReactNode = statusIsUrgent && statusLabel
     ? (
       <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-warning font-medium antialiased flex items-center gap-1.5">
-        <StatusIcon className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
+        <AlertCircle className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
         {statusLabel}
         {urgentDetail && <span className="text-warning/70 normal-case tracking-normal tabular-nums">· {urgentDetail}</span>}
       </p>
     )
-    : statusLabel
-      ?? (plan ? (
-        <p className="text-[13px] text-muted-foreground antialiased">
-          {plan.emoji} {plan.name}
-        </p>
-      ) : undefined);
+    : plan ? (
+      <p className="text-[13px] text-muted-foreground antialiased">
+        {plan.emoji} {plan.name}
+      </p>
+    ) : undefined;
 
   // Section label helper — consistent uppercase tracking with antialiased rendering.
   // Real <h2> so the page has a navigable heading outline, styled down to a label.
