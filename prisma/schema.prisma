@@ -186,6 +186,9 @@ model ClientInvite {
   coachId   String
   token     String       @unique
   email     String?
+  // Personal note from the coach, shown on the invite landing page and
+  // delivered as the coach's first chat message when the client signs up
+  note      String?
   status    InviteStatus @default(PENDING)
   expiresAt DateTime     // 7 days from creation
   createdAt DateTime     @default(now())

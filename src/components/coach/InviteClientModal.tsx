@@ -3,6 +3,7 @@ import { Copy, Check, Share2, RefreshCw } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
+import { Textarea } from '../ui/textarea';
 import { apiFetch } from '@/lib/api-client';
 
 interface InviteClientModalProps {
@@ -14,18 +15,23 @@ interface InviteResult {
   id: string;
   token: string;
   email: string | null;
+  note: string | null;
   expiresAt: string;
   inviteLink: string;
 }
+
+const NOTE_MAX_LENGTH = 280;
 
 const canNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
 export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const [email, setEmail] = useState('');
+  const [note, setNote] = useState('');
   const [invite, setInvite] = useState<InviteResult | null>(null);
-  // Email baked into the currently shown invite — lets us skip needless regen
+  // Email/note baked into the currently shown invite — lets us skip needless regen
   const [appliedEmail, setAppliedEmail] = useState('');
+  const [appliedNote, setAppliedNote] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,29 +40,36 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
 
   const fullLink = invite ? `${window.location.origin}${invite.inviteLink}` : '';
 
-  const generate = useCallback(async (emailToBake: string, replacing?: InviteResult | null) => {
-    setIsGenerating(true);
-    setError(null);
-    try {
-      // Replace, don't stack: kill the previous link from this modal so a
-      // regenerated invite doesn't leave a live orphan floating around
-      if (replacing) {
-        await apiFetch(`/api/invites/${replacing.token}`, { method: 'DELETE' }).catch(() => {
-          // Already used or gone — nothing to revoke
+  const generate = useCallback(
+    async (emailToBake: string, noteToBake: string, replacing?: InviteResult | null) => {
+      setIsGenerating(true);
+      setError(null);
+      try {
+        // Replace, don't stack: kill the previous link from this modal so a
+        // regenerated invite doesn't leave a live orphan floating around
+        if (replacing) {
+          await apiFetch(`/api/invites/${replacing.token}`, { method: 'DELETE' }).catch(() => {
+            // Already used or gone — nothing to revoke
+          });
+        }
+        const result = await apiFetch<InviteResult>('/api/invites', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: emailToBake || undefined,
+            note: noteToBake || undefined,
+          }),
         });
+        setInvite(result);
+        setAppliedEmail(emailToBake);
+        setAppliedNote(noteToBake);
+      } catch {
+        setError('Couldn’t create a link. Try again.');
+      } finally {
+        setIsGenerating(false);
       }
-      const result = await apiFetch<InviteResult>('/api/invites', {
-        method: 'POST',
-        body: JSON.stringify({ email: emailToBake || undefined }),
-      });
-      setInvite(result);
-      setAppliedEmail(emailToBake);
-    } catch {
-      setError('Couldn’t create a link. Try again.');
-    } finally {
-      setIsGenerating(false);
-    }
-  }, []);
+    },
+    []
+  );
 
   // Reset + auto-generate a ready-to-share link when the modal opens
   useEffect(() => {
@@ -65,13 +78,15 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
       return;
     }
     setEmail('');
+    setNote('');
     setInvite(null);
     setAppliedEmail('');
+    setAppliedNote('');
     setCopied(false);
     setError(null);
     if (!generatedForOpen.current) {
       generatedForOpen.current = true;
-      generate('');
+      generate('', '');
     }
   }, [isOpen, generate]);
 
@@ -79,7 +94,14 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const applyEmail = () => {
     const trimmed = email.trim();
     if (isGenerating || trimmed === appliedEmail) return;
-    generate(trimmed, invite);
+    generate(trimmed, appliedNote, invite);
+  };
+
+  // Same deal for the personal note
+  const applyNote = () => {
+    const trimmed = note.trim();
+    if (isGenerating || trimmed === appliedNote) return;
+    generate(appliedEmail, trimmed, invite);
   };
 
   const handleCopy = async () => {
@@ -188,6 +210,39 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           </p>
         </div>
 
+        {/* Personal note — turns the link into a letter */}
+        <div>
+          <label
+            htmlFor="invite-note"
+            className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2 block"
+          >
+            Note for your client
+            <span className="normal-case tracking-normal text-muted-foreground/50 ml-1 font-sans">
+              optional
+            </span>
+          </label>
+          <Textarea
+            id="invite-note"
+            value={note}
+            onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
+            onBlur={applyNote}
+            placeholder="Can’t wait to get you started — first up, we fix that squat."
+            rows={2}
+            className="min-h-[60px] resize-none"
+            maxLength={NOTE_MAX_LENGTH}
+          />
+          <div className="flex items-baseline justify-between gap-2 mt-2">
+            <p className="text-xs text-muted-foreground antialiased">
+              Greets them when they open your link, then waits in chat as your first message.
+            </p>
+            {note.length > 0 && (
+              <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50 shrink-0">
+                {note.length}/{NOTE_MAX_LENGTH}
+              </span>
+            )}
+          </div>
+        </div>
+
         {/* Link — the hero: this is what the coach came for */}
         <div className="rounded-xl bg-muted/40 p-4">
           <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2.5 flex items-center gap-1.5">
@@ -205,7 +260,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           {error ? (
             <div className="flex items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
               <p className="text-xs text-destructive font-medium antialiased">{error}</p>
-              <Button variant="outline" size="sm" onClick={() => generate(appliedEmail)}>
+              <Button variant="outline" size="sm" onClick={() => generate(appliedEmail, appliedNote)}>
                 <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                 Retry
               </Button>
@@ -242,7 +297,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                 Sent to the wrong person?
               </p>
               <button
-                onClick={() => generate(appliedEmail, invite)}
+                onClick={() => generate(appliedEmail, appliedNote, invite)}
                 disabled={isGenerating}
                 className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors tap-target disabled:opacity-50 antialiased"
               >

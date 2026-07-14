@@ -509,6 +509,21 @@ describe("createInviteSchema", () => {
     const result = createInviteSchema.safeParse({ email: "not-an-email" });
     expect(result.success).toBe(false);
   });
+
+  it("accepts and trims a personal note", () => {
+    const result = createInviteSchema.safeParse({
+      note: "  Can't wait to get you started!  ",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.note).toBe("Can't wait to get you started!");
+    }
+  });
+
+  it("rejects a note over 280 characters", () => {
+    const result = createInviteSchema.safeParse({ note: "x".repeat(281) });
+    expect(result.success).toBe(false);
+  });
 });
 
 // ──────────────────────────────────────

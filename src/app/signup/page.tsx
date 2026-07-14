@@ -8,11 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { LogoMark } from '@/components/brand/LogoMark';
+import { avatarColor } from '@/lib/avatar-colors';
+import { cn } from '@/lib/utils';
 
 interface InviteInfo {
   valid: boolean;
   email?: string | null;
+  note?: string | null;
   coachName?: string;
+  coachAvatar?: string | null;
   expiresAt?: string;
   reason?: 'not_found' | 'used' | 'expired';
 }
@@ -167,35 +171,89 @@ function SignupContent() {
     );
   }
 
+  const coachName = inviteInfo?.coachName ?? 'Your coach';
+  const coachFirstName = coachName.split(' ')[0];
+
   // Coach signup or valid invite — show signup form
   return (
     <div className="min-h-dvh bg-background p-4 pt-12 sm:pt-4 flex items-start sm:items-center justify-center pb-[env(safe-area-inset-bottom)]">
       <div className="max-w-md w-full space-y-6">
-        <div className="text-center space-y-1">
-          <div className="flex justify-center mb-3">
-            <LogoMark size={44} />
+        {isCoachSignup ? (
+          <div className="text-center space-y-1">
+            <div className="flex justify-center mb-3">
+              <LogoMark size={44} />
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Logbook<span className="text-muted-foreground/60">.fit</span>
+            </h1>
+            <p className="text-muted-foreground">
+              Know who needs you today — before they go quiet
+            </p>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Logbook<span className="text-muted-foreground/60">.fit</span>
-          </h1>
-          <p className="text-muted-foreground">
-            {isCoachSignup ? (
-              <>Know who needs you today — before they go quiet</>
-            ) : (
-              <><strong>{inviteInfo?.coachName}</strong> invited you to train together</>
+        ) : (
+          // Invited client: the coach is the page. The person who invited
+          // them — face, name, their own words — leads; the product recedes
+          // to a small wordmark.
+          <div className="space-y-5">
+            <div className="flex items-center justify-center gap-1.5 text-muted-foreground/70">
+              <LogoMark size={16} />
+              <span className="text-xs font-semibold tracking-tight">
+                Logbook<span className="text-muted-foreground/50">.fit</span>
+              </span>
+            </div>
+
+            <div className="text-center space-y-3">
+              <div
+                className={cn(
+                  'w-16 h-16 rounded-full flex items-center justify-center mx-auto overflow-hidden',
+                  inviteInfo?.coachAvatar ? 'bg-muted' : avatarColor(coachName)
+                )}
+              >
+                {inviteInfo?.coachAvatar ? (
+                  // Avatar URLs can point at arbitrary remote hosts, which
+                  // next/image rejects without a remotePatterns allowlist.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={inviteInfo.coachAvatar} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl font-bold uppercase">
+                    {coachName.charAt(0)}
+                  </span>
+                )}
+              </div>
+              <div className="space-y-1">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                  Your coach
+                </p>
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                  {coachName} is expecting you
+                </h1>
+              </div>
+            </div>
+
+            {inviteInfo?.note && (
+              <div className="flex items-start gap-3 pl-3.5 border-l-2 border-brand text-left">
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+                    A note from {coachFirstName}
+                  </p>
+                  <p className="text-sm text-foreground/80 leading-relaxed">
+                    {inviteInfo.note}
+                  </p>
+                </div>
+              </div>
             )}
-          </p>
-        </div>
+          </div>
+        )}
 
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">
-              {isCoachSignup ? 'Create your coach account' : "Let's get you started"}
+              {isCoachSignup ? 'Create your coach account' : 'Create your account'}
             </CardTitle>
             <CardDescription>
               {isCoachSignup
                 ? 'Your workspace comes ready with a starter exercise library.'
-                : "Create your account and you're in — takes 30 seconds."}
+                : `30 seconds and you're training with ${coachFirstName}.`}
             </CardDescription>
           </CardHeader>
           <CardContent>

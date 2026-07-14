@@ -31,7 +31,7 @@ export const POST = withCoach(
 
     const result = await parseBody(req, createInviteSchema);
     if (!result.success) return result.response;
-    const { email } = result.data;
+    const { email, note } = result.data;
 
     const sevenDaysFromNow = new Date();
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
@@ -41,6 +41,7 @@ export const POST = withCoach(
         coachId: coachProfileId,
         token: generateSecureToken(),
         email: email || null,
+        note: note || null,
         expiresAt: sevenDaysFromNow,
       },
     });
@@ -50,6 +51,7 @@ export const POST = withCoach(
         id: invite.id,
         token: invite.token,
         email: invite.email,
+        note: invite.note,
         expiresAt: invite.expiresAt,
         inviteLink: `/signup?invite=${invite.token}`,
       },
