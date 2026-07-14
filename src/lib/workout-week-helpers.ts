@@ -22,8 +22,35 @@ export interface WeekDayInfo {
 }
 
 /**
+ * Raw (unclamped) week number since the plan started.
+ * Week 1 starts on the Monday of (or before) planStartDate. This is the ONE
+ * definition of "which week is it" — both UI and API must derive from it so
+ * they can never disagree about where the client is in the plan.
+ */
+export function getRawWeekNumber(planStartDate: string | Date): number {
+  const startMonday = startOfWeek(new Date(planStartDate), { weekStartsOn: 1 });
+  const daysDiff = differenceInDays(startOfDay(new Date()), startMonday);
+  return Math.floor(daysDiff / 7) + 1;
+}
+
+/**
+ * Where the client is relative to the plan's end — drives the coach's
+ * "assign the next block" nudge and the client's plan-complete state.
+ */
+export type PlanProgressStatus = 'ACTIVE' | 'FINAL_WEEK' | 'ENDED';
+
+export function getPlanProgressStatus(
+  planStartDate: string | Date,
+  durationWeeks: number
+): PlanProgressStatus {
+  const raw = getRawWeekNumber(planStartDate);
+  if (raw > durationWeeks) return 'ENDED';
+  if (raw === durationWeeks) return 'FINAL_WEEK';
+  return 'ACTIVE';
+}
+
+/**
  * Calculate the current week number based on planStartDate.
- * Week 1 starts on the Monday of (or before) planStartDate.
  * Note: this advances the *displayed week* over time; it does NOT pin
  * individual workouts to weekdays.
  * @returns 1-indexed week number, clamped to plan duration
@@ -32,15 +59,7 @@ export function getCurrentWeekNumber(
   planStartDate: string,
   durationWeeks: number
 ): number {
-  const startDate = new Date(planStartDate);
-  const startMonday = startOfWeek(startDate, { weekStartsOn: 1 });
-  const today = startOfDay(new Date());
-
-  const daysDiff = differenceInDays(today, startMonday);
-  const weekNumber = Math.floor(daysDiff / 7) + 1;
-
-  // Clamp to valid range
-  return Math.max(1, Math.min(weekNumber, durationWeeks));
+  return Math.max(1, Math.min(getRawWeekNumber(planStartDate), durationWeeks));
 }
 
 /**

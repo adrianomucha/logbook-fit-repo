@@ -20,6 +20,12 @@ export function urgencyStyle(urgency: DashboardClient['urgency']): UrgencyStyle 
         chip: 'bg-brand/25 text-brand-foreground dark:bg-brand/15 dark:text-brand',
         dot: 'bg-brand',
       };
+    case 'PLAN_ENDED':
+      return {
+        label: 'Plan Ended',
+        chip: 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
+        dot: 'bg-violet-500',
+      };
     case 'AT_RISK':
       return {
         label: 'At Risk',
@@ -59,10 +65,15 @@ export type ClientSignal = { lead?: string; rest: string[] };
 export function getSignal(client: DashboardClient): ClientSignal {
   const rest: string[] = [];
   const plan = client.activePlan?.name;
+  const finalWeek = client.planStatus === 'FINAL_WEEK';
 
   switch (client.urgency) {
     case 'NEEDS_PLAN': {
       return { lead: 'Waiting on their first plan', rest };
+    }
+    case 'PLAN_ENDED': {
+      if (plan) rest.push(`${plan} finished`);
+      return { lead: 'Ready for their next block', rest };
     }
     case 'AT_RISK': {
       const lead = client.lastWorkoutAt
@@ -78,14 +89,17 @@ export function getSignal(client: DashboardClient): ClientSignal {
     }
     case 'AWAITING_RESPONSE': {
       if (plan) rest.push(plan);
+      if (finalWeek) rest.push('final week');
       return { lead: 'Ready to review', rest };
     }
     case 'CHECKIN_DUE': {
       if (plan) rest.push(plan);
+      if (finalWeek) rest.push('final week');
       return { lead: 'Check-in due', rest };
     }
     case 'ON_TRACK': {
       if (plan) rest.push(plan);
+      if (finalWeek) rest.push('final week — line up the next block');
       if (client.lastWorkoutAt) {
         const d = daysSince(client.lastWorkoutAt);
         rest.push(d <= 0 ? 'trained today' : d === 1 ? 'trained yesterday' : `last workout ${d}d ago`);

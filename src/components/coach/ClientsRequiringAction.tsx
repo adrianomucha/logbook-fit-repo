@@ -31,6 +31,8 @@ function ctaForClient(client: DashboardClient): { label: string; variant: 'defau
   switch (client.urgency) {
     case 'NEEDS_PLAN':
       return { label: 'Assign Plan', variant: 'default' };
+    case 'PLAN_ENDED':
+      return { label: 'Assign Next Plan', variant: 'default' };
     case 'AT_RISK':
       return { label: 'Send Reminder', variant: 'outline' };
     case 'CHECKIN_DUE':

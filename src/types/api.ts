@@ -12,6 +12,7 @@ export interface DashboardClient {
   activePlan: {
     id: string;
     name: string;
+    durationWeeks: number;
   } | null;
   lastWorkoutAt: string | null;
   pendingCheckIn: {
@@ -21,7 +22,9 @@ export interface DashboardClient {
   } | null;
   /** Coach-created demo client (sample mode) */
   isSample: boolean;
-  urgency: 'NEEDS_PLAN' | 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';
+  /** Where the client is relative to their plan's end */
+  planStatus: 'NONE' | 'ACTIVE' | 'FINAL_WEEK' | 'ENDED';
+  urgency: 'NEEDS_PLAN' | 'PLAN_ENDED' | 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';
   urgencyOrder: number;
 }
 
@@ -154,6 +157,8 @@ export interface WeekOverview {
   weekNumber: number;
   weekId: string;
   planStartDate: string;
+  /** Past the plan's last week — the response clamps to the final week */
+  planEnded: boolean;
   days: WeekOverviewDay[];
 }
 
