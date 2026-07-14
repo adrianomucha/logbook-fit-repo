@@ -411,7 +411,10 @@ function RecentCompletionsList({ completions }: {
     day: { name: string | null } | null;
   }[];
 }) {
-  if (completions.length === 0) return null;
+  // This list is finished-workouts context only; in-progress rows from the
+  // client detail payload have no completion date to show
+  const finished = completions.filter((c) => c.completedAt);
+  if (finished.length === 0) return null;
 
   return (
     <Card>
@@ -423,7 +426,7 @@ function RecentCompletionsList({ completions }: {
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          {completions.map((c) => (
+          {finished.map((c) => (
             <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50">
               <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
               <div className="flex-1 min-w-0">

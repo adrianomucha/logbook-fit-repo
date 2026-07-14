@@ -59,18 +59,48 @@ export const GET = withCoach(
           },
         },
         completions: {
-          where: { status: "COMPLETED" },
-          orderBy: { completedAt: "desc" },
+          // IN_PROGRESS rows are workouts the client started and never
+          // finished — abandonment is a fade signal the coach must see
+          where: { status: { in: ["COMPLETED", "IN_PROGRESS"] } },
+          orderBy: { completedAt: { sort: "desc", nulls: "first" } },
           take: 10,
           select: {
             id: true,
             dayId: true,
+            status: true,
+            startedAt: true,
             completedAt: true,
             completionPct: true,
             exercisesDone: true,
             exercisesTotal: true,
             effortRating: true,
             durationSec: true,
+            // Sets where the client overrode weight or reps — the coach
+            // reviews these as deviations from the prescription
+            sets: {
+              where: {
+                completed: true,
+                OR: [
+                  { actualWeight: { not: null } },
+                  { actualReps: { not: null } },
+                ],
+              },
+              orderBy: { setNumber: "asc" },
+              select: {
+                setNumber: true,
+                actualWeight: true,
+                actualReps: true,
+                workoutExercise: {
+                  select: {
+                    trackingType: true,
+                    weight: true,
+                    reps: true,
+                    repsMax: true,
+                    exercise: { select: { name: true } },
+                  },
+                },
+              },
+            },
             day: {
               select: {
                 name: true,

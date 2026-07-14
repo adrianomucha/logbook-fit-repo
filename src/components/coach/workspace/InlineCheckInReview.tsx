@@ -87,14 +87,14 @@ export function InlineCheckInReview({
 
     const sevenDaysAgo = subDays(new Date(), 7);
 
-    // Get workout completions from the past week for this client
-    const recentCompletions = workoutCompletions.filter(
-      (wc) =>
-        wc.clientId === client.id &&
-        wc.status === 'COMPLETED' &&
-        wc.completedAt &&
-        new Date(wc.completedAt) >= sevenDaysAgo
-    );
+    // Workout activity from the past week — including sessions the client
+    // started and never finished, since a flag raised mid-workout on an
+    // abandoned session is exactly the "help me" signal to review
+    const recentCompletions = workoutCompletions.filter((wc) => {
+      if (wc.clientId !== client.id) return false;
+      const at = wc.completedAt ?? wc.startedAt;
+      return !!at && new Date(at) >= sevenDaysAgo;
+    });
 
     const recentCompletionIds = new Set(recentCompletions.map((wc) => wc.id));
 
