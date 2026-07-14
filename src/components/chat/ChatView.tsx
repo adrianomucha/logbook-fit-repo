@@ -3,6 +3,10 @@ import { Message, Client } from '@/types';
 import { Send, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+// Server-side cap on message content (sendMessageSchema)
+const MAX_MESSAGE_LENGTH = 5000;
 
 const NEAR_BOTTOM_THRESHOLD = 100; // px from bottom to count as "at bottom"
 
@@ -11,7 +15,7 @@ interface ChatViewProps {
   messages: Message[];
   currentUserId: string;
   currentUserName: string;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string) => void | Promise<void>;
   /** Optional initial message to prefill the input (e.g., for flagged exercise context) */
   initialPrefill?: string;
   /** Optional: custom height class (default: h-[600px]) */
@@ -155,11 +159,17 @@ export function ChatView({
     setUnseenCount((prev) => prev + newMessages);
   }, [clientMessages.length, scrollToBottom]);
 
-  const handleSend = useCallback(() => {
-    if (newMessage.trim()) {
-      justSentRef.current = true;
-      onSendMessage(newMessage);
-      setNewMessage('');
+  const handleSend = useCallback(async () => {
+    const content = newMessage.trim();
+    if (!content) return;
+    justSentRef.current = true;
+    setNewMessage('');
+    try {
+      await onSendMessage(content);
+    } catch {
+      // Restore the draft so a failed send never eats the message
+      setNewMessage(content);
+      toast.error('Message failed to send. Please try again.');
     }
   }, [newMessage, onSendMessage]);
 
@@ -299,7 +309,7 @@ export function ChatView({
                           </div>
                         )}
 
-                        <p className="font-prose text-[15px] leading-[1.55]">{message.content}</p>
+                        <p className="font-prose text-[15px] leading-[1.55] whitespace-pre-wrap">{message.content}</p>
                       </div>
                     </div>
 
@@ -346,6 +356,7 @@ export function ChatView({
                 type="text"
                 placeholder={`Message ${peerFirst}...`}
                 value={newMessage}
+                maxLength={MAX_MESSAGE_LENGTH}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
                 className="flex-1 bg-transparent font-prose text-[15px] placeholder:font-prose placeholder:text-muted-foreground focus:outline-none py-2.5"

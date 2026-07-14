@@ -9,12 +9,13 @@ import { useMessages } from '@/hooks/api/useMessages';
 import { useCoachPlans } from '@/hooks/api/useCoachPlans';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { createCheckInForClient, useCheckIn } from '@/hooks/api/useCheckIn';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import {
   apiPlanToWorkoutPlan,
   apiCheckInToCheckIn,
   apiMessagesToMessages,
   apiClientDetailToWorkoutCompletions,
+  apiClientDetailToExerciseFlags,
   apiClientDetailToClient,
 } from '@/lib/adapters/api';
 import { cn } from '@/lib/utils';
@@ -53,7 +54,7 @@ export function UnifiedClientProfile() {
   const { user } = useCurrentUser();
 
   // API hooks
-  const { client: apiClient, isLoading: isLoadingClient, refresh: refreshClient } = useClientProfile(clientId);
+  const { client: apiClient, isLoading: isLoadingClient, error: clientError, refresh: refreshClient } = useClientProfile(clientId);
   const { plan: apiPlan, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
   const { messages: apiMessages, sendMessage } = useMessages(apiClient?.user.id ?? null);
   const { plans: coachPlans, createPlan, refresh: refreshCoachPlans } = useCoachPlans();
@@ -132,6 +133,11 @@ export function UnifiedClientProfile() {
   const messages: Message[] = useMemo(
     () => (apiClient ? apiMessagesToMessages(apiMessages, apiClient.id) : []),
     [apiMessages, apiClient]
+  );
+
+  const exerciseFlags: ExerciseFlag[] = useMemo(
+    () => (apiClient ? apiClientDetailToExerciseFlags(apiClient.completions) : []),
+    [apiClient]
   );
 
   // Adapted plan list for AssignPlanModal
@@ -354,6 +360,33 @@ export function UnifiedClientProfile() {
     );
   }
 
+  // Fetch failure — distinct from "not found" so a network/server error never
+  // reads as the client having been removed
+  if (clientError && !apiClient && !(clientError instanceof ApiError && clientError.status === 404)) {
+    return (
+      <div className="min-h-dvh bg-background pb-24 sm:pb-4">
+        <CoachNav activeTab="clients" />
+        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+          <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+            <div className="text-center py-12 px-6">
+              <div className="text-4xl select-none mb-4">📡</div>
+              <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Couldn&apos;t load this client</h2>
+              <p className="text-sm text-muted-foreground mb-5 antialiased">
+                Something went wrong on our end or with your connection.
+              </p>
+              <Button
+                onClick={() => refreshClient()}
+                className="active:scale-[0.96] transition-transform duration-150"
+              >
+                Try again
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Client not found
   if (!client || !apiClient) {
     return (
@@ -567,7 +600,7 @@ export function UnifiedClientProfile() {
               activeCheckIn={activeCheckIn}
               plan={plan}
               workoutCompletions={workoutCompletions}
-              exerciseFlags={[]}
+              exerciseFlags={exerciseFlags}
               currentUserId={user?.id ?? ''}
               onCompleteCheckIn={handleCompleteCheckIn}
               onCreateCheckIn={handleCreateCheckIn}

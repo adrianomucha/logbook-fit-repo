@@ -9,7 +9,7 @@ import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { EmptyStateNoClients } from '@/components/coach/EmptyStates';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, RefreshCw } from 'lucide-react';
 import {
   urgencyStyle,
   getSignal,
@@ -76,7 +76,7 @@ function ClientRow({ client }: { client: DashboardClient }) {
 
 export function AllClientsPage() {
   const router = useRouter();
-  const { clients, isLoading } = useCoachDashboard();
+  const { clients, isLoading, error, refresh } = useCoachDashboard();
   const { pastClients } = usePastClients();
   const [showInviteModal, setShowInviteModal] = useState(false);
 
@@ -103,8 +103,21 @@ export function AllClientsPage() {
           <div className="flex items-center justify-center py-12 animate-enter">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
+        ) : error && clients.length === 0 ? (
+          // A failed fetch must never masquerade as an empty roster
+          <div className="flex flex-col items-center text-center py-12 animate-enter">
+            <div className="text-4xl select-none mb-4">📡</div>
+            <h2 className="text-lg font-bold tracking-tight mb-1.5 antialiased">Couldn&apos;t load your clients</h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">
+              Something went wrong on our end or with your connection.
+            </p>
+            <Button onClick={() => refresh()} className="active:scale-[0.96] transition-transform duration-150">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Try again
+            </Button>
+          </div>
         ) : clients.length === 0 ? (
-          <EmptyStateNoClients />
+          <EmptyStateNoClients onInvite={() => setShowInviteModal(true)} />
         ) : (
           <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
             {clients.map((client) => (

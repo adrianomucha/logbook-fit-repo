@@ -1,6 +1,28 @@
 import prisma from "@/lib/prisma";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+// A PENDING check-in the client never answered goes stale after two full
+// cadences. Late responders still have a whole extra week to answer; after
+// that the check-in expires so it stops blocking the weekly schedule forever.
+const STALE_PENDING_MS = 2 * SEVEN_DAYS_MS;
+
+/**
+ * Close out PENDING check-ins the client never answered.
+ *
+ * Without this, one ignored check-in blocks the scheduler indefinitely —
+ * exactly the quiet client the product exists to surface would stop being
+ * checked on. Expired check-ins are hidden from history on both sides.
+ */
+export async function expireStaleCheckIns(clientId: string) {
+  await prisma.checkIn.updateMany({
+    where: {
+      clientId,
+      status: "PENDING",
+      createdAt: { lt: new Date(Date.now() - STALE_PENDING_MS) },
+    },
+    data: { status: "EXPIRED" },
+  });
+}
 
 /**
  * Lazily materialize the weekly check-in schedule for one coach-client pair.
@@ -19,7 +41,15 @@ export async function ensureScheduledCheckIn(relationship: {
   status: string;
   checkInScheduleEnabled: boolean;
 }) {
-  if (!relationship.checkInScheduleEnabled || relationship.status !== "ACTIVE") {
+  if (relationship.status !== "ACTIVE") {
+    return null;
+  }
+
+  // Runs even when the schedule is off — a manually sent check-in the client
+  // ignored should also stop pinning the workspace to "waiting" forever
+  await expireStaleCheckIns(relationship.clientId);
+
+  if (!relationship.checkInScheduleEnabled) {
     return null;
   }
 

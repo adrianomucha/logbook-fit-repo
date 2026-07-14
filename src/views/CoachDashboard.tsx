@@ -11,8 +11,9 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, PartyPopper, FlaskConical } from 'lucide-react';
-import { apiFetch } from '@/lib/api-client';
+import { Plus, Loader2, PartyPopper, FlaskConical, RefreshCw } from 'lucide-react';
+import { apiFetch, ApiError } from '@/lib/api-client';
+import { toast } from 'sonner';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
@@ -97,7 +98,7 @@ export function CoachDashboard() {
   const [showRemoveSampleConfirm, setShowRemoveSampleConfirm] = useState(false);
 
   // --- API hooks ---
-  const { clients: dashboardClients, isLoading: isDashboardLoading, refresh: refreshDashboard } = useCoachDashboard();
+  const { clients: dashboardClients, isLoading: isDashboardLoading, error: dashboardError, refresh: refreshDashboard } = useCoachDashboard();
   const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
   const { invites, isLoading: isInvitesLoading, refresh: refreshInvites } = useCoachInvites();
   const { plan: editingPlanDetail, isLoading: isEditingPlanLoading, error: editingPlanError, refresh: refreshEditingPlan } = usePlanDetail(editingPlanId);
@@ -175,8 +176,8 @@ export function CoachDashboard() {
         openEditorAfterCreate.current = false;
         setEditingPlanId(newPlan.id);
       }
-    } catch {
-      // Error handled by apiFetch
+    } catch (err) {
+      toast.error(err instanceof ApiError ? err.message : 'Failed to create plan. Please try again.');
     }
   };
 
@@ -189,7 +190,7 @@ export function CoachDashboard() {
       await apiFetch('/api/coach/sample-client', { method: 'POST' });
       await Promise.all([refreshDashboard(), refreshPlans()]);
     } catch {
-      // Error handled by apiFetch
+      toast.error('Failed to add the sample client. Please try again.');
     } finally {
       setIsAddingSample(false);
     }
@@ -201,7 +202,7 @@ export function CoachDashboard() {
       setShowRemoveSampleConfirm(false);
       await Promise.all([refreshDashboard(), refreshPlans()]);
     } catch {
-      // Error handled by apiFetch
+      toast.error('Failed to remove the sample client. Please try again.');
     }
   };
 
@@ -210,8 +211,9 @@ export function CoachDashboard() {
     try {
       await deletePlan(planToDelete);
       setPlanToDelete(null);
-    } catch {
-      // Error handled by apiFetch
+    } catch (err) {
+      setPlanToDelete(null);
+      toast.error(err instanceof ApiError ? err.message : 'Failed to delete plan. Please try again.');
     }
   };
 
@@ -274,7 +276,7 @@ export function CoachDashboard() {
         onConfirm={handleDeleteTemplate}
         title="Delete Plan"
         message={`Are you sure you want to delete "${planToDeleteName}"?`}
-        warningMessage="This action cannot be undone. Client plans created from this template will not be affected."
+        warningMessage="This action cannot be undone. A plan that's currently assigned to a client can't be deleted — change their plan first."
         confirmLabel="Delete"
         confirmVariant="destructive"
       />
@@ -311,9 +313,23 @@ export function CoachDashboard() {
                 subtitle={dashboardClients.length > 0 ? 'Here\u2019s your roster' : undefined}
               />
             </div>
-            {isDashboardLoading || (dashboardClients.length === 0 && (isPlansLoading || isInvitesLoading)) ? (
+            {isDashboardLoading || (!dashboardError && dashboardClients.length === 0 && (isPlansLoading || isInvitesLoading)) ? (
               <div className="flex items-center justify-center py-12 animate-enter">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : dashboardError && dashboardClients.length === 0 ? (
+              // A failed fetch must never masquerade as the "no clients yet"
+              // onboarding state — a coach with a full roster would see it
+              <div className="flex flex-col items-center text-center py-12 animate-enter">
+                <div className="text-4xl select-none mb-4">📡</div>
+                <h2 className="text-lg font-bold tracking-tight mb-1.5 antialiased">Couldn&apos;t load your roster</h2>
+                <p className="text-sm text-muted-foreground mb-5 antialiased">
+                  Something went wrong on our end or with your connection.
+                </p>
+                <Button onClick={() => refreshDashboard()} className="active:scale-[0.96] transition-transform duration-150">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Try again
+                </Button>
               </div>
             ) : dashboardClients.length === 0 ? (
               <div className="animate-enter pt-2 sm:pt-6" style={{ animationDelay: '60ms' }}>

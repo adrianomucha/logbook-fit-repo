@@ -78,9 +78,21 @@ export const GET = withCoach(
                 week: { select: { id: true } },
               },
             },
+            // Exercises the client flagged mid-workout — the coach reviews
+            // these alongside check-ins
+            flags: {
+              select: {
+                id: true,
+                workoutExerciseId: true,
+                note: true,
+                createdAt: true,
+              },
+            },
           },
         },
         checkIns: {
+          // Expired check-ins were never answered — noise, not history
+          where: { status: { not: "EXPIRED" } },
           orderBy: { createdAt: "desc" },
           take: 5,
           select: {
