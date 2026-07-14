@@ -22,7 +22,9 @@ interface MobileBottomNavProps {
  */
 export function MobileBottomNav({ items, activeId, onSelect }: MobileBottomNavProps) {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-background/90 backdrop-blur-xl border-t border-border/60 pb-[env(safe-area-inset-bottom)]">
+    // z-40 keeps the nav above page content but below dialogs/sheets (z-50),
+    // so full-screen modal footers aren't covered on mobile
+    <nav className="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-background/90 backdrop-blur-xl border-t border-border/60 pb-[env(safe-area-inset-bottom)]">
       <div className="flex h-[50px]">
         {items.map((item) => {
           const Icon = item.icon;

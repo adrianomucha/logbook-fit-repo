@@ -7,9 +7,11 @@ const GRID_COLS = 4;
 interface EmojiPickerProps {
   value: string;
   onChange: (emoji: string) => void;
+  /** Extra classes for the trigger tile (e.g. to match the height of an adjacent input) */
+  className?: string;
 }
 
-export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
+export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -106,7 +108,8 @@ export function EmojiPicker({ value, onChange }: EmojiPickerProps) {
           'w-10 h-10 flex items-center justify-center text-2xl',
           'bg-muted border border-border rounded-lg cursor-pointer',
           'hover:bg-accent transition-colors',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          className
         )}
         aria-label="Select emoji"
         aria-expanded={isOpen}

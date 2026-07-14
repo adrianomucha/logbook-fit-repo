@@ -1,17 +1,11 @@
-import { useState, useEffect, useId } from 'react';
-import { ArrowRight, Loader2 } from 'lucide-react';
+import { useState, useEffect, useId, useRef } from 'react';
+import { ArrowRight, Loader2, Minus, Plus } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../ui/select';
 import { EmojiPicker } from './EmojiPicker';
+import { cn } from '@/lib/utils';
 import type { PlanSetupFormData, PlanSetupFormErrors } from '../../types';
 import {
   validatePlanSetupForm,
@@ -24,8 +18,31 @@ interface PlanSetupModalProps {
   onSubmit: (formData: PlanSetupFormData) => void | Promise<void>;
 }
 
-const DURATION_OPTIONS = Array.from({ length: 12 }, (_, i) => i + 1);
+const MIN_WEEKS = 1;
+const MAX_WEEKS = 12;
 const WORKOUTS_OPTIONS = Array.from({ length: 7 }, (_, i) => i + 1);
+
+/** Uppercase tracked mono label — the same "data voice" used across list headers and stats */
+function FieldLabel({
+  htmlFor,
+  id,
+  children,
+}: {
+  htmlFor?: string;
+  id?: string;
+  children: React.ReactNode;
+}) {
+  const Tag = htmlFor ? 'label' : 'span';
+  return (
+    <Tag
+      htmlFor={htmlFor}
+      id={id}
+      className="block font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased mb-2"
+    >
+      {children}
+    </Tag>
+  );
+}
 
 export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProps) {
   const [formData, setFormData] = useState<PlanSetupFormData>({
@@ -38,14 +55,20 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
 
   const [errors, setErrors] = useState<PlanSetupFormErrors>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showDescription, setShowDescription] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
+  const scheduleRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const baseId = useId();
-  const errorIds = {
-    name: `${baseId}-name-error`,
-    description: `${baseId}-desc-error`,
-    durationWeeks: `${baseId}-duration-error`,
-    workoutsPerWeek: `${baseId}-workouts-error`,
+  const ids = {
+    name: `${baseId}-name`,
+    description: `${baseId}-desc`,
+    durationLabel: `${baseId}-duration-label`,
+    scheduleLabel: `${baseId}-schedule-label`,
+    scheduleHint: `${baseId}-schedule-hint`,
+    nameError: `${baseId}-name-error`,
+    descriptionError: `${baseId}-desc-error`,
   };
 
   // Reset form when modal opens
@@ -60,10 +83,18 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
       });
       setErrors({});
       setTouched({});
+      setShowDescription(false);
       setShowCancelConfirm(false);
       setIsSubmitting(false);
     }
   }, [isOpen]);
+
+  // Focus the textarea when the optional description is revealed
+  useEffect(() => {
+    if (showDescription) {
+      requestAnimationFrame(() => descriptionRef.current?.focus());
+    }
+  }, [showDescription]);
 
   const hasFormChanges = () => {
     return (
@@ -85,6 +116,26 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
     // Re-validate on blur to show errors
     const validationErrors = validatePlanSetupForm(formData);
     setErrors(validationErrors);
+  };
+
+  const stepDuration = (delta: number) => {
+    const next = Math.min(MAX_WEEKS, Math.max(MIN_WEEKS, formData.durationWeeks + delta));
+    handleFieldChange('durationWeeks', next);
+  };
+
+  // Standard radio-group keyboard behavior: arrows move and select
+  const handleScheduleKeyDown = (e: React.KeyboardEvent) => {
+    let next = formData.workoutsPerWeek;
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      next = formData.workoutsPerWeek >= 7 ? 1 : formData.workoutsPerWeek + 1;
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      next = formData.workoutsPerWeek <= 1 ? 7 : formData.workoutsPerWeek - 1;
+    } else {
+      return;
+    }
+    e.preventDefault();
+    handleFieldChange('workoutsPerWeek', next);
+    scheduleRefs.current[next - 1]?.focus();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,6 +181,8 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
     setShowCancelConfirm(false);
   };
 
+  const totalWorkouts = formData.durationWeeks * formData.workoutsPerWeek;
+
   if (showCancelConfirm) {
     return (
       <Modal
@@ -160,134 +213,199 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
     <Modal
       isOpen={isOpen}
       onClose={isSubmitting ? () => {} : handleCancel}
-      title="Create New Plan"
+      title={
+        <span className="flex flex-col">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased">
+            Plan template
+          </span>
+          <span className="font-black tracking-tight antialiased">Create New Plan</span>
+        </span>
+      }
       maxWidth="md"
       footer={
-        <div className="flex gap-3 justify-end">
-          <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
-            Cancel
-          </Button>
-          <Button onClick={handleSubmit} disabled={isSubmitting} className="flex items-center gap-2">
-            {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            Create Plan
-            {!isSubmitting && <ArrowRight className="h-4 w-4" />}
-          </Button>
+        <div className="flex items-center justify-between gap-3">
+          {/* Live tally — reads like a logbook total as the coach dials the plan in */}
+          <p
+            className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased min-w-0"
+            aria-live="polite"
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              <span className="font-medium text-foreground">{totalWorkouts}</span>
+              {' '}{totalWorkouts === 1 ? 'workout' : 'workouts'}
+              <span className="hidden sm:inline"> · {formData.durationWeeks} wk</span>
+            </span>
+          </p>
+          <div className="flex gap-3 shrink-0">
+            <Button variant="outline" onClick={handleCancel} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button onClick={handleSubmit} disabled={isSubmitting} className="flex items-center gap-2">
+              {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              Create Plan
+              {!isSubmitting && <ArrowRight className="h-4 w-4" />}
+            </Button>
+          </div>
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Emoji + Name */}
+      <form onSubmit={handleSubmit} className="space-y-7">
+        {/* Emoji + Name — the hero field */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Plan name*
-          </label>
+          <FieldLabel htmlFor={ids.name}>Plan name</FieldLabel>
           <div className="flex gap-3">
             <EmojiPicker
               value={formData.emoji}
               onChange={(emoji) => handleFieldChange('emoji', emoji)}
+              className="w-11 h-11 shrink-0"
             />
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <Input
+                id={ids.name}
                 placeholder="e.g., 4-Week Strength Foundation"
                 value={formData.name}
                 onChange={(e) => handleFieldChange('name', e.target.value)}
                 onBlur={() => handleBlur('name')}
-                className={errors.name && touched.name ? 'border-destructive' : ''}
+                className={cn(
+                  'h-11 text-base font-semibold tracking-tight',
+                  errors.name && touched.name && 'border-destructive'
+                )}
                 maxLength={50}
-                aria-describedby={errors.name && touched.name ? errorIds.name : undefined}
+                aria-describedby={errors.name && touched.name ? ids.nameError : undefined}
                 aria-invalid={errors.name && touched.name ? true : undefined}
               />
               <div className="flex justify-between mt-1">
                 {errors.name && touched.name && (
-                  <p id={errorIds.name} className="text-destructive text-sm" role="alert">{errors.name}</p>
+                  <p id={ids.nameError} className="text-destructive text-sm" role="alert">{errors.name}</p>
                 )}
                 {formData.name.length >= 40 && (
-                  <p className="text-muted-foreground text-xs ml-auto">
+                  <p className="font-mono text-[10px] tabular-nums text-muted-foreground ml-auto">
                     {formData.name.length}/50
                   </p>
                 )}
               </div>
             </div>
           </div>
+
+          {/* Description stays out of the way until it's wanted */}
+          {showDescription ? (
+            <div className="mt-4">
+              <FieldLabel htmlFor={ids.description}>Description</FieldLabel>
+              <Textarea
+                id={ids.description}
+                ref={descriptionRef}
+                placeholder="What is this plan for? Who is it for?"
+                value={formData.description}
+                onChange={(e) => handleFieldChange('description', e.target.value)}
+                onBlur={() => handleBlur('description')}
+                className={errors.description && touched.description ? 'border-destructive' : ''}
+                maxLength={200}
+                rows={2}
+                aria-describedby={
+                  errors.description && touched.description ? ids.descriptionError : undefined
+                }
+                aria-invalid={errors.description && touched.description ? true : undefined}
+              />
+              <div className="flex justify-between mt-1">
+                {errors.description && touched.description && (
+                  <p id={ids.descriptionError} className="text-destructive text-sm" role="alert">
+                    {errors.description}
+                  </p>
+                )}
+                {formData.description.length >= 150 && (
+                  <p className="font-mono text-[10px] tabular-nums text-muted-foreground ml-auto">
+                    {formData.description.length}/200
+                  </p>
+                )}
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowDescription(true)}
+              className="mt-2.5 flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
+            >
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+              Add description
+            </button>
+          )}
         </div>
 
-        {/* Description */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Description (optional)
-          </label>
-          <Textarea
-            placeholder="Brief description of this plan (optional)"
-            value={formData.description}
-            onChange={(e) => handleFieldChange('description', e.target.value)}
-            onBlur={() => handleBlur('description')}
-            className={errors.description && touched.description ? 'border-destructive' : ''}
-            maxLength={200}
-            rows={2}
-            aria-describedby={errors.description && touched.description ? errorIds.description : undefined}
-            aria-invalid={errors.description && touched.description ? true : undefined}
-          />
-          <div className="flex justify-between mt-1">
-            {errors.description && touched.description && (
-              <p id={errorIds.description} className="text-destructive text-sm" role="alert">{errors.description}</p>
-            )}
-            {formData.description.length >= 150 && (
-              <p className="text-muted-foreground text-xs ml-auto">
-                {formData.description.length}/200
-              </p>
-            )}
+        {/* Duration — stepper instead of a 12-item dropdown */}
+        <div role="group" aria-labelledby={ids.durationLabel}>
+          <FieldLabel id={ids.durationLabel}>Duration</FieldLabel>
+          <div className="inline-flex items-stretch rounded-lg border border-border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => stepDuration(-1)}
+              disabled={formData.durationWeeks <= MIN_WEEKS}
+              aria-label="One week shorter"
+              className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted/70 disabled:opacity-30 disabled:pointer-events-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            >
+              <Minus className="w-4 h-4" aria-hidden="true" />
+            </button>
+            <div
+              className="min-w-[104px] px-3 flex items-baseline justify-center gap-1.5 border-x border-border select-none"
+              aria-live="polite"
+            >
+              <span className="text-lg font-black tabular-nums tracking-tight antialiased">
+                {formData.durationWeeks}
+              </span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] font-medium text-muted-foreground antialiased">
+                {formData.durationWeeks === 1 ? 'week' : 'weeks'}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => stepDuration(1)}
+              disabled={formData.durationWeeks >= MAX_WEEKS}
+              aria-label="One week longer"
+              className="w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted active:bg-muted/70 disabled:opacity-30 disabled:pointer-events-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+            </button>
           </div>
         </div>
 
-        {/* Duration */}
+        {/* Weekly schedule — all seven options visible, one tap to pick */}
         <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Duration
-          </label>
-          <Select
-            value={formData.durationWeeks.toString()}
-            onValueChange={(val) => handleFieldChange('durationWeeks', parseInt(val))}
+          <FieldLabel id={ids.scheduleLabel}>Workouts per week</FieldLabel>
+          <div
+            role="radiogroup"
+            aria-labelledby={ids.scheduleLabel}
+            aria-describedby={ids.scheduleHint}
+            onKeyDown={handleScheduleKeyDown}
+            className="grid grid-cols-7 gap-1.5"
           >
-            <SelectTrigger className="w-full min-h-[44px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {DURATION_OPTIONS.map((weeks) => (
-                <SelectItem key={weeks} value={weeks.toString()}>
-                  {weeks} {weeks === 1 ? 'week' : 'weeks'}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.durationWeeks && touched.durationWeeks && (
-            <p id={errorIds.durationWeeks} className="text-destructive text-sm mt-1" role="alert">{errors.durationWeeks}</p>
-          )}
-        </div>
-
-        {/* Workouts per week */}
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-2">
-            Weekly schedule
-          </label>
-          <Select
-            value={formData.workoutsPerWeek.toString()}
-            onValueChange={(val) => handleFieldChange('workoutsPerWeek', parseInt(val))}
-          >
-            <SelectTrigger className="w-full min-h-[44px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {WORKOUTS_OPTIONS.map((count) => (
-                <SelectItem key={count} value={count.toString()}>
-                  {count} {count === 1 ? 'workout' : 'workouts'} per week
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground mt-1">Clients work through workouts in order — rest days are whenever they don&apos;t train</p>
-          {errors.workoutsPerWeek && touched.workoutsPerWeek && (
-            <p id={errorIds.workoutsPerWeek} className="text-destructive text-sm mt-1" role="alert">{errors.workoutsPerWeek}</p>
-          )}
+            {WORKOUTS_OPTIONS.map((count) => {
+              const isSelected = formData.workoutsPerWeek === count;
+              return (
+                <button
+                  key={count}
+                  ref={(el) => { scheduleRefs.current[count - 1] = el; }}
+                  type="button"
+                  role="radio"
+                  aria-checked={isSelected}
+                  aria-label={`${count} ${count === 1 ? 'workout' : 'workouts'} per week`}
+                  tabIndex={isSelected ? 0 : -1}
+                  onClick={() => handleFieldChange('workoutsPerWeek', count)}
+                  className={cn(
+                    'h-11 rounded-lg text-sm font-bold tabular-nums antialiased',
+                    'transition-[background-color,color,transform] duration-150 active:scale-[0.95]',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    isSelected
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                  )}
+                >
+                  {count}
+                </button>
+              );
+            })}
+          </div>
+          <p id={ids.scheduleHint} className="text-xs text-muted-foreground mt-2">
+            Clients work through workouts in order — rest days are whenever they don&apos;t train
+          </p>
         </div>
       </form>
     </Modal>
