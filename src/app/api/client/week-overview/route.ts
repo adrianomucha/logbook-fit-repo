@@ -3,6 +3,7 @@ import { withClient } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
 import { getRawWeekNumber } from "@/lib/workout-week-helpers";
+import { workoutService } from "@/lib/services/workout";
 
 /**
  * GET /api/client/week-overview
@@ -18,6 +19,13 @@ export const GET = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
+    // Roll abandoned sessions into history before reading statuses, so the
+    // dashboard never keeps pushing a days-old "Continue workout" card.
+    // Best-effort: a janitor failure must not take down the dashboard.
+    await workoutService
+      .finalizeStaleSessions(clientProfileId)
+      .catch((err) => console.error("finalizeStaleSessions failed", err));
+
     const client = await prisma.clientProfile.findUnique({
       where: { id: clientProfileId },
       select: {

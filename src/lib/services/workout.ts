@@ -72,11 +72,16 @@ type ProgressResult = {
   };
 };
 
+// How long an IN_PROGRESS session may sit idle before it's auto-finalized.
+// Long enough to resume after a same-day break, short enough that a session
+// abandoned in the evening has rolled into history by the next morning.
+const STALE_SESSION_IDLE_MS = 12 * 60 * 60 * 1000;
+
 // ---------------------------------------------------------------------------
 // Service
 // ---------------------------------------------------------------------------
 
-class WorkoutServiceImpl {
+export class WorkoutServiceImpl {
   constructor(private readonly db: PrismaClient) {}
 
   // ---- Helpers (private) --------------------------------------------------
@@ -291,6 +296,89 @@ class WorkoutServiceImpl {
           : {}),
       },
     });
+  }
+
+  /**
+   * Close out sessions the client walked away from: any IN_PROGRESS
+   * completion idle for STALE_SESSION_IDLE_MS becomes COMPLETED at its real
+   * partial percentage — backdated to the last logged set — so it shows up
+   * in progress history. A stale session with nothing logged is deleted
+   * instead (the day resets to NOT_STARTED; a 0% entry helps nobody).
+   * Runs lazily from the client's read endpoints — this stack has no cron.
+   */
+  async finalizeStaleSessions(clientId: string): Promise<number> {
+    const cutoff = new Date(Date.now() - STALE_SESSION_IDLE_MS);
+
+    // startedAt is a lower bound on last activity, so sessions younger than
+    // the idle window can be excluded without loading their sets.
+    const candidates = await this.db.workoutCompletion.findMany({
+      where: { clientId, status: "IN_PROGRESS", startedAt: { lt: cutoff } },
+      select: {
+        id: true,
+        startedAt: true,
+        day: { select: { exercises: { select: { id: true, sets: true } } } },
+        sets: {
+          select: {
+            workoutExerciseId: true,
+            completed: true,
+            completedAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    let finalized = 0;
+    for (const c of candidates) {
+      const lastActivity = c.sets.reduce(
+        (latest, s) => (s.updatedAt > latest ? s.updatedAt : latest),
+        c.startedAt ?? new Date(0),
+      );
+      if (lastActivity >= cutoff) continue; // touched recently — still live
+
+      const completedSets = c.sets.filter((s) => s.completed);
+
+      if (completedSets.length === 0) {
+        await this.db.workoutCompletion.delete({ where: { id: c.id } });
+        finalized++;
+        continue;
+      }
+
+      const totalSets = c.day.exercises.reduce((sum, ex) => sum + ex.sets, 0);
+      const completedAt =
+        completedSets.reduce<Date | null>(
+          (latest, s) =>
+            s.completedAt && (!latest || s.completedAt > latest)
+              ? s.completedAt
+              : latest,
+          null,
+        ) ?? lastActivity;
+
+      await this.db.workoutCompletion.update({
+        where: { id: c.id },
+        data: {
+          status: "COMPLETED",
+          completedAt,
+          completionPct:
+            totalSets > 0
+              ? Math.round((completedSets.length / totalSets) * 100)
+              : 0,
+          exercisesDone: new Set(completedSets.map((s) => s.workoutExerciseId))
+            .size,
+          exercisesTotal: c.day.exercises.length,
+          durationSec: c.startedAt
+            ? Math.max(
+                0,
+                Math.floor(
+                  (completedAt.getTime() - c.startedAt.getTime()) / 1000,
+                ),
+              )
+            : null,
+        },
+      });
+      finalized++;
+    }
+    return finalized;
   }
 
   async updateSets(

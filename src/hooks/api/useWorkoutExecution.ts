@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import useSWR, { mutate as mutateGlobal } from 'swr';
 import { apiFetch } from '@/lib/api-client';
 import type {
@@ -124,6 +124,37 @@ export function useWorkoutExecution(dayId: string | null) {
       mutate();
     }
   }, [completionId, ensureStarted, mutate]);
+
+  // Best-effort flush when the tab is hidden or torn down, so the last
+  // debounced set writes survive an abrupt exit (closed tab, app switch).
+  // keepalive lets the request outlive the page; sendBeacon can't send PUT.
+  // Skipped when the workout hasn't started yet — a start can't be awaited
+  // during teardown, and that window only spans the first debounce tick.
+  useEffect(() => {
+    const flushPendingNow = () => {
+      if (!completionId || pendingSetsRef.current.size === 0) return;
+      const sets = Array.from(pendingSetsRef.current.values());
+      pendingSetsRef.current.clear();
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      fetch(`/api/client/workout/${completionId}/sets`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sets }),
+        keepalive: true,
+      }).catch(() => {
+        // Nothing to do — the next load revalidates from server truth
+      });
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushPendingNow();
+    };
+    window.addEventListener('pagehide', flushPendingNow);
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => {
+      window.removeEventListener('pagehide', flushPendingNow);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [completionId]);
 
   /**
    * Queue a set write, merging with any pending write for the same set so a

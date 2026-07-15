@@ -15,6 +15,12 @@ export const GET = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
+    // Roll abandoned sessions into history first so they count toward the
+    // stats and show up in the list at their partial completion percentage.
+    await workoutService
+      .finalizeStaleSessions(clientProfileId)
+      .catch((err) => console.error("finalizeStaleSessions failed", err));
+
     const progress = await workoutService.getProgress({
       role: "client",
       clientProfileId,
