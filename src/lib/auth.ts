@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
               : undefined) ?? "unknown";
           // Log user ids rather than emails — emails are PII and login
           // attempts (including attacker probes) shouldn't put them in logs.
-          const { allowed } = loginLimiter(`${ip}:${email}`);
+          const { allowed } = await loginLimiter(`${ip}:${email}`);
           if (!allowed) {
             console.error("[AUTH] Rate limited login attempt");
             return null;
