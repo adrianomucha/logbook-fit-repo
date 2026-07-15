@@ -1,11 +1,21 @@
 import { useCallback, useRef } from 'react';
-import useSWR from 'swr';
+import useSWR, { mutate as mutateGlobal } from 'swr';
 import { apiFetch } from '@/lib/api-client';
 import type {
   WorkoutDayDetail,
   WorkoutExercise,
   WorkoutSetCompletion,
 } from '@/types/api';
+
+/**
+ * The dashboard's today card and progress views read workout status from
+ * their own SWR keys — revalidate them whenever a workout's status changes
+ * so the client doesn't land back on a stale "Continue workout" card.
+ */
+export function refreshDashboardCaches() {
+  mutateGlobal('/api/client/week-overview');
+  mutateGlobal('/api/client/progress');
+}
 
 export function useWorkoutExecution(dayId: string | null) {
   const { data, error, isLoading, mutate } = useSWR<WorkoutDayDetail>(
@@ -336,6 +346,7 @@ export function useWorkoutExecution(dayId: string | null) {
       { method: 'POST' }
     );
     await mutate();
+    refreshDashboardCaches();
     return result;
   }, [completionId, mutate]);
 
@@ -362,6 +373,7 @@ export function useWorkoutExecution(dayId: string | null) {
           body: JSON.stringify(effortRating ? { effortRating } : {}),
         });
         mutate();
+        refreshDashboardCaches();
         return result;
       } catch (err) {
         mutate(); // Revalidate to get server truth

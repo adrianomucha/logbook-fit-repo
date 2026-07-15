@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
-import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount, isExerciseComplete } from '@/hooks/api/useWorkoutExecution';
+import { useWorkoutExecution, refreshDashboardCaches, getNextIncompleteExerciseId, getCompletedSetsCount, isExerciseComplete } from '@/hooks/api/useWorkoutExecution';
 import { RotateCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
@@ -44,6 +44,9 @@ export function ClientWorkoutExecution() {
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
   const [showPartialConfirm, setShowPartialConfirm] = useState(false);
+  const [showAllDonePrompt, setShowAllDonePrompt] = useState(false);
+  // Prompt once per visit — dismissing it shouldn't re-trigger on set re-toggles
+  const allDonePromptShownRef = useRef(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [isSavingRating, setIsSavingRating] = useState(false);
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
@@ -93,6 +96,18 @@ export function ClientWorkoutExecution() {
     const prev = completeIdsRef.current;
     completeIdsRef.current = nowComplete;
 
+    // The last set was just checked — the whole workout is done. Collapse the
+    // list and prompt to finish, so completion doesn't hinge on the user
+    // noticing the sticky button before they navigate away.
+    if (nowComplete.size === exercises.length && prev.size < exercises.length) {
+      setExpandedExerciseId(null);
+      if (!allDonePromptShownRef.current && !isFinishing) {
+        allDonePromptShownRef.current = true;
+        setShowAllDonePrompt(true);
+      }
+      return;
+    }
+
     // Only react when the exercise the user is looking at just got completed.
     if (
       expandedExerciseId &&
@@ -119,7 +134,7 @@ export function ClientWorkoutExecution() {
         setExpandedExerciseId(null);
       }
     }
-  }, [exercises, expandedExerciseId, isReadOnly]);
+  }, [exercises, expandedExerciseId, isReadOnly, isFinishing]);
 
   // Handle message coach (open sheet)
   const handleMessageCoach = useCallback(
@@ -209,6 +224,7 @@ export function ClientWorkoutExecution() {
     });
 
     setShowPartialConfirm(false);
+    setShowAllDonePrompt(false);
 
     try {
       await finishWorkout();
@@ -274,6 +290,7 @@ export function ClientWorkoutExecution() {
           method: 'POST',
           body: JSON.stringify({ effortRating: rating }),
         });
+        refreshDashboardCaches();
       } catch {
         // Non-critical — effort rating can be given from dashboard later
       }
@@ -420,6 +437,42 @@ export function ClientWorkoutExecution() {
                 disabled={isRestarting}
               >
                 {isRestarting ? 'Restarting...' : 'Restart'}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // All exercises done — nudge to finish so the session doesn't sit unfinished
+  if (showAllDonePrompt) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <Card className="w-full max-w-md">
+          <CardContent className="py-6">
+            <div className="flex justify-center mb-4">
+              <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center">
+                <Check className="w-6 h-6 text-brand-foreground" strokeWidth={3} />
+              </div>
+            </div>
+            <h2 className="text-lg font-bold tracking-tight text-center mb-1">
+              All exercises done
+            </h2>
+            <p className="text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-6">
+              Finish to log this session
+            </p>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowAllDonePrompt(false)}
+                disabled={isFinishing}
+              >
+                Not Yet
+              </Button>
+              <Button className="flex-1" onClick={completeWorkout} disabled={isFinishing}>
+                {isFinishing ? 'Finishing...' : 'Finish Workout'}
               </Button>
             </div>
           </CardContent>
