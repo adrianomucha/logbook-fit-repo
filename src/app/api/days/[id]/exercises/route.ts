@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { addWorkoutExerciseSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/days/[id]/exercises
@@ -32,26 +34,9 @@ export const POST = withCoach(
       return NextResponse.json({ error: "Day not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { exerciseId, trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
-      exerciseId?: string;
-      trackingType?: "REPS" | "TIME";
-      sets?: number;
-      reps?: number;
-      repsMax?: number | null;
-      weight?: number;
-      restSeconds?: number;
-      coachNotes?: string;
-      orderIndex?: number;
-      supersetWithPrevious?: boolean;
-    };
-
-    if (!exerciseId) {
-      return NextResponse.json(
-        { error: "exerciseId is required" },
-        { status: 400 }
-      );
-    }
+    const result = await parseBody(req, addWorkoutExerciseSchema);
+    if (!result.success) return result.response;
+    const { exerciseId, trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = result.data;
 
     // Verify exercise belongs to coach
     const exercise = await prisma.exercise.findFirst({
@@ -80,10 +65,7 @@ export const POST = withCoach(
         dayId,
         exerciseId,
         orderIndex: idx,
-        trackingType:
-          trackingType === "REPS" || trackingType === "TIME"
-            ? trackingType
-            : exercise.trackingType,
+        trackingType: trackingType ?? exercise.trackingType,
         sets: sets ?? exercise.defaultSets ?? 3,
         reps: reps ?? exercise.defaultReps ?? 10,
         repsMax: repsMax ?? null,

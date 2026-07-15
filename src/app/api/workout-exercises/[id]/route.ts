@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { updateWorkoutExerciseSchema } from "@/lib/validations/schemas";
 
 /**
  * Helper to verify a workout exercise belongs to a plan owned by this coach.
@@ -48,23 +50,14 @@ export const PUT = withCoach(
       return NextResponse.json({ error: "Workout exercise not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = body as {
-      trackingType?: "REPS" | "TIME";
-      sets?: number;
-      reps?: number;
-      repsMax?: number | null;
-      weight?: number;
-      restSeconds?: number;
-      coachNotes?: string;
-      orderIndex?: number;
-      supersetWithPrevious?: boolean;
-    };
+    const result = await parseBody(req, updateWorkoutExerciseSchema);
+    if (!result.success) return result.response;
+    const { trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = result.data;
 
     const updated = await prisma.workoutExercise.update({
       where: { id: weId },
       data: {
-        ...(trackingType === "REPS" || trackingType === "TIME" ? { trackingType } : {}),
+        ...(trackingType !== undefined ? { trackingType } : {}),
         ...(sets !== undefined ? { sets } : {}),
         ...(reps !== undefined ? { reps } : {}),
         ...(repsMax !== undefined ? { repsMax } : {}),
