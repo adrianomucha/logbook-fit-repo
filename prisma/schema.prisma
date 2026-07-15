@@ -456,3 +456,15 @@ model Message {
   @@index([recipientId, readAt])                  // Unread count
   @@map("messages")
 }
+
+// ──────────────────────────────────────
+// EARLY ACCESS
+// ──────────────────────────────────────
+
+model EarlyAccessSignup {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+
+  @@map("early_access_signups")
+}

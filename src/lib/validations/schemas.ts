@@ -21,6 +21,15 @@ export const signupSchema = z
     path: ["role"],
   });
 
+export const earlyAccessSignupSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .email()
+    .max(254),
+});
+
 // ──────────────────────────────────────
 // EXERCISES
 // ──────────────────────────────────────
