@@ -172,6 +172,10 @@ export const flagExerciseSchema = z.object({
   note: z.string().max(500).optional(),
 });
 
+export const unflagExerciseSchema = z.object({
+  workoutExerciseId: z.string().uuid(),
+});
+
 // ──────────────────────────────────────
 // INVITES
 // ──────────────────────────────────────

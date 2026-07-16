@@ -89,6 +89,7 @@ export const GET = withCoach(
               orderBy: { setNumber: "asc" },
               select: {
                 setNumber: true,
+                workoutExerciseId: true,
                 actualWeight: true,
                 actualReps: true,
                 workoutExercise: {

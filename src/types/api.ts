@@ -141,6 +141,7 @@ export interface ClientDetail {
     /** Sets where the client overrode the prescribed weight or reps */
     sets: {
       setNumber: number;
+      workoutExerciseId: string;
       actualWeight: number | null;
       actualReps: number | null;
       workoutExercise: {
@@ -273,7 +274,9 @@ export interface WorkoutExercise {
   trackingType: 'REPS' | 'TIME';
   sets: number;
   reps: string | null;
-  weight: string | null;
+  /** Prescribed weight as stored (Prisma Float) — the unit is whatever the
+   *  coach programs in; there is no weightUnit column yet. */
+  weight: number | null;
   restSeconds: number | null;
   coachNotes: string | null;
   /** Chained to the exercise above it (by orderIndex) into a superset. */

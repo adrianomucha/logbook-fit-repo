@@ -5,6 +5,7 @@ type Set = Parameters<typeof getWorkoutDeviations>[0][number];
 
 function makeSet(overrides: {
   name: string;
+  workoutExerciseId?: string;
   setNumber?: number;
   actualWeight?: number | null;
   actualReps?: number | null;
@@ -15,6 +16,7 @@ function makeSet(overrides: {
 }): Set {
   return {
     setNumber: overrides.setNumber ?? 1,
+    workoutExerciseId: overrides.workoutExerciseId ?? `we-${overrides.name}`,
     actualWeight: overrides.actualWeight ?? null,
     actualReps: overrides.actualReps ?? null,
     workoutExercise: {
@@ -83,6 +85,17 @@ describe('getWorkoutDeviations', () => {
       repsShort: { actual: 4, min: 6, max: 6 },
     });
     expect(devs[1].weight).toEqual({ prescribed: 50, actual: 60 });
+  });
+
+  it('keeps two prescriptions of the same exercise separate (heavy + back-off)', () => {
+    const sets = [
+      makeSet({ name: 'Squat', workoutExerciseId: 'we-top', actualWeight: 130, weight: 140 }),
+      makeSet({ name: 'Squat', workoutExerciseId: 'we-backoff', actualWeight: 90, weight: 100 }),
+    ];
+    const devs = getWorkoutDeviations(sets);
+    expect(devs).toHaveLength(2);
+    expect(devs[0].weight).toEqual({ prescribed: 140, actual: 130 });
+    expect(devs[1].weight).toEqual({ prescribed: 100, actual: 90 });
   });
 });
 

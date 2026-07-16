@@ -4,6 +4,7 @@ import { Session } from "next-auth";
 import {
   workoutService,
   WorkoutNotFoundError,
+  InvalidStateError,
   ValidationError,
 } from "@/lib/services/workout";
 import { parseBody } from "@/lib/validations/parseBody";
@@ -34,6 +35,9 @@ export const PUT = withClient(
     } catch (e) {
       if (e instanceof WorkoutNotFoundError) {
         return NextResponse.json({ error: "Workout not found" }, { status: 404 });
+      }
+      if (e instanceof InvalidStateError) {
+        return NextResponse.json({ error: e.message }, { status: 400 });
       }
       if (e instanceof ValidationError) {
         return NextResponse.json({ error: e.message }, { status: 400 });

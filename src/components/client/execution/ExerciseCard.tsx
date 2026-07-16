@@ -3,17 +3,18 @@ import { Check, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDuration } from '@/lib/reps';
 import type { LastPerformance, WorkoutExercise } from '@/types/api';
-import { SetRow, SET_GRID } from './SetRow';
+import {
+  SetRow,
+  SET_GRID,
+  parseTargetReps,
+  parseTargetSeconds,
+  parseTargetWeight,
+} from './SetRow';
 import {
   isExerciseComplete,
   getCompletedSetsCount,
   isSetCompleted,
 } from '@/hooks/api/useWorkoutExecution';
-
-/** Weight unit inferred from the coach's prescription string ("50 kg" → kg). */
-function weightUnit(weightTarget?: string | null): string {
-  return weightTarget && /kg/i.test(weightTarget) ? 'kg' : 'lbs';
-}
 
 /** Compact last-session cell for the set table: "52.5×8" / "12" / "60s" — empty if nothing logged. */
 function formatLastCompact(p: LastPerformance, isTime: boolean): string {
@@ -88,7 +89,26 @@ export function ExerciseCard({
     const targetSets = isComplete
       ? setNumbers.filter((n) => isSetCompleted(exercise.setCompletions, n))
       : setNumbers.filter((n) => !isSetCompleted(exercise.setCompletions, n));
+    const isTime = exercise.trackingType === 'TIME';
     for (const setNumber of targetSets) {
+      if (!isComplete) {
+        // Persist actuals for each set, exactly like a per-set tap does —
+        // otherwise bulk-completed exercises log nothing, leaving next
+        // session's LAST column blank and coach deviation review blind.
+        const sc = exercise.setCompletions.find((s) => s.setNumber === setNumber);
+        const reps =
+          sc?.actualReps ??
+          (isTime
+            ? parseTargetSeconds(exercise.reps ?? undefined)
+            : parseTargetReps(exercise.reps ?? undefined));
+        const weight = sc?.actualWeight ?? parseTargetWeight(exercise.weight ?? undefined);
+        const patch: { actualReps?: number; actualWeight?: number } = {};
+        if (reps != null) patch.actualReps = reps;
+        if (weight != null) patch.actualWeight = weight;
+        if (Object.keys(patch).length > 0) {
+          onUpdateSet?.(exercise.workoutExerciseId, setNumber, patch);
+        }
+      }
       onToggleSet(exercise.workoutExerciseId, setNumber);
     }
   };
@@ -244,8 +264,10 @@ export function ExerciseCard({
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50">
                 Last
               </span>
+              {/* Unit-neutral: no weightUnit column exists yet, so claiming
+                  "LBS" for a kg-programming coach would be plain wrong */}
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
-                {weightUnit(exercise.weight)}
+                Weight
               </span>
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
                 {exercise.trackingType === 'TIME' ? 'Sec' : 'Reps'}
