@@ -56,7 +56,15 @@ export function ClientDashboard() {
   const { progress } = useClientProgress();
   const { checkIns: apiCheckIns } = useClientCheckIns();
   const coachUserId = coach?.user.id ?? null;
-  const { messages: apiMessages, sendMessage } = useMessages(coachUserId);
+  const {
+    messages: apiMessages,
+    sendMessage,
+    hasMore: hasEarlierMessages,
+    loadOlder: loadEarlierMessages,
+  } = useMessages(coachUserId, {
+    // Only the chat tab counts as "read" — the poll runs from every tab
+    markRead: currentView === 'chat',
+  });
 
   // Fetch full plan detail for sub-components that need the full plan structure
   const { plan: planDetail, error: planError, isLoading: isLoadingPlan } = useClientPlan();
@@ -410,6 +418,8 @@ export function ClientDashboard() {
                   currentUserId={user?.id ?? ''}
                   currentUserName={client.name}
                   onSendMessage={handleSendMessage}
+                  hasEarlier={hasEarlierMessages}
+                  onLoadEarlier={loadEarlierMessages}
                   heightClass="flex-1 min-h-0"
                   peerName={coach?.user.name ?? 'Coach'}
                   conversationStarters={[
@@ -616,6 +626,8 @@ export function ClientDashboard() {
                 currentUserId={user?.id ?? ''}
                 currentUserName={client.name}
                 onSendMessage={handleSendMessage}
+                hasEarlier={hasEarlierMessages}
+                onLoadEarlier={loadEarlierMessages}
                 heightClass="flex-1 min-h-0"
                 peerName={coach?.user.name ?? 'Coach'}
                 conversationStarters={[
@@ -635,12 +647,10 @@ export function ClientDashboard() {
               <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">Progress</h1>
             </div>
             <ProgressHistory
-              completedWorkouts={[]}
               plans={plan ? [plan] : []}
               client={client}
               plan={plan}
               workoutCompletions={allWorkoutCompletions}
-              measurements={[]}
               progressStats={progress?.stats}
             />
 

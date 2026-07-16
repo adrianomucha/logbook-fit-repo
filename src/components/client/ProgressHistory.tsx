@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { CompletedWorkout, WorkoutPlan, WorkoutCompletion, Measurement, Client } from '@/types';
+import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
+import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { EnrichedWorkoutHistory } from './progress/EnrichedWorkoutHistory';
-import { CollapsedBodyStats } from './progress/CollapsedBodyStats';
 import {
   startOfWeek,
   endOfWeek,
@@ -17,14 +17,10 @@ interface ProgressStats {
 }
 
 interface ProgressHistoryProps {
-  // Legacy props (kept for backward compatibility)
-  completedWorkouts: CompletedWorkout[];
   plans: WorkoutPlan[];
-  // New props for enhanced progress view
-  client?: Client;
-  plan?: WorkoutPlan;
-  workoutCompletions?: WorkoutCompletion[];
-  measurements?: Measurement[];
+  client: Client;
+  plan: WorkoutPlan;
+  workoutCompletions: WorkoutCompletion[];
   progressStats?: ProgressStats;
 }
 
@@ -94,24 +90,17 @@ const toneText: Record<VerdictTone, string> = {
 
 export function ProgressHistory({
   plans,
-  client,
   plan,
   workoutCompletions,
-  measurements,
   progressStats,
 }: ProgressHistoryProps) {
-  // If we have the new props, render the enhanced view
-  const hasEnhancedData = client && plan && workoutCompletions;
-
   const weekProgress = useMemo(() => {
-    if (!hasEnhancedData) return null;
-    const target = plan.workoutsPerWeek || 3;
+    const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
     return getWeekProgress(workoutCompletions, target);
-  }, [hasEnhancedData, plan, workoutCompletions]);
+  }, [plan, workoutCompletions]);
 
-  if (hasEnhancedData) {
-    return (
-      <div className="space-y-4 sm:space-y-6">
+  return (
+    <div className="space-y-4 sm:space-y-6">
         {/* Week progress tracker — same vocabulary as the dashboard's weekly strip */}
         {weekProgress && (
           <div className="animate-fade-in-up rounded-xl bg-muted/40 p-4">
@@ -181,36 +170,14 @@ export function ProgressHistory({
           </div>
         )}
 
-        {/* Workout History — the full log */}
-        <div className="animate-fade-in-up" style={{ animationDelay: '50ms' }}>
-          <EnrichedWorkoutHistory
-            completions={workoutCompletions}
-            plans={plans}
-            initialCount={10}
-          />
-        </div>
-
-        {/* Collapsed Body Stats - at bottom, tappable to expand */}
-        {measurements && measurements.length > 0 && (
-          <div className="animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-            <CollapsedBodyStats
-              measurements={measurements}
-              clientId={client.id}
-            />
-          </div>
-        )}
+      {/* Workout History — the full log */}
+      <div className="animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+        <EnrichedWorkoutHistory
+          completions={workoutCompletions}
+          plans={plans}
+          initialCount={10}
+        />
       </div>
-    );
-  }
-
-  // Fallback: Legacy view (kept for backward compatibility)
-  return (
-    <div className="space-y-4">
-      <EnrichedWorkoutHistory
-        completions={[]}
-        plans={plans}
-        initialCount={10}
-      />
     </div>
   );
 }

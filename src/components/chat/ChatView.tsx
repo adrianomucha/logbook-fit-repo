@@ -16,6 +16,10 @@ interface ChatViewProps {
   currentUserId: string;
   currentUserName: string;
   onSendMessage: (content: string) => void | Promise<void>;
+  /** True when older messages exist beyond what's loaded */
+  hasEarlier?: boolean;
+  /** Loads the next page of older messages (prepended above) */
+  onLoadEarlier?: () => void | Promise<void>;
   /** Optional initial message to prefill the input (e.g., for flagged exercise context) */
   initialPrefill?: string;
   /** Optional: custom height class (default: h-[600px]) */
@@ -59,6 +63,8 @@ export function ChatView({
   messages,
   currentUserId,
   onSendMessage,
+  hasEarlier,
+  onLoadEarlier,
   initialPrefill,
   heightClass = 'h-[350px] sm:h-[600px]',
   peerName,
@@ -66,6 +72,8 @@ export function ChatView({
 }: ChatViewProps) {
   const [newMessage, setNewMessage] = useState('');
   const [unseenCount, setUnseenCount] = useState(0);
+  const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
+  const suppressAutoScrollRef = useRef(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -145,6 +153,12 @@ export function ChatView({
     const newMessages = count - prevCount;
     if (newMessages <= 0) return;
 
+    // Older pages arriving above must not trigger "new message" behavior
+    if (suppressAutoScrollRef.current) {
+      suppressAutoScrollRef.current = false;
+      return;
+    }
+
     if (justSentRef.current) {
       justSentRef.current = false;
       requestAnimationFrame(() => scrollToBottom(false));
@@ -158,6 +172,26 @@ export function ChatView({
 
     setUnseenCount((prev) => prev + newMessages);
   }, [clientMessages.length, scrollToBottom]);
+
+  const handleLoadEarlier = useCallback(async () => {
+    if (!onLoadEarlier || isLoadingEarlier) return;
+    const viewport = scrollRef.current;
+    const prevHeight = viewport?.scrollHeight ?? 0;
+    const prevTop = viewport?.scrollTop ?? 0;
+    setIsLoadingEarlier(true);
+    suppressAutoScrollRef.current = true;
+    try {
+      await onLoadEarlier();
+      // Keep the same messages in view — prepended content grows scrollHeight
+      requestAnimationFrame(() => {
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight - prevHeight + prevTop;
+        }
+      });
+    } finally {
+      setIsLoadingEarlier(false);
+    }
+  }, [onLoadEarlier, isLoadingEarlier]);
 
   const handleSend = useCallback(async () => {
     const content = newMessage.trim();
@@ -225,6 +259,19 @@ export function ChatView({
               aria-label="Message history"
               className="pb-2 pt-4"
             >
+              {/* Load earlier messages */}
+              {hasEarlier && onLoadEarlier && clientMessages.length > 0 && (
+                <div className="flex justify-center pb-2">
+                  <button
+                    onClick={handleLoadEarlier}
+                    disabled={isLoadingEarlier}
+                    className="font-mono text-[10px] uppercase tracking-[0.15em] font-bold px-3.5 py-2 rounded-full bg-muted/60 text-muted-foreground hover:text-foreground transition-colors touch-manipulation disabled:opacity-50"
+                  >
+                    {isLoadingEarlier ? 'Loading…' : 'Load earlier messages'}
+                  </button>
+                </div>
+              )}
+
               {/* Empty state */}
               {clientMessages.length === 0 && (
                 <div className="flex flex-col items-center justify-center text-center space-y-4 min-h-[200px] py-8">
