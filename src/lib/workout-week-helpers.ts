@@ -23,9 +23,13 @@ export interface WeekDayInfo {
 
 /**
  * Raw (unclamped) week number since the plan started.
- * Week 1 starts on the Monday of (or before) planStartDate. This is the ONE
- * definition of "which week is it" — both UI and API must derive from it so
- * they can never disagree about where the client is in the plan.
+ * Week 1 starts on the Monday of (or before) planStartDate.
+ *
+ * NOTE: this is evaluated in the local timezone of whatever machine runs it,
+ * so the server and a client's browser can disagree near week boundaries.
+ * The API's week-overview response is the source of truth for "which week is
+ * it" — client views must consume `weekOverview.weekNumber` rather than
+ * calling this directly.
  */
 export function getRawWeekNumber(planStartDate: string | Date): number {
   const startMonday = startOfWeek(new Date(planStartDate), { weekStartsOn: 1 });
@@ -122,13 +126,16 @@ export function getWeekProgress(
 }
 
 /**
- * Get the workout the client should focus on: the next uncompleted one,
- * or — if the whole week is done — the last workout (so the completed
- * state and feedback prompt still render).
+ * Get the workout the client should focus on: a workout they're mid-way
+ * through takes priority (they can start any workout from the weekly view,
+ * not just the first), then the next uncompleted one, or — if the whole week
+ * is done — the last workout (so the completed state and feedback prompt
+ * still render).
  */
 export function getActiveWorkout(weekDays: WeekDayInfo[]): WeekDayInfo | null {
   if (weekDays.length === 0) return null;
   return (
+    weekDays.find((d) => d.completion?.status === 'IN_PROGRESS') ??
     weekDays.find((d) => d.status === 'CURRENT') ??
     weekDays[weekDays.length - 1]
   );

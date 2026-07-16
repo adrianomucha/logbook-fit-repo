@@ -26,12 +26,11 @@ interface TodayFocusViewProps {
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
   onMessageCoach: () => void;
   onViewWeekly: () => void;
-  /** Show the "Plan updated" pill in the header (fresh plan, week 1 not yet completed) */
-  showPlanUpdated?: boolean;
+  /** Show the "New plan" pill in the header (week 1, nothing started yet) */
+  showNewPlan?: boolean;
 }
 
 function getActionState(
-  todayWorkout: WeekDayInfo | null,
   todayCompletion: WorkoutCompletion | null
 ): ActionState {
   if (todayCompletion?.status === 'COMPLETED') return 'completed';
@@ -55,9 +54,9 @@ export function TodayFocusView({
   onSendFeedback,
   onMessageCoach,
   onViewWeekly,
-  showPlanUpdated,
+  showNewPlan,
 }: TodayFocusViewProps) {
-  const actionState = getActionState(todayWorkout, todayCompletion);
+  const actionState = getActionState(todayCompletion);
   const completionPct = todayCompletion?.completionPct || 0;
 
   const showFeedbackPrompt = actionState === 'completed' && !feedbackSubmitted && !todayCompletion?.effortRating;
@@ -69,7 +68,7 @@ export function TodayFocusView({
     <div className="space-y-6">
       {/* Status Header */}
       <div className="animate-fade-in-up">
-        <StatusHeader showPlanUpdated={showPlanUpdated} clientName={client.name} />
+        <StatusHeader showNewPlan={showNewPlan} clientName={client.name} />
       </div>
 
       {/* Today / week switcher — navigation chrome, kept quiet */}
@@ -90,8 +89,8 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Fallback to action card for completed / rest states */}
-      {(actionState === 'completed' || actionState === 'rest') && (
+      {/* Fallback to action card for the completed state */}
+      {actionState === 'completed' && (
         <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
           <TodayActionCard
             state={actionState}
@@ -119,8 +118,8 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Coach Context Strip (only for completed/rest, since overview handles it for scheduled) */}
-      {(actionState === 'completed' || actionState === 'rest') && coachNote && coachName && (
+      {/* Coach Context Strip (only for completed, since overview handles it for scheduled) */}
+      {actionState === 'completed' && coachNote && coachName && (
         <div className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
           <CoachContextStrip
             coachName={coachName}

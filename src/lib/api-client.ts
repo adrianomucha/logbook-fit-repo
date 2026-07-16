@@ -22,8 +22,8 @@ export async function apiFetch<T = unknown>(
   options?: RequestInit
 ): Promise<T> {
   const res = await fetch(url, {
-    headers: { "Content-Type": "application/json", ...options?.headers },
     ...options,
+    headers: { "Content-Type": "application/json", ...options?.headers },
   });
   if (!res.ok) {
     const body = await res.json().catch(() => ({ error: "Unknown error" }));

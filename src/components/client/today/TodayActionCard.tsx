@@ -2,9 +2,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
-import { Play, RotateCcw, Check, MessageSquare, Dumbbell, Coffee } from 'lucide-react';
+import { Play, RotateCcw, Check, MessageSquare, Dumbbell } from 'lucide-react';
 
-export type ActionState = 'scheduled' | 'in-progress' | 'completed' | 'rest';
+export type ActionState = 'scheduled' | 'in-progress' | 'completed';
 
 interface TodayActionCardProps {
   state: ActionState;
@@ -103,29 +103,6 @@ export function TodayActionCard({
           </>
         );
 
-      case 'rest':
-        return (
-          <>
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center">
-                <Coffee className="w-6 h-6 text-muted-foreground" />
-              </div>
-              <div>
-                <h3 className="font-bold text-xl tracking-tight">Rest Day</h3>
-                <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.14em] mt-1">Recovery &amp; mobility</p>
-              </div>
-            </div>
-            <Button
-              onClick={onAction}
-              variant="ghost"
-              className="w-full"
-              size="lg"
-            >
-              <MessageSquare className="w-5 h-5 mr-2" />
-              Message Coach
-            </Button>
-          </>
-        );
     }
   };
 
@@ -134,8 +111,7 @@ export function TodayActionCard({
       'shadow-none transition-[color,background-color,border-color]',
       state === 'scheduled' && 'border-info/20',
       state === 'in-progress' && 'border-warning/20',
-      state === 'completed' && 'border-success/20 bg-success/[0.03]',
-      state === 'rest' && 'border-border'
+      state === 'completed' && 'border-success/20 bg-success/[0.03]'
     )}>
       <CardContent className="p-5 sm:p-6">
         {renderContent()}
