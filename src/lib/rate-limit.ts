@@ -23,17 +23,23 @@ type RateLimitResult = {
   resetAt: number;
 };
 
-const hasUpstash = Boolean(
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-);
+// The Vercel Marketplace integration injects KV_-prefixed names; a database
+// created directly in the Upstash console uses UPSTASH_-prefixed ones.
+const redisUrl =
+  process.env.UPSTASH_REDIS_REST_URL ?? process.env.KV_REST_API_URL;
+const redisToken =
+  process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
+const hasUpstash = Boolean(redisUrl && redisToken);
 
 if (!hasUpstash && process.env.NODE_ENV === "production") {
   console.warn(
-    "[RATE-LIMIT] Upstash env vars not set — using per-instance in-memory limits, which are ineffective on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN."
+    "[RATE-LIMIT] Upstash env vars not set — using per-instance in-memory limits, which are ineffective on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the KV_REST_API_* equivalents)."
   );
 }
 
-const redis = hasUpstash ? Redis.fromEnv() : null;
+const redis = hasUpstash
+  ? new Redis({ url: redisUrl!, token: redisToken! })
+  : null;
 
 // ──────────────────────────────────────
 // In-memory fallback (dev / test)
