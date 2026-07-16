@@ -10,7 +10,7 @@ export async function POST(req: Request) {
   try {
     // Rate limit by IP
     const ip = getClientIp(req);
-    const { allowed } = signupLimiter(ip);
+    const { allowed } = await signupLimiter(ip);
     if (!allowed) {
       return NextResponse.json(
         { error: "Too many signup attempts. Please try again later." },

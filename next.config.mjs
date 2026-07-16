@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const isVercel = process.env.VERCEL === "1";
+const isDev = process.env.NODE_ENV === "development";
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -18,12 +19,13 @@ const securityHeaders = [
     value: [
       "default-src 'self'",
       // Next.js requires 'unsafe-inline' for hydration scripts;
-      // dev mode also needs 'unsafe-eval' for hot-module replacement.
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+      // dev mode also needs 'unsafe-eval' for hot-module replacement
+      // and a websocket back to the dev server.
+      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob:",
       "font-src 'self'",
-      "connect-src 'self' ws://localhost:3000",
+      `connect-src 'self'${isDev ? " ws://localhost:3000" : ""}`,
       "frame-ancestors 'none'",
     ].join("; "),
   },

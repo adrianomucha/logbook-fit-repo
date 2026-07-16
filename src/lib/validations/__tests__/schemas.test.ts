@@ -14,6 +14,8 @@ import {
   updateSetsSchema,
   flagExerciseSchema,
   createInviteSchema,
+  addWorkoutExerciseSchema,
+  updateWorkoutExerciseSchema,
 } from "../schemas";
 
 // ──────────────────────────────────────
@@ -203,6 +205,149 @@ describe("updateExerciseSchema", () => {
       instructions: null,
     });
     expect(result.success).toBe(true);
+  });
+});
+
+// ──────────────────────────────────────
+// addWorkoutExerciseSchema
+// ──────────────────────────────────────
+
+describe("addWorkoutExerciseSchema", () => {
+  const validUuid = "550e8400-e29b-41d4-a716-446655440000";
+
+  it("accepts valid workout exercise with all fields", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      trackingType: "REPS",
+      sets: 4,
+      reps: 6,
+      repsMax: 8,
+      weight: 80,
+      restSeconds: 120,
+      coachNotes: "Slow eccentric",
+      orderIndex: 0,
+      supersetWithPrevious: true,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts minimal payload (exerciseId only)", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects missing exerciseId", () => {
+    const result = addWorkoutExerciseSchema.safeParse({ sets: 3 });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects non-UUID exerciseId", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: "not-a-uuid",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects invalid trackingType", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      trackingType: "DISTANCE",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects sets over 20", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      sets: 21,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects zero or negative sets", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      sets: 0,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects negative weight", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      weight: -10,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects non-integer reps", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      reps: 8.5,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects negative orderIndex", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      orderIndex: -1,
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects coachNotes over 1000 characters", () => {
+    const result = addWorkoutExerciseSchema.safeParse({
+      exerciseId: validUuid,
+      coachNotes: "a".repeat(1001),
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ──────────────────────────────────────
+// updateWorkoutExerciseSchema
+// ──────────────────────────────────────
+
+describe("updateWorkoutExerciseSchema", () => {
+  it("accepts empty object (no-op update)", () => {
+    const result = updateWorkoutExerciseSchema.safeParse({});
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts partial update", () => {
+    const result = updateWorkoutExerciseSchema.safeParse({
+      sets: 5,
+      reps: 5,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts nullable fields set to null", () => {
+    const result = updateWorkoutExerciseSchema.safeParse({
+      repsMax: null,
+      weight: null,
+      restSeconds: null,
+      coachNotes: null,
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("does not accept exerciseId (immutable after creation)", () => {
+    const result = updateWorkoutExerciseSchema.safeParse({
+      exerciseId: "550e8400-e29b-41d4-a716-446655440000",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect("exerciseId" in result.data).toBe(false);
+    }
+  });
+
+  it("rejects out-of-range values", () => {
+    const result = updateWorkoutExerciseSchema.safeParse({ weight: 1e308 });
+    expect(result.success).toBe(false);
   });
 });
 
