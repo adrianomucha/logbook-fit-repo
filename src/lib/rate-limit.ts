@@ -7,6 +7,7 @@
  * for local dev, but on serverless every instance gets its own budget, so
  * production should always run with Upstash configured.
  */
+import crypto from "crypto";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 
@@ -81,6 +82,22 @@ function memoryCheck(name: string, config: RateLimitConfig, key: string): RateLi
   };
 }
 
+/**
+ * Rate-limit keys carry PII (login keys contain the attempted email, others
+ * the client IP). Hash every key before use so raw identifiers are never
+ * persisted — in particular not in Upstash, an external service. HMAC-keyed
+ * with NEXTAUTH_SECRET so a leaked Redis snapshot can't be dictionary-attacked
+ * back to emails. Same input still maps to the same bucket, so limiting
+ * behavior is unchanged.
+ */
+function pseudonymizeKey(key: string): string {
+  return crypto
+    .createHmac("sha256", process.env.NEXTAUTH_SECRET ?? "rate-limit")
+    .update(key)
+    .digest("base64url")
+    .slice(0, 32);
+}
+
 // ──────────────────────────────────────
 // Limiter factory
 // ──────────────────────────────────────
@@ -101,7 +118,9 @@ export function rateLimit(name: string, config: RateLimitConfig) {
       })
     : null;
 
-  return async function check(key: string): Promise<RateLimitResult> {
+  return async function check(rawKey: string): Promise<RateLimitResult> {
+    const key = pseudonymizeKey(rawKey);
+
     if (upstashLimiter) {
       try {
         const result = await upstashLimiter.limit(key);
