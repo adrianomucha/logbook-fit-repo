@@ -232,11 +232,14 @@ export default async function HomePage() {
                 </li>
               ))}
             </ol>
+            {/* Stretch to the list's exact height on desktop so both columns
+                end on the same line; the 4:5 ratio stays for stacked mobile */}
             <ImageSlot
               src="/landing/checkin-review.png"
               alt="A coach reviewing a client's check-in response in Logbook"
               label="In the product: the check-in review"
-              className="aspect-[4/5] rounded-xl lg:sticky lg:top-8 lg:h-fit"
+              objectPosition="center top"
+              className="aspect-[4/5] rounded-xl lg:aspect-auto lg:h-full"
             />
           </div>
         </section>
