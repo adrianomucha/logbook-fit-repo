@@ -76,7 +76,7 @@ export function ClientCheckIn() {
       toast.success('Check-in withdrawn');
       await refreshClient();
     } catch {
-      toast.error('Couldn’t withdraw the check-in — they may have just responded.');
+      toast.error('Couldn’t withdraw the check-in. They may have just responded.');
       await refreshClient();
     } finally {
       setIsWithdrawing(false);

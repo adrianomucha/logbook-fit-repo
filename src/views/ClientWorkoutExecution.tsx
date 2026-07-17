@@ -149,7 +149,7 @@ export function ClientWorkoutExecution() {
 
       // Exercise context travels inside the message text so the coach sees it
       // in any chat surface; the reference ids link it to the workout data
-      const contextLine = `🚩 ${messageSheetExercise.exercise.name} — ${prescription} · ${setsCompleted}/${messageSheetExercise.sets} sets done`;
+      const contextLine = `🚩 ${messageSheetExercise.exercise.name} · ${prescription} · ${setsCompleted}/${messageSheetExercise.sets} sets done`;
       const flagNote = messageSheetExercise.flag?.note ? `\n“${messageSheetExercise.flag.note}”` : '';
       const question =
         content.trim() || `I have a question about ${messageSheetExercise.exercise.name}`;

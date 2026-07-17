@@ -84,14 +84,14 @@ export function GettingStartedCard({
       done: hasPlan,
       title: hasPlan ? (
         <>
-          First plan created{planName ? <> — {planEmoji ? `${planEmoji} ` : ''}<span className="text-foreground">{planName}</span></> : ''}
+          First plan created{planName ? <>: {planEmoji ? `${planEmoji} ` : ''}<span className="text-foreground">{planName}</span></> : ''}
         </>
       ) : (
         'Build your first plan'
       ),
       body: hasPlan
         ? 'Ready to assign the moment a client joins.'
-        : 'Design the template once — assign it to every client who needs it.',
+        : 'Design the template once, then assign it to every client who needs it.',
       action: !hasPlan && (
         <Button
           variant="outline"
@@ -120,7 +120,7 @@ export function GettingStartedCard({
           appear right here the moment they sign up.
         </>
       ) : lastInviteExpired ? (
-        'Your last invite expired — links last 7 days. Send a fresh one.'
+        'Your last invite expired (links last 7 days). Send a fresh one.'
       ) : (
         'Send a link, they sign up, and they’re connected to you instantly.'
       ),
@@ -167,7 +167,7 @@ export function GettingStartedCard({
         Get your first client on your radar
       </h2>
       <p className="text-sm text-muted-foreground mb-6 sm:mb-8 antialiased">
-        Logbook ranks your roster by who needs attention — it starts working the
+        Logbook ranks your roster by who needs attention. It starts working the
         moment your first client joins.
       </p>
 
@@ -209,7 +209,7 @@ export function GettingStartedCard({
       <div className="mt-6 sm:mt-8 pt-5 border-t border-border/60 flex flex-col sm:flex-row sm:items-center gap-3">
         <p className="text-sm text-muted-foreground antialiased flex-1">
           Want to see it working first? Add a demo client with a week of
-          training and a check-in to review — remove them anytime.
+          training and a check-in to review. Remove them anytime.
         </p>
         <Button
           variant="outline"

@@ -71,7 +71,7 @@ const COACH_FEATURES = [
   {
     icon: Link2,
     title: 'Invite-based onboarding',
-    body: 'Send a link, client signs up, you’re connected. No manual pairing.',
+    body: 'Send a link with a personal note. They sign up already connected, your words waiting in chat.',
   },
 ];
 

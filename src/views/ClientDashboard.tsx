@@ -324,7 +324,7 @@ export function ClientDashboard() {
           <div className="text-5xl select-none mb-4 animate-bounce-once">🏋️</div>
           <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">No plan yet</h1>
           <p className="text-sm text-muted-foreground antialiased">
-            Your coach will assign a workout plan — hang tight.
+            Your coach will assign a workout plan. Hang tight.
           </p>
         </div>
       </div>
@@ -483,7 +483,7 @@ export function ClientDashboard() {
             </h1>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto antialiased">
               All {plan.durationWeeks || plan.weeks.length} weeks are behind you
-              {progress?.stats?.totalWorkouts ? ` — ${progress.stats.totalWorkouts} workouts logged` : ''}.
+              {progress?.stats?.totalWorkouts ? `, ${progress.stats.totalWorkouts} workouts logged` : ''}.
               {' '}{coach?.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block.
             </p>
             <div className="flex flex-col items-center gap-2 mt-6">

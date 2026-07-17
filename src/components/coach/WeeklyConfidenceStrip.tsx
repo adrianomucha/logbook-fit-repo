@@ -137,7 +137,7 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
                 <button
                   type="button"
                   onClick={() => router.push(`/coach/clients/${client.clientProfileId}`)}
-                  title={`${displayName} — ${BUCKET_LABEL[bucket]}`}
+                  title={`${displayName} · ${BUCKET_LABEL[bucket]}`}
                   aria-label={`${displayName}, ${BUCKET_LABEL[bucket]}`}
                   className={cn(
                     'relative w-9 h-9 rounded-full flex items-center justify-center select-none',
