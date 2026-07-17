@@ -233,7 +233,9 @@ export default async function HomePage() {
               ))}
             </ol>
             <ImageSlot
-              label="Photo: coach reviewing a check-in response"
+              src="/landing/checkin-review.png"
+              alt="A coach reviewing a client's check-in response in Logbook"
+              label="In the product: the check-in review"
               className="aspect-[4/5] rounded-xl lg:sticky lg:top-8 lg:h-fit"
             />
           </div>
@@ -243,7 +245,9 @@ export default async function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <ImageSlot
-              label="Photo: coach building a plan at the desk"
+              src="/landing/plan-week.png"
+              alt="A Logbook training plan, week by week, with a day expanded"
+              label="In the product: the plan, week by week"
               className="aspect-[4/5] rounded-xl"
             />
             <div>
@@ -269,7 +273,9 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
               <ImageSlot
-                label="Photo: client logging a set mid-workout"
+                src="/landing/client-training.jpg"
+                alt="An athlete resting between sets in a dark gym"
+                label="Between sets"
                 className="aspect-[4/5] rounded-xl"
               />
             </div>
