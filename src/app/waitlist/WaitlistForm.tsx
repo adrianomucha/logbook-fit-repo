@@ -1,6 +1,8 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
 type FormState = 'idle' | 'submitting' | 'success' | 'error';
@@ -28,7 +30,7 @@ export function WaitlistForm() {
   if (state === 'success') {
     return (
       <div className="animate-fade-in-up" role="status">
-        <p className="font-mono text-xs font-bold uppercase tracking-[0.2em] text-brand flex items-center gap-2.5">
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased flex items-center gap-2">
           <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25" aria-hidden="true" />
           You&rsquo;re on the list
         </p>
@@ -40,41 +42,46 @@ export function WaitlistForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate={false}>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <label htmlFor="waitlist-email" className="sr-only">
-          Email address
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="space-y-2">
+        <label
+          htmlFor="waitlist-email"
+          className="block font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
+        >
+          Email
         </label>
-        <input
+        <Input
           id="waitlist-email"
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          className="h-11"
           required
-          className="flex-1 h-12 px-4 rounded-lg bg-background border border-input text-sm text-foreground placeholder:text-muted-foreground/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:border-transparent transition-shadow"
         />
-        <button
-          type="submit"
-          disabled={state === 'submitting'}
-          className="h-12 px-6 rounded-lg bg-brand text-brand-foreground font-mono text-xs font-bold uppercase tracking-[0.14em] inline-flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-60 whitespace-nowrap"
-        >
-          {state === 'submitting' ? (
-            <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-          ) : null}
-          Get early access
-          {state !== 'submitting' && <ArrowRight className="w-4 h-4" aria-hidden="true" />}
-        </button>
       </div>
-      <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-        Takes 10 seconds. First invites go out in order.
-      </p>
       {state === 'error' && (
-        <p role="alert" className="mt-3 text-sm text-red-400">
+        <p role="alert" className="text-sm text-destructive">
           Something went wrong. Please try again.
         </p>
       )}
+      <div className="space-y-3">
+        <Button
+          type="submit"
+          className="w-full h-12 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.98] transition-transform duration-150"
+          disabled={state === 'submitting'}
+        >
+          {state === 'submitting' ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : null}
+          Get early access
+          {state !== 'submitting' && <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />}
+        </Button>
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+          Takes 10 seconds. First invites go out in order.
+        </p>
+      </div>
     </form>
   );
 }
