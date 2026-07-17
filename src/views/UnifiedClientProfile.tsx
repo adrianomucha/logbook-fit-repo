@@ -266,7 +266,7 @@ export function UnifiedClientProfile() {
       await apiFetch(`/api/check-ins/${activeCheckInId}`, { method: 'DELETE' });
       toast.success('Check-in withdrawn');
     } catch {
-      toast.error('Couldn’t withdraw the check-in — they may have just responded.');
+      toast.error('Couldn’t withdraw the check-in. They may have just responded.');
     }
     refreshClient();
   };
@@ -763,7 +763,7 @@ export function UnifiedClientProfile() {
                             <span className="truncate">{plan.name}</span>
                           </h3>
                           <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground tabular-nums antialiased mt-1">
-                            {planEnded ? 'Plan complete — assign the next block' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
+                            {planEnded ? 'Plan complete. Assign the next block' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
                           </p>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0">
@@ -871,8 +871,8 @@ export function UnifiedClientProfile() {
         message={`Stop coaching ${client.name}? They'll be removed from your roster.`}
         warningMessage={
           apiClient.isSample
-            ? 'This is your sample client — it and all its generated data will be deleted.'
-            : 'Their plan is removed and messaging closes for both of you. Nothing is deleted — you can restore them from Past clients on the Clients page.'
+            ? 'This is your sample client. It and all its generated data will be deleted.'
+            : 'Their plan is removed and messaging closes for both of you. Nothing is deleted. You can restore them from Past clients on the Clients page.'
         }
         confirmLabel="End Coaching"
         confirmVariant="destructive"

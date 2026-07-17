@@ -356,7 +356,7 @@ export function CoachDashboard() {
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">
                       <FlaskConical className="w-4 h-4 text-muted-foreground shrink-0" />
                       <p className="text-sm text-muted-foreground antialiased">
-                        You&apos;re exploring with a sample client — the history is
+                        You&apos;re exploring with a sample client. The history is
                         generated, everything else is the real product.
                       </p>
                     </div>
@@ -382,7 +382,7 @@ export function CoachDashboard() {
                   <div className="animate-enter flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3.5" style={{ animationDelay: '180ms' }}>
                     <PartyPopper className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 animate-bounce-once" />
                     <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 antialiased">
-                      All clients on track — nice coaching.
+                      All clients on track. Nice coaching.
                     </p>
                   </div>
                 )}

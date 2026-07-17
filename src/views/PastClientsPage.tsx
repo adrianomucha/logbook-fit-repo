@@ -102,7 +102,7 @@ export function PastClientsPage() {
             title="Past clients"
             subtitle={
               pastClients.length > 0
-                ? `${pastClients.length} ended ${pastClients.length === 1 ? 'relationship' : 'relationships'} — nothing here is deleted`
+                ? `${pastClients.length} ended ${pastClients.length === 1 ? 'relationship' : 'relationships'}. Nothing here is deleted`
                 : undefined
             }
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
@@ -119,7 +119,7 @@ export function PastClientsPage() {
               <div className="text-4xl select-none mb-4">📁</div>
               <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">No past clients</h2>
               <p className="text-sm text-muted-foreground antialiased">
-                When a coaching relationship ends, it lands here — with its
+                When a coaching relationship ends, it lands here, with its
                 history intact and a way back.
               </p>
             </div>

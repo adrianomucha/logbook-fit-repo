@@ -170,7 +170,7 @@ function SignupContent() {
   // Invalid or expired invite (coach signup has no token to validate)
   if (!isCoachSignup && !inviteInfo?.valid) {
     const errorContent = inviteInfo?.reason === 'expired'
-      ? { title: 'Link expired', message: 'This invite is past its 7-day window. Ask your coach to send a fresh one — it only takes them a second.' }
+      ? { title: 'Link expired', message: 'This invite is past its 7-day window. Ask your coach to send a fresh one. It only takes them a second.' }
       : inviteInfo?.reason === 'used'
         ? { title: 'Already used', message: 'Looks like you\'re already signed up! Try signing in instead.' }
         : { title: 'Link not found', message: 'This invite link doesn\'t look right. Double-check the URL or ask your coach for a new one.' };
@@ -217,7 +217,7 @@ function SignupContent() {
             Create your coach account
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3 text-pretty">
-            Know who needs you today — before they go quiet.
+            Know who needs you today, before they go quiet.
           </p>
         </div>
       ) : (
@@ -294,7 +294,7 @@ function SignupContent() {
           />
           {inviteInfo?.email && (
             <p className="text-xs text-muted-foreground text-pretty">
-              Pre-filled from your invite — change it if it&apos;s not right
+              Pre-filled from your invite. Change it if it&apos;s not right
             </p>
           )}
         </div>
@@ -341,7 +341,7 @@ function SignupContent() {
           <p className="text-center text-xs text-muted-foreground text-pretty">
             {isCoachSignup
               ? 'Your workspace comes ready with a starter exercise library.'
-              : `Takes 30 seconds — ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`}
+              : `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`}
           </p>
         </div>
       </form>

@@ -237,7 +237,7 @@ export async function createSampleClient(
     data: {
       workoutCompletionId: w1d3.id,
       workoutExerciseId: week1[2].weIds[0], // Conventional Deadlift
-      note: "Lower back felt tight on the last set — dropped the weight for the final reps.",
+      note: "Lower back felt tight on the last set, dropped the weight for the final reps.",
       createdAt: daysAgo(4, 18),
     },
   });
@@ -262,7 +262,7 @@ export async function createSampleClient(
       status: "CLIENT_RESPONDED",
       effortRating: "HARD",
       clientFeeling:
-        "Strong week — hit all my sessions and squats are moving well. Deadlifts felt heavy on the last set though.",
+        "Strong week. Hit all my sessions and squats are moving well. Deadlifts felt heavy on the last set though.",
       painBlockers: "Some lower-back tightness after deadlifts",
       clientRespondedAt: hoursAgo(3),
       createdAt: daysAgo(2),
@@ -278,7 +278,7 @@ export async function createSampleClient(
     },
     {
       from: "coach",
-      content: "Love to hear it. Keep the deadlifts honest — bar close, brace hard.",
+      content: "Love to hear it. Keep the deadlifts honest: bar close, brace hard.",
       at: daysAgo(4, 20),
     },
     {

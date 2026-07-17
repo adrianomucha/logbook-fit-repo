@@ -17,8 +17,8 @@ export async function generateMetadata({ searchParams }: SignupPageProps): Promi
 
   if (!invite) {
     return {
-      title: 'Create your coach account — Logbook',
-      description: 'Know who needs you today — before they go quiet.',
+      title: 'Create your coach account · Logbook',
+      description: 'Know who needs you today, before they go quiet.',
     };
   }
 
@@ -37,7 +37,7 @@ export async function generateMetadata({ searchParams }: SignupPageProps): Promi
 
   const coachName = found.coach.user.name ?? 'Your coach';
   const title = `${coachName} invited you to train on Logbook`;
-  const description = found.note ?? `${coachName} is expecting you — signup takes 30 seconds.`;
+  const description = found.note ?? `${coachName} is expecting you. Signup takes 30 seconds.`;
   const ogImage = `/api/og/invite?token=${encodeURIComponent(invite)}`;
 
   return {

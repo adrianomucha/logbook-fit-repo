@@ -62,19 +62,19 @@ function getWeekProgress(
     return { ...base, text: 'Your first workout will kick things off.', tone: 'neutral' };
   }
   if (thisWeekCompleted >= targetPerWeek) {
-    return { ...base, text: 'Target hit — consistency is building.', tone: 'success' };
+    return { ...base, text: 'Target hit. Consistency is building.', tone: 'success' };
   }
 
   const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
   const expectedByNow = Math.ceil((dayOfWeek / 7) * targetPerWeek);
   if (thisWeekCompleted >= expectedByNow) {
     const remaining = targetPerWeek - thisWeekCompleted;
-    return { ...base, text: remaining === 1 ? 'On pace — one more to go.' : `On pace — ${remaining} more to go.`, tone: 'success' };
+    return { ...base, text: remaining === 1 ? 'On pace, one more to go.' : `On pace, ${remaining} more to go.`, tone: 'success' };
   }
 
   if (thisWeekCompleted > 0) {
     const remaining = targetPerWeek - thisWeekCompleted;
-    return { ...base, text: remaining === 1 ? 'Almost there — one more session.' : `${remaining} sessions to go.`, tone: 'warning' };
+    return { ...base, text: remaining === 1 ? 'Almost there, one more session.' : `${remaining} sessions to go.`, tone: 'warning' };
   }
 
   if (dayOfWeek <= 2) {

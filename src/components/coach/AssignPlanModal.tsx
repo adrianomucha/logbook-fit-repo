@@ -237,7 +237,7 @@ export function AssignPlanModal({
             </div>
           ) : (
             <p className="text-[13px] text-muted-foreground antialiased px-1">
-              No other templates yet — create one on the Plans page first.
+              No other templates yet. Create one on the Plans page first.
             </p>
           )}
         </div>

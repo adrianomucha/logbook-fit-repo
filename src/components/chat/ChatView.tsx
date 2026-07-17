@@ -234,7 +234,7 @@ export function ChatView({
                       Start the conversation
                     </p>
                     <p className="text-xs text-muted-foreground antialiased">
-                      Drop {peerFirst} a note — they&apos;ll see it next time they open the app.
+                      Drop {peerFirst} a note. They&apos;ll see it next time they open the app.
                     </p>
                   </div>
                   {conversationStarters && conversationStarters.length > 0 && (

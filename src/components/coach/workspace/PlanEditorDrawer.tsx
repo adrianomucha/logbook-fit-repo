@@ -653,7 +653,7 @@ export function PlanEditorDrawer({
                       if (e.key === 'Enter') dayNameInputRef.current?.blur();
                       if (e.key === 'Escape') { setLocalDayName(currentDay?.name || ''); dayNameInputRef.current?.blur(); }
                     }}
-                    placeholder={`Day ${clampedDay + 1} — name this workout`}
+                    placeholder={`Day ${clampedDay + 1}: name this workout`}
                     maxLength={80}
                     aria-label="Workout name"
                     className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-lg font-semibold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
@@ -662,7 +662,7 @@ export function PlanEditorDrawer({
                     value={localDayDescription}
                     onChange={(e) => setLocalDayDescription(e.target.value)}
                     onBlur={commitDayDescription}
-                    placeholder="Add a briefing for your client — what to expect, how to approach it…"
+                    placeholder="Add a briefing for your client: what to expect, how to approach it…"
                     aria-label="Briefing"
                     className="mt-1 border-0 shadow-none rounded-none px-0 py-0 min-h-0 text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
                     rows={2}

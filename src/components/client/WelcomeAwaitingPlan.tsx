@@ -24,7 +24,7 @@ export function WelcomeAwaitingPlan({
   const firstName = clientName.split(' ')[0];
 
   const steps = [
-    { label: 'Create your account', detail: 'Done — welcome aboard', state: 'done' as const },
+    { label: 'Create your account', detail: 'Done, welcome aboard', state: 'done' as const },
     { label: `${coachName} builds your plan`, detail: 'Usually ready within a day or two', state: 'active' as const },
     { label: 'Start training', detail: 'Your workouts will appear right here', state: 'upcoming' as const },
   ];
@@ -96,7 +96,7 @@ export function WelcomeAwaitingPlan({
             Break the ice while you wait
           </p>
           <p className="text-sm text-muted-foreground mt-1 leading-relaxed antialiased">
-            Tell {coachName} about your goals, schedule, or any injuries — it all helps shape your plan.
+            Tell {coachName} about your goals, schedule, or any injuries. It all helps shape your plan.
           </p>
           <Button
             onClick={onMessageCoach}

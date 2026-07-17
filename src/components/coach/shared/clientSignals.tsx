@@ -104,7 +104,7 @@ export function getSignal(client: DashboardClient): ClientSignal {
     }
     case 'ON_TRACK': {
       if (plan) rest.push(plan);
-      if (finalWeek) rest.push('final week — line up the next block');
+      if (finalWeek) rest.push('final week, line up the next block');
       if (client.lastWorkoutAt) {
         const d = daysSince(client.lastWorkoutAt);
         rest.push(d <= 0 ? 'trained today' : d === 1 ? 'trained yesterday' : `last workout ${d}d ago`);

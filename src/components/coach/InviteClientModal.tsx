@@ -162,7 +162,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     try {
       await navigator.share({
         title: 'Join me on Logbook',
-        text: 'Here’s your signup link — you’ll be set up in seconds.',
+        text: 'Here’s your signup link. You’ll be set up in seconds.',
         url: fullLink,
       });
     } catch {
@@ -254,7 +254,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
             value={note}
             onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
             onBlur={applyNote}
-            placeholder="Can’t wait to get you started — first up, we fix that squat."
+            placeholder="Can’t wait to get you started. First up, we fix that squat."
             rows={3}
             className="resize-none leading-relaxed"
             maxLength={NOTE_MAX_LENGTH}
@@ -322,7 +322,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                 />
                 New link
                 <span className="font-normal text-muted-foreground/60">
-                  — the current one stops working
+                  · the current one stops working
                 </span>
               </button>
             )}

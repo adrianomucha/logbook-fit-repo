@@ -438,7 +438,7 @@ export function ExerciseEditorContent({
                     Superset with previous
                   </label>
                   <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                    Pairs with {previousExerciseName} — client alternates sets
+                    Pairs with {previousExerciseName}, client alternates sets
                   </p>
                 </div>
                 <Switch

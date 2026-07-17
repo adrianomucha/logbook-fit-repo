@@ -414,7 +414,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             })}
           </div>
           <p id={ids.scheduleHint} className="text-xs text-muted-foreground mt-2">
-            Clients work through workouts in order — rest days are whenever they don&apos;t train
+            Clients work through workouts in order. Rest days are whenever they don&apos;t train
           </p>
         </div>
       </form>
