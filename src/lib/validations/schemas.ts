@@ -184,3 +184,11 @@ export const createInviteSchema = z.object({
   email: z.string().email().optional(),
   note: z.string().trim().max(280).optional(),
 });
+
+// ──────────────────────────────────────
+// WAITLIST
+// ──────────────────────────────────────
+
+export const waitlistSchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(254),
+});
