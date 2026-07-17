@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 
 interface StatusHeaderProps {
-  /** Show the "Plan updated" pill — on while the client is still in week 1 of their plan */
-  showPlanUpdated?: boolean;
+  /** Show the "New plan" pill — on in week 1 while nothing has been started yet */
+  showNewPlan?: boolean;
   clientName?: string;
 }
 
@@ -16,7 +16,7 @@ function getGreeting(): string {
   return 'Good evening';
 }
 
-export function StatusHeader({ showPlanUpdated, clientName }: StatusHeaderProps) {
+export function StatusHeader({ showNewPlan, clientName }: StatusHeaderProps) {
   const [dateStr, setDateStr] = useState('');
   const [greeting, setGreeting] = useState('');
 
@@ -33,11 +33,11 @@ export function StatusHeader({ showPlanUpdated, clientName }: StatusHeaderProps)
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground truncate">
           {dateStr || ' '}
         </p>
-        {greeting && firstName && showPlanUpdated && (
+        {greeting && firstName && showNewPlan && (
           <span className="flex items-center gap-1.5 shrink-0 rounded-full bg-muted/70 pl-2.5 pr-3 py-1">
             <span className="w-1.5 h-1.5 rounded-full bg-info shrink-0" />
             <span className="font-mono text-[10px] text-muted-foreground font-medium uppercase tracking-[0.08em] whitespace-nowrap">
-              Plan updated
+              New plan
             </span>
           </span>
         )}

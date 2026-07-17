@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCheckIn } from '@/hooks/api/useCheckIn';
+import { ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
@@ -27,7 +28,7 @@ export function ClientCheckInForm() {
   const checkinId = params?.checkinId ?? null;
   const router = useRouter();
 
-  const { checkIn, isLoading, submitClientResponse } = useCheckIn(checkinId);
+  const { checkIn, isLoading, submitClientResponse, refresh } = useCheckIn(checkinId);
 
   const [effortRating, setEffortRating] = useState<string | null>(null);
   const [clientFeeling, setClientFeeling] = useState<string | null>(null);
@@ -69,6 +70,39 @@ export function ClientCheckInForm() {
     );
   }
 
+  // Success screen — checked before the status gate: the post-submit
+  // revalidation flips status to CLIENT_RESPONDED, and the user must see
+  // "Sent!" until the redirect, not a cold "Already Submitted"
+  if (showSuccess) {
+    return (
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
+        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="text-center py-12 px-6">
+            <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success animate-bounce-once" />
+            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach!</h2>
+            <p className="text-sm text-muted-foreground antialiased">They&apos;ll review and get back to you soon.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Expired — the client never responded; "Already Submitted" would be a lie
+  if (checkIn.status === 'EXPIRED') {
+    return (
+      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
+        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="text-center py-12 px-6">
+            <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in Expired</h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in is no longer open — the next one will appear on your dashboard.</p>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Already submitted
   if (checkIn.status !== 'PENDING') {
     return (
@@ -79,21 +113,6 @@ export function ClientCheckInForm() {
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Already Submitted</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">You&apos;ve already responded to this check-in.</p>
             <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Success screen
-  if (showSuccess) {
-    return (
-      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
-          <div className="text-center py-12 px-6">
-            <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success animate-bounce-once" />
-            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach!</h2>
-            <p className="text-sm text-muted-foreground antialiased">They&apos;ll review and get back to you soon.</p>
           </div>
         </div>
       </div>
@@ -118,8 +137,18 @@ export function ClientCheckInForm() {
         painBlockers: painBlockers.trim() || undefined,
       });
       setShowSuccess(true);
-    } catch {
-      setErrors({ submit: 'Failed to submit. Please try again.' });
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        // The check-in was answered in another tab or expired while the form
+        // sat open — "try again" can never succeed. Refetch so the right
+        // terminal screen (submitted/expired) renders instead of a dead end.
+        await refresh();
+        setErrors({
+          submit: 'This check-in is no longer open — it may have been answered already or expired.',
+        });
+      } else {
+        setErrors({ submit: 'Failed to submit. Please try again.' });
+      }
     } finally {
       setIsSubmitting(false);
     }

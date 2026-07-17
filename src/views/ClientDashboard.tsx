@@ -4,14 +4,15 @@ import { useState, useMemo, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSWRConfig } from 'swr';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
-import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
+import { getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
+import { startOfWeek } from 'date-fns';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
 import { useClientProgress } from '@/hooks/api/useClientProgress';
 import { useClientCheckIns } from '@/hooks/api/useClientCheckIns';
 import { useMessages } from '@/hooks/api/useMessages';
 import { useClientPlan } from '@/hooks/api/useClientPlan';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import {
   apiPlanToWorkoutPlan,
   apiCheckInToCheckIn,
@@ -55,12 +56,27 @@ export function ClientDashboard() {
   const { progress } = useClientProgress();
   const { checkIns: apiCheckIns } = useClientCheckIns();
   const coachUserId = coach?.user.id ?? null;
-  const { messages: apiMessages, sendMessage } = useMessages(coachUserId);
+  const {
+    messages: apiMessages,
+    sendMessage,
+    hasMore: hasEarlierMessages,
+    loadOlder: loadEarlierMessages,
+  } = useMessages(coachUserId, {
+    // Only the chat tab counts as "read" — the poll runs from every tab
+    markRead: currentView === 'chat',
+  });
 
   // Fetch full plan detail for sub-components that need the full plan structure
-  const { plan: planDetail, error: planError } = useClientPlan();
+  const { plan: planDetail, error: planError, isLoading: isLoadingPlan } = useClientPlan();
 
-  const hasDataError = !!(userError || weekError || planError);
+  // A 404 from the plan endpoints means "no plan assigned yet" — an expected
+  // state, not a failure. Anything else is a real error.
+  const isNotFound = (e: unknown): boolean =>
+    e instanceof ApiError && e.status === 404;
+  const hasFatalError = !!(
+    (userError && !user) ||
+    (planError && !isNotFound(planError) && !planDetail)
+  );
 
   // Handle URL tab parameter
   useEffect(() => {
@@ -69,6 +85,15 @@ export function ClientDashboard() {
     else if (tab === 'progress') setCurrentView('progress');
     else if (tab === 'workout') setCurrentView('workout');
   }, [searchParams]);
+
+  // Tab changes update the URL too, so refresh and back/forward keep the tab
+  const handleTabChange = (tab: View) => {
+    setCurrentView(tab);
+    const params = new URLSearchParams(searchParams?.toString() ?? '');
+    params.set('tab', tab);
+    router.replace(`/client?${params.toString()}`, { scroll: false });
+    window.scrollTo(0, 0);
+  };
 
   // ---- Adapted Data ----
 
@@ -102,14 +127,14 @@ export function ClientDashboard() {
     [checkIns]
   );
 
-  // Most recent completed check-in from this week (for coach feedback card)
+  // Most recent completed check-in from this week (for coach feedback card).
+  // Monday-anchored, matching every other "week" on this page.
   const thisWeekCheckIn = useMemo(() => {
-    const now = new Date();
-    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
     return (
       checkIns
         .filter((c) => c.status === 'completed' && c.completedAt)
-        .filter((c) => new Date(c.completedAt!) >= weekAgo)
+        .filter((c) => new Date(c.completedAt!) >= weekStart)
         .sort(
           (a, b) =>
             new Date(b.completedAt!).getTime() -
@@ -146,15 +171,18 @@ export function ClientDashboard() {
     return apiProgressToWorkoutCompletions(progress.allCompletions);
   }, [progress, clientWorkoutCompletions]);
 
-  // Today's workout data for TodayFocusView
+  // Today's workout data for TodayFocusView. The server's week-overview is
+  // the single source of truth for which week the client is in — recomputing
+  // it here with the browser clock can disagree with the server (timezones),
+  // which would break the completion join below for the whole plan.
   const { todayWorkout, todayCompletion, todayCoachNote, currentWeek } = useMemo(() => {
-    if (!client?.planStartDate || !plan || !weekOverview) {
+    if (!client || !plan || !weekOverview) {
       return { todayWorkout: null, todayCompletion: null, todayCoachNote: undefined, currentWeek: null };
     }
 
-    const durationWeeks = plan.durationWeeks || plan.weeks.length;
-    const weekNumber = getCurrentWeekNumber(client.planStartDate, durationWeeks);
-    const currentWeek = plan.weeks.find((w) => w.weekNumber === weekNumber);
+    const currentWeek = plan.weeks.find(
+      (w) => w.weekNumber === weekOverview.weekNumber
+    );
 
     if (!currentWeek) {
       return { todayWorkout: null, todayCompletion: null, todayCoachNote: undefined, currentWeek: null };
@@ -180,12 +208,13 @@ export function ClientDashboard() {
     };
   }, [client, plan, weekOverview, clientWorkoutCompletions]);
 
-  // "Plan updated" pill — on for a fresh plan, off once week 1 is fully completed
-  // (or once the calendar has moved past week 1)
-  const showPlanUpdated = useMemo(() => {
+  // "New plan" pill — on while the client is in week 1 and hasn't started
+  // anything yet; off the moment they begin (so it can't claim "updated"
+  // week-round on a plan nobody touched changed)
+  const showNewPlan = useMemo(() => {
     if (!weekOverview) return false;
     if (weekOverview.weekNumber !== 1) return false;
-    return !weekOverview.days.every((d) => d.status === 'COMPLETED');
+    return weekOverview.days.every((d) => d.status === 'NOT_STARTED');
   }, [weekOverview]);
 
   // Messages adapted for ChatView
@@ -194,20 +223,15 @@ export function ClientDashboard() {
     [apiMessages, client]
   );
 
-  // Plan has run its course — celebrate instead of replaying the last week
-  const planEnded =
-    weekOverview?.planEnded ??
-    (client?.planStartDate && plan
-      ? getPlanProgressStatus(client.planStartDate, plan.durationWeeks || plan.weeks.length) === 'ENDED'
-      : false);
+  // Plan has run its course — celebrate instead of replaying the last week.
+  // Server-computed only: deriving it locally can disagree across timezones.
+  const planEnded = weekOverview?.planEnded ?? false;
 
   // ---- Handlers ----
+  // Errors intentionally propagate: ChatView owns send-failure UX (it restores
+  // the draft and shows a toast). Swallowing here would eat the user's message.
   const handleSendMessage = async (content: string) => {
-    try {
-      await sendMessage(content);
-    } catch {
-      toast.error('Failed to send message. Please try again.');
-    }
+    await sendMessage(content);
   };
 
   const handleStartWorkout = () => {
@@ -231,7 +255,12 @@ export function ClientDashboard() {
         body: JSON.stringify({ effortRating: rating }),
       });
       if (notes) {
-        await handleSendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
+        try {
+          await sendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
+        } catch {
+          // The rating itself saved — only the note failed
+          toast.error('Feedback saved, but your note failed to send.');
+        }
       }
       setFeedbackSent(true);
       await refreshWeek();
@@ -290,7 +319,9 @@ export function ClientDashboard() {
   );
 
   // ---- Loading/Empty States ----
-  if (isLoadingUser || isLoadingWeek) {
+  // Wait for the plan too — otherwise a client with a plan briefly sees the
+  // "awaiting plan" welcome screen on every cold load while the plan loads
+  if (isLoadingUser || isLoadingWeek || isLoadingPlan) {
     return (
       <div className="min-h-dvh bg-background flex items-center justify-center animate-enter">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -298,7 +329,7 @@ export function ClientDashboard() {
     );
   }
 
-  if (hasDataError && !client && !plan) {
+  if (hasFatalError) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
@@ -365,8 +396,7 @@ export function ClientDashboard() {
           activeTab={isChat ? 'chat' : 'workout'}
           onTabChange={(tab) => {
             // Progress has nothing to show before the first plan — land on the welcome
-            setCurrentView(tab === 'progress' ? 'workout' : tab);
-            window.scrollTo(0, 0);
+            handleTabChange(tab === 'progress' ? 'workout' : tab);
           }}
         />
         <div className={cn(
@@ -388,6 +418,8 @@ export function ClientDashboard() {
                   currentUserId={user?.id ?? ''}
                   currentUserName={client.name}
                   onSendMessage={handleSendMessage}
+                  hasEarlier={hasEarlierMessages}
+                  onLoadEarlier={loadEarlierMessages}
                   heightClass="flex-1 min-h-0"
                   peerName={coach?.user.name ?? 'Coach'}
                   conversationStarters={[
@@ -435,10 +467,7 @@ export function ClientDashboard() {
     )}>
       <ClientNav
         activeTab={currentView}
-        onTabChange={(tab) => {
-          setCurrentView(tab);
-          window.scrollTo(0, 0);
-        }}
+        onTabChange={handleTabChange}
       />
 
       <div className={cn(
@@ -505,8 +534,38 @@ export function ClientDashboard() {
           </section>
         )}
 
+        {/* This week couldn't be loaded — say so instead of rendering a blank
+            Today tab or a mislabeled week (chat and progress still work) */}
+        {currentView === 'workout' && !planEnded && !weekOverview && (
+          <section
+            aria-label="Week unavailable"
+            className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center"
+          >
+            <div className="text-4xl select-none mb-4">🗓️</div>
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">
+              {isNotFound(weekError)
+                ? "This week isn't set up yet"
+                : "Couldn't load this week"}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">
+              {isNotFound(weekError)
+                ? `${coach?.user.name?.split(' ')[0] ?? 'Your coach'} hasn't built this week of your plan yet — send them a message.`
+                : 'Check your connection and try again.'}
+            </p>
+            {isNotFound(weekError) ? (
+              <Button onClick={handleMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+                Message {coach?.user.name?.split(' ')[0] ?? 'Coach'}
+              </Button>
+            ) : (
+              <Button onClick={() => refreshWeek()} className="active:scale-[0.96] transition-transform duration-150">
+                Retry
+              </Button>
+            )}
+          </section>
+        )}
+
         {/* Workout Views */}
-        {currentView === 'workout' && !planEnded && workoutViewMode === 'today' && (
+        {currentView === 'workout' && !planEnded && !!weekOverview && workoutViewMode === 'today' && (
           <TodayFocusView
             client={client}
             todayWorkout={todayWorkout}
@@ -523,11 +582,11 @@ export function ClientDashboard() {
             onSendFeedback={handleSendFeedback}
             onMessageCoach={handleMessageCoach}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
-            showPlanUpdated={showPlanUpdated}
+            showNewPlan={showNewPlan}
           />
         )}
 
-        {currentView === 'workout' && !planEnded && workoutViewMode === 'weekly' && (
+        {currentView === 'workout' && !planEnded && !!weekOverview && workoutViewMode === 'weekly' && (
           <>
             <WorkoutViewToggle
               value="weekly"
@@ -540,6 +599,7 @@ export function ClientDashboard() {
             <WeeklyOverview
               client={client}
               plan={plan}
+              currentWeekNumber={weekOverview.weekNumber}
               completions={clientWorkoutCompletions}
             />
 
@@ -566,6 +626,8 @@ export function ClientDashboard() {
                 currentUserId={user?.id ?? ''}
                 currentUserName={client.name}
                 onSendMessage={handleSendMessage}
+                hasEarlier={hasEarlierMessages}
+                onLoadEarlier={loadEarlierMessages}
                 heightClass="flex-1 min-h-0"
                 peerName={coach?.user.name ?? 'Coach'}
                 conversationStarters={[
@@ -585,12 +647,10 @@ export function ClientDashboard() {
               <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">Progress</h1>
             </div>
             <ProgressHistory
-              completedWorkouts={[]}
               plans={plan ? [plan] : []}
               client={client}
               plan={plan}
               workoutCompletions={allWorkoutCompletions}
-              measurements={[]}
               progressStats={progress?.stats}
             />
 

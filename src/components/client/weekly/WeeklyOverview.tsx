@@ -2,7 +2,6 @@ import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
 import {
-  getCurrentWeekNumber,
   getWeekDays,
   getWeekProgress,
   WeekDayInfo,
@@ -14,42 +13,34 @@ import { DayCardGrid } from './DayCardGrid';
 interface WeeklyOverviewProps {
   client: Client;
   plan: WorkoutPlan;
+  /** Server-computed current week number (from week-overview) — the single
+   *  source of truth. Recomputing it client-side can disagree across timezones. */
+  currentWeekNumber: number;
   completions: WorkoutCompletion[];
 }
 
 export function WeeklyOverview({
   client,
   plan,
+  currentWeekNumber,
   completions,
 }: WeeklyOverviewProps) {
   const router = useRouter();
 
-  // Calculate current week number
-  const currentWeekNumber = useMemo(() => {
-    if (!client.planStartDate) {
-      return 1;
-    }
-    return getCurrentWeekNumber(
-      client.planStartDate,
-      plan.durationWeeks || plan.weeks.length
-    );
-  }, [client.planStartDate, plan.durationWeeks, plan.weeks.length]);
-
-  // Get the current week data
-  const currentWeek = useMemo(() => {
-    return (
-      plan.weeks.find((w) => w.weekNumber === currentWeekNumber) ||
-      plan.weeks[0]
-    );
-  }, [plan.weeks, currentWeekNumber]);
+  // Get the current week data. No fallback to week 1 — showing a different
+  // week than the header claims is worse than an honest empty state.
+  const currentWeek = useMemo(
+    () => plan.weeks.find((w) => w.weekNumber === currentWeekNumber) ?? null,
+    [plan.weeks, currentWeekNumber]
+  );
 
   // Get this week's workouts as an ordered checklist
   const weekDays = useMemo(() => {
-    if (!currentWeek || !client.planStartDate) {
+    if (!currentWeek) {
       return [];
     }
     return getWeekDays(currentWeek, completions, client.id);
-  }, [currentWeek, client.planStartDate, completions, client.id]);
+  }, [currentWeek, completions, client.id]);
 
   // Calculate progress
   const progress = useMemo(() => {
@@ -60,23 +51,23 @@ export function WeeklyOverview({
 
   // Handle day card click
   const handleDayClick = (day: WeekDayInfo) => {
-    if (day.isInteractive && day.workoutDay) {
+    if (day.isInteractive && day.workoutDay && currentWeek) {
       router.push(`/client/workout/${currentWeek.id}/${day.workoutDay.id}`);
     }
   };
 
-  // Empty state
-  if (!currentWeek || !client.planStartDate) {
+  // Empty state — the plan has no week built for the current week number
+  if (!currentWeek) {
     return (
       <div className="text-center py-12">
         <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2">
-          No Plan
+          Week {currentWeekNumber}
         </p>
         <h3 className="font-bold text-lg tracking-tight mb-1">
-          No workouts scheduled
+          This week isn&apos;t set up yet
         </h3>
         <p className="text-sm text-muted-foreground">
-          Your coach will assign workouts soon.
+          Your coach hasn&apos;t built this week of your plan yet.
         </p>
       </div>
     );
@@ -90,7 +81,6 @@ export function WeeklyOverview({
         completed={progress.completed}
         total={progress.total}
         remaining={progress.remaining}
-        percentage={progress.percentage}
       />
 
       <DayCardGrid days={weekDays} onDayClick={handleDayClick} />

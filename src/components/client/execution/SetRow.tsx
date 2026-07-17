@@ -33,7 +33,7 @@ interface SetRowProps {
 }
 
 /** Highest number in the target ("6-8" → 8, 10 → 10) — the top of the prescribed range. */
-function parseTargetReps(target?: string | number): number | undefined {
+export function parseTargetReps(target?: string | number): number | undefined {
   if (target == null) return undefined;
   const nums = String(target).match(/\d+/g);
   if (!nums || nums.length === 0) return undefined;
@@ -41,14 +41,14 @@ function parseTargetReps(target?: string | number): number | undefined {
 }
 
 /** Top of a prescribed duration range in seconds ("30-60s" → 60, "1m 30s" → 90). */
-function parseTargetSeconds(target?: string | number): number | undefined {
+export function parseTargetSeconds(target?: string | number): number | undefined {
   if (target == null) return undefined;
   const { reps, repsMax } = parseDurationInput(target);
   return repsMax ?? reps ?? undefined;
 }
 
 /** First number in the target weight ("50 lbs" → 50, 50 → 50). */
-function parseTargetWeight(target?: string | number): number | undefined {
+export function parseTargetWeight(target?: string | number): number | undefined {
   if (target == null) return undefined;
   const m = String(target).match(/[\d.]+/);
   return m ? Number(m[0]) : undefined;

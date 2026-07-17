@@ -16,8 +16,10 @@ export function getWeeklyActivity(
     return { completed: 0, scheduled: 0, lastWorkout: null };
   }
 
-  const weekStart = startOfWeek(new Date());
-  const weekEnd = endOfWeek(new Date());
+  // Monday-anchored, matching every other "week" in the app (plan weeks,
+  // progress strip) — the date-fns default is Sunday
+  const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekEnd = endOfWeek(new Date(), { weekStartsOn: 1 });
 
   const thisWeekWorkouts = completedWorkouts
     .filter(w =>

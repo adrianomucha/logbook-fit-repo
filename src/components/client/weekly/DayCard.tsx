@@ -18,6 +18,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
   };
 
   const isCompleted = status === 'COMPLETED';
+  const isInProgress = day.completion?.status === 'IN_PROGRESS';
   const isCurrent = status === 'CURRENT';
 
   return (
@@ -67,12 +68,17 @@ export function DayCard({ day, onClick }: DayCardProps) {
         </p>
       </div>
 
-      {/* Right — status indicator */}
+      {/* Right — status indicator. A started workout must never look
+          identical to an untouched one, wherever it sits in the week. */}
       <div className="shrink-0">
         {isCompleted ? (
           <div className="w-6 h-6 rounded-full bg-success/15 flex items-center justify-center">
             <Check className="w-3.5 h-3.5 text-success stroke-[3]" />
           </div>
+        ) : isInProgress ? (
+          <span className="font-mono text-[9px] uppercase tracking-[0.14em] font-bold bg-warning/15 text-warning rounded-full px-2 py-1">
+            In progress
+          </span>
         ) : isCurrent ? (
           <span className="font-mono text-[9px] uppercase tracking-[0.14em] font-bold bg-brand text-brand-foreground rounded-full px-2 py-1">
             Up next

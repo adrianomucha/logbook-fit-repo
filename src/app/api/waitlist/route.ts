@@ -8,7 +8,7 @@ import { sendWaitlistWelcome } from "@/lib/services/waitlist-email";
 export async function POST(req: Request) {
   try {
     const ip = getClientIp(req);
-    const { allowed } = waitlistLimiter(ip);
+    const { allowed } = await waitlistLimiter(ip);
     if (!allowed) {
       return NextResponse.json(
         { error: "Too many requests. Please try again later." },

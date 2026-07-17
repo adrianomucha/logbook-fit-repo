@@ -111,15 +111,20 @@ export async function GET(
   const result = hasMore ? messages.slice(0, limit) : messages;
   const nextCursor = hasMore ? result[result.length - 1].id : null;
 
-  // Mark messages from the other user as read
-  await prisma.message.updateMany({
-    where: {
-      senderId: otherUserId,
-      recipientId: currentUserId,
-      readAt: null,
-    },
-    data: { readAt: new Date() },
-  });
+  // Mark messages from the other user as read — but only when the caller
+  // says the chat is actually on screen (?markRead=1). Both dashboards poll
+  // this thread in the background; stamping readAt on every poll would mark
+  // messages read that were never seen.
+  if (url.searchParams.get("markRead") === "1") {
+    await prisma.message.updateMany({
+      where: {
+        senderId: otherUserId,
+        recipientId: currentUserId,
+        readAt: null,
+      },
+      data: { readAt: new Date() },
+    });
+  }
 
   return NextResponse.json({
     messages: result,

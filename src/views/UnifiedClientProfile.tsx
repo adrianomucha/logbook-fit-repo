@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, ExerciseFlag, Message } from '@/types';
-import { useClientProfile } from '@/hooks/api/useClientProfile';
+import { useCoachClientProfile } from '@/hooks/api/useCoachClientProfile';
 import { usePlanDetail } from '@/hooks/api/usePlanDetail';
 import { useMessages } from '@/hooks/api/useMessages';
 import { useCoachPlans } from '@/hooks/api/useCoachPlans';
@@ -60,9 +60,14 @@ export function UnifiedClientProfile() {
   const { user } = useCurrentUser();
 
   // API hooks
-  const { client: apiClient, isLoading: isLoadingClient, error: clientError, refresh: refreshClient } = useClientProfile(clientId);
+  const { client: apiClient, isLoading: isLoadingClient, error: clientError, refresh: refreshClient } = useCoachClientProfile(clientId);
   const { plan: apiPlan, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
-  const { messages: apiMessages, sendMessage } = useMessages(apiClient?.user.id ?? null);
+  // markRead: the coach is on this client's profile, where the message panel
+  // lives — reading the thread here is genuinely "reading" it
+  const { messages: apiMessages, sendMessage } = useMessages(
+    apiClient?.user.id ?? null,
+    { markRead: true }
+  );
   const { plans: coachPlans, createPlan, refresh: refreshCoachPlans } = useCoachPlans();
 
   // Find active check-in from client's check-ins list

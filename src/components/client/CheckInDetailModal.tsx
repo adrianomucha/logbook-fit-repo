@@ -1,8 +1,9 @@
 import { CheckIn, WorkoutCompletion, WorkoutPlan } from '@/types';
 import { cn } from '@/lib/utils';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
+import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { Modal } from '@/components/ui/Modal';
-import { CheckCircle2, AlertTriangle, CheckSquare } from 'lucide-react';
+import { CheckCircle2, CheckSquare } from 'lucide-react';
 import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 
 interface CheckInDetailModalProps {
@@ -66,13 +67,8 @@ export function CheckInDetailModal({
     return 'Workout';
   };
 
-  // Get flagged workout details
-  const flaggedWorkout = checkIn.flaggedWorkoutId
-    ? completedWorkouts.find((w) => w.id === checkIn.flaggedWorkoutId)
-    : null;
-
   // Calculate completion stats
-  const totalExpected = plan?.workoutsPerWeek || 4;
+  const totalExpected = plan?.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
   const uniqueWorkoutDays = new Set(
     weekWorkouts.map((w) => `${w.planId}-${w.weekId}-${w.dayId}`)
   );
@@ -111,17 +107,6 @@ export function CheckInDetailModal({
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Body feels</span>
                 <span className={cn('font-bold', bodyFeeling.text)}>{bodyFeeling.emoji} {bodyFeeling.label}</span>
-              </div>
-            )}
-            {flaggedWorkout && (
-              <div className="flex items-start gap-2 text-warning">
-                <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                <span className="text-sm">
-                  Flagged: <span className="font-medium">{getWorkoutName(flaggedWorkout.dayId)}</span>
-                  {checkIn.flaggedWorkoutNote && (
-                    <p className="mt-1 text-muted-foreground">&ldquo;{checkIn.flaggedWorkoutNote}&rdquo;</p>
-                  )}
-                </span>
               </div>
             )}
             {checkIn.clientNotes && (
@@ -185,7 +170,7 @@ export function CheckInDetailModal({
                 <p className="text-sm font-medium">
                   {completed >= totalExpected ? (
                     <span className="text-success">
-                      You completed all {completed} workouts
+                      Target hit — {completed} workout{completed === 1 ? '' : 's'} against a target of {totalExpected}
                     </span>
                   ) : (
                     <span className="text-foreground">

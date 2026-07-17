@@ -51,7 +51,9 @@ interface EnrichedWorkoutHistoryProps {
 interface WorkoutHistoryItemProps {
   completion: WorkoutCompletion;
   dayName: string;
-  weekNumber: number;
+  /** Null when the completion belongs to a plan we no longer have the tree
+   *  for (e.g. a previous plan) — claiming "Week 1" would be wrong. */
+  weekNumber: number | null;
   planName: string;
 }
 
@@ -105,7 +107,7 @@ const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ completion, dayNam
           {completion.completedAt
             ? format(parseISO(completion.completedAt), 'MMM d, yyyy')
             : 'In Progress'}
-          {' · '}Week {weekNumber}
+          {weekNumber != null && <>{' · '}Week {weekNumber}</>}
           {effortInfo && (
             <span className={cn('ml-1.5 font-bold', effortInfo.color)}>
               {effortInfo.label}
@@ -172,8 +174,10 @@ export function EnrichedWorkoutHistory({
       return {
         completion,
         dayName: getWorkoutDisplayName(day, dayIndex, completion.completedAt),
-        weekNumber: week?.weekNumber || 1,
-        planName: plan?.name || 'Training',
+        // History spans plans, but only the active plan's tree is loaded —
+        // don't mislabel older work as "Week 1" of a plan it wasn't part of
+        weekNumber: week?.weekNumber ?? null,
+        planName: plan?.name || 'Earlier plan',
       };
     });
   }, [completions, plans]);

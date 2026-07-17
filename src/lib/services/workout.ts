@@ -146,29 +146,46 @@ class WorkoutServiceImpl {
       return { completion: existing, created: false };
     }
 
-    const completion = await this.db.$transaction(async (tx) => {
-      const wc = await tx.workoutCompletion.create({
-        data: {
-          clientId,
-          planId: client.activePlanId!,
-          dayId: params.dayId,
-          status: "IN_PROGRESS",
-          startedAt: new Date(),
-          exercisesTotal: day.exercises.length,
-          exercisesDone: 0,
-          completionPct: 0,
-        },
+    try {
+      const completion = await this.db.$transaction(async (tx) => {
+        const wc = await tx.workoutCompletion.create({
+          data: {
+            clientId,
+            planId: client.activePlanId!,
+            dayId: params.dayId,
+            status: "IN_PROGRESS",
+            startedAt: new Date(),
+            exercisesTotal: day.exercises.length,
+            exercisesDone: 0,
+            completionPct: 0,
+          },
+        });
+
+        const setData = this.buildSetCompletionData(wc.id, day.exercises);
+        if (setData.length > 0) {
+          await tx.setCompletion.createMany({ data: setData });
+        }
+
+        return wc;
       });
 
-      const setData = this.buildSetCompletionData(wc.id, day.exercises);
-      if (setData.length > 0) {
-        await tx.setCompletion.createMany({ data: setData });
+      return { completion, created: true };
+    } catch (e) {
+      // Two concurrent starts (e.g. two tabs) race the find-then-create;
+      // the loser hits the [clientId, planId, dayId] unique constraint.
+      // Resolve it like the idempotent path instead of surfacing a 500.
+      if (
+        e instanceof Error &&
+        "code" in e &&
+        (e as { code?: string }).code === "P2002"
+      ) {
+        const winner = await this.db.workoutCompletion.findFirst({
+          where: { clientId, planId: client.activePlanId, dayId: params.dayId },
+        });
+        if (winner) return { completion: winner, created: false };
       }
-
-      return wc;
-    });
-
-    return { completion, created: true };
+      throw e;
+    }
   }
 
   async restart(caller: Caller, params: { completionId: string }) {
@@ -260,13 +277,30 @@ class WorkoutServiceImpl {
       (sum, ex) => sum + ex.sets,
       0,
     );
-    const completedSets = await this.db.setCompletion.count({
-      where: { workoutCompletionId: params.completionId, completed: true },
-    });
-    const exercisesWithCompletedSets = await this.db.setCompletion.groupBy({
+    const completedGroups = await this.db.setCompletion.groupBy({
       by: ["workoutExerciseId"],
       where: { workoutCompletionId: params.completionId, completed: true },
+      _count: { _all: true },
     });
+    const completedByExercise = new Map(
+      completedGroups.map((g) => [g.workoutExerciseId, g._count._all]),
+    );
+
+    // Both counts are derived from the day's current exercises, clamped per
+    // exercise: orphaned rows (a coach lowering set counts mid-workout leaves
+    // completed rows beyond the new count) must not push stats past 100%.
+    //
+    // An exercise counts as done only when ALL its sets are completed —
+    // the same definition the execution UI uses, so what the client saw
+    // ("2 of 5 exercises") is what gets stored and shown to the coach.
+    const completedSets = completion.day.exercises.reduce(
+      (sum, ex) =>
+        sum + Math.min(completedByExercise.get(ex.id) ?? 0, ex.sets),
+      0,
+    );
+    const exercisesDone = completion.day.exercises.filter(
+      (ex) => ex.sets > 0 && (completedByExercise.get(ex.id) ?? 0) >= ex.sets,
+    ).length;
 
     const completionPct =
       totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
@@ -283,7 +317,7 @@ class WorkoutServiceImpl {
         status: "COMPLETED",
         completedAt: now,
         completionPct,
-        exercisesDone: exercisesWithCompletedSets.length,
+        exercisesDone,
         exercisesTotal: completion.day.exercises.length,
         durationSec,
         ...(params.effortRating
@@ -302,6 +336,12 @@ class WorkoutServiceImpl {
       clientId,
       params.completionId,
     );
+
+    // A completed workout's stats are frozen — accepting late writes (e.g. a
+    // stray debounced save racing the finish) would contradict them
+    if (completion.status === "COMPLETED") {
+      throw new InvalidStateError("Workout already completed");
+    }
 
     // Validate all workoutExerciseIds belong to the completion's day
     const uniqueWeIds = [...new Set(params.sets.map((s) => s.workoutExerciseId))];
@@ -361,6 +401,10 @@ class WorkoutServiceImpl {
       params.completionId,
     );
 
+    if (completion.status === "COMPLETED") {
+      throw new InvalidStateError("Workout already completed");
+    }
+
     // Validate exercise belongs to the day
     const exerciseBelongsToDay = await this.db.workoutExercise.findFirst({
       where: { id: params.workoutExerciseId, dayId: completion.dayId },
@@ -385,6 +429,29 @@ class WorkoutServiceImpl {
         workoutCompletionId: params.completionId,
         workoutExerciseId: params.workoutExerciseId,
         note: params.note ?? null,
+      },
+    });
+  }
+
+  async unflagExercise(
+    caller: Caller,
+    params: { completionId: string; workoutExerciseId: string },
+  ) {
+    const clientId = this.getClientId(caller);
+    const completion = await this.verifyOwnership(
+      clientId,
+      params.completionId,
+    );
+
+    if (completion.status === "COMPLETED") {
+      throw new InvalidStateError("Workout already completed");
+    }
+
+    // deleteMany so removing an already-absent flag is a no-op, not an error
+    await this.db.exerciseFlag.deleteMany({
+      where: {
+        workoutCompletionId: params.completionId,
+        workoutExerciseId: params.workoutExerciseId,
       },
     });
   }

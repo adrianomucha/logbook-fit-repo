@@ -65,6 +65,28 @@ export const updateExerciseSchema = z.object({
 });
 
 // ──────────────────────────────────────
+// WORKOUT EXERCISES (coach plan editing)
+// ──────────────────────────────────────
+
+export const addWorkoutExerciseSchema = z.object({
+  exerciseId: z.string().uuid(),
+  trackingType: trackingTypeEnum.optional(),
+  sets: z.number().int().min(1).max(20).optional(),
+  // Rep count, or seconds when trackingType = TIME (up to 1 hour)
+  reps: z.number().int().min(1).max(3600).optional(),
+  repsMax: z.number().int().min(1).max(3600).nullable().optional(),
+  weight: z.number().min(0).max(1000).nullable().optional(),
+  restSeconds: z.number().int().min(0).max(600).nullable().optional(),
+  coachNotes: z.string().max(1000).nullable().optional(),
+  orderIndex: z.number().int().min(0).optional(),
+  supersetWithPrevious: z.boolean().optional(),
+});
+
+export const updateWorkoutExerciseSchema = addWorkoutExerciseSchema.omit({
+  exerciseId: true,
+});
+
+// ──────────────────────────────────────
 // CHECK-INS
 // ──────────────────────────────────────
 
@@ -148,6 +170,10 @@ export const updateSetsSchema = z.object({
 export const flagExerciseSchema = z.object({
   workoutExerciseId: z.string().uuid(),
   note: z.string().max(500).optional(),
+});
+
+export const unflagExerciseSchema = z.object({
+  workoutExerciseId: z.string().uuid(),
 });
 
 // ──────────────────────────────────────

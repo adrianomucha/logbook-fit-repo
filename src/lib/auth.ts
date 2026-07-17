@@ -26,30 +26,30 @@ export const authOptions: NextAuthOptions = {
             (req?.headers && "x-forwarded-for" in req.headers
               ? (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
               : undefined) ?? "unknown";
-          const { allowed } = loginLimiter(`${ip}:${email}`);
+          // Log user ids rather than emails — emails are PII and login
+          // attempts (including attacker probes) shouldn't put them in logs.
+          const { allowed } = await loginLimiter(`${ip}:${email}`);
           if (!allowed) {
-            console.error("[AUTH] Rate limited:", email);
+            console.error("[AUTH] Rate limited login attempt");
             return null;
           }
-
-          console.log("[AUTH] Attempting login for:", email);
 
           const user = await prisma.user.findFirst({
             where: { email, deletedAt: null },
           });
 
           if (!user) {
-            console.error("[AUTH] User not found:", email);
+            console.error("[AUTH] Login attempt for unknown email");
             return null;
           }
 
           const passwordMatch = await bcrypt.compare(credentials.password, user.passwordHash);
           if (!passwordMatch) {
-            console.error("[AUTH] Password mismatch for:", email);
+            console.error("[AUTH] Password mismatch for user:", user.id);
             return null;
           }
 
-          console.log("[AUTH] Login successful for:", email);
+          console.log("[AUTH] Login successful for user:", user.id);
           return {
             id: user.id,
             email: user.email,

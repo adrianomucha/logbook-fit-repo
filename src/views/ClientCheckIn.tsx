@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { useClientProfile } from '@/hooks/api/useClientProfile';
+import { useCoachClientProfile } from '@/hooks/api/useCoachClientProfile';
 import { useCheckIn, createCheckInForClient } from '@/hooks/api/useCheckIn';
 import { apiFetch } from '@/lib/api-client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,7 +22,7 @@ export function ClientCheckIn() {
   const clientId = params?.clientId ?? null;
   const router = useRouter();
 
-  const { client, isLoading: isClientLoading, refresh: refreshClient } = useClientProfile(clientId);
+  const { client, isLoading: isClientLoading, refresh: refreshClient } = useCoachClientProfile(clientId);
 
   // Find the active (non-completed) check-in for this client
   const activeCheckInId = useMemo(() => {

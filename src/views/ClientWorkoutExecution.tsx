@@ -56,14 +56,20 @@ export function ClientWorkoutExecution() {
   } | null>(null);
   const celebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Auto-expand first incomplete exercise on load. Viewing the page does NOT
-  // start the workout — the completion is created on the first interaction.
+  // Auto-expand first incomplete exercise on load — once. Re-running whenever
+  // expandedExerciseId goes null would make collapsing a card impossible (it
+  // snaps back open) and pop the first card open after the last one completes.
+  // Viewing the page does NOT start the workout — the completion is created
+  // on the first interaction.
+  const didAutoExpandRef = useRef(false);
   useEffect(() => {
-    if (day && !isReadOnly && exercises.length > 0 && !expandedExerciseId) {
+    if (didAutoExpandRef.current) return;
+    if (day && !isReadOnly && exercises.length > 0) {
+      didAutoExpandRef.current = true;
       const nextIncomplete = getNextIncompleteExerciseId(exercises);
       setExpandedExerciseId(nextIncomplete || exercises[0].workoutExerciseId);
     }
-  }, [day, exercises, expandedExerciseId, isReadOnly]);
+  }, [day, exercises, isReadOnly]);
 
   // Cleanup celebration timeout on unmount
   useEffect(() => {
@@ -191,9 +197,14 @@ export function ClientWorkoutExecution() {
     }
   };
 
-  // Complete the workout (starts it first if the user hasn't logged anything)
+  // Complete the workout (starts it first if the user hasn't logged anything).
+  // Ref guard: isFinishing state is stale within the same tick, so a fast
+  // double-tap would finish twice — the second call 400s after the first
+  // succeeds and used to toast an error over a successful finish.
+  const finishingRef = useRef(false);
   const completeWorkout = async () => {
-    if (isFinishing) return;
+    if (finishingRef.current) return;
+    finishingRef.current = true;
     setIsFinishing(true);
 
     const startTime = completion?.startedAt
@@ -218,10 +229,15 @@ export function ClientWorkoutExecution() {
       celebrationTimeoutRef.current = setTimeout(() => {
         router.push('/client');
       }, 6000);
-    } catch {
+    } catch (err) {
+      finishingRef.current = false;
       setCompletedWorkoutData(null);
       setIsFinishing(false);
-      toast.error('Failed to finish workout. Please try again.');
+      toast.error(
+        err instanceof Error && err.message
+          ? err.message
+          : 'Failed to finish workout. Please try again.'
+      );
     }
   };
 

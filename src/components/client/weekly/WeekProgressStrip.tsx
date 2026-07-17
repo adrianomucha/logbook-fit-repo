@@ -2,7 +2,6 @@ interface WeekProgressStripProps {
   completed: number;
   total: number;
   remaining: number;
-  percentage: number;
 }
 
 export function WeekProgressStrip({

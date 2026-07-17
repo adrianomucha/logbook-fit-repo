@@ -21,7 +21,7 @@ export const POST = withCoach(
   ) => {
     // Rate limit invite creation by IP
     const ip = getClientIp(req);
-    const { allowed } = inviteLimiter(ip);
+    const { allowed } = await inviteLimiter(ip);
     if (!allowed) {
       return NextResponse.json(
         { error: "Too many invite requests. Please try again later." },
