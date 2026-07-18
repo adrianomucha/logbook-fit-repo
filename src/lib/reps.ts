@@ -10,6 +10,12 @@
 
 export type TrackingType = 'REPS' | 'TIME';
 
+/** Live timer readout: 47 → "0:47", 90 → "1:30". Always m:ss, never units. */
+export function formatClock(totalSeconds: number): string {
+  const s = Math.max(0, Math.ceil(totalSeconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
 /** Format a duration in seconds: 45 → "45s", 120 → "2 min", 90 → "1m 30s". */
 export function formatDuration(totalSeconds: number): string {
   if (totalSeconds < 60) return `${totalSeconds}s`;

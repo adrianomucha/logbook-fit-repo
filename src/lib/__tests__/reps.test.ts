@@ -1,11 +1,31 @@
 import { describe, expect, it } from 'vitest';
 import {
+  formatClock,
   formatDuration,
   formatReps,
   parseDurationInput,
   parsePrescriptionInput,
   parseRepsInput,
 } from '../reps';
+
+describe('formatClock', () => {
+  it('renders m:ss with zero-padded seconds', () => {
+    expect(formatClock(0)).toBe('0:00');
+    expect(formatClock(5)).toBe('0:05');
+    expect(formatClock(47)).toBe('0:47');
+    expect(formatClock(90)).toBe('1:30');
+    expect(formatClock(600)).toBe('10:00');
+  });
+
+  it('ceils fractional seconds so a countdown never shows 0:00 early', () => {
+    expect(formatClock(46.2)).toBe('0:47');
+    expect(formatClock(0.4)).toBe('0:01');
+  });
+
+  it('clamps negatives to 0:00', () => {
+    expect(formatClock(-3)).toBe('0:00');
+  });
+});
 
 describe('formatReps', () => {
   it('formats rep counts and ranges', () => {

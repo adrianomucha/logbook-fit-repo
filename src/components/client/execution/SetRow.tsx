@@ -1,13 +1,20 @@
-import { useState } from 'react';
-import { Check } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, Play, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseDurationInput, type TrackingType } from '@/lib/reps';
+import { formatClock, parseDurationInput, type TrackingType } from '@/lib/reps';
 
 /**
  * Shared grid template for the set table: SET · LAST · WEIGHT · REPS · ✓.
  * The header row in ExerciseCard uses the same template so columns align.
  */
 export const SET_GRID = 'grid grid-cols-[1.75rem_1fr_4.25rem_3.5rem_2rem] gap-x-2 items-center';
+
+/**
+ * TIME exercises get one more column — SET · LAST · WEIGHT · SEC · ▶ · ✓ —
+ * so the timer button lines up across rows and with the header.
+ */
+export const SET_GRID_TIME =
+  'grid grid-cols-[1.75rem_1fr_4.25rem_3.5rem_2rem_2rem] gap-x-2 items-center';
 
 interface SetRowProps {
   setNumber: number;
@@ -54,6 +61,28 @@ export function parseTargetWeight(target?: string | number): number | undefined 
   return m ? Number(m[0]) : undefined;
 }
 
+/**
+ * Two rising beeps when a hold finishes. The AudioContext must be created in
+ * the start-tap handler (a user gesture) or mobile browsers keep it suspended.
+ */
+function playTimerChime(ctx: AudioContext) {
+  const t0 = ctx.currentTime;
+  [880, 1320].forEach((freq, i) => {
+    const at = t0 + i * 0.18;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0.0001, at);
+    gain.gain.exponentialRampToValueAtTime(0.25, at + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.16);
+    osc.start(at);
+    osc.stop(at + 0.18);
+  });
+}
+
 export function SetRow({
   setNumber,
   trackingType = 'REPS',
@@ -84,6 +113,69 @@ export function SetRow({
     actualWeight != null ? String(actualWeight) : defaultWeight != null ? String(defaultWeight) : ''
   );
 
+  // In-app hold timer for TIME sets (planks, carries) so the athlete never
+  // has to leave for the phone's clock app. Wall-clock based (startedAt vs
+  // now) so a throttled background tab still reads the right remaining time.
+  // targetSec null = no prescribed duration → count up, stop when done.
+  // Local to the row: collapsing the exercise unmounts it and drops the timer,
+  // which matches "I walked away" better than a timer ticking off-screen.
+  const [timer, setTimer] = useState<{ startedAt: number; targetSec: number | null } | null>(null);
+  const [nowMs, setNowMs] = useState(0);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    if (!timer) return;
+    const id = setInterval(() => setNowMs(Date.now()), 250);
+    return () => clearInterval(id);
+  }, [timer]);
+
+  const elapsedSec = timer ? Math.max(0, (nowMs - timer.startedAt) / 1000) : 0;
+  const remainingSec = timer?.targetSec != null ? timer.targetSec - elapsedSec : null;
+
+  /** Log the held seconds and mark the set done, exactly like a manual tap. */
+  const finishTimer = (heldSec: number, cue: boolean) => {
+    setTimer(null);
+    const s = Math.max(1, Math.round(heldSec));
+    setReps(String(s));
+    onChangeReps?.(s);
+    const w = parseFloat(weight);
+    if (!Number.isNaN(w) && w >= 0) onChangeWeight?.(w);
+    if (!completed) onToggle();
+    if (cue) {
+      navigator.vibrate?.([200, 100, 200]);
+      const ctx = audioCtxRef.current;
+      if (ctx) {
+        // resume() because iOS re-suspends contexts while the screen is idle
+        void ctx.resume().then(() => playTimerChime(ctx));
+      }
+    }
+  };
+
+  // Countdown reached zero → auto-complete with the full prescribed hold.
+  // finishTimer clears `timer`, so this can only fire once per run.
+  useEffect(() => {
+    if (!timer || timer.targetSec == null) return;
+    if ((nowMs - timer.startedAt) / 1000 >= timer.targetSec) {
+      finishTimer(timer.targetSec, true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nowMs, timer]);
+
+  const startTimer = () => {
+    if (isReadOnly || completed || timer) return;
+    if (!audioCtxRef.current && typeof AudioContext !== 'undefined') {
+      try {
+        audioCtxRef.current = new AudioContext();
+      } catch {
+        // no audio — vibration and the visual finish still work
+      }
+    }
+    const n = parseInt(reps, 10);
+    const target = !Number.isNaN(n) && n > 0 ? n : defaultReps ?? null;
+    setNowMs(Date.now());
+    setTimer({ startedAt: Date.now(), targetSec: target });
+  };
+
   const commitReps = (raw: string) => {
     const v = raw.replace(/[^\d]/g, '');
     setReps(v);
@@ -100,6 +192,8 @@ export function SetRow({
 
   const handleToggle = () => {
     if (isReadOnly) return;
+    // A manual tap overrides a running timer — don't auto-complete later
+    setTimer(null);
     // When marking complete, persist whatever is shown so the logged values match
     // what the athlete did — even if they kept the prescribed default untouched.
     if (!completed) {
@@ -138,9 +232,10 @@ export function SetRow({
   );
 
   return (
+    <>
     <div
       className={cn(
-        SET_GRID,
+        isTime ? SET_GRID_TIME : SET_GRID,
         'h-[56px]',
         showDivider && 'border-t border-border/30'
       )}
@@ -174,6 +269,28 @@ export function SetRow({
         label: isTime ? 'seconds' : 'reps',
       })}
 
+      {isTime &&
+        (completed || isReadOnly ? (
+          // keep the grid aligned when there's nothing to time
+          <span aria-hidden="true" />
+        ) : (
+          <button
+            type="button"
+            onClick={timer ? () => setTimer(null) : startTimer}
+            aria-label={
+              timer ? `Cancel set ${setNumber} timer` : `Start set ${setNumber} timer`
+            }
+            className={cn(
+              'w-8 h-8 rounded-full flex items-center justify-center justify-self-end transition-all duration-200 touch-manipulation active:scale-[0.92] cursor-pointer',
+              timer
+                ? 'text-muted-foreground hover:text-destructive'
+                : 'text-muted-foreground/60 hover:text-foreground hover:bg-muted/60'
+            )}
+          >
+            {timer ? <X className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current" />}
+          </button>
+        ))}
+
       <button
         type="button"
         onClick={handleToggle}
@@ -191,5 +308,46 @@ export function SetRow({
         {completed && <Check className="w-4 h-4 text-success-foreground animate-set-complete" />}
       </button>
     </div>
+
+    {/* ── Running timer: countdown to the prescribed hold, or a stopwatch when
+        no duration is prescribed. "Done" logs the actual seconds held. ── */}
+    {timer && (
+      <div className="mb-2 rounded-lg bg-muted/50 px-3 py-2.5 flex items-center gap-3 animate-fade-in-up">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-baseline gap-2">
+            <span
+              className="font-mono text-2xl font-bold tabular-nums text-foreground"
+              role="timer"
+              aria-label={`Set ${setNumber} timer`}
+            >
+              {formatClock(remainingSec ?? elapsedSec)}
+            </span>
+            {timer.targetSec != null && (
+              <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                / {formatClock(timer.targetSec)}
+              </span>
+            )}
+          </div>
+          {timer.targetSec != null && (
+            <div className="mt-1.5 h-1 rounded-full bg-foreground/10 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-success transition-[width] duration-300 ease-linear"
+                style={{
+                  width: `${Math.min(100, (elapsedSec / timer.targetSec) * 100)}%`,
+                }}
+              />
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => finishTimer(elapsedSec, false)}
+          className="h-9 px-4 rounded-full bg-foreground text-background text-sm font-semibold touch-manipulation active:scale-[0.96] transition-transform"
+        >
+          Done
+        </button>
+      </div>
+    )}
+    </>
   );
 }

@@ -6,6 +6,7 @@ import type { LastPerformance, WorkoutExercise } from '@/types/api';
 import {
   SetRow,
   SET_GRID,
+  SET_GRID_TIME,
   parseTargetReps,
   parseTargetSeconds,
   parseTargetWeight,
@@ -257,7 +258,12 @@ export function ExerciseCard({
           {/* Set table — SET · LAST · WEIGHT · REPS · ✓. Labels live in this
               header once, so the rows below are pure numbers. */}
           <div>
-            <div className={cn(SET_GRID, 'pb-1')}>
+            <div
+              className={cn(
+                exercise.trackingType === 'TIME' ? SET_GRID_TIME : SET_GRID,
+                'pb-1'
+              )}
+            >
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50">
                 Set
               </span>
@@ -272,6 +278,8 @@ export function ExerciseCard({
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
                 {exercise.trackingType === 'TIME' ? 'Sec' : 'Reps'}
               </span>
+              {/* timer column for TIME exercises */}
+              {exercise.trackingType === 'TIME' && <span aria-hidden="true" />}
               <span aria-hidden="true" />
             </div>
             {setRows.map((setNumber, idx) => {
