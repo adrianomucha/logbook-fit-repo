@@ -100,6 +100,11 @@ export function SetRow({
 
   const handleToggle = () => {
     if (isReadOnly) return;
+    // Checking a set means "done typing": drop the keyboard so the field's
+    // focusout wipes its iOS undo history before the phone gets set down.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     // When marking complete, persist whatever is shown so the logged values match
     // what the athlete did — even if they kept the prescribed default untouched.
     if (!completed) {
@@ -126,6 +131,14 @@ export function SetRow({
       disabled={isReadOnly}
       aria-label={`Set ${setNumber} ${opts.label}`}
       onChange={(e) => opts.onChange(e.target.value)}
+      // A stray tap on iOS's shake-triggered "Undo Typing" alert must never
+      // rewrite a logged number; undo is worthless in a 3-character cell.
+      onBeforeInput={(e) => {
+        const inputType = (e.nativeEvent as InputEvent).inputType;
+        if (inputType === 'historyUndo' || inputType === 'historyRedo') {
+          e.preventDefault();
+        }
+      }}
       className={cn(
         // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
         'h-11 w-full rounded-lg text-center font-mono text-base sm:text-sm font-bold tabular-nums outline-none transition-colors',

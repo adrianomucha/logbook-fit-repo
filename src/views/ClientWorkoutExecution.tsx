@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount, isExerciseComplete } from '@/hooks/api/useWorkoutExecution';
+import { useSuppressShakeToUndo } from '@/hooks/useSuppressShakeToUndo';
 import { RotateCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
@@ -40,6 +41,10 @@ export function ClientWorkoutExecution() {
     updateFlagNote,
     finishWorkout,
   } = useWorkoutExecution(dayId);
+
+  // Typing weights/reps feeds iOS's shake-to-undo stack; gym knocks then pop
+  // the native "Undo Typing" alert over the workout. Keep the stack empty.
+  useSuppressShakeToUndo();
 
   const [expandedExerciseId, setExpandedExerciseId] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
