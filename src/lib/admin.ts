@@ -6,6 +6,8 @@
  * no admin role in the schema; this is an allowlist the owner controls.
  */
 
+import { createHash, timingSafeEqual } from "crypto";
+
 /** Emails allowed into admin surfaces, normalized to lowercase. */
 function adminEmails(): string[] {
   return (process.env.ADMIN_EMAILS ?? "")
@@ -21,11 +23,28 @@ export function isAdminEmail(email?: string | null): boolean {
 }
 
 /**
- * True when `token` matches WAITLIST_ADMIN_TOKEN. Always false when the env
- * var is unset, so a missing token can never be bypassed with an empty string.
+ * Timing-safe string comparison. Compares via SHA-256 digests so
+ * timingSafeEqual accepts unequal lengths.
+ */
+function tokenMatches(token: string, expected: string): boolean {
+  return timingSafeEqual(
+    createHash("sha256").update(token).digest(),
+    createHash("sha256").update(expected).digest()
+  );
+}
+
+/**
+ * True when `token` matches WAITLIST_ADMIN_TOKEN or, to allow zero-downtime
+ * rotation, WAITLIST_ADMIN_TOKEN_PREVIOUS. To rotate: move the live value to
+ * _PREVIOUS, set a fresh WAITLIST_ADMIN_TOKEN, migrate scripts, then unset
+ * _PREVIOUS. Always false when no env var is set, so a missing token can
+ * never be bypassed with an empty string.
  */
 export function isValidAdminToken(token?: string | null): boolean {
-  const expected = process.env.WAITLIST_ADMIN_TOKEN;
-  if (!expected) return false;
-  return token === expected;
+  if (!token) return false;
+  const accepted = [
+    process.env.WAITLIST_ADMIN_TOKEN,
+    process.env.WAITLIST_ADMIN_TOKEN_PREVIOUS,
+  ].filter((t): t is string => Boolean(t));
+  return accepted.some((expected) => tokenMatches(token, expected));
 }

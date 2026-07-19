@@ -10,13 +10,24 @@ function csvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
 }
 
+/** Extracts the bearer token from an Authorization header, if present. */
+function bearerToken(req: Request): string | null {
+  const header = req.headers.get("authorization");
+  const match = header?.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : null;
+}
+
 /**
  * Downloads the waitlist as CSV. Authorized two ways:
  *   1. A signed-in session whose email is on the ADMIN_EMAILS allowlist, or
- *   2. ?token=<WAITLIST_ADMIN_TOKEN> for scripts / automation.
+ *   2. `Authorization: Bearer <WAITLIST_ADMIN_TOKEN>` for scripts / automation.
+ *
+ * The token is deliberately NOT accepted as a query parameter: URLs (including
+ * query strings) end up in access logs, log drains, and browser history, which
+ * would leak a static admin credential (CWE-598).
  */
 export async function GET(req: Request) {
-  const token = new URL(req.url).searchParams.get("token");
+  const token = bearerToken(req);
 
   // Token path first, so scripts never depend on a session/next-auth secret.
   if (!isValidAdminToken(token)) {
