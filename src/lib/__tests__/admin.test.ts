@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { isAdminEmail, isValidAdminToken } from "../admin";
 
-const ENV_KEYS = ["ADMIN_EMAILS", "WAITLIST_ADMIN_TOKEN"] as const;
+const ENV_KEYS = [
+  "ADMIN_EMAILS",
+  "WAITLIST_ADMIN_TOKEN",
+  "WAITLIST_ADMIN_TOKEN_PREVIOUS",
+] as const;
 let saved: Record<string, string | undefined>;
 
 beforeEach(() => {
@@ -32,12 +36,36 @@ describe("isValidAdminToken", () => {
     expect(isValidAdminToken("s3c")).toBe(false);
   });
 
-  it("rejects everything when the env var is unset", () => {
+  it("rejects everything when no env var is set", () => {
     delete process.env.WAITLIST_ADMIN_TOKEN;
+    delete process.env.WAITLIST_ADMIN_TOKEN_PREVIOUS;
     expect(isValidAdminToken("")).toBe(false);
     expect(isValidAdminToken(null)).toBe(false);
     expect(isValidAdminToken(undefined)).toBe(false);
     expect(isValidAdminToken("anything")).toBe(false);
+  });
+
+  it("accepts both current and previous token during rotation", () => {
+    process.env.WAITLIST_ADMIN_TOKEN = "new-token";
+    process.env.WAITLIST_ADMIN_TOKEN_PREVIOUS = "old-token";
+    expect(isValidAdminToken("new-token")).toBe(true);
+    expect(isValidAdminToken("old-token")).toBe(true);
+    expect(isValidAdminToken("wrong")).toBe(false);
+  });
+
+  it("rejects the previous token once _PREVIOUS is unset", () => {
+    process.env.WAITLIST_ADMIN_TOKEN = "new-token";
+    delete process.env.WAITLIST_ADMIN_TOKEN_PREVIOUS;
+    expect(isValidAdminToken("old-token")).toBe(false);
+    expect(isValidAdminToken("new-token")).toBe(true);
+  });
+
+  it("cannot be unlocked by _PREVIOUS alone matching empty current", () => {
+    delete process.env.WAITLIST_ADMIN_TOKEN;
+    process.env.WAITLIST_ADMIN_TOKEN_PREVIOUS = "old-token";
+    expect(isValidAdminToken("old-token")).toBe(true);
+    expect(isValidAdminToken("")).toBe(false);
+    expect(isValidAdminToken("anything-else")).toBe(false);
   });
 
   it("rejects empty/null even when the env var is set", () => {
