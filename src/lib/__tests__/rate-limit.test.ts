@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { rateLimit, getClientIp } from "../rate-limit";
+import { rateLimit, getClientIp, getClientIpFromHeaders } from "../rate-limit";
 
 describe("rateLimit", () => {
   beforeEach(() => {
@@ -116,11 +116,13 @@ describe("rateLimit", () => {
 });
 
 describe("getClientIp", () => {
-  it("extracts IP from x-forwarded-for header", () => {
+  it("uses the LAST x-forwarded-for entry (the proxy-appended real client)", () => {
+    // A client sends "1.2.3.4" hoping to spoof; the trusted proxy appends the
+    // real IP. We must read 5.6.7.8, not the forgeable leading value.
     const req = new Request("http://localhost", {
       headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8" },
     });
-    expect(getClientIp(req)).toBe("1.2.3.4");
+    expect(getClientIp(req)).toBe("5.6.7.8");
   });
 
   it("returns single IP from x-forwarded-for", () => {
@@ -130,8 +132,50 @@ describe("getClientIp", () => {
     expect(getClientIp(req)).toBe("10.0.0.1");
   });
 
+  it("prefers x-vercel-forwarded-for over a spoofed x-forwarded-for", () => {
+    const req = new Request("http://localhost", {
+      headers: {
+        "x-forwarded-for": "1.2.3.4",
+        "x-vercel-forwarded-for": "9.9.9.9",
+      },
+    });
+    expect(getClientIp(req)).toBe("9.9.9.9");
+  });
+
+  it("prefers x-real-ip over a spoofed x-forwarded-for", () => {
+    const req = new Request("http://localhost", {
+      headers: {
+        "x-forwarded-for": "1.2.3.4",
+        "x-real-ip": "8.8.8.8",
+      },
+    });
+    expect(getClientIp(req)).toBe("8.8.8.8");
+  });
+
   it("returns 'unknown' when no header present", () => {
     const req = new Request("http://localhost");
     expect(getClientIp(req)).toBe("unknown");
+  });
+});
+
+describe("getClientIpFromHeaders", () => {
+  it("resolves the trusted platform header from a plain record", () => {
+    expect(
+      getClientIpFromHeaders({
+        "x-forwarded-for": "1.2.3.4",
+        "x-vercel-forwarded-for": "9.9.9.9",
+      })
+    ).toBe("9.9.9.9");
+  });
+
+  it("falls back to the last x-forwarded-for entry", () => {
+    expect(
+      getClientIpFromHeaders({ "x-forwarded-for": "1.2.3.4, 5.6.7.8" })
+    ).toBe("5.6.7.8");
+  });
+
+  it("returns 'unknown' for missing/undefined headers", () => {
+    expect(getClientIpFromHeaders(undefined)).toBe("unknown");
+    expect(getClientIpFromHeaders({})).toBe("unknown");
   });
 });

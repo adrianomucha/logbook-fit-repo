@@ -2,7 +2,11 @@ import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { loginLimiter } from "@/lib/rate-limit";
+import {
+  loginLimiter,
+  loginEmailLimiter,
+  getClientIpFromHeaders,
+} from "@/lib/rate-limit";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -21,15 +25,18 @@ export const authOptions: NextAuthOptions = {
 
           const email = credentials.email.trim().toLowerCase();
 
-          // Rate limit by IP + email to prevent brute-force
-          const ip =
-            (req?.headers && "x-forwarded-for" in req.headers
-              ? (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
-              : undefined) ?? "unknown";
+          // Rate limit two ways to prevent brute-force:
+          //   1. per (IP + email) — throttles a single client, and
+          //   2. per email — bounds guessing against one account even when the
+          //      attacker rotates source IPs (X-Forwarded-For is spoofable).
+          const ip = getClientIpFromHeaders(req?.headers);
+          const [ipResult, emailResult] = await Promise.all([
+            loginLimiter(`${ip}:${email}`),
+            loginEmailLimiter(email),
+          ]);
           // Log user ids rather than emails — emails are PII and login
           // attempts (including attacker probes) shouldn't put them in logs.
-          const { allowed } = await loginLimiter(`${ip}:${email}`);
-          if (!allowed) {
+          if (!ipResult.allowed || !emailResult.allowed) {
             console.error("[AUTH] Rate limited login attempt");
             return null;
           }

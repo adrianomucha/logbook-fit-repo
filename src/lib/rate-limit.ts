@@ -145,10 +145,59 @@ export function rateLimit(name: string, config: RateLimitConfig) {
 }
 
 /**
- * Extract client IP from request headers (Vercel / reverse proxy).
+ * Resolve the real client IP from a header lookup function.
+ *
+ * A raw `x-forwarded-for` is NOT trustworthy for rate limiting: a client can
+ * send any value, and Vercel's proxy *appends* the real connecting IP to the
+ * end of whatever the client supplied. So the FIRST entry is attacker-
+ * controlled — reading it lets an attacker rotate the value on every request
+ * and drop each attempt into a fresh limiter bucket, uncapping brute force
+ * (CWE-290 / CWE-307).
+ *
+ * We therefore trust, in order:
+ *   1. `x-vercel-forwarded-for` — set by Vercel's edge, not forgeable.
+ *   2. `x-real-ip` — also set by the platform proxy.
+ *   3. the LAST `x-forwarded-for` entry — the hop appended by the trusted
+ *      proxy, i.e. the real client as seen by Vercel (fallback for local dev
+ *      and non-Vercel proxies).
+ */
+function resolveClientIp(getHeader: (name: string) => string | null | undefined): string {
+  const trusted =
+    getHeader("x-vercel-forwarded-for")?.trim() || getHeader("x-real-ip")?.trim();
+  if (trusted) return trusted;
+
+  const forwarded = getHeader("x-forwarded-for");
+  if (forwarded) {
+    const parts = forwarded
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (parts.length > 0) return parts[parts.length - 1];
+  }
+
+  return "unknown";
+}
+
+/**
+ * Extract client IP from a Web `Request` (Vercel / reverse proxy).
+ * See resolveClientIp for why the last forwarded entry is used.
  */
 export function getClientIp(req: Request): string {
-  return req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  return resolveClientIp((name) => req.headers.get(name));
+}
+
+/**
+ * Extract client IP from a plain headers record, e.g. NextAuth's
+ * `authorize(credentials, req)` where `req.headers` is a lowercased object
+ * rather than a `Headers` instance.
+ */
+export function getClientIpFromHeaders(
+  headers: Record<string, string | string[] | undefined> | undefined | null
+): string {
+  return resolveClientIp((name) => {
+    const value = headers?.[name];
+    return Array.isArray(value) ? value[0] : value;
+  });
 }
 
 // Pre-configured limiters for auth-sensitive endpoints
@@ -157,9 +206,22 @@ export const signupLimiter = rateLimit("signup", {
   maxRequests: 5,
 });
 
+// Per (IP + email) login cap. Stops a single client hammering one account.
 export const loginLimiter = rateLimit("login", {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 10,
+});
+
+// Per-email login cap, independent of IP. Even if an attacker rotates source
+// IPs (e.g. via forged/rotated X-Forwarded-For or a botnet), guessing against
+// a single account stays bounded. The window is generous enough that a real
+// user fumbling their password won't trip it, but tight enough to keep online
+// guessing infeasible; bcrypt remains the backstop. Trade-off: an attacker can
+// briefly lock a known victim out of their own account, which we accept as far
+// less damaging than uncapped credential stuffing.
+export const loginEmailLimiter = rateLimit("login-email", {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 20,
 });
 
 export const inviteLimiter = rateLimit("invite", {
