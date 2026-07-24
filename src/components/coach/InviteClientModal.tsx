@@ -206,6 +206,8 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     }
   };
 
+  // Landscape proportions on purpose: the note takes its room from the dialog's
+  // width rather than extra rows, so the modal stays wider than it is tall.
   return (
     <Modal
       isOpen={isOpen}
@@ -216,7 +218,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         </span>
       }
       description="Share a signup link to get your client on board."
-      maxWidth="md"
+      maxWidth="xl"
       footer={
         // One unmissable action. Share collapses to an icon so nothing splits
         // attention with it.
@@ -249,7 +251,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         </div>
       }
     >
-      <div className="space-y-5 py-1">
+      <div className="space-y-4">
         {/* Link state in the data voice — full text, its own line, nothing to
             truncate against */}
         <p
@@ -293,12 +295,12 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
               onBlur={applyNote}
               placeholder="Can’t wait to get you started. First up, we fix that squat."
-              rows={3}
-              className="min-h-[96px] resize-none border-0 bg-transparent px-4 pb-3.5 pt-2 text-base sm:text-[15px] leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
+              rows={2}
+              className="min-h-[76px] resize-none border-0 bg-transparent px-4 pb-3 pt-1.5 text-base sm:text-[15px] leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
               maxLength={NOTE_MAX_LENGTH}
             />
           </FieldShell>
-          <p className="text-xs text-muted-foreground/70 mt-2 px-1 antialiased text-pretty">
+          <p className="text-xs text-muted-foreground/70 mt-1.5 px-1 antialiased text-pretty">
             Greets them at signup, then opens your chat.
           </p>
         </div>
