@@ -250,7 +250,7 @@ export function ClientCheckIn() {
       <div className="space-y-5 sm:space-y-6">
         {/* Their answer — the reason the page exists, so it gets the room */}
         <section className="rounded-2xl border border-border bg-muted/40 px-5 py-5 sm:px-7 sm:py-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 pb-5 border-b border-border/60">
             {effortDisplay && (
               <SignalTile label="Workouts felt" display={effortDisplay} />
             )}
@@ -423,7 +423,10 @@ function CheckInHeader({
 
 /* ── Inline sub-components ────────────────────────────────── */
 
-/** One of the two ratings, sized to be scanned before the note is read */
+/**
+ * One of the two ratings. A readout, not a choice — so it is label and value,
+ * with none of the box that would suggest there is something here to pick.
+ */
 function SignalTile({
   label,
   display,
@@ -432,17 +435,23 @@ function SignalTile({
   display: { label: string; emoji: string; text: string };
 }) {
   return (
-    <div className="rounded-xl border border-border bg-background px-4 py-3">
+    <div className="min-w-0">
       <FieldLabel>{label}</FieldLabel>
-      <p className={cn('mt-1.5 text-base font-bold tracking-tight antialiased', display.text)}>
-        <span className="mr-1.5 text-lg" aria-hidden="true">{display.emoji}</span>
+      <p className={cn('mt-1 text-lg font-bold tracking-tight antialiased', display.text)}>
+        <span className="mr-1.5" aria-hidden="true">{display.emoji}</span>
         {display.label}
       </p>
     </div>
   );
 }
 
-/** Sessions as a row of tiles — five workouts cost one row, not five */
+/**
+ * Ruled columns, no boxes. Context here is read, never chosen — a card or a
+ * pill would offer a tap that does nothing, so these are hairlines and type.
+ */
+const LEDGER =
+  'flex flex-col divide-y divide-border/60 border-y border-border/60 sm:flex-row sm:divide-y-0 sm:divide-x';
+
 function WorkoutStrip({ completions }: {
   completions: {
     id: string;
@@ -453,14 +462,15 @@ function WorkoutStrip({ completions }: {
   }[];
 }) {
   // This strip is finished-workouts context only; in-progress rows from the
-  // client detail payload have no completion date to show
-  const finished = completions.filter((c) => c.completedAt);
+  // client detail payload have no completion date to show. Capped so the
+  // desktop row never wraps into a second, half-empty line.
+  const finished = completions.filter((c) => c.completedAt).slice(0, 5);
   if (finished.length === 0) return null;
 
   return (
     <section>
       <StripHeading title="Recent workouts" count={finished.length} />
-      <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+      <ul className={LEDGER}>
         {finished.map((c) => {
           const effort = c.effortRating ? FEELING_DISPLAY[c.effortRating] : null;
           // A finished session is the norm; only a short one is worth a callout
@@ -470,7 +480,7 @@ function WorkoutStrip({ completions }: {
           return (
             <li
               key={c.id}
-              className="min-w-0 rounded-xl border border-border/70 bg-card px-3.5 py-3"
+              className="min-w-0 flex-1 py-2.5 sm:px-4 sm:first:pl-0 sm:last:pr-0"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums">
@@ -482,11 +492,11 @@ function WorkoutStrip({ completions }: {
                   </span>
                 )}
               </div>
-              <p className="mt-1.5 text-sm font-medium leading-snug antialiased line-clamp-2">
+              <p className="mt-1 text-sm font-medium leading-snug antialiased line-clamp-2">
                 {c.day?.name ?? 'Workout'}
               </p>
               {shortfall != null && (
-                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 tabular-nums">
+                <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 tabular-nums">
                   {shortfall}% done
                 </p>
               )}
@@ -498,7 +508,6 @@ function WorkoutStrip({ completions }: {
   );
 }
 
-/** History as a line of pills — enough to spot a trend, small enough to skim */
 function PreviousCheckInsRow({ checkIns }: {
   checkIns: {
     id: string;
@@ -513,13 +522,13 @@ function PreviousCheckInsRow({ checkIns }: {
   return (
     <section>
       <StripHeading title="Previous check-ins" count={checkIns.length} />
-      <ul className="flex flex-wrap gap-2">
+      <ul className={LEDGER}>
         {checkIns.map((checkIn) => {
           const effort = checkIn.effortRating ? FEELING_DISPLAY[checkIn.effortRating] : null;
           return (
             <li
               key={checkIn.id}
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card h-9 pl-3 pr-3.5"
+              className="min-w-0 flex items-center gap-2 py-2.5 sm:px-4 sm:first:pl-0 sm:last:pr-0"
             >
               {effort ? (
                 <>
@@ -531,7 +540,7 @@ function PreviousCheckInsRow({ checkIns }: {
               ) : (
                 <span className="text-sm text-muted-foreground antialiased">No rating</span>
               )}
-              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 tabular-nums">
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 tabular-nums ml-auto sm:ml-1">
                 {format(new Date(checkIn.completedAt || checkIn.createdAt), 'MMM d')}
               </span>
             </li>
