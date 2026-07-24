@@ -167,7 +167,7 @@ export function ClientCheckIn() {
           onBack={handleBack}
           status={<StatusLine tone="idle">No open check-in</StatusLine>}
         />
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 items-start">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
           <Panel className="text-center py-12">
             <ClipboardCheck className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-xl font-bold tracking-tight mb-2 antialiased">Nothing to review yet</h2>
@@ -202,7 +202,7 @@ export function ClientCheckIn() {
           onBack={handleBack}
           status={<StatusLine tone="idle" pulse>Check-in · waiting on their answer</StatusLine>}
         />
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 items-start">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
           <Panel className="text-center py-12">
             <Clock className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-xl font-bold tracking-tight mb-2 antialiased">
@@ -255,7 +255,7 @@ export function ClientCheckIn() {
       {/* Explicit placement keeps the reading order right in both directions:
           stacked, context sits between their words and the reply box; on
           desktop it moves to the rail and the reply stays under their words */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6 items-start">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
         {/* Their answer — the reason the page exists, so it gets the room */}
         <section className="lg:col-start-1 rounded-2xl border border-border bg-muted/40 px-5 py-5 sm:px-7 sm:py-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -311,7 +311,7 @@ export function ClientCheckIn() {
               onChange={(e) => setCoachResponse(e.target.value.slice(0, RESPONSE_MAX_LENGTH))}
               rows={5}
               maxLength={RESPONSE_MAX_LENGTH}
-              className="min-h-[148px] resize-none border-0 bg-transparent px-4 pb-3.5 pt-2 text-base sm:text-[15px] leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="min-h-[120px] resize-none border-0 bg-transparent px-4 pb-3.5 pt-2 text-base sm:text-[15px] leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
             />
           </FieldShell>
 
@@ -379,10 +379,14 @@ function Panel({ className, children }: { className?: string; children: React.Re
   );
 }
 
-/** Reference column: full-width when stacked, sticky rail on desktop */
+/**
+ * Reference column: full-width when stacked, a rail on desktop. Its cards share
+ * whatever height the main column takes, so the two columns end on the same
+ * line instead of leaving a ragged edge under the shorter one.
+ */
 function Rail({ className, children }: { className?: string; children: React.ReactNode }) {
   return (
-    <aside className={cn('space-y-4 lg:self-start lg:sticky lg:top-4', className)}>
+    <aside className={cn('flex flex-col gap-4 lg:[&>*]:flex-1', className)}>
       {children}
     </aside>
   );
