@@ -167,26 +167,22 @@ export function ClientCheckIn() {
           onBack={handleBack}
           status={<StatusLine tone="idle">No open check-in</StatusLine>}
         />
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
-          <Panel className="text-center py-12">
-            <ClipboardCheck className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
-            <h2 className="text-xl font-bold tracking-tight mb-2 antialiased">Nothing to review yet</h2>
-            <p className="text-sm text-muted-foreground mb-6 antialiased text-pretty max-w-sm mx-auto">
-              Send a check-in to hear how {clientName} is training, then answer it here.
-            </p>
-            <Button onClick={handleStartNewCheckIn} disabled={isCreating} className="h-11 rounded-xl">
-              {isCreating ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <ClipboardCheck className="w-4 h-4 mr-2" />
-              )}
-              Send check-in
-            </Button>
-          </Panel>
-          <Rail>
-            <PreviousCheckInsList checkIns={completedCheckIns} />
-          </Rail>
-        </div>
+        <Panel className="text-center py-12">
+          <ClipboardCheck className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
+          <h2 className="text-xl font-bold tracking-tight mb-2 antialiased">Nothing to review yet</h2>
+          <p className="text-sm text-muted-foreground mb-6 antialiased text-pretty max-w-sm mx-auto">
+            Send a check-in to hear how {clientName} is training, then answer it here.
+          </p>
+          <Button onClick={handleStartNewCheckIn} disabled={isCreating} className="h-11 rounded-xl">
+            {isCreating ? (
+              <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            ) : (
+              <ClipboardCheck className="w-4 h-4 mr-2" />
+            )}
+            Send check-in
+          </Button>
+        </Panel>
+        <PreviousCheckInsRow checkIns={completedCheckIns} />
       </PageShell>
     );
   }
@@ -202,31 +198,27 @@ export function ClientCheckIn() {
           onBack={handleBack}
           status={<StatusLine tone="idle" pulse>Check-in · waiting on their answer</StatusLine>}
         />
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
-          <Panel className="text-center py-12">
-            <Clock className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
-            <h2 className="text-xl font-bold tracking-tight mb-2 antialiased">
-              Sent {sentAgo}
-            </h2>
-            <p className="text-sm text-muted-foreground antialiased text-pretty max-w-sm mx-auto">
-              {clientName} hasn&apos;t answered yet. You&apos;ll see their response here the moment
-              they do.
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-5 text-muted-foreground hover:text-destructive"
-              disabled={isWithdrawing}
-              onClick={handleWithdrawCheckIn}
-            >
-              {isWithdrawing ? 'Withdrawing…' : 'Withdraw check-in'}
-            </Button>
-          </Panel>
-          <Rail>
-            <RecentCompletionsList completions={client.completions} />
-            <PreviousCheckInsList checkIns={completedCheckIns} />
-          </Rail>
-        </div>
+        <Panel className="text-center py-12">
+          <Clock className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
+          <h2 className="text-xl font-bold tracking-tight mb-2 antialiased">
+            Sent {sentAgo}
+          </h2>
+          <p className="text-sm text-muted-foreground antialiased text-pretty max-w-sm mx-auto">
+            {clientName} hasn&apos;t answered yet. You&apos;ll see their response here the moment
+            they do.
+          </p>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="mt-5 text-muted-foreground hover:text-destructive"
+            disabled={isWithdrawing}
+            onClick={handleWithdrawCheckIn}
+          >
+            {isWithdrawing ? 'Withdrawing…' : 'Withdraw check-in'}
+          </Button>
+        </Panel>
+        <WorkoutStrip completions={client.completions} />
+        <PreviousCheckInsRow checkIns={completedCheckIns} />
       </PageShell>
     );
   }
@@ -252,12 +244,12 @@ export function ClientCheckIn() {
         status={<StatusLine>Check-in · answered {submittedAgo}</StatusLine>}
       />
 
-      {/* Explicit placement keeps the reading order right in both directions:
-          stacked, context sits between their words and the reply box; on
-          desktop it moves to the rail and the reply stays under their words */}
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
+      {/* One column, read top to bottom: what they said, what they did, what
+          you say back. Context runs across as a strip rather than down a rail,
+          so there are no two columns to end level with each other */}
+      <div className="space-y-5 sm:space-y-6">
         {/* Their answer — the reason the page exists, so it gets the room */}
-        <section className="lg:col-start-1 rounded-2xl border border-border bg-muted/40 px-5 py-5 sm:px-7 sm:py-6">
+        <section className="rounded-2xl border border-border bg-muted/40 px-5 py-5 sm:px-7 sm:py-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {effortDisplay && (
               <SignalTile label="Workouts felt" display={effortDisplay} />
@@ -283,16 +275,13 @@ export function ClientCheckIn() {
           )}
         </section>
 
-        {/* Training context — reference material, so it sits in the rail */}
-        <Rail className="lg:col-start-2 lg:row-start-1 lg:row-span-2">
-          <RecentCompletionsList
-            completions={activeCheckIn?.client.completions ?? client.completions}
-          />
-          <PreviousCheckInsList checkIns={completedCheckIns} />
-        </Rail>
+        {/* Training context — a strip of tiles, so five sessions cost one row
+            instead of a column of near-identical list items */}
+        <WorkoutStrip completions={activeCheckIn?.client.completions ?? client.completions} />
+        <PreviousCheckInsRow checkIns={completedCheckIns} />
 
         {/* Your reply */}
-        <div className="lg:col-start-1 space-y-3">
+        <div className="space-y-3">
           <FieldShell
             label="Your response"
             htmlFor="coach-response"
@@ -363,7 +352,9 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background pb-8 sm:pb-4">
       <CoachNav activeTab="clients" />
-      <div className="max-w-6xl mx-auto space-y-5 sm:space-y-6 px-3 pt-4 sm:px-4 sm:pt-7">
+      {/* Narrower than the list pages on purpose: this one is read and written
+          in, so the quote and the reply box want a comfortable measure */}
+      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6 px-3 pt-4 sm:px-4 sm:pt-7">
         {children}
       </div>
     </div>
@@ -379,16 +370,15 @@ function Panel({ className, children }: { className?: string; children: React.Re
   );
 }
 
-/**
- * Reference column: full-width when stacked, a rail on desktop. Its cards share
- * whatever height the main column takes, so the two columns end on the same
- * line instead of leaving a ragged edge under the shorter one.
- */
-function Rail({ className, children }: { className?: string; children: React.ReactNode }) {
+/** Section heading for the context strips — label left, tally right */
+function StripHeading({ title, count }: { title: string; count?: number }) {
   return (
-    <aside className={cn('flex flex-col gap-4 lg:[&>*]:flex-1', className)}>
-      {children}
-    </aside>
+    <div className="flex items-baseline justify-between gap-2 mb-2 px-0.5">
+      <FieldLabel>{title}</FieldLabel>
+      {count != null && (
+        <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">{count}</span>
+      )}
+    </div>
   );
 }
 
@@ -452,28 +442,8 @@ function SignalTile({
   );
 }
 
-/** Rail card wrapper — quieter than the main column by design */
-function RailCard({ title, count, children }: {
-  title: string;
-  count?: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="rounded-2xl border border-border/70 bg-card px-4 py-4 sm:px-5">
-      <div className="flex items-baseline justify-between gap-2 mb-1">
-        <FieldLabel>{title}</FieldLabel>
-        {count != null && (
-          <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
-            {count}
-          </span>
-        )}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function RecentCompletionsList({ completions }: {
+/** Sessions as a row of tiles — five workouts cost one row, not five */
+function WorkoutStrip({ completions }: {
   completions: {
     id: string;
     completedAt: string | null;
@@ -482,14 +452,15 @@ function RecentCompletionsList({ completions }: {
     day: { name: string | null } | null;
   }[];
 }) {
-  // This list is finished-workouts context only; in-progress rows from the
+  // This strip is finished-workouts context only; in-progress rows from the
   // client detail payload have no completion date to show
   const finished = completions.filter((c) => c.completedAt);
   if (finished.length === 0) return null;
 
   return (
-    <RailCard title="Recent workouts" count={finished.length}>
-      <ul className="divide-y divide-border/60">
+    <section>
+      <StripHeading title="Recent workouts" count={finished.length} />
+      <ul className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
         {finished.map((c) => {
           const effort = c.effortRating ? FEELING_DISPLAY[c.effortRating] : null;
           // A finished session is the norm; only a short one is worth a callout
@@ -497,37 +468,38 @@ function RecentCompletionsList({ completions }: {
             ? Math.round(c.completionPct)
             : null;
           return (
-            <li key={c.id} className="flex items-center gap-3 py-2.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-brand shrink-0" aria-hidden="true" />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate antialiased">
-                  {c.day?.name ?? 'Workout'}
-                </p>
-                {shortfall != null && (
-                  <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 tabular-nums">
-                    {shortfall}% done
-                  </p>
+            <li
+              key={c.id}
+              className="min-w-0 rounded-xl border border-border/70 bg-card px-3.5 py-3"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums">
+                  {c.completedAt ? format(new Date(c.completedAt), 'MMM d') : '—'}
+                </span>
+                {effort && (
+                  <span className="text-sm shrink-0" title={effort.label} aria-label={effort.label}>
+                    {effort.emoji}
+                  </span>
                 )}
               </div>
-              {effort && (
-                <span className="shrink-0 text-sm" title={effort.label} aria-label={effort.label}>
-                  {effort.emoji}
-                </span>
-              )}
-              {c.completedAt && (
-                <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums">
-                  {format(new Date(c.completedAt), 'MMM d')}
-                </span>
+              <p className="mt-1.5 text-sm font-medium leading-snug antialiased line-clamp-2">
+                {c.day?.name ?? 'Workout'}
+              </p>
+              {shortfall != null && (
+                <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 tabular-nums">
+                  {shortfall}% done
+                </p>
               )}
             </li>
           );
         })}
       </ul>
-    </RailCard>
+    </section>
   );
 }
 
-function PreviousCheckInsList({ checkIns }: {
+/** History as a line of pills — enough to spot a trend, small enough to skim */
+function PreviousCheckInsRow({ checkIns }: {
   checkIns: {
     id: string;
     status: string;
@@ -539,29 +511,33 @@ function PreviousCheckInsList({ checkIns }: {
   if (checkIns.length === 0) return null;
 
   return (
-    <RailCard title="Previous check-ins" count={checkIns.length}>
-      <ul className="divide-y divide-border/60">
+    <section>
+      <StripHeading title="Previous check-ins" count={checkIns.length} />
+      <ul className="flex flex-wrap gap-2">
         {checkIns.map((checkIn) => {
           const effort = checkIn.effortRating ? FEELING_DISPLAY[checkIn.effortRating] : null;
           return (
-            <li key={checkIn.id} className="flex items-center gap-3 py-2.5">
-              <div className="min-w-0 flex-1">
-                {effort ? (
-                  <p className={cn('text-sm font-medium truncate antialiased', effort.text)}>
-                    <span className="mr-1.5" aria-hidden="true">{effort.emoji}</span>
+            <li
+              key={checkIn.id}
+              className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card h-9 pl-3 pr-3.5"
+            >
+              {effort ? (
+                <>
+                  <span aria-hidden="true">{effort.emoji}</span>
+                  <span className={cn('text-sm font-medium antialiased', effort.text)}>
                     {effort.label}
-                  </p>
-                ) : (
-                  <p className="text-sm text-muted-foreground antialiased">No rating</p>
-                )}
-              </div>
-              <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums">
+                  </span>
+                </>
+              ) : (
+                <span className="text-sm text-muted-foreground antialiased">No rating</span>
+              )}
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/70 tabular-nums">
                 {format(new Date(checkIn.completedAt || checkIn.createdAt), 'MMM d')}
               </span>
             </li>
           );
         })}
       </ul>
-    </RailCard>
+    </section>
   );
 }
