@@ -4,6 +4,7 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { Chip, FieldShell, StatusLine } from './shared/formSurfaces';
 import { apiFetch } from '@/lib/api-client';
 
 interface InviteClientModalProps {
@@ -24,60 +25,6 @@ const NOTE_MAX_LENGTH = 280;
 
 const canNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function';
-
-/**
- * One filled surface per field — the only boxes in the modal. The control sits
- * borderless inside it so the field reads as a single object, not a stack of
- * label + box + hint.
- */
-function FieldShell({
-  label,
-  htmlFor,
-  trailing,
-  children,
-}: {
-  label: string;
-  htmlFor: string;
-  trailing?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-muted/40 overflow-hidden transition-colors focus-within:border-foreground/25 focus-within:bg-background">
-      <div className="flex items-baseline justify-between gap-2 px-4 pt-3">
-        <label
-          htmlFor={htmlFor}
-          className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
-        >
-          {label}
-        </label>
-        {trailing}
-      </div>
-      {children}
-    </div>
-  );
-}
-
-/** Small pill action — the quiet tier, so nothing competes with Copy link */
-function Chip({
-  onClick,
-  disabled,
-  children,
-}: {
-  onClick: () => void;
-  disabled?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-3 h-8 text-xs font-medium text-muted-foreground transition-colors hover:border-foreground/25 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 tap-target"
-    >
-      {children}
-    </button>
-  );
-}
 
 export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const [email, setEmail] = useState('');
@@ -254,16 +201,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
       <div className="space-y-4">
         {/* Link state in the data voice — full text, its own line, nothing to
             truncate against */}
-        <p
-          aria-live="polite"
-          className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground tabular-nums antialiased"
-        >
-          <span
-            className={`w-1.5 h-1.5 rounded-full shrink-0 ring-2 ${
-              error ? 'bg-muted-foreground/40 ring-transparent' : 'bg-brand ring-brand/25'
-            } ${isGenerating ? 'animate-pulse' : ''}`}
-            aria-hidden="true"
-          />
+        <StatusLine tone={error ? 'idle' : 'ready'} pulse={isGenerating}>
           {isGenerating ? (
             'Creating link…'
           ) : invite ? (
@@ -274,7 +212,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           ) : (
             'No link yet'
           )}
-        </p>
+        </StatusLine>
 
         {/* The one real decision in this modal, given the room to look like one */}
         <div>
