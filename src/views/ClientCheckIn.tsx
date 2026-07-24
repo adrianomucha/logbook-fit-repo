@@ -351,10 +351,15 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background pb-8 sm:pb-4">
       <CoachNav activeTab="clients" />
-      {/* Narrower than the list pages on purpose: this one is read and written
-          in, so the quote and the reply box want a comfortable measure */}
-      <div className="max-w-4xl mx-auto space-y-5 sm:space-y-6 px-3 pt-4 sm:px-4 sm:pt-7">
-        {children}
+      {/* Outer container matches CoachNav's exactly, so the page starts on the
+          same line as the logotype like every other coach page. The column
+          inside is narrower on purpose — this page is read and written in, so
+          the quote and the reply box want a comfortable measure — but it hangs
+          off the left edge rather than centring away from that line. */}
+      <div className="max-w-7xl mx-auto px-3 pt-4 sm:px-4 sm:pt-7">
+        <div className="max-w-4xl space-y-5 sm:space-y-6">
+          {children}
+        </div>
       </div>
     </div>
   );
