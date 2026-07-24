@@ -16,6 +16,8 @@ import {
   createInviteSchema,
   addWorkoutExerciseSchema,
   updateWorkoutExerciseSchema,
+  waitlistSchema,
+  waitlistQualifySchema,
 } from "../schemas";
 
 // ──────────────────────────────────────
@@ -702,6 +704,67 @@ describe("finishWorkoutSchema", () => {
 
   it("rejects invalid effort rating", () => {
     const result = finishWorkoutSchema.safeParse({ effortRating: "INSANE" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("waitlistSchema", () => {
+  it("accepts an email on its own", () => {
+    const result = waitlistSchema.safeParse({ email: "coach@example.com" });
+    expect(result.success).toBe(true);
+  });
+
+  it("normalizes the email", () => {
+    const result = waitlistSchema.safeParse({ email: "  Coach@Example.COM " });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.email).toBe("coach@example.com");
+  });
+
+  it("accepts attribution alongside the email", () => {
+    const result = waitlistSchema.safeParse({
+      email: "coach@example.com",
+      source: "reddit",
+      medium: "social",
+      campaign: "retention-post",
+      referrer: "https://www.reddit.com/r/personaltraining/",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.source).toBe("reddit");
+  });
+
+  it("rejects an over-long attribution value", () => {
+    const result = waitlistSchema.safeParse({
+      email: "coach@example.com",
+      source: "x".repeat(121),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an invalid email", () => {
+    const result = waitlistSchema.safeParse({ email: "not-an-email" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("waitlistQualifySchema", () => {
+  it("accepts a known bucket", () => {
+    const result = waitlistQualifySchema.safeParse({
+      email: "coach@example.com",
+      clientCount: "6-15",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an unknown bucket", () => {
+    const result = waitlistQualifySchema.safeParse({
+      email: "coach@example.com",
+      clientCount: "loads",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("requires the email", () => {
+    const result = waitlistQualifySchema.safeParse({ clientCount: "1-5" });
     expect(result.success).toBe(false);
   });
 });

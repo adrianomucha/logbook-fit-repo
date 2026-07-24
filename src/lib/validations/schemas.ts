@@ -189,6 +189,31 @@ export const createInviteSchema = z.object({
 // WAITLIST
 // ──────────────────────────────────────
 
+/**
+ * Attribution captured alongside a signup. Every field is optional and
+ * attacker-controlled, so each is trimmed and hard-capped — these are only
+ * ever read back by admins in a CSV, never rendered as HTML.
+ */
+const attributionValue = z.string().trim().max(120).optional();
+
 export const waitlistSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255),
+  source: attributionValue,
+  medium: attributionValue,
+  campaign: attributionValue,
+  referrer: z.string().trim().max(300).optional(),
+});
+
+/** The buckets offered by the confirmation-screen qualifying question. */
+export const WAITLIST_CLIENT_COUNTS = [
+  '1-5',
+  '6-15',
+  '16-30',
+  '30+',
+  'not-coaching',
+] as const;
+
+export const waitlistQualifySchema = z.object({
+  email: z.string().trim().toLowerCase().email().max(255),
+  clientCount: z.enum(WAITLIST_CLIENT_COUNTS),
 });

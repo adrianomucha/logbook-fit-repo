@@ -15,18 +15,19 @@ import {
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
+import prisma from '@/lib/prisma';
 
 export const metadata: Metadata = {
-  title: 'Logbook.fit · The coaching platform that puts your clients first',
+  title: 'Logbook.fit · Your quietest client is your next cancellation',
   description:
-    'Plan workouts, track progress, and stay connected to every client through a structured check-in loop. Join the waitlist for early access.',
+    'The retention-first platform for independent coaches. Logbook.fit ranks your clients by who needs you today, so you catch the fade before it becomes a refund.',
 };
 
 const MARQUEE_ITEMS = [
-  'Coach-first training platform',
-  'Private beta',
+  'Catch the fade before the refund',
+  'For independent coaches',
   'Plan · Train · Check in',
-  'Join the waitlist',
+  'Private beta · onboarding in small batches',
 ];
 
 const CHECK_IN_LOOP = [
@@ -98,6 +99,27 @@ const CLIENT_FEATURES = [
   },
 ];
 
+/**
+ * Live signup count for the proof line next to the form, or null when there
+ * isn't one worth showing. Two guards:
+ *
+ *   - Below the threshold the honest number reads as "nobody wants this", so
+ *     the copy falls back to a different, still-true proof point.
+ *   - The database is deliberately optional here. The landing page has to
+ *     render in any environment (preview builds, a fresh clone with no DB),
+ *     so a failure degrades to the fallback instead of a 500.
+ */
+const PROOF_THRESHOLD = 25;
+
+async function getWaitlistProof(): Promise<number | null> {
+  try {
+    const count = await prisma.waitlistEntry.count();
+    return count >= PROOF_THRESHOLD ? count : null;
+  } catch {
+    return null;
+  }
+}
+
 function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
   return (
     <ul className="divide-y divide-border/70 border-t border-border/70">
@@ -133,6 +155,8 @@ export default async function HomePage() {
     redirect('/coach');
   }
 
+  const waitlistCount = await getWaitlistProof();
+
   return (
     <div className="bg-background">
       {/* Hero — dark brand canvas, centered display type */}
@@ -147,27 +171,42 @@ export default async function HomePage() {
           </Link>
         </header>
 
-        <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
+        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
           <div className="animate-enter flex flex-col items-center">
             <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-              Private beta · coming soon
+              Private beta · for independent coaches
             </p>
-            <h1 className="text-[clamp(3.25rem,13vw,8rem)] font-bold uppercase leading-[0.88] tracking-tight antialiased">
-              Plan. Train.
+            {/* Sized so "Your quietest client" holds one line on desktop:
+                the three-line break is the rhythm of the sentence. */}
+            <h1 className="text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
+              Your quietest client
               <br />
-              <span className="text-brand">Check in.</span>
+              is your next
+              <br />
+              <span className="text-brand">cancellation.</span>
             </h1>
             <p className="mt-8 max-w-2xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
-              The coaching platform built around the coach and client: you build the
-              plans, your clients execute them, and a structured check-in loop keeps
-              you both in sync. No spreadsheets. No scattered chat threads.
+              Clients don&rsquo;t quit over a bad workout. They go quiet for two weeks
+              and nobody notices. Logbook.fit ranks your roster by who needs you
+              today, so you catch the fade while it&rsquo;s still fixable.
             </p>
             <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
               <WaitlistForm />
-              <p className="mt-3 text-sm text-muted-foreground antialiased">
-                Free during the beta. No spam, just an invite when it&rsquo;s ready.
-              </p>
+              <div className="mt-4 flex flex-col items-center gap-1.5 text-sm text-muted-foreground antialiased">
+                <p>Free during the beta. No spam, just your invite.</p>
+                <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
+                  <span className="font-medium text-foreground">
+                    We onboard in batches of 10
+                  </span>
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    {waitlistCount === null
+                      ? 'every coach gets a setup call'
+                      : `${waitlistCount.toLocaleString('en-US')} coaches already in line`}
+                  </span>
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -198,6 +237,32 @@ export default async function HomePage() {
       </div>
 
       <main>
+        {/* Who it's for — the filter. Naming who this isn't for is what makes
+            the right coach feel it was built for them specifically. */}
+        <section className="border-b border-border/70">
+          <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 sm:py-20">
+            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+              Who it&rsquo;s for
+            </p>
+            <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
+              Deliberately not
+              <br />
+              for everyone.
+            </h2>
+            <p className="mx-auto mt-6 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
+              Logbook.fit is built for one person: the independent coach who
+              actually gives a damn about every client. You write the plans, you
+              run the check-ins, and today you keep it straight across
+              spreadsheets and WhatsApp threads.
+            </p>
+            <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
+              If you train alone, it&rsquo;s useless to you. This isn&rsquo;t a
+              workout tracker for lifters. It&rsquo;s the tool for the coaches who
+              train them.
+            </p>
+          </div>
+        </section>
+
         {/* Check-in loop */}
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
           <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -235,10 +300,8 @@ export default async function HomePage() {
             {/* Stretch to the list's exact height on desktop so both columns
                 end on the same line; the 4:5 ratio stays for stacked mobile */}
             <ImageSlot
-              src="/landing/checkin-review.png"
-              alt="A coach reviewing a client's check-in response in Logbook"
               label="In the product: the check-in review"
-              objectPosition="center top"
+              description="Screenshot of the check-in review. The client's effort rating and notes on one side, the exercises they flagged that week sitting right beside them, and the coach's reply box below. Crop tight enough that the flagged exercise stays readable, because that context is exactly what a group chat never gives you."
               className="aspect-[4/5] rounded-xl lg:aspect-auto lg:h-full"
             />
           </div>
@@ -248,9 +311,8 @@ export default async function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <ImageSlot
-              src="/landing/plan-week.png"
-              alt="A Logbook training plan, week by week, with a day expanded"
-              label="In the product: the plan, week by week"
+              label="In the product: who needs you today"
+              description="Screenshot of the urgency-sorted dashboard, and the single most important image on the page: it's the proof of the headline. Show a full client list ranked with at-risk on top, and make sure a silence signal like 'last logged 12 days ago' is legible on the first row. Favour this over the plan builder, which every competitor also has."
               className="aspect-[4/5] rounded-xl"
             />
             <div>
@@ -276,22 +338,21 @@ export default async function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
               <ImageSlot
-                src="/landing/client-training.jpg"
-                alt="An athlete resting between sets in a dark gym"
                 label="Between sets"
+                description="Photo of a client's phone held in a real gym, the Today view on screen mid-session, a loaded bar soft in the background. Shot from the client's own eye line rather than as a staged flat-lay. The point is that logging happens between sets, in the room, in seconds."
                 className="aspect-[4/5] rounded-xl"
               />
             </div>
             <div className="lg:order-1">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                For clients
+                Their side
               </p>
               <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
-                Made for clients.
+                They&rsquo;ll actually use it.
               </h2>
               <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
-                Open the app, see today&rsquo;s session, train. Everything else gets
-                out of the way.
+                An early warning only works if the data arrives. Your clients get
+                an app worth opening, which is what keeps your dashboard honest.
               </p>
               <div className="mt-8">
                 <FeatureList features={CLIENT_FEATURES} />
@@ -313,8 +374,9 @@ export default async function HomePage() {
                 the list<span className="text-brand">.</span>
               </h2>
               <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
-                We&rsquo;re onboarding coaches in small batches. Grab a spot and
-                we&rsquo;ll send your invite.
+                We onboard coaches ten at a time, and every one gets a setup call
+                where we import your roster with you. Grab a spot and we&rsquo;ll
+                send your invite.
               </p>
               <div className="mx-auto mt-9 max-w-md text-left">
                 <WaitlistForm />

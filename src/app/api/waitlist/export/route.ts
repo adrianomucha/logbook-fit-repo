@@ -39,13 +39,31 @@ export async function GET(req: Request) {
 
   const entries = await prisma.waitlistEntry.findMany({
     orderBy: { createdAt: "desc" },
-    select: { email: true, createdAt: true },
+    select: {
+      email: true,
+      createdAt: true,
+      source: true,
+      medium: true,
+      campaign: true,
+      referrer: true,
+      clientCount: true,
+    },
   });
 
   const rows = [
-    "email,joined",
-    ...entries.map(
-      (e) => `${csvCell(e.email)},${csvCell(e.createdAt.toISOString())}`
+    "email,joined,source,medium,campaign,referrer,clients",
+    ...entries.map((e) =>
+      [
+        e.email,
+        e.createdAt.toISOString(),
+        e.source ?? "",
+        e.medium ?? "",
+        e.campaign ?? "",
+        e.referrer ?? "",
+        e.clientCount ?? "",
+      ]
+        .map(csvCell)
+        .join(",")
     ),
   ];
 

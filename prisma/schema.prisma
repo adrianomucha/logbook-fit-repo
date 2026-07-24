@@ -462,8 +462,22 @@ model Message {
 // ──────────────────────────────────────
 
 model WaitlistEntry {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id    String @id @default(uuid())
+  email String @unique
+
+  // Where the signup came from. Captured from the landing page URL's utm_*
+  // params, falling back to the referring host, so a multi-channel push can
+  // be judged per channel instead of as one undifferentiated number.
+  source   String?
+  medium   String?
+  campaign String?
+  referrer String?
+
+  // Answered on the confirmation screen, after the email is already saved —
+  // asking it before the submit would cost signups, asking it after costs
+  // nothing and tells us whether we're attracting coaches or curious lifters.
+  clientCount String?
+
   createdAt DateTime @default(now())
 
   @@map("waitlist_entries")
