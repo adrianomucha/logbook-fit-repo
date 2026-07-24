@@ -153,10 +153,9 @@ export function ClientCheckIn() {
     );
   }
 
-  // Previous completed check-ins (from client detail)
-  const completedCheckIns = client.checkIns
-    .filter((c) => c.status === 'COMPLETED')
-    .slice(0, 3);
+  // Previous completed check-ins (from client detail). Passed whole — the
+  // strip decides how many fit and reports what it left out.
+  const completedCheckIns = client.checkIns.filter((c) => c.status === 'COMPLETED');
 
   // State C: No active check-in
   if (!activeCheckIn && !activeCheckInId) {
@@ -370,14 +369,26 @@ function Panel({ className, children }: { className?: string; children: React.Re
   );
 }
 
-/** Section heading for the context strips — label left, tally right */
-function StripHeading({ title, count }: { title: string; count?: number }) {
+/**
+ * Section heading for the context strips — label left, tally right. When the
+ * strip is showing fewer than exist, the tally says so rather than quietly
+ * passing off five of seven as the whole story.
+ */
+function StripHeading({
+  title,
+  shown,
+  total,
+}: {
+  title: string;
+  shown: number;
+  total: number;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-2 mb-2 px-0.5">
       <FieldLabel>{title}</FieldLabel>
-      {count != null && (
-        <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">{count}</span>
-      )}
+      <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
+        {shown < total ? `${shown} of ${total}` : total}
+      </span>
     </div>
   );
 }
@@ -452,6 +463,10 @@ function SignalTile({
 const LEDGER =
   'flex flex-col divide-y divide-border/60 border-y border-border/60 sm:flex-row sm:divide-y-0 sm:divide-x';
 
+/** What fits across this measure before entries start wrapping */
+const MAX_WORKOUT_COLUMNS = 5;
+const MAX_CHECKIN_COLUMNS = 3;
+
 function WorkoutStrip({ completions }: {
   completions: {
     id: string;
@@ -462,16 +477,18 @@ function WorkoutStrip({ completions }: {
   }[];
 }) {
   // This strip is finished-workouts context only; in-progress rows from the
-  // client detail payload have no completion date to show. Capped so the
-  // desktop row never wraps into a second, half-empty line.
-  const finished = completions.filter((c) => c.completedAt).slice(0, 5);
-  if (finished.length === 0) return null;
+  // client detail payload have no completion date to show. The client route
+  // hands back up to ten, so cap the row at five and let the heading own up
+  // to the ones it isn't showing.
+  const finished = completions.filter((c) => c.completedAt);
+  const shown = finished.slice(0, MAX_WORKOUT_COLUMNS);
+  if (shown.length === 0) return null;
 
   return (
     <section>
-      <StripHeading title="Recent workouts" count={finished.length} />
+      <StripHeading title="Recent workouts" shown={shown.length} total={finished.length} />
       <ul className={LEDGER}>
-        {finished.map((c) => {
+        {shown.map((c) => {
           const effort = c.effortRating ? FEELING_DISPLAY[c.effortRating] : null;
           // A finished session is the norm; only a short one is worth a callout
           const shortfall = c.completionPct != null && c.completionPct < 100
@@ -480,7 +497,9 @@ function WorkoutStrip({ completions }: {
           return (
             <li
               key={c.id}
-              className="min-w-0 flex-1 py-2.5 sm:px-4 sm:first:pl-0 sm:last:pr-0"
+              // Capped width so a lone session doesn't stretch its date and
+              // effort mark to opposite ends of the page
+              className="min-w-0 flex-1 py-2.5 sm:max-w-[13.5rem] sm:px-4 sm:first:pl-0 sm:last:pr-0"
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums">
@@ -517,13 +536,14 @@ function PreviousCheckInsRow({ checkIns }: {
     completedAt: string | null;
   }[];
 }) {
-  if (checkIns.length === 0) return null;
+  const shown = checkIns.slice(0, MAX_CHECKIN_COLUMNS);
+  if (shown.length === 0) return null;
 
   return (
     <section>
-      <StripHeading title="Previous check-ins" count={checkIns.length} />
+      <StripHeading title="Previous check-ins" shown={shown.length} total={checkIns.length} />
       <ul className={LEDGER}>
-        {checkIns.map((checkIn) => {
+        {shown.map((checkIn) => {
           const effort = checkIn.effortRating ? FEELING_DISPLAY[checkIn.effortRating] : null;
           return (
             <li
