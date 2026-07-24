@@ -249,7 +249,9 @@ export function ClientCheckIn() {
       <div className="space-y-5 sm:space-y-6">
         {/* Their answer — the reason the page exists, so it gets the room */}
         <section className="rounded-2xl border border-border bg-muted/40 px-5 py-5 sm:px-7 sm:py-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 pb-5 border-b border-border/60">
+          {/* Side by side at a fixed distance, not halves of the panel — at
+              full width a two-column grid throws them 600px apart */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:gap-14 pb-5 border-b border-border/60">
             {effortDisplay && (
               <SignalTile label="Workouts felt" display={effortDisplay} />
             )}
@@ -260,7 +262,9 @@ export function ClientCheckIn() {
 
           {activeCheckIn?.painBlockers ? (
             <blockquote className="mt-5 border-l-2 border-brand pl-4 sm:pl-5">
-              <p className="text-lg sm:text-xl font-medium leading-relaxed tracking-tight text-pretty antialiased">
+              {/* The panel takes the full width; the sentence does not — past
+                  roughly 70 characters a line stops being readable */}
+              <p className="max-w-[68ch] text-lg sm:text-xl font-medium leading-relaxed tracking-tight text-pretty antialiased">
                 {activeCheckIn.painBlockers}
               </p>
               <footer className="mt-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased">
@@ -351,15 +355,11 @@ function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-dvh bg-background pb-8 sm:pb-4">
       <CoachNav activeTab="clients" />
-      {/* Outer container matches CoachNav's exactly, so the page starts on the
-          same line as the logotype like every other coach page. The column
-          inside is narrower on purpose — this page is read and written in, so
-          the quote and the reply box want a comfortable measure — but it hangs
-          off the left edge rather than centring away from that line. */}
-      <div className="max-w-7xl mx-auto px-3 pt-4 sm:px-4 sm:pt-7">
-        <div className="max-w-4xl space-y-5 sm:space-y-6">
-          {children}
-        </div>
+      {/* Same container as CoachNav and every other coach page, so the page
+          starts on the logotype's line and fills the frame. Only the prose
+          inside caps its measure — the layout itself uses the full width. */}
+      <div className="max-w-7xl mx-auto space-y-5 sm:space-y-6 px-3 pt-4 sm:px-4 sm:pt-7">
+        {children}
       </div>
     </div>
   );
@@ -500,13 +500,10 @@ function WorkoutStrip({ completions }: {
             ? Math.round(c.completionPct)
             : null;
           return (
-            <li
-              key={c.id}
-              // Capped width so a lone session doesn't stretch its date and
-              // effort mark to opposite ends of the page
-              className="min-w-0 flex-1 py-2.5 sm:max-w-[13.5rem] sm:px-4 sm:first:pl-0 sm:last:pr-0"
-            >
-              <div className="flex items-center justify-between gap-2">
+            <li key={c.id} className="min-w-0 flex-1 py-2.5 sm:px-4 sm:first:pl-0 sm:last:pr-0">
+              {/* Date and effort mark sit together rather than at opposite
+                  edges, so a lone session doesn't strand them across the page */}
+              <div className="flex items-center gap-2">
                 <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums">
                   {c.completedAt ? format(new Date(c.completedAt), 'MMM d') : '—'}
                 </span>
