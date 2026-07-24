@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
+  Bell,
   CheckCircle2,
+  ChevronRight,
   ClipboardCheck,
   Dumbbell,
   Send,
@@ -43,6 +45,8 @@ interface InlineCheckInReviewProps {
   onCreateCheckIn: (checkIn: CheckIn) => void;
   /** Withdraw a still-unanswered check-in (sent by mistake, wrong timing) */
   onCancelCheckIn?: () => Promise<void> | void;
+  /** Give a silent client a friendly poke about the pending check-in */
+  onNudge?: () => Promise<void> | void;
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
   /** Signal from parent that check-in was just sent (for showing confirmation) */
   justSentFromParent?: boolean;
@@ -62,6 +66,7 @@ export function InlineCheckInReview({
   onCompleteCheckIn,
   onCreateCheckIn,
   onCancelCheckIn,
+  onNudge,
   onMessageAboutFlag,
   justSentFromParent = false,
   hideTitle = false,
@@ -72,6 +77,7 @@ export function InlineCheckInReview({
   const [showSuccess, setShowSuccess] = useState(false);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showQuestions, setShowQuestions] = useState(false);
 
   // Timer refs for cleanup on unmount
   const sentTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -258,89 +264,103 @@ export function InlineCheckInReview({
       );
     }
 
+    // Nothing has happened yet, so the whole "waiting" state is one quiet
+    // status line rather than a card — the timeline it replaced spent a lot of
+    // vertical space narrating two steps the coach can't act on.
     return (
       <Wrapper>
-        <div className={cn("pb-3", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
-          <h3 className="text-base font-semibold flex items-center gap-2 antialiased">
-            <span className="relative flex h-2.5 w-2.5 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
-            </span>
-            Waiting on {firstName}
-          </h3>
-        </div>
-        <div className={cn("space-y-4", isFlat ? 'rounded-xl bg-warning/[0.07] p-4' : 'px-3 sm:px-6 pb-6')}>
-          {/* Timeline-style status */}
-          <div className="flex gap-3.5">
-            <div className="flex flex-col items-center pt-1.5">
-              <div className="w-2 h-2 rounded-full bg-success shrink-0" />
-              <div className="w-px flex-1 bg-success/30 my-1.5" />
-              <div className="w-2 h-2 rounded-full border-2 border-warning/50 shrink-0" />
-            </div>
-            <div className="space-y-5 flex-1 -mt-0.5">
-              <div>
-                <p className="text-sm font-medium antialiased">
-                  Check-in sent <span className="text-muted-foreground font-normal tabular-nums">{sentAgo}</span>
-                </p>
-                <p className="font-prose text-[13px] text-muted-foreground mt-0.5 antialiased">
-                  {firstName} will see it next time they open the app.
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground antialiased">
-                  {firstName} responds
-                </p>
-                <p className="font-prose text-[13px] text-muted-foreground mt-0.5 antialiased">
-                  You&apos;ll review their feedback and reply here.
+        <div className={cn("space-y-4", isFlat ? '' : 'px-3 sm:px-6 py-6')}>
+          <div className="rounded-xl border border-warning/25 bg-warning/[0.07] px-4 py-3 sm:px-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
+              <div className="flex gap-2.5 min-w-0">
+                <span className="relative flex h-2 w-2 shrink-0 mt-[7px]">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-warning" />
+                </span>
+                <p className="text-sm leading-6 antialiased min-w-0">
+                  <span className="font-semibold">Waiting on {firstName}</span>
+                  <span className="text-muted-foreground">
+                    {' '}— sent <span className="tabular-nums">{sentAgo}</span>, they&apos;ll see it next
+                    time they open the app.{' '}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowQuestions((v) => !v)}
+                    aria-expanded={showQuestions}
+                    className="font-medium underline underline-offset-[3px] decoration-foreground/25 hover:decoration-foreground transition-colors duration-150 whitespace-nowrap"
+                  >
+                    {showQuestions ? 'Hide questions' : 'View questions'}
+                    <ChevronRight
+                      aria-hidden="true"
+                      className={cn(
+                        "inline w-3.5 h-3.5 ml-0.5 -mt-px transition-transform duration-200 no-underline",
+                        showQuestions && "rotate-90"
+                      )}
+                    />
+                  </button>
                 </p>
               </div>
-            </div>
-          </div>
 
-          {/* What client will answer — collapsible detail */}
-          <details className="text-xs text-muted-foreground group">
-            <summary className="font-medium cursor-pointer select-none hover:text-foreground transition-colors duration-150 list-none flex items-center gap-1.5 py-1 -my-1">
-              <svg className="w-3 h-3 transition-transform duration-200 group-open:rotate-90 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-              What {firstName} will answer
-            </summary>
-            <ul className="space-y-0.5 ml-[18px] mt-1.5 antialiased">
-              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How workouts felt</li>
-              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How their body feels</li>
-              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> Any notes or concerns</li>
-            </ul>
-          </details>
+              <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-auto sm:-mt-1">
+                {/* Escape hatch — sent by mistake or at a bad time */}
+                {onCancelCheckIn && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={isSubmitting}
+                    className="text-muted-foreground hover:text-destructive"
+                    onClick={async () => {
+                      if (isSubmitting) return;
+                      setIsSubmitting(true);
+                      try {
+                        await onCancelCheckIn();
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                  >
+                    Withdraw
+                  </Button>
+                )}
+                {onNudge && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isSubmitting}
+                    className="bg-background font-semibold active:scale-[0.97] transition-transform duration-150"
+                    onClick={async () => {
+                      if (isSubmitting) return;
+                      setIsSubmitting(true);
+                      try {
+                        await onNudge();
+                      } finally {
+                        setIsSubmitting(false);
+                      }
+                    }}
+                  >
+                    <Bell className="w-4 h-4 mr-1.5" aria-hidden="true" />
+                    Nudge {firstName}
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* What the client is being asked — folded away until wanted */}
+            {showQuestions && (
+              <ul className="text-[13px] text-muted-foreground space-y-0.5 mt-2.5 ml-[18px] antialiased animate-fade-in-up">
+                <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How workouts felt</li>
+                <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How their body feels</li>
+                <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> Any notes or concerns</li>
+              </ul>
+            )}
+          </div>
 
           {/* Show flagged exercises while waiting */}
           {flaggedExercisesWithContext.length > 0 && (
-            <div className="pt-3 border-t">
-              <FlaggedExercisesSection
-                flags={flaggedExercisesWithContext}
-                onMessageAboutFlag={onMessageAboutFlag}
-              />
-            </div>
-          )}
-
-          {/* Escape hatch — sent by mistake or at a bad time */}
-          {onCancelCheckIn && (
-            <div className="flex justify-end pt-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={isSubmitting}
-                className="text-muted-foreground hover:text-destructive"
-                onClick={async () => {
-                  if (isSubmitting) return;
-                  setIsSubmitting(true);
-                  try {
-                    await onCancelCheckIn();
-                  } finally {
-                    setIsSubmitting(false);
-                  }
-                }}
-              >
-                Withdraw check-in
-              </Button>
-            </div>
+            <FlaggedExercisesSection
+              flags={flaggedExercisesWithContext}
+              onMessageAboutFlag={onMessageAboutFlag}
+            />
           )}
         </div>
       </Wrapper>

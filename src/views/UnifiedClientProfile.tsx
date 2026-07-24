@@ -370,6 +370,14 @@ export function UnifiedClientProfile() {
     chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // Nudge about a pending check-in. Drafted rather than auto-sent — a poke
+  // lands better in the coach's own words, and it stays one send away.
+  const handleNudgeCheckIn = () => {
+    const firstName = client?.name?.split(' ')[0] ?? 'there';
+    setChatPrefill(`Hey ${firstName}, just a nudge on that check-in when you get a minute — `);
+    chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   const handleEndRelationship = async () => {
     if (!clientId) return;
     try {
@@ -667,23 +675,30 @@ export function UnifiedClientProfile() {
         {plan && activeCheckIn && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>Latest check-in</SectionLabel>
-          <SectionCard>
-            <InlineCheckInReview
-              client={client}
-              activeCheckIn={activeCheckIn}
-              plan={plan}
-              workoutCompletions={workoutCompletions}
-              exerciseFlags={exerciseFlags}
-              currentUserId={user?.id ?? ''}
-              onCompleteCheckIn={handleCompleteCheckIn}
-              onCreateCheckIn={handleCreateCheckIn}
-              onCancelCheckIn={handleCancelCheckIn}
-              onMessageAboutFlag={handleMessageAboutFlag}
-              justSentFromParent={justSentCheckIn}
-              hideTitle={activeCheckIn?.status === 'responded'}
-              variant="flat"
-            />
-          </SectionCard>
+          {/* While the check-in is still out, the status banner is the whole
+              surface — wrapping it in a card would nest two boxes to say one thing */}
+          {(() => {
+            const review = (
+              <InlineCheckInReview
+                client={client}
+                activeCheckIn={activeCheckIn}
+                plan={plan}
+                workoutCompletions={workoutCompletions}
+                exerciseFlags={exerciseFlags}
+                currentUserId={user?.id ?? ''}
+                onCompleteCheckIn={handleCompleteCheckIn}
+                onCreateCheckIn={handleCreateCheckIn}
+                onCancelCheckIn={handleCancelCheckIn}
+                onNudge={handleNudgeCheckIn}
+                onMessageAboutFlag={handleMessageAboutFlag}
+                justSentFromParent={justSentCheckIn}
+                hideTitle={activeCheckIn?.status === 'responded'}
+                variant="flat"
+              />
+            );
+            const isBareBanner = activeCheckIn?.status === 'pending' && !justSentCheckIn;
+            return isBareBanner ? review : <SectionCard>{review}</SectionCard>;
+          })()}
         </section>
         )}
 
