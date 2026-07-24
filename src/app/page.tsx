@@ -1,7 +1,4 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import {
   ClipboardList,
   Dumbbell,
@@ -15,11 +12,72 @@ import {
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Logbook.fit · The coaching platform that puts your clients first',
-  description:
-    'Plan workouts, track progress, and stay connected to every client through a structured check-in loop. Join the waitlist for early access.',
+// Title/description/canonical/OG for this route come from the root layout —
+// the landing page *is* the site root, so duplicating them here would only
+// create two places to keep in sync.
+
+/**
+ * Structured data for the waitlist page. Tells Google what Logbook.fit is
+ * (a product, not a blog), which entity owns the domain, and what to show in
+ * the knowledge panel / sitelinks — none of which is inferable from a page
+ * whose h1 is three verbs.
+ */
+const JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      logo: {
+        '@type': 'ImageObject',
+        url: absoluteUrl('/icon-512.png'),
+        width: 512,
+        height: 512,
+      },
+      description: SITE_DESCRIPTION,
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      url: SITE_URL,
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      inLanguage: 'en-US',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      '@id': `${SITE_URL}/#software`,
+      name: SITE_NAME,
+      url: SITE_URL,
+      applicationCategory: 'BusinessApplication',
+      applicationSubCategory: 'Personal training and coaching software',
+      operatingSystem: 'Web browser, iOS, Android',
+      description: SITE_DESCRIPTION,
+      publisher: { '@id': `${SITE_URL}/#organization` },
+      // No aggregateRating: the product is pre-launch and has no reviews.
+      // Inventing one is exactly what Google's spam policies penalise.
+      offers: {
+        '@type': 'Offer',
+        price: '0',
+        priceCurrency: 'USD',
+        description: 'Free during the private beta.',
+        availability: 'https://schema.org/PreOrder',
+      },
+      featureList: [
+        'Multi-week workout plan builder',
+        'Structured client check-in loop',
+        'Urgency-sorted coach dashboard',
+        'Custom exercise library',
+        'Invite-based client onboarding',
+        'Progress and completion tracking',
+      ],
+    },
+  ],
 };
 
 const MARQUEE_ITEMS = [
@@ -119,22 +177,24 @@ function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
   );
 }
 
-export default async function HomePage() {
-  // Signed-in visitors go straight to the app (PWA start_url is "/").
-  // Only the cookie's *presence* is checked — no secret, no database —
-  // so the landing page renders in any environment. The middleware on
-  // /coach verifies the token and bounces clients to /client and
-  // stale sessions to /login.
-  const cookieStore = await cookies();
-  const hasSession =
-    cookieStore.has('__Secure-next-auth.session-token') ||
-    cookieStore.has('next-auth.session-token');
-  if (hasSession) {
-    redirect('/coach');
-  }
-
+export default function HomePage() {
+  // The "signed-in visitors go straight to /coach" bounce lives in middleware
+  // (see src/middleware.ts). Reading cookies() here opted the page into dynamic
+  // rendering, so every crawler hit — and every real visitor — paid a server
+  // round trip for markup that never changes. Statically prerendered, it now
+  // ships from the CDN edge, which is the single biggest TTFB/LCP win available
+  // to this page.
   return (
     <div className="bg-background">
+      <script
+        type="application/ld+json"
+        // Serialised from a literal defined in this file — no user input reaches it.
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
+      />
+      {/* One <main> around every content section, so the h1 and the primary
+          waitlist CTA sit inside the document's main landmark rather than
+          floating outside it. */}
+      <main>
       {/* Hero — dark brand canvas, centered display type */}
       <section className="dark flex min-h-dvh flex-col bg-background text-foreground">
         <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
@@ -157,6 +217,14 @@ export default async function HomePage() {
               Plan. Train.
               <br />
               <span className="text-brand">Check in.</span>
+              {/* The display h1 is three verbs — striking, but it tells a crawler
+                  (and a screen reader landing cold on the page) nothing about
+                  what this is. This completes the sentence for both without
+                  touching the visual composition. */}
+              <span className="sr-only">
+                {' '}
+                — Logbook.fit, coaching software for personal trainers and their clients.
+              </span>
             </h1>
             <p className="mt-8 max-w-2xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
               The coaching platform built around the coach and client: you build the
@@ -197,7 +265,6 @@ export default async function HomePage() {
         </div>
       </div>
 
-      <main>
         {/* Check-in loop */}
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
           <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">

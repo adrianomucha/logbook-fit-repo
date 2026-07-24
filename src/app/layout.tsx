@@ -5,6 +5,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import { SessionProvider } from '@/providers/SessionProvider';
 import { SWRProvider } from '@/providers/SWRProvider';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from '@/lib/seo';
 import '@/app/globals.css';
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -32,7 +33,48 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'LogBook.fit',
+  // Resolves every relative URL below (and in child routes) to an absolute one.
+  // Without it Next.js can't emit og:image/canonical URLs at all — crawlers and
+  // unfurlers require absolute URLs and silently drop relative ones.
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    // Child routes set a bare title ("Waitlist · Admin") and inherit the brand
+    // suffix, instead of every page in the app rendering as just "LogBook.fit".
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: { canonical: '/' },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'en_US',
+    url: '/',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      // Lets Google use full-size image previews and untruncated snippets —
+      // both default to conservative limits when unspecified.
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  // Stops iOS Safari from auto-linking numbers in copy (e.g. "01", "1200")
+  // as phone numbers, which injects unwanted <a> tags into the crawled DOM.
+  formatDetection: { telephone: false, address: false, email: false },
   appleWebApp: {
     capable: true,
     title: 'Logbook',
