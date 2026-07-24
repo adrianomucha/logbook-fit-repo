@@ -33,6 +33,8 @@ export function useCurrentUser() {
     session,
     user: user ?? null,
     role: (session?.user as { role?: string })?.role as 'COACH' | 'CLIENT' | undefined,
+    /** Owner-only surfaces. Server-derived from ADMIN_EMAILS — never inferred client-side. */
+    isAdmin: (session?.user as { isAdmin?: boolean })?.isAdmin === true,
     coachProfileId: user?.coachProfile?.id ?? null,
     clientProfileId: user?.clientProfile?.id ?? null,
     /** The client's coach (only available for CLIENT role) */

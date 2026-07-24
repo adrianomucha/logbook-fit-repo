@@ -1,13 +1,23 @@
 'use client';
 
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 
 /**
- * Inline "switch account" control for the nav chrome. Replaces the old global
+ * Inline sign-out control for the nav chrome. Replaces the old global
  * floating button that overlapped focused flows like the workout screen.
+ *
+ * Reads as "Switch" only for admins, who hop between the coach and client
+ * sides of a demo. Everyone else — a coach who just signed up, a real client —
+ * gets a plain "Log out", which is what the action has always actually done.
+ * Admin-ness comes from the session (server-derived from ADMIN_EMAILS); it is
+ * a labelling decision, not an access grant, so there is nothing here to
+ * enforce server-side.
  */
 export function SwitchAccountButton({ className }: { className?: string }) {
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.isAdmin === true;
+
   return (
     <button
       type="button"
@@ -17,7 +27,7 @@ export function SwitchAccountButton({ className }: { className?: string }) {
         className
       )}
     >
-      Switch
+      {isAdmin ? 'Switch' : 'Log out'}
     </button>
   );
 }

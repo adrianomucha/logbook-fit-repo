@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { loginLimiter } from "@/lib/rate-limit";
+import { isAdminEmail } from "@/lib/admin";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -70,12 +71,17 @@ export const authOptions: NextAuthOptions = {
         token.role = (user as { role: string }).role;
         token.userId = user.id;
       }
+      // Recomputed on every call rather than only at sign-in: sessions live for
+      // 30 days, so a baked-in claim would keep granting admin long after an
+      // email left ADMIN_EMAILS (and withhold it from one just added).
+      token.isAdmin = isAdminEmail(user?.email ?? token.email);
       return token;
     },
     session({ session, token }) {
       if (session.user) {
         session.user.role = token.role as string;
         session.user.id = token.userId as string;
+        session.user.isAdmin = token.isAdmin === true;
       }
       return session;
     },
