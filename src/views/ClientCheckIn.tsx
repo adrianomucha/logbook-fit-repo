@@ -44,6 +44,9 @@ export function ClientCheckIn() {
   const [coachResponse, setCoachResponse] = useState('');
   const [planAdjustment, setPlanAdjustment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  // Stamped client-side when the server accepts the response, so the
+  // confirmation can say when it happened rather than just that it did
+  const [sentAt, setSentAt] = useState<Date | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -93,6 +96,7 @@ export function ClientCheckIn() {
         coachFeedback: coachResponse.trim(),
         planAdjustment,
       });
+      setSentAt(new Date());
       setShowSuccess(true);
     } catch {
       toast.error('Failed to submit your response. Please try again.');
@@ -133,37 +137,40 @@ export function ClientCheckIn() {
   if (showSuccess) {
     return (
       <PageShell>
+        {/* The outcome is the headline here, not the client's name — this
+            screen exists to say the thing went through */}
         <CheckInHeader
           clientName={clientName}
+          title="Response sent"
           onBack={handleBack}
           status={<StatusLine>Check-in · closed</StatusLine>}
         />
 
         <section className="rounded-2xl border border-border bg-muted/40 px-5 py-5 sm:px-7 sm:py-6">
-          <div className="flex items-center gap-3 pb-5 border-b border-border/60">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pb-5 border-b border-border/60">
             <span
               className="w-9 h-9 shrink-0 rounded-full bg-brand flex items-center justify-center animate-bounce-once"
               aria-hidden="true"
             >
               <Check className="w-5 h-5 text-brand-foreground" strokeWidth={3} />
             </span>
-            <div className="min-w-0">
-              <p className="text-base font-bold tracking-tight antialiased">
-                Sent to {clientName}
-              </p>
-              <p className="text-sm text-muted-foreground antialiased">
-                It lands in their chat right away.
-              </p>
-            </div>
+            <p className="text-base antialiased">
+              <span className="font-bold tracking-tight">Delivered to {clientName}</span>
+              {/* Coach feedback surfaces on the client's dashboard, not in chat */}
+              <span className="text-muted-foreground"> · it&apos;s on their dashboard now</span>
+            </p>
+            {sentAt && (
+              <span className="ml-auto font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground tabular-nums antialiased">
+                {format(sentAt, 'MMM d · h:mm a')}
+              </span>
+            )}
           </div>
 
-          <blockquote className="mt-5 border-l-2 border-brand pl-4 sm:pl-5">
+          <FieldLabel className="mt-5">What you sent</FieldLabel>
+          <blockquote className="mt-2 border-l-2 border-brand pl-4 sm:pl-5">
             <p className="max-w-[52ch] text-lg sm:text-xl font-medium leading-relaxed tracking-tight text-pretty antialiased">
               {coachResponse.trim()}
             </p>
-            <footer className="mt-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased">
-              You
-            </footer>
           </blockquote>
 
           {planAdjustment && (
@@ -438,10 +445,13 @@ function StripHeading({
 
 function CheckInHeader({
   clientName,
+  title,
   onBack,
   status,
 }: {
   clientName: string;
+  /** Overrides the h1 when the page's subject is an outcome, not the client */
+  title?: string;
   onBack: () => void;
   status: React.ReactNode;
 }) {
@@ -468,7 +478,7 @@ function CheckInHeader({
       <div className="min-w-0">
         {status}
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none antialiased truncate mt-1">
-          {clientName}
+          {title ?? clientName}
         </h1>
       </div>
     </header>
