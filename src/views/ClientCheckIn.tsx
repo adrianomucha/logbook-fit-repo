@@ -262,9 +262,11 @@ export function ClientCheckIn() {
 
           {activeCheckIn?.painBlockers ? (
             <blockquote className="mt-5 border-l-2 border-brand pl-4 sm:pl-5">
-              {/* The panel takes the full width; the sentence does not — past
-                  roughly 70 characters a line stops being readable */}
-              <p className="max-w-[68ch] text-lg sm:text-xl font-medium leading-relaxed tracking-tight text-pretty antialiased">
+              {/* The panel takes the full width; the sentence does not. At 52
+                  characters the note breaks on sentence boundaries instead of
+                  running long and leaving a two-word stub on the last line —
+                  text-pretty then handles single-word orphans in longer notes. */}
+              <p className="max-w-[52ch] text-lg sm:text-xl font-medium leading-relaxed tracking-tight text-pretty antialiased">
                 {activeCheckIn.painBlockers}
               </p>
               <footer className="mt-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased">
