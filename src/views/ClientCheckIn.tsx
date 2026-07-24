@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  ArrowLeft, Clock, CheckCircle2, ClipboardCheck, Send, Loader2,
+  ArrowLeft, Check, Clock, ClipboardCheck, Send, Loader2,
 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { FieldLabel, FieldShell, StatusLine } from '@/components/coach/shared/formSurfaces';
@@ -128,27 +128,63 @@ export function ClientCheckIn() {
     );
   }
 
-  // Success screen
+  // Success screen — a receipt, not a dead end. Same header and panel as the
+  // review it just replaced, showing the words that were actually sent.
   if (showSuccess) {
     return (
       <PageShell>
-        <Panel className="max-w-md mx-auto text-center py-12">
-          <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
-            <CheckCircle2 className="w-8 h-8 text-brand-foreground" strokeWidth={2.5} />
+        <CheckInHeader
+          clientName={clientName}
+          onBack={handleBack}
+          status={<StatusLine>Check-in · closed</StatusLine>}
+        />
+
+        <section className="rounded-2xl border border-border bg-muted/40 px-5 py-5 sm:px-7 sm:py-6">
+          <div className="flex items-center gap-3 pb-5 border-b border-border/60">
+            <span
+              className="w-9 h-9 shrink-0 rounded-full bg-brand flex items-center justify-center animate-bounce-once"
+              aria-hidden="true"
+            >
+              <Check className="w-5 h-5 text-brand-foreground" strokeWidth={3} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-base font-bold tracking-tight antialiased">
+                Sent to {clientName}
+              </p>
+              <p className="text-sm text-muted-foreground antialiased">
+                It lands in their chat right away.
+              </p>
+            </div>
           </div>
-          <h2 className="text-2xl font-black tracking-tight mb-2 antialiased">Check-in closed</h2>
-          <p className="text-sm text-muted-foreground mb-6 antialiased text-pretty">
-            {clientName} has your response. It lands in their chat right away.
-          </p>
-          <div className="space-y-2">
-            <Button onClick={handleBack} className="w-full h-11 rounded-xl">
-              Back to {clientName}&apos;s profile
-            </Button>
-            <Button variant="outline" onClick={() => router.push('/coach')} className="w-full h-11 rounded-xl">
-              Back to dashboard
-            </Button>
-          </div>
-        </Panel>
+
+          <blockquote className="mt-5 border-l-2 border-brand pl-4 sm:pl-5">
+            <p className="max-w-[52ch] text-lg sm:text-xl font-medium leading-relaxed tracking-tight text-pretty antialiased">
+              {coachResponse.trim()}
+            </p>
+            <footer className="mt-2.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased">
+              You
+            </footer>
+          </blockquote>
+
+          {planAdjustment && (
+            <p className="mt-4 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased">
+              Flagged · you&apos;re adjusting the plan
+            </p>
+          )}
+        </section>
+
+        <div className="flex flex-wrap gap-3">
+          <Button onClick={handleBack} className="h-11 rounded-xl px-5">
+            Back to {clientName}&apos;s profile
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => router.push('/coach')}
+            className="h-11 rounded-xl px-5"
+          >
+            Dashboard
+          </Button>
+        </div>
       </PageShell>
     );
   }
