@@ -7,14 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  ArrowLeft, Check, Clock, ClipboardCheck, Send, Loader2,
+  Check, Clock, ClipboardCheck, Send, Loader2,
 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { FieldLabel, FieldShell, StatusLine } from '@/components/coach/shared/formSurfaces';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
-import { avatarColor } from '@/lib/avatar-colors';
 import { format, formatDistanceToNow } from 'date-fns';
 
 const RESPONSE_MAX_LENGTH = 1000;
@@ -142,7 +141,6 @@ export function ClientCheckIn() {
         <CheckInHeader
           clientName={clientName}
           title="Response sent"
-          onBack={handleBack}
           status={<StatusLine>Check-in · closed</StatusLine>}
         />
 
@@ -206,7 +204,6 @@ export function ClientCheckIn() {
       <PageShell>
         <CheckInHeader
           clientName={clientName}
-          onBack={handleBack}
           status={<StatusLine tone="idle">No open check-in</StatusLine>}
         />
         <Panel className="text-center py-12">
@@ -237,7 +234,6 @@ export function ClientCheckIn() {
       <PageShell>
         <CheckInHeader
           clientName={clientName}
-          onBack={handleBack}
           status={<StatusLine tone="idle" pulse>Check-in · waiting on their answer</StatusLine>}
         />
         <Panel className="text-center py-12">
@@ -282,7 +278,6 @@ export function ClientCheckIn() {
     <PageShell>
       <CheckInHeader
         clientName={clientName}
-        onBack={handleBack}
         status={<StatusLine>Check-in · answered {submittedAgo}</StatusLine>}
       />
 
@@ -446,41 +441,19 @@ function StripHeading({
 function CheckInHeader({
   clientName,
   title,
-  onBack,
   status,
 }: {
   clientName: string;
   /** Overrides the h1 when the page's subject is an outcome, not the client */
   title?: string;
-  onBack: () => void;
   status: React.ReactNode;
 }) {
   return (
-    <header className="flex items-center gap-3">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={onBack}
-        className="h-9 w-9 p-0 shrink-0 -ml-1.5"
-        aria-label="Back to profile"
-      >
-        <ArrowLeft className="h-4 w-4" />
-      </Button>
-      <div
-        className={cn(
-          'w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 select-none',
-          avatarColor(clientName)
-        )}
-        aria-hidden="true"
-      >
-        {clientName.charAt(0).toUpperCase()}
-      </div>
-      <div className="min-w-0">
-        {status}
-        <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none antialiased truncate mt-1">
-          {title ?? clientName}
-        </h1>
-      </div>
+    <header className="min-w-0">
+      {status}
+      <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-none antialiased truncate mt-1">
+        {title ?? clientName}
+      </h1>
     </header>
   );
 }
