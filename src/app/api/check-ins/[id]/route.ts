@@ -1,6 +1,7 @@
 import { getServerSession, Session } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { isLockedDemoAccount } from "@/lib/demo";
 import prisma from "@/lib/prisma";
 import { withCoach } from "@/lib/middleware/withAuth";
 
@@ -14,7 +15,7 @@ export async function GET(
   ctx: { params: Promise<Record<string, string>> }
 ) {
   const session = await getServerSession(authOptions);
-  if (!session) {
+  if (!session || isLockedDemoAccount(session.user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

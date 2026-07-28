@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, UserCog, User, Loader2 } from 'lucide-react';
 import { Logo } from '@/components/brand/LogoMark';
+import { isDemoModeEnabled } from '@/lib/demo';
 
 const DEMO_ACCOUNTS = {
   coach: { email: 'coach@logbook.fit', password: 'demo1234', label: 'Demo Coach', icon: UserCog },
@@ -132,37 +133,39 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        {/* Quick demo login */}
-        <div className="mt-9">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-3 antialiased flex items-center gap-2">
-            <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25" aria-hidden="true" />
-            Demo access
-          </p>
-          <div className="space-y-2">
-            {Object.entries(DEMO_ACCOUNTS).map(([key, account]) => {
-              const Icon = account.icon;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  disabled={loading !== null}
-                  onClick={() => handleLogin(account.email, account.password, key)}
-                  className="w-full h-11 px-3 rounded-lg border border-border/70 flex items-center gap-2.5 text-sm font-medium antialiased hover:bg-accent active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
-                >
-                  {loading === key ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-                  ) : (
-                    <Icon className="w-4 h-4 text-muted-foreground" />
-                  )}
-                  {account.label}
-                  <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">
-                    {account.email}
-                  </span>
-                </button>
-              );
-            })}
+        {/* Quick demo login — locked server-side too (see src/lib/demo.ts) */}
+        {isDemoModeEnabled() && (
+          <div className="mt-9">
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-3 antialiased flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25" aria-hidden="true" />
+              Demo access
+            </p>
+            <div className="space-y-2">
+              {Object.entries(DEMO_ACCOUNTS).map(([key, account]) => {
+                const Icon = account.icon;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    disabled={loading !== null}
+                    onClick={() => handleLogin(account.email, account.password, key)}
+                    className="w-full h-11 px-3 rounded-lg border border-border/70 flex items-center gap-2.5 text-sm font-medium antialiased hover:bg-accent active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                  >
+                    {loading === key ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                    ) : (
+                      <Icon className="w-4 h-4 text-muted-foreground" />
+                    )}
+                    {account.label}
+                    <span className="ml-auto font-mono text-[10px] text-muted-foreground tabular-nums">
+                      {account.email}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { getCoachProfileId, getClientProfileId } from "@/lib/scoping";
+import { isLockedDemoAccount } from "@/lib/demo";
 import { Session } from "next-auth";
 
 type CoachHandler = (
@@ -25,7 +26,11 @@ type ClientHandler = (
 export function withCoach(handler: CoachHandler) {
   return async (req: Request, ctx: { params: Promise<Record<string, string>> }) => {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "COACH") {
+    if (
+      !session ||
+      session.user.role !== "COACH" ||
+      isLockedDemoAccount(session.user.email)
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     try {
@@ -44,7 +49,11 @@ export function withCoach(handler: CoachHandler) {
 export function withClient(handler: ClientHandler) {
   return async (req: Request, ctx: { params: Promise<Record<string, string>> }) => {
     const session = await getServerSession(authOptions);
-    if (!session || session.user.role !== "CLIENT") {
+    if (
+      !session ||
+      session.user.role !== "CLIENT" ||
+      isLockedDemoAccount(session.user.email)
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
     try {
