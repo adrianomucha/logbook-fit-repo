@@ -3,6 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { loginLimiter } from "@/lib/rate-limit";
+import { isLockedDemoAccount } from "@/lib/demo";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -20,6 +21,14 @@ export const authOptions: NextAuthOptions = {
           }
 
           const email = credentials.email.trim().toLowerCase();
+
+          // Demo credentials are public (login page, repo), so hiding the
+          // buttons isn't enough — refuse the sign-in outright when demo
+          // mode is off.
+          if (isLockedDemoAccount(email)) {
+            console.error("[AUTH] Demo account sign-in blocked (demo mode off)");
+            return null;
+          }
 
           // Rate limit by IP + email to prevent brute-force
           const ip =

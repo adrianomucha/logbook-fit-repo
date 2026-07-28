@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Copy, Check, Share2, RefreshCw, Plus } from 'lucide-react';
+import { Copy, Check, Share2, RefreshCw, Plus, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { Chip, FieldShell, StatusLine } from './shared/formSurfaces';
 import { apiFetch } from '@/lib/api-client';
 
 interface InviteClientModalProps {
@@ -25,29 +26,6 @@ const NOTE_MAX_LENGTH = 280;
 const canNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
-/** Uppercase tracked mono label — the same "data voice" used across list headers and stats */
-function FieldLabel({
-  htmlFor,
-  children,
-  trailing,
-}: {
-  htmlFor?: string;
-  children: React.ReactNode;
-  trailing?: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-baseline justify-between gap-2 mb-2">
-      <label
-        htmlFor={htmlFor}
-        className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
-      >
-        {children}
-      </label>
-      {trailing}
-    </div>
-  );
-}
-
 export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
@@ -59,6 +37,9 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Replacing a link is destructive, so the warning shows at the moment of the
+  // decision instead of sitting on screen permanently
+  const [confirmNew, setConfirmNew] = useState(false);
   // Guard so React strict-mode / re-renders don't double-generate on open
   const generatedForOpen = useRef(false);
   const emailRef = useRef<HTMLInputElement>(null);
@@ -73,6 +54,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     async (emailToBake: string, noteToBake: string, replacing?: InviteResult | null) => {
       setIsGenerating(true);
       setError(null);
+      setConfirmNew(false);
       try {
         // Replace, don't stack: kill the previous link from this modal so a
         // regenerated invite doesn't leave a live orphan floating around
@@ -114,6 +96,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     setAppliedNote('');
     setCopied(false);
     setError(null);
+    setConfirmNew(false);
     if (!generatedForOpen.current) {
       generatedForOpen.current = true;
       generate('', '');
@@ -170,102 +153,98 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     }
   };
 
+  // Landscape proportions on purpose: the note takes its room from the dialog's
+  // width rather than extra rows, so the modal stays wider than it is tall.
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <span className="flex flex-col">
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased">
-            Grow your roster
-          </span>
-          <span className="font-black tracking-tight antialiased">Invite Client</span>
+        <span className="block text-2xl sm:text-[28px] font-black tracking-tight leading-none antialiased">
+          Invite a client
         </span>
       }
       description="Share a signup link to get your client on board."
-      maxWidth="md"
+      maxWidth="xl"
       footer={
-        <div className="flex items-center justify-between gap-3">
-          {/* Live expiry — reads like a logbook stat, same voice as the plan tally */}
-          <p className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased min-w-0">
-            <span
-              className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25 shrink-0"
-              aria-hidden="true"
-            />
-            <span className="truncate">
-              {expiresLabel ? (
-                <>
-                  Link ready · expires <span className="font-medium text-foreground">{expiresLabel}</span>
-                </>
-              ) : error ? (
-                'No link yet'
-              ) : (
-                'Creating link…'
-              )}
-            </span>
-          </p>
-          <div className="flex gap-3 shrink-0">
-            {canNativeShare() && (
-              <Button
-                variant="outline"
-                onClick={handleShare}
-                disabled={isGenerating || !invite}
-                className="flex items-center gap-2"
-              >
-                <Share2 className="h-4 w-4" aria-hidden="true" />
-                Share
-              </Button>
-            )}
+        // One unmissable action. Share collapses to an icon so nothing splits
+        // attention with it.
+        <div className="flex items-center gap-3">
+          {canNativeShare() && (
             <Button
-              onClick={handleCopy}
+              variant="outline"
+              onClick={handleShare}
               disabled={isGenerating || !invite}
-              className="flex items-center gap-2"
+              aria-label="Share invite link"
+              className="h-12 w-12 shrink-0 rounded-xl p-0"
             >
-              {copied ? (
-                <Check className="h-4 w-4" aria-hidden="true" />
-              ) : (
-                <Copy className="h-4 w-4" aria-hidden="true" />
-              )}
-              {copied ? 'Copied!' : 'Copy link'}
+              <Share2 className="h-[18px] w-[18px]" aria-hidden="true" />
             </Button>
-          </div>
+          )}
+          <Button
+            onClick={handleCopy}
+            disabled={isGenerating || !invite}
+            className="h-12 flex-1 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.98] transition-[background-color,transform] duration-150"
+          >
+            {isGenerating ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : copied ? (
+              <Check className="h-4 w-4" strokeWidth={3} aria-hidden="true" />
+            ) : (
+              <Copy className="h-4 w-4" aria-hidden="true" />
+            )}
+            {isGenerating ? 'Preparing' : copied ? 'Copied' : 'Copy link'}
+          </Button>
         </div>
       }
     >
-      <div className="space-y-6 py-1 sm:py-2">
-        {/* Personal note — the one real decision in this modal */}
+      <div className="space-y-4">
+        {/* Link state in the data voice — full text, its own line, nothing to
+            truncate against */}
+        <StatusLine tone={error ? 'idle' : 'ready'} pulse={isGenerating}>
+          {isGenerating ? (
+            'Creating link…'
+          ) : invite ? (
+            <>
+              Link ready · expires{' '}
+              <span className="font-medium text-foreground">{expiresLabel}</span>
+            </>
+          ) : (
+            'No link yet'
+          )}
+        </StatusLine>
+
+        {/* The one real decision in this modal, given the room to look like one */}
         <div>
-          <FieldLabel
+          <FieldShell
+            label={note.length > 0 ? 'Personal note' : 'Personal note · optional'}
             htmlFor="invite-note"
             trailing={
               note.length > 0 ? (
                 <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
                   {note.length}/{NOTE_MAX_LENGTH}
                 </span>
-              ) : (
-                <span className="text-xs text-muted-foreground/50 font-sans">optional</span>
-              )
+              ) : null
             }
           >
-            Personal note
-          </FieldLabel>
-          <Textarea
-            id="invite-note"
-            value={note}
-            onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
-            onBlur={applyNote}
-            placeholder="Can’t wait to get you started. First up, we fix that squat."
-            rows={3}
-            className="resize-none leading-relaxed"
-            maxLength={NOTE_MAX_LENGTH}
-          />
-          <p className="text-xs text-muted-foreground mt-2 antialiased text-pretty">
-            Greets them at signup, then lands in chat as your first message.
+            <Textarea
+              id="invite-note"
+              value={note}
+              onChange={(e) => setNote(e.target.value.slice(0, NOTE_MAX_LENGTH))}
+              onBlur={applyNote}
+              placeholder="Can’t wait to get you started. First up, we fix that squat."
+              rows={2}
+              className="min-h-[76px] resize-none border-0 bg-transparent px-4 pb-3 pt-1.5 text-base sm:text-[15px] leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
+              maxLength={NOTE_MAX_LENGTH}
+            />
+          </FieldShell>
+          <p className="text-xs text-muted-foreground/70 mt-1.5 px-1 antialiased text-pretty">
+            Greets them at signup, then opens your chat.
           </p>
         </div>
 
         {error ? (
-          <div className="flex items-center justify-between gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
+          <div className="flex items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3.5 py-2.5">
             <p className="text-xs text-destructive font-medium antialiased">{error}</p>
             <Button variant="outline" size="sm" onClick={() => generate(appliedEmail, appliedNote)}>
               <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
@@ -275,9 +254,8 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         ) : (
           <div className="space-y-3">
             {/* Email pre-fill stays out of the way until it's wanted */}
-            {showEmail ? (
-              <div>
-                <FieldLabel htmlFor="invite-email">Client email</FieldLabel>
+            {showEmail && (
+              <FieldShell label="Client email" htmlFor="invite-email">
                 <Input
                   id="invite-email"
                   ref={emailRef}
@@ -286,7 +264,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                   onChange={(e) => setEmail(e.target.value)}
                   onBlur={applyEmail}
                   placeholder="client@example.com"
-                  className="h-11"
+                  className="h-10 border-0 bg-transparent px-4 pb-3 pt-1 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -295,37 +273,48 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                     }
                   }}
                 />
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => setShowEmail(true)}
-                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
-              >
-                <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-                Pre-fill their email
-              </button>
+              </FieldShell>
             )}
 
-            {/* Escape hatch for a link that reached the wrong person. The URL
-                itself never shows — Copy link and Share are the link. */}
-            {invite && (
-              <button
-                type="button"
-                onClick={() => generate(appliedEmail, appliedNote, invite)}
-                disabled={isGenerating}
-                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target disabled:opacity-50"
-              >
-                <RefreshCw
-                  className={isGenerating ? 'w-3.5 h-3.5 animate-spin' : 'w-3.5 h-3.5'}
-                  aria-hidden="true"
-                />
-                New link
-                <span className="font-normal text-muted-foreground/60">
-                  · the current one stops working
-                </span>
-              </button>
-            )}
+            {/* Both secondary paths on one line, in the quietest tier */}
+            <div className="flex flex-wrap items-center gap-2">
+              {!showEmail && (
+                <Chip onClick={() => setShowEmail(true)}>
+                  <Plus className="w-3.5 h-3.5" aria-hidden="true" />
+                  Their email
+                </Chip>
+              )}
+
+              {/* Escape hatch for a link that reached the wrong person. The URL
+                  itself never shows — Copy link and Share are the link. */}
+              {invite &&
+                (confirmNew ? (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-muted-foreground antialiased">
+                      The current link stops working.
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => generate(appliedEmail, appliedNote, invite)}
+                      disabled={isGenerating}
+                      className="h-8 rounded-full px-3 text-xs"
+                    >
+                      Replace it
+                    </Button>
+                    <Chip onClick={() => setConfirmNew(false)}>Cancel</Chip>
+                  </div>
+                ) : (
+                  <Chip onClick={() => setConfirmNew(true)} disabled={isGenerating}>
+                    {isGenerating ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                    )}
+                    New link
+                  </Chip>
+                ))}
+            </div>
           </div>
         )}
       </div>

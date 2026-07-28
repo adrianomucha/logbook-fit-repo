@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { isAdminEmail, isValidAdminToken } from "../admin";
+import { bearerToken, isAdminEmail, isValidAdminToken } from "../admin";
 
 const ENV_KEYS = [
   "ADMIN_EMAILS",
@@ -73,6 +73,24 @@ describe("isValidAdminToken", () => {
     expect(isValidAdminToken("")).toBe(false);
     expect(isValidAdminToken(null)).toBe(false);
     expect(isValidAdminToken(undefined)).toBe(false);
+  });
+});
+
+describe("bearerToken", () => {
+  const reqWithAuth = (value?: string) =>
+    new Request("http://test.local", {
+      headers: value ? { authorization: value } : {},
+    });
+
+  it("extracts the token from a Bearer header, case-insensitively", () => {
+    expect(bearerToken(reqWithAuth("Bearer abc123"))).toBe("abc123");
+    expect(bearerToken(reqWithAuth("bearer abc123"))).toBe("abc123");
+  });
+
+  it("returns null without a header or for other schemes", () => {
+    expect(bearerToken(reqWithAuth())).toBeNull();
+    expect(bearerToken(reqWithAuth("Basic dXNlcjpwYXNz"))).toBeNull();
+    expect(bearerToken(reqWithAuth("Bearer"))).toBeNull();
   });
 });
 

@@ -18,6 +18,7 @@ import {
   updateWorkoutExerciseSchema,
   waitlistSchema,
   waitlistQualifySchema,
+  waitlistInviteSchema,
 } from "../schemas";
 
 // ──────────────────────────────────────
@@ -112,6 +113,30 @@ describe("signupSchema", () => {
       email: "test@test.com",
       password: "securepass",
       name: "John",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts coach signup with a waitlist beta token", () => {
+    const result = signupSchema.safeParse({
+      email: "coach@test.com",
+      password: "securepass",
+      name: "John",
+      role: "COACH",
+      betaToken: "beta-abc123",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.betaToken).toBe("beta-abc123");
+    }
+  });
+
+  it("still requires role or inviteToken when only betaToken is given", () => {
+    const result = signupSchema.safeParse({
+      email: "coach@test.com",
+      password: "securepass",
+      name: "John",
+      betaToken: "beta-abc123",
     });
     expect(result.success).toBe(false);
   });
@@ -765,6 +790,25 @@ describe("waitlistQualifySchema", () => {
 
   it("requires the email", () => {
     const result = waitlistQualifySchema.safeParse({ clientCount: "1-5" });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("waitlistInviteSchema", () => {
+  it("accepts a UUID id", () => {
+    const result = waitlistInviteSchema.safeParse({
+      id: "6f9619ff-8b86-4d01-b42d-00cf4fc964ff",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a non-UUID id", () => {
+    const result = waitlistInviteSchema.safeParse({ id: "42" });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a missing id", () => {
+    const result = waitlistInviteSchema.safeParse({});
     expect(result.success).toBe(false);
   });
 });

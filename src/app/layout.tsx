@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { AnalyticsWithOptOut } from '@/components/AnalyticsWithOptOut';
+import { SpeedInsightsWithOptOut } from '@/components/SpeedInsightsWithOptOut';
 import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import { SessionProvider } from '@/providers/SessionProvider';
 import { SWRProvider } from '@/providers/SWRProvider';
@@ -80,6 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </SWRProvider>
         </SessionProvider>
         <AnalyticsWithOptOut />
+        <SpeedInsightsWithOptOut />
       </body>
     </html>
   );

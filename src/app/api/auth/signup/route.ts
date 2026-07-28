@@ -5,6 +5,11 @@ import { QUICK_START_EXERCISES } from "@/lib/quick-start-exercises";
 import { parseBody } from "@/lib/validations/parseBody";
 import { signupSchema } from "@/lib/validations/schemas";
 import { signupLimiter, getClientIp } from "@/lib/rate-limit";
+import { isCoachSignupOpen } from "@/lib/waitlist";
+
+// Thrown inside the signup transaction when a beta invite was redeemed by a
+// concurrent signup between validation and commit; rolls the account back.
+class BetaInviteRedeemedError extends Error {}
 
 export async function POST(req: Request) {
   try {
@@ -21,7 +26,8 @@ export async function POST(req: Request) {
     const result = await parseBody(req, signupSchema);
     if (!result.success) return result.response;
 
-    const { email, password, name, role, inviteToken } = result.data;
+    const { email, password, name, role, inviteToken, betaToken } =
+      result.data;
 
     // If invite token provided, validate it and force CLIENT role
     let invite: {
@@ -65,6 +71,36 @@ export async function POST(req: Request) {
         { error: "Role must be COACH or CLIENT" },
         { status: 400 }
       );
+    }
+
+    // Coach signups are invite-only during the private beta: a valid waitlist
+    // invite unlocks account creation (and is redeemed in the transaction
+    // below). OPEN_COACH_SIGNUP=true lifts the gate for local dev or launch.
+    // A presented token is always validated — even with the gate open — so a
+    // stale link fails loudly instead of quietly minting an ungated account.
+    let waitlistEntryId: string | null = null;
+    if (effectiveRole === "COACH") {
+      if (betaToken) {
+        const entry = await prisma.waitlistEntry.findUnique({
+          where: { inviteToken: betaToken },
+          select: { id: true, status: true },
+        });
+        if (!entry || entry.status !== "INVITED") {
+          return NextResponse.json(
+            { error: "Invite link is invalid or already used" },
+            { status: 400 }
+          );
+        }
+        waitlistEntryId = entry.id;
+      } else if (!isCoachSignupOpen()) {
+        return NextResponse.json(
+          {
+            error:
+              "Coach signup is invite-only during the beta. Join the waitlist and we'll email your invite.",
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Check for existing active user with this email
@@ -112,6 +148,19 @@ export async function POST(req: Request) {
             defaultRest: ex.defaultRest,
           })),
         });
+      }
+
+      // Redeem the beta invite atomically with the account: the status guard
+      // makes the token single-use even under concurrent signups — the loser
+      // hits count 0 and their whole signup rolls back.
+      if (waitlistEntryId) {
+        const { count } = await tx.waitlistEntry.updateMany({
+          where: { id: waitlistEntryId, status: "INVITED" },
+          data: { status: "JOINED", joinedAt: new Date() },
+        });
+        if (count === 0) {
+          throw new BetaInviteRedeemedError();
+        }
       }
 
       // For invite-based signups: create coach-client relationship + accept invite
@@ -163,6 +212,12 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
+    if (error instanceof BetaInviteRedeemedError) {
+      return NextResponse.json(
+        { error: "Invite link is invalid or already used" },
+        { status: 400 }
+      );
+    }
     console.error("Signup error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

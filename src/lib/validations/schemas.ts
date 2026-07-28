@@ -15,6 +15,8 @@ export const signupSchema = z
     name: z.string().min(1, "Name is required").max(100),
     role: z.enum(["COACH", "CLIENT"]).optional(),
     inviteToken: z.string().optional(),
+    // Waitlist beta invite — unlocks COACH signup while the beta is closed
+    betaToken: z.string().optional(),
   })
   .refine((data) => data.role || data.inviteToken, {
     message: "Either role or inviteToken must be provided",
@@ -216,4 +218,8 @@ export const WAITLIST_CLIENT_COUNTS = [
 export const waitlistQualifySchema = z.object({
   email: z.string().trim().toLowerCase().email().max(255),
   clientCount: z.enum(WAITLIST_CLIENT_COUNTS),
+});
+
+export const waitlistInviteSchema = z.object({
+  id: z.string().uuid(),
 });
