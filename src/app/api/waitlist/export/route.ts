@@ -1,20 +1,13 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { isAdminEmail, isValidAdminToken } from "@/lib/admin";
+import { bearerToken, isAdminEmail, isValidAdminToken } from "@/lib/admin";
 
 export const dynamic = "force-dynamic";
 
 /** Wrap a field in quotes and escape embedded quotes for safe CSV. */
 function csvCell(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
-}
-
-/** Extracts the bearer token from an Authorization header, if present. */
-function bearerToken(req: Request): string | null {
-  const header = req.headers.get("authorization");
-  const match = header?.match(/^Bearer\s+(.+)$/i);
-  return match ? match[1] : null;
 }
 
 /**
@@ -39,13 +32,28 @@ export async function GET(req: Request) {
 
   const entries = await prisma.waitlistEntry.findMany({
     orderBy: { createdAt: "desc" },
-    select: { email: true, createdAt: true },
+    select: {
+      email: true,
+      createdAt: true,
+      status: true,
+      invitedAt: true,
+      joinedAt: true,
+    },
   });
 
+  // "joined" (the signup date) keeps its original position for existing
+  // scripts; the invite-flow columns are appended after it. Tokens are
+  // deliberately excluded — the CSV is a mailing list, not a credential dump.
   const rows = [
-    "email,joined",
-    ...entries.map(
-      (e) => `${csvCell(e.email)},${csvCell(e.createdAt.toISOString())}`
+    "email,joined,status,invited_at,joined_at",
+    ...entries.map((e) =>
+      [
+        csvCell(e.email),
+        csvCell(e.createdAt.toISOString()),
+        csvCell(e.status),
+        csvCell(e.invitedAt?.toISOString() ?? ""),
+        csvCell(e.joinedAt?.toISOString() ?? ""),
+      ].join(",")
     ),
   ];
 
