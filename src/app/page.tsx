@@ -351,47 +351,56 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Check-in loop */}
-        <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-          <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-            The north star
-          </p>
-          <h2 className="max-w-3xl text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
-            A loop, not a group chat.
-          </h2>
-          <p className="mt-4 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
-            A focused, contextual conversation that lives right inside the client
-            workspace, not buried in WhatsApp.
-          </p>
+        {/* Check-in loop.
 
-          <div className="mt-12 grid gap-10 lg:grid-cols-2 lg:gap-14">
-            <ol>
-              {CHECK_IN_LOOP.map((item) => (
-                <li
-                  key={item.step}
-                  className="flex gap-6 border-t border-border/70 py-6 sm:gap-8"
-                >
-                  <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
-                    {item.step}
-                  </span>
-                  <div>
-                    <h3 className="text-base font-semibold antialiased sm:text-lg">
-                      {item.title}
-                    </h3>
-                    <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased sm:text-base">
-                      {item.body}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ol>
+            Every image/text section keeps the ImageSlot FIRST in source order
+            and reorders with lg:order-*, never the other way round. Stacked at
+            mobile width the source order is the only order, so leading with the
+            image in the markup is what makes each section read image → text all
+            the way down the page; the desktop zigzag is then purely a
+            large-screen concern. */}
+        <section>
+          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-14">
             {/* Stretch to the list's exact height on desktop so both columns
                 end on the same line; the 4:5 ratio stays for stacked mobile */}
             <ImageSlot
               label="In the product: the check-in review"
               description="Screenshot of the check-in review. The client's effort rating and notes on one side, the exercises they flagged that week sitting right beside them, and the coach's reply box below. Crop tight enough that the flagged exercise stays readable, because that context is exactly what a group chat never gives you."
-              className="aspect-[4/5] rounded-xl lg:aspect-auto lg:h-full"
+              className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
             />
+            <div className="lg:order-1">
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                The north star
+              </p>
+              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+                A loop, not a group chat.
+              </h2>
+              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
+                A focused, contextual conversation that lives right inside the
+                client workspace, not buried in WhatsApp.
+              </p>
+
+              <ol className="mt-8">
+                {CHECK_IN_LOOP.map((item) => (
+                  <li
+                    key={item.step}
+                    className="flex gap-6 border-t border-border/70 py-6 sm:gap-8"
+                  >
+                    <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
+                      {item.step}
+                    </span>
+                    <div>
+                      <h3 className="text-base font-semibold antialiased sm:text-lg">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased sm:text-base">
+                        {item.body}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </div>
         </section>
 
