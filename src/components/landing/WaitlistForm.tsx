@@ -147,7 +147,7 @@ export function WaitlistForm() {
     return (
       <div
         role="status"
-        className="flex items-start gap-3 rounded-xl border border-border/70 bg-card px-4 py-3.5 animate-fade-in-up"
+        className="flex items-start gap-3 rounded-xl border border-border/70 bg-card px-4 py-3.5 text-left animate-fade-in-up"
       >
         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand">
           <Check className="h-4 w-4 text-brand-foreground" strokeWidth={3} />
