@@ -64,7 +64,12 @@ export function AuthShell({ mode, children }: AuthShellProps) {
           />
         </svg>
 
-        <Logo markSize={24} className="relative" />
+        <Link
+          href="/#waitlist"
+          className="relative flex self-start rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        >
+          <Logo markSize={24} />
+        </Link>
 
         <div className="relative">
           <p className="mb-6 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -103,9 +108,12 @@ export function AuthShell({ mode, children }: AuthShellProps) {
             mirrors the logo across the seam. */}
         <header className="border-b border-border lg:border-0 lg:pt-10 xl:pt-14">
           <div className="flex h-14 items-center px-5 sm:px-8 lg:h-6 lg:px-10 xl:px-14">
-            <span className="lg:hidden">
+            <Link
+              href="/#waitlist"
+              className="flex rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:hidden"
+            >
               <Logo markSize={20} />
-            </span>
+            </Link>
             <span className="ml-auto flex items-center gap-3">
               <span className="hidden font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground antialiased sm:inline">
                 {alt.question}
