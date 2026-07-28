@@ -3,14 +3,14 @@
 import { useId, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Check, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 /** Buckets for the confirmation-screen question. Values match `waitlistQualifySchema`. */
 const CLIENT_COUNTS = [
-  { value: '1-5', label: '1 to 5' },
-  { value: '6-15', label: '6 to 15' },
-  { value: '16-30', label: '16 to 30' },
+  { value: '1-5', label: '1–5' },
+  { value: '6-15', label: '6–15' },
+  { value: '16-30', label: '16–30' },
   { value: '30+', label: '30+' },
   { value: 'not-coaching', label: 'Not coaching yet' },
 ] as const;
@@ -106,38 +106,71 @@ export function WaitlistForm() {
     }
   };
 
+  // Shared header for both confirmation states: the card keeps one identity
+  // while its body swaps from the question to the sign-off. The volt fill is
+  // deliberate — this is the page's accent color spent on its best moment.
+  const confirmationHeader = (
+    <>
+      <div className="flex items-start justify-between gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-foreground text-brand animate-bounce-once">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={3}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+            className="h-5 w-5"
+          >
+            <path d="M4.5 12.5l5 5L19.5 6.5" pathLength={20} className="animate-draw-check" />
+          </svg>
+        </span>
+        <p className="pt-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-foreground/70 antialiased">
+          Request received
+        </p>
+      </div>
+      <p className="mt-5 text-[2rem] font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-[2.4rem]">
+        You’re on
+        <br />
+        the list.
+      </p>
+    </>
+  );
+
   if (status === 'qualify') {
     return (
-      <div className="flex items-start gap-3 rounded-xl border border-border/70 bg-card p-4 text-left animate-fade-in-up">
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand">
-          <Check className="h-4 w-4 text-brand-foreground" strokeWidth={3} />
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold antialiased">You’re on the list.</p>
-          <p className="mt-3 text-sm font-medium antialiased">
-            One question, so we invite you in the right batch: how many clients
-            are you coaching right now?
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {CLIENT_COUNTS.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                onClick={() => handleQualify(option.value)}
-                className="rounded-lg border border-border px-3 py-2 text-sm font-medium antialiased transition-colors hover:border-brand hover:bg-accent active:scale-[0.97]"
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={() => setStatus('done')}
-            className="mt-3 text-sm text-muted-foreground antialiased underline-offset-4 transition-colors hover:text-foreground hover:underline"
-          >
-            Skip
-          </button>
+      <div
+        role="status"
+        className="rounded-2xl bg-brand p-6 text-left text-brand-foreground animate-fade-in-up sm:p-7"
+      >
+        {confirmationHeader}
+        <p className="mt-5 text-sm font-medium text-brand-foreground/75 antialiased">
+          One question so we can put you in the right batch:
+        </p>
+        <p className="mt-1 text-base font-semibold antialiased">
+          How many clients are you coaching right now?
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {CLIENT_COUNTS.map((option, i) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleQualify(option.value)}
+              style={{ animationDelay: `${150 + i * 50}ms` }}
+              className="animate-fade-in-up rounded-lg border-2 border-brand-foreground/30 px-3.5 py-2 font-mono text-xs font-medium uppercase tracking-[0.08em] antialiased transition-colors hover:border-brand-foreground hover:bg-brand-foreground hover:text-brand active:scale-[0.97]"
+            >
+              {option.label}
+            </button>
+          ))}
         </div>
+        <button
+          type="button"
+          onClick={() => setStatus('done')}
+          className="mt-4 text-sm text-brand-foreground/60 antialiased underline-offset-4 transition-colors hover:text-brand-foreground hover:underline"
+        >
+          Skip
+        </button>
       </div>
     );
   }
@@ -146,19 +179,21 @@ export function WaitlistForm() {
     return (
       <div
         role="status"
-        className="flex items-start gap-3 rounded-xl border border-border/70 bg-card px-4 py-3.5 text-left animate-fade-in-up"
+        className="overflow-hidden rounded-2xl bg-brand text-left text-brand-foreground animate-fade-in-up"
       >
-        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand">
-          <Check className="h-4 w-4 text-brand-foreground" strokeWidth={3} />
-        </span>
-        <div className="min-w-0">
-          <p className="text-sm font-semibold antialiased">You’re on the list.</p>
-          <p className="mt-1 text-sm text-muted-foreground antialiased">
+        <div className="p-6 sm:p-7">
+          {confirmationHeader}
+          <p className="mt-4 text-sm leading-relaxed text-brand-foreground/80 antialiased">
             Your invite lands by email. In the meantime, hit reply on it and tell
             us what you’re using to keep track of clients today. We read every
             one, and it shapes what we build next.
           </p>
         </div>
+        {/* Echoes the page's black-on-volt marquee, inverted: a ticket-stub
+            footer that closes the loop on the brand's ticker language. */}
+        <p className="bg-brand-foreground px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-brand antialiased sm:px-7">
+          Invite incoming · Watch your inbox
+        </p>
       </div>
     );
   }
