@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
+import { isAdminEmail } from "@/lib/admin";
 import { isLockedDemoAccount } from "@/lib/demo";
 import prisma from "@/lib/prisma";
 
@@ -61,5 +62,11 @@ export async function GET() {
       }
     : null;
 
-  return NextResponse.json({ ...user, clientProfile });
+  return NextResponse.json({
+    ...user,
+    clientProfile,
+    // Lets the nav show the Admin entry point. Informational only — every
+    // /admin page and API independently re-checks the allowlist server-side.
+    isAdmin: isAdminEmail(session.user.email),
+  });
 }
