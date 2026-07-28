@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import {
+  Check,
   ClipboardList,
   Dumbbell,
   LayoutDashboard,
@@ -8,6 +9,7 @@ import {
   LineChart,
   MessageCircle,
   Sun,
+  X,
 } from 'lucide-react';
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
@@ -85,6 +87,31 @@ const MARQUEE_ITEMS = [
   'For independent coaches',
   'Plan · Train · Check in',
   'Private beta · onboarding in small batches',
+];
+
+// The filter, as two lists. Every line is short enough to scan in one pass —
+// the point lands from the shape of the section before any of it is read.
+const AUDIENCE = [
+  {
+    title: 'Built for',
+    icon: Check,
+    iconClass: 'text-brand',
+    items: [
+      'Independent coaches with a real roster',
+      'You write the plans and run the check-ins yourself',
+      'Today it lives in spreadsheets and WhatsApp',
+    ],
+  },
+  {
+    title: 'Not for',
+    icon: X,
+    iconClass: 'text-muted-foreground',
+    items: [
+      'Lifters training on their own',
+      'Anyone who just wants a workout log',
+      'Coaches happy with their spreadsheet',
+    ],
+  },
 ];
 
 const CHECK_IN_LOOP = [
@@ -236,10 +263,9 @@ export default function HomePage() {
                 coaches.
               </span>
             </h1>
-            <p className="mt-8 max-w-2xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
-              Clients don&rsquo;t quit over a bad workout. They go quiet for two weeks
-              and nobody notices. Logbook.fit ranks your roster by who needs you
-              today, so you catch the fade while it&rsquo;s still fixable.
+            <p className="mt-8 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
+              Clients go quiet weeks before they quit. Logbook.fit ranks your
+              roster by who needs you today.
             </p>
             <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
               <WaitlistForm />
@@ -283,28 +309,45 @@ export default function HomePage() {
       </div>
 
         {/* Who it's for — the filter. Naming who this isn't for is what makes
-            the right coach feel it was built for them specifically. */}
+            the right coach feel it was built for them specifically. Two columns
+            rather than prose: the section is *about* a line between two groups,
+            so it should be shaped like one instead of describing it. */}
         <section className="border-b border-border/70">
-          <div className="mx-auto max-w-3xl px-4 py-16 text-center sm:px-6 sm:py-20">
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-              Who it&rsquo;s for
-            </p>
-            <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
-              Deliberately not
-              <br />
-              for everyone.
-            </h2>
-            <p className="mx-auto mt-6 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
-              Logbook.fit is built for one person: the independent coach who
-              actually gives a damn about every client. You write the plans, you
-              run the check-ins, and today you keep it straight across
-              spreadsheets and WhatsApp threads.
-            </p>
-            <p className="mx-auto mt-4 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
-              If you train alone, it&rsquo;s useless to you. This isn&rsquo;t a
-              workout tracker for lifters. It&rsquo;s the tool for the coaches who
-              train them.
-            </p>
+          <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
+            <div className="text-center">
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                Who it&rsquo;s for
+              </p>
+              <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
+                Deliberately not
+                <br />
+                for everyone.
+              </h2>
+            </div>
+
+            <div className="mt-12 grid gap-8 sm:grid-cols-2 sm:gap-12">
+              {AUDIENCE.map((group) => (
+                <div key={group.title}>
+                  <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                    {group.title}
+                  </h3>
+                  <ul className="mt-4 space-y-3">
+                    {group.items.map((item) => (
+                      <li key={item} className="flex gap-3">
+                        <group.icon
+                          className={`mt-0.5 h-4 w-4 shrink-0 ${group.iconClass}`}
+                          strokeWidth={3}
+                          aria-hidden="true"
+                        />
+                        <span className="text-pretty text-base antialiased">
+                          {item}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -397,7 +440,7 @@ export default function HomePage() {
               </h2>
               <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
                 An early warning only works if the data arrives. Your clients get
-                an app worth opening, which is what keeps your dashboard honest.
+                an app worth opening.
               </p>
               <div className="mt-8">
                 <FeatureList features={CLIENT_FEATURES} />
@@ -419,9 +462,8 @@ export default function HomePage() {
                 the list<span className="text-brand">.</span>
               </h2>
               <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
-                We onboard coaches ten at a time, and every one gets a setup call
-                where we import your roster with you. Grab a spot and we&rsquo;ll
-                send your invite.
+                Ten coaches at a time. Every one gets a setup call where we import
+                your roster with you.
               </p>
               <div className="mx-auto mt-9 max-w-md text-left">
                 <WaitlistForm />
