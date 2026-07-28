@@ -6,6 +6,7 @@ import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import { waitlistInvitePath } from '@/lib/waitlist';
 import prisma from '@/lib/prisma';
+import { AdminNav } from '../AdminNav';
 import { InviteActions } from './InviteActions';
 
 export const dynamic = 'force-dynamic';
@@ -98,7 +99,9 @@ export default async function WaitlistAdminPage() {
   return (
     <div className="min-h-dvh bg-background px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-4xl">
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        <AdminNav active="waitlist" />
+
+        <div className="mt-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
               Admin
