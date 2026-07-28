@@ -22,6 +22,13 @@ export function isAdminEmail(email?: string | null): boolean {
   return adminEmails().includes(email.trim().toLowerCase());
 }
 
+/** Extracts the bearer token from a request's Authorization header, if present. */
+export function bearerToken(req: Request): string | null {
+  const header = req.headers.get("authorization");
+  const match = header?.match(/^Bearer\s+(.+)$/i);
+  return match ? match[1] : null;
+}
+
 /**
  * Timing-safe string comparison. Compares via SHA-256 digests so
  * timingSafeEqual accepts unequal lengths.

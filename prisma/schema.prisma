@@ -55,6 +55,12 @@ enum InviteStatus {
   EXPIRED
 }
 
+enum WaitlistStatus {
+  PENDING
+  INVITED
+  JOINED
+}
+
 // How an exercise is measured. When TIME, the reps-shaped integer columns
 // (Exercise.defaultReps, WorkoutExercise.reps/repsMax, SetCompletion.actualReps)
 // hold a duration in seconds instead of a rep count.
@@ -461,10 +467,18 @@ model Message {
 // WAITLIST
 // ──────────────────────────────────────
 
+// Lifecycle: PENDING (signed up on the landing page) → INVITED (owner sent a
+// beta invite from /admin/waitlist) → JOINED (invite redeemed at coach signup).
+// The invite token is single-use — JOINED blocks re-redemption — and
+// re-inviting rotates it, which doubles as revocation of the old link.
 model WaitlistEntry {
-  id        String   @id @default(uuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
+  id          String         @id @default(uuid())
+  email       String         @unique
+  status      WaitlistStatus @default(PENDING)
+  inviteToken String?        @unique
+  invitedAt   DateTime?
+  joinedAt    DateTime?
+  createdAt   DateTime       @default(now())
 
   @@map("waitlist_entries")
 }

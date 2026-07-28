@@ -20,6 +20,12 @@ interface InviteInfo {
   reason?: 'not_found' | 'used' | 'expired';
 }
 
+interface BetaInviteInfo {
+  valid: boolean;
+  email?: string | null;
+  reason?: 'not_found' | 'used';
+}
+
 /** Uppercase tracked mono label — the product's data voice */
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
@@ -55,28 +61,37 @@ function PageFrame({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function SignupClient() {
+export default function SignupClient({
+  coachSignupOpen,
+}: {
+  coachSignupOpen: boolean;
+}) {
   return (
     <Suspense fallback={
       <div className="min-h-dvh bg-background p-4 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     }>
-      <SignupContent />
+      <SignupContent coachSignupOpen={coachSignupOpen} />
     </Suspense>
   );
 }
 
-function SignupContent() {
+function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const inviteToken = searchParams?.get('invite') ?? null;
+  // Waitlist beta invite — the coach-side counterpart of the client invite
+  const betaToken = searchParams?.get('beta') ?? null;
 
-  // No invite token → coach signup. With a token → invited-client signup.
+  // No client-invite token → coach signup. With one → invited-client signup.
   const isCoachSignup = !inviteToken;
 
   const [inviteInfo, setInviteInfo] = useState<InviteInfo | null>(null);
-  const [isValidating, setIsValidating] = useState(!isCoachSignup);
+  const [betaInfo, setBetaInfo] = useState<BetaInviteInfo | null>(null);
+  const [isValidating, setIsValidating] = useState(
+    Boolean(inviteToken || betaToken)
+  );
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -84,30 +99,45 @@ function SignupContent() {
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Validate invite token on mount
+  // Validate whichever token is present on mount (client invite wins if both)
   useEffect(() => {
-    if (!inviteToken) {
+    if (!inviteToken && !betaToken) {
       setIsValidating(false);
       return;
     }
 
     const validate = async () => {
       try {
-        const res = await fetch(`/api/invites/${inviteToken}`);
-        const data: InviteInfo = await res.json();
-        setInviteInfo(data);
-        if (data.valid && data.email) {
-          setEmail(data.email);
+        if (inviteToken) {
+          const res = await fetch(`/api/invites/${inviteToken}`);
+          const data: InviteInfo = await res.json();
+          setInviteInfo(data);
+          if (data.valid && data.email) {
+            setEmail(data.email);
+          }
+        } else {
+          const res = await fetch(
+            `/api/waitlist/invites/${encodeURIComponent(betaToken!)}`
+          );
+          const data: BetaInviteInfo = await res.json();
+          setBetaInfo(data);
+          if (data.valid && data.email) {
+            setEmail(data.email);
+          }
         }
       } catch {
-        setInviteInfo({ valid: false, reason: 'not_found' });
+        if (inviteToken) {
+          setInviteInfo({ valid: false, reason: 'not_found' });
+        } else {
+          setBetaInfo({ valid: false, reason: 'not_found' });
+        }
       } finally {
         setIsValidating(false);
       }
     };
 
     validate();
-  }, [inviteToken]);
+  }, [inviteToken, betaToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,7 +155,9 @@ function SignupContent() {
           email: email.trim().toLowerCase(),
           password,
           name: name.trim(),
-          ...(isCoachSignup ? { role: 'COACH' } : { inviteToken }),
+          ...(isCoachSignup
+            ? { role: 'COACH', ...(betaToken ? { betaToken } : {}) }
+            : { inviteToken }),
         }),
       });
 
@@ -167,7 +199,80 @@ function SignupContent() {
     );
   }
 
-  // Invalid or expired invite (coach signup has no token to validate)
+  // Beta invite that doesn't check out — mirror the client-invite error card
+  if (isCoachSignup && betaToken && !betaInfo?.valid) {
+    const errorContent =
+      betaInfo?.reason === 'used'
+        ? {
+            title: 'Already used',
+            message:
+              'This beta invite was already redeemed. If that was you, sign in instead.',
+          }
+        : {
+            title: 'Link not found',
+            message:
+              'This invite link doesn’t look right. Double-check the URL from your email — a re-sent invite also replaces the old link.',
+          };
+
+    return (
+      <PageFrame>
+        <div className="space-y-4">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
+              Beta invite
+            </p>
+            <h1 className="text-3xl font-black tracking-tight leading-tight text-balance">
+              {errorContent.title}
+            </h1>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
+            {errorContent.message}
+          </p>
+          <div className="pt-2">
+            <Button variant="outline" onClick={() => router.push('/login')}>
+              Go to sign in
+            </Button>
+          </div>
+        </div>
+      </PageFrame>
+    );
+  }
+
+  // No beta invite while the beta is closed — point at the waitlist instead
+  // of a form that would only be refused server-side
+  if (isCoachSignup && !betaToken && !coachSignupOpen) {
+    return (
+      <PageFrame>
+        <div className="space-y-4">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
+              Private beta
+            </p>
+            <h1 className="text-3xl font-black tracking-tight leading-tight text-balance">
+              Invite-only for now
+            </h1>
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
+            We&rsquo;re onboarding coaches in small batches. Grab a spot on the
+            waitlist and we&rsquo;ll email your invite the moment one opens.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Button
+              onClick={() => router.push('/#waitlist')}
+              className="bg-brand text-brand-foreground hover:bg-brand/90 font-bold uppercase tracking-wider"
+            >
+              Join the waitlist
+            </Button>
+            <Button variant="outline" onClick={() => router.push('/login')}>
+              Go to sign in
+            </Button>
+          </div>
+        </div>
+      </PageFrame>
+    );
+  }
+
+  // Invalid or expired invite (coach signup has no client token to validate)
   if (!isCoachSignup && !inviteInfo?.valid) {
     const errorContent = inviteInfo?.reason === 'expired'
       ? { title: 'Link expired', message: 'This invite is past its 7-day window. Ask your coach to send a fresh one. It only takes them a second.' }
@@ -211,13 +316,24 @@ function SignupContent() {
       {isCoachSignup ? (
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
-            Get started
+            {betaToken ? (
+              <>
+                <span className="text-brand" aria-hidden="true">
+                  &#9679;
+                </span>{' '}
+                Invite accepted
+              </>
+            ) : (
+              'Get started'
+            )}
           </p>
           <h1 className="text-3xl font-black tracking-tight leading-tight text-balance">
             Create your coach account
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3 text-pretty">
-            Know who needs you today, before they go quiet.
+            {betaToken
+              ? 'Your spot in the private beta is ready. This link works once, and it’s yours.'
+              : 'Know who needs you today, before they go quiet.'}
           </p>
         </div>
       ) : (
@@ -292,7 +408,7 @@ function SignupContent() {
             className="h-11"
             required
           />
-          {inviteInfo?.email && (
+          {Boolean(inviteInfo?.email || betaInfo?.email) && (
             <p className="text-xs text-muted-foreground text-pretty">
               Pre-filled from your invite. Change it if it&apos;s not right
             </p>

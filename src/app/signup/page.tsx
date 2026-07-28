@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
+import { isCoachSignupOpen } from '@/lib/waitlist';
 import SignupClient from './SignupClient';
 
 interface SignupPageProps {
@@ -58,5 +59,7 @@ export async function generateMetadata({ searchParams }: SignupPageProps): Promi
 }
 
 export default function SignupPage() {
-  return <SignupClient />;
+  // The gate is decided server-side (env never reaches the client bundle);
+  // the API enforces it independently, so this only shapes which UI renders.
+  return <SignupClient coachSignupOpen={isCoachSignupOpen()} />;
 }
