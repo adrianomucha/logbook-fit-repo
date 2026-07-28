@@ -108,37 +108,36 @@ export function WaitlistForm() {
 
   if (status === 'qualify') {
     return (
-      <div className="rounded-xl border border-border/70 bg-card p-4 text-left animate-fade-in-up">
-        <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand">
-            <Check className="h-4 w-4 text-brand-foreground" strokeWidth={3} />
-          </span>
+      <div className="flex items-start gap-3 rounded-xl border border-border/70 bg-card p-4 text-left animate-fade-in-up">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand">
+          <Check className="h-4 w-4 text-brand-foreground" strokeWidth={3} />
+        </span>
+        <div className="min-w-0">
           <p className="text-sm font-semibold antialiased">You’re on the list.</p>
+          <p className="mt-3 text-sm font-medium antialiased">
+            One question, so we invite you in the right batch: how many clients
+            are you coaching right now?
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {CLIENT_COUNTS.map((option) => (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => handleQualify(option.value)}
+                className="rounded-lg border border-border px-3 py-2 text-sm font-medium antialiased transition-colors hover:border-brand hover:bg-accent active:scale-[0.97]"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setStatus('done')}
+            className="mt-3 text-sm text-muted-foreground antialiased underline-offset-4 transition-colors hover:text-foreground hover:underline"
+          >
+            Skip
+          </button>
         </div>
-
-        <p className="mt-4 text-sm font-medium antialiased">
-          One question, so we invite you in the right batch: how many clients are
-          you coaching right now?
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {CLIENT_COUNTS.map((option) => (
-            <button
-              key={option.value}
-              type="button"
-              onClick={() => handleQualify(option.value)}
-              className="rounded-lg border border-border px-3 py-2 text-sm font-medium antialiased transition-colors hover:border-brand hover:bg-accent active:scale-[0.97]"
-            >
-              {option.label}
-            </button>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => setStatus('done')}
-          className="mt-3 text-sm text-muted-foreground antialiased underline-offset-4 transition-colors hover:text-foreground hover:underline"
-        >
-          Skip
-        </button>
       </div>
     );
   }
