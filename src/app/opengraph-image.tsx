@@ -1,22 +1,23 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'nodejs';
-export const alt = 'Logbook.fit · Your quietest client is your next cancellation';
+
+export const alt =
+  'Logbook.fit — your quietest client is your next cancellation. Retention-first coaching software for independent coaches.';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-// Same literals as the invite card (src/app/api/og/invite): ImageResponse
-// renders outside the app's CSS, so the HSL tokens in globals.css aren't
-// available here.
 const VOLT = '#c3f910';
 const INK = '#0a0a0a';
 
 /**
- * The share card behind every link to the landing page. Nearly all waitlist
- * traffic arrives through a shared link, so this is the page's real first
- * impression. Generated rather than committed as a PNG so the headline can't
- * drift out of sync with the hero, and so there's no binary to re-export when
- * the copy changes.
+ * Unfurl card for the landing page — what Twitter/X, LinkedIn, Slack, iMessage
+ * and WhatsApp render when someone shares the waitlist link. Mirrors the hero's
+ * dark canvas and display type so the preview and the page read as one thing.
+ *
+ * Deliberately no photo: at 1200×630 the screenshots in the page body turn to
+ * mush, and the wordmark + volt slash survive the thumbnail crops these
+ * platforms apply.
  */
 export default function OpengraphImage() {
   return new ImageResponse(
@@ -32,40 +33,60 @@ export default function OpengraphImage() {
           padding: '72px 80px',
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            fontSize: 26,
-            letterSpacing: 6,
-            color: '#a3a3a3',
-          }}
-        >
-          FOR INDEPENDENT COACHES · LOGBOOK.FIT
+        <div style={{ display: 'flex', fontSize: 26, letterSpacing: 6, color: '#a3a3a3' }}>
+          PRIVATE BETA · JOIN THE WAITLIST
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'stretch' }}>
-          <div
-            style={{
-              width: 14,
-              borderRadius: 7,
-              backgroundColor: VOLT,
-              marginRight: 40,
-            }}
-          />
+        {/* Same three lines as the hero h1, so the preview and the page a
+            click later say the same thing. Sized to fit the longest line
+            ("YOUR QUIETEST CLIENT") inside the 1040px content box. */}
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
           <div
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              fontSize: 72,
+              fontSize: 82,
               fontWeight: 700,
               color: '#fafafa',
-              lineHeight: 1.15,
-              maxWidth: 940,
+              lineHeight: 1.0,
+              letterSpacing: -2,
             }}
           >
-            <div style={{ display: 'flex' }}>Your quietest client</div>
-            <div style={{ display: 'flex' }}>is your next</div>
-            <div style={{ display: 'flex', color: VOLT }}>cancellation.</div>
+            YOUR QUIETEST CLIENT
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 82,
+              fontWeight: 700,
+              color: '#fafafa',
+              lineHeight: 1.0,
+              letterSpacing: -2,
+            }}
+          >
+            IS YOUR NEXT
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              fontSize: 82,
+              fontWeight: 700,
+              color: VOLT,
+              lineHeight: 1.0,
+              letterSpacing: -2,
+            }}
+          >
+            CANCELLATION.
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              marginTop: 28,
+              fontSize: 30,
+              color: '#a3a3a3',
+              maxWidth: 860,
+            }}
+          >
+            Retention-first coaching software for independent coaches.
           </div>
         </div>
 
