@@ -97,18 +97,22 @@ export function AuthShell({ mode, children }: AuthShellProps) {
       {/* Form column — the app's own light chrome */}
       <div className="flex min-h-dvh flex-col">
         <div className="h-1 shrink-0 bg-brand lg:hidden" aria-hidden="true" />
-        <header className="border-b border-border">
-          <div className="flex h-12 items-center px-5 sm:px-8">
+        {/* Mobile: hairline app bar. Desktop: borderless, with the 24px row
+            (lg:h-6) centered on the brand panel's logo line — pt + h/2 equals
+            the panel's p-10/xl:p-14 + half the 24px mark — so the button
+            mirrors the logo across the seam. */}
+        <header className="border-b border-border lg:border-0 lg:pt-10 xl:pt-14">
+          <div className="flex h-14 items-center px-5 sm:px-8 lg:h-6 lg:px-10 xl:px-14">
             <span className="lg:hidden">
               <Logo markSize={20} />
             </span>
-            <span className="ml-auto flex items-baseline gap-2.5">
+            <span className="ml-auto flex items-center gap-3">
               <span className="hidden font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground antialiased sm:inline">
                 {alt.question}
               </span>
               <Link
                 href={alt.href}
-                className="rounded-sm font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-foreground antialiased transition-colors hover:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {alt.label}
               </Link>
