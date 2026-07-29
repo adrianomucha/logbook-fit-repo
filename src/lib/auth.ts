@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { loginLimiter } from "@/lib/rate-limit";
 import { isLockedDemoAccount } from "@/lib/demo";
+import { verifySwitchToken } from "@/lib/switch-token";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -67,6 +68,45 @@ export const authOptions: NextAuthOptions = {
           };
         } catch (error) {
           console.error("[AUTH] Error in authorize:", error);
+          return null;
+        }
+      },
+    }),
+    // Linked-account switch: redeems the short-lived token minted by
+    // POST /api/account/switch. The token — obtainable only from a live
+    // session of the paired account — is the whole credential; no password
+    // crosses the wire and the demo lock still applies to the target.
+    CredentialsProvider({
+      id: "account-switch",
+      name: "account-switch",
+      credentials: {
+        token: { label: "Token", type: "text" },
+      },
+      async authorize(credentials) {
+        try {
+          const userId = verifySwitchToken(credentials?.token);
+          if (!userId) {
+            console.error("[AUTH] Invalid or expired account-switch token");
+            return null;
+          }
+
+          const user = await prisma.user.findFirst({
+            where: { id: userId, deletedAt: null },
+          });
+          if (!user || isLockedDemoAccount(user.email)) {
+            console.error("[AUTH] Account-switch target unavailable:", userId);
+            return null;
+          }
+
+          console.log("[AUTH] Account switch successful for user:", user.id);
+          return {
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            name: user.name,
+          };
+        } catch (error) {
+          console.error("[AUTH] Error in account-switch authorize:", error);
           return null;
         }
       },

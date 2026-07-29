@@ -20,6 +20,7 @@ interface UserProfile {
     } | null;
   } | null;
   isAdmin: boolean;
+  linkedAccount: { role: 'COACH' | 'CLIENT'; name: string } | null;
 }
 
 export function useCurrentUser() {
@@ -40,6 +41,8 @@ export function useCurrentUser() {
     coach: user?.clientProfile?.coachRelationship?.coach ?? null,
     /** On the ADMIN_EMAILS allowlist — shows the nav's Admin entry point */
     isAdmin: user?.isAdmin ?? false,
+    /** This person's paired account, if one is linked and switchable */
+    linkedAccount: user?.linkedAccount ?? null,
     error,
   };
 }
