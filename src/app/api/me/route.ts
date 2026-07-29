@@ -19,6 +19,7 @@ export async function GET() {
       name: true,
       role: true,
       createdAt: true,
+      linkedUserId: true,
       coachProfile: {
         select: {
           id: true,
@@ -62,9 +63,23 @@ export async function GET() {
       }
     : null;
 
+  // The paired account for the nav's one-click switch — only surfaced when
+  // it could actually be switched into (exists, live, not demo-locked).
+  let linkedAccount: { role: "COACH" | "CLIENT"; name: string } | null = null;
+  if (user.linkedUserId) {
+    const linked = await prisma.user.findFirst({
+      where: { id: user.linkedUserId, deletedAt: null },
+      select: { role: true, name: true, email: true },
+    });
+    if (linked && !isLockedDemoAccount(linked.email)) {
+      linkedAccount = { role: linked.role, name: linked.name };
+    }
+  }
+
   return NextResponse.json({
     ...user,
     clientProfile,
+    linkedAccount,
     // Lets the nav show the Admin entry point. Informational only — every
     // /admin page and API independently re-checks the allowlist server-side.
     isAdmin: isAdminEmail(session.user.email),

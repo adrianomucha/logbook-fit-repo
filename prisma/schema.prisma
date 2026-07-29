@@ -95,6 +95,10 @@ model User {
   role         UserRole
   avatarUrl    String?
   timezone     String    @default("UTC")
+  // Owner-managed pairing with this person's other account (coach ↔ client),
+  // stored symmetrically on both rows. Powers the nav's one-click account
+  // switch. Written only by the owner (SQL/admin) — no user-facing API sets it.
+  linkedUserId String?   @unique
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
