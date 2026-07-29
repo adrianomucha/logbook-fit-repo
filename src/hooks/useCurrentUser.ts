@@ -19,6 +19,7 @@ interface UserProfile {
       coach: { id: string; user: { id: string; name: string | null } };
     } | null;
   } | null;
+  isAdmin: boolean;
 }
 
 export function useCurrentUser() {
@@ -37,6 +38,8 @@ export function useCurrentUser() {
     clientProfileId: user?.clientProfile?.id ?? null,
     /** The client's coach (only available for CLIENT role) */
     coach: user?.clientProfile?.coachRelationship?.coach ?? null,
+    /** On the ADMIN_EMAILS allowlist — shows the nav's Admin entry point */
+    isAdmin: user?.isAdmin ?? false,
     error,
   };
 }
