@@ -1,8 +1,7 @@
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
-import { AdminButton } from '@/components/AdminButton';
-import { SwitchAccountButton } from '@/components/SwitchAccountButton';
+import { AccountMenu } from '@/components/AccountMenu';
 import { Logo } from '@/components/brand/LogoMark';
 import { Home, Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -102,10 +101,7 @@ export function CoachNav({
             </nav>
           </div>
 
-          <div className="flex items-center gap-1">
-            <AdminButton />
-            <SwitchAccountButton />
-          </div>
+          <AccountMenu />
         </div>
       </header>
 

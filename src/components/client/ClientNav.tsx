@@ -1,6 +1,5 @@
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
-import { AdminButton } from '@/components/AdminButton';
-import { SwitchAccountButton } from '@/components/SwitchAccountButton';
+import { AccountMenu } from '@/components/AccountMenu';
 import { Logo } from '@/components/brand/LogoMark';
 import { Dumbbell, MessageSquare, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -65,10 +64,7 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
             </nav>
           </div>
 
-          <div className="flex items-center gap-1">
-            <AdminButton />
-            <SwitchAccountButton />
-          </div>
+          <AccountMenu />
         </div>
       </header>
 
