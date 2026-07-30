@@ -14,31 +14,3 @@ export function EmptyStateNoClients({ onInvite }: { onInvite?: () => void }) {
     </div>
   );
 }
-
-export function EmptyStateNoneNeedAttention() {
-  return (
-    <div className="p-6 sm:p-8 text-center bg-emerald-50 dark:bg-emerald-950/30 rounded-xl">
-      <div className="text-3xl select-none mb-2">🎯</div>
-      <h3 className="text-base sm:text-lg font-bold antialiased">
-        All clients are on track!
-      </h3>
-      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto antialiased">
-        Great work staying connected with everyone.
-      </p>
-    </div>
-  );
-}
-
-export function EmptyStateAllNeedAttention() {
-  return (
-    <div className="p-6 sm:p-8 text-center bg-warning/5 rounded-xl">
-      <div className="text-3xl select-none mb-2">⚡</div>
-      <h3 className="text-base sm:text-lg font-bold antialiased">
-        All clients need attention
-      </h3>
-      <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-xs mx-auto antialiased">
-        Review the list above to catch up with your clients.
-      </p>
-    </div>
-  );
-}

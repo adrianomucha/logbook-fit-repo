@@ -70,10 +70,6 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   { id: 'mountain-climbers', name: 'Mountain Climbers', category: 'cardio', equipment: 'Bodyweight', trackingType: 'TIME', defaultSets: 3, defaultReps: '30s' },
 ];
 
-export const getExercisesByCategory = (category: string) => {
-  return exerciseLibrary.filter((ex) => ex.category === category);
-};
-
 export const searchExercises = (query: string) => {
   const lowerQuery = query.toLowerCase();
   return exerciseLibrary.filter((ex) =>

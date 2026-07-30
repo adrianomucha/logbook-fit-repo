@@ -37,14 +37,6 @@ export function coachScope(coachProfileId: string) {
 }
 
 /**
- * Prisma where-clause fragment that scopes to the authenticated client.
- * Usage: prisma.workoutCompletion.findMany({ where: { ...clientScope(clientProfileId) } })
- */
-export function clientScope(clientProfileId: string) {
-  return { clientId: clientProfileId };
-}
-
-/**
  * Verifies a coach owns a specific resource. Returns false if not owned.
  * Callers should return 404 (not 403) to prevent enumeration.
  */
