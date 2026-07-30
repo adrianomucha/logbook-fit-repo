@@ -169,34 +169,6 @@ export interface ExerciseFlag {
   flaggedAt: string;          // ISO timestamp
 }
 
-export interface Measurement {
-  id: string;
-  clientId: string;
-  date: string;
-  weight?: number;
-  bodyFat?: number;
-  chest?: number;
-  waist?: number;
-  hips?: number;
-  biceps?: number;
-  thighs?: number;
-  notes?: string;
-}
-
-// Check-in schedule types (TASK-053)
-export type CheckInScheduleStatus = 'ACTIVE' | 'PAUSED' | 'INACTIVE';
-
-export interface CheckInSchedule {
-  id: string;
-  coachId: string;
-  clientId: string;
-  status: CheckInScheduleStatus;
-  cadence: 'WEEKLY';
-  anchorDate: string;         // ISO date — reference point for 7-day cycle
-  createdAt: string;
-  updatedAt: string;
-}
-
 export type Role = 'coach' | 'client';
 
 // Plan Setup Form Types
@@ -223,42 +195,3 @@ export type ExerciseCategory =
   | 'CARDIO'
   | 'MOBILITY'
   | 'OTHER';
-
-export type ExerciseEquipment =
-  | 'BARBELL'
-  | 'DUMBBELL'
-  | 'KETTLEBELL'
-  | 'BODYWEIGHT'
-  | 'MACHINE'
-  | 'CABLE'
-  | 'BANDS'
-  | 'OTHER';
-
-export interface CoachExercise {
-  id: string;
-  coachId: string;
-  name: string;
-  category: ExerciseCategory;
-  equipment: ExerciseEquipment;
-  defaultSets: number;
-  notes?: string;
-  usageCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ExerciseFormData {
-  name: string;
-  category: ExerciseCategory;
-  equipment: ExerciseEquipment;
-  defaultSets: number;
-  notes: string;
-}
-
-export interface ExerciseFormErrors {
-  name?: string;
-  category?: string;
-  equipment?: string;
-  defaultSets?: string;
-  notes?: string;
-}

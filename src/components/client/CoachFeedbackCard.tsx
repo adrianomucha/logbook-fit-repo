@@ -1,5 +1,5 @@
 import { CheckIn } from '@/types';
-import { truncateText } from '@/lib/checkin-context-helpers';
+import { truncateText } from '@/lib/utils';
 import { format } from 'date-fns';
 
 interface CoachFeedbackCardProps {
