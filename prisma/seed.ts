@@ -10,6 +10,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { QUICK_START_EXERCISES } from "../src/lib/quick-start-exercises";
+import { isDemoAccount } from "../src/lib/demo";
 
 const prisma = new PrismaClient();
 
@@ -39,6 +40,18 @@ async function seed() {
     name: string;
     role: "COACH" | "CLIENT";
   }) {
+    // Every account seeded here shares one public password, so the demo lock
+    // must recognise it — otherwise it stays signable-in on a deployed build
+    // with credentials that are printed on the login page and sit in this
+    // repo. isDemoAccount names its accounts exactly, so a new one added
+    // here has to be added there too; fail loudly rather than ship a hole.
+    if (!isDemoAccount(opts.email)) {
+      throw new Error(
+        `Seeded demo account ${opts.email} is not covered by isDemoAccount() — ` +
+          `add it to DEMO_CLIENT_EMAILS/DEMO_LOGIN_EMAILS in src/lib/demo.ts, ` +
+          `or NEXT_PUBLIC_DEMO_MODE will not gate it.`
+      );
+    }
     const existing = await prisma.user.findFirst({
       where: { email: { equals: opts.email, mode: "insensitive" }, deletedAt: null },
     });
