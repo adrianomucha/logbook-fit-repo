@@ -1,13 +1,13 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { PlusSquare, Share, X } from 'lucide-react';
 import { LogoMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
 import {
   INSTALL_PROMPT_STORAGE_KEY,
+  markOffered,
   parseInstallPromptState,
-  recordDismissal,
   resolveInstallPrompt,
   type InstallMethod,
   type InstallPromptState,
@@ -33,8 +33,21 @@ function readState(): InstallPromptState {
     );
   } catch {
     // Storage throws in private/locked-down modes. Treat as a first visit —
-    // the cost is an un-snoozable banner, not a broken page.
+    // the cost is a banner that can't be retired, not a broken page.
     return {};
+  }
+}
+
+/** Spends this device's single ask. Called the moment the banner goes on
+ *  screen, and again on the way out in case that first write was refused. */
+function persistOffered(): void {
+  try {
+    window.localStorage.setItem(
+      INSTALL_PROMPT_STORAGE_KEY,
+      JSON.stringify(markOffered(Date.now()))
+    );
+  } catch {
+    // Nothing to do. The banner still goes away for this page view.
   }
 }
 
@@ -82,11 +95,20 @@ function Step({ index, children }: { index: number; children: React.ReactNode })
  * Mounted on the coach and client dashboards only — deliberately not on the
  * workout or check-in screens, where a floating card would sit on top of the
  * flow people came to complete.
+ *
+ * One ask per device, ever. It is spent the moment the banner reaches the
+ * screen, so installing, closing, or just reading it and carrying on all end
+ * the same way: it never comes back.
  */
 export function InstallPrompt() {
   const [method, setMethod] = useState<InstallMethod>('none');
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showSteps, setShowSteps] = useState(false);
+
+  // Set once the banner has gone on screen this page view. Without it, a late
+  // `beforeinstallprompt` would re-run the check, find the record just written,
+  // and yank a visible banner back off the screen.
+  const offered = useRef(false);
 
   useEffect(() => {
     const onBeforeInstallPrompt = (event: Event) => {
@@ -98,6 +120,9 @@ export function InstallPrompt() {
     const onInstalled = () => {
       setDeferred(null);
       setMethod('none');
+      // Covers installs done through Chromium's own menu rather than this
+      // banner, which would otherwise leave the ask unspent.
+      persistOffered();
     };
 
     window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
@@ -109,40 +134,40 @@ export function InstallPrompt() {
   }, []);
 
   useEffect(() => {
+    if (offered.current) return;
+
     const timer = setTimeout(() => {
       const navigatorStandalone =
         (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
-      setMethod(
-        resolveInstallPrompt(
-          {
-            userAgent: window.navigator.userAgent,
-            maxTouchPoints: window.navigator.maxTouchPoints,
-            navigatorStandalone,
-            displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
-            hasNativePrompt: deferred !== null,
-          },
-          readState(),
-          Date.now()
-        )
+      const resolved = resolveInstallPrompt(
+        {
+          userAgent: window.navigator.userAgent,
+          maxTouchPoints: window.navigator.maxTouchPoints,
+          navigatorStandalone,
+          displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
+          hasNativePrompt: deferred !== null,
+        },
+        readState()
       );
+      if (resolved === 'none') return;
+
+      // Spend the ask only once the banner is genuinely on screen. Someone who
+      // opens a workout before the delay elapses never saw it, so they keep
+      // their turn.
+      offered.current = true;
+      persistOffered();
+      setMethod(resolved);
     }, SHOW_DELAY_MS);
 
     return () => clearTimeout(timer);
-    // Re-resolves if Chromium's prompt lands after the first pass.
+    // Re-runs if Chromium's prompt lands after the first pass.
   }, [deferred]);
 
   const dismiss = useCallback(() => {
     setMethod('none');
     setShowSteps(false);
-    try {
-      window.localStorage.setItem(
-        INSTALL_PROMPT_STORAGE_KEY,
-        JSON.stringify(recordDismissal(readState(), Date.now()))
-      );
-    } catch {
-      // Can't persist the snooze — it still stays gone for this page view.
-    }
+    persistOffered();
   }, []);
 
   const handleCta = useCallback(async () => {

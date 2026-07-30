@@ -20,7 +20,7 @@ export type InstallMethod =
   | 'ios-safari'
   /** Chrome/Edge/Firefox/Orion on iOS 16.4+ — Share lives in their own menu. */
   | 'ios-browser'
-  /** Already installed, no install path, or the user has said no. Render nothing. */
+  /** Already installed, no install path, or already offered. Render nothing. */
   | 'none';
 
 export interface BrowserSnapshot {
@@ -38,26 +38,31 @@ export interface BrowserSnapshot {
   hasNativePrompt: boolean;
 }
 
-/** localStorage key. Versioned so the snooze ladder can change without
- *  inheriting counts recorded under different rules. */
-export const INSTALL_PROMPT_STORAGE_KEY = 'logbook.install-prompt.v1';
+/** localStorage key. Versioned so the offer rule can change later without
+ *  inheriting records written under different semantics. */
+export const INSTALL_PROMPT_STORAGE_KEY = 'logbook.install-prompt.v2';
 
 export interface InstallPromptState {
-  /** Epoch ms of the most recent dismissal. */
-  dismissedAt?: number;
-  /** How many times the user has dismissed the banner. */
-  dismissCount?: number;
+  /**
+   * Epoch ms of the one time the banner was shown.
+   *
+   * Its presence is the entire rule. The banner is a single one-shot offer per
+   * device: installing, closing, or simply reading it and moving on all leave
+   * the same record behind, and none of them bring it back. Asking twice is
+   * how an install nudge turns into a cookie banner.
+   */
+  offeredAt?: number;
 }
 
-/**
- * Days to stay quiet after the 1st and 2nd dismissal. A third dismissal
- * retires the banner for good — someone who has closed it three times has
- * answered the question, and a fitness app people open daily would otherwise
- * get a lot of chances to ask again.
- */
-export const SNOOZE_DAYS = [7, 30];
+/** True when the app has already used up its one ask on this device. */
+export function hasBeenOffered(state: InstallPromptState): boolean {
+  return isFiniteNumber(state.offeredAt);
+}
 
-const DAY_MS = 86_400_000;
+/** The record to persist the moment the banner actually goes on screen. */
+export function markOffered(now: number): InstallPromptState {
+  return { offeredAt: now };
+}
 
 /** True when the page is already running as an installed app. */
 export function isRunningInstalled(
@@ -101,14 +106,11 @@ export function parseInstallPromptState(raw: string | null): InstallPromptState 
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return {};
-    const { dismissedAt, dismissCount } = parsed as Record<string, unknown>;
-    return {
-      dismissedAt: isFiniteNumber(dismissedAt) ? dismissedAt : undefined,
-      dismissCount: isFiniteNumber(dismissCount) ? dismissCount : undefined,
-    };
+    const { offeredAt } = parsed as Record<string, unknown>;
+    return isFiniteNumber(offeredAt) ? { offeredAt } : {};
   } catch {
-    // Corrupt or hand-edited value. Treating it as "never dismissed" is the
-    // safe read: the worst case is one extra ask, not a thrown render.
+    // Corrupt or hand-edited value. Treating it as "never offered" is the safe
+    // read: the worst case is one extra ask, not a thrown render.
     return {};
   }
 }
@@ -117,39 +119,11 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-export function recordDismissal(
-  state: InstallPromptState,
-  now: number
-): InstallPromptState {
-  return { dismissedAt: now, dismissCount: (state.dismissCount ?? 0) + 1 };
-}
-
-/** True once the user has dismissed more times than the ladder has rungs. */
-export function isRetired(state: InstallPromptState): boolean {
-  return (state.dismissCount ?? 0) > SNOOZE_DAYS.length;
-}
-
-export function isSnoozed(state: InstallPromptState, now: number): boolean {
-  const count = state.dismissCount ?? 0;
-  if (count === 0) return false;
-
-  const days = SNOOZE_DAYS[count - 1];
-  if (days === undefined) return true; // retired
-  // A dismissal recorded without a timestamp can't be aged out; stay quiet
-  // rather than re-asking on every page view.
-  if (!isFiniteNumber(state.dismissedAt)) return true;
-
-  // Subtraction (not addition) so a clock moved backwards reads as "still
-  // snoozed" instead of overflowing into an immediate re-show.
-  return now - state.dismissedAt < days * DAY_MS;
-}
-
 /** The single decision the banner needs: what to render, if anything. */
 export function resolveInstallPrompt(
   snapshot: BrowserSnapshot,
-  state: InstallPromptState,
-  now: number
+  state: InstallPromptState
 ): InstallMethod {
-  if (isSnoozed(state, now)) return 'none';
+  if (hasBeenOffered(state)) return 'none';
   return detectInstallMethod(snapshot);
 }
