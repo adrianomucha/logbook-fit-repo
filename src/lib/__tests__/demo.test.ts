@@ -45,7 +45,7 @@ describe("isDemoAccount", () => {
     expect(isDemoAccount("  Coach@Logbook.FIT ")).toBe(true);
   });
 
-  it("matches the seeded @demo.logbook.fit clients", () => {
+  it("matches the seeded demo clients", () => {
     expect(isDemoAccount("emma@demo.logbook.fit")).toBe(true);
     expect(isDemoAccount("alex@demo.logbook.fit")).toBe(true);
     expect(isDemoAccount("jordan@demo.logbook.fit")).toBe(true);
@@ -58,6 +58,14 @@ describe("isDemoAccount", () => {
     expect(isDemoAccount("")).toBe(false);
     expect(isDemoAccount(null)).toBe(false);
     expect(isDemoAccount(undefined)).toBe(false);
+  });
+
+  // A real test account was created at piyumika@demo.logbook.fit; matching the
+  // subdomain rather than the account made it undeployable — sign-in was
+  // refused before the password check, which reads as "wrong password".
+  it("does not claim real accounts that merely share the demo subdomain", () => {
+    expect(isDemoAccount("piyumika@demo.logbook.fit")).toBe(false);
+    expect(isDemoAccount("someone-else@demo.logbook.fit")).toBe(false);
   });
 });
 
@@ -76,6 +84,7 @@ describe("isLockedDemoAccount", () => {
     vi.stubEnv("NODE_ENV", "production");
     vi.stubEnv("NEXT_PUBLIC_DEMO_MODE", "");
     expect(isLockedDemoAccount("someone@example.com")).toBe(false);
+    expect(isLockedDemoAccount("piyumika@demo.logbook.fit")).toBe(false);
     expect(isLockedDemoAccount(null)).toBe(false);
   });
 });
