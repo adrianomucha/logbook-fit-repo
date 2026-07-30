@@ -46,7 +46,7 @@ export function TodayActionCard({
               size="lg"
             >
               <Play className="w-5 h-5 mr-2" />
-              Start Workout
+              Start workout
             </Button>
           </>
         );
@@ -70,7 +70,7 @@ export function TodayActionCard({
               size="lg"
             >
               <RotateCcw className="w-5 h-5 mr-2" />
-              Resume Workout
+              Resume workout
             </Button>
           </>
         );
@@ -97,7 +97,7 @@ export function TodayActionCard({
                 size="lg"
               >
                 <MessageSquare className="w-5 h-5 mr-2" />
-                Send Feedback to Coach
+                Send feedback to coach
               </Button>
             )}
           </>

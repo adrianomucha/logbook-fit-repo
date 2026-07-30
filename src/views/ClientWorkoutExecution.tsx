@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { useWorkoutExecution, getNextIncompleteExerciseId, getCompletedSetsCount, isExerciseComplete } from '@/hooks/api/useWorkoutExecution';
-import { RotateCcw } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
 import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
@@ -14,7 +13,7 @@ import { groupBySuperset, isSuperset, exerciseLabel } from '@/lib/superset';
 import { Link2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Card, CardContent } from '@/components/ui/card';
+import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Check, Dumbbell, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -54,7 +53,6 @@ export function ClientWorkoutExecution() {
     exercisesTotal: number;
     durationMin: number;
   } | null>(null);
-  const celebrationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Auto-expand first incomplete exercise on load — once. Re-running whenever
   // expandedExerciseId goes null would make collapsing a card impossible (it
@@ -71,14 +69,17 @@ export function ClientWorkoutExecution() {
     }
   }, [day, exercises, isReadOnly]);
 
-  // Cleanup celebration timeout on unmount
+  // Escape leaves the celebration screen, matching every other overlay in the app
   useEffect(() => {
-    return () => {
-      if (celebrationTimeoutRef.current) {
-        clearTimeout(celebrationTimeoutRef.current);
-      }
+    if (!showCelebration) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleCelebrationDismiss();
     };
-  }, []);
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+    // handleCelebrationDismiss only closes over stable refs and the router
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showCelebration]);
 
   // Auto-advance: when the currently-expanded exercise becomes fully complete,
   // collapse it and jump to the next incomplete exercise (scrolling it into view).
@@ -224,11 +225,8 @@ export function ClientWorkoutExecution() {
     try {
       await finishWorkout();
       setShowCelebration(true);
-
-      // Auto-dismiss celebration after 6 seconds
-      celebrationTimeoutRef.current = setTimeout(() => {
-        router.push('/client');
-      }, 6000);
+      // No auto-dismiss timer: the effort-rating buttons are a live decision,
+      // and a 6s redirect used to take them off screen mid-thought (WCAG 2.2.1).
     } catch (err) {
       finishingRef.current = false;
       setCompletedWorkoutData(null);
@@ -248,9 +246,6 @@ export function ClientWorkoutExecution() {
 
   // Handle celebration dismiss
   const handleCelebrationDismiss = () => {
-    if (celebrationTimeoutRef.current) {
-      clearTimeout(celebrationTimeoutRef.current);
-    }
     router.push('/client');
   };
 
@@ -278,10 +273,6 @@ export function ClientWorkoutExecution() {
   const handleEffortRating = async (rating: string) => {
     if (isSavingRating) return;
     setIsSavingRating(true);
-
-    if (celebrationTimeoutRef.current) {
-      clearTimeout(celebrationTimeoutRef.current);
-    }
 
     // Save effort rating via the finish endpoint (already completed, but server handles it)
     if (completionId) {
@@ -315,7 +306,7 @@ export function ClientWorkoutExecution() {
           <div className="py-8 px-6 text-center">
             <p className="text-muted-foreground antialiased">Failed to load workout.</p>
             <Button onClick={handleBack} className="mt-4 active:scale-[0.96] transition-transform duration-150">
-              Go Back
+              Go back
             </Button>
           </div>
         </div>
@@ -333,7 +324,7 @@ export function ClientWorkoutExecution() {
             <p className="text-sm text-muted-foreground mb-5 antialiased">
               This workout doesn&apos;t exist in your plan.
             </p>
-            <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">Go Back</Button>
+            <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">Go back</Button>
           </div>
         </div>
       </div>
@@ -345,7 +336,6 @@ export function ClientWorkoutExecution() {
     return (
       <div
         className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]"
-        onClick={handleCelebrationDismiss}
       >
         {/* Celebration Header — volt burst, mono eyebrow */}
         <div className="text-center mb-8">
@@ -377,20 +367,18 @@ export function ClientWorkoutExecution() {
         </div>
 
         {/* Effort Rating */}
-        <div
-          className="text-center"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-4">
+        <div className="text-center">
+          <p id="celebration-effort-label" className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-4">
             How did that feel?
           </p>
-          <div className="flex gap-2 sm:gap-3">
+          <div role="group" aria-labelledby="celebration-effort-label" className="flex gap-2 sm:gap-3">
             {(['EASY', 'MEDIUM', 'HARD'] as const).map((level) => (
               <button
                 key={level}
+                type="button"
                 onClick={() => handleEffortRating(level)}
                 disabled={isSavingRating}
-                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-foreground text-background font-bold uppercase tracking-wider text-sm hover:bg-foreground/90 active:scale-[0.95] transition-[background-color,transform] duration-150 touch-manipulation min-h-[44px] disabled:opacity-50"
+                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-foreground text-background font-bold uppercase tracking-wider text-sm hover:bg-foreground/90 active:scale-[0.95] transition-[background-color,transform] duration-150 touch-manipulation min-h-[44px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
                 {level === 'EASY' ? 'Easy' : level === 'MEDIUM' ? 'Medium' : 'Hard'}
               </button>
@@ -398,78 +386,17 @@ export function ClientWorkoutExecution() {
           </div>
         </div>
 
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/60 mt-8">
-          Tap anywhere to skip
-        </p>
-      </div>
-    );
-  }
-
-  // Restart confirmation
-  if (showRestartConfirm) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <Card className="w-full max-w-md">
-          <CardContent className="py-6">
-            <div className="flex justify-center mb-4">
-              <RotateCcw className="w-10 h-10 text-muted-foreground" />
-            </div>
-            <h2 className="text-lg font-bold tracking-tight text-center mb-1">
-              Restart this workout?
-            </h2>
-            <p className="text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-6">
-              All progress, flags, and notes will be cleared
-            </p>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowRestartConfirm(false)}
-                disabled={isRestarting}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1"
-                onClick={handleRestartConfirm}
-                disabled={isRestarting}
-              >
-                {isRestarting ? 'Restarting...' : 'Restart'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // Partial completion confirmation
-  if (showPartialConfirm) {
-    return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-end sm:items-center justify-center p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <Card className="w-full max-w-md">
-          <CardContent className="py-6">
-            <h2 className="text-lg font-bold tracking-tight text-center mb-1">
-              Finish this workout?
-            </h2>
-            <p className="text-center font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-6">
-              {stats.exercisesDone} of {stats.exercisesTotal} exercises completed
-            </p>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowPartialConfirm(false)}
-              >
-                Keep Going
-              </Button>
-              <Button className="flex-1" onClick={completeWorkout} disabled={isFinishing}>
-                {isFinishing ? 'Finishing...' : 'Finish Workout'}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        {/* A real control, not a whole-screen click target: the pointer-only
+            "tap anywhere" left keyboard users with no way past this screen
+            except submitting a rating. */}
+        <button
+          type="button"
+          onClick={handleCelebrationDismiss}
+          disabled={isSavingRating}
+          className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors mt-8 min-h-[44px] px-4 rounded-lg touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          Skip for now
+        </button>
       </div>
     );
   }
@@ -505,7 +432,7 @@ export function ClientWorkoutExecution() {
             <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
               Exercises
             </h2>
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
               {stats.exercisesDone}/{exercises.length}
             </span>
           </div>
@@ -541,10 +468,10 @@ export function ClientWorkoutExecution() {
               <div key={group[0].workoutExerciseId} className="py-3.5">
                 <div className="flex items-center gap-1.5 mb-1">
                   <Link2 className="w-3 h-3 text-muted-foreground/60" />
-                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/60">
+                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                     Superset
                   </span>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/40">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                     · Alternate sets
                   </span>
                 </div>
@@ -574,6 +501,30 @@ export function ClientWorkoutExecution() {
         onClose={() => setMessageSheetExercise(null)}
         exercise={messageSheetExercise}
         onSend={handleSendMessage}
+      />
+
+      {/* Both confirmations go through the shared Modal, which owns the focus
+          trap, Escape, scroll lock and focus restore the hand-rolled overlays
+          skipped. They also no longer unmount the workout behind them. */}
+      <ConfirmationModal
+        isOpen={showRestartConfirm}
+        onClose={() => setShowRestartConfirm(false)}
+        onConfirm={handleRestartConfirm}
+        title="Restart this workout?"
+        message="You'll start again from the first set."
+        warningMessage="All progress, flags, and notes from this session are cleared."
+        confirmLabel="Restart workout"
+        confirmVariant="destructive"
+      />
+
+      <ConfirmationModal
+        isOpen={showPartialConfirm}
+        onClose={() => setShowPartialConfirm(false)}
+        onConfirm={completeWorkout}
+        title="Finish this workout?"
+        message={`You've completed ${stats.exercisesDone} of ${stats.exercisesTotal} exercises. The rest will be logged as skipped.`}
+        confirmLabel="Finish workout"
+        cancelLabel="Keep going"
       />
     </div>
   );

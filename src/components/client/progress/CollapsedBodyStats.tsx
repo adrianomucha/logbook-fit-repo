@@ -35,7 +35,7 @@ export function CollapsedBodyStats({ measurements, clientId }: CollapsedBodyStat
   // Build rows from available data
   const rows: { label: string; value: number; unit: string }[] = [];
   if (latest.weight !== undefined) rows.push({ label: 'Weight', value: latest.weight, unit: 'lbs' });
-  if (latest.bodyFat !== undefined) rows.push({ label: 'Body Fat', value: latest.bodyFat, unit: '%' });
+  if (latest.bodyFat !== undefined) rows.push({ label: 'Body fat', value: latest.bodyFat, unit: '%' });
   if (latest.chest !== undefined) rows.push({ label: 'Chest', value: latest.chest, unit: 'in' });
   if (latest.waist !== undefined) rows.push({ label: 'Waist', value: latest.waist, unit: 'in' });
   if (latest.hips !== undefined) rows.push({ label: 'Hips', value: latest.hips, unit: 'in' });
@@ -52,7 +52,7 @@ export function CollapsedBodyStats({ measurements, clientId }: CollapsedBodyStat
       >
         {/* Row 1: Title + chevron */}
         <div className="flex items-center justify-between gap-2">
-          <h4 className="text-[15px] font-semibold tracking-tight leading-snug">Body Stats</h4>
+          <h4 className="text-[15px] font-semibold tracking-tight leading-snug">Body stats</h4>
           {isExpanded ? (
             <ChevronUp className="w-4 h-4 text-muted-foreground/60 shrink-0" />
           ) : (

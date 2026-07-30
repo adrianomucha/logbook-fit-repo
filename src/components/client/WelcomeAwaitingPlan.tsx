@@ -81,7 +81,7 @@ export function WelcomeAwaitingPlan({
             </div>
 
             {step.state === 'active' && (
-              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground shrink-0 antialiased">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground shrink-0 antialiased">
                 In progress
               </span>
             )}

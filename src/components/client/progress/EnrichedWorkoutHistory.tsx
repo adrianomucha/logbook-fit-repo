@@ -116,7 +116,7 @@ const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ completion, dayNam
         </p>
 
         {/* Row 3: Quick stats */}
-        <p className="font-mono text-xs tabular-nums text-muted-foreground/70 mt-1.5">
+        <p className="font-mono text-xs tabular-nums text-muted-foreground mt-1.5">
           {completion.exercisesDone}/{completion.exercisesTotal} exercises
           &ensp;·&ensp;{formatDuration(completion.durationSec)}
           &ensp;·&ensp;~{estimatedSets} sets
@@ -224,7 +224,7 @@ export function EnrichedWorkoutHistory({
         <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
           Workout history
         </h3>
-        <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
           {enrichedCompletions.length}
         </span>
       </div>

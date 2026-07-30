@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCheckIn } from '@/hooks/api/useCheckIn';
 import { ApiError } from '@/lib/api-client';
@@ -37,13 +37,16 @@ export function ClientCheckInForm() {
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Auto-redirect after success
-  useEffect(() => {
-    if (showSuccess) {
-      const timer = setTimeout(() => router.push('/client'), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [showSuccess, router]);
+  const effortLabelId = useId();
+  const effortErrorId = useId();
+  const feelingLabelId = useId();
+  const feelingErrorId = useId();
+  const effortGroupRef = useRef<HTMLDivElement>(null);
+  const feelingGroupRef = useRef<HTMLDivElement>(null);
+
+  // No auto-redirect: the success screen is a terminal state the reader
+  // leaves on their own. A timer would yank the page out from under anyone
+  // still reading it (WCAG 2.2.1).
 
   // Loading state
   if (isLoading) {
@@ -61,9 +64,9 @@ export function ClientCheckInForm() {
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
-            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in Not Found</h2>
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in not found</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in doesn&apos;t exist or has expired.</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to dashboard</Button>
           </div>
         </div>
       </div>
@@ -72,15 +75,19 @@ export function ClientCheckInForm() {
 
   // Success screen — checked before the status gate: the post-submit
   // revalidation flips status to CLIENT_RESPONDED, and the user must see
-  // "Sent!" until the redirect, not a cold "Already Submitted"
+  // "Sent" rather than a cold "Already sent"
   if (showSuccess) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success animate-bounce-once" />
-            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach!</h2>
-            <p className="text-sm text-muted-foreground antialiased">They&apos;ll review and get back to you soon.</p>
+            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach</h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">They&apos;ll read it and get back to you.</p>
+            {/* The 3s auto-redirect is gone, so the way out is an explicit control */}
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">
+              Back to dashboard
+            </Button>
           </div>
         </div>
       </div>
@@ -94,9 +101,9 @@ export function ClientCheckInForm() {
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
-            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in Expired</h2>
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in expired</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in is no longer open — the next one will appear on your dashboard.</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to dashboard</Button>
           </div>
         </div>
       </div>
@@ -110,9 +117,9 @@ export function ClientCheckInForm() {
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
             <CheckCircle2 className="w-10 h-10 mx-auto mb-4 text-success" />
-            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Already Submitted</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">You&apos;ve already responded to this check-in.</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to Dashboard</Button>
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Already sent</h2>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">You already sent this one to your coach.</p>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to dashboard</Button>
           </div>
         </div>
       </div>
@@ -121,13 +128,17 @@ export function ClientCheckInForm() {
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!effortRating) newErrors.effortRating = 'Please select how workouts felt';
-    if (!clientFeeling) newErrors.clientFeeling = 'Please select how your body feels';
+    if (!effortRating) newErrors.effortRating = 'Choose how your workouts felt';
+    if (!clientFeeling) newErrors.clientFeeling = 'Choose how your body feels';
     setErrors(newErrors);
+    // Send focus to the first unanswered question so the reason is on screen
+    if (newErrors.effortRating) effortGroupRef.current?.focus();
+    else if (newErrors.clientFeeling) feelingGroupRef.current?.focus();
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async () => {
+    if (isSubmitting) return;
     if (!validate()) return;
     setIsSubmitting(true);
     try {
@@ -154,14 +165,14 @@ export function ClientCheckInForm() {
     }
   };
 
-  const canSubmit = effortRating && clientFeeling && !isSubmitting;
-
   // Recent completions from the API (included in check-in detail)
   const recentCompletions = checkIn.client.completions ?? [];
 
   return (
     <div className="min-h-dvh bg-background p-3 sm:p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
-      <div className="max-w-2xl mx-auto space-y-4">
+      {/* space-y-8 between questions against mb-3 inside each: groups need at
+          least 2× their internal gap or the form reads as one flat stack. */}
+      <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div className="py-4">
           <button
@@ -171,21 +182,32 @@ export function ClientCheckInForm() {
             ← Back
           </button>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium mb-1">Check-in</p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Weekly Check-in</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Weekly check-in</h1>
         </div>
 
         {/* Question 1: Effort Rating */}
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">How did your workouts feel?</p>
-          <div className="grid grid-cols-3 gap-2">
+          <p id={effortLabelId} className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">How did your workouts feel?</p>
+          {/* Named group so the choices announce what they answer; tabIndex -1
+              lets validation move focus here without adding a tab stop. */}
+          <div
+            ref={effortGroupRef}
+            tabIndex={-1}
+            role="group"
+            aria-labelledby={effortLabelId}
+            aria-describedby={errors.effortRating ? effortErrorId : undefined}
+            className="grid grid-cols-3 gap-2 focus:outline-none"
+          >
             {EFFORT_OPTIONS.map(({ value, label, emoji, selectedClass }) => (
               <button
                 key={value}
+                type="button"
                 onClick={() => { setEffortRating(value); setErrors(e => ({ ...e, effortRating: '' })); }}
                 aria-pressed={effortRating === value}
                 className={cn(
-                  'flex flex-col items-center gap-1 py-3 px-1 rounded-lg border-2 transition-all touch-manipulation min-h-[64px]',
+                  'flex flex-col items-center gap-1 py-3 px-1 rounded-lg border-2 transition-[background-color,border-color,color,box-shadow] touch-manipulation min-h-[64px]',
                   'text-xs font-bold uppercase tracking-wide',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   effortRating === value
                     ? selectedClass
                     : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -197,22 +219,31 @@ export function ClientCheckInForm() {
             ))}
           </div>
           {errors.effortRating && (
-            <p className="text-xs text-destructive mt-2">{errors.effortRating}</p>
+            <p id={effortErrorId} className="text-sm text-destructive mt-2">{errors.effortRating}</p>
           )}
         </div>
 
         {/* Question 2: Body Feeling */}
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">How does your body feel?</p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <p id={feelingLabelId} className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">How does your body feel?</p>
+          <div
+            ref={feelingGroupRef}
+            tabIndex={-1}
+            role="group"
+            aria-labelledby={feelingLabelId}
+            aria-describedby={errors.clientFeeling ? feelingErrorId : undefined}
+            className="grid grid-cols-2 sm:grid-cols-4 gap-2 focus:outline-none"
+          >
             {FEELING_OPTIONS.map(({ value, label, emoji, selectedClass }) => (
               <button
                 key={value}
+                type="button"
                 onClick={() => { setClientFeeling(value); setErrors(e => ({ ...e, clientFeeling: '' })); }}
                 aria-pressed={clientFeeling === value}
                 className={cn(
-                  'flex flex-col items-center gap-1 py-3 px-1 rounded-lg border-2 transition-all touch-manipulation min-h-[64px]',
+                  'flex flex-col items-center gap-1 py-3 px-1 rounded-lg border-2 transition-[background-color,border-color,color,box-shadow] touch-manipulation min-h-[64px]',
                   'text-xs font-bold uppercase tracking-wide',
+                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   clientFeeling === value
                     ? selectedClass
                     : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -224,15 +255,16 @@ export function ClientCheckInForm() {
             ))}
           </div>
           {errors.clientFeeling && (
-            <p className="text-xs text-destructive mt-2">{errors.clientFeeling}</p>
+            <p id={feelingErrorId} className="text-sm text-destructive mt-2">{errors.clientFeeling}</p>
           )}
         </div>
 
         {/* Optional Notes */}
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">Anything else for your coach?</p>
+          <label htmlFor="checkin-notes" className="block font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">Anything else for your coach?</label>
           <Textarea
-            placeholder="Pain, blockers, schedule changes, or just how your week went..."
+            id="checkin-notes"
+            placeholder="Right knee twinged on squats Wednesday"
             value={painBlockers}
             onChange={(e) => setPainBlockers(e.target.value.slice(0, 500))}
             rows={3}
@@ -243,7 +275,7 @@ export function ClientCheckInForm() {
         {/* Recent Workouts Summary */}
         {recentCompletions.length > 0 && (
           <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">Recent Workouts</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-3 antialiased">Recent workouts</p>
             <div className="space-y-1.5">
               {recentCompletions.map((completion) => (
                 <div
@@ -278,22 +310,25 @@ export function ClientCheckInForm() {
           </div>
         )}
 
-        {/* Submit Error */}
-        {errors.submit && (
-          <p className="text-sm text-destructive text-center">{errors.submit}</p>
-        )}
+        {/* Submit Error — stable region so repeat failures re-announce */}
+        <div role="alert" aria-live="assertive">
+          {errors.submit && (
+            <p className="text-sm text-destructive text-center">{errors.submit}</p>
+          )}
+        </div>
 
-        {/* Submit */}
+        {/* Submit stays enabled until the request starts: disabling it while
+            the form is incomplete hid the reason and made validate() dead code. */}
         <Button
           onClick={handleSubmit}
-          disabled={!canSubmit}
+          disabled={isSubmitting}
           className="w-full h-14 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
           size="lg"
         >
           {isSubmitting ? (
             <Loader2 className="w-4 h-4 animate-spin mr-2" />
           ) : null}
-          Submit Check-in
+          Send check-in
         </Button>
       </div>
     </div>

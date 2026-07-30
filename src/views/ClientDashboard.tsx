@@ -310,10 +310,10 @@ export function ClientDashboard() {
       isOpen={showLeaveConfirm}
       onClose={() => setShowLeaveConfirm(false)}
       onConfirm={handleLeaveCoach}
-      title="Leave Your Coach"
-      message={`Stop training with ${coach?.user.name ?? 'your coach'}?`}
+      title="Leave your coach?"
+      message={`You'll stop training with ${coach?.user.name ?? 'your coach'}.`}
       warningMessage="Your assigned plan is removed and messaging closes for both of you. Your workout history stays on your account."
-      confirmLabel="Leave Coach"
+      confirmLabel="Leave coach"
       confirmVariant="destructive"
     />
   );
@@ -491,7 +491,7 @@ export function ClientDashboard() {
                 className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150 mt-3"
                 size="sm"
               >
-                Complete Check-in
+                Complete check-in
               </Button>
             </div>
           </section>

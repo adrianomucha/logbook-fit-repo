@@ -396,7 +396,9 @@ export function ChatView({
             <label htmlFor="chat-message-input" className="sr-only">
               Message to {client.name}
             </label>
-            <div className="flex-1 flex items-center bg-muted/40 rounded-full px-4 min-h-[44px] transition-colors duration-150 focus-within:bg-muted/60">
+            {/* The bg-muted/40 → /60 tint measures 1.02:1 — invisible as a focus
+                indicator on its own, so the ring carries it. */}
+            <div className="flex-1 flex items-center bg-muted/40 rounded-full px-4 min-h-[44px] transition-colors duration-150 focus-within:bg-muted/60 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
               <input
                 id="chat-message-input"
                 ref={inputRef}

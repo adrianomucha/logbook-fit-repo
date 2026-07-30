@@ -138,7 +138,7 @@ export function WorkoutOverview({
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-brand transition-all duration-500"
+                className="h-full rounded-full bg-brand transition-[width] duration-500"
                 style={{ width: `${completionPct}%` }}
               />
             </div>
@@ -174,7 +174,7 @@ export function WorkoutOverview({
             <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
               Exercises
             </h3>
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground/60">
+            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
               {exercises.length}
             </span>
           </div>

@@ -67,7 +67,7 @@ export function WorkoutHeader({
             )}
             <span className="font-mono text-sm font-bold tabular-nums">
               {exercisesDone}
-              <span className="text-muted-foreground/60">/{exercisesTotal}</span>
+              <span className="text-muted-foreground">/{exercisesTotal}</span>
             </span>
           </div>
         </div>

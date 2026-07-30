@@ -16,7 +16,7 @@ function formatPrescription(exercise: Exercise): string {
 function ExerciseRow({ exercise, label }: { exercise: Exercise; label: string }) {
   return (
     <div className="py-3.5 first:pt-0 last:pb-0 flex items-center gap-3.5">
-      <span className="font-mono text-[11px] font-medium text-muted-foreground/50 tabular-nums w-7 text-right shrink-0">
+      <span className="font-mono text-[11px] font-medium text-muted-foreground tabular-nums w-7 text-right shrink-0">
         {label}
       </span>
       <div className="flex-1 min-w-0">
@@ -53,7 +53,7 @@ export function ExercisePreviewList({ exercises }: ExercisePreviewListProps) {
           <div key={group[0].id} className="py-3.5 first:pt-0 last:pb-0">
             <div className="flex items-center gap-1.5 mb-2">
               <Link2 className="w-3 h-3 text-muted-foreground/60" />
-              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground/60">
+              <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                 Superset
               </span>
             </div>

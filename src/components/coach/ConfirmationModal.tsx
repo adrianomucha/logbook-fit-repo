@@ -12,6 +12,9 @@ interface ConfirmationModalProps {
   message: string;
   warningMessage?: string;
   confirmLabel: string;
+  /** Label for the dismiss button. Defaults to "Cancel"; override when a
+   *  flow-specific word reads better ("Keep going" mid-workout). */
+  cancelLabel?: string;
   confirmVariant?: 'default' | 'destructive';
   /** When set, the confirm button stays locked until this exact text is
    * typed — the deliberate-friction rail for weighty actions. */
@@ -26,6 +29,7 @@ export function ConfirmationModal({
   message,
   warningMessage,
   confirmLabel,
+  cancelLabel = 'Cancel',
   confirmVariant = 'default',
   requireText,
 }: ConfirmationModalProps) {
@@ -73,7 +77,7 @@ export function ConfirmationModal({
             disabled={isPending}
             className="h-11 text-muted-foreground hover:text-foreground active:scale-[0.97] transition-transform duration-150 tap-target"
           >
-            Cancel
+            {cancelLabel}
           </Button>
           <Button
             variant={confirmVariant}
