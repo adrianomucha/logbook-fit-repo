@@ -16,7 +16,7 @@ export function WeekProgressStrip({
           <span className="font-mono text-2xl font-bold tabular-nums leading-none">
             {completed}
           </span>
-          <span className="font-mono text-sm text-muted-foreground/60 font-bold tabular-nums leading-none">
+          <span className="font-mono text-sm text-muted-foreground font-bold tabular-nums leading-none">
             / {total}
           </span>
           <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground ml-1">

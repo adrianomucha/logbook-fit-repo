@@ -113,7 +113,7 @@ export function TodayFocusView({
             disabled={isRestarting}
           >
             <RotateCcw className="w-4 h-4" />
-            {isRestarting ? 'Restarting...' : 'Restart Workout'}
+            {isRestarting ? 'Restarting…' : 'Restart workout'}
           </Button>
         </div>
       )}

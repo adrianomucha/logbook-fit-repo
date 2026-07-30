@@ -72,7 +72,7 @@ export function FlagMessageSheet({
 
         {/* Header */}
         <SheetHeader className="px-4 pb-3 border-b text-left">
-          <SheetTitle className="text-sm font-bold tracking-tight uppercase">Message Coach</SheetTitle>
+          <SheetTitle className="text-sm font-bold tracking-tight uppercase">Message coach</SheetTitle>
           <SheetDescription className="sr-only">
             Send a message to your coach about {exercise?.exercise.name}
           </SheetDescription>
@@ -115,7 +115,7 @@ export function FlagMessageSheet({
             ) : (
               <Send className="w-4 h-4 mr-2" />
             )}
-            {isSending ? 'Sending...' : 'Send Message'}
+            {isSending ? 'Sending…' : 'Send message'}
           </Button>
         </div>
       </SheetContent>

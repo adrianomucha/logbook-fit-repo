@@ -129,10 +129,14 @@ export function SetRow({
       className={cn(
         // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
         'h-11 w-full rounded-lg text-center font-mono text-base sm:text-sm font-bold tabular-nums outline-none transition-colors',
-        'placeholder:font-semibold placeholder:text-muted-foreground/40 disabled:opacity-100',
+        // Full-strength muted-foreground: any alpha below 100% drops this text
+        // under 4.5:1 on the card, and these cells hold logged training data.
+        'placeholder:font-semibold placeholder:text-muted-foreground disabled:opacity-100',
         completed
-          ? 'bg-transparent text-muted-foreground/50'
-          : 'bg-muted/50 text-foreground focus:bg-background focus:ring-1 focus:ring-foreground/20'
+          ? 'bg-transparent text-muted-foreground'
+          // ring-foreground/20 measured 1.6:1 against the card — too faint to
+          // read as a focus indicator on the screen's main data-entry control.
+          : 'bg-muted/50 text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
       )}
     />
   );
@@ -145,16 +149,18 @@ export function SetRow({
         showDivider && 'border-t border-border/30'
       )}
     >
+      {/* Two-step hierarchy that still clears AA: the live set number carries
+          full foreground weight, a logged one recedes to muted-foreground. */}
       <span
         className={cn(
           'font-mono text-sm font-bold tabular-nums transition-colors',
-          completed ? 'text-muted-foreground/40' : 'text-muted-foreground'
+          completed ? 'text-muted-foreground' : 'text-foreground'
         )}
       >
         {setNumber}
       </span>
 
-      <span className="font-mono text-xs tabular-nums text-muted-foreground/45 truncate">
+      <span className="font-mono text-xs tabular-nums text-muted-foreground truncate">
         {previous || '—'}
       </span>
 
@@ -181,7 +187,8 @@ export function SetRow({
         aria-label={completed ? `Mark set ${setNumber} incomplete` : `Mark set ${setNumber} complete`}
         aria-pressed={completed}
         className={cn(
-          'w-8 h-8 rounded-full border-2 flex items-center justify-center justify-self-end transition-all duration-200 touch-manipulation',
+          'w-8 h-8 rounded-full border-2 flex items-center justify-center justify-self-end transition-[background-color,border-color] duration-200 touch-manipulation',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           !isReadOnly && 'active:scale-[0.92] cursor-pointer',
           completed
             ? 'bg-success border-success'

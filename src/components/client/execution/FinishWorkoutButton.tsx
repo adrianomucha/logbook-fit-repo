@@ -31,7 +31,7 @@ export function FinishWorkoutButton({
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         >
-          Finish Workout
+          Finish workout
           {!allDone && (
             <span className="ml-2 font-mono tabular-nums opacity-50">
               {exercisesDone}/{exercisesTotal}

@@ -21,36 +21,21 @@ export function DayCard({ day, onClick }: DayCardProps) {
   const isInProgress = day.completion?.status === 'IN_PROGRESS';
   const isCurrent = status === 'CURRENT';
 
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-3 px-3.5 py-3 rounded-xl transition-colors touch-manipulation min-h-[56px]',
-        isCurrent && 'bg-muted/60 ring-1 ring-inset ring-brand/50',
-        isCompleted && 'opacity-60',
-        isInteractive && 'cursor-pointer hover:bg-muted/60 active:bg-muted',
-      )}
-      onClick={handleClick}
-      role={isInteractive ? 'button' : undefined}
-      tabIndex={isInteractive ? 0 : undefined}
-      aria-label={
-        isInteractive
-          ? `Workout ${orderIndex} – ${workoutDay?.name || 'Workout'}`
-          : undefined
-      }
-      onKeyDown={
-        isInteractive
-          ? (e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                handleClick();
-              }
-            }
-          : undefined
-      }
-    >
+  // Status reaches sighted users through a badge or an icon-only check, so it
+  // has to travel in the accessible name too — aria-label replaces the content.
+  const statusText = isCompleted
+    ? 'completed'
+    : isInProgress
+      ? 'in progress'
+      : isCurrent
+        ? 'up next'
+        : null;
+
+  const content = (
+    <>
       {/* Position number — fixed width */}
-      <div className="w-9 shrink-0">
-        <p className="font-mono text-[9px] uppercase tracking-[0.14em] text-muted-foreground/60">
+      <div className="w-9 shrink-0 text-left">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
           Day
         </p>
         <p className="font-mono text-sm font-bold tabular-nums leading-none mt-0.5">
@@ -59,7 +44,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
       </div>
 
       {/* Middle — workout info */}
-      <div className="flex-1 min-w-0">
+      <div className="flex-1 min-w-0 text-left">
         <p className="text-[15px] font-semibold truncate tracking-tight">
           {workoutDay?.name || 'Workout'}
         </p>
@@ -76,15 +61,48 @@ export function DayCard({ day, onClick }: DayCardProps) {
             <Check className="w-3.5 h-3.5 text-success stroke-[3]" />
           </div>
         ) : isInProgress ? (
-          <span className="font-mono text-[9px] uppercase tracking-[0.14em] font-bold bg-warning/15 text-warning rounded-full px-2 py-1">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] font-bold bg-warning/15 text-warning rounded-full px-2 py-1">
             In progress
           </span>
         ) : isCurrent ? (
-          <span className="font-mono text-[9px] uppercase tracking-[0.14em] font-bold bg-brand text-brand-foreground rounded-full px-2 py-1">
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] font-bold bg-brand text-brand-foreground rounded-full px-2 py-1">
             Up next
           </span>
         ) : null}
       </div>
-    </div>
+    </>
+  );
+
+  // rounded-lg (10px) sits concentrically inside the grid card's 18px corner
+  // over its 8px padding; rounded-xl made the inner corner rounder than the outer.
+  const shell = cn(
+    'w-full flex items-center gap-3 px-3.5 py-3 rounded-lg transition-colors touch-manipulation min-h-[56px]',
+    isCurrent && 'bg-muted/60 ring-1 ring-inset ring-brand/50',
+    isCompleted && 'opacity-60',
+  );
+
+  if (!isInteractive) {
+    return <div className={shell}>{content}</div>;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className={cn(
+        shell,
+        'cursor-pointer hover:bg-muted/60 active:bg-muted',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+      )}
+      aria-label={[
+        `Workout ${orderIndex}`,
+        workoutDay?.name || 'Workout',
+        statusText,
+      ]
+        .filter(Boolean)
+        .join(', ')}
+    >
+      {content}
+    </button>
   );
 }

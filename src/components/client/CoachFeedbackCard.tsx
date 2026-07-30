@@ -25,7 +25,7 @@ export function CoachFeedbackCard({ checkIn, onViewDetails }: CoachFeedbackCardP
   return (
     <div className="rounded-xl bg-muted/40 px-4 py-4 border-l-2 border-brand">
       <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
-        Coach Feedback · {checkInDate}
+        Coach feedback · {checkInDate}
       </p>
       <p className="text-sm text-foreground/80 leading-relaxed line-clamp-2 mb-2">
         {feedbackPreview}

@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { Input } from '@/components/ui/input';
 import { Check, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -62,6 +63,7 @@ export function ExerciseCard({
   const completedSets = getCompletedSetsCount(exercise);
   const isFlagged = !!exercise.flag;
   const flagNote = exercise.flag?.note;
+  const flagNoteId = useId();
 
   // Zero-pad the numeric part so labels line up with the dashboard's
   // exercise preview list: "4" → "04", "4B" → "04B".
@@ -76,13 +78,11 @@ export function ExerciseCard({
 
   const setRows = Array.from({ length: exercise.sets }, (_, i) => i + 1);
 
-  const handleFlagClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleFlagClick = () => {
     if (!isReadOnly && onToggleFlag) onToggleFlag();
   };
 
-  const handleToggleAllSets = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleAllSets = () => {
     if (isReadOnly) return;
     // Toggle all sets — if all complete, uncomplete them; otherwise complete remaining
     const setNumbers = Array.from({ length: exercise.sets }, (_, i) => i + 1);
@@ -115,60 +115,65 @@ export function ExerciseCard({
 
   return (
     <div id={id}>
-      {/* ── Exercise row ── */}
-      <button
-        type="button"
-        onClick={onToggleExpand}
-        className="w-full flex items-center gap-3.5 text-left py-2.5 transition-colors hover:bg-muted/30 active:scale-[0.99] touch-manipulation min-h-[56px]"
-        aria-expanded={isExpanded}
-        aria-label={`${exercise.exercise.name}, ${getPrescription()}`}
-      >
-        {/* Left — mono index, same voice as the dashboard preview list */}
-        <span
-          className={cn(
-            'font-mono text-[11px] font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
-            isComplete ? 'text-success' : 'text-muted-foreground/50'
-          )}
+      {/* ── Exercise row ──
+          Expand and mark-all are siblings, never nested: a <button> may not
+          contain another interactive element, and nesting them hid the
+          mark-all control behind the outer button's accessible name. */}
+      <div className="flex items-center gap-3.5 min-h-[56px]">
+        <button
+          type="button"
+          onClick={onToggleExpand}
+          className="flex-1 min-w-0 flex items-center gap-3.5 text-left py-2.5 rounded-lg transition-colors hover:bg-muted/30 active:scale-[0.99] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          aria-expanded={isExpanded}
+          aria-label={`${exercise.exercise.name}, ${getPrescription()}`}
         >
-          {displayLabel}
-        </span>
-
-        {/* Middle — name + prescription */}
-        <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-          <div className="flex items-center gap-1.5">
-            <p
-              className={cn(
-                'text-[15px] font-semibold tracking-tight leading-snug truncate transition-colors',
-                isComplete ? 'text-foreground/50' : 'text-foreground'
-              )}
-            >
-              {exercise.exercise.name}
-            </p>
-            {isFlagged && (
-              <div className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
-            )}
-          </div>
-          <p className="font-mono text-xs tabular-nums text-muted-foreground">
-            {getPrescription()}
-            {completedSets > 0 && !isComplete && (
-              <span className="ml-1.5 text-success font-bold">
-                {completedSets}/{exercise.sets}
-              </span>
-            )}
-          </p>
-        </div>
-
-        {/* Right — circle checkbox (tappable: toggles all sets) */}
-        {!isReadOnly ? (
-          <div
-            role="button"
-            tabIndex={0}
-            onClick={handleToggleAllSets}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleToggleAllSets(e as unknown as React.MouseEvent); } }}
+          {/* Left — mono index, same voice as the dashboard preview list */}
+          <span
             className={cn(
-              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 cursor-pointer',
+              'font-mono text-[11px] font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
+              isComplete ? 'text-success' : 'text-muted-foreground'
+            )}
+          >
+            {displayLabel}
+          </span>
+
+          {/* Middle — name + prescription */}
+          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+            <div className="flex items-center gap-1.5">
+              <p
+                className={cn(
+                  'text-[15px] font-semibold tracking-tight leading-snug truncate transition-colors',
+                  isComplete ? 'text-muted-foreground' : 'text-foreground'
+                )}
+              >
+                {exercise.exercise.name}
+              </p>
+              {isFlagged && (
+                <div className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
+              )}
+            </div>
+            <p className="font-mono text-xs tabular-nums text-muted-foreground">
+              {getPrescription()}
+              {completedSets > 0 && !isComplete && (
+                <span className="ml-1.5 text-success font-bold">
+                  {completedSets}/{exercise.sets}
+                </span>
+              )}
+            </p>
+          </div>
+        </button>
+
+        {/* Right — circle checkbox (toggles every set in one go) */}
+        {!isReadOnly ? (
+          <button
+            type="button"
+            onClick={handleToggleAllSets}
+            aria-pressed={isComplete}
+            className={cn(
+              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200 cursor-pointer touch-manipulation',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               isComplete
-                ? 'bg-success border-success scale-100'
+                ? 'bg-success border-success'
                 : 'border-foreground/15 bg-transparent hover:border-foreground/30'
             )}
             aria-label={isComplete ? 'Mark all sets incomplete' : 'Mark all sets complete'}
@@ -176,11 +181,11 @@ export function ExerciseCard({
             {isComplete && (
               <Check className="w-4 h-4 text-success-foreground animate-set-complete" />
             )}
-          </div>
+          </button>
         ) : (
           <div
             className={cn(
-              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200',
+              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200',
               isComplete
                 ? 'bg-success border-success'
                 : 'border-foreground/15 bg-transparent'
@@ -191,7 +196,7 @@ export function ExerciseCard({
             )}
           </div>
         )}
-      </button>
+      </div>
 
       {/* ── Expanded: coach tip + set table + flag ── */}
       {isExpanded && (
@@ -214,8 +219,13 @@ export function ExerciseCard({
               </div>
               {!isReadOnly ? (
                 <>
+                  {/* A placeholder is never the label — it disappears on input */}
+                  <label htmlFor={flagNoteId} className="sr-only">
+                    Note for your coach about {exercise.exercise.name}
+                  </label>
                   <Input
-                    placeholder="Add a note (optional)..."
+                    id={flagNoteId}
+                    placeholder="Sore left shoulder on the last set"
                     value={flagNote || ''}
                     onChange={(e) => onUpdateFlagNote?.(e.target.value)}
                     maxLength={200}
@@ -229,7 +239,7 @@ export function ExerciseCard({
                         <button
                           type="button"
                           onClick={handleFlagClick}
-                          className="text-sm text-muted-foreground/60 hover:text-destructive transition-colors min-h-[44px] flex items-center touch-manipulation"
+                          className="text-sm text-muted-foreground hover:text-destructive transition-colors min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           Remove flag
                         </button>
@@ -237,9 +247,9 @@ export function ExerciseCard({
                       <button
                         type="button"
                         onClick={onMessageCoach}
-                        className="text-sm text-primary hover:underline min-h-[44px] flex items-center touch-manipulation"
+                        className="text-sm text-primary hover:underline min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        Message coach →
+                        Message coach
                       </button>
                     </div>
                   </div>
@@ -258,18 +268,18 @@ export function ExerciseCard({
               header once, so the rows below are pure numbers. */}
           <div>
             <div className={cn(SET_GRID, 'pb-1')}>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 Set
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 Last
               </span>
               {/* Unit-neutral: no weightUnit column exists yet, so claiming
                   "LBS" for a kg-programming coach would be plain wrong */}
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
                 Weight
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 text-center">
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
                 {exercise.trackingType === 'TIME' ? 'Sec' : 'Reps'}
               </span>
               <span aria-hidden="true" />
@@ -321,7 +331,7 @@ export function ExerciseCard({
             <button
               type="button"
               onClick={handleFlagClick}
-              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/50 hover:text-muted-foreground transition-colors touch-manipulation py-2 -my-2"
+              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors touch-manipulation py-2 -my-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Flag className="w-3.5 h-3.5" />
               Flag for coach

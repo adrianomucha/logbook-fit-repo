@@ -94,7 +94,7 @@ export function CheckInDetailModal({
         {/* What You Said */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
-            What You Said
+            What you said
           </h3>
           <div className="space-y-3">
             {workoutFeeling && (
@@ -123,7 +123,7 @@ export function CheckInDetailModal({
         {/* Coach's Feedback */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
-            Your Coach&apos;s Feedback
+            Your coach&apos;s feedback
           </h3>
           {checkIn.coachResponse ? (
             <div className="space-y-3">
@@ -150,7 +150,7 @@ export function CheckInDetailModal({
         {/* This Week's Workouts */}
         <section>
           <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
-            That Week&apos;s Workouts
+            That week&apos;s workouts
           </h3>
           {weekWorkouts.length > 0 ? (
             <div className="space-y-2">
