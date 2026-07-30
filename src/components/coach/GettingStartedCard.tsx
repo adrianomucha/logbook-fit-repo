@@ -196,7 +196,7 @@ export function GettingStartedCard({
               >
                 {step.title}
               </p>
-              <p className="text-sm text-muted-foreground/80 mt-0.5 antialiased">
+              <p className="text-sm text-muted-foreground mt-0.5 antialiased">
                 {step.body}
               </p>
               {step.action && <div className="mt-2.5">{step.action}</div>}

@@ -121,7 +121,7 @@ export function AllClientsPage() {
             action={
               <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
                 <Plus className="w-4 h-4 mr-1.5" />
-                Invite Client
+                Invite client
               </Button>
             }
           />
@@ -204,7 +204,7 @@ export function AllClientsPage() {
           <div className="animate-enter flex justify-center pt-4">
             <button
               onClick={() => router.push('/coach/clients/past')}
-              className="text-xs text-muted-foreground/70 hover:text-foreground transition-colors tap-target antialiased"
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors tap-target antialiased"
             >
               Past clients ({pastClients.length})
             </button>

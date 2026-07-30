@@ -226,6 +226,7 @@ export function CheckInHistoryPanel({
                       {editingId === checkIn.id ? (
                         <div className="space-y-2">
                           <Textarea
+                            aria-label="Edit your response"
                             value={draft}
                             onChange={(e) => setDraft(e.target.value.slice(0, 1000))}
                             maxLength={1000}

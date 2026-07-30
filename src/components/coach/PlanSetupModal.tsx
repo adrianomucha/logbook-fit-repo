@@ -242,7 +242,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             htmlFor={ids.name}
             trailing={
               formData.name.length >= 40 ? (
-                <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
+                <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
                   {formData.name.length}/50
                 </span>
               ) : null
@@ -283,7 +283,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
                 htmlFor={ids.description}
                 trailing={
                   formData.description.length >= 150 ? (
-                    <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
+                    <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
                       {formData.description.length}/200
                     </span>
                   ) : null
@@ -416,7 +416,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           </div>
         </div>
 
-        <p id={ids.scheduleHint} className="text-xs text-muted-foreground/70 px-1 text-pretty">
+        <p id={ids.scheduleHint} className="text-xs text-muted-foreground px-1 text-pretty">
           Clients work through workouts in order. Rest days are whenever they don&apos;t train.
         </p>
       </form>

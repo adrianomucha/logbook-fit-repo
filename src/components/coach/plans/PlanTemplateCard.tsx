@@ -110,7 +110,7 @@ export function PlanTemplateCard({
                 </span>
               ))}
               {clientNames.length > MAX_AVATARS && (
-                <span className="w-6 h-6 rounded-full ring-2 ring-card bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground tabular-nums select-none">
+                <span className="w-6 h-6 rounded-full ring-2 ring-card bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground tabular-nums select-none">
                   +{clientNames.length - MAX_AVATARS}
                 </span>
               )}
@@ -129,7 +129,7 @@ export function PlanTemplateCard({
             </span>
           )
         ) : (
-          <span className="hidden sm:inline font-mono text-[10px] font-medium text-muted-foreground/50 antialiased">{'—'}</span>
+          <span className="hidden sm:inline font-mono text-[10px] font-medium text-muted-foreground antialiased">{'—'}</span>
         )}
       </span>
 

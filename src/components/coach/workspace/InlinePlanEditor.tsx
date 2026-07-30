@@ -131,7 +131,7 @@ export function InlinePlanEditor({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onCreatePlan}>
                 <Plus className="w-4 h-4 mr-2" />
-                Create New Plan
+                Create new plan
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -201,8 +201,8 @@ export function InlinePlanEditor({
                   isSuperset(group) ? (
                     <div key={group[0].id} className="py-1.5">
                       <div className="flex items-center gap-1.5 px-0.5 pb-0.5">
-                        <Link2 className="w-3 h-3 text-muted-foreground/60" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+                        <Link2 className="w-3 h-3 text-muted-foreground" />
+                        <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                           Superset
                         </span>
                       </div>

@@ -9,7 +9,7 @@ export function EmptyStateNoClients({ onInvite }: { onInvite?: () => void }) {
         Invite your first client to get started.
       </p>
       <Button variant="default" size="sm" onClick={onInvite} className="active:scale-[0.96] transition-transform duration-150">
-        + Invite Client
+        + Invite client
       </Button>
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useId } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -68,6 +68,7 @@ export function InlineCheckInReview({
   variant = 'card',
 }: InlineCheckInReviewProps) {
   const [coachResponse, setCoachResponse] = useState('');
+  const responseId = useId();
   const [planAdjustment, setPlanAdjustment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
@@ -418,8 +419,9 @@ export function InlineCheckInReview({
         {/* Coach Response - Inline Form */}
         <div className="space-y-3 bg-muted/50 rounded-xl p-3 sm:p-4">
           <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Your response</label>
+            <label htmlFor={responseId} className="text-xs text-muted-foreground mb-1.5 block font-medium">Your response</label>
             <Textarea
+              id={responseId}
               placeholder={`Write your response to ${firstName}...`}
               value={coachResponse}
               onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
@@ -477,7 +479,7 @@ function FlaggedExercisesSection({
       <div className="flex items-center gap-2 mb-2">
         <Flag className="w-4 h-4 text-muted-foreground" />
         <span className="text-sm font-medium">
-          Flagged This Week ({flags.length})
+          Flagged this week ({flags.length})
         </span>
       </div>
 

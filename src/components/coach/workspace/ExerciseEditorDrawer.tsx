@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useId, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ChevronLeft, Library, Link2, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
@@ -39,6 +38,13 @@ interface ExerciseEditorContentProps {
  * Exercise editor content — renders inline (no Sheet wrapper).
  * Used inside PlanEditorDrawer as a view swap.
  */
+// Mirrors the `default` / `outline` Badge variants these filters used to render
+const BADGE_FILTER =
+  'inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] font-semibold transition-colors ' +
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
+const BADGE_FILTER_ON = 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80';
+const BADGE_FILTER_OFF = 'border-border text-foreground hover:bg-accent';
+
 export function ExerciseEditorContent({
   exercise,
   onSave,
@@ -72,6 +78,19 @@ export function ExerciseEditorContent({
   const [weightUnit, setWeightUnit] = useState(exercise?.weightUnit || 'lbs');
   const [restSeconds, setRestSeconds] = useState(exercise?.restSeconds?.toString() || '');
   const [notes, setNotes] = useState(exercise?.notes || '');
+
+  // Every visible label in this form was decoration — no htmlFor, no id — so
+  // screen readers announced each field as an unnamed text box.
+  const uid = useId();
+  const ids = {
+    name: `${uid}-name`,
+    sets: `${uid}-sets`,
+    reps: `${uid}-reps`,
+    weight: `${uid}-weight`,
+    weightUnit: `${uid}-weight-unit`,
+    rest: `${uid}-rest`,
+    notes: `${uid}-notes`,
+  };
   const [supersetWithPrevious, setSupersetWithPrevious] = useState(!!exercise?.supersetWithPrevious);
 
   // Reset form when exercise changes
@@ -188,9 +207,9 @@ export function ExerciseEditorContent({
           </button>
           <div className="flex-1 min-w-0">
             <h2 className="text-[15px] font-black tracking-tight leading-tight truncate">
-              {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` ${exerciseNumber}` : ''}`}
+              {isNew ? 'Add exercise' : `Edit exercise${exerciseNumber ? ` ${exerciseNumber}` : ''}`}
             </h2>
-            <p className="text-[11px] text-muted-foreground/80 truncate mt-px">
+            <p className="text-[11px] text-muted-foreground truncate mt-px">
               {isNew ? 'Choose from library or create custom' : dayName || 'Modify exercise details'}
             </p>
           </div>
@@ -238,28 +257,33 @@ export function ExerciseEditorContent({
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search exercises..."
+                aria-label="Search the exercise library"
                 className="pl-9"
               />
             </div>
 
             {/* Category filter */}
-            <div className="flex gap-1.5 flex-wrap">
-              <Badge
-                variant={selectedCategory === null ? 'default' : 'outline'}
-                className="cursor-pointer text-[10px]"
+            {/* Real buttons, not Badges: Badge renders a plain <div>, so these
+                filters had no role, no focus and no keyboard activation. */}
+            <div className="flex gap-1.5 flex-wrap" role="group" aria-label="Filter by category">
+              <button
+                type="button"
+                aria-pressed={selectedCategory === null}
                 onClick={() => setSelectedCategory(null)}
+                className={cn(BADGE_FILTER, selectedCategory === null ? BADGE_FILTER_ON : BADGE_FILTER_OFF)}
               >
                 All
-              </Badge>
+              </button>
               {categories.map((cat) => (
-                <Badge
+                <button
                   key={cat}
-                  variant={selectedCategory === cat ? 'default' : 'outline'}
-                  className="cursor-pointer capitalize text-[10px]"
+                  type="button"
+                  aria-pressed={selectedCategory === cat}
                   onClick={() => setSelectedCategory(cat)}
+                  className={cn(BADGE_FILTER, 'capitalize', selectedCategory === cat ? BADGE_FILTER_ON : BADGE_FILTER_OFF)}
                 >
                   {cat}
-                </Badge>
+                </button>
               ))}
             </div>
 
@@ -317,10 +341,11 @@ export function ExerciseEditorContent({
           <div className="p-4 space-y-5">
             {/* Exercise Name */}
             <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 block">
+              <label htmlFor={ids.name} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium mb-1.5 block">
                 Exercise Name
               </label>
               <Input
+                  id={ids.name}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Barbell Squat"
@@ -333,11 +358,12 @@ export function ExerciseEditorContent({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex items-center h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
+                  <label htmlFor={ids.sets} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     Sets
                   </label>
                 </div>
                 <Input
+                  id={ids.sets}
                   type="number"
                   value={sets}
                   onChange={(e) => setSets(e.target.value)}
@@ -348,7 +374,7 @@ export function ExerciseEditorContent({
               </div>
               <div>
                 <div className="flex items-center justify-between gap-2 h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
+                  <label htmlFor={ids.reps} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     {trackingType === 'TIME' ? 'Time' : 'Reps'}
                   </label>
                   <div className="flex rounded-md bg-muted p-0.5" role="group" aria-label="Measure by">
@@ -371,6 +397,7 @@ export function ExerciseEditorContent({
                   </div>
                 </div>
                 <Input
+                  id={ids.reps}
                   value={reps}
                   onChange={(e) => setReps(e.target.value)}
                   placeholder={trackingType === 'TIME' ? '60s or 30-60s' : '10 or 8-12'}
@@ -384,12 +411,13 @@ export function ExerciseEditorContent({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <div className="flex items-center h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
+                  <label htmlFor={ids.weight} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     Weight
                   </label>
                 </div>
                 <div className="flex gap-2">
                   <Input
+                  id={ids.weight}
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
                     placeholder="135"
@@ -397,7 +425,7 @@ export function ExerciseEditorContent({
                     className="flex-1 min-w-0 tabular-nums"
                   />
                   <Select value={weightUnit} onValueChange={setWeightUnit}>
-                    <SelectTrigger className="w-[72px] shrink-0">
+                    <SelectTrigger id={ids.weightUnit} aria-label="Weight unit" className="w-[72px] shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -410,11 +438,12 @@ export function ExerciseEditorContent({
               </div>
               <div>
                 <div className="flex items-center h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
+                  <label htmlFor={ids.rest} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium">
                     Rest (sec)
                   </label>
                 </div>
                 <Input
+                  id={ids.rest}
                   type="number"
                   value={restSeconds}
                   onChange={(e) => setRestSeconds(e.target.value)}
@@ -451,10 +480,11 @@ export function ExerciseEditorContent({
 
             {/* Coaching Notes */}
             <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 block">
+              <label htmlFor={ids.notes} className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium mb-1.5 block">
                 Notes
               </label>
               <Textarea
+                id={ids.notes}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Form cues, progressions, modifications..."
@@ -479,7 +509,7 @@ export function ExerciseEditorContent({
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                isNew ? 'Add Exercise' : 'Save Changes'
+                isNew ? 'Add exercise' : 'Save changes'
               )}
             </Button>
 

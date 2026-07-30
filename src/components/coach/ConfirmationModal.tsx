@@ -107,7 +107,7 @@ export function ConfirmationModal({
           <div>
             <label
               htmlFor="confirmation-modal-text"
-              className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-2 block"
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium mb-2 block"
             >
               Type <span className="text-foreground normal-case tracking-normal font-sans font-semibold">{requireText}</span> to confirm
             </label>

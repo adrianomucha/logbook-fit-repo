@@ -54,10 +54,12 @@ function Key({
   return (
     <span className="flex items-center gap-1.5">
       <span className={cn('w-1.5 h-1.5 rounded-full', active ? dot : 'bg-muted-foreground/20')} />
-      <span className={cn('font-semibold tabular-nums', active ? 'text-foreground' : 'text-muted-foreground/40')}>
+      {/* Inactive recedes to muted-foreground rather than /40: the dimmed
+          state still has to be readable (4.74:1 vs 1.69:1). */}
+      <span className={cn('font-semibold tabular-nums', active ? 'text-foreground' : 'text-muted-foreground')}>
         {value}
       </span>
-      <span className={active ? 'text-muted-foreground' : 'text-muted-foreground/40'}>{label}</span>
+      <span className="text-muted-foreground">{label}</span>
     </span>
   );
 }

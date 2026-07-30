@@ -452,7 +452,7 @@ export function UnifiedClientProfile() {
                 onClick={() => router.push('/coach/clients')}
                 className="active:scale-[0.96] transition-transform duration-150"
               >
-                Back to Clients
+                Back to clients
               </Button>
             </div>
           </div>
@@ -741,7 +741,7 @@ export function UnifiedClientProfile() {
                   >
                     {tab.label}
                     {'count' in tab && tab.count > 0 && (
-                      <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
+                      <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[10px] leading-none tabular-nums text-muted-foreground">
                         {tab.count}
                       </span>
                     )}
@@ -872,14 +872,14 @@ export function UnifiedClientProfile() {
         isOpen={showEndConfirm}
         onClose={() => setShowEndConfirm(false)}
         onConfirm={handleEndRelationship}
-        title="End Coaching Relationship"
+        title="End the coaching relationship?"
         message={`Stop coaching ${client.name}? They'll be removed from your roster.`}
         warningMessage={
           apiClient.isSample
             ? 'This is your sample client. It and all its generated data will be deleted.'
             : 'Their plan is removed and messaging closes for both of you. Nothing is deleted. You can restore them from Past clients on the Clients page.'
         }
-        confirmLabel="End Coaching"
+        confirmLabel="End coaching"
         confirmVariant="destructive"
         /* Typing the name makes ending a real coaching relationship a
            deliberate act — the sample client stays one-tap disposable */

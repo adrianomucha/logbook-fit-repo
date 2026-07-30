@@ -221,7 +221,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
             htmlFor="invite-note"
             trailing={
               note.length > 0 ? (
-                <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
+                <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
                   {note.length}/{NOTE_MAX_LENGTH}
                 </span>
               ) : null
@@ -238,7 +238,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               maxLength={NOTE_MAX_LENGTH}
             />
           </FieldShell>
-          <p className="text-xs text-muted-foreground/70 mt-1.5 px-1 antialiased text-pretty">
+          <p className="text-xs text-muted-foreground mt-1.5 px-1 antialiased text-pretty">
             Greets them at signup, then opens your chat.
           </p>
         </div>

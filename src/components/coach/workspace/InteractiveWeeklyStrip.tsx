@@ -72,7 +72,7 @@ export function InteractiveWeeklyStrip({
     if (compact) {
       return (
         <div className="flex items-center justify-between py-3 px-4 bg-card border rounded-xl text-muted-foreground">
-          <span className="text-sm antialiased">This Week</span>
+          <span className="text-sm antialiased">This week</span>
           <span className="text-xs antialiased">No plan assigned</span>
         </div>
       );
@@ -115,7 +115,7 @@ export function InteractiveWeeklyStrip({
         {/* Header row */}
         <div className="flex items-baseline justify-between">
           <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
-            This Week
+            This week
           </p>
           <p className={cn(
             "text-[11px] uppercase tracking-[0.12em] font-medium antialiased transition-colors duration-300",
@@ -269,7 +269,7 @@ export function InteractiveWeeklyStrip({
         <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
           Week {currentWeekNum} of {plan.weeks.length}
         </p>
-        <CardTitle className="text-base antialiased">This Week</CardTitle>
+        <CardTitle className="text-base antialiased">This week</CardTitle>
       </CardHeader>
       <CardContent>
         {content}

@@ -201,7 +201,7 @@ export function AssignPlanModal({
                     aria-checked={isSelected}
                     onClick={() => setSelectedPlanId(isSelected ? null : plan.id)}
                     className={cn(
-                      'w-full text-left rounded-xl p-3 bg-card transition-all duration-150',
+                      'w-full text-left rounded-xl p-3 bg-card transition-[box-shadow,transform] duration-150',
                       'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       'cursor-pointer active:scale-[0.98]',

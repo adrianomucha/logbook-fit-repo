@@ -542,10 +542,10 @@ export function PlanEditorDrawer({
                 {hasDays && (
                   <div className="hidden sm:block flex-1 overflow-y-auto px-2 pb-3">
                     <div className="flex items-baseline justify-between gap-2 px-2.5 pt-2 pb-1.5">
-                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium antialiased">
+                      <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
                         Days
                       </span>
-                      <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70 antialiased">
+                      <span className="font-mono text-[10px] tabular-nums text-muted-foreground antialiased">
                         {currentWeek.days.filter((d) => d.exercises?.length > 0).length}/{currentWeek.days.length} ready
                       </span>
                     </div>
@@ -656,7 +656,7 @@ export function PlanEditorDrawer({
                     placeholder={`Day ${clampedDay + 1}: name this workout`}
                     maxLength={80}
                     aria-label="Workout name"
-                    className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-lg font-semibold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                    className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-lg font-semibold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground antialiased"
                   />
                   <Textarea
                     value={localDayDescription}
@@ -664,7 +664,7 @@ export function PlanEditorDrawer({
                     onBlur={commitDayDescription}
                     placeholder="Add a briefing for your client: what to expect, how to approach it…"
                     aria-label="Briefing"
-                    className="mt-1 border-0 shadow-none rounded-none px-0 py-0 min-h-0 text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                    className="mt-1 border-0 shadow-none rounded-none px-0 py-0 min-h-0 text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground antialiased"
                     rows={2}
                     maxLength={500}
                   />
@@ -731,8 +731,8 @@ export function PlanEditorDrawer({
                               style={{ animationDelay: `${baseIdx * 40}ms`, animationFillMode: 'backwards' }}
                             >
                               <div className="flex items-center gap-1.5 px-4 pb-1">
-                                <Link2 className="w-3 h-3 text-muted-foreground/60" />
-                                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+                                <Link2 className="w-3 h-3 text-muted-foreground" />
+                                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground">
                                   Superset
                                 </span>
                               </div>
@@ -755,7 +755,7 @@ export function PlanEditorDrawer({
                         className="w-full px-4 py-3.5 sm:py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
                       >
                         <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
-                        Add Exercise
+                        Add exercise
                       </button>
                     </>
                   )}

@@ -18,7 +18,7 @@ interface ClientsRequiringActionProps {
 
 function SampleChip() {
   return (
-    <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-dashed border-border font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.1em] text-muted-foreground leading-none whitespace-nowrap flex-shrink-0">
+    <span className="inline-flex items-center px-1.5 py-0.5 rounded border border-dashed border-border font-mono text-[10px] sm:text-[10px] uppercase tracking-[0.1em] text-muted-foreground leading-none whitespace-nowrap flex-shrink-0">
       Sample
     </span>
   );

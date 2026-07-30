@@ -90,7 +90,6 @@ export function CoachDashboard() {
   const searchParams = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -170,8 +169,9 @@ export function CoachDashboard() {
         workoutsPerWeek: formData.workoutsPerWeek,
       });
       setShowPlanSetupModal(false);
-      setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 3000);
+      // sonner, like every other toast in the app: it announces through a live
+      // region and is dismissible. The hand-rolled banner did neither.
+      toast.success('Plan created');
       if (openEditorAfterCreate.current) {
         openEditorAfterCreate.current = false;
         setEditingPlanId(newPlan.id);
@@ -219,24 +219,6 @@ export function CoachDashboard() {
 
   return (
     <div className="min-h-dvh bg-background pb-24 sm:pb-4">
-      {/* Success Toast — checkmark draws in */}
-      {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(16,185,129,0.3)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
-          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
-            <path
-              d="M8 12.5l2.5 2.5 5.5-5.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="animate-draw-check"
-            />
-          </svg>
-          <span className="font-semibold text-sm tracking-tight">Plan created</span>
-        </div>
-      )}
-
       {/* Invite Client Modal */}
       <InviteClientModal
         isOpen={showInviteModal}
@@ -262,8 +244,8 @@ export function CoachDashboard() {
         isOpen={showRemoveSampleConfirm}
         onClose={() => setShowRemoveSampleConfirm(false)}
         onConfirm={handleRemoveSampleClient}
-        title="Remove Sample Client"
-        message="Remove Riley Chen and all their generated data?"
+        title="Remove the sample client?"
+        message="Riley Chen and all their generated data will be removed."
         warningMessage="The sample plan, workouts, check-ins, and messages will be deleted. Your own plans and exercises stay untouched."
         confirmLabel="Remove"
         confirmVariant="destructive"
@@ -274,8 +256,8 @@ export function CoachDashboard() {
         isOpen={!!planToDelete}
         onClose={() => setPlanToDelete(null)}
         onConfirm={handleDeleteTemplate}
-        title="Delete Plan"
-        message={`Are you sure you want to delete "${planToDeleteName}"?`}
+        title="Delete this plan?"
+        message={`"${planToDeleteName}" will be deleted.`}
         warningMessage="This action cannot be undone. Clients keep their own copy of any plan you've assigned them."
         confirmLabel="Delete"
         confirmVariant="destructive"
@@ -379,9 +361,9 @@ export function CoachDashboard() {
 
                 {/* All-clear celebration — only when every client is on track */}
                 {dashboardClients.length > 0 && dashboardClients.every((c) => c.urgency === 'ON_TRACK') && (
-                  <div className="animate-enter flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3.5" style={{ animationDelay: '180ms' }}>
-                    <PartyPopper className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 animate-bounce-once" />
-                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 antialiased">
+                  <div className="animate-enter flex items-center gap-3 rounded-xl bg-success/10 px-4 py-3.5" style={{ animationDelay: '180ms' }}>
+                    <PartyPopper className="w-5 h-5 text-success shrink-0 animate-bounce-once" aria-hidden="true" />
+                    <p className="text-sm font-medium text-foreground antialiased">
                       All clients on track. Nice coaching.
                     </p>
                   </div>
@@ -400,7 +382,7 @@ export function CoachDashboard() {
                 action={templates.length > 0 ? (
                   <Button onClick={handleCreateNewPlan} size="sm" className="active:scale-[0.96] transition-transform duration-150 tap-target">
                     <Plus className="w-4 h-4 mr-1.5" />
-                    New Plan
+                    New plan
                   </Button>
                 ) : undefined}
               />
@@ -430,7 +412,7 @@ export function CoachDashboard() {
                   </p>
                   <Button onClick={handleCreateNewPlan} size="lg" className="text-sm tracking-wide px-8 active:scale-[0.96] transition-transform duration-150">
                     <Plus className="w-4 h-4 mr-2" />
-                    Create Template
+                    Create template
                   </Button>
                 </div>
               )}

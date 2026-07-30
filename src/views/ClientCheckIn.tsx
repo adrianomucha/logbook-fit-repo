@@ -119,7 +119,7 @@ export function ClientCheckIn() {
               <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
               <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can&apos;t find this client</h2>
               <p className="text-sm text-muted-foreground mb-5 antialiased">They may have been removed, or the link might be outdated.</p>
-              <Button onClick={() => router.push('/coach/clients')} className="active:scale-[0.96] transition-transform duration-150">Back to Clients</Button>
+              <Button onClick={() => router.push('/coach/clients')} className="active:scale-[0.96] transition-transform duration-150">Back to clients</Button>
             </CardContent>
           </Card>
         </div>
@@ -136,16 +136,16 @@ export function ClientCheckIn() {
           <Card className="max-w-md mx-auto">
             <CardContent className="text-center py-12">
               <CheckCircle2 className="w-16 h-16 mx-auto mb-4 text-success animate-bounce-once" />
-              <h2 className="text-2xl font-bold mb-2">Check-in Complete!</h2>
+              <h2 className="text-2xl font-bold mb-2">Check-in sent</h2>
               <p className="text-muted-foreground mb-6">
                 Your response has been recorded for {clientName}.
               </p>
               <div className="space-y-2">
                 <Button onClick={handleBack} className="w-full">
-                  Back to {clientName}&apos;s Profile
+                  Back to {clientName}&apos;s profile
                 </Button>
                 <Button variant="outline" onClick={() => router.push('/coach')} className="w-full">
-                  Back to Dashboard
+                  Back to dashboard
                 </Button>
               </div>
             </CardContent>
@@ -173,7 +173,7 @@ export function ClientCheckIn() {
               size="sm"
               onClick={handleBack}
               className="h-8 w-8 p-0 shrink-0"
-              aria-label="Back to Profile"
+              aria-label="Back to profile"
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
@@ -188,7 +188,7 @@ export function ClientCheckIn() {
           <Card>
             <CardContent className="text-center py-12">
               <ClipboardCheck className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
-              <h2 className="text-xl font-bold mb-2">No Active Check-in</h2>
+              <h2 className="text-xl font-bold mb-2">No active check-in</h2>
               <p className="text-muted-foreground mb-6">
                 Start a new check-in to hear how {clientName} is doing.
               </p>
@@ -370,12 +370,13 @@ export function ClientCheckIn() {
             {/* Coach Response */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Your Response</CardTitle>
+                <CardTitle className="text-base" id="coach-response-label">Your response</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <Textarea
-                    placeholder={`Write your response to ${clientName}...`}
+                    aria-labelledby="coach-response-label"
+                    placeholder={`Write your response to ${clientName}…`}
                     value={coachResponse}
                     onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
                     rows={4}

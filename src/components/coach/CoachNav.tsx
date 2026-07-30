@@ -94,7 +94,10 @@ export function CoachNav({
                       variant="destructive"
                       className="h-4 min-w-4 justify-center px-1 py-0 text-[10px] tabular-nums"
                     >
-                      {unreadCount}
+                      <span aria-hidden="true">{unreadCount}</span>
+                      <span className="sr-only">
+                        {unreadCount === 1 ? '1 unread message' : `${unreadCount} unread messages`}
+                      </span>
                     </Badge>
                   )}
                 </button>

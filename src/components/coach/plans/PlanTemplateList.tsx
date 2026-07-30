@@ -108,23 +108,23 @@ export function PlanTemplateList({
                 aria-expanded={isOpen}
                 className="w-full flex items-baseline justify-between gap-2 px-1 mb-2 group/header rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
-                <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 group-hover/header:text-muted-foreground font-medium antialiased transition-colors">
+                <span className="flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground group-hover/header:text-muted-foreground font-medium antialiased transition-colors">
                   <ChevronRight
                     className={cn('w-3 h-3 transition-transform duration-150', isOpen && 'rotate-90')}
                     aria-hidden="true"
                   />
                   {section.label}
                 </span>
-                <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70 antialiased">
+                <span className="font-mono text-[10px] tabular-nums text-muted-foreground antialiased">
                   {section.plans.length}
                 </span>
               </button>
             ) : (
               <div className="flex items-baseline justify-between px-1 mb-2">
-                <h2 className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium antialiased">
+                <h2 className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
                   {section.label}
                 </h2>
-                <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70 antialiased">
+                <span className="font-mono text-[10px] tabular-nums text-muted-foreground antialiased">
                   {section.plans.length}
                 </span>
               </div>
