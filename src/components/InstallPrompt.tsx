@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import {
   INSTALL_PROMPT_STORAGE_KEY,
   markOffered,
+  matchesInstalledDisplayMode,
   parseInstallPromptState,
   resolveInstallPrompt,
   type InstallMethod,
@@ -145,7 +146,9 @@ export function InstallPrompt() {
           userAgent: window.navigator.userAgent,
           maxTouchPoints: window.navigator.maxTouchPoints,
           navigatorStandalone,
-          displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
+          displayModeInstalled: matchesInstalledDisplayMode(
+            (query) => window.matchMedia(query).matches
+          ),
           hasNativePrompt: deferred !== null,
         },
         readState()

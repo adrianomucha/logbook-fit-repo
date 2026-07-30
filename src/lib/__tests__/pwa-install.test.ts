@@ -2,9 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   detectInstallMethod,
   hasBeenOffered,
+  INSTALLED_DISPLAY_MODES,
   isIOS,
   isRunningInstalled,
   markOffered,
+  matchesInstalledDisplayMode,
   parseInstallPromptState,
   resolveInstallPrompt,
   type BrowserSnapshot,
@@ -43,10 +45,14 @@ const snapshot = (over: Partial<BrowserSnapshot> = {}): BrowserSnapshot => ({
   userAgent: UA.iphoneSafari,
   maxTouchPoints: 5,
   navigatorStandalone: false,
-  displayModeStandalone: false,
+  displayModeInstalled: false,
   hasNativePrompt: false,
   ...over,
 });
+
+/** Stands in for `window.matchMedia`, matching only the modes listed. */
+const matcherFor = (...active: string[]) => (query: string) =>
+  active.some((mode) => query === `(display-mode: ${mode})`);
 
 describe("isIOS", () => {
   it("matches iPhone, iPad and iPod user agents", () => {
@@ -68,19 +74,40 @@ describe("isIOS", () => {
   });
 });
 
+describe("matchesInstalledDisplayMode", () => {
+  it("is false in a browser tab, where only `browser` matches", () => {
+    expect(matchesInstalledDisplayMode(matcherFor("browser"))).toBe(false);
+  });
+
+  it("catches every display mode an installed launch can report", () => {
+    for (const mode of INSTALLED_DISPLAY_MODES) {
+      expect(matchesInstalledDisplayMode(matcherFor(mode))).toBe(true);
+    }
+  });
+
+  it("covers the modes a manifest can land on beyond plain standalone", () => {
+    // The manifest asks for `standalone`, but the platform decides. Guard
+    // against a future manifest change silently re-enabling the banner
+    // inside the installed app.
+    expect(INSTALLED_DISPLAY_MODES).toContain("fullscreen");
+    expect(INSTALLED_DISPLAY_MODES).toContain("minimal-ui");
+    expect(INSTALLED_DISPLAY_MODES).toContain("window-controls-overlay");
+  });
+});
+
 describe("isRunningInstalled", () => {
   it("is false in a normal browser tab", () => {
     expect(
-      isRunningInstalled({ navigatorStandalone: false, displayModeStandalone: false })
+      isRunningInstalled({ navigatorStandalone: false, displayModeInstalled: false })
     ).toBe(false);
   });
 
   it("accepts either the iOS or the standards-based signal", () => {
     expect(
-      isRunningInstalled({ navigatorStandalone: true, displayModeStandalone: false })
+      isRunningInstalled({ navigatorStandalone: true, displayModeInstalled: false })
     ).toBe(true);
     expect(
-      isRunningInstalled({ navigatorStandalone: false, displayModeStandalone: true })
+      isRunningInstalled({ navigatorStandalone: false, displayModeInstalled: true })
     ).toBe(true);
   });
 });
@@ -130,14 +157,42 @@ describe("detectInstallMethod", () => {
 
   it("never prompts inside an already-installed app", () => {
     expect(detectInstallMethod(snapshot({ navigatorStandalone: true }))).toBe("none");
-    expect(detectInstallMethod(snapshot({ displayModeStandalone: true }))).toBe("none");
+    expect(detectInstallMethod(snapshot({ displayModeInstalled: true }))).toBe("none");
     // Even when Chromium offers a prompt for an app that is already installed.
     expect(
       detectInstallMethod(
         snapshot({
           userAgent: UA.androidChrome,
-          displayModeStandalone: true,
+          displayModeInstalled: true,
           hasNativePrompt: true,
+        })
+      )
+    ).toBe("none");
+  });
+
+  it("stays silent inside the installed app under any launch display mode", () => {
+    for (const mode of INSTALLED_DISPLAY_MODES) {
+      const displayModeInstalled = matchesInstalledDisplayMode(matcherFor(mode));
+      // Every platform we support, launched from its home screen / dock.
+      for (const userAgent of [UA.iphoneSafari, UA.iphoneChrome, UA.androidChrome]) {
+        expect(detectInstallMethod(snapshot({ userAgent, displayModeInstalled }))).toBe(
+          "none"
+        );
+      }
+    }
+  });
+
+  it("stays silent on Chromium with the app installed, because no event fires", () => {
+    // Chrome withholds `beforeinstallprompt` once the app is installed, so an
+    // installed user browsing a normal tab resolves to none without needing
+    // getInstalledRelatedApps().
+    expect(
+      detectInstallMethod(
+        snapshot({
+          userAgent: UA.androidChrome,
+          maxTouchPoints: 5,
+          displayModeInstalled: false,
+          hasNativePrompt: false,
         })
       )
     ).toBe("none");
