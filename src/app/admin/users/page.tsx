@@ -19,7 +19,7 @@ function FlagChip({ label, title }: { label: string; title?: string }) {
   return (
     <span
       title={title}
-      className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
+      className="inline-flex items-center whitespace-nowrap rounded-full bg-muted px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground"
     >
       {label}
     </span>
@@ -80,7 +80,10 @@ export default async function AccountsAdminPage() {
         <div className="mt-8 overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border text-left font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+              {/* whitespace-nowrap throughout: on narrow screens the table must
+                  overflow into the scroll wrapper, not crush columns until
+                  roles, dates, and chips wrap mid-value */}
+              <tr className="border-b border-border text-left font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground whitespace-nowrap">
                 <th className="px-4 py-3 font-medium">Account</th>
                 <th className="px-4 py-3 font-medium">Role</th>
                 <th className="px-4 py-3 font-medium">Created</th>
@@ -105,18 +108,18 @@ export default async function AccountsAdminPage() {
                         {user.name}
                       </p>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 whitespace-nowrap">
                       <span className="font-mono text-[11px] font-semibold uppercase tracking-[0.08em]">
                         {user.role === 'COACH'
                           ? `Coach · ${user.coachProfile?._count.clients ?? 0}`
                           : 'Client'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-mono tabular-nums text-muted-foreground">
+                    <td className="px-4 py-3 font-mono tabular-nums text-muted-foreground whitespace-nowrap">
                       {dateFmt.format(user.createdAt)}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="flex flex-wrap gap-1.5">
+                      <span className="flex items-center gap-1.5">
                         {isDemoAccount(user.email) && (
                           <FlagChip
                             label={locked ? 'Demo · locked' : 'Demo'}
