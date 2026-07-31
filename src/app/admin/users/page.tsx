@@ -4,7 +4,6 @@ import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import { isDemoAccount, isLockedDemoAccount } from '@/lib/demo';
 import prisma from '@/lib/prisma';
-import { AdminNav } from '../AdminNav';
 import { ResetPasswordButton } from './ResetPasswordButton';
 
 export const dynamic = 'force-dynamic';
@@ -56,11 +55,9 @@ export default async function AccountsAdminPage() {
   const demoCount = active.filter((u) => isDemoAccount(u.email)).length;
 
   return (
-    <div className="min-h-dvh bg-background px-4 py-10 sm:px-6">
+    <div className="px-4 py-10 sm:px-6">
       <div className="mx-auto max-w-4xl">
-        <AdminNav active="accounts" />
-
-        <div className="mt-6">
+        <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             Admin
           </p>
