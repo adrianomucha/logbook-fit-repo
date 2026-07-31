@@ -106,16 +106,19 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center sm:justify-center bg-black/50 sm:p-4 animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50 sm:p-4 animate-in fade-in-0 duration-200"
       onClick={handleBackdropClick}
     >
       {/* Flex-column dialog: header and footer stay put, only the body scrolls.
           More reliable than sticky-inside-scroller (Safari) and keeps the
-          scrollbar inside the rounded corners. */}
+          scrollbar inside the rounded corners.
+          On mobile this is a bottom sheet that hugs its content — never a
+          full-height panel, so short dialogs don't strand their footer at the
+          bottom of an empty screen. */}
       <div
         ref={modalRef}
         tabIndex={-1}
-        className={`relative w-full h-full sm:h-auto ${maxWidthClasses[maxWidth]} sm:max-h-[85vh] flex flex-col overflow-hidden bg-background sm:rounded-2xl shadow-xl focus:outline-none animate-in fade-in-0 sm:zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200`}
+        className={`relative w-full ${maxWidthClasses[maxWidth]} max-h-[calc(100dvh-2.5rem)] sm:max-h-[85vh] flex flex-col overflow-hidden bg-background rounded-t-2xl sm:rounded-2xl pb-[env(safe-area-inset-bottom)] sm:pb-0 shadow-xl focus:outline-none animate-in fade-in-0 sm:zoom-in-95 slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-200`}
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
