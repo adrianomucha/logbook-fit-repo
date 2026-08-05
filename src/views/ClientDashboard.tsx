@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, type CSSProperties } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSWRConfig } from 'swr';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
 import { getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
 import { startOfWeek } from 'date-fns';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
 import { useClientProgress } from '@/hooks/api/useClientProgress';
 import { useClientCheckIns } from '@/hooks/api/useClientCheckIns';
@@ -50,6 +51,23 @@ export function ClientDashboard() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const { mutate } = useSWRConfig();
+
+  // On mobile the chat is a fixed full-screen column. Left anchored to the
+  // layout viewport it would keep reserving the full screen height once the
+  // keyboard is up — iOS doesn't shrink that viewport — and the composer
+  // would float above the keys with a band of blank page between them. Pin
+  // the column to the area that's actually visible instead, and drop the
+  // tab-bar clearance for as long as the bar is hiding itself.
+  const keyboard = useKeyboardInset();
+  const chatShellClass = cn(
+    'fixed left-0 right-0 top-[var(--kb-top,0px)] bottom-[var(--kb-bottom,0px)] flex flex-col overflow-hidden',
+    keyboard.isOpen ? 'pb-0' : 'pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))]',
+    'sm:relative sm:left-auto sm:right-auto sm:top-auto sm:bottom-auto sm:pb-0 sm:min-h-dvh'
+  );
+  const chatShellStyle = {
+    '--kb-top': `${keyboard.top}px`,
+    '--kb-bottom': `${keyboard.bottom}px`,
+  } as CSSProperties;
 
   // ---- API Hooks ----
   const { user, coach, isLoading: isLoadingUser, error: userError } = useCurrentUser();
@@ -389,12 +407,10 @@ export function ClientDashboard() {
   if (!plan) {
     const isChat = currentView === 'chat' && !!coachUserId;
     return (
-      <div className={cn(
-        'bg-background',
-        isChat
-          ? 'fixed inset-0 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-dvh'
-          : 'min-h-dvh sm:pb-4'
-      )}>
+      <div
+        className={cn('bg-background', isChat ? chatShellClass : 'min-h-dvh sm:pb-4')}
+        style={isChat ? chatShellStyle : undefined}
+      >
         <ClientNav
           activeTab={isChat ? 'chat' : 'workout'}
           onTabChange={(tab) => {
@@ -465,12 +481,10 @@ export function ClientDashboard() {
   }
 
   return (
-    <div className={cn(
-      'bg-background',
-      currentView === 'chat'
-        ? 'fixed inset-0 pb-[calc(var(--tabbar-h)+env(safe-area-inset-bottom))] flex flex-col overflow-hidden sm:relative sm:pb-0 sm:min-h-dvh'
-        : 'sm:pb-4'
-    )}>
+    <div
+      className={cn('bg-background', currentView === 'chat' ? chatShellClass : 'sm:pb-4')}
+      style={currentView === 'chat' ? chatShellStyle : undefined}
+    >
       <ClientNav
         activeTab={currentView}
         onTabChange={handleTabChange}

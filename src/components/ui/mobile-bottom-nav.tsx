@@ -1,4 +1,7 @@
+'use client';
+
 import { cn } from '@/lib/utils';
+import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { LucideIcon } from 'lucide-react';
 
 export interface NavItem {
@@ -36,13 +39,21 @@ export function MobileBottomNav({
 }: MobileBottomNavProps) {
   const activeIndex = items.findIndex((item) => item.id === activeId);
   const isBrand = accent === 'brand';
+  // A tab bar stranded behind the keyboard is unreachable chrome, and its
+  // bottom-0 anchor is measured against a viewport the keyboard doesn't
+  // shrink — so it strands a band of blank page above the keys. Native chat
+  // apps drop the bar while you type; so do we.
+  const { isOpen: isKeyboardOpen } = useKeyboardInset();
 
   return (
     // z-40 keeps the nav above page content but below dialogs/sheets (z-50),
     // so full-screen modal footers aren't covered on mobile
     <nav
       aria-label="Main navigation"
-      className="fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-background/80 backdrop-blur-xl border-t border-border/60 pb-[env(safe-area-inset-bottom)]"
+      className={cn(
+        'fixed bottom-0 left-0 right-0 z-40 sm:hidden bg-background/80 backdrop-blur-xl border-t border-border/60 pb-[env(safe-area-inset-bottom)]',
+        isKeyboardOpen && 'hidden'
+      )}
     >
       <div className="relative flex h-[var(--tabbar-h)]">
         {/* The travelling pill. One element for all tabs — it slides a whole
