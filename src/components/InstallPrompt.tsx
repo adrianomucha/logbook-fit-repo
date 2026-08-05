@@ -203,9 +203,9 @@ export function InstallPrompt() {
       className={cn(
         // z-40 matches the mobile tab bar and stays under sheets/dialogs (z-50).
         'fixed z-40 animate-enter',
-        // Clears the 50px mobile tab bar plus the home-indicator inset; on sm+
+        // Clears the mobile tab bar plus the home-indicator inset; on sm+
         // the tab bar is hidden, so the card just sits in the bottom corner.
-        'inset-x-3 bottom-[calc(3.75rem+env(safe-area-inset-bottom))]',
+        'inset-x-3 bottom-[calc(var(--tabbar-h)+0.625rem+env(safe-area-inset-bottom))]',
         'sm:inset-x-auto sm:right-4 sm:bottom-4 sm:w-[22rem]'
       )}
     >

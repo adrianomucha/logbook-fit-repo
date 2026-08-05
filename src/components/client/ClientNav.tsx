@@ -88,6 +88,8 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
         items={mobileNavItems}
         activeId={activeTab}
         onSelect={(id) => onTabChange(id as ClientNavTab)}
+        // Volt pill, matching the brand underline the desktop tabs use
+        accent="brand"
       />
     </>
   );
