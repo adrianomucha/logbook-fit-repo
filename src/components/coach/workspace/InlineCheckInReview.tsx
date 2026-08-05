@@ -425,7 +425,7 @@ export function InlineCheckInReview({
               onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
               maxLength={1000}
               rows={3}
-              className="bg-background border-border/60 font-prose text-[15px] leading-[1.5]"
+              className="bg-background border-border/60 font-prose text-base sm:text-[15px] leading-[1.5]"
             />
             {coachResponse.length > 0 && (
               <p className="text-xs text-muted-foreground mt-1 text-right">

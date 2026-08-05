@@ -325,7 +325,7 @@ export function ExerciseEditorContent({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Barbell Squat"
                 maxLength={100}
-                className="h-11 font-bold text-[15px] tracking-tight"
+                className="h-11 font-bold text-base sm:text-[15px] tracking-tight"
               />
             </div>
 
@@ -460,7 +460,7 @@ export function ExerciseEditorContent({
                 placeholder="Form cues, progressions, modifications..."
                 rows={2}
                 maxLength={500}
-                className="text-sm resize-none"
+                className="resize-none"
               />
             </div>
           </div>
