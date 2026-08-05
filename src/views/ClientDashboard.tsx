@@ -49,8 +49,6 @@ export function ClientDashboard() {
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
-  const [showContinueConfirm, setShowContinueConfirm] = useState(false);
-  const [isContinuingPlan, setIsContinuingPlan] = useState(false);
   const { mutate } = useSWRConfig();
 
   // ---- API Hooks ----
@@ -72,12 +70,7 @@ export function ClientDashboard() {
   });
 
   // Fetch full plan detail for sub-components that need the full plan structure
-  const {
-    plan: planDetail,
-    error: planError,
-    isLoading: isLoadingPlan,
-    refresh: refreshPlan,
-  } = useClientPlan();
+  const { plan: planDetail, error: planError, isLoading: isLoadingPlan } = useClientPlan();
 
   // A 404 from the plan endpoints means "no plan assigned yet" — an expected
   // state, not a failure. Anything else is a real error.
@@ -278,28 +271,6 @@ export function ClientDashboard() {
       toast.error('Failed to send feedback. Please try again.');
     } finally {
       setIsSendingFeedback(false);
-    }
-  };
-
-  // Plan finished → run the same block again. A fresh copy is created
-  // server-side, so this cycle starts empty and the finished one stays in
-  // Progress.
-  const handleContinuePlan = async () => {
-    setIsContinuingPlan(true);
-    try {
-      await apiFetch('/api/client/plan/continue', { method: 'POST' });
-      setShowContinueConfirm(false);
-      await Promise.all([refreshWeek(), refreshPlan(), mutate('/api/me')]);
-      setWorkoutViewMode('today');
-      toast.success(`${plan?.name ?? 'Your plan'} restarted — week 1 is live`);
-    } catch (e) {
-      toast.error(
-        e instanceof ApiError && e.status === 409
-          ? 'This plan is still running.'
-          : 'Couldn’t restart your plan. Please try again.'
-      );
-    } finally {
-      setIsContinuingPlan(false);
     }
   };
 
@@ -548,23 +519,12 @@ export function ClientDashboard() {
             <p className="text-sm text-muted-foreground max-w-xs mx-auto antialiased">
               All {plan.durationWeeks || plan.weeks.length} weeks are behind you
               {progress?.stats?.totalWorkouts ? `, ${progress.stats.totalWorkouts} workouts logged` : ''}.
-              {' '}{coach?.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block —
-              or run this one again while you wait.
+              {' '}{coach?.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block.
             </p>
             <div className="flex flex-col items-center gap-2 mt-6">
-              {/* Waiting on the next block shouldn't mean not training —
-                  running this one again is one tap */}
               <Button
-                onClick={() => setShowContinueConfirm(true)}
-                disabled={isContinuingPlan}
-                className="min-w-[220px] h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
-              >
-                {isContinuingPlan ? 'Starting…' : 'Run this plan again'}
-              </Button>
-              <Button
-                variant="outline"
                 onClick={handleMessageCoach}
-                className="min-w-[220px] h-11 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform duration-150"
+                className="min-w-[220px] h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
               >
                 Message {coach?.user.name?.split(' ')[0] ?? 'Coach'}
               </Button>
@@ -724,16 +684,6 @@ export function ClientDashboard() {
           </>
         )}
       </div>
-
-      {/* Run the finished plan again */}
-      <ConfirmationModal
-        isOpen={showContinueConfirm}
-        onClose={() => setShowContinueConfirm(false)}
-        onConfirm={handleContinuePlan}
-        title={`Run ${plan?.name ?? 'this plan'} again?`}
-        message="You'll start back at week 1 from today, with the same workouts. Everything you already logged stays in Progress — this is a fresh cycle, not a reset."
-        confirmLabel="Start week 1"
-      />
 
       {/* Check-in detail modal */}
       <CheckInDetailModal

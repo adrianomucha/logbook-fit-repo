@@ -4,6 +4,8 @@ import { getRawWeekNumber } from "@/lib/workout-week-helpers";
 
 /**
  * "Run it again" — restart the plan a client just finished for another cycle.
+ * Coach-only: what a client trains on next is the coach's call, so this is
+ * reached solely through POST /api/coach/clients/[id]/plan/continue.
  *
  * The client gets a FRESH COPY rather than a reset date on the same rows.
  * WorkoutCompletion is unique per (client, plan, day), so reusing the plan
@@ -53,8 +55,8 @@ export function isPlanEnded(
 
 /**
  * Clone the client's finished plan into a new cycle and put them on it.
- * Returns a discriminated result rather than throwing so both the coach and
- * client routes can map failures onto the same status codes.
+ * Returns a discriminated result rather than throwing so the route can map
+ * each failure onto its own status code.
  */
 export async function continueClientPlan(
   clientProfileId: string
