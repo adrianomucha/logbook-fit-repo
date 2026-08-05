@@ -107,6 +107,42 @@ return 404/410 are deleted on the next send. iOS only delivers Web Push to
 apps installed to the home screen (16.4+), which the toggle detects and says
 so instead of offering a button that can't work.
 
+## Analytics
+
+Web Analytics and Speed Insights both mount in the root layout, and both are
+wrapped so our own visits don't land in the numbers. Vercel has no server-side
+exclusion — no IP filter, no dashboard toggle — so the only hook is
+`beforeSend`, which runs in the browser and can drop an event before it goes
+out. `lib/analytics-opt-out.ts` holds the flag both wrappers check: a
+`va-disable` key in localStorage.
+
+Load the site once with the toggle to flip it:
+
+```
+https://logbook.fit/?va-disable=1   # stop counting this browser
+https://logbook.fit/?va-disable=0   # count it again
+```
+
+The parameter is written to storage and then stripped from the address bar, so
+it can't ride along into a bookmark or a shared link. The console equivalent
+does the same thing:
+
+```js
+localStorage.setItem('va-disable', '1')
+localStorage.removeItem('va-disable')
+```
+
+Do it on every browser and device you browse from. Storage is per origin, so
+logbook.fit and a preview deployment are separate buckets, and private windows
+always count — their storage is discarded on close. Localhost needs no opt-out:
+`/_vercel/insights/` only exists on Vercel deployments, so the script 404s and
+no events are generated.
+
+To confirm, `localStorage.getItem('va-disable')` reads `"1"` when excluded. For
+proof events are dropped rather than merely flagged, reload with the Network
+tab open — a counted visit fires a request to `/_vercel/insights/view` and an
+excluded one fires nothing. The insights script itself still loads either way.
+
 ## Scripts
 
 | Command | Description |
