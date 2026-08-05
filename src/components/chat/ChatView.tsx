@@ -408,7 +408,9 @@ export function ChatView({
                 maxLength={MAX_MESSAGE_LENGTH}
                 onChange={(e) => setNewMessage(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="flex-1 bg-transparent font-prose text-[15px] placeholder:font-prose placeholder:text-muted-foreground focus:outline-none py-2.5"
+                // text-base (16px) on mobile keeps iOS from zooming the page in
+                // on focus; the composer keeps its 15px prose size from sm up
+                className="flex-1 bg-transparent font-prose text-base sm:text-[15px] placeholder:font-prose placeholder:text-muted-foreground focus:outline-none py-2.5"
               />
             </div>
             <button

@@ -230,7 +230,7 @@ export function CheckInHistoryPanel({
                             onChange={(e) => setDraft(e.target.value.slice(0, 1000))}
                             maxLength={1000}
                             rows={3}
-                            className="bg-background/60 text-sm"
+                            className="bg-background/60"
                             autoFocus
                           />
                           <div className="flex justify-end gap-1.5">
