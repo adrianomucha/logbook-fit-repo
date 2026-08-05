@@ -19,6 +19,7 @@ Status: ✅ fixed on this branch · ⬜ open
 | 4 | ✅ | **API failures render as empty states.** Dashboard fetch error → "Getting Started" onboarding screen; client-profile fetch error → "Can't find this client". Most mutations swallow errors silently (`catch {}` + misleading "handled by apiFetch" comments). | High | S–M |
 | 5 | ✅ | **Plans are assigned by reference, not cloned.** Now clone-on-assign: each assignment creates the client's own copy (`sourceTemplateId` links it to the template). Editing a template affects future assignments only; editing from a client's profile tailors only that client. Pre-existing assignments keep legacy shared behavior until their next (re)assignment. | Critical | L |
 | 5a | ✅ | *Stopgap for #5:* block deleting a plan while it's assigned, and fix the false confirm copy. (Superseded by clone-on-assign — the 409 now only guards legacy direct assignments.) | High | S |
+| 5b | ✅ | *Follow-on defect in #5, found by end-to-end testing:* the `plans_coach_name_active_unique` index predates clone-on-assign and covers every live plan, so the **second** copy of any plan name collided — assigning one template to a second client (or re-running a finished block) died on a unique-constraint 500. The API layer already scoped the rule to templates; the index now agrees (`20260805_plan_name_unique_templates_only`). | Critical | S |
 
 ## P1 — High-impact gaps in daily coaching
 

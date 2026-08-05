@@ -802,7 +802,7 @@ export function UnifiedClientProfile() {
                             <span className="truncate">{plan.name}</span>
                           </h3>
                           <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground tabular-nums antialiased mt-1">
-                            {planEnded ? 'Plan complete. Assign the next block, or run this one again' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
+                            {planEnded ? 'Plan complete' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
                           </p>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0">
