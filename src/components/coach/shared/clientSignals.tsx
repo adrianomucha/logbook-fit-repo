@@ -1,3 +1,4 @@
+import { MessageSquare } from 'lucide-react';
 import type { DashboardClient } from '@/types/api';
 
 /**
@@ -130,6 +131,24 @@ export function SignalLine({ signal }: { signal: ClientSignal }) {
         </span>
       ))}
     </p>
+  );
+}
+
+/**
+ * Unanswered messages from this client — the most literal "act on me" a
+ * roster row can carry, so it reads as a solid chip rather than a status tint.
+ * Renders nothing at zero so callers can pass a count straight through.
+ */
+export function UnreadChip({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <span
+      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-foreground text-background text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0"
+      title={`${count} unread message${count === 1 ? '' : 's'}`}
+    >
+      <MessageSquare className="w-2.5 h-2.5" aria-hidden="true" />
+      {count} new
+    </span>
   );
 }
 

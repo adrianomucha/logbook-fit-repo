@@ -30,6 +30,7 @@ import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
 import { WelcomeAwaitingPlan } from '@/components/client/WelcomeAwaitingPlan';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
+import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserMinus } from 'lucide-react';
@@ -48,6 +49,8 @@ export function ClientDashboard() {
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showContinueConfirm, setShowContinueConfirm] = useState(false);
+  const [isContinuingPlan, setIsContinuingPlan] = useState(false);
   const { mutate } = useSWRConfig();
 
   // ---- API Hooks ----
@@ -64,10 +67,17 @@ export function ClientDashboard() {
   } = useMessages(coachUserId, {
     // Only the chat tab counts as "read" — the poll runs from every tab
     markRead: currentView === 'chat',
+    // …and only the chat tab polls at conversation speed
+    active: currentView === 'chat',
   });
 
   // Fetch full plan detail for sub-components that need the full plan structure
-  const { plan: planDetail, error: planError, isLoading: isLoadingPlan } = useClientPlan();
+  const {
+    plan: planDetail,
+    error: planError,
+    isLoading: isLoadingPlan,
+    refresh: refreshPlan,
+  } = useClientPlan();
 
   // A 404 from the plan endpoints means "no plan assigned yet" — an expected
   // state, not a failure. Anything else is a real error.
@@ -271,6 +281,28 @@ export function ClientDashboard() {
     }
   };
 
+  // Plan finished → run the same block again. A fresh copy is created
+  // server-side, so this cycle starts empty and the finished one stays in
+  // Progress.
+  const handleContinuePlan = async () => {
+    setIsContinuingPlan(true);
+    try {
+      await apiFetch('/api/client/plan/continue', { method: 'POST' });
+      setShowContinueConfirm(false);
+      await Promise.all([refreshWeek(), refreshPlan(), mutate('/api/me')]);
+      setWorkoutViewMode('today');
+      toast.success(`${plan?.name ?? 'Your plan'} restarted — week 1 is live`);
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError && e.status === 409
+          ? 'This plan is still running.'
+          : 'Couldn’t restart your plan. Please try again.'
+      );
+    } finally {
+      setIsContinuingPlan(false);
+    }
+  };
+
   const [isRestartingWorkout, setIsRestartingWorkout] = useState(false);
 
   const handleRestartWorkout = async () => {
@@ -407,9 +439,12 @@ export function ClientDashboard() {
         )}>
           {isChat ? (
             <>
-              <div className="shrink-0 py-4">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
-                <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
+              <div className="shrink-0 py-4 flex items-end justify-between gap-3">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
+                  <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
+                </div>
+                <NotificationToggle className="shrink-0" />
               </div>
               <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
                 <ChatView
@@ -513,12 +548,23 @@ export function ClientDashboard() {
             <p className="text-sm text-muted-foreground max-w-xs mx-auto antialiased">
               All {plan.durationWeeks || plan.weeks.length} weeks are behind you
               {progress?.stats?.totalWorkouts ? `, ${progress.stats.totalWorkouts} workouts logged` : ''}.
-              {' '}{coach?.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block.
+              {' '}{coach?.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block —
+              or run this one again while you wait.
             </p>
             <div className="flex flex-col items-center gap-2 mt-6">
+              {/* Waiting on the next block shouldn't mean not training —
+                  running this one again is one tap */}
               <Button
-                onClick={handleMessageCoach}
+                onClick={() => setShowContinueConfirm(true)}
+                disabled={isContinuingPlan}
                 className="min-w-[220px] h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
+              >
+                {isContinuingPlan ? 'Starting…' : 'Run this plan again'}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleMessageCoach}
+                className="min-w-[220px] h-11 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-transform duration-150"
               >
                 Message {coach?.user.name?.split(' ')[0] ?? 'Coach'}
               </Button>
@@ -614,9 +660,12 @@ export function ClientDashboard() {
 
         {currentView === 'chat' && coachUserId && (
           <>
-            <div className="shrink-0 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
-              <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
+            <div className="shrink-0 py-4 flex items-end justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
+                <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
+              </div>
+              <NotificationToggle className="shrink-0" />
             </div>
             {/* Contained module — hairline card, matching the rest of the client pages */}
             <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
@@ -675,6 +724,16 @@ export function ClientDashboard() {
           </>
         )}
       </div>
+
+      {/* Run the finished plan again */}
+      <ConfirmationModal
+        isOpen={showContinueConfirm}
+        onClose={() => setShowContinueConfirm(false)}
+        onConfirm={handleContinuePlan}
+        title={`Run ${plan?.name ?? 'this plan'} again?`}
+        message="You'll start back at week 1 from today, with the same workouts. Everything you already logged stays in Progress — this is a fresh cycle, not a reset."
+        confirmLabel="Start week 1"
+      />
 
       {/* Check-in detail modal */}
       <CheckInDetailModal

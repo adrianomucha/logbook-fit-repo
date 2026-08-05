@@ -1,6 +1,8 @@
+import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { AccountMenu } from '@/components/AccountMenu';
 import { Logo } from '@/components/brand/LogoMark';
+import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { Dumbbell, MessageSquare, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -20,10 +22,15 @@ const DESKTOP_TABS: { id: ClientNavTab; label: string }[] = [
 ];
 
 export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
+  const { total: unreadTotal } = useUnreadMessages();
+  // Sitting in the chat marks the thread read within a poll — showing the
+  // badge on the tab you're already reading is just noise.
+  const unreadCount = activeTab === 'chat' ? 0 : unreadTotal;
+
   // Mobile bottom nav items
   const mobileNavItems = [
     { id: 'workout' as const, label: 'Workout', icon: Dumbbell },
-    { id: 'chat' as const, label: 'Chat', icon: MessageSquare },
+    { id: 'chat' as const, label: 'Chat', icon: MessageSquare, badge: unreadCount },
     { id: 'progress' as const, label: 'Progress', icon: TrendingUp },
   ];
 
@@ -52,13 +59,21 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
                   onClick={() => onTabChange(id)}
                   aria-current={activeTab === id ? 'page' : undefined}
                   className={cn(
-                    'inline-flex items-center border-b-2 px-0.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                    'inline-flex items-center gap-1.5 border-b-2 px-0.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     activeTab === id
                       ? 'border-brand text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
                   {label}
+                  {id === 'chat' && unreadCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="h-4 min-w-4 justify-center px-1 py-0 text-[10px] tabular-nums"
+                    >
+                      {unreadCount}
+                    </Badge>
+                  )}
                 </button>
               ))}
             </nav>

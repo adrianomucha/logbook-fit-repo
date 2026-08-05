@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import { usePastClients } from '@/hooks/api/useCoachClients';
+import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import type { DashboardClient } from '@/types/api';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
@@ -17,9 +18,10 @@ import {
   avatarColor,
   SignalLine,
   ChevronIcon,
+  UnreadChip,
 } from '@/components/coach/shared/clientSignals';
 
-function ClientRow({ client }: { client: DashboardClient }) {
+function ClientRow({ client, unreadCount }: { client: DashboardClient; unreadCount: number }) {
   const router = useRouter();
   const style = urgencyStyle(client.urgency);
   const signal = getSignal(client);
@@ -50,6 +52,7 @@ function ClientRow({ client }: { client: DashboardClient }) {
           <h3 className="text-sm sm:text-[15px] font-semibold truncate leading-tight">
             {displayName}
           </h3>
+          <UnreadChip count={unreadCount} />
           <span
             className={cn(
               'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0',
@@ -79,6 +82,11 @@ export function AllClientsPage() {
   const router = useRouter();
   const { clients, isLoading, error, refresh } = useCoachDashboard();
   const { pastClients } = usePastClients();
+  const { threads } = useUnreadMessages();
+  const unreadByUserId = useMemo(
+    () => new Map(threads.map((thread) => [thread.userId, thread.count])),
+    [threads]
+  );
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [query, setQuery] = useState('');
   const [sortMode, setSortMode] = useState<'urgency' | 'name'>('urgency');
@@ -193,7 +201,11 @@ export function AllClientsPage() {
         ) : (
           <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
             {visibleClients.map((client) => (
-              <ClientRow key={client.clientProfileId} client={client} />
+              <ClientRow
+                key={client.clientProfileId}
+                client={client}
+                unreadCount={unreadByUserId.get(client.user.id) ?? 0}
+              />
             ))}
           </div>
         )}

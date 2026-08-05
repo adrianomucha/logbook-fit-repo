@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { isLockedDemoAccount } from "@/lib/demo";
 import prisma from "@/lib/prisma";
+import { notifyNewMessage } from "@/lib/push";
 import { parseBody } from "@/lib/validations/parseBody";
 import { sendMessageSchema } from "@/lib/validations/schemas";
 
@@ -152,6 +153,22 @@ export async function POST(req: Request) {
     include: {
       sender: { select: { id: true, name: true, avatarUrl: true } },
     },
+  });
+
+  // Push it to the recipient's devices. Awaited rather than fired and
+  // forgotten — a serverless function can be frozen the moment it responds,
+  // which would drop the notification — but never allowed to fail the send:
+  // notifyNewMessage swallows its own errors.
+  await notifyNewMessage({
+    recipientId,
+    senderId,
+    senderName: message.sender.name,
+    content,
+    // Each app keeps the thread somewhere different: the coach's lives under
+    // the client's profile, the client's on their chat tab.
+    url: senderProfile.clientProfile
+      ? `/coach/clients/${senderProfile.clientProfile.id}?chat=1`
+      : "/client?tab=chat",
   });
 
   return NextResponse.json(message, { status: 201 });

@@ -26,6 +26,7 @@ import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor'
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { ChatView } from '@/components/chat/ChatView';
+import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
@@ -38,7 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AlertCircle, ArrowLeftRight, Loader2, MoreVertical, Pencil, UserMinus } from 'lucide-react';
+import { AlertCircle, ArrowLeftRight, Loader2, MoreVertical, Pencil, RotateCcw, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
@@ -63,11 +64,14 @@ export function UnifiedClientProfile() {
   const { client: apiClient, isLoading: isLoadingClient, error: clientError, refresh: refreshClient } = useCoachClientProfile(clientId);
   const { plan: apiPlan, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
   // markRead: the coach is on this client's profile, where the message panel
-  // lives — reading the thread here is genuinely "reading" it
-  const { messages: apiMessages, sendMessage } = useMessages(
-    apiClient?.user.id ?? null,
-    { markRead: true }
-  );
+  // lives — reading the thread here is genuinely "reading" it. active: the
+  // panel is always on screen here, so the thread polls at chat speed.
+  const {
+    messages: apiMessages,
+    sendMessage,
+    hasMore: hasEarlierMessages,
+    loadOlder: loadEarlierMessages,
+  } = useMessages(apiClient?.user.id ?? null, { markRead: true, active: true });
   const { plans: coachPlans, createPlan, refresh: refreshCoachPlans } = useCoachPlans();
 
   // Find active check-in from client's check-ins list
@@ -90,6 +94,8 @@ export function UnifiedClientProfile() {
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [showContinueConfirm, setShowContinueConfirm] = useState(false);
+  const [isContinuingPlan, setIsContinuingPlan] = useState(false);
   // Optimistic override for the weekly check-in schedule switch (null = follow server)
   const [scheduleOverride, setScheduleOverride] = useState<boolean | null>(null);
 
@@ -340,6 +346,31 @@ export function UnifiedClientProfile() {
       refreshCoachPlans();
     } catch {
       toast.error('Failed to create and assign plan. Please try again.');
+    }
+  };
+
+  // The finished plan is working — run it again rather than build a new block.
+  // The server clones it, so the new cycle starts empty and the completed one
+  // stays in the client's history.
+  const handleContinuePlan = async () => {
+    if (!clientId) return;
+    setIsContinuingPlan(true);
+    try {
+      await apiFetch(`/api/coach/clients/${clientId}/plan/continue`, {
+        method: 'POST',
+      });
+      setShowContinueConfirm(false);
+      await Promise.all([refreshClient(), refreshPlan()]);
+      const name = client?.name?.split(' ')[0] ?? 'Your client';
+      toast.success(`${plan?.name ?? 'Plan'} restarted — ${name} is on week 1`);
+    } catch (e) {
+      toast.error(
+        e instanceof ApiError && e.status === 409
+          ? 'This plan hasn’t finished yet.'
+          : 'Couldn’t restart the plan. Please try again.'
+      );
+    } finally {
+      setIsContinuingPlan(false);
     }
   };
 
@@ -696,11 +727,12 @@ export function UnifiedClientProfile() {
               "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
             )}>
               <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 shrink-0">
-                <div className="flex gap-1 border-b border-border mb-0 -mt-1">
+                <div className="flex gap-1 items-center justify-between border-b border-border mb-0 -mt-1">
                   <h2 className="pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
                     Messages
                     <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
                   </h2>
+                  <NotificationToggle className="mb-1.5" />
                 </div>
               </div>
               <ChatView
@@ -709,6 +741,8 @@ export function UnifiedClientProfile() {
                 currentUserId={user?.id ?? ''}
                 currentUserName={user?.name ?? 'Coach'}
                 onSendMessage={handleSendMessage}
+                hasEarlier={hasEarlierMessages}
+                onLoadEarlier={loadEarlierMessages}
                 initialPrefill={chatPrefill}
                 /* Fixed height on mobile so the history scrolls inside the card instead of
                    stretching the page (flex-basis 0 from flex-1 would override h-[…]) */
@@ -768,10 +802,24 @@ export function UnifiedClientProfile() {
                             <span className="truncate">{plan.name}</span>
                           </h3>
                           <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground tabular-nums antialiased mt-1">
-                            {planEnded ? 'Plan complete. Assign the next block' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
+                            {planEnded ? 'Plan complete. Assign the next block, or run this one again' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
                           </p>
                         </div>
                         <div className="flex items-center gap-0.5 shrink-0">
+                          {/* A finished block that's working doesn't need
+                              replacing — one tap starts the next cycle */}
+                          {planEnded && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowContinueConfirm(true)}
+                              disabled={isContinuingPlan}
+                              className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                              {isContinuingPlan ? 'Starting…' : 'Run again'}
+                            </Button>
+                          )}
                           <Button variant="ghost" size="sm" onClick={handleChangePlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
                             Change
@@ -867,6 +915,14 @@ export function UnifiedClientProfile() {
         plan={plan ?? null}
         onUpdatePlan={handleUpdatePlan}
         onRefresh={() => { refreshPlan(); refreshCoachPlans(); }}
+      />
+      <ConfirmationModal
+        isOpen={showContinueConfirm}
+        onClose={() => setShowContinueConfirm(false)}
+        onConfirm={handleContinuePlan}
+        title={`Run ${plan?.name ?? 'this plan'} again?`}
+        message={`${client.name?.split(' ')[0] || 'They'} starts back at week 1 from today with the same workouts, including any edits you made for them. Their completed weeks stay in their history.`}
+        confirmLabel="Start week 1"
       />
       <ConfirmationModal
         isOpen={showEndConfirm}

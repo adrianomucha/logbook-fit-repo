@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { AccountMenu } from '@/components/AccountMenu';
 import { Logo } from '@/components/brand/LogoMark';
+import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { Home, Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -11,7 +12,11 @@ export type CoachNavTab = 'dashboard' | 'clients' | 'plans';
 interface CoachNavProps {
   /** Currently active tab */
   activeTab: CoachNavTab;
-  /** Number of unread messages to show as badge on Clients tab */
+  /**
+   * Override the unread-message badge on the Clients tab. Left unset the nav
+   * counts them itself, so every coach page gets the badge without threading
+   * the number through five call sites.
+   */
   unreadCount?: number;
   /** Handler for tab changes (for in-page view switching like CoachDashboard) */
   onTabChange?: (tab: CoachNavTab) => void;
@@ -25,10 +30,12 @@ const DESKTOP_TABS: { id: CoachNavTab; label: string }[] = [
 
 export function CoachNav({
   activeTab,
-  unreadCount = 0,
+  unreadCount: unreadOverride,
   onTabChange,
 }: CoachNavProps) {
   const router = useRouter();
+  const { total } = useUnreadMessages();
+  const unreadCount = unreadOverride ?? total;
 
   const handleTabClick = (tab: CoachNavTab) => {
     if (onTabChange) {

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DashboardClient } from '@/types/api';
 import { Button } from '@/components/ui/button';
+import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -10,6 +11,7 @@ import {
   avatarColor,
   SignalLine,
   ChevronIcon,
+  UnreadChip,
 } from '@/components/coach/shared/clientSignals';
 
 interface ClientsRequiringActionProps {
@@ -56,6 +58,11 @@ const ON_TRACK_PREVIEW = 8;
 export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps) {
   const router = useRouter();
   const [showAllOnTrack, setShowAllOnTrack] = useState(false);
+  const { threads } = useUnreadMessages();
+  const unreadByUserId = useMemo(
+    () => new Map(threads.map((thread) => [thread.userId, thread.count])),
+    [threads]
+  );
 
   const needsAction = clients.filter((c) => c.urgency !== 'ON_TRACK');
   const onTrack = clients.filter((c) => c.urgency === 'ON_TRACK');
@@ -118,6 +125,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                         {displayName}
                       </span>
                       {client.isSample && <SampleChip />}
+                      <UnreadChip count={unreadByUserId.get(client.user.id) ?? 0} />
                       <span className={cn(
                         'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0',
                         style.chip
@@ -186,6 +194,7 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                         {displayName}
                       </p>
                       {client.isSample && <SampleChip />}
+                      <UnreadChip count={unreadByUserId.get(client.user.id) ?? 0} />
                       <span className={cn(
                         'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-medium leading-none whitespace-nowrap flex-shrink-0',
                         style.chip

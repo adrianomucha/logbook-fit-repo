@@ -76,13 +76,36 @@ prisma/
 
 ## Database Schema
 
-16 models across 4 domains:
+17 models across 5 domains:
 
 - **Auth** — User, CoachProfile, ClientProfile
 - **Relationships** — CoachClientRelationship, ClientInvite
 - **Training** — Exercise, Plan, Week, Day, WorkoutExercise
 - **Tracking** — WorkoutCompletion, SetCompletion, ExerciseFlag
-- **Communication** — CheckIn, Message
+- **Communication** — CheckIn, Message, PushSubscription
+
+## Messaging & Notifications
+
+**Delivery.** There is no socket between the server and an open page, so chat
+threads poll: `useMessages` runs at 3s while a chat is on screen and 20s when
+it isn't, and refetches on tab focus, network reconnect, and `visibilitychange`
+(the last one is what a resumed PWA fires — without it, an installed app can
+show a frozen thread until it's force-closed). Fetches go out `no-store` and
+`GET /api/messages/[userId]` answers `Cache-Control: no-store`, so no browser
+or proxy cache can serve a stale thread.
+
+**In-app.** `GET /api/messages/unread` returns per-thread unread counts for the
+signed-in user, scoped to live coaching relationships. It drives the nav
+badges, the coach roster's "N new" chips, and the arrival toast rendered by
+`MessageNotifications` in both app layouts.
+
+**Push (app closed).** Web Push via `lib/push.ts` and `public/sw.js`. Set
+`VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY` (`npx web-push generate-vapid-keys`)
+plus `VAPID_SUBJECT`; unset, the feature no-ops and the opt-in never appears.
+Devices register through `POST /api/push/subscription`, and endpoints that
+return 404/410 are deleted on the next send. iOS only delivers Web Push to
+apps installed to the home screen (16.4+), which the toggle detects and says
+so instead of offering a button that can't work.
 
 ## Scripts
 

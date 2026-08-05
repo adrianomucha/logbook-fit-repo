@@ -28,21 +28,18 @@ export async function GET(
     );
   }
 
-  // Verify relationship exists
-  const currentUser = await prisma.user.findUnique({
-    where: { id: currentUserId },
+  // Verify relationship exists. Both users in one query — this endpoint is
+  // polled every few seconds while a chat is open, so every saved round trip
+  // to the database counts.
+  const users = await prisma.user.findMany({
+    where: { id: { in: [currentUserId, otherUserId] } },
     include: {
       coachProfile: { select: { id: true } },
       clientProfile: { select: { id: true } },
     },
   });
-  const otherUser = await prisma.user.findUnique({
-    where: { id: otherUserId },
-    include: {
-      coachProfile: { select: { id: true } },
-      clientProfile: { select: { id: true } },
-    },
-  });
+  const currentUser = users.find((u) => u.id === currentUserId);
+  const otherUser = users.find((u) => u.id === otherUserId);
 
   if (!currentUser || !otherUser) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -127,9 +124,15 @@ export async function GET(
     });
   }
 
-  return NextResponse.json({
-    messages: result,
-    nextCursor,
-    hasMore,
-  });
+  return NextResponse.json(
+    {
+      messages: result,
+      nextCursor,
+      hasMore,
+    },
+    // Chat threads must never be answered from a browser or proxy cache — a
+    // stale hit here is exactly the "messages only arrive after restarting the
+    // app" symptom.
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }

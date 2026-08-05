@@ -111,6 +111,9 @@ model User {
   sentMessages     Message[] @relation("sender")
   receivedMessages Message[] @relation("recipient")
 
+  // Web Push endpoints — one row per browser/device that opted in
+  pushSubscriptions PushSubscription[]
+
   @@index([email])
   @@index([role])
   @@map("users")
@@ -465,6 +468,31 @@ model Message {
   @@index([recipientId, senderId, createdAt])    // Chat thread (recipient's view)
   @@index([recipientId, readAt])                  // Unread count
   @@map("messages")
+}
+
+// ──────────────────────────────────────
+// PUSH NOTIFICATIONS
+// ──────────────────────────────────────
+
+// One row per browser/device that granted notification permission. The
+// endpoint is the push service's URL for that device and is globally unique,
+// so re-subscribing the same device updates the row instead of stacking.
+// Rows are deleted when the push service reports the endpoint is gone
+// (404/410) — that is the only reliable "user uninstalled the PWA" signal.
+model PushSubscription {
+  id         String   @id @default(uuid())
+  userId     String
+  endpoint   String   @unique
+  p256dh     String // Client public key for payload encryption
+  auth       String // Client auth secret for payload encryption
+  userAgent  String? // Debugging aid: which device this row belongs to
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }
 
 // ──────────────────────────────────────

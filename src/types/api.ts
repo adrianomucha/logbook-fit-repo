@@ -246,6 +246,23 @@ export interface MessageThread {
   nextCursor: string | null;
 }
 
+// GET /api/messages/unread
+export interface UnreadThread {
+  /** The other person's user id */
+  userId: string;
+  name: string | null;
+  /** Set when the sender is a client — the coach app routes by this id */
+  clientProfileId: string | null;
+  count: number;
+  lastMessageAt: string | null;
+  preview: string;
+}
+
+export interface UnreadSummary {
+  total: number;
+  threads: UnreadThread[];
+}
+
 export interface ApiMessage {
   id: string;
   content: string;
