@@ -37,7 +37,7 @@ export function LegalPage({
   return (
     <div className="min-h-dvh bg-background">
       <header className="border-b border-border/70">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-5 sm:px-6">
+        <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-5 sm:px-6">
           <Link
             href="/"
             className="flex rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -53,7 +53,7 @@ export function LegalPage({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         <Link
           href="/legal"
           className="mb-3 flex w-fit items-center gap-1.5 rounded-sm font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased transition-colors hover:text-foreground"
@@ -68,7 +68,7 @@ export function LegalPage({
           Last updated: {updated}
         </p>
 
-        <div className="mt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-14">
+        <div className="mt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-12">
           {/* On-this-page nav — the Google/Stripe convention. Mobile gets a
               jump list before the prose; desktop moves it into a sticky rail
               (first in source order, so `order-2` puts the prose back on the
@@ -101,7 +101,7 @@ export function LegalPage({
       </main>
 
       <footer className="border-t border-border/70">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
+        <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
             © 2026 Logbook.fit · All rights reserved
           </p>

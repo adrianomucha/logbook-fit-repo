@@ -36,7 +36,7 @@ export default function LegalPage() {
   return (
     <div className="min-h-dvh bg-background">
       <header className="border-b border-border/70">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-5 sm:px-6">
+        <div className="mx-auto flex w-full max-w-4xl items-center justify-between px-4 py-5 sm:px-6">
           <Link
             href="/"
             className="flex rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -52,7 +52,7 @@ export default function LegalPage() {
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
+      <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
           <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
           Legal
@@ -101,7 +101,7 @@ export default function LegalPage() {
       </main>
 
       <footer className="border-t border-border/70">
-        <div className="mx-auto flex w-full max-w-3xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
+        <div className="mx-auto flex w-full max-w-4xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
             © 2026 Logbook.fit · All rights reserved
           </p>
