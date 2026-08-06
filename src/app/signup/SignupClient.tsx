@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
@@ -444,6 +445,24 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             {isCoachSignup
               ? 'Your workspace comes ready with a starter exercise library.'
               : `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`}
+          </p>
+
+          <p className="text-center text-xs text-muted-foreground text-pretty">
+            By creating an account you agree to the{' '}
+            <Link
+              href="/terms"
+              className="underline underline-offset-2 transition-colors hover:text-foreground"
+            >
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link
+              href="/privacy"
+              className="underline underline-offset-2 transition-colors hover:text-foreground"
+            >
+              Privacy Policy
+            </Link>
+            .
           </p>
         </div>
       </form>
