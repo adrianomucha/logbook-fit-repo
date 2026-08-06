@@ -23,7 +23,25 @@ const CONTACT_EMAIL = 'hello@logbook.fit';
  */
 export default function TermsPage() {
   return (
-    <LegalPage kicker="Legal" title="Terms of Service" updated="August 6, 2026">
+    <LegalPage
+      kicker="Legal"
+      title="Terms of Service"
+      updated="August 6, 2026"
+      toc={[
+        'The short version',
+        'Who can use it',
+        'Beta status',
+        'Not medical advice',
+        'Assumption of risk',
+        'Coaches and clients',
+        'Your content',
+        'Acceptable use',
+        'Disclaimers and limits on liability',
+        'Governing law',
+        'Changes to these terms',
+        'Contact',
+      ]}
+    >
       <LegalSection title="The short version">
         <p>
           Logbook.fit is software that helps coaches and their clients plan,

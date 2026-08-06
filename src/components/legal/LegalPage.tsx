@@ -7,16 +7,31 @@ import { Logo } from '@/components/brand/LogoMark';
  * instead of being re-specified per page.
  */
 
+/**
+ * Anchor id for a section title. Shared by the ToC links and LegalSection ids
+ * so a page's `toc` array only has to repeat the visible titles.
+ */
+function slugify(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-');
+}
+
 export function LegalPage({
   kicker,
   title,
   updated,
+  toc,
   children,
 }: {
   kicker: string;
   title: string;
   /** Human-readable "Last updated" date, e.g. "August 6, 2026". */
   updated: string;
+  /** Section titles, in order — must match the LegalSection titles below. */
+  toc?: string[];
   children: React.ReactNode;
 }) {
   return (
@@ -38,11 +53,14 @@ export function LegalPage({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
-        <p className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+      <main className="mx-auto w-full max-w-5xl px-4 py-12 sm:px-6 sm:py-16">
+        <Link
+          href="/legal"
+          className="mb-3 flex w-fit items-center gap-1.5 rounded-sm font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased transition-colors hover:text-foreground"
+        >
           <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
           {kicker}
-        </p>
+        </Link>
         <h1 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
           {title}
         </h1>
@@ -50,7 +68,36 @@ export function LegalPage({
           Last updated: {updated}
         </p>
 
-        <div className="mt-10 space-y-10">{children}</div>
+        <div className="mt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_14rem] lg:gap-14">
+          {/* On-this-page nav — the Google/Stripe convention. Mobile gets a
+              jump list before the prose; desktop moves it into a sticky rail
+              (first in source order, so `order-2` puts the prose back on the
+              left without reordering for screen readers). */}
+          {toc && toc.length > 0 && (
+            <nav
+              aria-label="On this page"
+              className="mb-10 border-l-2 border-brand pl-4 lg:order-2 lg:mb-0 lg:self-start lg:border-l lg:border-border lg:pl-5 lg:sticky lg:top-10"
+            >
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                On this page
+              </p>
+              <ul className="mt-3 space-y-2">
+                {toc.map((section) => (
+                  <li key={section}>
+                    <a
+                      href={`#${slugify(section)}`}
+                      className="text-sm text-muted-foreground antialiased transition-colors hover:text-foreground"
+                    >
+                      {section}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
+
+          <div className="space-y-10 lg:order-1">{children}</div>
+        </div>
       </main>
 
       <footer className="border-t border-border/70">
@@ -59,6 +106,9 @@ export function LegalPage({
             © 2026 Logbook.fit · All rights reserved
           </p>
           <nav className="flex items-center gap-5 text-sm text-muted-foreground antialiased">
+            <Link href="/legal" className="transition-colors hover:text-foreground">
+              Legal
+            </Link>
             <Link href="/privacy" className="transition-colors hover:text-foreground">
               Privacy
             </Link>
@@ -83,7 +133,7 @@ export function LegalSection({
   children: React.ReactNode;
 }) {
   return (
-    <section>
+    <section id={slugify(title)} className="scroll-mt-8">
       <h2 className="text-xl font-bold uppercase tracking-tight antialiased">
         {title}
       </h2>

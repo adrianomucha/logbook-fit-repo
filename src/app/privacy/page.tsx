@@ -24,7 +24,23 @@ const CONTACT_EMAIL = 'hello@logbook.fit';
  */
 export default function PrivacyPage() {
   return (
-    <LegalPage kicker="Legal" title="Privacy Policy" updated="August 6, 2026">
+    <LegalPage
+      kicker="Legal"
+      title="Privacy Policy"
+      updated="August 6, 2026"
+      toc={[
+        'The short version',
+        'What we collect',
+        'Analytics and cookies',
+        'Who can see your data',
+        'How long we keep it',
+        'Security',
+        'Children',
+        'California residents',
+        'Changes to this policy',
+        'Contact',
+      ]}
+    >
       <LegalSection title="The short version">
         <p>
           Logbook.fit is a workspace shared by a coach and their clients. We
