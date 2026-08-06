@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
+import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
@@ -231,6 +232,16 @@ export function WaitlistForm() {
           {error}
         </p>
       )}
+      <p className="text-xs text-muted-foreground antialiased">
+        By requesting an invite you agree to our{' '}
+        <Link
+          href="/privacy"
+          className="underline underline-offset-2 transition-colors hover:text-foreground"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </form>
   );
 }

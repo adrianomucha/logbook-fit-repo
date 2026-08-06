@@ -138,10 +138,18 @@ export function AuthShell({ mode, children }: AuthShellProps) {
 
         {/* Bottom padding tracks the brand panel's (p-10/xl:p-14) so the ©
             line and the loop-steps ticker share a baseline across the seam */}
-        <footer className="px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2 sm:px-8 lg:pb-10 xl:pb-14">
+        <footer className="flex items-center justify-between gap-3 px-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-2 sm:px-8 lg:pb-10 xl:pb-14">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
             © 2026 Logbook.fit
           </p>
+          <nav className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+            <Link href="/privacy" className="transition-colors hover:text-foreground">
+              Privacy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-foreground">
+              Terms
+            </Link>
+          </nav>
         </footer>
       </div>
     </div>
