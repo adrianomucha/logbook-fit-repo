@@ -168,10 +168,10 @@ export default function TermsPage() {
 
       <LegalSection title="Governing law">
         <p>
-          These terms are governed by the laws of the United States and the
-          state in which Logbook.fit&rsquo;s operator resides, without regard
-          to conflict-of-law rules. Disputes will be resolved in the courts
-          of that state.
+          These terms are governed by the laws of the State of California and
+          the United States, without regard to conflict-of-law rules.
+          Disputes will be resolved in the state or federal courts located in
+          California.
         </p>
       </LegalSection>
 
