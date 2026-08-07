@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
-import { Check, Dumbbell, Loader2 } from 'lucide-react';
+import { Check, Dumbbell, Flag, Loader2, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function ClientWorkoutExecution() {
@@ -515,6 +515,7 @@ export function ClientWorkoutExecution() {
         warningMessage="All progress, flags, and notes from this session are cleared."
         confirmLabel="Restart workout"
         confirmVariant="destructive"
+        icon={RotateCcw}
       />
 
       <ConfirmationModal
@@ -525,6 +526,7 @@ export function ClientWorkoutExecution() {
         message={`You've completed ${stats.exercisesDone} of ${stats.exercisesTotal} exercises. The rest will be logged as skipped.`}
         confirmLabel="Finish workout"
         cancelLabel="Keep going"
+        icon={Flag}
       />
     </div>
   );

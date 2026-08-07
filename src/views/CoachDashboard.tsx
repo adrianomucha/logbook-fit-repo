@@ -11,7 +11,7 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, PartyPopper, FlaskConical, RefreshCw } from 'lucide-react';
+import { Plus, Loader2, PartyPopper, FlaskConical, RefreshCw, Trash2 } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
@@ -268,6 +268,7 @@ export function CoachDashboard() {
         warningMessage="The sample plan, workouts, check-ins, and messages will be deleted. Your own plans and exercises stay untouched."
         confirmLabel="Remove"
         confirmVariant="destructive"
+        icon={FlaskConical}
       />
 
       {/* Delete Template Confirmation */}
@@ -280,6 +281,7 @@ export function CoachDashboard() {
         warningMessage="This action cannot be undone. Clients keep their own copy of any plan you've assigned them."
         confirmLabel="Delete"
         confirmVariant="destructive"
+        icon={Trash2}
       />
 
       {/* Plan Editor Drawer */}
