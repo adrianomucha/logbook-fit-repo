@@ -200,6 +200,20 @@
     }
   }
 
+  /* Empty-state ghost rows: the list "fills in" row by row. No `to`
+     keyframe — each row rises to its own cascade opacity (100/60/30), so
+     the fade hierarchy survives the animation. Backwards fill keeps rows
+     hidden through their stagger delay. */
+  .animate-ghost-row {
+    animation: ghostRow 0.5s cubic-bezier(0.25, 1, 0.5, 1) backwards;
+  }
+  @keyframes ghostRow {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
   /* Single playful bounce — not repeating */
   .animate-bounce-once {
     animation: bounceOnce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -225,6 +239,7 @@
   .animate-fade-in-up,
   .animate-set-complete,
   .animate-enter,
+  .animate-ghost-row,
   .animate-draw-check,
   .animate-bounce-once,
   .animate-marquee,
