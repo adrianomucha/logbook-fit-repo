@@ -96,8 +96,8 @@ export default async function WaitlistAdminPage() {
   ].sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="px-4 py-10 sm:px-6">
-      <div className="mx-auto max-w-4xl">
+    <div className="flex min-h-0 flex-1 flex-col px-4 py-10 sm:px-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
@@ -146,15 +146,19 @@ export default async function WaitlistAdminPage() {
           </div>
         )}
 
-        <div className="mt-8 overflow-x-auto rounded-xl border border-border">
+        {/* min-h-0 lets the table shrink to the viewport and scroll inside
+            this container, so the page itself never scrolls vertically */}
+        <div className="mt-8 min-h-0 overflow-auto rounded-xl border border-border">
           {entries.length === 0 ? (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">
               No signups yet.
             </p>
           ) : (
             <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border text-left font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+              {/* inset shadow instead of border-b: collapsed-table borders
+                  scroll away under a sticky thead, the shadow stays put */}
+              <thead className="sticky top-0 z-10 bg-background shadow-[inset_0_-1px_0_0_hsl(var(--border))]">
+                <tr className="text-left font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                   <th className="px-4 py-3 font-medium">Email</th>
                   <th className="px-4 py-3 font-medium">Channel</th>
                   <th className="px-4 py-3 font-medium">Clients</th>
