@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { FormError } from '@/components/ui/form-error';
 import { cn } from '@/lib/utils';
 
 /** Buckets for the confirmation-screen question. Values match `waitlistQualifySchema`. */
@@ -58,7 +59,7 @@ export function WaitlistForm() {
   const [status, setStatus] = useState<'idle' | 'loading' | 'qualify' | 'done'>(
     'idle'
   );
-  const [error, setError] = useState('');
+  const [error, setError] = useState<'registered' | string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,11 +76,13 @@ export function WaitlistForm() {
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         setError(
-          res.status === 429
-            ? 'Too many attempts. Please try again in a bit.'
-            : body?.error === 'Validation failed'
-              ? 'That doesn’t look like a valid email address.'
-              : 'Something went wrong. Please try again.'
+          body?.error === 'already_registered'
+            ? 'registered'
+            : res.status === 429
+              ? 'Too many attempts. Please try again in a bit.'
+              : body?.error === 'Validation failed'
+                ? 'That doesn’t look like a valid email address.'
+                : 'Something went wrong. Please try again.'
         );
         setStatus('idle');
         return;
@@ -228,9 +231,22 @@ export function WaitlistForm() {
         </Button>
       </div>
       {error && (
-        <p role="alert" className="text-sm text-destructive antialiased">
-          {error}
-        </p>
+        <FormError>
+          {error === 'registered' ? (
+            <>
+              Good news — you already have an account.{' '}
+              <Link
+                href="/login"
+                className="font-medium underline underline-offset-2"
+              >
+                Sign in
+              </Link>{' '}
+              and get after it.
+            </>
+          ) : (
+            error
+          )}
+        </FormError>
       )}
       <p className="text-xs text-muted-foreground antialiased">
         By requesting an invite you agree to our{' '}

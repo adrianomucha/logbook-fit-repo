@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { AuthShell, AuthDivider } from '@/components/auth/AuthShell';
 import { PasswordRules } from '@/components/auth/PasswordRules';
+import { FormError } from '@/components/ui/form-error';
 import { avatarColor } from '@/lib/avatar-colors';
 import { passwordSchema } from '@/lib/validations/schemas';
 import { cn } from '@/lib/utils';
@@ -426,9 +427,20 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
         </div>
 
         {error && (
-          <p role="alert" className="border-l-2 border-destructive pl-3 text-sm text-destructive">
+          <FormError>
             {error}
-          </p>
+            {error === 'Email already registered' && (
+              <>
+                {' — '}
+                <Link
+                  href="/login"
+                  className="font-medium underline underline-offset-2"
+                >
+                  sign in instead
+                </Link>
+              </>
+            )}
+          </FormError>
         )}
 
         <div className="space-y-3 pt-1">
