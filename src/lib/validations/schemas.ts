@@ -310,3 +310,19 @@ export const waitlistQualifySchema = z.object({
 export const waitlistInviteSchema = z.object({
   id: z.string().uuid(),
 });
+
+// ──────────────────────────────────────
+// CLIENT ERROR REPORTS
+// ──────────────────────────────────────
+
+/**
+ * Crash report posted by the app's error boundaries. Unauthenticated and
+ * attacker-writable by definition, so every field is hard-capped and the
+ * handler only ever logs it — nothing is stored or rendered.
+ */
+export const clientErrorReportSchema = z.object({
+  message: z.string().trim().max(500),
+  digest: z.string().trim().max(100).optional(),
+  url: z.string().trim().max(1000).optional(),
+  stack: z.string().max(4000).optional(),
+});

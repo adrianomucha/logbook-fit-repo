@@ -5,6 +5,15 @@ import prisma from "@/lib/prisma";
 import { loginLimiter } from "@/lib/rate-limit";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { verifySwitchToken } from "@/lib/switch-token";
+import { reportEnvProblemsOnce } from "@/lib/env-check";
+import {
+  LOGIN_ERROR_DEMO_LOCKED,
+  LOGIN_ERROR_RATE_LIMITED,
+} from "@/lib/auth-errors";
+
+// Nearly every server route imports this module, so a cold start is the
+// closest thing to "boot" a serverless deploy has — log missing env here.
+reportEnvProblemsOnce();
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -15,35 +24,37 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
+        if (!credentials?.email || !credentials?.password) {
+          console.error("[AUTH] Missing credentials");
+          return null;
+        }
+
+        const email = credentials.email.trim().toLowerCase();
+
+        // Demo credentials are public (login page, repo), so hiding the
+        // buttons isn't enough — refuse the sign-in outright when demo
+        // mode is off. Thrown (not null) so the login page can say why:
+        // to a tester with the seeded credentials this otherwise looks
+        // exactly like a wrong password.
+        if (isLockedDemoAccount(email)) {
+          console.error("[AUTH] Demo account sign-in blocked (demo mode off)");
+          throw new Error(LOGIN_ERROR_DEMO_LOCKED);
+        }
+
+        // Rate limit by IP + email to prevent brute-force
+        const ip =
+          (req?.headers && "x-forwarded-for" in req.headers
+            ? (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
+            : undefined) ?? "unknown";
+        // Log user ids rather than emails — emails are PII and login
+        // attempts (including attacker probes) shouldn't put them in logs.
+        const { allowed } = await loginLimiter(`${ip}:${email}`);
+        if (!allowed) {
+          console.error("[AUTH] Rate limited login attempt");
+          throw new Error(LOGIN_ERROR_RATE_LIMITED);
+        }
+
         try {
-          if (!credentials?.email || !credentials?.password) {
-            console.error("[AUTH] Missing credentials");
-            return null;
-          }
-
-          const email = credentials.email.trim().toLowerCase();
-
-          // Demo credentials are public (login page, repo), so hiding the
-          // buttons isn't enough — refuse the sign-in outright when demo
-          // mode is off.
-          if (isLockedDemoAccount(email)) {
-            console.error("[AUTH] Demo account sign-in blocked (demo mode off)");
-            return null;
-          }
-
-          // Rate limit by IP + email to prevent brute-force
-          const ip =
-            (req?.headers && "x-forwarded-for" in req.headers
-              ? (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
-              : undefined) ?? "unknown";
-          // Log user ids rather than emails — emails are PII and login
-          // attempts (including attacker probes) shouldn't put them in logs.
-          const { allowed } = await loginLimiter(`${ip}:${email}`);
-          if (!allowed) {
-            console.error("[AUTH] Rate limited login attempt");
-            return null;
-          }
-
           const user = await prisma.user.findFirst({
             where: { email, deletedAt: null },
           });

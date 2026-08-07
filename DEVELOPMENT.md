@@ -40,6 +40,39 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
+## Deploying
+
+Checklist for a production or staging deploy. Several subsystems degrade
+*silently* when their env is missing — the `/admin` banner and the
+`_ALERT]`-tagged log lines (set a Vercel log alert on `_ALERT]`) are the
+signals that something below was skipped.
+
+Required env for a correct deploy:
+
+| Var | Missing it means |
+|-----|------------------|
+| `DATABASE_URL` + `DIRECT_URL` | nothing works |
+| `NEXTAUTH_SECRET` | NextAuth fails; password-reset tokens can't be minted |
+| `NEXTAUTH_URL` | emailed links point at the per-deploy `*.vercel.app` host |
+| `NEXT_PUBLIC_SITE_URL` | staging emits production canonicals/OG URLs |
+| `RESEND_API_KEY` + `WAITLIST_FROM_EMAIL` | every email silently skipped |
+| `ADMIN_EMAILS` | `/admin` 404s for everyone; no beta invites |
+| `UPSTASH_REDIS_REST_URL` + `_TOKEN` | rate limiting effectively off on serverless |
+| `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | push notifications no-op (optional) |
+
+Gotchas:
+
+- **`NEXT_PUBLIC_DEMO_MODE` is inlined at build time.** On any deployed build
+  the seeded demo accounts are locked unless this was `"true"` when the build
+  ran — flipping it on Vercel requires a redeploy, not a restart. Locked demo
+  sign-ins now say so on the login page instead of "invalid password".
+- **Migrations run on production deploys only** by default. A staging project
+  with its own database should set `MIGRATE_ON_PREVIEW="true"`; previews
+  sharing the production database must leave it unset, or they'd apply
+  unreleased migrations.
+- Client-side crashes are reported to `POST /api/client-errors` and logged as
+  `[CLIENT_ERROR_ALERT]` — include that tag in your log alert too.
+
 ## Project Structure
 
 ```

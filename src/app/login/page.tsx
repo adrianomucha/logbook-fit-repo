@@ -9,6 +9,34 @@ import { Input } from '@/components/ui/input';
 import { ArrowRight, UserCog, User, Loader2 } from 'lucide-react';
 import { AuthShell, AuthDivider, AuthFieldLabel } from '@/components/auth/AuthShell';
 import { isDemoModeEnabled } from '@/lib/demo';
+import { LOGIN_ERROR_DEMO_LOCKED, LOGIN_ERROR_RATE_LIMITED } from '@/lib/auth-errors';
+
+const LOGIN_ERROR_MESSAGES: Record<string, string> = {
+  [LOGIN_ERROR_RATE_LIMITED]:
+    'Too many sign-in attempts. Wait 15 minutes and try again — or reset your password below.',
+  [LOGIN_ERROR_DEMO_LOCKED]: 'Demo access is switched off on this deployment.',
+};
+
+/**
+ * The deep link to return to after sign-in, from ?callbackUrl (written by the
+ * middleware when it bounces an unauthenticated visitor). Only same-origin
+ * paths survive — anything else (absolute URLs to other hosts, protocol-
+ * relative //evil.com) is discarded so login can't be an open redirect.
+ */
+function callbackPathFromLocation(): string | null {
+  const raw = new URLSearchParams(window.location.search).get('callbackUrl');
+  if (!raw) return null;
+  try {
+    const url = new URL(raw, window.location.origin);
+    if (url.origin !== window.location.origin) return null;
+    // "/" just re-enters the role bounce in the middleware — let the
+    // role-based redirect below pick the right home instead.
+    if (url.pathname === '/') return null;
+    return url.pathname + url.search;
+  } catch {
+    return null;
+  }
+}
 
 const DEMO_ACCOUNTS = {
   coach: { email: 'coach@logbook.fit', password: 'demo1234', label: 'Demo Coach', icon: UserCog },
@@ -35,7 +63,15 @@ export default function LoginPage() {
     setLoading(null);
 
     if (result?.error) {
-      setError('Invalid email or password');
+      setError(LOGIN_ERROR_MESSAGES[result.error] ?? 'Invalid email or password');
+      return;
+    }
+
+    // Return to the page that bounced us here, if any. A wrong-role deep
+    // link is harmless — the middleware bounces it to the right app home.
+    const callbackPath = callbackPathFromLocation();
+    if (callbackPath) {
+      router.push(callbackPath);
       return;
     }
 

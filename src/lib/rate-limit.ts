@@ -32,9 +32,11 @@ const redisToken =
   process.env.UPSTASH_REDIS_REST_TOKEN ?? process.env.KV_REST_API_TOKEN;
 const hasUpstash = Boolean(redisUrl && redisToken);
 
+// The _ALERT] suffix matches the other alert tags ([EMAIL_ALERT] etc.) so one
+// log alert on "_ALERT]" catches every silently-degraded subsystem.
 if (!hasUpstash && process.env.NODE_ENV === "production") {
-  console.warn(
-    "[RATE-LIMIT] Upstash env vars not set — using per-instance in-memory limits, which are ineffective on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the KV_REST_API_* equivalents)."
+  console.error(
+    "[RATE-LIMIT_ALERT] Upstash env vars not set — using per-instance in-memory limits, which are ineffective on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the KV_REST_API_* equivalents)."
   );
 }
 
@@ -131,7 +133,8 @@ export function rateLimit(name: string, config: RateLimitConfig) {
         };
       } catch (error) {
         // Fail open: a Redis outage shouldn't lock everyone out of login.
-        console.error("[RATE-LIMIT] Upstash check failed, allowing request:", error);
+        // Alert-tagged because while it lasts, rate limiting is off.
+        console.error("[RATE-LIMIT_ALERT] Upstash check failed, allowing request:", error);
         return {
           allowed: true,
           remaining: config.maxRequests,
@@ -184,6 +187,13 @@ export const passwordResetRequestLimiter = rateLimit("pw-reset-request", {
 export const passwordResetConfirmLimiter = rateLimit("pw-reset-confirm", {
   windowMs: 15 * 60 * 1000, // 15 minutes
   maxRequests: 10,
+});
+
+// Crash reports from the error boundaries: enough for a genuine render-loop
+// crash, tight enough that the endpoint can't be used to flood the logs.
+export const clientErrorLimiter = rateLimit("client-error", {
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  maxRequests: 20,
 });
 
 // Periodic cleanup of expired in-memory entries (every 5 minutes)

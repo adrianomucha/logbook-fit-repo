@@ -5,35 +5,35 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 
 ## Phase 0 — Config, deploy & visibility (do first; almost all S)
 
-- [ ] **0.1** Add `UPSTASH_REDIS_REST_URL`/`_TOKEN` to `.env.example` with a comment
+- [x] **0.1** Add `UPSTASH_REDIS_REST_URL`/`_TOKEN` to `.env.example` with a comment
       that rate limiting is inert on serverless without them; log an
       `[RATE-LIMIT_ALERT]`-style line (not just `console.warn`) when running in
       production without Redis. (`src/lib/rate-limit.ts:29-43`) — S
-- [ ] **0.2** Boot-time env sanity check: one server-side module that warns loudly
+- [x] **0.2** Boot-time env sanity check: one server-side module that warns loudly
       (log + admin banner) when `ADMIN_EMAILS`, `RESEND_API_KEY`/`WAITLIST_FROM_EMAIL`,
       `NEXTAUTH_URL`, or Upstash vars are missing in production. Extends the
       existing mailer banner pattern (`src/app/admin/layout.tsx:38-56`). — S
-- [ ] **0.3** Staging migrations: run `prisma migrate deploy` for preview envs too
+- [x] **0.3** Staging migrations: run `prisma migrate deploy` for preview envs too
       (or a dedicated staging branch condition) so a fresh staging DB works.
       (`package.json:8` `vercel-build`) — S
-- [ ] **0.4** Demo accounts: give locked-demo sign-in its own error message instead
+- [x] **0.4** Demo accounts: give locked-demo sign-in its own error message instead
       of "Invalid email or password" (`src/lib/auth.ts:29-32`,
       `src/app/login/page.tsx:37-40`), and add `NEXT_PUBLIC_DEMO_MODE` (build-time!)
       to the deploy checklist in DEVELOPMENT.md. — S
-- [ ] **0.5** Error reporting: wire Sentry (or at minimum report from
+- [x] **0.5** Error reporting: wire Sentry (or at minimum report from
       `src/app/error.tsx` / `global-error.tsx` to a logging endpoint) so tester
       500s leave a trace. Stop rendering raw `error.message` in `error.tsx:14`. — M
-- [ ] **0.6** Add `/admin/:path*` to the middleware matcher so a signed-out admin
+- [x] **0.6** Add `/admin/:path*` to the middleware matcher so a signed-out admin
       gets a login redirect instead of a bare 404. (`src/middleware.ts:56`) — S
-- [ ] **0.7** Password-reset silent no-op: when `createResetToken` returns null or
+- [x] **0.7** Password-reset silent no-op: when `createResetToken` returns null or
       the mailer is unconfigured, log an `[EMAIL_ALERT]` line (keep the anti-enumeration
       `{ok:true}` response). (`src/app/api/auth/password-reset/route.ts:44-52`) — S
-- [ ] **0.8** CI: add `"test": "vitest run"` to package.json and a GitHub Actions
+- [x] **0.8** CI: add `"test": "vitest run"` to package.json and a GitHub Actions
       workflow running install → lint → test → build on PRs. Delete the dead
       `@prisma → generated/prisma` alias in `vitest.config.ts`. — S
-- [ ] **0.9** Fix login `callbackUrl`: honor it in `src/app/login/page.tsx:42-49`
+- [x] **0.9** Fix login `callbackUrl`: honor it in `src/app/login/page.tsx:42-49`
       (middleware already writes it) so deep links survive re-auth. — S
-- [ ] **0.10** Distinct login error for rate-limited attempts so blocked users stop
+- [x] **0.10** Distinct login error for rate-limited attempts so blocked users stop
       digging (`src/lib/auth.ts:41-45`). — S
 
 ## Phase 1 — Make the core retention loop true

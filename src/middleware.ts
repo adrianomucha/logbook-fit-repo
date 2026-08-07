@@ -49,9 +49,13 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/coach", request.url));
   }
 
+  // /admin only needs the signed-out → login redirect here (with callbackUrl,
+  // handled above, so the admin lands back where they were going). The
+  // allowlist check itself stays in the admin layout: signed-in non-admins
+  // still get its plain 404, which keeps these routes unadvertised.
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/", "/coach/:path*", "/client/:path*"],
+  matcher: ["/", "/coach/:path*", "/client/:path*", "/admin/:path*"],
 };

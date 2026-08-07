@@ -48,6 +48,15 @@ export async function POST(req: Request) {
           // Log user ids rather than emails — same PII rule as login.
           console.log("[AUTH] Password reset requested for user:", user.id);
           await sendPasswordReset(email, resetUrl);
+        } else {
+          // NEXTAUTH_SECRET is unset — the user still sees "check your
+          // inbox" (anti-enumeration), so this log line is the ONLY signal
+          // that every password reset is silently dying.
+          console.error(
+            "[EMAIL_ALERT] Password reset for user",
+            user.id,
+            "skipped — NEXTAUTH_SECRET is unset, reset tokens cannot be minted."
+          );
         }
       }
     }
