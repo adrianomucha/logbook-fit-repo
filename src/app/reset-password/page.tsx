@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, Loader2, KeyRound } from 'lucide-react';
 import { AuthShell, AuthDivider, AuthFieldLabel } from '@/components/auth/AuthShell';
+import { PasswordRules } from '@/components/auth/PasswordRules';
 import { passwordSchema } from '@/lib/validations/schemas';
 
 function ResetPasswordForm() {
@@ -110,16 +111,15 @@ function ResetPasswordForm() {
           type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          placeholder="At least 8 characters"
+          placeholder="Make it a strong one"
           autoComplete="new-password"
           className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
           required
-          minLength={8}
           maxLength={72}
         />
-        <p className="text-xs text-muted-foreground text-pretty">
-          8+ characters with at least one letter and one number
-        </p>
+        {/* Live checklist replaces the native minLength bubble — the
+            schema check in handleSubmit still backstops it */}
+        <PasswordRules password={password} />
       </div>
       <div className="space-y-2">
         <AuthFieldLabel htmlFor="confirm">Confirm password</AuthFieldLabel>
@@ -132,7 +132,7 @@ function ResetPasswordForm() {
           autoComplete="new-password"
           className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
           required
-          minLength={8}
+          maxLength={72}
         />
       </div>
       {error && (

@@ -36,6 +36,17 @@ const COMMON_PASSWORDS = new Set([
   "aa123456",
 ]);
 
+/** Shared with the live password checklist in the auth forms. */
+export const isCommonPassword = (password: string) =>
+  COMMON_PASSWORDS.has(password.toLowerCase());
+
+/** bcrypt reads BYTES, so multi-byte characters count more than once. */
+export const passwordByteLength = (password: string) =>
+  new TextEncoder().encode(password).length;
+
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_BYTES = 72;
+
 /**
  * The one rule set for every place a user picks a password (signup, reset).
  * The 72 limit is bcrypt's input size in BYTES — anything longer is silently
@@ -43,13 +54,13 @@ const COMMON_PASSWORDS = new Set([
  */
 export const passwordSchema = z
   .string()
-  .min(8, "Password must be at least 8 characters")
+  .min(PASSWORD_MIN_LENGTH, "Password must be at least 8 characters")
   .regex(/[a-zA-Z]/, "Password must contain at least one letter")
   .regex(/[0-9]/, "Password must contain at least one number")
-  .refine((password) => new TextEncoder().encode(password).length <= 72, {
+  .refine((password) => passwordByteLength(password) <= PASSWORD_MAX_BYTES, {
     message: "Password must be at most 72 characters",
   })
-  .refine((password) => !COMMON_PASSWORDS.has(password.toLowerCase()), {
+  .refine((password) => !isCommonPassword(password), {
     message: "This password is too common — pick something harder to guess",
   });
 
