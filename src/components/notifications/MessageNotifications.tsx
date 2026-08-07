@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { MessageToast } from './MessageToast';
@@ -35,7 +34,6 @@ function isViewingThread(thread: UnreadThread): boolean {
  * the app open; Web Push (lib/push.ts + public/sw.js) covers it being closed.
  */
 export function MessageNotifications() {
-  const router = useRouter();
   const { threads, hasLoaded } = useUnreadMessages();
   // userId → newest message timestamp already announced. Null until the first
   // response lands: the backlog waiting at sign-in is history, not news.
@@ -70,7 +68,7 @@ export function MessageNotifications() {
             toastId={id}
             name={name}
             preview={thread.preview}
-            onOpen={() => router.push(href)}
+            href={href}
           />
         ),
         {
@@ -82,7 +80,7 @@ export function MessageNotifications() {
         }
       );
     }
-  }, [threads, hasLoaded, router]);
+  }, [threads, hasLoaded]);
 
   return null;
 }
