@@ -55,11 +55,18 @@ function GhostRoster() {
     >
       <div className={`bg-card rounded-xl divide-y divide-border overflow-hidden ${cardShadow}`}>
         {rows.map((row, i) => (
-          <div key={i} className={`flex items-center gap-3 px-4 py-3.5 ${row.opacity}`}>
+          <div
+            key={i}
+            className={`animate-ghost-row flex items-center gap-3 px-4 py-3.5 ${row.opacity}`}
+            style={{ animationDelay: `${120 + i * 110}ms` }}
+          >
             <div className="relative w-10 h-10 rounded-full bg-muted shrink-0">
               {/* volt live-dot on the top row — the roster ranks who needs you */}
               {i === 0 && (
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand ring-2 ring-card" />
+                <span
+                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand ring-2 ring-card animate-bounce-once"
+                  style={{ animationDelay: '560ms' }}
+                />
               )}
             </div>
             <div className="flex-1 min-w-0 space-y-2">
@@ -89,10 +96,17 @@ function GhostPlanList() {
     >
       <div className={`bg-card rounded-xl divide-y divide-border overflow-hidden ${cardShadow}`}>
         {rows.map((row, i) => (
-          <div key={i} className={`flex items-center gap-3 px-4 py-3.5 ${row.opacity}`}>
+          <div
+            key={i}
+            className={`animate-ghost-row flex items-center gap-3 px-4 py-3.5 ${row.opacity}`}
+            style={{ animationDelay: `${120 + i * 110}ms` }}
+          >
             <div className="relative w-9 h-9 rounded-lg bg-muted shrink-0">
               {i === 0 && (
-                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand ring-2 ring-card" />
+                <span
+                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand ring-2 ring-card animate-bounce-once"
+                  style={{ animationDelay: '560ms' }}
+                />
               )}
             </div>
             <div className={`h-2.5 rounded-full bg-muted ${row.name}`} />
