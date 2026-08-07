@@ -4,10 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
-  CheckCircle2,
+  Check,
   ClipboardCheck,
-  Dumbbell,
-  Send,
   SendHorizonal,
   Flag,
   MessageSquare,
@@ -23,7 +21,9 @@ import {
 } from '@/types';
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import { completeCheckIn, createCheckIn } from '@/lib/checkin-helpers';
-import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
+// One shared feeling map for the whole loop (client form, standalone review,
+// this panel) — same labels, same AA-contrast status colors everywhere
+import { FEELING_DISPLAY } from '@/lib/feeling-display';
 
 interface FlaggedExerciseWithContext {
   flag: ExerciseFlag;
@@ -46,8 +46,6 @@ interface InlineCheckInReviewProps {
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
   /** Signal from parent that check-in was just sent (for showing confirmation) */
   justSentFromParent?: boolean;
-  /** Hide the title when it would be redundant with status header */
-  hideTitle?: boolean;
   /** Visual weight: 'card' (default) with border, 'flat' borderless */
   variant?: 'card' | 'flat';
 }
@@ -64,14 +62,15 @@ export function InlineCheckInReview({
   onCancelCheckIn,
   onMessageAboutFlag,
   justSentFromParent = false,
-  hideTitle = false,
   variant = 'card',
 }: InlineCheckInReviewProps) {
   const [coachResponse, setCoachResponse] = useState('');
+  const [responseError, setResponseError] = useState('');
   const [planAdjustment, setPlanAdjustment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const responseRef = useRef<HTMLTextAreaElement>(null);
 
   // Timer refs for cleanup on unmount
   const sentTimerRef = useRef<ReturnType<typeof setTimeout>>();
@@ -155,8 +154,16 @@ export function InlineCheckInReview({
     }
   };
 
+  // Submit stays enabled until the request starts (same pattern as the
+  // standalone review) — an empty submit explains itself inline instead of
+  // presenting a disabled button that silently drops from the tab order
   const handleCompleteCheckIn = () => {
-    if (!activeCheckIn || !coachResponse.trim() || isSubmitting) return;
+    if (!activeCheckIn || isSubmitting) return;
+    if (!coachResponse.trim()) {
+      setResponseError(`Write a response to ${firstName} before completing the check-in.`);
+      responseRef.current?.focus();
+      return;
+    }
     setIsSubmitting(true);
 
     const completed = completeCheckIn(activeCheckIn, {
@@ -185,12 +192,15 @@ export function InlineCheckInReview({
       <Wrapper className="animate-fade-in-up">
         <div className="py-8">
           <div className="flex flex-col items-center text-center gap-2">
-            <CheckCircle2 className="w-10 h-10 text-success" />
-            <h3 className="font-semibold text-lg">
+            {/* Same volt confirmation as the standalone review + finished workout */}
+            <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+              <Check className="w-6 h-6 text-brand-foreground" strokeWidth={3} aria-hidden="true" />
+            </div>
+            <h3 className="font-bold text-lg tracking-tight mt-1">
               Check-in complete
             </h3>
             <p className="text-sm text-muted-foreground">
-              Your response has been sent to {firstName}.
+              Your response is on its way to {firstName}.
             </p>
           </div>
         </div>
@@ -349,60 +359,70 @@ export function InlineCheckInReview({
 
   // State: Responded - Coach needs to review
   const workoutFeeling = activeCheckIn.workoutFeeling
-    ? WORKOUT_FEELING_DISPLAY[activeCheckIn.workoutFeeling]
+    ? FEELING_DISPLAY[activeCheckIn.workoutFeeling]
     : null;
   const bodyFeeling = activeCheckIn.bodyFeeling
-    ? BODY_FEELING_DISPLAY[activeCheckIn.bodyFeeling]
+    ? FEELING_DISPLAY[activeCheckIn.bodyFeeling]
     : null;
+  const submittedAgo = activeCheckIn.clientRespondedAt
+    ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true }).replace(/^about /, '')
+    : 'recently';
 
   return (
     <Wrapper>
-      {!hideTitle && (
-        <div className={cn("pb-2", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-lg sm:text-xl font-bold flex items-center gap-2 min-w-0">
-              <ClipboardCheck className="w-5 h-5 shrink-0" />
-              <span className="truncate">{firstName}&apos;s Check-In</span>
+      <div className={cn('space-y-5', isFlat ? '' : 'px-3 sm:px-6 py-6')}>
+        {/* The client's answers as instrument readouts — same vitals grid as
+            the page's stats strip, with the submitted time as one more reading */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
+          {workoutFeeling && (
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-2">
+                Workouts felt
+              </p>
+              <p className={cn(
+                'font-mono text-sm font-bold uppercase tracking-[0.08em] antialiased',
+                'flex items-center gap-2 leading-none',
+                workoutFeeling.text
+              )}>
+                <span className="text-lg leading-none select-none" aria-hidden="true">{workoutFeeling.emoji}</span>
+                {workoutFeeling.label}
+              </p>
             </div>
-            <span className="text-xs text-muted-foreground shrink-0">
-              {activeCheckIn.clientRespondedAt
-                ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })
-                : 'recently'}
-            </span>
+          )}
+          {bodyFeeling && (
+            <div>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-2">
+                Body feels
+              </p>
+              <p className={cn(
+                'font-mono text-sm font-bold uppercase tracking-[0.08em] antialiased',
+                'flex items-center gap-2 leading-none',
+                bodyFeeling.text
+              )}>
+                <span className="text-lg leading-none select-none" aria-hidden="true">{bodyFeeling.emoji}</span>
+                {bodyFeeling.label}
+              </p>
+            </div>
+          )}
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-2">
+              Submitted
+            </p>
+            <p className="font-mono text-sm font-semibold tabular-nums leading-none antialiased">
+              {submittedAgo}
+            </p>
           </div>
         </div>
-      )}
-      <div className={cn("space-y-4", isFlat ? '' : 'px-3 sm:px-6 pb-6', hideTitle && "pt-4")}>
-        {/* Feeling indicators */}
-        {(workoutFeeling || bodyFeeling) && (
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            {workoutFeeling && (
-              <div className="bg-muted/40 rounded-xl p-3 sm:p-4">
-                <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Workouts felt</p>
-                <p className="text-lg font-bold">
-                  <span className="text-xl mr-1">{workoutFeeling.emoji}</span> {workoutFeeling.label}
-                </p>
-              </div>
-            )}
-            {bodyFeeling && (
-              <div className="bg-muted/40 rounded-xl p-3 sm:p-4">
-                <p className="font-mono text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Body feels</p>
-                <p className="text-lg font-bold">
-                  <span className="text-xl mr-1">{bodyFeeling.emoji}</span> {bodyFeeling.label}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
 
-        {/* Client notes - flattened styling */}
+        {/* Client notes read as a quote — the brand's volt-edge treatment,
+            capped near 65ch so the measure stays comfortable */}
         {activeCheckIn.clientNotes && (
           <div>
-            <p className="text-xs text-muted-foreground mb-1">
+            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
               Notes from {firstName}
             </p>
-            <p className="font-prose text-[15px] leading-[1.5] bg-background/60 rounded-lg p-3">
-              &ldquo;{activeCheckIn.clientNotes}&rdquo;
+            <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose text-pretty">
+              {activeCheckIn.clientNotes}
             </p>
           </div>
         )}
@@ -415,48 +435,56 @@ export function InlineCheckInReview({
           />
         )}
 
-        {/* Coach Response - Inline Form */}
-        <div className="space-y-3 bg-muted/50 rounded-xl p-3 sm:p-4">
-          <div>
-            <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Your response</label>
-            <Textarea
-              placeholder={`Write your response to ${firstName}...`}
-              value={coachResponse}
-              onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
-              maxLength={1000}
-              rows={3}
-              className="bg-background border-border/60 font-prose text-base sm:text-[15px] leading-[1.5]"
-            />
-            {coachResponse.length > 0 && (
-              <p className="text-xs text-muted-foreground mt-1 text-right">
-                {coachResponse.length}/1000
+        {/* Coach response — space-grouped with the evidence above, no sub-panel */}
+        <div>
+          <label
+            htmlFor="inline-coach-response"
+            className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5 block"
+          >
+            Your response
+          </label>
+          <Textarea
+            id="inline-coach-response"
+            ref={responseRef}
+            aria-invalid={!!responseError || undefined}
+            aria-describedby={responseError ? 'inline-coach-response-error' : undefined}
+            placeholder={`Write your response to ${firstName}…`}
+            value={coachResponse}
+            onChange={(e) => {
+              setCoachResponse(e.target.value.slice(0, 1000));
+              if (responseError) setResponseError('');
+            }}
+            maxLength={1000}
+            rows={4}
+          />
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-right tabular-nums">
+            {coachResponse.length}/1000
+          </p>
+          {/* Stable live region so repeat empty submits re-announce */}
+          <div role="alert" aria-live="assertive">
+            {responseError && (
+              <p id="inline-coach-response-error" className="text-sm text-destructive mt-1">
+                {responseError}
               </p>
             )}
           </div>
 
-          <label className="flex items-center gap-3 cursor-pointer min-h-[44px] px-1 -mx-1 rounded-md hover:bg-muted/50 transition-colors">
+          <label className="flex items-center gap-2.5 cursor-pointer select-none mt-2.5 min-h-11">
             <Checkbox
               checked={planAdjustment}
               onCheckedChange={(checked) => setPlanAdjustment(!!checked)}
-              className="h-5 w-5"
             />
-            <span className="text-sm select-none">I&apos;ll adjust the plan based on this feedback</span>
+            <span className="text-sm">I&apos;ll adjust the plan based on this feedback</span>
           </label>
 
+          {/* Submit — the section's one volt moment */}
           <Button
             onClick={handleCompleteCheckIn}
-            disabled={!coachResponse.trim() || isSubmitting}
-            className={cn(
-              "w-full min-h-[48px] text-sm font-semibold transition-[background-color,color,transform] duration-150 active:scale-[0.98]",
-              coachResponse.trim()
-                ? 'bg-foreground text-background hover:bg-foreground/90 shadow-sm'
-                : ''
-            )}
-            variant={coachResponse.trim() ? 'default' : 'outline'}
+            disabled={isSubmitting}
+            className="w-full h-12 mt-4 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
             size="lg"
           >
-            <Send className="w-4 h-4 mr-2" />
-            {isSubmitting ? 'Sending…' : 'Complete Check-in'}
+            {isSubmitting ? 'Sending…' : 'Complete check-in'}
           </Button>
         </div>
       </div>
@@ -464,7 +492,8 @@ export function InlineCheckInReview({
   );
 }
 
-// Sub-component for flagged exercises
+// Sub-component for flagged exercises — same amber tile language as the
+// standalone review's flag rows, with the Ask escape hatch into chat
 function FlaggedExercisesSection({
   flags,
   onMessageAboutFlag,
@@ -473,47 +502,49 @@ function FlaggedExercisesSection({
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
 }) {
   return (
-    <div className="bg-muted/50 rounded-lg p-3 border">
-      <div className="flex items-center gap-2 mb-2">
-        <Flag className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm font-medium">
-          Flagged This Week ({flags.length})
-        </span>
-      </div>
-
-      <div className="space-y-2">
+    <div>
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-warning-text font-medium antialiased mb-1.5">
+        Flagged this week · {flags.length}
+      </p>
+      <div className="space-y-1.5">
         {flags.slice(0, 3).map(({ flag, exerciseName, workoutName, date }) => (
-          <div key={flag.id} className="flex items-start justify-between gap-2">
+          <div key={flag.id} className="rounded-md bg-warning/10 px-2.5 py-2 flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <Dumbbell className="w-3 h-3 text-muted-foreground shrink-0" />
-                <span className="text-sm font-medium truncate">{exerciseName}</span>
-              </div>
-              <p className="text-xs text-muted-foreground ml-5">
+              <p className="flex items-center gap-1.5 text-xs font-bold text-warning-text">
+                <Flag className="w-3 h-3 shrink-0" aria-hidden="true" />
+                {/* The icon carries "flagged" only visually — say it */}
+                <span className="sr-only">Flagged: </span>
+                <span className="truncate">{exerciseName}</span>
+              </p>
+              {/* foreground/70, not muted-foreground: the amber tint eats ~0.4 of contrast */}
+              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/70 font-medium mt-1">
                 {workoutName} · {format(date, 'MMM d')}
               </p>
               {flag.note && (
-                <p className="text-xs text-muted-foreground ml-5 italic mt-0.5">
+                <p className="text-xs text-foreground/80 leading-relaxed mt-1 text-pretty">
                   &ldquo;{flag.note}&rdquo;
                 </p>
               )}
             </div>
             {onMessageAboutFlag && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                className="shrink-0 h-7 text-xs"
+                className="shrink-0 h-7 px-2.5 text-xs bg-card tap-target"
                 onClick={() => onMessageAboutFlag(flag, exerciseName)}
               >
-                <MessageSquare className="w-3 h-3 mr-1" />
+                <MessageSquare className="w-3 h-3 mr-1" aria-hidden="true" />
                 Ask
+                <span className="sr-only"> about {exerciseName}</span>
               </Button>
             )}
           </div>
         ))}
 
         {flags.length > 3 && (
-          <p className="text-xs text-muted-foreground">+{flags.length - 3} more flagged</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+            +{flags.length - 3} more flagged
+          </p>
         )}
       </div>
     </div>

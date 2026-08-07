@@ -315,7 +315,11 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
 
       {/* Position number */}
       <div className="w-10 shrink-0">
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
+        {/* The current row's tint drops plain muted-foreground below 4.5:1 */}
+        <p className={cn(
+          'font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased',
+          isCurrent ? 'text-foreground/70' : 'text-muted-foreground'
+        )}>
           Day
         </p>
         <p className={cn(
@@ -334,7 +338,10 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
         )}>
           {day.workoutDay?.name || 'Workout'}
         </p>
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased">
+        <p className={cn(
+          'font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased',
+          isCurrent ? 'text-foreground/70' : 'text-muted-foreground'
+        )}>
           {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
         </p>
       </div>
