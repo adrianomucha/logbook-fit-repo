@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useDialogBehavior } from '@/hooks/useDialogBehavior';
-import { cn } from '@/lib/utils';
+import { cn, noWidows } from '@/lib/utils';
 import { AlertTriangle, Check, HelpCircle, Loader2, X, type LucideIcon } from 'lucide-react';
 
 type ConfirmIntent = 'default' | 'destructive';
@@ -158,7 +158,7 @@ export function ConfirmationModal({
                 id={titleId}
                 className="mt-1 text-lg font-bold leading-tight tracking-tight text-balance text-foreground sm:text-xl"
               >
-                {title}
+                {noWidows(title)}
               </h2>
             </div>
           </div>
@@ -167,9 +167,9 @@ export function ConfirmationModal({
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5 pt-4 sm:px-7 sm:pb-6">
           <p
             id={messageId}
-            className="text-[15px] leading-[1.6] text-foreground/80 antialiased"
+            className="text-pretty text-[15px] leading-[1.6] text-foreground/80 antialiased"
           >
-            {message}
+            {noWidows(message)}
           </p>
 
           {warningMessage && (
@@ -179,8 +179,8 @@ export function ConfirmationModal({
                 <span className="block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
                   What happens
                 </span>
-                <p className="mt-1.5 text-[13px] leading-relaxed text-foreground/75 antialiased">
-                  {warningMessage}
+                <p className="mt-1.5 text-pretty text-[13px] leading-relaxed text-foreground/75 antialiased">
+                  {noWidows(warningMessage)}
                 </p>
               </div>
             </div>
@@ -190,13 +190,14 @@ export function ConfirmationModal({
             <div className="mt-5">
               <label
                 htmlFor="confirmation-modal-text"
-                className="mb-2 block font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground"
+                className="mb-2 block text-pretty font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground"
               >
                 Type{' '}
                 <span className="font-sans font-semibold normal-case tracking-normal text-foreground">
                   {requireText}
                 </span>{' '}
-                to confirm
+                {/* bound so "confirm" never drops to a line of its own */}
+                to{'\u00A0'}confirm
               </label>
               <div className="relative">
                 <Input
