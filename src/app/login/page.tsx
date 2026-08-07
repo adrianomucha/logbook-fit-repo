@@ -3,28 +3,17 @@
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, UserCog, User, Loader2 } from 'lucide-react';
-import { AuthShell, AuthDivider } from '@/components/auth/AuthShell';
+import { AuthShell, AuthDivider, AuthFieldLabel } from '@/components/auth/AuthShell';
 import { isDemoModeEnabled } from '@/lib/demo';
 
 const DEMO_ACCOUNTS = {
   coach: { email: 'coach@logbook.fit', password: 'demo1234', label: 'Demo Coach', icon: UserCog },
   client: { email: 'client@logbook.fit', password: 'demo1234', label: 'Demo Client', icon: User },
 } as const;
-
-/** Uppercase tracked mono label — the product's data voice */
-function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
-  return (
-    <label
-      htmlFor={htmlFor}
-      className="block font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
-    >
-      {children}
-    </label>
-  );
-}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -84,7 +73,7 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <AuthFieldLabel htmlFor="email">Email</AuthFieldLabel>
           <Input
             id="email"
             type="email"
@@ -97,7 +86,15 @@ export default function LoginPage() {
           />
         </div>
         <div className="space-y-2">
-          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <div className="flex items-baseline justify-between">
+            <AuthFieldLabel htmlFor="password">Password</AuthFieldLabel>
+            <Link
+              href="/forgot-password"
+              className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased transition-colors hover:text-foreground"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Input
             id="password"
             type="password"

@@ -172,6 +172,20 @@ export const waitlistLimiter = rateLimit("waitlist", {
   maxRequests: 10,
 });
 
+// Reset requests are keyed by IP + email: tight enough that one address
+// can't be flooded with reset mail, without one shared office IP starving
+// everyone. The confirm side is keyed by IP alone — its failure mode is
+// token guessing, not mail volume — and sized like login.
+export const passwordResetRequestLimiter = rateLimit("pw-reset-request", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 5,
+});
+
+export const passwordResetConfirmLimiter = rateLimit("pw-reset-confirm", {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 10,
+});
+
 // Periodic cleanup of expired in-memory entries (every 5 minutes)
 if (!hasUpstash && typeof setInterval !== "undefined") {
   setInterval(() => {

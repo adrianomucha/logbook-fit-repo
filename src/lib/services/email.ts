@@ -1,5 +1,5 @@
 /**
- * Waitlist emails via Resend's REST API.
+ * Transactional emails (waitlist + auth) via Resend's REST API.
  *
  * Best-effort by design: if RESEND_API_KEY (or WAITLIST_FROM_EMAIL) is not
  * configured, or the send fails, these resolve to false without throwing so
@@ -29,12 +29,21 @@ const LIME = "#c6f542";
 const SANS = "Arial,Helvetica,sans-serif";
 const MONO = "'Courier New',Courier,monospace";
 
+const WAITLIST_FOOTER =
+  "You&rsquo;re receiving this because you joined the waitlist at";
+
 /**
- * Shared dark-card shell so both waitlist emails render as one family.
- * `preheader` is the hidden preview line inbox lists show next to the
- * subject; `content` is the card body between the header and footer rows.
+ * Shared dark-card shell so every email renders as one family. `preheader`
+ * is the hidden preview line inbox lists show next to the subject;
+ * `content` is the card body between the header and footer rows;
+ * `footerNote` is the "why you got this" line (defaults to the waitlist
+ * one) — the logbook.fit link is appended to whatever is passed.
  */
-function emailShell(preheader: string, content: string): string {
+function emailShell(
+  preheader: string,
+  content: string,
+  footerNote: string = WAITLIST_FOOTER
+): string {
   return `
   <div style="margin:0;padding:0;background:${BG};">
     <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
@@ -64,7 +73,7 @@ function emailShell(preheader: string, content: string): string {
                 Plan &middot; Train &middot; Check in
               </td></tr>
               <tr><td style="padding-top:12px;font-family:${SANS};font-size:11px;line-height:1.6;color:${FAINT};">
-                You&rsquo;re receiving this because you joined the waitlist at
+                ${footerNote}
                 <a href="https://logbook.fit" style="color:${MUTED};text-decoration:none;">logbook.fit</a>.
               </td></tr>
             </table>
@@ -180,6 +189,49 @@ function inviteText(inviteUrl: string): string {
   ].join("\n");
 }
 
+function passwordResetHtml(resetUrl: string): string {
+  return emailShell(
+    "Set a new password for your Logbook.fit account — this link works for 30 minutes.",
+    `${heading("Reset your", "password.")}
+            <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              Someone asked to reset the password for your Logbook.fit account.
+              If that was you, set a new one below &mdash; the link works for
+              30 minutes.
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+              <tr><td align="center" style="background:${LIME};border-radius:10px;">
+                <a href="${resetUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
+                  Set new password&nbsp;&nbsp;&#8594;
+                </a>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 32px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
+              Didn&rsquo;t ask for this? Ignore this email &mdash; your password
+              is unchanged. If the button doesn&rsquo;t work, paste this into
+              your browser:<br>
+              <a href="${resetUrl}" style="color:${MUTED};word-break:break-all;">${resetUrl}</a>
+            </p>`,
+    "You&rsquo;re receiving this because a password reset was requested for your account at"
+  );
+}
+
+function passwordResetText(resetUrl: string): string {
+  return [
+    "LOGBOOK.FIT — PRIVATE BETA",
+    "",
+    "Reset your password.",
+    "",
+    "Someone asked to reset the password for your Logbook.fit account. If that was you, set a new one here — the link works for 30 minutes:",
+    "",
+    resetUrl,
+    "",
+    "Didn't ask for this? Ignore this email — your password is unchanged.",
+    "",
+    "Plan · Train · Check in",
+    "You're receiving this because a password reset was requested for your account at https://logbook.fit",
+  ].join("\n");
+}
+
 /**
  * Shared sender. Resolves to true if the send was attempted and accepted,
  * false if skipped (unconfigured) or it failed. Never throws. The plain-text
@@ -248,5 +300,23 @@ export function sendWaitlistInvite(
     "Your Logbook.fit invite is ready",
     inviteHtml(inviteUrl),
     inviteText(inviteUrl)
+  );
+}
+
+/**
+ * Send the password-reset link. Fire-and-forget from the caller's point of
+ * view — the request endpoint answers identically whether or not an account
+ * (or a configured mailer) exists, so nothing can be probed from timing the
+ * boolean.
+ */
+export function sendPasswordReset(
+  to: string,
+  resetUrl: string
+): Promise<boolean> {
+  return sendEmail(
+    to,
+    "Reset your Logbook.fit password",
+    passwordResetHtml(resetUrl),
+    passwordResetText(resetUrl)
   );
 }

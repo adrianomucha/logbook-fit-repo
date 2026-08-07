@@ -7,7 +7,7 @@ import { parseBody } from "@/lib/validations/parseBody";
 import { waitlistInviteSchema } from "@/lib/validations/schemas";
 import { generateSecureToken } from "@/lib/tokens";
 import { appBaseUrl, waitlistInvitePath } from "@/lib/waitlist";
-import { sendWaitlistInvite } from "@/lib/services/waitlist-email";
+import { sendWaitlistInvite } from "@/lib/services/email";
 
 export const dynamic = "force-dynamic";
 

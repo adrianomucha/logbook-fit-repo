@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { parseBody } from "@/lib/validations/parseBody";
 import { waitlistSchema, waitlistQualifySchema } from "@/lib/validations/schemas";
 import { waitlistLimiter, getClientIp } from "@/lib/rate-limit";
-import { sendWaitlistWelcome } from "@/lib/services/waitlist-email";
+import { sendWaitlistWelcome } from "@/lib/services/email";
 
 export async function POST(req: Request) {
   try {
