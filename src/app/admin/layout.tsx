@@ -39,7 +39,7 @@ export default async function AdminLayout({
         <div className="px-4 pt-6 sm:px-6">
           <div
             role="alert"
-            className="mx-auto flex max-w-4xl items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4"
+            className="mx-auto flex max-w-7xl items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4"
           >
             <AlertTriangle
               className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
