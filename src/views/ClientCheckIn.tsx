@@ -240,7 +240,7 @@ export function ClientCheckIn() {
             <h2
               ref={successHeadingRef}
               tabIndex={-1}
-              className="text-2xl font-bold tracking-tight mb-1.5 focus:outline-none"
+              className="text-2xl font-bold tracking-tight mb-1.5 focus:outline-none text-balance"
             >
               Check-in complete
             </h2>
@@ -248,7 +248,7 @@ export function ClientCheckIn() {
               Your response is on its way to {clientName}.
             </p>
             <div className="space-y-2">
-              <Button onClick={handleBack} className="w-full active:scale-[0.97] transition-transform duration-150">
+              <Button onClick={handleBack} className="w-full active:scale-[0.96] transition-transform duration-150">
                 Back to {firstName}&apos;s profile
               </Button>
               <Button variant="ghost" onClick={() => router.push('/coach')} className="w-full text-muted-foreground">
@@ -275,14 +275,14 @@ export function ClientCheckIn() {
             <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <ClipboardCheck className="w-6 h-6 text-muted-foreground" />
             </div>
-            <h2 className="text-xl font-bold tracking-tight mb-1.5">No active check-in</h2>
-            <p className="text-sm text-muted-foreground mb-6">
+            <h2 className="text-xl font-bold tracking-tight mb-1.5 text-balance">No active check-in</h2>
+            <p className="text-sm text-muted-foreground mb-6 text-pretty">
               Start a new check-in to hear how {firstName} is doing.
             </p>
             <Button
               onClick={handleStartNewCheckIn}
               disabled={isCreating}
-              className="h-11 px-6 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
+              className="h-11 px-6 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
             >
               {isCreating && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Send check-in
@@ -315,8 +315,8 @@ export function ClientCheckIn() {
               <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
               Awaiting response
             </span>
-            <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5">Waiting for {firstName}</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Waiting for {firstName}</h2>
+            <p className="text-sm text-muted-foreground text-pretty">
               Check-in sent {sentAgo}. {firstName} hasn&apos;t responded yet.
             </p>
             <Button
@@ -412,11 +412,11 @@ export function ClientCheckIn() {
               {/* Client notes read as a quote — the brand's coach-note treatment.
                   max-w-prose keeps the measure at ~65ch in the wide column */}
               {activeCheckIn?.painBlockers && (
-                <div className="border-t border-border mt-4 pt-4">
+                <div className="mt-6">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
                     Notes from {firstName}
                   </p>
-                  <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose">
+                  <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose text-pretty">
                     {activeCheckIn.painBlockers}
                   </p>
                 </div>
@@ -482,7 +482,7 @@ export function ClientCheckIn() {
             <Button
               onClick={handleCompleteCheckIn}
               disabled={isSubmitting}
-              className="w-full h-12 mt-5 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
+              className="w-full h-12 mt-5 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
               size="lg"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
