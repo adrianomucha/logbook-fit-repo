@@ -127,10 +127,13 @@ export function AllClientsPage() {
                 : undefined
             }
             action={
-              <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
-                <Plus className="w-4 h-4 mr-1.5" />
-                Invite Client
-              </Button>
+              // Hidden while the roster is empty — the empty state carries its own invite CTA
+              clients.length > 0 ? (
+                <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
+                  <Plus className="w-4 h-4 mr-1.5" />
+                  Invite Client
+                </Button>
+              ) : undefined
             }
           />
         </div>
