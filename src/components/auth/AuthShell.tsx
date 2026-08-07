@@ -156,6 +156,24 @@ export function AuthShell({ mode, children }: AuthShellProps) {
   );
 }
 
+/** Uppercase tracked mono field label — the product's data voice. */
+export function AuthFieldLabel({
+  htmlFor,
+  children,
+}: {
+  htmlFor: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label
+      htmlFor={htmlFor}
+      className="block font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
+    >
+      {children}
+    </label>
+  );
+}
+
 /** Volt-tick divider between an auth page's headline block and its form. */
 export function AuthDivider() {
   return (

@@ -23,6 +23,15 @@ export const signupSchema = z
     path: ["role"],
   });
 
+export const passwordResetRequestSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+});
+
+export const passwordResetConfirmSchema = z.object({
+  token: z.string().min(1, "Reset token is required"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
 // ──────────────────────────────────────
 // EXERCISES
 // ──────────────────────────────────────
