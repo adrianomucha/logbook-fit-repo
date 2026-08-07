@@ -301,7 +301,7 @@ export function ClientCheckIn() {
 
   // State A: Pending (waiting for client)
   if (activeCheckIn?.status === 'PENDING') {
-    const sentAgo = formatDistanceToNow(new Date(activeCheckIn.createdAt), { addSuffix: true });
+    const sentAgo = formatDistanceToNow(new Date(activeCheckIn.createdAt), { addSuffix: true }).replace(/^about /, '');
 
     return (
       <PageShell
@@ -322,7 +322,7 @@ export function ClientCheckIn() {
             <Button
               variant="ghost"
               size="sm"
-              className="mt-5 text-muted-foreground hover:text-destructive"
+              className="mt-5 text-muted-foreground hover:text-destructive tap-target"
               disabled={isWithdrawing}
               onClick={handleWithdrawCheckIn}
             >
@@ -353,7 +353,7 @@ export function ClientCheckIn() {
     : null;
 
   const submittedAgo = activeCheckIn?.clientRespondedAt
-    ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })
+    ? formatDistanceToNow(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true }).replace(/^about /, '')
     : 'recently';
 
   return (
@@ -373,38 +373,50 @@ export function ClientCheckIn() {
           <section className="animate-enter" style={{ animationDelay: '100ms' }}>
             <SectionLabel>{firstName}&apos;s response</SectionLabel>
             <SectionCard>
+              {/* Answers in the brand's instrument-readout voice — mono caps,
+                  like the profile's vitals; the emoji is the client's own pick
+                  from the check-in form, carried over as content */}
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {effortDisplay && (
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-2">
                       Workouts felt
                     </p>
-                    <p className={cn('text-base font-bold tracking-tight antialiased', effortDisplay.text)}>
-                      <span className="mr-1.5 select-none" aria-hidden="true">{effortDisplay.emoji}</span>
+                    <p className={cn(
+                      'font-mono text-sm font-bold uppercase tracking-[0.08em] antialiased',
+                      'flex items-center gap-2 leading-none',
+                      effortDisplay.text
+                    )}>
+                      <span className="text-lg leading-none select-none" aria-hidden="true">{effortDisplay.emoji}</span>
                       {effortDisplay.label}
                     </p>
                   </div>
                 )}
                 {feelingDisplay && (
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-2">
                       Body feels
                     </p>
-                    <p className={cn('text-base font-bold tracking-tight antialiased', feelingDisplay.text)}>
-                      <span className="mr-1.5 select-none" aria-hidden="true">{feelingDisplay.emoji}</span>
+                    <p className={cn(
+                      'font-mono text-sm font-bold uppercase tracking-[0.08em] antialiased',
+                      'flex items-center gap-2 leading-none',
+                      feelingDisplay.text
+                    )}>
+                      <span className="text-lg leading-none select-none" aria-hidden="true">{feelingDisplay.emoji}</span>
                       {feelingDisplay.label}
                     </p>
                   </div>
                 )}
               </div>
 
-              {/* Client notes read as a quote — the brand's coach-note treatment */}
+              {/* Client notes read as a quote — the brand's coach-note treatment.
+                  max-w-prose keeps the measure at ~65ch in the wide column */}
               {activeCheckIn?.painBlockers && (
                 <div className="border-t border-border mt-4 pt-4">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
                     Notes from {firstName}
                   </p>
-                  <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90">
+                  <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose">
                     {activeCheckIn.painBlockers}
                   </p>
                 </div>
@@ -458,7 +470,7 @@ export function ClientCheckIn() {
               </div>
             </div>
 
-            <label className="flex items-center gap-2.5 cursor-pointer select-none mt-4">
+            <label className="flex items-center gap-2.5 cursor-pointer select-none mt-2.5 min-h-11">
               <Checkbox
                 checked={planAdjustment}
                 onCheckedChange={setPlanAdjustment}
@@ -631,8 +643,12 @@ function PreviousCheckInsList({ checkIns }: {
                 {format(new Date(checkIn.completedAt || checkIn.createdAt), 'MMM d, yyyy')}
               </p>
               {effort && (
-                <p className={cn('text-sm font-semibold', effort.text)}>
-                  <span className="mr-1 select-none" aria-hidden="true">{effort.emoji}</span>
+                <p className={cn(
+                  'font-mono text-[11px] font-bold uppercase tracking-[0.08em] antialiased',
+                  'flex items-center gap-1.5 leading-none',
+                  effort.text
+                )}>
+                  <span className="text-sm leading-none select-none" aria-hidden="true">{effort.emoji}</span>
                   {effort.label}
                 </p>
               )}
