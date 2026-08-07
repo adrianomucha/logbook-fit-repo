@@ -30,6 +30,13 @@ export function useUnreadMessages(pollMs = 15_000) {
   return {
     total: data?.total ?? 0,
     threads: data?.threads ?? [],
+    /**
+     * False until the first response lands. Consumers that diff `threads`
+     * against a baseline must wait for this: the pre-load empty list means
+     * "not known yet", not "nothing unread", and seeding a baseline from it
+     * makes the whole backlog look newly arrived.
+     */
+    hasLoaded: data !== undefined,
     error,
     isLoading,
     refresh: mutate,

@@ -98,7 +98,10 @@
     display: none;
   }
 
-  /* Expands a control's hit area to ≥44×44px without changing its visual size */
+  /* Expands a control's hit area to ≥44×44px without changing its visual size.
+     Note: this sets position: relative, and being later in the utilities layer
+     it overrides Tailwind's `absolute`/`fixed`. To place a tap-target control
+     absolutely, put the positioning on a wrapper element instead. */
   .tap-target {
     position: relative;
   }
