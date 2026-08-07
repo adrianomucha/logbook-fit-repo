@@ -7,10 +7,15 @@
  * SDK dependency. Callers that need to know (the invite endpoint) get the
  * boolean; the signup endpoint ignores it.
  *
- * The templates mirror the landing-page hero: mono eyebrow with a lime dot,
- * uppercase display heading with the last word in brand lime, muted body copy
- * on a dark card. Email clients don't honour <style>/external CSS or webfonts,
- * so everything is inline and Arial/Courier New stand in for IBM Plex.
+ * The templates speak the brand's light voice (the auth pages' form column):
+ * mono eyebrow with a lime dot, uppercase display heading with the closing
+ * words on a lime highlight, dark ink on a white card. Light-first is a
+ * deliberate constraint, not a style choice — Gmail's dark mode force-inverts
+ * email colors with no reliable opt-out, and dark-designed emails come out
+ * worst (flipped to a washed-out light theme). A light design survives both
+ * modes predictably. Email clients don't honour <style>/external CSS or
+ * webfonts, so everything is inline and Arial/Courier New stand in for
+ * IBM Plex.
  *
  * Required env to actually send:
  *   RESEND_API_KEY      — your Resend API key
@@ -70,12 +75,13 @@ export function emailConfigStatus():
   return { ok: true };
 }
 
-const BG = "#0a0a0a";
-const CARD = "#111111";
-const BORDER = "#262626";
-const INK = "#fafafa";
-const MUTED = "#a3a3a3";
-const FAINT = "#525252";
+const BG = "#f5f5f5";
+const CARD = "#ffffff";
+const PANEL = "#fafafa";
+const BORDER = "#e5e5e5";
+const INK = "#0a0a0a";
+const MUTED = "#525252";
+const FAINT = "#a3a3a3";
 const LIME = "#c6f542";
 const SANS = "Arial,Helvetica,sans-serif";
 const MONO = "'Courier New',Courier,monospace";
@@ -137,12 +143,15 @@ function emailShell(
 
 /**
  * Display heading in the landing-hero voice: uppercase, tight, with the
- * closing words picked out in brand lime.
+ * closing words picked out by a lime highlight. Highlight (dark ink on lime)
+ * rather than lime text — lime on white fails contrast, and a saturated
+ * background block survives Gmail's dark-mode color transform far better
+ * than colored text does.
  */
-function heading(plain: string, limePart: string): string {
+function heading(plain: string, accentPart: string): string {
   return `
-            <h1 style="margin:0 0 16px 0;font-family:${SANS};font-size:30px;line-height:1.05;font-weight:800;color:${INK};text-transform:uppercase;letter-spacing:-0.5px;">
-              ${plain}<br><span style="color:${LIME};">${limePart}</span>
+            <h1 style="margin:0 0 16px 0;font-family:${SANS};font-size:30px;line-height:1.15;font-weight:800;color:${INK};text-transform:uppercase;letter-spacing:-0.5px;">
+              ${plain}<br><span style="background:${LIME};color:${INK};padding:0 8px;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${accentPart}</span>
             </h1>`;
 }
 
@@ -152,7 +161,7 @@ function stepRow(num: string, text: string, last = false): string {
   const rule = last ? "" : `border-bottom:1px solid ${BORDER};`;
   return `
               <tr>
-                <td width="36" valign="top" style="${pad}${rule}font-family:${MONO};font-size:12px;letter-spacing:1px;color:${LIME};">${num}</td>
+                <td width="36" valign="top" style="${pad}${rule}font-family:${MONO};font-size:12px;font-weight:700;letter-spacing:1px;color:${INK};">${num}</td>
                 <td valign="top" style="${pad}${rule}font-family:${SANS};font-size:14px;line-height:1.5;color:${MUTED};">${text}</td>
               </tr>`;
 }
@@ -165,7 +174,7 @@ function welcomeHtml(): string {
               Thanks for signing up for the Logbook.fit private beta. Here&rsquo;s
               how it goes from here:
             </p>
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG};border:1px solid ${BORDER};border-radius:12px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;">
               <tr><td style="padding:8px 20px 20px 20px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                   ${stepRow("01", "You&rsquo;re in the queue &mdash; no forms, nothing else to fill in.")}
