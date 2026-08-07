@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { createCheckInSchema } from "@/lib/validations/schemas";
+import { notifyCheckInSent } from "@/lib/push";
 
 /**
  * POST /api/check-ins
@@ -60,10 +61,22 @@ export const POST = withCoach(
       include: {
         client: {
           select: {
+            userId: true,
             user: { select: { name: true } },
           },
         },
+        coach: {
+          select: { user: { select: { name: true } } },
+        },
       },
+    });
+
+    // Awaited, not fired and forgotten — a serverless function can freeze the
+    // moment it responds. notifyCheckInSent swallows its own errors, so a
+    // failed push can never fail the check-in.
+    await notifyCheckInSent({
+      clientUserId: checkIn.client.userId,
+      coachName: checkIn.coach.user.name,
     });
 
     return NextResponse.json(checkIn, { status: 201 });

@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { coachRespondSchema } from "@/lib/validations/schemas";
+import { notifyCheckInFeedback } from "@/lib/push";
 
 /**
  * PUT /api/check-ins/[id]/coach-respond
@@ -56,7 +57,20 @@ export const PUT = withCoach(
         coachRespondedAt: new Date(),
         ...(isEdit ? {} : { completedAt: new Date() }),
       },
+      include: {
+        client: { select: { userId: true } },
+        coach: { select: { user: { select: { name: true } } } },
+      },
     });
+
+    // Only on the first reply: an edit of a typo shouldn't re-ping the client
+    // as if fresh feedback had arrived.
+    if (!isEdit) {
+      await notifyCheckInFeedback({
+        clientUserId: updated.client.userId,
+        coachName: updated.coach.user.name,
+      });
+    }
 
     return NextResponse.json(updated);
   }

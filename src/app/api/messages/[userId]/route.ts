@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import { isLockedDemoAccount } from "@/lib/demo";
 import prisma from "@/lib/prisma";
+import { formatPrescription } from "@/lib/reps";
 
 /**
  * GET /api/messages/[userId]
@@ -96,10 +97,26 @@ export async function GET(
           completedAt: true,
         },
       },
+      // Everything the chat's exercise-context card renders: the name, the
+      // prescription it was flagged against, how far the client got, and the
+      // flag note. Without the prescription/set columns the card had nothing
+      // to show, so the structured half of "flag + message coach" was
+      // invisible to both sides.
       exerciseReference: {
         select: {
           id: true,
+          trackingType: true,
+          sets: true,
+          reps: true,
+          repsMax: true,
+          weight: true,
           exercise: { select: { name: true } },
+          setCompletions: {
+            select: { workoutCompletionId: true, completed: true },
+          },
+          flags: {
+            select: { workoutCompletionId: true, note: true },
+          },
         },
       },
     },
@@ -108,6 +125,45 @@ export async function GET(
   const hasMore = messages.length > limit;
   const result = hasMore ? messages.slice(0, limit) : messages;
   const nextCursor = hasMore ? result[result.length - 1].id : null;
+
+  // Flatten the exercise join into the card's shape here rather than shipping
+  // raw relations. Sets and flags are scoped to this message's own workout —
+  // the same exercise recurs every week, so unscoped counts would describe the
+  // wrong session.
+  const shaped = result.map((message) => {
+    const ref = message.exerciseReference;
+    if (!ref) {
+      const { exerciseReference: _drop, ...rest } = message;
+      return { ...rest, exerciseContext: null };
+    }
+
+    const completionId = message.workoutReferenceId;
+    const setsForWorkout = completionId
+      ? ref.setCompletions.filter((s) => s.workoutCompletionId === completionId)
+      : [];
+    const flag = completionId
+      ? ref.flags.find((f) => f.workoutCompletionId === completionId)
+      : undefined;
+
+    const { exerciseReference: _drop, ...rest } = message;
+    return {
+      ...rest,
+      exerciseContext: {
+        exerciseId: ref.id,
+        exerciseName: ref.exercise.name,
+        prescription: formatPrescription({
+          sets: ref.sets,
+          reps: ref.reps,
+          repsMax: ref.repsMax,
+          weight: ref.weight,
+          trackingType: ref.trackingType,
+        }),
+        setsCompleted: setsForWorkout.filter((s) => s.completed).length,
+        totalSets: ref.sets,
+        flagNote: flag?.note ?? null,
+      },
+    };
+  });
 
   // Mark messages from the other user as read — but only when the caller
   // says the chat is actually on screen (?markRead=1). Both dashboards poll
@@ -126,7 +182,7 @@ export async function GET(
 
   return NextResponse.json(
     {
-      messages: result,
+      messages: shaped,
       nextCursor,
       hasMore,
     },

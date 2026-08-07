@@ -14,6 +14,7 @@ const FULLY_CONFIGURED = {
   UPSTASH_REDIS_REST_URL: "https://example.upstash.io",
   UPSTASH_REDIS_REST_TOKEN: "token",
   NEXTAUTH_URL: "https://logbook.fit",
+  CRON_SECRET: "cron-secret",
 } as const;
 
 function stubEnv(overrides: Record<string, string | undefined>) {
@@ -97,6 +98,12 @@ describe("envProblems", () => {
     expect(problems.some((p) => p.includes("NEXTAUTH_URL"))).toBe(true);
   });
 
+  it("flags a missing CRON_SECRET", () => {
+    stubEnv({ CRON_SECRET: undefined });
+    const problems = envProblems(process.env);
+    expect(problems.some((p) => p.includes("CRON_SECRET"))).toBe(true);
+  });
+
   it("reports every problem at once", () => {
     stubEnv({
       RESEND_API_KEY: undefined,
@@ -104,7 +111,8 @@ describe("envProblems", () => {
       UPSTASH_REDIS_REST_URL: undefined,
       UPSTASH_REDIS_REST_TOKEN: undefined,
       NEXTAUTH_URL: undefined,
+      CRON_SECRET: undefined,
     });
-    expect(envProblems(process.env)).toHaveLength(4);
+    expect(envProblems(process.env)).toHaveLength(5);
   });
 });

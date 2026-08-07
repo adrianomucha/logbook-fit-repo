@@ -39,8 +39,12 @@ interface InlineCheckInReviewProps {
   workoutCompletions: WorkoutCompletion[];
   exerciseFlags: ExerciseFlag[];
   currentUserId: string;
-  onCompleteCheckIn: (checkIn: CheckIn) => void;
-  onCreateCheckIn: (checkIn: CheckIn) => void;
+  /**
+   * Persist the coach's response. Must reject if the write failed — this
+   * panel only clears the draft and shows the success state once it resolves.
+   */
+  onCompleteCheckIn: (checkIn: CheckIn) => Promise<void> | void;
+  onCreateCheckIn: (checkIn: CheckIn) => Promise<void> | void;
   /** Withdraw a still-unanswered check-in (sent by mistake, wrong timing) */
   onCancelCheckIn?: () => Promise<void> | void;
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
@@ -142,20 +146,24 @@ export function InlineCheckInReview({
     return flagsWithContext.sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [flaggedExercisesFromWeek, workoutCompletions, plan]);
 
-  const handleStartNewCheckIn = () => {
+  const handleStartNewCheckIn = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const newCheckIn = createCheckIn(client.id, currentUserId);
-      onCreateCheckIn(newCheckIn);
+      // Await before claiming it was sent — the parent toasts and rethrows
+      // on failure, so a 409/500 must not paint "Sent to <name>".
+      await onCreateCheckIn(newCheckIn);
       setJustSentCheckIn(true);
       sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
+    } catch {
+      // Parent already surfaced the reason; just don't show the sent state.
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleCompleteCheckIn = () => {
+  const handleCompleteCheckIn = async () => {
     if (!activeCheckIn || !coachResponse.trim() || isSubmitting) return;
     setIsSubmitting(true);
 
@@ -164,7 +172,15 @@ export function InlineCheckInReview({
       planAdjustment,
     });
 
-    onCompleteCheckIn(completed);
+    try {
+      await onCompleteCheckIn(completed);
+    } catch {
+      // Keep the draft and the checkbox exactly as typed so the coach can
+      // retry without rewriting their response.
+      setIsSubmitting(false);
+      return;
+    }
+
     setCoachResponse('');
     setPlanAdjustment(false);
     setShowSuccess(true);

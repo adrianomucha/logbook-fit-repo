@@ -6,6 +6,7 @@ import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { assignPlanSchema } from "@/lib/validations/schemas";
 import { clonePlanForClient } from "@/lib/plan-clone";
+import { notifyPlanAssigned } from "@/lib/push";
 
 /**
  * POST /api/plans/[id]/assign
@@ -92,10 +93,23 @@ export const POST = withCoach(
       },
       select: {
         id: true,
+        userId: true,
         activePlanId: true,
         planStartDate: true,
         user: { select: { name: true } },
       },
+    });
+
+    // Until now a client waiting on their first plan had no way to learn it
+    // had landed except by reopening the app.
+    const coach = await prisma.coachProfile.findUnique({
+      where: { id: coachProfileId },
+      select: { user: { select: { name: true } } },
+    });
+    await notifyPlanAssigned({
+      clientUserId: updatedClient.userId,
+      coachName: coach?.user.name ?? null,
+      planName: instance.name,
     });
 
     return NextResponse.json(updatedClient);

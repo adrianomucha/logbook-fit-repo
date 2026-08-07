@@ -51,6 +51,12 @@ export function envProblems(env: NodeJS.ProcessEnv = process.env): string[] {
     );
   }
 
+  if (!env.CRON_SECRET) {
+    problems.push(
+      "CRON_SECRET is not set — the nightly check-in sweep (/api/cron/check-ins) refuses every call, so weekly check-ins only appear when someone opens the right page."
+    );
+  }
+
   return problems;
 }
 

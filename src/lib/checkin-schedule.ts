@@ -1,4 +1,5 @@
 import prisma from "@/lib/prisma";
+import { notifyCheckInSent } from "@/lib/push";
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 // A PENDING check-in the client never answered goes stale after two full
@@ -25,13 +26,16 @@ export async function expireStaleCheckIns(clientId: string) {
 }
 
 /**
- * Lazily materialize the weekly check-in schedule for one coach-client pair.
+ * Materialize the weekly check-in schedule for one coach-client pair.
  *
- * There is no cron in this app, so "auto-sends every 7 days" is enforced at
- * read time: call this when either party loads check-in data. If the
- * relationship has the schedule enabled, there's no check-in currently in
- * flight, and the most recent one is at least 7 days old (or none exists),
+ * If the relationship has the schedule enabled, there's no check-in currently
+ * in flight, and the most recent one is at least 7 days old (or none exists),
  * a fresh PENDING check-in is created.
+ *
+ * Called from two places: the nightly sweep (runScheduledCheckIns, the
+ * authority — it reaches every client whether or not anyone opens the app),
+ * and opportunistically when either party loads check-in data, so a due
+ * check-in appears immediately rather than at the next sweep.
  *
  * Returns the created check-in, or null when nothing was due.
  */
@@ -67,10 +71,78 @@ export async function ensureScheduledCheckIn(relationship: {
     return null;
   }
 
-  return prisma.checkIn.create({
+  const created = await prisma.checkIn.create({
     data: {
       coachId: relationship.coachId,
       clientId: relationship.clientId,
     },
+    include: {
+      client: { select: { userId: true } },
+      coach: { select: { user: { select: { name: true } } } },
+    },
   });
+
+  // An auto-sent check-in needs the ping more than a manual one does: no
+  // human is watching to follow it up, and the client has no other cue that
+  // one is waiting.
+  await notifyCheckInSent({
+    clientUserId: created.client.userId,
+    coachName: created.coach.user.name,
+  });
+
+  return created;
+}
+
+export type ScheduleSweepResult = {
+  relationshipsScanned: number;
+  checkInsCreated: number;
+  failures: number;
+};
+
+/**
+ * Sweep every active relationship: expire abandoned check-ins and send any
+ * that are due. This is what makes "auto-sends every 7 days" true.
+ *
+ * Before this existed, scheduling was materialized only when someone loaded
+ * check-in data — so the quiet client the product exists to catch, who by
+ * definition isn't opening the app, was never checked on, and their coach's
+ * dashboard showed "all clear". Run from the nightly cron
+ * (POST /api/cron/check-ins).
+ *
+ * Each relationship is handled independently: one client's failure must not
+ * abort the sweep for everyone behind them in the list.
+ */
+export async function runScheduledCheckIns(): Promise<ScheduleSweepResult> {
+  const relationships = await prisma.coachClientRelationship.findMany({
+    where: { status: "ACTIVE" },
+    select: {
+      coachId: true,
+      clientId: true,
+      status: true,
+      checkInScheduleEnabled: true,
+    },
+  });
+
+  let checkInsCreated = 0;
+  let failures = 0;
+
+  for (const relationship of relationships) {
+    try {
+      const created = await ensureScheduledCheckIn(relationship);
+      if (created) checkInsCreated++;
+    } catch (error) {
+      failures++;
+      console.error(
+        "[CRON] Check-in scheduling failed for client",
+        relationship.clientId,
+        error
+      );
+    }
+  }
+
+  return {
+    relationshipsScanned: relationships.length,
+    checkInsCreated,
+    failures,
+  };
 }

@@ -170,9 +170,13 @@ model CoachClientRelationship {
   coachId   String
   clientId  String       @unique // MVP: one coach per client
   status    ClientStatus @default(ACTIVE)
-  // Weekly check-in automation: when enabled, a new check-in is created
-  // lazily (on coach/client data access) once 7 days pass since the last one
-  checkInScheduleEnabled Boolean @default(false)
+  // Weekly check-in automation: when enabled, a new check-in is created once
+  // 7 days pass since the last one — by the nightly cron sweep
+  // (/api/cron/check-ins), and opportunistically when either party loads
+  // check-in data. On by default: coaches assume weekly check-ins simply
+  // happen, and a default-off retention loop buried in a third-level tab is
+  // one nobody turns on. The coach can still switch it off per client.
+  checkInScheduleEnabled Boolean @default(true)
   // Termination audit: set when the coach ends the relationship or the
   // client unsubscribes. status becomes INACTIVE; the row is kept as history.
   endedAt   DateTime?

@@ -125,6 +125,23 @@ export function apiMessagesToMessages(
       timestamp: m.createdAt,
       read: m.readAt !== null,
       clientId: clientProfileId,
+      // Drives ChatView's flagged-exercise card. Dropping this on the floor
+      // is what made "flag + message coach" arrive as bare text on both
+      // sides, despite the API already returning the context.
+      ...(m.exerciseContext
+        ? {
+            exerciseContext: {
+              exerciseId: m.exerciseContext.exerciseId,
+              exerciseName: m.exerciseContext.exerciseName,
+              prescription: m.exerciseContext.prescription,
+              setsCompleted: m.exerciseContext.setsCompleted,
+              totalSets: m.exerciseContext.totalSets,
+              ...(m.exerciseContext.flagNote
+                ? { flagNote: m.exerciseContext.flagNote }
+                : {}),
+            },
+          }
+        : {}),
     }))
     .reverse();
 }

@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { clientRespondSchema } from "@/lib/validations/schemas";
+import { notifyCheckInResponse } from "@/lib/push";
 
 /**
  * PUT /api/check-ins/[id]/client-respond
@@ -47,6 +48,17 @@ export const PUT = withClient(
         clientFeeling,
         clientRespondedAt: new Date(),
       },
+      include: {
+        coach: { select: { userId: true } },
+        client: { select: { user: { select: { name: true } } } },
+      },
+    });
+
+    // A response nobody hears about is the loop stalling on the coach's side.
+    await notifyCheckInResponse({
+      coachUserId: updated.coach.userId,
+      clientName: updated.client.user.name,
+      clientProfileId,
     });
 
     return NextResponse.json(updated);

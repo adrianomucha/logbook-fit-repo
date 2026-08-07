@@ -157,6 +157,11 @@ export interface ClientDetail {
     id: string;
     status: string;
     effortRating: string | null;
+    clientFeeling: string | null;
+    painBlockers: string | null;
+    clientRespondedAt: string | null;
+    coachFeedback: string | null;
+    planAdjustment: boolean;
     createdAt: string;
     completedAt: string | null;
   }[];
@@ -271,6 +276,19 @@ export interface ApiMessage {
   senderId: string;
   recipientId: string;
   sender: { name: string | null };
+  /**
+   * Present when the message was sent about a flagged exercise. Sets and the
+   * flag note are scoped to the message's own workout, so the counts describe
+   * that session rather than the exercise's whole history.
+   */
+  exerciseContext: {
+    exerciseId: string;
+    exerciseName: string;
+    prescription: string;
+    setsCompleted: number;
+    totalSets: number;
+    flagNote: string | null;
+  } | null;
 }
 
 // GET /api/client/workout/day/[id]

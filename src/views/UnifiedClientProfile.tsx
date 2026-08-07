@@ -243,8 +243,11 @@ export function UnifiedClientProfile() {
     }
   };
 
+  // Both of these rethrow after toasting: the review panel awaits them and
+  // only clears the coach's typed response once the write is durable. Failing
+  // silently here is what used to show a green "response sent" over a request
+  // that 500'd, with the draft already wiped.
   const handleCompleteCheckIn = async (completedCheckIn: CheckIn) => {
-    // Submit coach response via API
     if (!activeCheckInId) return;
     try {
       await apiFetch(`/api/check-ins/${activeCheckInId}/coach-respond`, {
@@ -255,8 +258,9 @@ export function UnifiedClientProfile() {
         }),
       });
       refreshClient();
-    } catch {
+    } catch (err) {
       toast.error('Failed to submit your response. Please try again.');
+      throw err;
     }
   };
 
@@ -268,6 +272,7 @@ export function UnifiedClientProfile() {
     } catch (err) {
       toast.error(err instanceof ApiError && err.status === 409 ? err.message : 'Failed to create check-in. Please try again.');
       refreshClient();
+      throw err;
     }
   };
 
@@ -693,11 +698,16 @@ export function UnifiedClientProfile() {
         </div>
         )}
 
-        {/* Check-in section — only shown while a check-in is in flight; past
-            check-ins live in the History tab */}
-        {plan && activeCheckIn && (
+        {/* Check-in section. Rendered whenever the client has a plan, not only
+            while one is in flight: gating on activeCheckIn hid the panel's
+            "Send Check-in" button, and with the dashboard CTA only appearing
+            for clients already flagged as due, a coach could reach a client
+            with no way to start a check-in at all. With no active check-in the
+            panel shows its prompt plus any unaddressed flags. Past check-ins
+            still live in the History tab. */}
+        {plan && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
-          <SectionLabel>Latest check-in</SectionLabel>
+          <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
           <SectionCard>
             <InlineCheckInReview
               client={client}

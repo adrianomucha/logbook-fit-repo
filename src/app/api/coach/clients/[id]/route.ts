@@ -64,7 +64,9 @@ export const GET = withCoach(
           // finished — abandonment is a fade signal the coach must see
           where: { status: { in: ["COMPLETED", "IN_PROGRESS"] } },
           orderBy: { completedAt: { sort: "desc", nulls: "first" } },
-          take: 10,
+          // Enough to back the panel's "Show all" without paging: at 4
+          // sessions a week that's a full training block.
+          take: 50,
           select: {
             id: true,
             dayId: true,
@@ -126,11 +128,21 @@ export const GET = withCoach(
           // Expired check-ins were never answered — noise, not history
           where: { status: { not: "EXPIRED" } },
           orderBy: { createdAt: "desc" },
-          take: 5,
+          take: 25,
+          // The client's answers and the coach's own reply are what the
+          // history panel actually renders. Selecting only the status/rating
+          // left every note, the "Your response" block (and with it the
+          // edit-response action) and the plan-adjustment badge permanently
+          // blank — the panel showed a date and one emoji.
           select: {
             id: true,
             status: true,
             effortRating: true,
+            clientFeeling: true,
+            painBlockers: true,
+            clientRespondedAt: true,
+            coachFeedback: true,
+            planAdjustment: true,
             createdAt: true,
             completedAt: true,
           },

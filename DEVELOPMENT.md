@@ -58,6 +58,7 @@ Required env for a correct deploy:
 | `RESEND_API_KEY` + `WAITLIST_FROM_EMAIL` | every email silently skipped |
 | `ADMIN_EMAILS` | `/admin` 404s for everyone; no beta invites |
 | `UPSTASH_REDIS_REST_URL` + `_TOKEN` | rate limiting effectively off on serverless |
+| `CRON_SECRET` | the nightly check-in sweep refuses every call — weekly check-ins never send on their own |
 | `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | push notifications no-op (optional) |
 
 Gotchas:
@@ -72,6 +73,28 @@ Gotchas:
   unreleased migrations.
 - Client-side crashes are reported to `POST /api/client-errors` and logged as
   `[CLIENT_ERROR_ALERT]` — include that tag in your log alert too.
+
+## Scheduled work
+
+One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
+09:00 UTC, authenticated with `Authorization: Bearer $CRON_SECRET`. It expires
+check-ins the client never answered and sends the ones that are due, for every
+active relationship with `checkInScheduleEnabled`.
+
+This is what makes "auto-sends every 7 days" true. Scheduling is also
+materialized opportunistically when either party loads check-in data, so a due
+check-in shows up immediately rather than at the next sweep — but the sweep is
+the authority, because it reaches clients who aren't opening the app, which is
+exactly the fade the product exists to catch.
+
+Run it by hand against a deployment with:
+
+```bash
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://<host>/api/cron/check-ins
+```
+
+It answers `{ok, relationshipsScanned, checkInsCreated, failures}` and logs
+`[CRON_ALERT]` if any client failed.
 
 ## Project Structure
 

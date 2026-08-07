@@ -55,3 +55,19 @@ export function isValidAdminToken(token?: string | null): boolean {
   ].filter((t): t is string => Boolean(t));
   return accepted.some((expected) => tokenMatches(token, expected));
 }
+
+/**
+ * True when `token` matches CRON_SECRET — the credential Vercel Cron sends as
+ * a bearer token on scheduled invocations. Separate from the admin token so a
+ * leaked export script can't trigger scheduled work, and vice versa.
+ *
+ * Fails closed when CRON_SECRET is unset: an unauthenticated caller must never
+ * be able to drive the scheduler, so on a deploy that forgot the secret the
+ * cron endpoint refuses everything (and says so in its 401).
+ */
+export function isValidCronToken(token?: string | null): boolean {
+  if (!token) return false;
+  const expected = process.env.CRON_SECRET;
+  if (!expected) return false;
+  return tokenMatches(token, expected);
+}

@@ -38,40 +38,43 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 
 ## Phase 1 — Make the core retention loop true
 
-- [ ] **1.1** Cron: add a `vercel.json` cron hitting a new authed endpoint that runs
+- [x] **1.1** Cron: add a `vercel.json` cron hitting a new authed endpoint that runs
       `expireStaleCheckIns` + `ensureScheduledCheckIn` for every client with
       `checkInScheduleEnabled`, hourly or daily. (`src/lib/checkin-schedule.ts`) — M
-- [ ] **1.2** Surface the check-in schedule at plan-assign time (opt-out, not buried
-      opt-in): add the toggle to `AssignPlanModal`/`PlanSetupModal`, and consider
-      defaulting `checkInScheduleEnabled` to `true` for new relationships.
-      (`prisma/schema.prisma:175`, `CheckInHistoryPanel.tsx:72-79`) — S–M
-- [ ] **1.3** Notifications beyond messages: push + in-app toast/badge for
+- [x] **1.2** Surface the check-in schedule at plan-assign time (opt-out, not buried
+      opt-in). *Done as default-on:* `checkInScheduleEnabled` now defaults to
+      `true` (migration `20260807_checkin_schedule_on_by_default` also enables it
+      for existing active relationships), and the toggle copy no longer lies. A
+      per-client opt-out remains in the check-ins tab; no assign-time toggle was
+      added — with the schedule on by default there is nothing to opt into.
+- [x] **1.3** Notifications beyond messages: push + in-app toast/badge for
       check-in created (incl. auto), client responded, coach responded, plan
       assigned, client joined via invite. Reuse `notifyNewMessage` pattern in
       `src/lib/push.ts`; call sites in the respective routes. — M
-- [ ] **1.4** Re-wire flag context: map `exerciseReference`/`workoutReference` in
+- [x] **1.4** Re-wire flag context: map `exerciseReference`/`workoutReference` in
       `apiMessagesToMessages` (`src/lib/adapters/api.ts:115-130`) so the existing
       `ChatView` exercise card (`ChatView.tsx:339-357`) renders for both parties. — S
-- [ ] **1.5** Fix coach check-in history payload: include `clientFeeling`,
+- [x] **1.5** Fix coach check-in history payload: include `clientFeeling`,
       `painBlockers`, `coachFeedback`, `planAdjustment` in
       `GET /api/coach/clients/[id]` (`route.ts:130-136`) so notes, "Your response",
       edit-response, and the adjustment badge actually render; raise/paginate the
       `take: 5` cap (and the workout `take: 10`). — S–M
-- [ ] **1.6** Always-reachable "Send check-in": render the check-in section (or a
+- [x] **1.6** Always-reachable "Send check-in": render the check-in section (or a
       header action) when a plan exists but no active check-in, un-deadening
       `InlineCheckInReview`'s empty branch. (`UnifiedClientProfile.tsx:698,552-554`) — S
-- [ ] **1.7** Fix check-in reply data loss: await `onCompleteCheckIn` /
+- [x] **1.7** Fix check-in reply data loss: await `onCompleteCheckIn` /
       `onStartNewCheckIn` before clearing state and showing success; show the error
       inline and keep the draft on failure. (`InlineCheckInReview.tsx:158-174`,
       `UnifiedClientProfile.tsx:145-156,246-261`) — S
-- [ ] **1.8** Show flagged exercises on the standalone `/check-in` page (the path the
-      dashboard CTA uses), or route the CTA to the inline workspace review.
-      (`ClientCheckIn.tsx`, `ClientsRequiringAction.tsx:75`) — S–M
-- [ ] **1.9** Client-side check-in visibility: a "sent — waiting on your coach"
+- [x] **1.8** Show flagged exercises on the standalone `/check-in` page. *Already
+      delivered* by the check-in redesign merged from `main` (PR #44), which
+      renders flags and abandoned sessions per workout — verified in
+      `ClientCheckIn.tsx`, no further change needed.
+- [x] **1.9** Client-side check-in visibility: a "sent — waiting on your coach"
       state after submitting, and a persistent feedback/history surface that does
       not expire on Monday (drop the `startOfWeek` filter, add a simple list).
       (`ClientDashboard.tsx:146-165,626-631`, `CoachFeedbackCard.tsx:14-16`) — M
-- [ ] **1.10** Notify the coach roster: call `ensureScheduledCheckIn` (batched) from
+- [x] **1.10** Notify the coach roster: call `ensureScheduledCheckIn` (batched) from
       the dashboard route, or rely on 1.1's cron — either way the dashboard must not
       show "all clear" while check-ins are overdue.
       (`src/app/api/coach/dashboard/route.ts`) — S (falls out of 1.1)

@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useSWRConfig } from 'swr';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
 import { getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
-import { startOfWeek } from 'date-fns';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
@@ -148,21 +147,29 @@ export function ClientDashboard() {
     [checkIns]
   );
 
-  // Most recent completed check-in from this week (for coach feedback card).
-  // Monday-anchored, matching every other "week" on this page.
-  const thisWeekCheckIn = useMemo(() => {
-    const weekStart = startOfWeek(new Date(), { weekStartsOn: 1 });
-    return (
+  // The client's check-in is with their coach, not with the calendar: this
+  // used to be filtered to the current Monday-anchored week, so feedback the
+  // coach sent on Sunday night vanished when the client opened the app on
+  // Monday — the one reply the whole loop exists to deliver, gone unread.
+  // Newest completed check-in with a reply, whenever it arrived.
+  const latestFeedbackCheckIn = useMemo(
+    () =>
       checkIns
         .filter((c) => c.status === 'completed' && c.completedAt)
-        .filter((c) => new Date(c.completedAt!) >= weekStart)
         .sort(
           (a, b) =>
             new Date(b.completedAt!).getTime() -
             new Date(a.completedAt!).getTime()
-        )[0] ?? null
-    );
-  }, [checkIns]);
+        )[0] ?? null,
+    [checkIns]
+  );
+
+  // Sent, waiting on the coach. Without this the check-in simply disappeared
+  // from every client surface between submitting and the coach replying.
+  const awaitingCoachCheckIn = useMemo(
+    () => checkIns.find((c) => c.status === 'responded') ?? null,
+    [checkIns]
+  );
 
   // Build adapted workout completions from week overview
   const clientWorkoutCompletions: WorkoutCompletion[] = useMemo(() => {
@@ -517,6 +524,26 @@ export function ClientDashboard() {
           </section>
         )}
 
+        {/* Answered, waiting on the coach. Without this the check-in vanished
+            from every client surface the moment it was submitted, so a client
+            who had just written up their week saw no trace of it. */}
+        {!pendingCheckIn && awaitingCoachCheckIn && (
+          <section aria-label="Check-in sent">
+            <div className="rounded-xl border border-border/70 bg-card px-4 py-4">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
+                Weekly check-in
+              </p>
+              <p className="text-[15px] font-bold tracking-tight antialiased">
+                Sent — {coach?.user.name?.split(' ')[0] ?? 'your coach'} is reviewing it
+              </p>
+              <p className="text-sm text-muted-foreground mt-1 antialiased">
+                You&apos;ll see their reply here when it lands.
+              </p>
+            </div>
+          </section>
+        )}
+
         {/* Plan complete — the last week must not replay as if un-started */}
         {currentView === 'workout' && planEnded && (
           <section
@@ -623,9 +650,9 @@ export function ClientDashboard() {
               completions={clientWorkoutCompletions}
             />
 
-            {thisWeekCheckIn && (
+            {latestFeedbackCheckIn && (
               <CoachFeedbackCard
-                checkIn={thisWeekCheckIn}
+                checkIn={latestFeedbackCheckIn}
                 onViewDetails={() => setShowCheckInModal(true)}
               />
             )}
@@ -703,7 +730,7 @@ export function ClientDashboard() {
       <CheckInDetailModal
         isOpen={showCheckInModal}
         onClose={() => setShowCheckInModal(false)}
-        checkIn={thisWeekCheckIn}
+        checkIn={latestFeedbackCheckIn}
         completedWorkouts={allWorkoutCompletions}
         plan={plan}
       />

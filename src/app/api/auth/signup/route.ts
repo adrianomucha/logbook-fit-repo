@@ -6,6 +6,7 @@ import { parseBody } from "@/lib/validations/parseBody";
 import { signupSchema } from "@/lib/validations/schemas";
 import { signupLimiter, getClientIp } from "@/lib/rate-limit";
 import { isCoachSignupOpen } from "@/lib/waitlist";
+import { notifyClientJoined } from "@/lib/push";
 
 // Thrown inside the signup transaction when a beta invite was redeemed by a
 // concurrent signup between validation and commit; rolls the account back.
@@ -193,6 +194,18 @@ export async function POST(req: Request) {
 
       return newUser;
     });
+
+    // Tell the coach their invited client is here. Outside the transaction:
+    // a push failure must never roll back a created account. The coach
+    // otherwise had no signal at all — the new client just appeared on the
+    // roster whenever they next reloaded.
+    if (invite && "clientProfile" in user && user.clientProfile) {
+      await notifyClientJoined({
+        coachUserId: invite.coachUserId,
+        clientName: user.name,
+        clientProfileId: user.clientProfile.id,
+      });
+    }
 
     // Return user without passwordHash
     return NextResponse.json(

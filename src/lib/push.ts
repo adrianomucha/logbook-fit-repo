@@ -156,3 +156,113 @@ export async function notifyNewMessage(params: {
     console.error("[PUSH] notifyNewMessage failed:", error);
   }
 }
+
+/**
+ * Notify a client that their coach sent a check-in.
+ *
+ * The check-in loop is the product's north star, but until now only chat
+ * messages notified — so the one prompt the whole retention model depends on
+ * arrived silently and was found only if the client happened to open the app.
+ * Tagged per client so a re-sent check-in replaces the old notification.
+ */
+export async function notifyCheckInSent(params: {
+  clientUserId: string;
+  coachName: string | null;
+}): Promise<void> {
+  const { clientUserId, coachName } = params;
+  try {
+    await sendPushToUser(clientUserId, {
+      title: coachName?.trim()
+        ? `${coachName.trim()} sent a check-in`
+        : "New check-in",
+      body: "Tell them how your training is going.",
+      url: "/client?tab=checkin",
+      tag: `checkin:${clientUserId}`,
+    });
+  } catch (error) {
+    console.error("[PUSH] notifyCheckInSent failed:", error);
+  }
+}
+
+/** Notify a coach that a client answered their check-in. */
+export async function notifyCheckInResponse(params: {
+  coachUserId: string;
+  clientName: string | null;
+  clientProfileId: string;
+}): Promise<void> {
+  const { coachUserId, clientName, clientProfileId } = params;
+  try {
+    await sendPushToUser(coachUserId, {
+      title: clientName?.trim()
+        ? `${clientName.trim()} answered your check-in`
+        : "Check-in answered",
+      body: "Read their response and reply.",
+      url: `/coach/clients/${clientProfileId}`,
+      tag: `checkin-response:${clientProfileId}`,
+    });
+  } catch (error) {
+    console.error("[PUSH] notifyCheckInResponse failed:", error);
+  }
+}
+
+/** Notify a client that their coach replied to their check-in. */
+export async function notifyCheckInFeedback(params: {
+  clientUserId: string;
+  coachName: string | null;
+}): Promise<void> {
+  const { clientUserId, coachName } = params;
+  try {
+    await sendPushToUser(clientUserId, {
+      title: coachName?.trim()
+        ? `${coachName.trim()} replied to your check-in`
+        : "Check-in reply",
+      body: "See what your coach said.",
+      url: "/client?tab=checkin",
+      tag: `checkin-feedback:${clientUserId}`,
+    });
+  } catch (error) {
+    console.error("[PUSH] notifyCheckInFeedback failed:", error);
+  }
+}
+
+/** Notify a client that a training plan is waiting for them. */
+export async function notifyPlanAssigned(params: {
+  clientUserId: string;
+  coachName: string | null;
+  planName: string;
+}): Promise<void> {
+  const { clientUserId, coachName, planName } = params;
+  try {
+    await sendPushToUser(clientUserId, {
+      title: coachName?.trim()
+        ? `${coachName.trim()} assigned your plan`
+        : "Your plan is ready",
+      body: previewText(planName),
+      url: "/client",
+      tag: `plan:${clientUserId}`,
+    });
+  } catch (error) {
+    console.error("[PUSH] notifyPlanAssigned failed:", error);
+  }
+}
+
+/** Notify a coach that an invited client created their account. */
+export async function notifyClientJoined(params: {
+  coachUserId: string;
+  clientName: string | null;
+  clientProfileId: string;
+}): Promise<void> {
+  const { coachUserId, clientName, clientProfileId } = params;
+  try {
+    await sendPushToUser(coachUserId, {
+      title: clientName?.trim()
+        ? `${clientName.trim()} joined`
+        : "A client joined",
+      body: "Build their first plan to get them training.",
+      url: `/coach/clients/${clientProfileId}`,
+      tag: `client-joined:${clientProfileId}`,
+    });
+  } catch (error) {
+    console.error("[PUSH] notifyClientJoined failed:", error);
+  }
+}

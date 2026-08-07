@@ -45,6 +45,29 @@ export function formatReps(
 }
 
 /**
+ * Format a full prescription for display: "4x 6-8 @ 135" — sets, the rep or
+ * duration range, and the prescribed load when there is one. Used anywhere a
+ * prescription is shown outside an editor (the chat's flagged-exercise card).
+ */
+export function formatPrescription(exercise: {
+  sets: number;
+  reps: number;
+  repsMax?: number | null;
+  weight?: number | null;
+  trackingType?: TrackingType | string;
+}): string {
+  const tracking: TrackingType =
+    exercise.trackingType === 'TIME' ? 'TIME' : 'REPS';
+  let text = `${exercise.sets}x ${formatReps(
+    exercise.reps,
+    exercise.repsMax,
+    tracking
+  )}`;
+  if (exercise.weight != null) text += ` @ ${exercise.weight}`;
+  return text;
+}
+
+/**
  * Parse a coach-entered reps string into a stored pair. Tolerates "6-8",
  * "6 - 8", "8", "8 reps", and empty input. Returns reps=null when there's no
  * number (callers fall back to a default), and collapses to a single value when

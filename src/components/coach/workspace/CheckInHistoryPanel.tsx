@@ -76,7 +76,9 @@ export function CheckInHistoryPanel({
         <div>
           <span className="text-sm font-medium">Weekly check-ins</span>
           <p className="text-xs text-muted-foreground">
-            {scheduleEnabled ? 'Auto-sends every 7 days' : 'Not active'}
+            {scheduleEnabled
+              ? 'Sends automatically every 7 days'
+              : 'Off — send check-ins by hand'}
           </p>
         </div>
       </div>
