@@ -7,6 +7,11 @@
  * SDK dependency. Callers that need to know (the invite endpoint) get the
  * boolean; the signup endpoint ignores it.
  *
+ * The templates mirror the landing-page hero: mono eyebrow with a lime dot,
+ * uppercase display heading with the last word in brand lime, muted body copy
+ * on a dark card. Email clients don't honour <style>/external CSS or webfonts,
+ * so everything is inline and Arial/Courier New stand in for IBM Plex.
+ *
  * Required env to actually send:
  *   RESEND_API_KEY      — your Resend API key
  *   WAITLIST_FROM_EMAIL — verified sender, e.g. "Logbook.fit <hello@logbook.fit>"
@@ -14,26 +19,55 @@
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
+const BG = "#0a0a0a";
+const CARD = "#111111";
+const BORDER = "#262626";
+const INK = "#fafafa";
+const MUTED = "#a3a3a3";
+const FAINT = "#525252";
+const LIME = "#c6f542";
+const SANS = "Arial,Helvetica,sans-serif";
+const MONO = "'Courier New',Courier,monospace";
+
 /**
  * Shared dark-card shell so both waitlist emails render as one family.
- * Inline styles only — email clients don't honour <style>/external CSS.
+ * `preheader` is the hidden preview line inbox lists show next to the
+ * subject; `content` is the card body between the header and footer rows.
  */
-function emailShell(content: string): string {
+function emailShell(preheader: string, content: string): string {
   return `
-  <div style="margin:0;padding:0;background:#0a0a0a;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 16px;">
+  <div style="margin:0;padding:0;background:${BG};">
+    <div style="display:none;max-height:0;overflow:hidden;mso-hide:all;">
+      ${preheader}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;
+    </div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG};padding:48px 16px;">
       <tr><td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background:#111111;border:1px solid #262626;border-radius:16px;overflow:hidden;">
-          <tr><td style="padding:32px 32px 8px 32px;">
-            <p style="margin:0 0 24px 0;font-family:'Courier New',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#a3a3a3;">
-              <span style="color:#c6f542;">&#9679;</span> Logbook.fit
-            </p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:${CARD};border:1px solid ${BORDER};border-radius:16px;overflow:hidden;">
+          <tr><td height="4" style="background:${LIME};font-size:0;line-height:0;">&nbsp;</td></tr>
+          <tr><td style="padding:36px 36px 8px 36px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+              <tr>
+                <td style="font-family:${MONO};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${MUTED};">
+                  <span style="color:${LIME};">&#9679;</span>&nbsp; Logbook.fit
+                </td>
+                <td align="right" style="font-family:${MONO};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${FAINT};">
+                  Private beta
+                </td>
+              </tr>
+            </table>
+            <div style="height:28px;line-height:28px;font-size:0;">&nbsp;</div>
             ${content}
           </td></tr>
-          <tr><td style="padding:0 32px 32px 32px;border-top:1px solid #262626;">
-            <p style="margin:20px 0 0 0;font-family:'Courier New',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#525252;">
-              Plan &middot; Train &middot; Check in
-            </p>
+          <tr><td style="padding:0 36px 32px 36px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${BORDER};">
+              <tr><td style="padding-top:20px;font-family:${MONO};font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${FAINT};">
+                Plan &middot; Train &middot; Check in
+              </td></tr>
+              <tr><td style="padding-top:12px;font-family:${SANS};font-size:11px;line-height:1.6;color:${FAINT};">
+                You&rsquo;re receiving this because you joined the waitlist at
+                <a href="https://logbook.fit" style="color:${MUTED};text-decoration:none;">logbook.fit</a>.
+              </td></tr>
+            </table>
           </td></tr>
         </table>
       </td></tr>
@@ -41,51 +75,121 @@ function emailShell(content: string): string {
   </div>`;
 }
 
+/**
+ * Display heading in the landing-hero voice: uppercase, tight, with the
+ * closing words picked out in brand lime.
+ */
+function heading(plain: string, limePart: string): string {
+  return `
+            <h1 style="margin:0 0 16px 0;font-family:${SANS};font-size:30px;line-height:1.05;font-weight:800;color:${INK};text-transform:uppercase;letter-spacing:-0.5px;">
+              ${plain}<br><span style="color:${LIME};">${limePart}</span>
+            </h1>`;
+}
+
+/** One numbered row of the "what happens next" list. */
+function stepRow(num: string, text: string, last = false): string {
+  const pad = last ? "padding:14px 0 0 0;" : "padding:14px 0;";
+  const rule = last ? "" : `border-bottom:1px solid ${BORDER};`;
+  return `
+              <tr>
+                <td width="36" valign="top" style="${pad}${rule}font-family:${MONO};font-size:12px;letter-spacing:1px;color:${LIME};">${num}</td>
+                <td valign="top" style="${pad}${rule}font-family:${SANS};font-size:14px;line-height:1.5;color:${MUTED};">${text}</td>
+              </tr>`;
+}
+
 function welcomeHtml(): string {
-  return emailShell(`
-            <h1 style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:28px;line-height:1.15;font-weight:800;color:#fafafa;text-transform:uppercase;letter-spacing:-0.5px;">
-              You&rsquo;re on the list.
-            </h1>
-            <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#a3a3a3;">
-              Thanks for signing up for the Logbook.fit private beta. We&rsquo;re
-              onboarding coaches in small batches, and we&rsquo;ll email you the
-              moment your invite is ready.
+  return emailShell(
+    "We onboard coaches in small batches — your invite will land right here.",
+    `${heading("You&rsquo;re on", "the list.")}
+            <p style="margin:0 0 24px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              Thanks for signing up for the Logbook.fit private beta. Here&rsquo;s
+              how it goes from here:
             </p>
-            <p style="margin:0 0 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#a3a3a3;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${BG};border:1px solid ${BORDER};border-radius:12px;">
+              <tr><td style="padding:8px 20px 20px 20px;">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  ${stepRow("01", "You&rsquo;re in the queue &mdash; no forms, nothing else to fill in.")}
+                  ${stepRow("02", "We onboard coaches in batches of 10 to keep the beta sharp.")}
+                  ${stepRow("03", "Your invite lands in this inbox the moment your spot opens.", true)}
+                </table>
+              </td></tr>
+            </table>
+            <p style="margin:24px 0 32px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
               Nothing else to do for now. Just keep training.
-            </p>`);
+            </p>`
+  );
+}
+
+function welcomeText(): string {
+  return [
+    "LOGBOOK.FIT — PRIVATE BETA",
+    "",
+    "You're on the list.",
+    "",
+    "Thanks for signing up for the Logbook.fit private beta. Here's how it goes from here:",
+    "",
+    "  01  You're in the queue — no forms, nothing else to fill in.",
+    "  02  We onboard coaches in batches of 10 to keep the beta sharp.",
+    "  03  Your invite lands in this inbox the moment your spot opens.",
+    "",
+    "Nothing else to do for now. Just keep training.",
+    "",
+    "Plan · Train · Check in",
+    "You're receiving this because you joined the waitlist at https://logbook.fit",
+  ].join("\n");
 }
 
 function inviteHtml(inviteUrl: string): string {
-  return emailShell(`
-            <h1 style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:28px;line-height:1.15;font-weight:800;color:#fafafa;text-transform:uppercase;letter-spacing:-0.5px;">
-              Your invite is ready.
-            </h1>
-            <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.6;color:#a3a3a3;">
+  return emailShell(
+    "Your spot in the private beta just opened up — create your coach account.",
+    `${heading("Your invite", "is ready.")}
+            <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
               Your spot in the Logbook.fit private beta just opened up. Create
               your coach account and your workspace comes ready with a starter
               exercise library.
             </p>
-            <p style="margin:0 0 28px 0;">
-              <a href="${inviteUrl}" style="display:inline-block;background:#c6f542;color:#0a0a0a;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;text-decoration:none;padding:14px 28px;border-radius:10px;">
-                Create your account
-              </a>
-            </p>
-            <p style="margin:0 0 32px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#525252;">
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+              <tr><td align="center" style="background:${LIME};border-radius:10px;">
+                <a href="${inviteUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
+                  Create your account&nbsp;&nbsp;&#8594;
+                </a>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 32px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
               This link is yours alone and works once. If the button doesn&rsquo;t
               work, paste this into your browser:<br>
-              <a href="${inviteUrl}" style="color:#a3a3a3;word-break:break-all;">${inviteUrl}</a>
-            </p>`);
+              <a href="${inviteUrl}" style="color:${MUTED};word-break:break-all;">${inviteUrl}</a>
+            </p>`
+  );
+}
+
+function inviteText(inviteUrl: string): string {
+  return [
+    "LOGBOOK.FIT — PRIVATE BETA",
+    "",
+    "Your invite is ready.",
+    "",
+    "Your spot in the Logbook.fit private beta just opened up. Create your coach account and your workspace comes ready with a starter exercise library.",
+    "",
+    `Create your account: ${inviteUrl}`,
+    "",
+    "This link is yours alone and works once.",
+    "",
+    "Plan · Train · Check in",
+    "You're receiving this because you joined the waitlist at https://logbook.fit",
+  ].join("\n");
 }
 
 /**
  * Shared sender. Resolves to true if the send was attempted and accepted,
- * false if skipped (unconfigured) or it failed. Never throws.
+ * false if skipped (unconfigured) or it failed. Never throws. The plain-text
+ * part rides along for clients that prefer it and for spam-filter goodwill.
  */
 async function sendEmail(
   to: string,
   subject: string,
-  html: string
+  html: string,
+  text: string
 ): Promise<boolean> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.WAITLIST_FROM_EMAIL;
@@ -102,7 +206,7 @@ async function sendEmail(
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to, subject, html }),
+      body: JSON.stringify({ from, to, subject, html, text }),
     });
 
     if (!res.ok) {
@@ -122,7 +226,12 @@ async function sendEmail(
 
 /** Send the "you're on the list" confirmation after a landing-page signup. */
 export function sendWaitlistWelcome(to: string): Promise<boolean> {
-  return sendEmail(to, "You're on the Logbook.fit waitlist", welcomeHtml());
+  return sendEmail(
+    to,
+    "You're on the Logbook.fit waitlist",
+    welcomeHtml(),
+    welcomeText()
+  );
 }
 
 /**
@@ -134,5 +243,10 @@ export function sendWaitlistInvite(
   to: string,
   inviteUrl: string
 ): Promise<boolean> {
-  return sendEmail(to, "Your Logbook.fit invite is ready", inviteHtml(inviteUrl));
+  return sendEmail(
+    to,
+    "Your Logbook.fit invite is ready",
+    inviteHtml(inviteUrl),
+    inviteText(inviteUrl)
+  );
 }
