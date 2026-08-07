@@ -55,8 +55,8 @@ export default async function AccountsAdminPage() {
   const demoCount = active.filter((u) => isDemoAccount(u.email)).length;
 
   return (
-    <div className="px-4 py-10 sm:px-6">
-      <div className="mx-auto max-w-4xl">
+    <div className="flex min-h-0 flex-1 flex-col px-4 py-10 sm:px-6">
+      <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             Admin
@@ -77,13 +77,17 @@ export default async function AccountsAdminPage() {
           </p>
         </div>
 
-        <div className="mt-8 overflow-x-auto rounded-xl border border-border">
+        {/* min-h-0 lets the table shrink to the viewport and scroll inside
+            this container, so the page itself never scrolls vertically */}
+        <div className="mt-8 min-h-0 overflow-auto rounded-xl border border-border">
           <table className="w-full text-sm">
-            <thead>
+            {/* inset shadow instead of border-b: collapsed-table borders
+                scroll away under a sticky thead, the shadow stays put */}
+            <thead className="sticky top-0 z-10 bg-background shadow-[inset_0_-1px_0_0_hsl(var(--border))]">
               {/* whitespace-nowrap throughout: on narrow screens the table must
                   overflow into the scroll wrapper, not crush columns until
                   roles, dates, and chips wrap mid-value */}
-              <tr className="border-b border-border text-left font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground whitespace-nowrap">
+              <tr className="text-left font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground whitespace-nowrap">
                 <th className="px-4 py-3 font-medium">Account</th>
                 <th className="px-4 py-3 font-medium">Role</th>
                 <th className="px-4 py-3 font-medium">Created</th>

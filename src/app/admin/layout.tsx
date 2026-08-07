@@ -23,7 +23,9 @@ export default async function AdminLayout({
   }
 
   return (
-    <div className="min-h-dvh bg-background">
+    // h-dvh + overflow-hidden: admin pages never scroll the window — long
+    // tables scroll inside their own container instead.
+    <div className="flex h-dvh flex-col overflow-hidden bg-background">
       <AdminHeader />
       {children}
     </div>
