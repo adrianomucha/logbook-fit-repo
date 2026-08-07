@@ -45,7 +45,11 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   applicationName: SITE_NAME,
-  alternates: { canonical: '/' },
+  // No `alternates` here on purpose: metadata inherits per top-level key, so
+  // a canonical declared in the root layout leaks onto every child route that
+  // doesn't override it — /privacy et al. were claiming to be duplicates of
+  // the homepage. Each indexable page declares its own canonical (the home
+  // page in page.tsx, the rest via pageMetadata()).
   openGraph: {
     type: 'website',
     siteName: SITE_NAME,

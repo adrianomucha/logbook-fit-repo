@@ -27,3 +27,44 @@ export const SITE_DESCRIPTION =
 export function absoluteUrl(path = '/'): string {
   return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 }
+
+/**
+ * Per-page metadata for indexable routes. Exists because Next.js merges
+ * metadata *shallowly* per top-level key: a child page that sets no
+ * `alternates` inherits the parent layout's whole object — so before this
+ * helper, /privacy and /terms carried `canonical: '/'` and told Google they
+ * were duplicates of the homepage, cancelling their own sitemap entries.
+ *
+ * `title` must be the bare page name ("Privacy Policy"): the root layout's
+ * title template appends the brand suffix. The openGraph block is restated in
+ * full (siteName, type, locale) because setting any openGraph key replaces
+ * the inherited object entirely rather than deep-merging into it.
+ */
+export function pageMetadata({
+  title,
+  description,
+  path,
+}: {
+  title: string;
+  description: string;
+  path: `/${string}`;
+}) {
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: 'website',
+      siteName: SITE_NAME,
+      locale: 'en_US',
+      url: path,
+      title: `${title} · ${SITE_NAME}`,
+      description,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} · ${SITE_NAME}`,
+      description,
+    },
+  } satisfies import('next').Metadata;
+}

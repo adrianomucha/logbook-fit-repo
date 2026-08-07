@@ -1,13 +1,15 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/brand/LogoMark';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Legal · Logbook.fit',
+// Bare title: the root layout's template appends "· Logbook.fit".
+export const metadata = pageMetadata({
+  title: 'Legal',
   description:
     'Every Logbook.fit legal document in one place: the privacy policy and the terms of service.',
-};
+  path: '/legal',
+});
 
 /**
  * Legal hub — the stripe.com/legal pattern: one index every legal document

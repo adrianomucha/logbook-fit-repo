@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   Check,
@@ -16,9 +17,14 @@ import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 
-// Title/description/canonical/OG for this route come from the root layout —
-// the landing page *is* the site root, so duplicating them here would only
-// create two places to keep in sync.
+// Title/description/OG for this route come from the root layout — the landing
+// page *is* the site root, so duplicating them here would only create two
+// places to keep in sync. The canonical, though, lives here rather than in the
+// layout: layout metadata is inherited by every child route, and a canonical
+// of '/' on /privacy or /login marks those pages as duplicates of the homepage.
+export const metadata: Metadata = {
+  alternates: { canonical: '/' },
+};
 
 /**
  * Structured data for the waitlist page. Tells Google what Logbook.fit is
@@ -364,8 +370,10 @@ export default function HomePage() {
             {/* Stretch to the list's exact height on desktop so both columns
                 end on the same line; the 4:5 ratio stays for stacked mobile */}
             <ImageSlot
+              src="/landing/checkin-review.png"
+              alt="The check-in review in Logbook.fit: the client rated the week's workouts Too Hard and noted lower-back tightness after deadlifts, with their recent workouts and the coach's reply box on the same screen."
               label="In the product: the check-in review"
-              description="Screenshot of the check-in review. The client's effort rating and notes on one side, the exercises they flagged that week sitting right beside them, and the coach's reply box below. Crop tight enough that the flagged exercise stays readable, because that context is exactly what a group chat never gives you."
+              objectPosition="center top"
               className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
             />
             <div className="lg:order-1">
@@ -435,8 +443,9 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
               <ImageSlot
+                src="/landing/client-training.jpg"
+                alt="A lifter resting on a bench between sets in a dark gym, water bottle in hand."
                 label="Between sets"
-                description="Photo of a client's phone held in a real gym, the Today view on screen mid-session, a loaded bar soft in the background. Shot from the client's own eye line rather than as a staged flat-lay. The point is that logging happens between sets, in the room, in seconds."
                 className="aspect-[4/5] rounded-xl"
               />
             </div>
