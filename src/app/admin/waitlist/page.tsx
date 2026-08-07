@@ -96,8 +96,10 @@ export default async function WaitlistAdminPage() {
   ].sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-4 py-10 sm:px-6">
-      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col py-10">
+      {/* Horizontal padding lives inside the centered box, matching the
+          header, so page content and nav share the same left edge */}
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col px-4 sm:px-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
