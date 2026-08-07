@@ -5,11 +5,13 @@
  * run down = destructive.
  */
 export const FEELING_DISPLAY: Record<string, { label: string; emoji: string; text: string }> = {
-  EASY: { label: 'Too Easy', emoji: '😴', text: 'text-success' },
+  // The -text variants are the AA-contrast cuts of the status hues — the
+  // bright fill colors sit around 2:1 as small text on light surfaces
+  EASY: { label: 'Too Easy', emoji: '😴', text: 'text-success-text' },
   MEDIUM: { label: 'About Right', emoji: '💪', text: 'text-foreground' },
-  HARD: { label: 'Too Hard', emoji: '😰', text: 'text-warning' },
-  FRESH: { label: 'Fresh', emoji: '✨', text: 'text-success' },
+  HARD: { label: 'Too Hard', emoji: '😰', text: 'text-warning-text' },
+  FRESH: { label: 'Fresh', emoji: '✨', text: 'text-success-text' },
   NORMAL: { label: 'Normal', emoji: '👍', text: 'text-foreground' },
-  TIRED: { label: 'Tired', emoji: '😓', text: 'text-warning' },
+  TIRED: { label: 'Tired', emoji: '😓', text: 'text-warning-text' },
   RUN_DOWN: { label: 'Run Down', emoji: '🥴', text: 'text-destructive' },
 };

@@ -29,6 +29,11 @@
     --success-foreground: 0 0% 98%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 9%;
+    /* Text-on-light cuts of the status hues: the bright fills sit around
+       2:1 as small text on white (WCAG needs 4.5:1), so text gets a darker
+       shade of the same hue. Fills, dots, and chips keep the bright value. */
+    --success-text: 142 72% 29%;
+    --warning-text: 26 90% 37%;
     --info: 221 83% 53%;
     --info-foreground: 0 0% 98%;
     /* Brand accent — "volt" lime. Fills, indicators, and CTAs only;
@@ -65,6 +70,9 @@
     --success-foreground: 0 0% 98%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 9%;
+    /* On dark surfaces the bright fills already clear AA (8–9:1) */
+    --success-text: 142 71% 45%;
+    --warning-text: 38 92% 50%;
     --info: 217 91% 60%;
     --info-foreground: 0 0% 98%;
     --brand: 74 95% 56%;

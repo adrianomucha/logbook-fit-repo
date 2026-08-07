@@ -89,7 +89,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${ibmPlexMono.variable} ${ibmPlexSans.variable}`}>
-      <body>
+      {/* Font smoothing once at the root — macOS renders text heavier than
+          intended without it; per-element antialiased classes remain no-ops */}
+      <body className="antialiased">
         <SessionProvider>
           <SWRProvider>
               <ScrollToTop />
