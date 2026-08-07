@@ -184,6 +184,14 @@ export function CoachDashboard() {
 
   const hasSampleClient = dashboardClients.some((c) => c.isSample);
 
+  // Which of the dashboard's three empty-ish states is on screen. Derived once
+  // so the page header and the body below it can never disagree about it.
+  const isDashboardBootstrapping =
+    isDashboardLoading ||
+    (!dashboardError && dashboardClients.length === 0 && (isPlansLoading || isInvitesLoading));
+  const showGettingStarted =
+    !isDashboardBootstrapping && !dashboardError && dashboardClients.length === 0;
+
   const handleAddSampleClient = async () => {
     if (isAddingSample) return;
     setIsAddingSample(true);
@@ -219,7 +227,10 @@ export function CoachDashboard() {
   };
 
   return (
-    <div className="min-h-dvh bg-background pb-24 sm:pb-4">
+    // No min-h-dvh or mobile bottom padding here: CoachLayout already supplies
+    // both, and stacking a second full-viewport box inside the first pushed the
+    // page ~76px past the fold on mobile no matter how little content it held.
+    <div className="pb-0 sm:pb-4">
       {/* Success Toast — checkmark draws in */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(16,185,129,0.3)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
@@ -310,14 +321,21 @@ export function CoachDashboard() {
 
         {currentView === 'dashboard' && (
           <div className="space-y-6 sm:space-y-8">
-            <div className="animate-enter">
-              <PageHeader
-                title={getGreeting()}
-                subtitle={dashboardClients.length > 0 ? 'Here\u2019s your roster' : undefined}
-              />
-            </div>
-            {isDashboardLoading || (!dashboardError && dashboardClients.length === 0 && (isPlansLoading || isInvitesLoading)) ? (
-              <div className="flex items-center justify-center py-12 animate-enter">
+            {/* The getting-started screen carries the greeting itself as its
+                brand kicker, so the standalone header would only repeat it.
+                Held back while loading too, so it doesn't flash in and out. */}
+            {!isDashboardBootstrapping && !showGettingStarted && (
+              <div className="animate-enter">
+                <PageHeader
+                  title={getGreeting()}
+                  subtitle={dashboardClients.length > 0 ? 'Here\u2019s your roster' : undefined}
+                />
+              </div>
+            )}
+            {isDashboardBootstrapping ? (
+              // Same box the getting-started composition centres in, so the
+              // spinner doesn't hand off to a screen that jumps
+              <div className="flex items-center justify-center py-12 sm:min-h-[calc(100dvh-6.5rem-1px)] sm:py-0 animate-enter">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : dashboardError && dashboardClients.length === 0 ? (
@@ -334,9 +352,10 @@ export function CoachDashboard() {
                   Try again
                 </Button>
               </div>
-            ) : dashboardClients.length === 0 ? (
-              <div className="animate-enter pt-2 sm:pt-6" style={{ animationDelay: '60ms' }}>
+            ) : showGettingStarted ? (
+              <div className="animate-enter" style={{ animationDelay: '60ms' }}>
                 <GettingStartedCard
+                  greeting={getGreeting()}
                   hasPlan={apiPlans.length > 0}
                   planName={apiPlans[0]?.name}
                   planEmoji={apiPlans[0]?.emoji}
