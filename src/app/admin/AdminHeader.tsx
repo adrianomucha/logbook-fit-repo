@@ -26,7 +26,7 @@ export function AdminHeader() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-sm">
-      <div className="mx-auto flex h-12 max-w-4xl items-center justify-between px-4 sm:px-6">
+      <div className="mx-auto flex h-12 max-w-7xl items-center justify-between px-4 sm:px-6">
         <div className="flex items-center self-stretch gap-3 sm:gap-6">
           {/* Logotype — doubles as "back to the app" */}
           <Link

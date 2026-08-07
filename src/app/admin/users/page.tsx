@@ -56,7 +56,7 @@ export default async function AccountsAdminPage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col px-4 py-10 sm:px-6">
-      <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
+      <div className="mx-auto flex min-h-0 w-full max-w-7xl flex-1 flex-col">
         <div>
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             Admin
