@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   LegalPage,
@@ -6,12 +5,15 @@ import {
   LegalList,
   Strong,
 } from '@/components/legal/LegalPage';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy · Logbook.fit',
+// Bare title: the root layout's template appends "· Logbook.fit".
+export const metadata = pageMetadata({
+  title: 'Privacy Policy',
   description:
     'What Logbook.fit collects, why, who can see it, and how to reach us about your data.',
-};
+  path: '/privacy',
+});
 
 const CONTACT_EMAIL = 'hello@logbook.fit';
 

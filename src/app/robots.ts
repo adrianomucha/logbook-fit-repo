@@ -9,7 +9,8 @@ import { absoluteUrl } from '@/lib/seo';
  * would 302 to /login for a crawler anyway, so letting bots walk them just
  * burns crawl budget and risks thin, duplicate "Sign in" pages entering the
  * index. /signup is disallowed because invite links are unguessable one-time
- * tokens that should never be indexed.
+ * tokens that should never be indexed, and /reset-password for the same
+ * reason (its links carry one-time tokens in the query string).
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -17,7 +18,16 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/', '/admin/', '/coach/', '/client/', '/login', '/signup'],
+        disallow: [
+          '/api/',
+          '/admin/',
+          '/coach/',
+          '/client/',
+          '/login',
+          '/signup',
+          '/forgot-password',
+          '/reset-password',
+        ],
       },
     ],
     sitemap: absoluteUrl('/sitemap.xml'),

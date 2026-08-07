@@ -1,4 +1,3 @@
-import type { Metadata } from 'next';
 import Link from 'next/link';
 import {
   LegalPage,
@@ -6,12 +5,15 @@ import {
   LegalList,
   Strong,
 } from '@/components/legal/LegalPage';
+import { pageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Terms of Service · Logbook.fit',
+// Bare title: the root layout's template appends "· Logbook.fit".
+export const metadata = pageMetadata({
+  title: 'Terms of Service',
   description:
     'The terms for using Logbook.fit during the private beta — including what we are (software) and what we are not (medical advice).',
-};
+  path: '/terms',
+});
 
 const CONTACT_EMAIL = 'hello@logbook.fit';
 
