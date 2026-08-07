@@ -19,6 +19,57 @@
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
+/**
+ * Every alert-worthy mailer problem logs with this tag so one Vercel log
+ * alert ("message contains [EMAIL_ALERT]") catches all of them. Without an
+ * alert the failures are still one log search away — which is the whole
+ * point: sends fail best-effort (silently, by design) and once burned us
+ * with a week of dead email that nothing surfaced.
+ */
+const ALERT_TAG = "[EMAIL_ALERT]";
+
+/**
+ * True when `from` is a sender Resend will accept: `email@example.com` or
+ * `Name <email@example.com>`, exactly one address. Catches the config bug
+ * that broke production — two comma-separated addresses inside one <...>.
+ */
+function isValidFromField(from: string): boolean {
+  const m = from.trim().match(/^(?:[^<>]*<([^<>]+)>|(\S+))$/);
+  const addr = (m?.[1] ?? m?.[2])?.trim();
+  return !!addr && /^[^\s@,<>]+@[^\s@,<>]+\.[^\s@,<>]{2,}$/.test(addr);
+}
+
+/**
+ * Health check for the mailer config, shared by the send path and the admin
+ * UI banner. Pure env inspection — never sends anything.
+ */
+export function emailConfigStatus():
+  | { ok: true }
+  | { ok: false; reason: string } {
+  if (!process.env.RESEND_API_KEY) {
+    return {
+      ok: false,
+      reason:
+        "RESEND_API_KEY is not set — every email (waitlist, invites, password resets) is silently skipped.",
+    };
+  }
+  const from = process.env.WAITLIST_FROM_EMAIL;
+  if (!from) {
+    return {
+      ok: false,
+      reason:
+        "WAITLIST_FROM_EMAIL is not set — every email (waitlist, invites, password resets) is silently skipped.",
+    };
+  }
+  if (!isValidFromField(from)) {
+    return {
+      ok: false,
+      reason: `WAITLIST_FROM_EMAIL (currently "${from}") is not a valid sender. Use "email@example.com" or "Name <email@example.com>" with exactly one address — Resend rejects every send otherwise.`,
+    };
+  }
+  return { ok: true };
+}
+
 const BG = "#0a0a0a";
 const CARD = "#111111";
 const BORDER = "#262626";
@@ -248,6 +299,22 @@ async function sendEmail(
 
   if (!apiKey || !from) {
     // Not configured — the calling flow still succeeds, just without email.
+    // Normal in dev; in production it means every email is dying quietly,
+    // which is exactly what the alert tag exists to make loud.
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        `${ALERT_TAG} Email "${subject}" skipped — mailer not configured (RESEND_API_KEY / WAITLIST_FROM_EMAIL missing).`
+      );
+    }
+    return false;
+  }
+
+  // Fail fast on a malformed sender instead of collecting a Resend 422 per
+  // send — the log then names the env var to fix, not just the symptom.
+  if (!isValidFromField(from)) {
+    console.error(
+      `${ALERT_TAG} Email "${subject}" not sent — WAITLIST_FROM_EMAIL ("${from}") is not a valid sender. Use "email@example.com" or "Name <email@example.com>" with exactly one address.`
+    );
     return false;
   }
 
@@ -263,7 +330,7 @@ async function sendEmail(
 
     if (!res.ok) {
       console.error(
-        `Waitlist email "${subject}" failed:`,
+        `${ALERT_TAG} Email "${subject}" rejected by Resend:`,
         res.status,
         await res.text().catch(() => "")
       );
@@ -271,7 +338,7 @@ async function sendEmail(
     }
     return true;
   } catch (err) {
-    console.error(`Waitlist email "${subject}" error:`, err);
+    console.error(`${ALERT_TAG} Email "${subject}" send error:`, err);
     return false;
   }
 }
