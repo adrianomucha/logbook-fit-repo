@@ -248,9 +248,14 @@ export function ChatView({
     <section aria-label={chatLabel} className="h-full flex flex-col min-h-0">
       <div className={cn('flex flex-col min-h-0', heightClass)}>
         {/* Message area */}
+        {/* Focusable so keyboard users can scroll the history (role=log also
+            announces new messages politely) */}
         <div
           ref={scrollRef}
-          className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4"
+          tabIndex={0}
+          role="log"
+          aria-label="Message history"
+          className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-md"
         >
           <div className={cn("flex flex-col min-h-full", clientMessages.length === 0 ? "justify-center" : "justify-end")}>
             <div
