@@ -1,11 +1,10 @@
 import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
-import { Download, AlertTriangle } from 'lucide-react';
+import { Download } from 'lucide-react';
 import type { WaitlistStatus } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 import { isAdminEmail } from '@/lib/admin';
 import { waitlistInvitePath } from '@/lib/waitlist';
-import { emailConfigStatus } from '@/lib/services/email';
 import prisma from '@/lib/prisma';
 import { InviteActions } from './InviteActions';
 
@@ -96,31 +95,9 @@ export default async function WaitlistAdminPage() {
       }, new Map<string, number>())
   ].sort((a, b) => b[1] - a[1]);
 
-  // Config-level mailer breakage (missing key, malformed sender) is
-  // otherwise invisible — sends are best-effort and the app stays green.
-  // This page is where invites get sent, so this is where it shouts.
-  const mailer = emailConfigStatus();
-
   return (
     <div className="flex min-h-0 flex-1 flex-col px-4 py-10 sm:px-6">
       <div className="mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col">
-        {!mailer.ok && (
-          <div
-            role="alert"
-            className="mb-6 flex items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4"
-          >
-            <AlertTriangle
-              className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
-              aria-hidden="true"
-            />
-            <div className="text-sm leading-relaxed">
-              <p className="font-semibold text-destructive">
-                Email sending is broken
-              </p>
-              <p className="mt-1 text-muted-foreground">{mailer.reason}</p>
-            </div>
-          </div>
-        )}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
