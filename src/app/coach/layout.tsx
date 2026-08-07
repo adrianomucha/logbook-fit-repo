@@ -1,4 +1,4 @@
-import { Toaster } from 'sonner';
+import { AppToaster } from '@/components/notifications/AppToaster';
 import { MessageNotifications } from '@/components/notifications/MessageNotifications';
 
 /**
@@ -12,7 +12,7 @@ export default function CoachLayout({ children }: { children: React.ReactNode })
       {children}
       {/* Client messages announce themselves from anywhere in the coach app */}
       <MessageNotifications />
-      <Toaster position="top-center" richColors closeButton />
+      <AppToaster />
     </div>
   );
 }

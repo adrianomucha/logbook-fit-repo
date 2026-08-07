@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
+import { MessageToast } from './MessageToast';
 import type { UnreadThread } from '@/types/api';
 
 /** Where this thread lives in whichever app is rendering us. */
@@ -35,12 +36,17 @@ function isViewingThread(thread: UnreadThread): boolean {
  */
 export function MessageNotifications() {
   const router = useRouter();
-  const { threads } = useUnreadMessages();
+  const { threads, hasLoaded } = useUnreadMessages();
   // userId → newest message timestamp already announced. Null until the first
   // response lands: the backlog waiting at sign-in is history, not news.
   const announcedRef = useRef<Map<string, string> | null>(null);
 
   useEffect(() => {
+    // Wait for real data. `threads` is an empty array until the first response
+    // resolves, and seeding the baseline from it announced the entire unread
+    // backlog as new messages on every page load.
+    if (!hasLoaded) return;
+
     if (announcedRef.current === null) {
       announcedRef.current = new Map(
         threads.map((thread) => [thread.userId, thread.lastMessageAt ?? ''])
@@ -56,16 +62,27 @@ export function MessageNotifications() {
       announced.set(thread.userId, stamp);
       if (isViewingThread(thread)) continue;
 
-      const name = thread.name?.split(' ')[0] || 'New message';
-      toast(name, {
-        description: thread.preview,
-        action: {
-          label: 'Open',
-          onClick: () => router.push(threadHref(thread)),
-        },
-      });
+      const name = thread.name || 'Someone';
+      const href = threadHref(thread);
+      toast.custom(
+        (id) => (
+          <MessageToast
+            toastId={id}
+            name={name}
+            preview={thread.preview}
+            onOpen={() => router.push(href)}
+          />
+        ),
+        {
+          // Keyed by sender, so a rapid second message replaces that person's
+          // notice instead of stacking a near-duplicate card
+          id: `message-${thread.userId}`,
+          // A notice carrying an action needs longer than the 4s default
+          duration: 8000,
+        }
+      );
     }
-  }, [threads, router]);
+  }, [threads, hasLoaded, router]);
 
   return null;
 }
