@@ -14,6 +14,7 @@ import { PageHeader } from '@/components/coach/PageHeader';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
+import { avatarColor } from '@/lib/avatar-colors';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
 import { format, formatDistanceToNow, differenceInHours } from 'date-fns';
 
@@ -45,6 +46,7 @@ function SectionCard({ children, className }: { children: ReactNode; className?:
 
 // Page chrome shared by every state: nav, container, path-style header
 // ("‹ Client / Check-in") where the crumb is the way back to the profile.
+// The avatar rides the action slot as the page's identity anchor.
 function PageShell({ clientName, subtitle, onBack, children }: {
   clientName: string;
   subtitle?: ReactNode;
@@ -61,6 +63,18 @@ function PageShell({ clientName, subtitle, onBack, children }: {
               title="Check-in"
               subtitle={subtitle}
               breadcrumb={{ label: clientName, onClick: onBack }}
+              action={
+                <div
+                  className={cn(
+                    'w-10 h-10 rounded-full hidden sm:flex items-center justify-center',
+                    'text-sm font-bold select-none shrink-0',
+                    avatarColor(clientName)
+                  )}
+                  aria-hidden="true"
+                >
+                  {clientName.charAt(0).toUpperCase()}
+                </div>
+              }
             />
           </div>
           {children}
@@ -257,7 +271,7 @@ export function ClientCheckIn() {
     return (
       <PageShell clientName={clientName} subtitle="No active check-in" onBack={handleBack}>
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
-          <SectionCard className="text-center py-12">
+          <SectionCard className="max-w-2xl text-center py-12">
             <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
               <ClipboardCheck className="w-6 h-6 text-muted-foreground" />
             </div>
@@ -296,7 +310,7 @@ export function ClientCheckIn() {
         onBack={handleBack}
       >
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
-          <SectionCard className="text-center py-10">
+          <SectionCard className="max-w-2xl text-center py-10">
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-warning/10 text-warning-text font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased">
               <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
               Awaiting response
@@ -348,32 +362,35 @@ export function ClientCheckIn() {
       subtitle={`Submitted ${submittedAgo}`}
       onBack={handleBack}
     >
-      {/* Two-column layout on desktop */}
-      <div className="flex flex-col lg:flex-row lg:gap-6 space-y-6 sm:space-y-8 lg:space-y-0">
-        {/* Main content column */}
-        <div className="flex-1 space-y-6 sm:space-y-8">
-          {/* Client response */}
+      {/* Review desk: a reading column of evidence beside a sticky composer,
+          so the coach writes with the client's words still on screen.
+          Mobile stacks read-first: response → workouts → composer → history. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8 lg:items-start space-y-6 sm:space-y-8 lg:space-y-0">
+        {/* Evidence column */}
+        <div className="space-y-6 sm:space-y-8 min-w-0">
+          {/* Client response — the page's headline data: bare mono-labelled
+              vitals, no box-in-box */}
           <section className="animate-enter" style={{ animationDelay: '100ms' }}>
             <SectionLabel>{firstName}&apos;s response</SectionLabel>
-            <SectionCard className="space-y-4">
-              <div className="grid grid-cols-2 gap-2">
+            <SectionCard>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {effortDisplay && (
-                  <div className="rounded-lg bg-muted/40 px-3 py-2.5">
+                  <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
                       Workouts felt
                     </p>
-                    <p className={cn('text-sm font-bold tracking-tight', effortDisplay.text)}>
+                    <p className={cn('text-base font-bold tracking-tight antialiased', effortDisplay.text)}>
                       <span className="mr-1.5 select-none" aria-hidden="true">{effortDisplay.emoji}</span>
                       {effortDisplay.label}
                     </p>
                   </div>
                 )}
                 {feelingDisplay && (
-                  <div className="rounded-lg bg-muted/40 px-3 py-2.5">
+                  <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
                       Body feels
                     </p>
-                    <p className={cn('text-sm font-bold tracking-tight', feelingDisplay.text)}>
+                    <p className={cn('text-base font-bold tracking-tight antialiased', feelingDisplay.text)}>
                       <span className="mr-1.5 select-none" aria-hidden="true">{feelingDisplay.emoji}</span>
                       {feelingDisplay.label}
                     </p>
@@ -383,11 +400,11 @@ export function ClientCheckIn() {
 
               {/* Client notes read as a quote — the brand's coach-note treatment */}
               {activeCheckIn?.painBlockers && (
-                <div>
+                <div className="border-t border-border mt-4 pt-4">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
                     Notes from {firstName}
                   </p>
-                  <p className="border-l-2 border-brand/60 pl-3 text-sm leading-relaxed text-foreground/90">
+                  <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90">
                     {activeCheckIn.painBlockers}
                   </p>
                 </div>
@@ -398,78 +415,79 @@ export function ClientCheckIn() {
           {/* Recent workouts — the client-profile payload carries the review
               context the check-in payload lacks: abandoned sessions, mid-workout
               exercise flags, and prescription deviations */}
-          <div className="animate-enter" style={{ animationDelay: '200ms' }}>
+          <div className="animate-enter" style={{ animationDelay: '175ms' }}>
             <RecentCompletionsList completions={client.completions} exerciseNames={exerciseNames} />
           </div>
 
-          {/* Previous check-ins (mobile) */}
+          {/* Previous check-ins close the reading column (desktop) */}
           {completedCheckIns.length > 0 && (
-            <div className="lg:hidden animate-enter" style={{ animationDelay: '250ms' }}>
+            <div className="hidden lg:block animate-enter" style={{ animationDelay: '250ms' }}>
               <PreviousCheckInsList checkIns={completedCheckIns} />
             </div>
           )}
+        </div>
 
-          {/* Coach response */}
-          <section className="animate-enter" style={{ animationDelay: '300ms' }}>
-            <SectionLabel>Your response</SectionLabel>
-            <SectionCard className="space-y-4">
-              <div>
-                <Textarea
-                  ref={responseRef}
-                  aria-label={`Your response to ${firstName}`}
-                  aria-invalid={!!responseError || undefined}
-                  aria-describedby={responseError ? 'coach-response-error' : undefined}
-                  placeholder={`Write your response to ${firstName}…`}
-                  value={coachResponse}
-                  onChange={(e) => {
-                    setCoachResponse(e.target.value.slice(0, 1000));
-                    if (responseError) setResponseError('');
-                  }}
-                  rows={5}
-                />
-                <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-right tabular-nums">
-                  {coachResponse.length}/1000
-                </p>
-                {/* Stable live region so repeat empty submits re-announce */}
-                <div role="alert" aria-live="assertive">
-                  {responseError && (
-                    <p id="coach-response-error" className="text-sm text-destructive mt-1">
-                      {responseError}
-                    </p>
-                  )}
-                </div>
+        {/* Action column — composer and CTA as one unit, pinned on desktop */}
+        <section className="lg:sticky lg:top-6 animate-enter" style={{ animationDelay: '150ms' }}>
+          <SectionLabel>Your response</SectionLabel>
+          <SectionCard>
+            <div>
+              <Textarea
+                ref={responseRef}
+                aria-label={`Your response to ${firstName}`}
+                aria-invalid={!!responseError || undefined}
+                aria-describedby={responseError ? 'coach-response-error' : undefined}
+                placeholder={`Write your response to ${firstName}…`}
+                value={coachResponse}
+                onChange={(e) => {
+                  setCoachResponse(e.target.value.slice(0, 1000));
+                  if (responseError) setResponseError('');
+                }}
+                rows={6}
+              />
+              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-right tabular-nums">
+                {coachResponse.length}/1000
+              </p>
+              {/* Stable live region so repeat empty submits re-announce */}
+              <div role="alert" aria-live="assertive">
+                {responseError && (
+                  <p id="coach-response-error" className="text-sm text-destructive mt-1">
+                    {responseError}
+                  </p>
+                )}
               </div>
+            </div>
 
-              <label className="flex items-center gap-2.5 cursor-pointer select-none">
-                <Checkbox
-                  checked={planAdjustment}
-                  onCheckedChange={setPlanAdjustment}
-                />
-                <span className="text-sm">I&apos;ll adjust the plan based on this feedback</span>
-              </label>
-            </SectionCard>
+            <label className="flex items-center gap-2.5 cursor-pointer select-none mt-4">
+              <Checkbox
+                checked={planAdjustment}
+                onCheckedChange={setPlanAdjustment}
+              />
+              <span className="text-sm">I&apos;ll adjust the plan based on this feedback</span>
+            </label>
 
             {/* Submit — the page's one volt moment */}
             <Button
               onClick={handleCompleteCheckIn}
               disabled={isSubmitting}
-              className="w-full h-12 sm:h-14 mt-4 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
+              className="w-full h-12 mt-5 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
               size="lg"
             >
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
               Complete check-in
             </Button>
-          </section>
-        </div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground text-center mt-2.5 antialiased">
+              Closes this check-in · saved to {firstName}&apos;s history
+            </p>
+          </SectionCard>
+        </section>
 
-        {/* Right sidebar: Previous check-ins (desktop only) */}
-        <div className="hidden lg:block lg:w-80 lg:shrink-0">
-          <div className="sticky top-4 animate-enter" style={{ animationDelay: '200ms' }}>
-            {completedCheckIns.length > 0 && (
-              <PreviousCheckInsList checkIns={completedCheckIns} />
-            )}
+        {/* Previous check-ins after the action on mobile */}
+        {completedCheckIns.length > 0 && (
+          <div className="lg:hidden animate-enter" style={{ animationDelay: '250ms' }}>
+            <PreviousCheckInsList checkIns={completedCheckIns} />
           </div>
-        </div>
+        )}
       </div>
     </PageShell>
   );
