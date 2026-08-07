@@ -21,6 +21,20 @@ export async function POST(req: Request) {
 
     const { email, source, medium, campaign, referrer } = result.data;
 
+    // An email with a live account has nothing to wait for — send its owner
+    // to the sign-in instead of parking them on the list. This does disclose
+    // that the email is registered, but signup's "Email already registered"
+    // response discloses the same thing, so it opens no new enumeration
+    // channel. (Repeat WAITLIST signups below stay a quiet no-op — being on
+    // the list is not an account and stays undisclosed.)
+    const registered = await prisma.user.findFirst({
+      where: { email, deletedAt: null },
+      select: { id: true },
+    });
+    if (registered) {
+      return NextResponse.json({ error: "already_registered" }, { status: 409 });
+    }
+
     // Only the first signup for an email creates a row; repeats are quiet
     // no-ops so the response never reveals whether an email was already on
     // the list. `createMany({ skipDuplicates })` tells us if a row was added.

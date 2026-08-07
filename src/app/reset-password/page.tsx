@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ArrowRight, Loader2, KeyRound } from 'lucide-react';
 import { AuthShell, AuthDivider, AuthFieldLabel } from '@/components/auth/AuthShell';
 import { PasswordRules } from '@/components/auth/PasswordRules';
+import { FormError } from '@/components/ui/form-error';
 import { passwordSchema } from '@/lib/validations/schemas';
 
 function ResetPasswordForm() {
@@ -136,7 +137,7 @@ function ResetPasswordForm() {
         />
       </div>
       {error && (
-        <p role="alert" className="border-l-2 border-destructive pl-3 text-sm text-destructive">
+        <FormError>
           {error}
           {error.includes('invalid or expired') && (
             <>
@@ -146,7 +147,7 @@ function ResetPasswordForm() {
               </Link>
             </>
           )}
-        </p>
+        </FormError>
       )}
       <Button
         type="submit"
