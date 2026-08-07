@@ -2,17 +2,20 @@ import { useState, useMemo, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCoachClientProfile } from '@/hooks/api/useCoachClientProfile';
 import { useCheckIn, createCheckInForClient } from '@/hooks/api/useCheckIn';
+import { usePlanDetail } from '@/hooks/api/usePlanDetail';
 import { apiFetch } from '@/lib/api-client';
+import type { ClientDetail } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Check, ClipboardCheck, Loader2 } from 'lucide-react';
+import { Check, ClipboardCheck, Flag, Loader2 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
-import { format, formatDistanceToNow } from 'date-fns';
+import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
+import { format, formatDistanceToNow, differenceInHours } from 'date-fns';
 
 /* ── Brand surface helpers — same vocabulary as the client profile ── */
 
@@ -73,6 +76,19 @@ export function ClientCheckIn() {
   const router = useRouter();
 
   const { client, isLoading: isClientLoading, refresh: refreshClient } = useCoachClientProfile(clientId);
+
+  // Plan detail resolves flagged workoutExerciseIds to exercise names —
+  // flags key by the client's plan copy, which is exactly activePlan
+  const { plan } = usePlanDetail(client?.activePlan?.id ?? null);
+  const exerciseNames = useMemo(() => {
+    const map = new Map<string, string>();
+    plan?.weeks.forEach((w) =>
+      w.days.forEach((d) =>
+        d.exercises.forEach((e) => map.set(e.id, e.exercise.name))
+      )
+    );
+    return map;
+  }, [plan]);
 
   // Find the active (non-completed) check-in for this client
   const activeCheckInId = useMemo(() => {
@@ -275,7 +291,7 @@ export function ClientCheckIn() {
         </div>
 
         <div className="animate-enter" style={{ animationDelay: '200ms' }}>
-          <RecentCompletionsList completions={client.completions} />
+          <RecentCompletionsList completions={client.completions} exerciseNames={exerciseNames} />
         </div>
 
         {completedCheckIns.length > 0 && (
@@ -352,11 +368,11 @@ export function ClientCheckIn() {
             </SectionCard>
           </section>
 
-          {/* Recent workouts */}
+          {/* Recent workouts — the client-profile payload carries the review
+              context the check-in payload lacks: abandoned sessions, mid-workout
+              exercise flags, and prescription deviations */}
           <div className="animate-enter" style={{ animationDelay: '200ms' }}>
-            <RecentCompletionsList
-              completions={activeCheckIn?.client.completions ?? client.completions}
-            />
+            <RecentCompletionsList completions={client.completions} exerciseNames={exerciseNames} />
           </div>
 
           {/* Previous check-ins (mobile) */}
@@ -419,42 +435,105 @@ export function ClientCheckIn() {
 
 /* ── Inline sub-components ────────────────────────────────── */
 
-function RecentCompletionsList({ completions }: {
-  completions: {
-    id: string;
-    completedAt: string | null;
-    completionPct: number | null;
-    effortRating: string | null;
-    day: { name: string | null } | null;
-  }[];
+function RecentCompletionsList({ completions, exerciseNames }: {
+  completions: ClientDetail['completions'];
+  exerciseNames: Map<string, string>;
 }) {
-  // This list is finished-workouts context only; in-progress rows from the
-  // client detail payload have no completion date to show
-  const finished = completions.filter((c) => c.completedAt);
-  if (finished.length === 0) return null;
+  // Completed workouts plus started-but-never-finished ones — abandonment
+  // (and a flag raised mid-session) is exactly the signal to review
+  const rows = completions.filter(
+    (c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt)
+  );
+  if (rows.length === 0) return null;
+
+  const flagCount = rows.reduce((n, c) => n + (c.flags?.length ?? 0), 0);
 
   return (
     <section>
-      <SectionLabel>Recent workouts · {finished.length}</SectionLabel>
+      <SectionLabel>
+        Recent workouts · {rows.length}
+        {flagCount > 0 && (
+          <span className="text-warning"> · {flagCount} {flagCount === 1 ? 'flag' : 'flags'}</span>
+        )}
+      </SectionLabel>
       <SectionCard className="space-y-1.5">
-        {finished.map((c) => (
-          <div key={c.id} className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/40">
-            <span className="w-2 h-2 rounded-full bg-success shrink-0" aria-hidden="true" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold tracking-tight truncate">{c.day?.name ?? 'Workout'}</p>
-              {c.completedAt && (
-                <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
-                  {format(new Date(c.completedAt), 'EEE, MMM d')}
+        {rows.map((c) => {
+          const isUnfinished = c.status === 'IN_PROGRESS';
+          const timestamp = new Date((c.completedAt ?? c.startedAt) as string);
+          // A session started in the last few hours may still be live;
+          // older ones were walked away from
+          const abandoned = isUnfinished && differenceInHours(new Date(), timestamp) >= 6;
+          const deviations = getWorkoutDeviations(c.sets ?? []);
+          const flags = c.flags ?? [];
+          // Flags on exercises no longer in the plan (or before plan detail
+          // loads) fall back to the names carried on deviated sets
+          const flagName = (workoutExerciseId: string) =>
+            exerciseNames.get(workoutExerciseId) ??
+            c.sets?.find((s) => s.workoutExerciseId === workoutExerciseId)
+              ?.workoutExercise.exercise.name ??
+            'Exercise';
+          return (
+            <div key={c.id} className="px-3 py-2.5 rounded-lg bg-muted/40">
+              <div className="flex items-center gap-3">
+                <span
+                  className={cn(
+                    'w-2 h-2 rounded-full shrink-0',
+                    isUnfinished ? (abandoned ? 'bg-warning' : 'bg-info') : 'bg-success'
+                  )}
+                  aria-hidden="true"
+                />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold tracking-tight truncate">{c.day?.name ?? 'Workout'}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
+                    {isUnfinished && 'Started '}
+                    {format(timestamp, 'EEE, MMM d')}
+                  </p>
+                </div>
+                {isUnfinished ? (
+                  <p className={cn(
+                    'font-mono text-[10px] uppercase tracking-[0.12em] font-medium shrink-0',
+                    abandoned ? 'text-warning' : 'text-info'
+                  )}>
+                    {abandoned ? 'Not finished' : 'In progress'}
+                  </p>
+                ) : c.completionPct != null ? (
+                  <p className={cn(
+                    'font-mono text-sm font-semibold tabular-nums shrink-0',
+                    c.completionPct < 100 && 'text-warning'
+                  )}>
+                    {Math.round(c.completionPct)}%
+                  </p>
+                ) : null}
+              </div>
+
+              {/* What the client changed vs. the prescription */}
+              {deviations.length > 0 && (
+                <p
+                  className="text-[11px] text-warning/90 mt-1.5 pl-5 truncate antialiased"
+                  title={deviations.map(formatDeviation).join(' · ')}
+                >
+                  Adjusted: {deviations.slice(0, 2).map(formatDeviation).join(' · ')}
+                  {deviations.length > 2 && ` +${deviations.length - 2} more`}
                 </p>
               )}
+
+              {/* Exercises flagged mid-workout — "help me" signals */}
+              {flags.map((f) => (
+                <div key={f.id} className="mt-2 ml-5 rounded-md bg-warning/10 px-2.5 py-2">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-warning">
+                    <Flag className="w-3 h-3 shrink-0" aria-hidden="true" />
+                    {flagName(f.workoutExerciseId)}
+                  </p>
+                  {f.note && (
+                    <p className="text-xs text-foreground/80 leading-relaxed mt-1">
+                      &ldquo;{f.note}&rdquo;
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
-            {c.completionPct != null && (
-              <p className="font-mono text-sm font-semibold tabular-nums shrink-0">
-                {Math.round(c.completionPct)}%
-              </p>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </SectionCard>
     </section>
   );
