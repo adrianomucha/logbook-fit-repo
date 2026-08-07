@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
+import { EmptyStateNoPlans } from '@/components/coach/EmptyStates';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import { useCoachInvites } from '@/hooks/api/useCoachInvites';
@@ -420,19 +421,7 @@ export function CoachDashboard() {
                   onDelete={setPlanToDelete}
                 />
               ) : (
-                <div className="flex flex-col items-center text-center pt-8 sm:pt-16 pb-8 animate-enter">
-                  <div className="text-6xl sm:text-7xl select-none mb-6 animate-bounce-once">📋</div>
-                  <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2 antialiased">
-                    Your blank canvas
-                  </h2>
-                  <p className="text-sm text-muted-foreground max-w-[280px] mb-8 antialiased">
-                    Design a workout template, then assign it to any client. One plan, many athletes.
-                  </p>
-                  <Button onClick={handleCreateNewPlan} size="lg" className="text-sm tracking-wide px-8 active:scale-[0.96] transition-transform duration-150">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create Template
-                  </Button>
-                </div>
+                <EmptyStateNoPlans onCreate={handleCreateNewPlan} />
               )}
             </section>
           </div>
