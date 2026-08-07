@@ -721,7 +721,6 @@ export function UnifiedClientProfile() {
               onCancelCheckIn={handleCancelCheckIn}
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
-              hideTitle={activeCheckIn?.status === 'responded'}
               variant="flat"
             />
           </SectionCard>

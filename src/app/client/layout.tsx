@@ -1,4 +1,4 @@
-import { Toaster } from 'sonner';
+import { AppToaster } from '@/components/notifications/AppToaster';
 import { MessageNotifications } from '@/components/notifications/MessageNotifications';
 
 /**
@@ -13,7 +13,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       {children}
       {/* New messages announce themselves from any tab, not just the chat */}
       <MessageNotifications />
-      <Toaster position="top-center" richColors closeButton />
+      <AppToaster />
     </div>
   );
 }
