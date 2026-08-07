@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { useDialogBehavior } from '@/hooks/useDialogBehavior';
 import { Button } from './button';
 
 interface ModalProps {
@@ -13,9 +14,6 @@ interface ModalProps {
   description?: string;
 }
 
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
-
 export function Modal({
   isOpen,
   onClose,
@@ -27,67 +25,8 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
-  const modalRef = useRef<HTMLDivElement>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
-  const onCloseRef = useRef(onClose);
-
-  // Keep onClose ref current without triggering re-renders
-  useEffect(() => {
-    onCloseRef.current = onClose;
-  });
-
-  // Scroll lock + keyboard listener (stable — no dependency on onClose)
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onCloseRef.current();
-        return;
-      }
-
-      if (e.key !== 'Tab' || !modalRef.current) return;
-
-      const focusableEls = modalRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
-      if (focusableEls.length === 0) return;
-
-      const firstEl = focusableEls[0];
-      const lastEl = focusableEls[focusableEls.length - 1];
-      // -1 when focus sits on the container itself (initial state)
-      const activeIndex = Array.prototype.indexOf.call(focusableEls, document.activeElement);
-
-      if (e.shiftKey) {
-        if (activeIndex <= 0) {
-          e.preventDefault();
-          lastEl.focus();
-        }
-      } else {
-        if (activeIndex === focusableEls.length - 1) {
-          e.preventDefault();
-          firstEl.focus();
-        }
-      }
-    };
-
-    previouslyFocusedRef.current = document.activeElement as HTMLElement;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    // Focus the dialog container itself so keyboard users start inside the
-    // modal without a visible focus ring lighting up the close button
-    requestAnimationFrame(() => {
-      modalRef.current?.focus();
-    });
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocusedRef.current?.focus();
-    };
-  }, [isOpen]);
+  // Scroll lock, Escape, focus trap and focus restore — see the hook
+  const modalRef = useDialogBehavior({ isOpen, onClose });
 
   if (!isOpen) return null;
 
@@ -106,7 +45,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/50 sm:p-4 animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-black/55 backdrop-blur-sm sm:p-4 animate-in fade-in-0 duration-200 motion-reduce:animate-none"
       onClick={handleBackdropClick}
     >
       {/* Flex-column dialog: header and footer stay put, only the body scrolls.

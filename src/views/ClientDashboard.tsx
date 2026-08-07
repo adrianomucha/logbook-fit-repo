@@ -343,6 +343,7 @@ export function ClientDashboard() {
       warningMessage="Your assigned plan is removed and messaging closes for both of you. Your workout history stays on your account."
       confirmLabel="Leave coach"
       confirmVariant="destructive"
+      icon={UserMinus}
     />
   );
 
