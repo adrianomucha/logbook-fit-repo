@@ -13,7 +13,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
       <div className="relative inline-flex items-center">
         <input
           type="checkbox"
-          className="sr-only"
+          className="peer sr-only"
           ref={ref}
           checked={checked}
           onChange={(e) => {
@@ -23,11 +23,13 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           }}
           {...props}
         />
+        {/* Focus lands on the sr-only input, so the visible ring has to be
+            driven off it — peer-focus-visible, not focus-visible */}
         <div
           className={cn(
             "h-4 w-4 rounded border border-input bg-background ring-offset-background transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
-            "disabled:cursor-not-allowed disabled:opacity-50",
+            "peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2",
+            "peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
             checked && "bg-primary border-primary text-primary-foreground",
             className
           )}

@@ -1,4 +1,4 @@
-import { useState, useMemo, ReactNode } from 'react';
+import { useState, useMemo, useRef, useEffect, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCoachClientProfile } from '@/hooks/api/useCoachClientProfile';
 import { useCheckIn, createCheckInForClient } from '@/hooks/api/useCheckIn';
@@ -106,10 +106,19 @@ export function ClientCheckIn() {
   } = useCheckIn(activeCheckInId);
 
   const [coachResponse, setCoachResponse] = useState('');
+  const [responseError, setResponseError] = useState('');
   const [planAdjustment, setPlanAdjustment] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  // The success screen replaces the whole page — move focus to its heading
+  // so the confirmation is announced instead of landing on nothing
+  const responseRef = useRef<HTMLTextAreaElement>(null);
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (showSuccess) successHeadingRef.current?.focus();
+  }, [showSuccess]);
 
   const isLoading = isClientLoading || (activeCheckInId && isCheckInLoading);
 
@@ -150,8 +159,16 @@ export function ClientCheckIn() {
     }
   };
 
+  // Submit stays enabled until the request starts — disabling it while the
+  // form is empty hides the reason and drops it from the tab order. An empty
+  // submit explains itself inline instead.
   const handleCompleteCheckIn = async () => {
-    if (!activeCheckIn || !coachResponse.trim()) return;
+    if (!activeCheckIn || isSubmitting) return;
+    if (!coachResponse.trim()) {
+      setResponseError(`Write a response to ${firstName} before completing the check-in.`);
+      responseRef.current?.focus();
+      return;
+    }
     setIsSubmitting(true);
     try {
       await submitCoachResponse({
@@ -169,8 +186,12 @@ export function ClientCheckIn() {
   // Loading
   if (isLoading) {
     return (
-      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center animate-enter">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div
+        className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center animate-enter"
+        role="status"
+      >
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Loading…</span>
       </div>
     );
   }
@@ -202,7 +223,13 @@ export function ClientCheckIn() {
             <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
               <Check className="w-8 h-8 text-brand-foreground" strokeWidth={3} />
             </div>
-            <h2 className="text-2xl font-bold tracking-tight mb-1.5">Check-in complete</h2>
+            <h2
+              ref={successHeadingRef}
+              tabIndex={-1}
+              className="text-2xl font-bold tracking-tight mb-1.5 focus:outline-none"
+            >
+              Check-in complete
+            </h2>
             <p className="text-sm text-muted-foreground mb-7">
               Your response is on its way to {clientName}.
             </p>
@@ -270,7 +297,7 @@ export function ClientCheckIn() {
       >
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
           <SectionCard className="text-center py-10">
-            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-warning/10 text-warning font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased">
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-warning/10 text-warning-text font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased">
               <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
               Awaiting response
             </span>
@@ -388,14 +415,29 @@ export function ClientCheckIn() {
             <SectionCard className="space-y-4">
               <div>
                 <Textarea
+                  ref={responseRef}
+                  aria-label={`Your response to ${firstName}`}
+                  aria-invalid={!!responseError || undefined}
+                  aria-describedby={responseError ? 'coach-response-error' : undefined}
                   placeholder={`Write your response to ${firstName}…`}
                   value={coachResponse}
-                  onChange={(e) => setCoachResponse(e.target.value.slice(0, 1000))}
+                  onChange={(e) => {
+                    setCoachResponse(e.target.value.slice(0, 1000));
+                    if (responseError) setResponseError('');
+                  }}
                   rows={5}
                 />
                 <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-right tabular-nums">
                   {coachResponse.length}/1000
                 </p>
+                {/* Stable live region so repeat empty submits re-announce */}
+                <div role="alert" aria-live="assertive">
+                  {responseError && (
+                    <p id="coach-response-error" className="text-sm text-destructive mt-1">
+                      {responseError}
+                    </p>
+                  )}
+                </div>
               </div>
 
               <label className="flex items-center gap-2.5 cursor-pointer select-none">
@@ -410,7 +452,7 @@ export function ClientCheckIn() {
             {/* Submit — the page's one volt moment */}
             <Button
               onClick={handleCompleteCheckIn}
-              disabled={!coachResponse.trim() || isSubmitting}
+              disabled={isSubmitting}
               className="w-full h-12 sm:h-14 mt-4 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
               size="lg"
             >
@@ -453,7 +495,7 @@ function RecentCompletionsList({ completions, exerciseNames }: {
       <SectionLabel>
         Recent workouts · {rows.length}
         {flagCount > 0 && (
-          <span className="text-warning"> · {flagCount} {flagCount === 1 ? 'flag' : 'flags'}</span>
+          <span className="text-warning-text"> · {flagCount} {flagCount === 1 ? 'flag' : 'flags'}</span>
         )}
       </SectionLabel>
       <SectionCard className="space-y-1.5">
@@ -483,7 +525,11 @@ function RecentCompletionsList({ completions, exerciseNames }: {
                   aria-hidden="true"
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold tracking-tight truncate">{c.day?.name ?? 'Workout'}</p>
+                  <p className="text-sm font-bold tracking-tight truncate">
+                    {/* The green dot is the only visual "completed" cue — say it */}
+                    {!isUnfinished && <span className="sr-only">Completed: </span>}
+                    {c.day?.name ?? 'Workout'}
+                  </p>
                   <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
                     {isUnfinished && 'Started '}
                     {format(timestamp, 'EEE, MMM d')}
@@ -492,14 +538,14 @@ function RecentCompletionsList({ completions, exerciseNames }: {
                 {isUnfinished ? (
                   <p className={cn(
                     'font-mono text-[10px] uppercase tracking-[0.12em] font-medium shrink-0',
-                    abandoned ? 'text-warning' : 'text-info'
+                    abandoned ? 'text-warning-text' : 'text-info'
                   )}>
                     {abandoned ? 'Not finished' : 'In progress'}
                   </p>
                 ) : c.completionPct != null ? (
                   <p className={cn(
                     'font-mono text-sm font-semibold tabular-nums shrink-0',
-                    c.completionPct < 100 && 'text-warning'
+                    c.completionPct < 100 && 'text-warning-text'
                   )}>
                     {Math.round(c.completionPct)}%
                   </p>
@@ -509,7 +555,7 @@ function RecentCompletionsList({ completions, exerciseNames }: {
               {/* What the client changed vs. the prescription */}
               {deviations.length > 0 && (
                 <p
-                  className="text-[11px] text-warning/90 mt-1.5 pl-5 truncate antialiased"
+                  className="text-[11px] text-warning-text mt-1.5 pl-5 truncate antialiased"
                   title={deviations.map(formatDeviation).join(' · ')}
                 >
                   Adjusted: {deviations.slice(0, 2).map(formatDeviation).join(' · ')}
@@ -520,8 +566,10 @@ function RecentCompletionsList({ completions, exerciseNames }: {
               {/* Exercises flagged mid-workout — "help me" signals */}
               {flags.map((f) => (
                 <div key={f.id} className="mt-2 ml-5 rounded-md bg-warning/10 px-2.5 py-2">
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-warning">
+                  <p className="flex items-center gap-1.5 text-xs font-bold text-warning-text">
                     <Flag className="w-3 h-3 shrink-0" aria-hidden="true" />
+                    {/* The icon carries "flagged" only visually — say it */}
+                    <span className="sr-only">Flagged: </span>
                     {flagName(f.workoutExerciseId)}
                   </p>
                   {f.note && (
