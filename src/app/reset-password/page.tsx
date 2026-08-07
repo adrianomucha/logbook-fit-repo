@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, Loader2, KeyRound } from 'lucide-react';
 import { AuthShell, AuthDivider, AuthFieldLabel } from '@/components/auth/AuthShell';
+import { passwordSchema } from '@/lib/validations/schemas';
 
 function ResetPasswordForm() {
   // The token rides in the query string straight from the email link. No
@@ -23,8 +24,11 @@ function ResetPasswordForm() {
     e.preventDefault();
     setError('');
 
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+    // The server enforces the same schema but answers with a generic
+    // "Validation failed" — checking here keeps the message specific.
+    const passwordCheck = passwordSchema.safeParse(password);
+    if (!passwordCheck.success) {
+      setError(passwordCheck.error.issues[0].message);
       return;
     }
     if (password !== confirm) {
@@ -111,7 +115,11 @@ function ResetPasswordForm() {
           className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
           required
           minLength={8}
+          maxLength={72}
         />
+        <p className="text-xs text-muted-foreground text-pretty">
+          8+ characters with at least one letter and one number
+        </p>
       </div>
       <div className="space-y-2">
         <AuthFieldLabel htmlFor="confirm">Confirm password</AuthFieldLabel>

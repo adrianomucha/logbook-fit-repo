@@ -4,6 +4,55 @@ import { z } from "zod";
 // AUTH
 // ──────────────────────────────────────
 
+/**
+ * Passwords that satisfy the letter+number rule yet still top every breach
+ * corpus. Compared case-insensitively; purely alphabetic or numeric staples
+ * ("password", "12345678") are already caught by the character rules.
+ */
+const COMMON_PASSWORDS = new Set([
+  "password1",
+  "password123",
+  "passw0rd",
+  "p@ssw0rd",
+  "qwerty123",
+  "qwerty12345",
+  "abc12345",
+  "abcd1234",
+  "letmein1",
+  "welcome1",
+  "welcome123",
+  "iloveyou1",
+  "sunshine1",
+  "monkey123",
+  "dragon123",
+  "football1",
+  "baseball1",
+  "superman1",
+  "trustno1",
+  "1q2w3e4r",
+  "1qaz2wsx",
+  "123456789a",
+  "a1234567",
+  "aa123456",
+]);
+
+/**
+ * The one rule set for every place a user picks a password (signup, reset).
+ * The 72 limit is bcrypt's input size in BYTES — anything longer is silently
+ * truncated at hash time, so two "different" passwords would compare equal.
+ */
+export const passwordSchema = z
+  .string()
+  .min(8, "Password must be at least 8 characters")
+  .regex(/[a-zA-Z]/, "Password must contain at least one letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+  .refine((password) => new TextEncoder().encode(password).length <= 72, {
+    message: "Password must be at most 72 characters",
+  })
+  .refine((password) => !COMMON_PASSWORDS.has(password.toLowerCase()), {
+    message: "This password is too common — pick something harder to guess",
+  });
+
 export const signupSchema = z
   .object({
     email: z
@@ -11,7 +60,7 @@ export const signupSchema = z
       .trim()
       .toLowerCase()
       .email(),
-    password: z.string().min(8, "Password must be at least 8 characters"),
+    password: passwordSchema,
     name: z.string().min(1, "Name is required").max(100),
     role: z.enum(["COACH", "CLIENT"]).optional(),
     inviteToken: z.string().optional(),
@@ -29,7 +78,7 @@ export const passwordResetRequestSchema = z.object({
 
 export const passwordResetConfirmSchema = z.object({
   token: z.string().min(1, "Reset token is required"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: passwordSchema,
 });
 
 // ──────────────────────────────────────

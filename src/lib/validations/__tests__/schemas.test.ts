@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   signupSchema,
+  passwordSchema,
+  passwordResetConfirmSchema,
   createExerciseSchema,
   updateExerciseSchema,
   createCheckInSchema,
@@ -22,6 +24,83 @@ import {
 } from "../schemas";
 
 // ──────────────────────────────────────
+// passwordSchema
+// ──────────────────────────────────────
+
+describe("passwordSchema", () => {
+  it("accepts a password with letters and numbers", () => {
+    expect(passwordSchema.safeParse("securepass1").success).toBe(true);
+  });
+
+  it("rejects fewer than 8 characters", () => {
+    expect(passwordSchema.safeParse("abc123").success).toBe(false);
+  });
+
+  it("rejects letters-only passwords", () => {
+    expect(passwordSchema.safeParse("aaaaaaaa").success).toBe(false);
+  });
+
+  it("rejects digits-only passwords", () => {
+    expect(passwordSchema.safeParse("12345678").success).toBe(false);
+  });
+
+  it("rejects passwords over 72 bytes (bcrypt truncation limit)", () => {
+    expect(passwordSchema.safeParse("a1" + "a".repeat(71)).success).toBe(false);
+  });
+
+  it("counts the limit in bytes, not characters", () => {
+    // 25 emoji = 100 bytes but only 50 UTF-16 code units — chars alone
+    // would pass, bytes must not
+    expect(passwordSchema.safeParse("a1" + "💪".repeat(25)).success).toBe(
+      false
+    );
+  });
+
+  it("rejects common passwords regardless of case", () => {
+    expect(passwordSchema.safeParse("password1").success).toBe(false);
+    expect(passwordSchema.safeParse("PassWord1").success).toBe(false);
+    expect(passwordSchema.safeParse("qwerty123").success).toBe(false);
+  });
+
+  it("reports the specific failed rule", () => {
+    const result = passwordSchema.safeParse("aaaaaaaa");
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues[0].message).toContain("number");
+    }
+  });
+});
+
+// ──────────────────────────────────────
+// passwordResetConfirmSchema
+// ──────────────────────────────────────
+
+describe("passwordResetConfirmSchema", () => {
+  it("accepts a token with a valid password", () => {
+    const result = passwordResetConfirmSchema.safeParse({
+      token: "some-token",
+      password: "securepass1",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a weak password", () => {
+    const result = passwordResetConfirmSchema.safeParse({
+      token: "some-token",
+      password: "aaaaaaaa",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a missing token", () => {
+    const result = passwordResetConfirmSchema.safeParse({
+      password: "securepass1",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+// ──────────────────────────────────────
 // signupSchema
 // ──────────────────────────────────────
 
@@ -29,7 +108,7 @@ describe("signupSchema", () => {
   it("accepts valid coach signup", () => {
     const result = signupSchema.safeParse({
       email: "  Coach@Example.COM  ",
-      password: "securepass",
+      password: "securepass1",
       name: "John",
       role: "COACH",
     });
@@ -42,7 +121,7 @@ describe("signupSchema", () => {
   it("accepts valid client signup with invite token", () => {
     const result = signupSchema.safeParse({
       email: "client@test.com",
-      password: "securepass",
+      password: "securepass1",
       name: "Jane",
       inviteToken: "abc123",
     });
@@ -51,7 +130,7 @@ describe("signupSchema", () => {
 
   it("rejects missing email", () => {
     const result = signupSchema.safeParse({
-      password: "securepass",
+      password: "securepass1",
       name: "John",
       role: "COACH",
     });
@@ -61,7 +140,7 @@ describe("signupSchema", () => {
   it("rejects invalid email format", () => {
     const result = signupSchema.safeParse({
       email: "not-an-email",
-      password: "securepass",
+      password: "securepass1",
       name: "John",
       role: "COACH",
     });
@@ -81,7 +160,7 @@ describe("signupSchema", () => {
   it("rejects empty name", () => {
     const result = signupSchema.safeParse({
       email: "test@test.com",
-      password: "securepass",
+      password: "securepass1",
       name: "",
       role: "COACH",
     });
@@ -91,7 +170,7 @@ describe("signupSchema", () => {
   it("rejects name over 100 characters", () => {
     const result = signupSchema.safeParse({
       email: "test@test.com",
-      password: "securepass",
+      password: "securepass1",
       name: "a".repeat(101),
       role: "COACH",
     });
@@ -101,7 +180,7 @@ describe("signupSchema", () => {
   it("rejects invalid role", () => {
     const result = signupSchema.safeParse({
       email: "test@test.com",
-      password: "securepass",
+      password: "securepass1",
       name: "John",
       role: "ADMIN",
     });
@@ -111,7 +190,7 @@ describe("signupSchema", () => {
   it("rejects when neither role nor inviteToken is provided", () => {
     const result = signupSchema.safeParse({
       email: "test@test.com",
-      password: "securepass",
+      password: "securepass1",
       name: "John",
     });
     expect(result.success).toBe(false);
@@ -120,7 +199,7 @@ describe("signupSchema", () => {
   it("accepts coach signup with a waitlist beta token", () => {
     const result = signupSchema.safeParse({
       email: "coach@test.com",
-      password: "securepass",
+      password: "securepass1",
       name: "John",
       role: "COACH",
       betaToken: "beta-abc123",
@@ -134,7 +213,7 @@ describe("signupSchema", () => {
   it("still requires role or inviteToken when only betaToken is given", () => {
     const result = signupSchema.safeParse({
       email: "coach@test.com",
-      password: "securepass",
+      password: "securepass1",
       name: "John",
       betaToken: "beta-abc123",
     });
