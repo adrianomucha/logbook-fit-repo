@@ -187,7 +187,7 @@ export function ExerciseEditorContent({
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
           </button>
           <div className="flex-1 min-w-0">
-            <h2 className="text-[15px] font-black tracking-tight leading-tight truncate">
+            <h2 className="text-[15px] font-bold tracking-tight leading-tight truncate">
               {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` ${exerciseNumber}` : ''}`}
             </h2>
             <p className="text-[11px] text-muted-foreground/80 truncate mt-px">

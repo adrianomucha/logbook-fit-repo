@@ -23,6 +23,65 @@ import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseEditorContent } from './ExerciseEditorDrawer';
 
+/**
+ * Empty day: a ghost of the exercise rows this pane will hold, fading into the
+ * page, with the brand kicker and volt CTA beneath — the same empty-state
+ * language the roster and plan library already speak. The preview teaches the
+ * row layout (index, name, prescription) before there's data to show it.
+ */
+function EmptyDay({ dayLabel, onAdd }: { dayLabel: string; onAdd: () => void }) {
+  const rows = [
+    { name: 'w-32', opacity: 'opacity-100' },
+    { name: 'w-40', opacity: 'opacity-60' },
+    { name: 'w-28', opacity: 'opacity-30' },
+  ];
+  return (
+    <div className="flex flex-1 flex-col items-center justify-center px-6 py-10 text-center">
+      <div
+        aria-hidden="true"
+        className="w-full max-w-[300px] mb-5 select-none pointer-events-none"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 30%, transparent 92%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 30%, transparent 92%)',
+        }}
+      >
+        <div className="rounded-xl bg-card divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]">
+          {rows.map((row, i) => (
+            <div
+              key={i}
+              className={`animate-ghost-row flex items-center gap-3 px-4 py-3.5 ${row.opacity}`}
+              style={{ animationDelay: `${120 + i * 110}ms` }}
+            >
+              <div className="h-2 w-4 rounded-full bg-muted shrink-0" />
+              <div className={`h-2.5 rounded-full bg-muted ${row.name}`} />
+              <div className="ml-auto h-4 w-12 rounded-md bg-muted/70 shrink-0" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+        <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+        {dayLabel} · 0 exercises
+      </p>
+      <h3 className="mb-1.5 text-xl font-bold tracking-tight antialiased">
+        Nothing programmed yet
+      </h3>
+      <p className="mb-6 max-w-[280px] text-sm text-muted-foreground antialiased">
+        Add movements one at a time — sets, reps, load, and any notes your
+        client should see before they start.
+      </p>
+      <Button
+        onClick={onAdd}
+        className="h-11 gap-2 rounded-xl bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
+      >
+        <Plus className="w-4 h-4" />
+        Add first exercise
+      </Button>
+    </div>
+  );
+}
+
 interface PlanEditorDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -336,6 +395,13 @@ export function PlanEditorDrawer({
   const hasWeeks = plan && plan.weeks.length > 0;
   const hasDays = currentWeek && currentWeek.days.length > 0;
 
+  // How much of the plan is actually programmed. Drives the volt rail under
+  // the header and the mono readout beside the plan name — a coach opening a
+  // half-built plan should see how far along it is before reading a single row.
+  const allDays = plan?.weeks.flatMap((w) => w.days) ?? [];
+  const builtDays = allDays.filter((d) => (d.exercises?.length ?? 0) > 0).length;
+  const builtPct = allDays.length > 0 ? (builtDays / allDays.length) * 100 : 0;
+
   const closeExerciseEditor = () => {
     setExerciseDrawerOpen(false);
     setEditingExerciseIndex(null);
@@ -346,7 +412,18 @@ export function PlanEditorDrawer({
       if (!o) closeExerciseEditor();
       onOpenChange(o);
     }}>
-      <SheetContent side="right" className="w-full sm:max-w-[880px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
+      <SheetContent
+        side="right"
+        // Land focus on the panel itself rather than whichever control happens
+        // to be first in the DOM — opening the editor should not put the
+        // keyboard on "Close". Radix gives the panel tabIndex -1, and Tab still
+        // walks into the header from here.
+        onOpenAutoFocus={(e) => {
+          e.preventDefault();
+          (e.currentTarget as HTMLElement | null)?.focus();
+        }}
+        className="w-full sm:max-w-[880px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible focus:outline-none [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden"
+      >
         {/* Loading state — skeleton */}
         {isLoading && !plan && (
           <>
@@ -378,7 +455,7 @@ export function PlanEditorDrawer({
           <>
             <div className="p-4 border-b pr-4">
               <SheetHeader>
-                <SheetTitle className="font-black tracking-tight">Error</SheetTitle>
+                <SheetTitle className="font-bold tracking-tight">Error</SheetTitle>
                 <SheetDescription>Something went wrong</SheetDescription>
               </SheetHeader>
             </div>
@@ -399,7 +476,7 @@ export function PlanEditorDrawer({
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
                   <span className="text-xl select-none">{plan.emoji || '💪'}</span>
-                  <span className="truncate font-black tracking-tight">{plan.name}</span>
+                  <span className="truncate font-bold tracking-tight">{plan.name}</span>
                 </SheetTitle>
                 <SheetDescription className="sr-only">Plan editor</SheetDescription>
               </SheetHeader>
@@ -423,7 +500,31 @@ export function PlanEditorDrawer({
         {plan && hasWeeks && (
           <>
             {/* Plan header — always visible */}
-            <div className="px-3 sm:px-4 py-3 border-b overflow-visible relative z-10 shrink-0">
+            <div className="px-3 sm:px-4 pt-2.5 pb-3 border-b overflow-visible relative z-10 shrink-0">
+              {/* Build progress as a volt rail on the header's bottom edge —
+                  the same device the getting-started card uses for setup */}
+              <span className="absolute inset-x-0 bottom-0 h-[2px]" aria-hidden="true">
+                <span
+                  className="block h-full bg-brand transition-[width] duration-500 ease-out"
+                  style={{ width: `${builtPct}%` }}
+                />
+              </span>
+
+              <div className="flex items-center justify-between gap-3 mb-1.5">
+                <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased min-w-0">
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand shrink-0" aria-hidden="true" />
+                  <span className="truncate">
+                    {plan.isTemplate ? 'Plan template' : 'Client plan'}
+                  </span>
+                </p>
+                <button
+                  onClick={() => onOpenChange(false)}
+                  className="shrink-0 rounded-md px-2 py-1 -mr-1 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.96] transition-[color,background-color,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring tap-target"
+                >
+                  Close
+                </button>
+              </div>
+
               <SheetHeader>
                 <SheetTitle asChild>
                   <div className="flex items-center gap-2 min-w-0">
@@ -471,24 +572,22 @@ export function PlanEditorDrawer({
                         maxLength={100}
                         aria-label="Plan name"
                         autoFocus
-                        className="font-black text-base h-auto py-1 px-2 tracking-tight min-w-0 flex-1"
+                        className="font-bold text-base h-auto py-1 px-2 tracking-tight min-w-0 flex-1"
                       />
                     ) : (
                       <button
                         onClick={() => { setEditingPlanName(true); setLocalPlanName(plan.name); }}
-                        className="font-black text-base tracking-tight truncate hover:text-muted-foreground transition-colors text-left min-w-0 flex-1"
+                        className="font-bold text-base tracking-tight truncate hover:text-muted-foreground transition-colors text-left min-w-0 flex-1"
                       >
                         {plan.name}
                       </button>
                     )}
 
-                    {/* Close drawer */}
-                    <button
-                      onClick={() => onOpenChange(false)}
-                      className="text-xs font-bold text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1 rounded-md hover:bg-muted"
-                    >
-                      Close
-                    </button>
+                    {/* Build readout — the rail's number, for anyone who needs
+                        the count rather than the bar */}
+                    <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] tabular-nums text-muted-foreground antialiased">
+                      {builtDays}/{allDays.length} built
+                    </span>
                   </div>
                 </SheetTitle>
                 <SheetDescription className="sr-only">
@@ -565,7 +664,7 @@ export function PlanEditorDrawer({
                             )}
                           >
                             <span className={cn(
-                              'text-[11px] font-black tabular-nums w-5 shrink-0 select-none',
+                              'font-mono text-[11px] font-bold tabular-nums w-5 shrink-0 select-none',
                               isActive ? 'text-background/50' : 'text-muted-foreground'
                             )}>
                               {String(idx + 1).padStart(2, '0')}
@@ -573,13 +672,30 @@ export function PlanEditorDrawer({
                             <span className="flex-1 min-w-0 text-[13px] font-bold leading-snug truncate antialiased">
                               {day.name || `Day ${idx + 1}`}
                             </span>
-                            <span className={cn(
-                              'text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md shrink-0',
-                              isActive
-                                ? 'bg-background/20 text-background'
-                                : 'bg-muted/80 text-muted-foreground'
-                            )}>
-                              {exerciseCount || '—'}
+                            {/* Readiness, not a count badge: a volt dot for a
+                                day that's programmed, a hollow ring for one
+                                that isn't. The old "—" chip read as blocked. */}
+                            {exerciseCount > 0 ? (
+                              <span className="flex items-center gap-1.5 shrink-0">
+                                <span className={cn(
+                                  'font-mono text-[10px] tabular-nums font-bold',
+                                  isActive ? 'text-background/70' : 'text-muted-foreground'
+                                )}>
+                                  {exerciseCount}
+                                </span>
+                                <span className="h-2 w-2 rounded-full bg-brand" aria-hidden="true" />
+                              </span>
+                            ) : (
+                              <span
+                                className={cn(
+                                  'h-2 w-2 rounded-full border shrink-0',
+                                  isActive ? 'border-background/40' : 'border-muted-foreground/40'
+                                )}
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span className="sr-only">
+                              {exerciseCount > 0 ? `${exerciseCount} exercises` : 'not programmed yet'}
                             </span>
                           </button>
                         );
@@ -608,14 +724,29 @@ export function PlanEditorDrawer({
                           <span className="text-xs font-bold truncate max-w-[120px]">
                             {day.name || `Day ${idx + 1}`}
                           </span>
-                          {exerciseCount > 0 && (
-                            <span className={cn(
-                              'font-mono text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md',
-                              isActive ? 'bg-background/20 text-background' : 'bg-foreground/10 text-muted-foreground'
-                            )}>
-                              {exerciseCount}
-                            </span>
+                          {/* Same readiness language as the desktop rail */}
+                          {exerciseCount > 0 ? (
+                            <>
+                              <span className={cn(
+                                'font-mono text-[10px] tabular-nums font-bold',
+                                isActive ? 'text-background/70' : 'text-muted-foreground'
+                              )}>
+                                {exerciseCount}
+                              </span>
+                              <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                            </>
+                          ) : (
+                            <span
+                              className={cn(
+                                'h-1.5 w-1.5 rounded-full border',
+                                isActive ? 'border-background/40' : 'border-muted-foreground/40'
+                              )}
+                              aria-hidden="true"
+                            />
                           )}
+                          <span className="sr-only">
+                            {exerciseCount > 0 ? `${exerciseCount} exercises` : 'not programmed yet'}
+                          </span>
                         </button>
                       );
                     })}
@@ -641,9 +772,11 @@ export function PlanEditorDrawer({
                   dayName={currentDay?.name || (currentDay ? `Day ${clampedDay + 1}` : null)}
                 />
               ) : currentDay ? (
-              <div className="flex-1 min-h-0 overflow-y-auto">
+              // Column, not a plain block: it lets the empty state claim the
+              // leftover height and sit in the middle of the pane
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
                 {/* Day name & briefing — seamless inline fields, no boxed inputs */}
-                <div className="px-4 sm:px-5 pt-4 pb-3 border-b">
+                <div className="shrink-0 px-4 sm:px-5 pt-4 pb-3 border-b">
                   <Input
                     ref={dayNameInputRef}
                     value={localDayName}
@@ -672,7 +805,7 @@ export function PlanEditorDrawer({
 
                 {/* Exercise count header */}
                 {currentDay.exercises.length > 0 && (
-                  <div className="px-4 sm:px-5 py-2.5 border-b flex items-center justify-between">
+                  <div className="shrink-0 px-4 sm:px-5 py-2.5 border-b flex items-center justify-between">
                     <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
                       Exercises
                     </span>
@@ -682,26 +815,18 @@ export function PlanEditorDrawer({
                   </div>
                 )}
 
-                {/* Exercise List */}
-                <div className="divide-y">
-                  {currentDay.exercises.length === 0 ? (
-                    <div className="flex flex-col items-center py-16 px-8 text-center animate-fade-in-up">
-                      <div className="text-5xl select-none mb-4" role="img" aria-label="weightlifter">🏋️</div>
-                      <p className="text-base font-black mb-1 tracking-tight">No exercises yet</p>
-                      <p className="text-sm text-muted-foreground mb-6 antialiased max-w-[240px]">
-                        Tap below to start building this workout
-                      </p>
-                      <Button
-                        onClick={handleAddExercise}
-                        size="lg"
-                        className="active:scale-[0.96] transition-transform duration-150 shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add First Exercise
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
+                {/* Exercise list — or, with nothing in it yet, the empty state
+                    as a sibling so it can take the pane's leftover height */}
+                {currentDay.exercises.length === 0 ? (
+                  <EmptyDay
+                    dayLabel={currentDay.name || `Day ${clampedDay + 1}`}
+                    onAdd={handleAddExercise}
+                  />
+                ) : (
+                  // shrink-0 matters: this is a flex child of a scroll
+                  // container with a definite height, so without it a long
+                  // list compresses instead of scrolling
+                  <div className="divide-y shrink-0">
                       {(() => {
                         let idx = 0;
                         return groupBySuperset(currentDay.exercises).map((group) => {
@@ -757,9 +882,8 @@ export function PlanEditorDrawer({
                         <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
                         Add Exercise
                       </button>
-                    </>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
               ) : (
                 <div className="flex-1 flex flex-col items-center justify-center gap-2 p-8 text-center">

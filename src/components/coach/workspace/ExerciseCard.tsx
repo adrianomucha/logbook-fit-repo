@@ -33,7 +33,7 @@ export function ExerciseCard({
     >
       <div className="flex items-center gap-3">
         {/* Exercise number — bold counter */}
-        <span className="text-[11px] font-black text-muted-foreground w-5 shrink-0 tabular-nums select-none">
+        <span className="font-mono text-[11px] font-bold text-muted-foreground w-5 shrink-0 tabular-nums select-none">
           {String(exerciseIndex + 1).padStart(2, '0')}
         </span>
 
