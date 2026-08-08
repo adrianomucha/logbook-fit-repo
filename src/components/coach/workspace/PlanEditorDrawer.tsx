@@ -11,10 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Plus,
-  ChevronLeft,
-  ChevronRight,
   Link2,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
 import { parsePrescriptionInput } from '@/lib/reps';
@@ -75,7 +74,7 @@ function EmptyDay({ dayLabel, onAdd }: { dayLabel: string; onAdd: () => void }) 
         onClick={onAdd}
         className="h-11 gap-2 rounded-xl bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="w-4 h-4" aria-hidden="true" />
         Add first exercise
       </Button>
     </div>
@@ -182,27 +181,70 @@ export function PlanEditorDrawer({
     setSelectedDayId(day?.id ?? null);
   }, [resetKey, plan, initialWeekIndex, initialDayIndex]);
 
-  // Navigate weeks — abandon any in-flight exercise edit, it belongs to the old day
-  const goToPrevWeek = () => {
-    if (selectedWeek > 0) {
-      closeExerciseEditor();
-      setSelectedWeek(selectedWeek - 1);
-      setSelectedDayId(null); // will auto-select first day via effect
-    }
-  };
-
-  const goToNextWeek = () => {
-    if (plan && selectedWeek < plan.weeks.length - 1) {
-      closeExerciseEditor();
-      setSelectedWeek(selectedWeek + 1);
-      setSelectedDayId(null); // will auto-select first day via effect
-    }
+  // Jump to a week — abandon any in-flight exercise edit, it belongs to the old day
+  const goToWeek = (index: number) => {
+    if (!plan || index < 0 || index > plan.weeks.length - 1 || index === clampedWeek) return;
+    closeExerciseEditor();
+    setSelectedWeek(index);
+    setSelectedDayId(null); // will auto-select first day via effect
   };
 
   const handleSelectDay = (dayId: string) => {
     closeExerciseEditor();
     setSelectedDayId(dayId);
   };
+
+  // Arrow keys walk the plan: ←/→ across weeks, ↑/↓ down the days. Building a
+  // 4×5 mesocycle means visiting twenty days, and reaching for the mouse each
+  // time is the slowest part of the job.
+  useEffect(() => {
+    if (!open || !plan || exerciseDrawerOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      // Never steal arrows from a field the coach is typing in
+      const el = e.target as HTMLElement | null;
+      if (
+        el &&
+        (el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          el.tagName === 'SELECT' ||
+          el.isContentEditable)
+      ) {
+        return;
+      }
+
+      const week = plan.weeks[clampedWeek];
+      const days = week?.days ?? [];
+      const dayIdx = days.findIndex((d) => d.id === selectedDayId);
+      const current = dayIdx >= 0 ? dayIdx : 0;
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          goToWeek(clampedWeek - 1);
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          goToWeek(clampedWeek + 1);
+          break;
+        case 'ArrowUp':
+          if (current > 0) {
+            e.preventDefault();
+            handleSelectDay(days[current - 1].id);
+          }
+          break;
+        case 'ArrowDown':
+          if (current < days.length - 1) {
+            e.preventDefault();
+            handleSelectDay(days[current + 1].id);
+          }
+          break;
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, plan, exerciseDrawerOpen, clampedWeek, selectedDayId]);
 
   // Open exercise drawer for new exercise
   const handleAddExercise = () => {
@@ -281,7 +323,9 @@ export function PlanEditorDrawer({
         });
       }
     } catch (err) {
+      // A silent console.error left the coach believing the exercise saved
       console.error('Failed to save exercise:', err);
+      toast.error('Couldn’t save that exercise. Check your connection and try again.');
       return; // Don't refresh on error
     } finally {
       setIsSaving(false);
@@ -302,6 +346,7 @@ export function PlanEditorDrawer({
       });
     } catch (err) {
       console.error('Failed to delete exercise:', err);
+      toast.error('Couldn’t remove that exercise. Check your connection and try again.');
       return;
     } finally {
       setIsSaving(false);
@@ -422,7 +467,7 @@ export function PlanEditorDrawer({
           e.preventDefault();
           (e.currentTarget as HTMLElement | null)?.focus();
         }}
-        className="w-full sm:max-w-[880px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible focus:outline-none [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden"
+        className="w-full sm:max-w-[880px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible overscroll-contain focus:outline-none [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden"
       >
         {/* Loading state — skeleton */}
         {isLoading && !plan && (
@@ -571,6 +616,7 @@ export function PlanEditorDrawer({
                         placeholder="Plan name"
                         maxLength={100}
                         aria-label="Plan name"
+                        autoComplete="off"
                         autoFocus
                         className="font-bold text-base h-auto py-1 px-2 tracking-tight min-w-0 flex-1"
                       />
@@ -605,35 +651,60 @@ export function PlanEditorDrawer({
                 exerciseDrawerOpen && 'hidden sm:flex'
               )}>
                 {/* Week stepper — one grouped control instead of chevrons floating at the rail edges */}
-                <div className="px-2 pt-2 sm:px-3 sm:pt-3 pb-1 shrink-0">
-                  <div className="flex items-center justify-between gap-0.5 rounded-lg bg-muted/60 p-0.5">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn(
-                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.92] transition-[background-color,color,transform]',
-                        selectedWeek === 0 && 'opacity-20 pointer-events-none'
-                      )}
-                      onClick={goToPrevWeek}
-                      disabled={selectedWeek === 0}
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </Button>
-                    <span className="font-mono text-[11px] font-semibold tabular-nums antialiased select-none">
-                      Week {selectedWeek + 1} <span className="text-muted-foreground font-normal">of {plan.weeks.length}</span>
+                {/* px-3 on mobile lines the tiles up with the day pills below;
+                    px-2 on desktop lines them up with the day rows */}
+                <div className="px-3 pt-2.5 sm:px-2 sm:pt-3 pb-2 shrink-0">
+                  <div className="flex items-baseline justify-between gap-2 px-2.5 pb-1.5">
+                    <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium antialiased">
+                      Weeks
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn(
-                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.92] transition-[background-color,color,transform]',
-                        selectedWeek === plan.weeks.length - 1 && 'opacity-20 pointer-events-none'
-                      )}
-                      onClick={goToNextWeek}
-                      disabled={selectedWeek === plan.weeks.length - 1}
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Button>
+                    <span className="font-mono text-[10px] tabular-nums text-muted-foreground/70 antialiased">
+                      {plan.weeks.filter((w) => w.days?.some((d) => (d.exercises?.length ?? 0) > 0)).length}
+                      /{plan.weeks.length} started
+                    </span>
+                  </div>
+                  {/* One tile per week, each carrying its own build meter. The
+                      old chevron stepper meant three clicks to reach week 4 and
+                      no way to see which weeks were still empty. */}
+                  <div className="flex gap-1.5 overflow-x-auto scrollbar-hide snap-x pb-0.5">
+                    {plan.weeks.map((w, i) => {
+                      const days = w.days ?? [];
+                      const ready = days.filter((d) => (d.exercises?.length ?? 0) > 0).length;
+                      const pct = days.length > 0 ? (ready / days.length) * 100 : 0;
+                      const isActive = clampedWeek === i;
+                      return (
+                        <button
+                          key={w.id}
+                          onClick={() => goToWeek(i)}
+                          aria-current={isActive ? 'true' : undefined}
+                          className={cn(
+                            'shrink-0 snap-start flex h-11 w-12 flex-col items-center justify-center gap-1.5 rounded-lg touch-manipulation transition-[background-color,color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                            isActive
+                              ? 'bg-foreground text-background'
+                              : 'bg-muted/60 hover:bg-muted text-foreground'
+                          )}
+                        >
+                          <span className="font-mono text-[11px] font-bold tabular-nums leading-none">
+                            {i + 1}
+                          </span>
+                          <span
+                            className={cn(
+                              'block h-1 w-6 overflow-hidden rounded-full',
+                              isActive ? 'bg-background/25' : 'bg-foreground/10'
+                            )}
+                            aria-hidden="true"
+                          >
+                            <span
+                              className="block h-full bg-brand transition-[width] duration-300 ease-out"
+                              style={{ width: `${pct}%` }}
+                            />
+                          </span>
+                          <span className="sr-only">
+                            Week {i + 1}, {ready} of {days.length} days programmed
+                          </span>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -701,6 +772,21 @@ export function PlanEditorDrawer({
                         );
                       })}
                     </div>
+
+                    {/* Shortcut hint — teaches the arrow keys in the space the
+                        day list leaves empty, instead of hiding them */}
+                    <p className="mt-4 px-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground/60 antialiased select-none">
+                      <span className="flex items-center gap-1">
+                        <kbd className="rounded border border-border px-1 py-px">↑</kbd>
+                        <kbd className="rounded border border-border px-1 py-px">↓</kbd>
+                        days
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <kbd className="rounded border border-border px-1 py-px">←</kbd>
+                        <kbd className="rounded border border-border px-1 py-px">→</kbd>
+                        weeks
+                      </span>
+                    </p>
                   </div>
                 )}
 
@@ -786,9 +872,10 @@ export function PlanEditorDrawer({
                       if (e.key === 'Enter') dayNameInputRef.current?.blur();
                       if (e.key === 'Escape') { setLocalDayName(currentDay?.name || ''); dayNameInputRef.current?.blur(); }
                     }}
-                    placeholder={`Day ${clampedDay + 1}: name this workout`}
+                    placeholder={`Day ${clampedDay + 1}: name this workout…`}
                     maxLength={80}
                     aria-label="Workout name"
+                    autoComplete="off"
                     className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-lg font-semibold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
                   />
                   <Textarea
@@ -856,7 +943,7 @@ export function PlanEditorDrawer({
                               style={{ animationDelay: `${baseIdx * 40}ms`, animationFillMode: 'backwards' }}
                             >
                               <div className="flex items-center gap-1.5 px-4 pb-1">
-                                <Link2 className="w-3 h-3 text-muted-foreground/60" />
+                                <Link2 className="w-3 h-3 text-muted-foreground/60" aria-hidden="true" />
                                 <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
                                   Superset
                                 </span>
@@ -879,7 +966,7 @@ export function PlanEditorDrawer({
                         onClick={handleAddExercise}
                         className="w-full px-4 py-3.5 sm:py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
                       >
-                        <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
+                        <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" aria-hidden="true" />
                         Add Exercise
                       </button>
                   </div>
