@@ -164,13 +164,6 @@ export function ClientDashboard() {
     [checkIns]
   );
 
-  // Sent, waiting on the coach. Without this the check-in simply disappeared
-  // from every client surface between submitting and the coach replying.
-  const awaitingCoachCheckIn = useMemo(
-    () => checkIns.find((c) => c.status === 'responded') ?? null,
-    [checkIns]
-  );
-
   // Build adapted workout completions from week overview
   const clientWorkoutCompletions: WorkoutCompletion[] = useMemo(() => {
     if (!weekOverview || !client) return [];
@@ -525,25 +518,10 @@ export function ClientDashboard() {
           </section>
         )}
 
-        {/* Answered, waiting on the coach. Without this the check-in vanished
-            from every client surface the moment it was submitted, so a client
-            who had just written up their week saw no trace of it. */}
-        {!pendingCheckIn && awaitingCoachCheckIn && (
-          <section aria-label="Check-in sent">
-            <div className="rounded-xl border border-border/70 bg-card px-4 py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
-                Weekly check-in
-              </p>
-              <p className="text-[15px] font-bold tracking-tight antialiased">
-                Sent — {coach?.user.name?.split(' ')[0] ?? 'your coach'} is reviewing it
-              </p>
-              <p className="text-sm text-muted-foreground mt-1 antialiased">
-                You&apos;ll see their reply here when it lands.
-              </p>
-            </div>
-          </section>
-        )}
+        {/* No banner between submitting a check-in and the coach replying:
+            the form's own "Sent" screen is the confirmation, and the reply
+            arrives as CoachFeedbackCard. A card that only says "waiting" sat
+            at the top of the dashboard for days with nothing to act on. */}
 
         {/* Plan complete — the last week must not replay as if un-started */}
         {currentView === 'workout' && planEnded && (
