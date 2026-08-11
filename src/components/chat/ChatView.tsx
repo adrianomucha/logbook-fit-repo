@@ -3,6 +3,7 @@ import { Message, Client } from '@/types';
 import { Send, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { avatarColor } from '@/lib/avatar-colors';
 import { toast } from 'sonner';
 
 // Server-side cap on message content (sendMessageSchema)
@@ -28,6 +29,14 @@ interface ChatViewProps {
   peerName?: string;
   /** Optional: tappable conversation starter chips for the empty state */
   conversationStarters?: string[];
+  /**
+   * Visual voice. 'default' is the quiet monochrome chat the coach dashboard
+   * uses. 'brand' is the client-facing treatment: volt outgoing bubbles, the
+   * peer's avatar beside incoming groups, a warmer empty state, and a "Seen"
+   * receipt — the conversation reads as the product's own, not a generic
+   * messenger.
+   */
+  variant?: 'default' | 'brand';
 }
 
 /**
@@ -69,7 +78,9 @@ export function ChatView({
   heightClass = 'h-[350px] sm:h-[600px]',
   peerName,
   conversationStarters,
+  variant = 'default',
 }: ChatViewProps) {
+  const isBrand = variant === 'brand';
   const [newMessage, setNewMessage] = useState('');
   const [unseenCount, setUnseenCount] = useState(0);
   const [isLoadingEarlier, setIsLoadingEarlier] = useState(false);
@@ -218,7 +229,9 @@ export function ChatView({
   );
 
   const chatLabel = `Chat with ${client.name}`;
-  const peerFirst = peerName?.split(' ')[0] || client.name?.split(' ')[0] || 'Coach';
+  // Full name drives the deterministic avatar color; first name drives copy
+  const peerLabel = peerName || client.name || 'Coach';
+  const peerFirst = peerLabel.split(' ')[0];
 
   // Pre-compute grouping info for each message
   const groupInfo = useMemo(() => {
@@ -279,14 +292,41 @@ export function ChatView({
 
               {/* Empty state */}
               {clientMessages.length === 0 && (
-                <div className="flex flex-col items-center justify-center text-center space-y-4 min-h-[200px] py-8">
+                <div className={cn(
+                  'flex flex-col items-center justify-center text-center space-y-4 min-h-[200px] py-8',
+                  isBrand && 'animate-fade-in-up'
+                )}>
                   <div className="space-y-2">
-                    <div className="text-3xl select-none mb-1">👋</div>
-                    <p className="text-sm font-medium antialiased">
-                      Start the conversation
+                    {isBrand ? (
+                      /* The person, not a pictogram — this thread is the
+                         coaching relationship, so lead with the coach */
+                      <div
+                        className={cn(
+                          'relative w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3',
+                          avatarColor(peerLabel)
+                        )}
+                        aria-hidden="true"
+                      >
+                        <span className="text-lg font-bold uppercase">{peerLabel.charAt(0)}</span>
+                        {/* Volt presence dot — same accent the avatars in the
+                            coach empty states carry */}
+                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-brand ring-2 ring-card animate-bounce-once" />
+                      </div>
+                    ) : (
+                      <div className="text-3xl select-none mb-1">👋</div>
+                    )}
+                    {isBrand && (
+                      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                        Direct line
+                      </p>
+                    )}
+                    <p className={cn('antialiased', isBrand ? 'text-lg font-bold tracking-tight' : 'text-sm font-medium')}>
+                      {isBrand ? `Talk to ${peerFirst}` : 'Start the conversation'}
                     </p>
-                    <p className="text-xs text-muted-foreground antialiased">
-                      Drop {peerFirst} a note. They&apos;ll see it next time they open the app.
+                    <p className={cn('text-muted-foreground antialiased', isBrand ? 'text-sm max-w-[280px] mx-auto leading-relaxed' : 'text-xs')}>
+                      {isBrand
+                        ? `Questions, wins, sore spots — it all helps ${peerFirst} coach you better.`
+                        : <>Drop {peerFirst} a note. They&apos;ll see it next time they open the app.</>}
                     </p>
                   </div>
                   {conversationStarters && conversationStarters.length > 0 && (
@@ -298,7 +338,12 @@ export function ChatView({
                             setNewMessage(starter);
                             inputRef.current?.focus();
                           }}
-                          className="text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground hover:bg-foreground hover:text-background active:scale-[0.97] transition-[background-color,color,transform] duration-150 touch-manipulation min-h-[44px]"
+                          className={cn(
+                            'text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground active:scale-[0.97] transition-[background-color,color,transform] duration-150 touch-manipulation min-h-[44px]',
+                            isBrand
+                              ? 'hover:bg-brand hover:text-brand-foreground'
+                              : 'hover:bg-foreground hover:text-background'
+                          )}
                         >
                           {starter}
                         </button>
@@ -326,16 +371,37 @@ export function ChatView({
 
                     <div
                       className={cn(
-                        'flex',
+                        'flex items-end gap-2',
                         isCurrentUser ? 'justify-end' : 'justify-start',
                         isFirstInGroup ? 'mt-4' : 'mt-[5px]'
                       )}
                     >
+                      {/* Peer avatar — anchors incoming groups to the coach.
+                          The gutter stays on every incoming row so grouped
+                          bubbles keep a straight left edge. */}
+                      {isBrand && !isCurrentUser && (
+                        <div className="w-7 shrink-0" aria-hidden="true">
+                          {isLastInGroup && (
+                            <div
+                              className={cn(
+                                'w-7 h-7 rounded-full flex items-center justify-center',
+                                avatarColor(peerLabel)
+                              )}
+                            >
+                              <span className="text-[10px] font-bold uppercase">
+                                {peerLabel.charAt(0)}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                       <div
                         className={cn(
                           'max-w-[80%] sm:max-w-[65%] px-4 py-2.5',
                           isCurrentUser
-                            ? 'bg-foreground text-background'
+                            ? isBrand
+                              ? 'bg-brand text-brand-foreground'
+                              : 'bg-foreground text-background'
                             : 'bg-muted/50'
                         )}
                         style={{ borderRadius: bubbleRadius(isCurrentUser, isFirstInGroup, isLastInGroup) }}
@@ -345,8 +411,14 @@ export function ChatView({
                           <div className={cn(
                             'rounded-lg px-3 py-2.5 mb-2 -mx-0.5',
                             isCurrentUser
-                              ? 'bg-background/10'
-                              : 'bg-muted/50'
+                              ? isBrand
+                                // Dark-on-volt tint + rail — quoted context
+                                // in the same voice as the coach-note strips
+                                ? 'bg-brand-foreground/10 border-l-2 border-brand-foreground/30'
+                                : 'bg-background/10'
+                              : isBrand
+                                ? 'bg-background/60 border-l-2 border-brand'
+                                : 'bg-muted/50'
                           )}>
                             <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-50 mb-0.5">Exercise</p>
                             <p className="text-sm font-bold tracking-tight truncate">{message.exerciseContext.exerciseName}</p>
@@ -368,10 +440,21 @@ export function ChatView({
                     {/* Timestamp — only after last message in a group */}
                     {isLastInGroup && (
                       <p className={cn(
-                        'font-mono text-[10px] text-muted-foreground mt-1.5 px-0.5',
-                        isCurrentUser ? 'text-right' : 'text-left'
+                        'font-mono text-[10px] text-muted-foreground mt-1.5',
+                        isCurrentUser
+                          ? 'px-0.5 text-right'
+                          : isBrand
+                            ? 'pl-9 pr-0.5 text-left' // clear the avatar gutter
+                            : 'px-0.5 text-left'
                       )}>
                         {format(msgDate, 'h:mm a')}
+                        {/* Read receipt — only on the newest message, and only
+                            when the other side has actually opened it */}
+                        {isBrand &&
+                          isCurrentUser &&
+                          idx === clientMessages.length - 1 &&
+                          message.read &&
+                          ' · Seen'}
                       </p>
                     )}
                   </div>
@@ -387,7 +470,12 @@ export function ChatView({
           <div className="flex justify-center -mt-4 mb-1 relative z-10">
             <button
               onClick={() => scrollToBottom(false)}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-foreground text-background text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg hover:bg-foreground/90 transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-full tap-target"
+              className={cn(
+                'flex items-center gap-1.5 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-full tap-target',
+                isBrand
+                  ? 'bg-brand text-brand-foreground hover:bg-brand/90'
+                  : 'bg-foreground text-background hover:bg-foreground/90'
+              )}
             >
               <ChevronDown className="w-3 h-3" />
               {unseenCount === 1 ? '1 new' : `${unseenCount} new`}
@@ -424,7 +512,10 @@ export function ChatView({
               className={cn(
                 'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-[background-color,color,transform] duration-200 ease-out touch-manipulation tap-target',
                 hasInput
-                  ? 'bg-foreground text-background hover:bg-foreground/90 active:scale-95 scale-100'
+                  ? isBrand
+                    // Volt = "go", same as the workout CTA
+                    ? 'bg-brand text-brand-foreground hover:bg-brand/90 active:scale-95 scale-100'
+                    : 'bg-foreground text-background hover:bg-foreground/90 active:scale-95 scale-100'
                   : 'bg-muted/40 text-muted-foreground/30 scale-90 pointer-events-none'
               )}
               aria-label="Send message"

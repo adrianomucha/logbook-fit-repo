@@ -28,9 +28,9 @@ import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
+import { ClientChatHeader } from '@/components/client/ClientChatHeader';
 import { WelcomeAwaitingPlan } from '@/components/client/WelcomeAwaitingPlan';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
-import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserMinus } from 'lucide-react';
@@ -427,13 +427,7 @@ export function ClientDashboard() {
         )}>
           {isChat ? (
             <>
-              <div className="shrink-0 py-4 flex items-end justify-between gap-3">
-                <div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
-                  <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
-                </div>
-                <NotificationToggle className="shrink-0" />
-              </div>
+              <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} />
               <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
                 <ChatView
                   client={client}
@@ -450,6 +444,7 @@ export function ClientDashboard() {
                     'Here’s what I want to work on…',
                     'Anything you need from me?',
                   ]}
+                  variant="brand"
                 />
               </div>
             </>
@@ -640,13 +635,7 @@ export function ClientDashboard() {
 
         {currentView === 'chat' && coachUserId && (
           <>
-            <div className="shrink-0 py-4 flex items-end justify-between gap-3">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Messages</p>
-                <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">{coach?.user.name ?? 'Coach'}</h1>
-              </div>
-              <NotificationToggle className="shrink-0" />
-            </div>
+            <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} />
             {/* Contained module — hairline card, matching the rest of the client pages */}
             <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
               <ChatView
@@ -664,6 +653,7 @@ export function ClientDashboard() {
                   'Feeling sore today',
                   'Can we adjust my plan?',
                 ]}
+                variant="brand"
               />
             </div>
           </>
