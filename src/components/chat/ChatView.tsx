@@ -420,13 +420,27 @@ export function ChatView({
                                 ? 'bg-background/60 border-l-2 border-brand'
                                 : 'bg-muted/50'
                           )}>
-                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-50 mb-0.5">Exercise</p>
+                            {/* Label opacities are contrast-bound (WCAG AA 4.5:1):
+                                on the volt bubble opacity-50 measures 2.8:1, so
+                                outgoing needs 80; incoming needs 70 (50 was 3.7:1
+                                on light). Only the default outgoing bubble keeps
+                                the original 50 (5.0:1 on near-black). */}
+                            <p className={cn(
+                              'text-[10px] uppercase tracking-[0.12em] font-medium mb-0.5',
+                              isCurrentUser ? (isBrand ? 'opacity-80' : 'opacity-50') : 'opacity-70'
+                            )}>Exercise</p>
                             <p className="text-sm font-bold tracking-tight truncate">{message.exerciseContext.exerciseName}</p>
-                            <p className="text-[10px] uppercase tracking-[0.12em] font-medium opacity-50 mt-0.5">
+                            <p className={cn(
+                              'text-[10px] uppercase tracking-[0.12em] font-medium mt-0.5',
+                              isCurrentUser ? (isBrand ? 'opacity-80' : 'opacity-50') : 'opacity-70'
+                            )}>
                               {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets
                             </p>
                             {message.exerciseContext.flagNote && (
-                              <p className="font-prose text-[13px] mt-1.5 italic border-l-2 border-current/20 pl-2 opacity-70">
+                              <p className={cn(
+                                'font-prose text-[13px] mt-1.5 italic border-l-2 border-current/20 pl-2',
+                                isBrand && isCurrentUser ? 'opacity-80' : 'opacity-70'
+                              )}>
                                 &ldquo;{message.exerciseContext.flagNote}&rdquo;
                               </p>
                             )}
