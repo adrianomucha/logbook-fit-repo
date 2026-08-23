@@ -1,13 +1,12 @@
 import { Client, WorkoutCompletion } from '@/types';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
 import { StatusHeader } from './StatusHeader';
-import { TodayActionCard, ActionState } from './TodayActionCard';
+import { SessionCompleteCard } from './SessionCompleteCard';
 import { CoachContextStrip } from './CoachContextStrip';
-import { QuickEffortFeedback } from './QuickEffortFeedback';
 import { WorkoutOverview } from './WorkoutOverview';
-import { Button } from '@/components/ui/button';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
-import { RotateCcw } from 'lucide-react';
+
+type ActionState = 'scheduled' | 'in-progress' | 'completed';
 
 interface TodayFocusViewProps {
   client: Client;
@@ -59,7 +58,6 @@ export function TodayFocusView({
   const actionState = getActionState(todayCompletion);
   const completionPct = todayCompletion?.completionPct || 0;
 
-  const showFeedbackPrompt = actionState === 'completed' && !feedbackSubmitted && !todayCompletion?.effortRating;
   const showFeedbackSent = actionState === 'completed' && (feedbackSubmitted || !!todayCompletion?.effortRating);
 
   const showOverview = (actionState === 'scheduled' || actionState === 'in-progress') && todayWorkout?.workoutDay;
@@ -89,32 +87,20 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Fallback to action card for the completed state */}
-      {actionState === 'completed' && (
+      {/* Completed — one session report instead of a loose stack of cards */}
+      {actionState === 'completed' && todayCompletion && (
         <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
-          <TodayActionCard
-            state={actionState}
-            workoutName={todayWorkout?.workoutDay?.name}
-            exerciseCount={todayWorkout?.workoutDay?.exercises?.length}
-            completionPct={completionPct}
-            onAction={onMessageCoach}
-            hideCta={showFeedbackSent}
+          <SessionCompleteCard
+            workoutDay={todayWorkout?.workoutDay}
+            completion={todayCompletion}
+            coachName={coachName}
+            feedbackSubmitted={showFeedbackSent}
+            isSendingFeedback={isSendingFeedback}
+            onSendFeedback={onSendFeedback}
+            onRestartWorkout={onRestartWorkout}
+            isRestarting={isRestarting}
+            onMessageCoach={onMessageCoach}
           />
-        </div>
-      )}
-
-      {/* Restart workout button (completed state only) */}
-      {actionState === 'completed' && onRestartWorkout && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={onRestartWorkout}
-            disabled={isRestarting}
-          >
-            <RotateCcw className="w-4 h-4" />
-            {isRestarting ? 'Restarting…' : 'Restart workout'}
-          </Button>
         </div>
       )}
 
@@ -126,13 +112,6 @@ export function TodayFocusView({
             coachAvatar={coachAvatar}
             note={coachNote}
           />
-        </div>
-      )}
-
-      {/* Quick Effort Feedback */}
-      {showFeedbackPrompt && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          <QuickEffortFeedback onSubmit={onSendFeedback} isSubmitting={isSendingFeedback} />
         </div>
       )}
 

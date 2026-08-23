@@ -10,6 +10,8 @@ type EffortRating = 'EASY' | 'MEDIUM' | 'HARD';
 interface QuickEffortFeedbackProps {
   onSubmit: (rating: EffortRating, notes?: string) => void;
   isSubmitting?: boolean;
+  /** Render without the card shell — for embedding inside another module */
+  bare?: boolean;
 }
 
 const effortOptions: { value: EffortRating; label: string; selectedClass: string }[] = [
@@ -18,7 +20,7 @@ const effortOptions: { value: EffortRating; label: string; selectedClass: string
   { value: 'HARD', label: 'Hard', selectedClass: 'text-warning bg-warning/10 border-warning/40 ring-1 ring-warning/20' },
 ];
 
-export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEffortFeedbackProps) {
+export function QuickEffortFeedback({ onSubmit, isSubmitting = false, bare = false }: QuickEffortFeedbackProps) {
   const [selectedRating, setSelectedRating] = useState<EffortRating | null>(null);
   const [notes, setNotes] = useState('');
   const [showNotes, setShowNotes] = useState(false);
@@ -30,16 +32,21 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
     onSubmit(selectedRating, notes.trim() || undefined);
   };
 
-  return (
-    <Card className="border-border shadow-none">
-      <CardContent className="p-5 sm:p-6">
+  const body = (
+    <>
         <p id={promptId} className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground mb-3">
           How did that feel?
         </p>
 
         {/* Named group + aria-pressed: selection was communicated by colour
             alone, and the buttons carried no reference to the question. */}
-        <div role="group" aria-labelledby={promptId} className="flex gap-2.5 mb-4">
+        <div
+          role="group"
+          aria-labelledby={promptId}
+          // The gap only earns its keep once the note link / send button
+          // renders below — unselected, the row is the section's last element
+          className={cn('flex gap-2.5', selectedRating ? 'mb-4' : 'mb-0')}
+        >
           {effortOptions.map((option) => {
             const isSelected = selectedRating === option.value;
             return (
@@ -98,7 +105,14 @@ export function QuickEffortFeedback({ onSubmit, isSubmitting = false }: QuickEff
             {isSubmitting ? 'Sending…' : 'Send to coach'}
           </Button>
         )}
-      </CardContent>
+    </>
+  );
+
+  if (bare) return <div>{body}</div>;
+
+  return (
+    <Card className="border-border shadow-none">
+      <CardContent className="p-5 sm:p-6">{body}</CardContent>
     </Card>
   );
 }
