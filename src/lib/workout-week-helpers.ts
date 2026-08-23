@@ -2,6 +2,7 @@ import {
   startOfWeek,
   differenceInDays,
   startOfDay,
+  isToday,
 } from 'date-fns';
 import {
   WorkoutWeek,
@@ -128,14 +129,33 @@ export function getWeekProgress(
 /**
  * Get the workout the client should focus on: a workout they're mid-way
  * through takes priority (they can start any workout from the weekly view,
- * not just the first), then the next uncompleted one, or — if the whole week
- * is done — the last workout (so the completed state and feedback prompt
- * still render).
+ * not just the first), then a workout they finished today — so the Today
+ * card stays on "Done" and the feedback prompt for the rest of the day
+ * instead of immediately advancing to the next workout in the sequence —
+ * then the next uncompleted one, or — if the whole week is done — the last
+ * workout (so the completed state and feedback prompt still render).
  */
 export function getActiveWorkout(weekDays: WeekDayInfo[]): WeekDayInfo | null {
   if (weekDays.length === 0) return null;
+
+  // "Today" is the client's local calendar day: completedAt is an instant,
+  // and the day it falls on is judged from where the client is now.
+  const completedToday = weekDays
+    .filter(
+      (d) =>
+        d.completion?.status === 'COMPLETED' &&
+        d.completion.completedAt &&
+        isToday(new Date(d.completion.completedAt))
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.completion!.completedAt!).getTime() -
+        new Date(a.completion!.completedAt!).getTime()
+    )[0];
+
   return (
     weekDays.find((d) => d.completion?.status === 'IN_PROGRESS') ??
+    completedToday ??
     weekDays.find((d) => d.status === 'CURRENT') ??
     weekDays[weekDays.length - 1]
   );
