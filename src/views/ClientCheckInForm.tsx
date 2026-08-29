@@ -8,7 +8,7 @@ import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
-// Selected states reuse the app's effort color semantics (QuickEffortFeedback,
+// Selected states reuse the app's effort color semantics (SessionCompleteCard,
 // workout history): easy/fresh = success, strained = warning, run down = destructive.
 const EFFORT_OPTIONS: { value: string; label: string; emoji: string; selectedClass: string }[] = [
   { value: 'EASY', label: 'Too Easy', emoji: '😴', selectedClass: 'text-success bg-success/10 border-success/40 ring-1 ring-success/20' },

@@ -1,13 +1,14 @@
 import { Client, WorkoutCompletion } from '@/types';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
 import { StatusHeader } from './StatusHeader';
-import { TodayActionCard, ActionState } from './TodayActionCard';
 import { CoachContextStrip } from './CoachContextStrip';
-import { QuickEffortFeedback } from './QuickEffortFeedback';
 import { WorkoutOverview } from './WorkoutOverview';
+import { SessionCompleteCard } from './SessionCompleteCard';
 import { Button } from '@/components/ui/button';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
 import { RotateCcw } from 'lucide-react';
+
+type ActionState = 'scheduled' | 'in-progress' | 'completed';
 
 interface TodayFocusViewProps {
   client: Client;
@@ -24,7 +25,6 @@ interface TodayFocusViewProps {
   onRestartWorkout?: () => void;
   isRestarting?: boolean;
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
-  onMessageCoach: () => void;
   onViewWeekly: () => void;
   /** Show the "New plan" pill in the header (week 1, nothing started yet) */
   showNewPlan?: boolean;
@@ -52,14 +52,12 @@ export function TodayFocusView({
   onRestartWorkout,
   isRestarting,
   onSendFeedback,
-  onMessageCoach,
   onViewWeekly,
   showNewPlan,
 }: TodayFocusViewProps) {
   const actionState = getActionState(todayCompletion);
   const completionPct = todayCompletion?.completionPct || 0;
 
-  const showFeedbackPrompt = actionState === 'completed' && !feedbackSubmitted && !todayCompletion?.effortRating;
   const showFeedbackSent = actionState === 'completed' && (feedbackSubmitted || !!todayCompletion?.effortRating);
 
   const showOverview = (actionState === 'scheduled' || actionState === 'in-progress') && todayWorkout?.workoutDay;
@@ -89,38 +87,23 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Fallback to action card for the completed state */}
-      {actionState === 'completed' && (
+      {/* Completed hero — session summary + effort feedback in one card */}
+      {actionState === 'completed' && todayCompletion && (
         <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
-          <TodayActionCard
-            state={actionState}
+          <SessionCompleteCard
             workoutName={todayWorkout?.workoutDay?.name}
-            exerciseCount={todayWorkout?.workoutDay?.exercises?.length}
-            completionPct={completionPct}
-            onAction={onMessageCoach}
-            hideCta={showFeedbackSent}
+            completion={todayCompletion}
+            coachName={coachName}
+            feedbackSubmitted={showFeedbackSent}
+            isSubmittingFeedback={isSendingFeedback}
+            onSubmitFeedback={onSendFeedback}
           />
-        </div>
-      )}
-
-      {/* Restart workout button (completed state only) */}
-      {actionState === 'completed' && onRestartWorkout && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>
-          <Button
-            variant="outline"
-            className="w-full gap-2"
-            onClick={onRestartWorkout}
-            disabled={isRestarting}
-          >
-            <RotateCcw className="w-4 h-4" />
-            {isRestarting ? 'Restarting…' : 'Restart workout'}
-          </Button>
         </div>
       )}
 
       {/* Coach Context Strip (only for completed, since overview handles it for scheduled) */}
       {actionState === 'completed' && coachNote && coachName && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '150ms' }}>
+        <div className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>
           <CoachContextStrip
             coachName={coachName}
             coachAvatar={coachAvatar}
@@ -129,10 +112,19 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Quick Effort Feedback */}
-      {showFeedbackPrompt && (
-        <div className="animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          <QuickEffortFeedback onSubmit={onSendFeedback} isSubmitting={isSendingFeedback} />
+      {/* Restart — rare, deliberate action: quiet ghost, never competing with the card */}
+      {actionState === 'completed' && onRestartWorkout && (
+        <div className="animate-fade-in-up flex justify-center" style={{ animationDelay: '150ms' }}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onRestartWorkout}
+            disabled={isRestarting}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+            {isRestarting ? 'Restarting…' : 'Restart workout'}
+          </Button>
         </div>
       )}
 

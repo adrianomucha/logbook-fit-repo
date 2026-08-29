@@ -601,7 +601,6 @@ export function ClientDashboard() {
             onRestartWorkout={handleRestartWorkout}
             isRestarting={isRestartingWorkout}
             onSendFeedback={handleSendFeedback}
-            onMessageCoach={handleMessageCoach}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
             showNewPlan={showNewPlan}
           />
