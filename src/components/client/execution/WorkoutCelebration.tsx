@@ -20,6 +20,9 @@ interface WorkoutCelebrationProps {
 // selection, saving state) don't reshuffle pieces mid-fall.
 type ConfettiPiece = {
   id: number;
+  // Back pieces fall behind the content, front pieces fall over it —
+  // two planes give the burst depth and let it wash over the screen.
+  layer: 'back' | 'front';
   left: number;
   delay: number;
   duration: number;
@@ -32,16 +35,21 @@ type ConfettiPiece = {
 };
 
 function makeConfetti(): ConfettiPiece[] {
-  return Array.from({ length: 36 }, (_, i) => {
-    const rand = (min: number, max: number) => min + Math.random() * (max - min);
+  const rand = (min: number, max: number) => min + Math.random() * (max - min);
+  return Array.from({ length: 72 }, (_, i) => {
+    // Front plane: bigger, faster pieces over the content (1 in 3);
+    // back plane: smaller, slower pieces behind it. The size/speed split
+    // reads as parallax.
+    const front = i % 3 === 0;
     return {
       id: i,
+      layer: front ? ('front' as const) : ('back' as const),
       left: rand(2, 98),
-      delay: rand(0, 0.5),
-      duration: rand(2.4, 3.6),
-      width: rand(5, 9),
-      height: rand(8, 14),
-      drift: rand(-90, 90),
+      delay: front ? rand(0, 0.6) : rand(0, 1),
+      duration: front ? rand(2.1, 3.1) : rand(2.6, 3.9),
+      width: front ? rand(8, 13) : rand(5, 9),
+      height: front ? rand(12, 18) : rand(8, 14),
+      drift: rand(-110, 110),
       rotate: rand(360, 900) * (Math.random() < 0.5 ? -1 : 1),
       round: Math.random() < 0.3,
       // Volt-dominant with foreground accents; theme vars keep the
@@ -121,12 +129,19 @@ export function WorkoutCelebration({
     onEffortRating(rating);
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center overflow-hidden p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-      {/* Confetti burst — decorative, one-shot. Pieces start at opacity-0 so
-          reduced motion (animation: none) leaves nothing frozen on screen. */}
-      <div aria-hidden="true" className="absolute inset-0 pointer-events-none">
-        {confetti.map((piece) => (
+  // Decorative, one-shot. Pieces start at opacity-0 so reduced motion
+  // (animation: none) leaves nothing frozen on screen.
+  const renderConfettiLayer = (layer: ConfettiPiece['layer']) => (
+    <div
+      aria-hidden="true"
+      className={cn(
+        'absolute inset-0 pointer-events-none',
+        layer === 'front' && 'z-10'
+      )}
+    >
+      {confetti
+        .filter((piece) => piece.layer === layer)
+        .map((piece) => (
           <span
             key={piece.id}
             className={cn('confetti-piece opacity-0', piece.round && 'rounded-full')}
@@ -142,7 +157,13 @@ export function WorkoutCelebration({
             } as CSSProperties}
           />
         ))}
-      </div>
+    </div>
+  );
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center overflow-hidden p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      {/* Confetti behind the content */}
+      {renderConfettiLayer('back')}
 
       {/* Celebration header — volt burst with ring pulses and a drawn check */}
       <div className="text-center mb-8">
@@ -274,6 +295,10 @@ export function WorkoutCelebration({
       >
         Skip for now
       </button>
+
+      {/* Confetti over the content — pointer-events-none keeps every
+          control clickable while pieces fall across them */}
+      {renderConfettiLayer('front')}
     </div>
   );
 }
