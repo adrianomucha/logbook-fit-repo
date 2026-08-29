@@ -8,6 +8,7 @@ import { WorkoutHeader } from '@/components/client/execution/WorkoutHeader';
 import { ExerciseCard } from '@/components/client/execution/ExerciseCard';
 import { FinishWorkoutButton } from '@/components/client/execution/FinishWorkoutButton';
 import { FlagMessageSheet } from '@/components/client/execution/FlagMessageSheet';
+import { WorkoutCelebration } from '@/components/client/execution/WorkoutCelebration';
 import type { WorkoutExercise } from '@/types/api';
 import { groupBySuperset, isSuperset, exerciseLabel } from '@/lib/superset';
 import { Link2 } from 'lucide-react';
@@ -15,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
-import { Check, Dumbbell, Flag, Loader2, RotateCcw } from 'lucide-react';
+import { Dumbbell, Flag, Loader2, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 
 export function ClientWorkoutExecution() {
@@ -334,70 +335,15 @@ export function ClientWorkoutExecution() {
   // Celebration overlay with effort rating
   if (showCelebration && completedWorkoutData) {
     return (
-      <div
-        className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]"
-      >
-        {/* Celebration Header — volt burst, mono eyebrow */}
-        <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-in zoom-in duration-300">
-            <Check className="w-10 h-10 text-brand-foreground" strokeWidth={3} />
-          </div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
-            Session complete
-          </p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            {day.name}
-          </h1>
-        </div>
-
-        {/* Workout Summary — flat stat blocks, mono data voice */}
-        <div className="flex gap-2 sm:gap-3 mb-8 sm:mb-10 w-full max-w-xs">
-          <div className="flex-1 bg-muted/60 rounded-xl px-3 py-5 sm:py-6 text-center">
-            <p className="font-mono text-2xl font-bold tabular-nums leading-none">
-              {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
-            </p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">Exercises</p>
-          </div>
-          <div className="flex-1 bg-muted/60 rounded-xl px-3 py-5 sm:py-6 text-center">
-            <p className="font-mono text-2xl font-bold tabular-nums leading-none">
-              {completedWorkoutData.durationMin}
-            </p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">Minutes</p>
-          </div>
-        </div>
-
-        {/* Effort Rating */}
-        <div className="text-center">
-          <p id="celebration-effort-label" className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-4">
-            How did that feel?
-          </p>
-          <div role="group" aria-labelledby="celebration-effort-label" className="flex gap-2 sm:gap-3">
-            {(['EASY', 'MEDIUM', 'HARD'] as const).map((level) => (
-              <button
-                key={level}
-                type="button"
-                onClick={() => handleEffortRating(level)}
-                disabled={isSavingRating}
-                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-foreground text-background font-bold uppercase tracking-wider text-sm hover:bg-foreground/90 active:scale-[0.95] transition-[background-color,transform] duration-150 touch-manipulation min-h-[44px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {level === 'EASY' ? 'Easy' : level === 'MEDIUM' ? 'Medium' : 'Hard'}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* A real control, not a whole-screen click target: the pointer-only
-            "tap anywhere" left keyboard users with no way past this screen
-            except submitting a rating. */}
-        <button
-          type="button"
-          onClick={handleCelebrationDismiss}
-          disabled={isSavingRating}
-          className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors mt-8 min-h-[44px] px-4 rounded-lg touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          Skip for now
-        </button>
-      </div>
+      <WorkoutCelebration
+        workoutName={day.name ?? 'Workout'}
+        exercisesDone={completedWorkoutData.exercisesDone}
+        exercisesTotal={completedWorkoutData.exercisesTotal}
+        durationMin={completedWorkoutData.durationMin}
+        isSavingRating={isSavingRating}
+        onEffortRating={handleEffortRating}
+        onDismiss={handleCelebrationDismiss}
+      />
     );
   }
 

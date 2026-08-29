@@ -65,6 +65,8 @@ module.exports = {
         brand: {
           DEFAULT: "hsl(var(--brand))",
           foreground: "hsl(var(--brand-foreground))",
+          // AA-compliant shade for small volt text on light surfaces
+          text: "hsl(var(--brand-text))",
         },
       },
       borderRadius: {

@@ -40,6 +40,9 @@
        never small text on light backgrounds (contrast). */
     --brand: 74 95% 52%;
     --brand-foreground: 74 90% 8%;
+    /* Text-on-light cut of the volt hue — the bright fill fails AA as small
+       text on white, so eyebrows/labels in brand colour use this shade. */
+    --brand-text: 74 90% 24%;
     /* Content height of the fixed mobile tab bar, excluding the
        home-indicator inset. Every layout that has to clear the bar derives
        its padding from this, so the height lives in exactly one place. */
@@ -77,6 +80,8 @@
     --info-foreground: 0 0% 98%;
     --brand: 74 95% 56%;
     --brand-foreground: 74 90% 8%;
+    /* On dark surfaces the bright volt already clears AA */
+    --brand-text: 74 95% 56%;
   }
 }
 
@@ -214,6 +219,55 @@
     }
   }
 
+  /* Workout celebration: confetti burst. One-shot fall with per-piece
+     drift/spin via CSS vars set inline. Pieces have an opacity-0 base
+     class, so reduced motion (animation: none) leaves nothing visible. */
+  .confetti-piece {
+    position: absolute;
+    top: -6%;
+    animation: confettiFall var(--confetti-duration, 3s)
+      cubic-bezier(0.3, 0.35, 0.6, 0.95) var(--confetti-delay, 0s) forwards;
+    will-change: transform;
+  }
+  @keyframes confettiFall {
+    0% {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) rotate(0deg);
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translate3d(var(--confetti-drift, 0px), 108vh, 0)
+        rotate(var(--confetti-rotate, 540deg));
+    }
+  }
+
+  /* Workout celebration: expanding volt ring pulse around the check badge.
+     Elements carry an opacity-0 base for the same reduced-motion reason. */
+  .animate-celebration-ring {
+    animation: celebrationRing 0.9s cubic-bezier(0.25, 1, 0.5, 1) 0.2s both;
+  }
+  @keyframes celebrationRing {
+    0% {
+      opacity: 0.8;
+      transform: scale(0.7);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(2);
+    }
+  }
+
+  /* Workout celebration: check draws itself after the badge pops.
+     Path "M5 13l4 4L19 7" is ~22 units long. */
+  .animate-celebration-check {
+    stroke-dasharray: 22;
+    stroke-dashoffset: 22;
+    animation: drawCheck 0.45s cubic-bezier(0.65, 0, 0.35, 1) 0.3s both;
+  }
+
   /* Single playful bounce — not repeating */
   .animate-bounce-once {
     animation: bounceOnce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
@@ -244,7 +298,14 @@
   .animate-bounce-once,
   .animate-marquee,
   .animate-tab-pop,
+  .confetti-piece,
+  .animate-celebration-ring,
   [class*="animate-[completionPop"] {
     animation: none !important;
+  }
+  /* The check must still be visible when the draw animation is off */
+  .animate-celebration-check {
+    animation: none !important;
+    stroke-dashoffset: 0;
   }
 }
