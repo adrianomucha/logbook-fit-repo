@@ -173,6 +173,22 @@ export function UnifiedClientProfile() {
     [apiClient]
   );
 
+  // Same seven-day window the check-in panel uses for its "Flagged this week"
+  // section — lets the page skip the whole check-in card when the panel would
+  // have nothing to show (idle, send action already in the header, no flags)
+  const hasRecentFlags = useMemo(() => {
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const recentCompletionIds = new Set(
+      workoutCompletions
+        .filter((wc) => {
+          const at = wc.completedAt ?? wc.startedAt;
+          return !!at && new Date(at).getTime() >= sevenDaysAgo;
+        })
+        .map((wc) => wc.id)
+    );
+    return exerciseFlags.some((ef) => recentCompletionIds.has(ef.workoutCompletionId));
+  }, [workoutCompletions, exerciseFlags]);
+
   // Adapted plan list for AssignPlanModal
   const plansList: WorkoutPlan[] = useMemo(
     () =>
@@ -697,14 +713,14 @@ export function UnifiedClientProfile() {
         </div>
         )}
 
-        {/* Check-in section. Rendered whenever the client has a plan, not only
-            while one is in flight: gating on activeCheckIn hid the panel's
-            "Send Check-in" button, and with the dashboard CTA only appearing
-            for clients already flagged as due, a coach could reach a client
-            with no way to start a check-in at all. With no active check-in the
-            panel shows its compact prompt plus any unaddressed flags. Past
-            check-ins still live in the History tab. */}
-        {plan && (
+        {/* Check-in section — only when it has something to show: an active
+            check-in, recent flags, or the send prompt when the header's
+            primary action is something other than "Send check-in" (the coach
+            must always have some way to start one). The prompt is suppressed
+            inside the panel whenever the header already carries Send, so the
+            same button never appears twice on one screen. Past check-ins
+            still live in the History tab. */}
+        {plan && (activeCheckIn || justSentCheckIn || hasRecentFlags || primaryAction.kind !== 'send') && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
           <SectionCard>
@@ -721,6 +737,7 @@ export function UnifiedClientProfile() {
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
               variant="flat"
+              hideSendPrompt={primaryAction.kind === 'send'}
             />
           </SectionCard>
         </section>
