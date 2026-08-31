@@ -7,11 +7,12 @@ import { formatReps } from '@/lib/reps';
 import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip';
 import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
+import { ImportPlanModal } from '@/components/coach/ImportPlanModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, PartyPopper, FlaskConical, RefreshCw, Trash2 } from 'lucide-react';
+import { Plus, Loader2, PartyPopper, FlaskConical, RefreshCw, Trash2, FileSpreadsheet } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
@@ -91,6 +92,7 @@ export function CoachDashboard() {
   const searchParams = useSearchParams();
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
@@ -182,6 +184,15 @@ export function CoachDashboard() {
     }
   };
 
+  // Imported plans open straight in the editor so the coach can verify the
+  // sheet came through the way they meant it
+  const handlePlanImported = (plan: PlanSummary) => {
+    setShowImportModal(false);
+    toast.success(`"${plan.name}" imported`);
+    refreshPlans();
+    setEditingPlanId(plan.id);
+  };
+
   const hasSampleClient = dashboardClients.some((c) => c.isSample);
 
   // Which of the dashboard's three empty-ish states is on screen. Derived once
@@ -257,6 +268,13 @@ export function CoachDashboard() {
           // The modal generates a link on open — reflect it in the guide
           refreshInvites();
         }}
+      />
+
+      {/* Import from Excel Modal */}
+      <ImportPlanModal
+        isOpen={showImportModal}
+        onClose={() => setShowImportModal(false)}
+        onImported={handlePlanImported}
       />
 
       {/* Plan Setup Modal */}
@@ -420,10 +438,16 @@ export function CoachDashboard() {
                 title="Plans"
                 subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'template' : 'templates'}` : undefined}
                 action={templates.length > 0 ? (
-                  <Button onClick={handleCreateNewPlan} size="sm" className="active:scale-[0.96] transition-transform duration-150 tap-target">
-                    <Plus className="w-4 h-4 mr-1.5" />
-                    New Plan
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={() => setShowImportModal(true)} size="sm" variant="outline" className="active:scale-[0.96] transition-transform duration-150 tap-target">
+                      <FileSpreadsheet className="w-4 h-4 mr-1.5" />
+                      Import
+                    </Button>
+                    <Button onClick={handleCreateNewPlan} size="sm" className="active:scale-[0.96] transition-transform duration-150 tap-target">
+                      <Plus className="w-4 h-4 mr-1.5" />
+                      New Plan
+                    </Button>
+                  </div>
                 ) : undefined}
               />
             </div>
@@ -442,7 +466,7 @@ export function CoachDashboard() {
                   onDelete={setPlanToDelete}
                 />
               ) : (
-                <EmptyStateNoPlans onCreate={handleCreateNewPlan} />
+                <EmptyStateNoPlans onCreate={handleCreateNewPlan} onImport={() => setShowImportModal(true)} />
               )}
             </section>
           </div>
