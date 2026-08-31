@@ -347,3 +347,26 @@ export const clientErrorReportSchema = z.object({
   url: z.string().trim().max(1000).optional(),
   stack: z.string().max(4000).optional(),
 });
+
+// ──────────────────────────────────────
+// PRODUCT FEEDBACK
+// ──────────────────────────────────────
+
+export const FEEDBACK_CATEGORIES = ["BUG", "IDEA", "OTHER"] as const;
+export const FEEDBACK_STATUSES = ["NEW", "REVIEWED", "RESOLVED"] as const;
+
+/**
+ * In-app feedback from the account menu's dialog. pageUrl is auto-captured
+ * by the client and only ever displayed as text on the admin page, but it's
+ * still user-controllable input — hence the hard cap.
+ */
+export const feedbackSchema = z.object({
+  category: z.enum(FEEDBACK_CATEGORIES),
+  message: z.string().trim().min(1, "Tell us something first").max(2000),
+  pageUrl: z.string().trim().max(1000).optional(),
+});
+
+/** Admin-only status transition on /admin/feedback. */
+export const feedbackStatusSchema = z.object({
+  status: z.enum(FEEDBACK_STATUSES),
+});

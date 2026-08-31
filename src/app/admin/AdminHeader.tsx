@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 const SECTIONS = [
   { label: 'Waitlist', href: '/admin/waitlist' },
   { label: 'Accounts', href: '/admin/users' },
+  { label: 'Feedback', href: '/admin/feedback' },
 ] as const;
 
 /**

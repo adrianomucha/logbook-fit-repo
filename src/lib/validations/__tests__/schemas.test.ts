@@ -21,6 +21,8 @@ import {
   waitlistSchema,
   waitlistQualifySchema,
   waitlistInviteSchema,
+  feedbackSchema,
+  feedbackStatusSchema,
 } from "../schemas";
 
 // ──────────────────────────────────────
@@ -889,5 +891,74 @@ describe("waitlistInviteSchema", () => {
   it("rejects a missing id", () => {
     const result = waitlistInviteSchema.safeParse({});
     expect(result.success).toBe(false);
+  });
+});
+
+// ──────────────────────────────────────
+// feedbackSchema
+// ──────────────────────────────────────
+
+describe("feedbackSchema", () => {
+  it("accepts a category and message", () => {
+    const result = feedbackSchema.safeParse({
+      category: "BUG",
+      message: "The plan editor loses my superset on save",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts an optional pageUrl", () => {
+    const result = feedbackSchema.safeParse({
+      category: "IDEA",
+      message: "Let me duplicate a week",
+      pageUrl: "/coach/plans/abc",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("trims the message", () => {
+    const result = feedbackSchema.safeParse({
+      category: "OTHER",
+      message: "  loving it  ",
+    });
+    expect(result.success && result.data.message).toBe("loving it");
+  });
+
+  it("rejects a whitespace-only message", () => {
+    const result = feedbackSchema.safeParse({
+      category: "OTHER",
+      message: "   ",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a message over 2000 characters", () => {
+    const result = feedbackSchema.safeParse({
+      category: "BUG",
+      message: "a".repeat(2001),
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects an unknown category", () => {
+    const result = feedbackSchema.safeParse({
+      category: "RANT",
+      message: "hello",
+    });
+    expect(result.success).toBe(false);
+  });
+});
+
+describe("feedbackStatusSchema", () => {
+  it("accepts each lifecycle status", () => {
+    for (const status of ["NEW", "REVIEWED", "RESOLVED"]) {
+      expect(feedbackStatusSchema.safeParse({ status }).success).toBe(true);
+    }
+  });
+
+  it("rejects an unknown status", () => {
+    expect(feedbackStatusSchema.safeParse({ status: "DONE" }).success).toBe(
+      false
+    );
   });
 });
