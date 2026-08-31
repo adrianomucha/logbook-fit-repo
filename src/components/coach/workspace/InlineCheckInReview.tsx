@@ -281,7 +281,7 @@ export function InlineCheckInReview({
               flaggedExercisesWithContext.length > 0 && "border-t pt-4 mt-4"
             )}>
               <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className="text-2xl select-none sm:pl-1" aria-hidden="true">📋</div>
+                <div className="text-2xl select-none sm:ps-1" aria-hidden="true">📋</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold antialiased">Time for a check-in?</p>
                   <p className="text-sm text-muted-foreground antialiased">
@@ -290,7 +290,7 @@ export function InlineCheckInReview({
                 </div>
               </div>
               <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 ps-2.5 active:scale-[0.96] transition-transform duration-150">
-                <ClipboardCheck className="w-4 h-4 mr-2" />
+                <ClipboardCheck className="w-4 h-4 me-2" />
                 {isSubmitting ? 'Sending…' : 'Send Check-in'}
               </Button>
             </div>
@@ -313,7 +313,7 @@ export function InlineCheckInReview({
             {/* Dot stays beside the heading on phones — alone on its own
                 stacked row it reads as a stray mark */}
             <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
-              <span className="relative flex h-2.5 w-2.5 shrink-0 sm:ml-1.5" aria-hidden="true">
+              <span className="relative flex h-2.5 w-2.5 shrink-0 sm:ms-1.5" aria-hidden="true">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
               </span>
@@ -424,7 +424,7 @@ export function InlineCheckInReview({
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
               Notes from {firstName}
             </p>
-            <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose text-pretty">
+            <p className="border-s-2 border-brand/60 ps-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose text-pretty">
               {activeCheckIn.clientNotes}
             </p>
           </div>
@@ -460,7 +460,7 @@ export function InlineCheckInReview({
             maxLength={1000}
             rows={4}
           />
-          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-right tabular-nums">
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-end tabular-nums">
             {coachResponse.length}/1000
           </p>
           {/* Stable live region so repeat empty submits re-announce */}
@@ -536,7 +536,7 @@ function FlaggedExercisesSection({
                 className="shrink-0 h-7 px-2.5 text-xs bg-card tap-target"
                 onClick={() => onMessageAboutFlag(flag, exerciseName)}
               >
-                <MessageSquare className="w-3 h-3 mr-1" aria-hidden="true" />
+                <MessageSquare className="w-3 h-3 me-1" aria-hidden="true" />
                 Ask
                 <span className="sr-only"> about {exerciseName}</span>
               </Button>

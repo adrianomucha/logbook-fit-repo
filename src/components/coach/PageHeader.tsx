@@ -17,7 +17,7 @@ export function PageHeader({ title, subtitle, action, breadcrumb }: PageHeaderPr
         {breadcrumb && (
           <button
             onClick={breadcrumb.onClick}
-            className="flex items-center gap-0.5 -ml-1.5 mb-1 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
+            className="flex items-center gap-0.5 -ms-1.5 mb-1 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
           >
             <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
             {breadcrumb.label}

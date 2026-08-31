@@ -42,28 +42,29 @@ interface ChatViewProps {
 /**
  * Compute Messenger-style bubble rounding.
  * Full rounding = 1.25rem (20px). Flattened corner = 0.25rem (4px).
- * The "tail" corner is bottom-right for outgoing, bottom-left for incoming.
+ * The "tail" side is the trailing edge for outgoing, leading for incoming —
+ * logical corner properties keep the tails on the correct side under RTL.
  * First-in-group gets full top, last-in-group gets full bottom on the tail side.
  */
 function bubbleRadius(
   isCurrentUser: boolean,
   isFirstInGroup: boolean,
   isLastInGroup: boolean,
-): string {
-  // For outgoing: the right side is the "tail" side
-  // For incoming: the left side is the "tail" side
+): React.CSSProperties {
   if (isCurrentUser) {
-    const tl = '1.25rem'; // always full
-    const bl = '1.25rem'; // always full
-    const tr = isFirstInGroup ? '1.25rem' : '0.25rem';
-    const br = isLastInGroup ? '1.25rem' : '0.25rem';
-    return `${tl} ${tr} ${br} ${bl}`;
+    return {
+      borderStartStartRadius: '1.25rem', // start side always full
+      borderEndStartRadius: '1.25rem',
+      borderStartEndRadius: isFirstInGroup ? '1.25rem' : '0.25rem',
+      borderEndEndRadius: isLastInGroup ? '1.25rem' : '0.25rem',
+    };
   } else {
-    const tr = '1.25rem'; // always full
-    const br = '1.25rem'; // always full
-    const tl = isFirstInGroup ? '1.25rem' : '0.25rem';
-    const bl = isLastInGroup ? '1.25rem' : '0.25rem';
-    return `${tl} ${tr} ${br} ${bl}`;
+    return {
+      borderStartEndRadius: '1.25rem', // end side always full
+      borderEndEndRadius: '1.25rem',
+      borderStartStartRadius: isFirstInGroup ? '1.25rem' : '0.25rem',
+      borderEndStartRadius: isLastInGroup ? '1.25rem' : '0.25rem',
+    };
   }
 }
 
@@ -310,7 +311,7 @@ export function ChatView({
                         <span className="text-lg font-bold uppercase">{peerLabel.charAt(0)}</span>
                         {/* Volt presence dot — same accent the avatars in the
                             coach empty states carry */}
-                        <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-brand ring-2 ring-card animate-bounce-once" />
+                        <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-brand ring-2 ring-card animate-bounce-once" />
                       </div>
                     ) : (
                       <div className="text-3xl select-none mb-1">👋</div>
@@ -404,7 +405,7 @@ export function ChatView({
                               : 'bg-foreground text-background'
                             : 'bg-muted/50'
                         )}
-                        style={{ borderRadius: bubbleRadius(isCurrentUser, isFirstInGroup, isLastInGroup) }}
+                        style={bubbleRadius(isCurrentUser, isFirstInGroup, isLastInGroup)}
                       >
                         {/* Exercise context card */}
                         {message.exerciseContext && (
@@ -414,10 +415,10 @@ export function ChatView({
                               ? isBrand
                                 // White-on-blue tint + rail — quoted context
                                 // in the same voice as the coach-note strips
-                                ? 'bg-chat-accent-foreground/10 border-l-2 border-chat-accent-foreground/30'
+                                ? 'bg-chat-accent-foreground/10 border-s-2 border-chat-accent-foreground/30'
                                 : 'bg-background/10'
                               : isBrand
-                                ? 'bg-background/60 border-l-2 border-brand'
+                                ? 'bg-background/60 border-s-2 border-brand'
                                 : 'bg-muted/50'
                           )}>
                             {/* Label opacities are contrast-bound (WCAG AA 4.5:1):
@@ -438,7 +439,7 @@ export function ChatView({
                             </p>
                             {message.exerciseContext.flagNote && (
                               <p className={cn(
-                                'font-prose text-[13px] mt-1.5 italic border-l-2 border-current/20 pl-2',
+                                'font-prose text-[13px] mt-1.5 italic border-s-2 border-current/20 ps-2',
                                 isBrand && isCurrentUser ? 'opacity-80' : 'opacity-70'
                               )}>
                                 &ldquo;{message.exerciseContext.flagNote}&rdquo;
@@ -456,10 +457,10 @@ export function ChatView({
                       <p className={cn(
                         'font-mono text-[10px] text-muted-foreground mt-1.5',
                         isCurrentUser
-                          ? 'px-0.5 text-right'
+                          ? 'px-0.5 text-end'
                           : isBrand
-                            ? 'pl-9 pr-0.5 text-left' // clear the avatar gutter
-                            : 'px-0.5 text-left'
+                            ? 'ps-9 pe-0.5 text-start' // clear the avatar gutter
+                            : 'px-0.5 text-start'
                       )}>
                         {format(msgDate, 'h:mm a')}
                         {/* Read receipt — only on the newest message, and only
