@@ -107,8 +107,14 @@ export function CheckInHistoryPanel({
   // The whole setting reads as one sentence — "Sends every week on Mondays" —
   // with the variable words as compact inline selects, so nothing has to line
   // up against a grid it doesn't share.
+  // Compact inline triggers: the default focus treatment (2px ring + 2px
+  // offset) reads as a heavy outline that collides with the words beside it,
+  // so focus is shown on the border instead.
   const selectTriggerClasses =
-    'h-8 w-auto gap-1 rounded-md border-border/60 bg-background/60 px-2.5 text-sm font-medium text-foreground hover:border-border transition-colors';
+    'h-8 w-auto gap-1 rounded-md border-border/60 bg-background/60 px-2.5 text-sm font-medium text-foreground hover:border-border transition-colors focus:ring-0 focus:ring-offset-0 focus:border-foreground/40';
+  // The widget sits at the bottom edge of an overflow-hidden card, so the
+  // menus open upward — downward they'd be clipped mid-list.
+  const selectContentClasses = 'top-auto bottom-full mt-0 mb-1';
 
   const scheduleToggle = hasPlan && schedule && onUpdateSchedule ? (
     <div className="px-3 py-2.5 bg-muted/30 rounded-lg">
@@ -131,7 +137,7 @@ export function CheckInHistoryPanel({
       </div>
       {schedule.enabled && (
         <div className="mt-2.5 pt-2.5 pl-6 border-t border-border/50 animate-in fade-in-0 slide-in-from-top-1 duration-150">
-          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-muted-foreground">
             <span>Sends</span>
             <Select
               value={String(schedule.intervalDays)}
@@ -140,7 +146,7 @@ export function CheckInHistoryPanel({
               <SelectTrigger aria-label="Frequency" className={selectTriggerClasses}>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className={selectContentClasses}>
                 {INTERVAL_OPTIONS.map((option) => (
                   <SelectItem key={option.value} value={String(option.value)}>
                     {option.label}
@@ -161,7 +167,7 @@ export function CheckInHistoryPanel({
                   <SelectTrigger aria-label="Day of week" className={selectTriggerClasses}>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className={selectContentClasses}>
                     <SelectItem value="any">any day</SelectItem>
                     {DAY_OPTIONS.map((option) => (
                       <SelectItem key={option.value} value={String(option.value)}>
