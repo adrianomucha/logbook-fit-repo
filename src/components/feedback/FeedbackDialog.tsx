@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { usePathname } from 'next/navigation';
 import { Bug, CheckCircle2, Lightbulb, Loader2, MessageCircle, Send } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
@@ -77,7 +78,15 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
     }
   };
 
-  return (
+  // Only ever open after a click, so document is guaranteed to exist by the
+  // time the portal renders (and SSR never sees it)
+  if (!isOpen) return null;
+
+  // Portal to <body>: this dialog is triggered from the account menu inside
+  // the sticky app header, whose backdrop-blur makes the header the
+  // containing block for fixed descendants — rendered in place, the overlay
+  // would pin to the header instead of the viewport.
+  return createPortal(
     <Modal
       isOpen={isOpen}
       onClose={onClose}
@@ -184,6 +193,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
           {error && <FormError>{error}</FormError>}
         </div>
       )}
-    </Modal>
+    </Modal>,
+    document.body
   );
 }
