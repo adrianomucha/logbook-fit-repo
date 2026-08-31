@@ -1,8 +1,15 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 
 const FITNESS_EMOJIS = ['💪', '🏋️', '🏃', '🚴', '🧘', '⚡', '🔥', '🎯'];
 const GRID_COLS = 4;
+
+const POPOVER_WIDTH = 232;
+/** Approximate rendered height (2 rows + padding) — only used to decide
+ * whether to flip the popover above the trigger near the viewport bottom. */
+const POPOVER_HEIGHT = 140;
+const POPOVER_GAP = 8;
 
 interface EmojiPickerProps {
   value: string;
@@ -14,21 +21,57 @@ interface EmojiPickerProps {
 export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const popoverRef = useRef<HTMLDivElement>(null);
   const emojiRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // The popover portals to <body> so no ancestor overflow (FieldShell's
+  // overflow-hidden, the modal body's overflow-y-auto) can clip it — it used
+  // to render absolutely inside the trigger and got cut off in dialogs.
+  // Fixed positioning off the trigger rect, clamped to the viewport,
+  // flipped above when there's no room below.
+  const updatePosition = useCallback(() => {
+    const trigger = triggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
+    const left = Math.max(
+      POPOVER_GAP,
+      Math.min(rect.left, window.innerWidth - POPOVER_WIDTH - POPOVER_GAP)
+    );
+    const openUp = rect.bottom + POPOVER_GAP + POPOVER_HEIGHT > window.innerHeight;
+    const top = openUp
+      ? Math.max(POPOVER_GAP, rect.top - POPOVER_GAP - POPOVER_HEIGHT)
+      : rect.bottom + POPOVER_GAP;
+    setPosition({ top, left });
+  }, []);
+
+  const handleTriggerClick = () => {
+    if (!isOpen) updatePosition();
+    setIsOpen(!isOpen);
+  };
 
   useEffect(() => {
     if (!isOpen) return;
 
     const handleClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
+      const target = e.target as Node;
+      if (triggerRef.current?.contains(target) || popoverRef.current?.contains(target)) {
+        return;
       }
+      setIsOpen(false);
     };
 
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen]);
+    // Track the trigger while the dialog body scrolls or the window resizes
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('scroll', updatePosition, true);
+      window.removeEventListener('resize', updatePosition);
+    };
+  }, [isOpen, updatePosition]);
 
   // Focus the active emoji when the picker opens
   useEffect(() => {
@@ -45,6 +88,7 @@ export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
   const handleEmojiSelect = (emoji: string) => {
     onChange(emoji);
     setIsOpen(false);
+    triggerRef.current?.focus();
   };
 
   const handleGridKeyDown = useCallback(
@@ -79,7 +123,17 @@ export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
           break;
         case 'Escape':
           e.preventDefault();
+          // Just the picker — without this the modal's document-level
+          // Escape handler would tear down the whole dialog too
+          e.stopPropagation();
           setIsOpen(false);
+          triggerRef.current?.focus();
+          return;
+        case 'Tab':
+          // The portal sits outside the modal's Tab trap; close and hand
+          // focus back to the trigger so Tab continues inside the dialog
+          setIsOpen(false);
+          triggerRef.current?.focus();
           return;
         case 'Home':
           e.preventDefault();
@@ -100,10 +154,11 @@ export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
   );
 
   return (
-    <div ref={containerRef} className="relative">
+    <>
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleTriggerClick}
         className={cn(
           'w-10 h-10 flex items-center justify-center text-2xl',
           'bg-muted border border-border rounded-lg cursor-pointer',
@@ -118,41 +173,44 @@ export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
         {value}
       </button>
 
-      {isOpen && (
-        <div
-          className={cn(
-            'absolute top-12 left-0 z-50 w-[232px]',
-            'bg-popover border-2 border-border rounded-lg shadow-lg p-3'
-          )}
-          role="listbox"
-          aria-label="Fitness emojis"
-          onKeyDown={handleGridKeyDown}
-        >
-          <div className="grid grid-cols-4 gap-2">
-            {FITNESS_EMOJIS.map((emoji, index) => (
-              <button
-                key={emoji}
-                ref={(el) => { emojiRefs.current[index] = el; }}
-                type="button"
-                role="option"
-                aria-selected={emoji === value}
-                tabIndex={index === focusedIndex ? 0 : -1}
-                onClick={() => handleEmojiSelect(emoji)}
-                className={cn(
-                  'w-12 h-12 flex items-center justify-center text-[28px] rounded-md cursor-pointer',
-                  'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  emoji === value
-                    ? 'bg-accent border-2 border-primary'
-                    : 'bg-background border border-border hover:bg-accent'
-                )}
-                aria-label={`Select ${emoji}`}
-              >
-                {emoji}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+      {isOpen &&
+        position &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            style={{ top: position.top, left: position.left, width: POPOVER_WIDTH }}
+            // Above the modal overlay's z-50 so it never sinks behind the dialog
+            className="fixed z-[60] bg-popover border-2 border-border rounded-lg shadow-lg p-3"
+            role="listbox"
+            aria-label="Fitness emojis"
+            onKeyDown={handleGridKeyDown}
+          >
+            <div className="grid grid-cols-4 gap-2">
+              {FITNESS_EMOJIS.map((emoji, index) => (
+                <button
+                  key={emoji}
+                  ref={(el) => { emojiRefs.current[index] = el; }}
+                  type="button"
+                  role="option"
+                  aria-selected={emoji === value}
+                  tabIndex={index === focusedIndex ? 0 : -1}
+                  onClick={() => handleEmojiSelect(emoji)}
+                  className={cn(
+                    'w-12 h-12 flex items-center justify-center text-[28px] rounded-md cursor-pointer',
+                    'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    emoji === value
+                      ? 'bg-accent border-2 border-primary'
+                      : 'bg-background border border-border hover:bg-accent'
+                  )}
+                  aria-label={`Select ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   );
 }
