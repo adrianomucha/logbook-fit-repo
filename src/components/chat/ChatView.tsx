@@ -31,7 +31,7 @@ interface ChatViewProps {
   conversationStarters?: string[];
   /**
    * Visual voice. 'default' is the quiet monochrome chat the coach dashboard
-   * uses. 'brand' is the client-facing treatment: volt outgoing bubbles, the
+   * uses. 'brand' is the client-facing treatment: blue outgoing bubbles, the
    * peer's avatar beside incoming groups, a warmer empty state, and a "Seen"
    * receipt — the conversation reads as the product's own, not a generic
    * messenger.
@@ -400,7 +400,7 @@ export function ChatView({
                           'max-w-[80%] sm:max-w-[65%] px-4 py-2.5',
                           isCurrentUser
                             ? isBrand
-                              ? 'bg-brand text-brand-foreground'
+                              ? 'bg-chat-accent text-chat-accent-foreground'
                               : 'bg-foreground text-background'
                             : 'bg-muted/50'
                         )}
@@ -412,19 +412,19 @@ export function ChatView({
                             'rounded-lg px-3 py-2.5 mb-2 -mx-0.5',
                             isCurrentUser
                               ? isBrand
-                                // Dark-on-volt tint + rail — quoted context
+                                // White-on-blue tint + rail — quoted context
                                 // in the same voice as the coach-note strips
-                                ? 'bg-brand-foreground/10 border-l-2 border-brand-foreground/30'
+                                ? 'bg-chat-accent-foreground/10 border-l-2 border-chat-accent-foreground/30'
                                 : 'bg-background/10'
                               : isBrand
                                 ? 'bg-background/60 border-l-2 border-brand'
                                 : 'bg-muted/50'
                           )}>
                             {/* Label opacities are contrast-bound (WCAG AA 4.5:1):
-                                on the volt bubble opacity-50 measures 2.8:1, so
-                                outgoing needs 80; incoming needs 70 (50 was 3.7:1
-                                on light). Only the default outgoing bubble keeps
-                                the original 50 (5.0:1 on near-black). */}
+                                white at opacity-80 on the blue bubble measures
+                                ~4.8:1; incoming needs 70 (50 was 3.7:1 on light).
+                                Only the default outgoing bubble keeps the
+                                original 50 (5.0:1 on near-black). */}
                             <p className={cn(
                               'text-[10px] uppercase tracking-[0.12em] font-medium mb-0.5',
                               isCurrentUser ? (isBrand ? 'opacity-80' : 'opacity-50') : 'opacity-70'

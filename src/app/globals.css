@@ -40,6 +40,11 @@
        never small text on light backgrounds (contrast). */
     --brand: 74 95% 52%;
     --brand-foreground: 74 90% 8%;
+    /* Chat accent — deep blue for outgoing message bubbles only; the rest of
+       the chat keeps the volt accents. Separate from --brand so the bubbles
+       read as a conversation, not a fill; white on this blue is 6.6:1. */
+    --chat-accent: 224 76% 48%;
+    --chat-accent-foreground: 0 0% 100%;
     /* Content height of the fixed mobile tab bar, excluding the
        home-indicator inset. Every layout that has to clear the bar derives
        its padding from this, so the height lives in exactly one place. */
@@ -77,6 +82,10 @@
     --info-foreground: 0 0% 98%;
     --brand: 74 95% 56%;
     --brand-foreground: 74 90% 8%;
+    /* Slightly lighter on dark so the bubble lifts off the near-black
+       ground; white on this blue is 5.2:1. */
+    --chat-accent: 224 80% 55%;
+    --chat-accent-foreground: 0 0% 100%;
   }
 }
 
