@@ -5,10 +5,12 @@ import { cn } from '@/lib/utils';
 const FITNESS_EMOJIS = ['💪', '🏋️', '🏃', '🚴', '🧘', '⚡', '🔥', '🎯'];
 const GRID_COLS = 4;
 
-const POPOVER_WIDTH = 232;
+// Tiles mirror the 40px trigger (w-10 gap-1.5 p-2 + 1px borders), so the
+// popover reads as an extension of it: 4×40 + 3×6 + 2×8 + 2 = 196 wide.
+const POPOVER_WIDTH = 196;
 /** Approximate rendered height (2 rows + padding) — only used to decide
  * whether to flip the popover above the trigger near the viewport bottom. */
-const POPOVER_HEIGHT = 140;
+const POPOVER_HEIGHT = 104;
 const POPOVER_GAP = 8;
 
 interface EmojiPickerProps {
@@ -180,12 +182,12 @@ export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
             ref={popoverRef}
             style={{ top: position.top, left: position.left, width: POPOVER_WIDTH }}
             // Above the modal overlay's z-50 so it never sinks behind the dialog
-            className="fixed z-[60] bg-popover border-2 border-border rounded-lg shadow-lg p-3"
+            className="fixed z-[60] bg-popover border border-border rounded-xl shadow-lg p-2"
             role="listbox"
             aria-label="Fitness emojis"
             onKeyDown={handleGridKeyDown}
           >
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-1.5">
               {FITNESS_EMOJIS.map((emoji, index) => (
                 <button
                   key={emoji}
@@ -196,11 +198,13 @@ export function EmojiPicker({ value, onChange, className }: EmojiPickerProps) {
                   tabIndex={index === focusedIndex ? 0 : -1}
                   onClick={() => handleEmojiSelect(emoji)}
                   className={cn(
-                    'w-12 h-12 flex items-center justify-center text-[28px] rounded-md cursor-pointer',
-                    'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    // Same tile as the trigger, so the grid reads as more of it.
+                    // Selection uses a 1px border + ring so tiles never shift.
+                    'w-10 h-10 flex items-center justify-center text-2xl rounded-lg cursor-pointer',
+                    'border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                     emoji === value
-                      ? 'bg-accent border-2 border-primary'
-                      : 'bg-background border border-border hover:bg-accent'
+                      ? 'bg-accent border-primary ring-1 ring-primary'
+                      : 'bg-background border-border hover:bg-accent'
                   )}
                   aria-label={`Select ${emoji}`}
                 >
