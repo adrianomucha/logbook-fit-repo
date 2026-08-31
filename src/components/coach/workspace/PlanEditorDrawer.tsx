@@ -431,7 +431,7 @@ export function PlanEditorDrawer({
                     <div className="relative shrink-0" ref={emojiPickerRef}>
                       <button
                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className="text-lg leading-none p-1 -m-1 rounded-md hover:bg-muted active:scale-[0.9] transition-[background-color,transform]"
+                        className="text-lg leading-none p-1 -m-1 rounded-md hover:bg-muted active:scale-[0.96] transition-[background-color,transform]"
                         aria-label="Change emoji"
                       >
                         {plan.emoji || '💪'}
@@ -444,7 +444,7 @@ export function PlanEditorDrawer({
                                 key={e}
                                 onClick={() => commitEmoji(e)}
                                 className={cn(
-                                  'w-8 h-8 flex items-center justify-center rounded-md text-sm hover:bg-muted active:scale-[0.85] transition-[background-color,transform]',
+                                  'w-8 h-8 flex items-center justify-center rounded-md text-sm hover:bg-muted active:scale-[0.96] transition-[background-color,transform]',
                                   e === plan.emoji && 'bg-muted ring-1 ring-foreground/20'
                                 )}
                               >
@@ -512,7 +512,7 @@ export function PlanEditorDrawer({
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.92] transition-[background-color,color,transform]',
+                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.96] transition-[background-color,color,transform]',
                         selectedWeek === 0 && 'opacity-20 pointer-events-none'
                       )}
                       onClick={goToPrevWeek}
@@ -527,7 +527,7 @@ export function PlanEditorDrawer({
                       variant="ghost"
                       size="icon"
                       className={cn(
-                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.92] transition-[background-color,color,transform]',
+                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.96] transition-[background-color,color,transform]',
                         selectedWeek === plan.weeks.length - 1 && 'opacity-20 pointer-events-none'
                       )}
                       onClick={goToNextWeek}

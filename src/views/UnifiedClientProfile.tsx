@@ -604,7 +604,6 @@ export function UnifiedClientProfile() {
     <div className={cn(
       "bg-card rounded-xl overflow-hidden p-4 sm:p-5",
       "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
-      "transition-shadow duration-200",
       cardClassName
     )}>
       {children}
@@ -784,10 +783,11 @@ export function UnifiedClientProfile() {
               edge (like the chat input) so spare space sits inside the card. */}
           <section ref={secondaryRef}>
             <SectionCard className="lg:h-[480px] lg:flex lg:flex-col">
-              {/* Tab bar */}
+              {/* Tab bar — labels never wrap; "Training Plan" shortens to
+                  "Plan" on phones where three full labels don't fit */}
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
                 {([
-                  { id: 'plan' as const, label: 'Training Plan' },
+                  { id: 'plan' as const, label: 'Training Plan', shortLabel: 'Plan' },
                   { id: 'workouts' as const, label: 'Workouts', count: apiClient.completions.length },
                   { id: 'history' as const, label: 'Check-ins', count: checkIns.filter(c => c.status === 'completed').length },
                 ] as const).map((tab) => (
@@ -795,13 +795,20 @@ export function UnifiedClientProfile() {
                     key={tab.id}
                     onClick={() => setSecondaryTab(tab.id)}
                     className={cn(
-                      'pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target',
+                      'pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target whitespace-nowrap',
                       secondaryTab === tab.id
                         ? 'text-foreground'
                         : 'text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    {tab.label}
+                    {'shortLabel' in tab ? (
+                      <>
+                        <span className="sm:hidden">{tab.shortLabel}</span>
+                        <span className="hidden sm:inline">{tab.label}</span>
+                      </>
+                    ) : (
+                      tab.label
+                    )}
                     {'count' in tab && tab.count > 0 && (
                       <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
                         {tab.count}
@@ -822,8 +829,10 @@ export function UnifiedClientProfile() {
                 )}>
                   {plan ? (
                     <>
-                      {/* Plan actions row */}
-                      <div className="flex items-center justify-between pb-3 lg:shrink-0">
+                      {/* Plan actions row — stacked on phones so the plan
+                          name keeps the full width instead of truncating
+                          against three action buttons */}
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-3 lg:shrink-0">
                         <div className="min-w-0">
                           <h3 className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
                             <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
@@ -833,7 +842,9 @@ export function UnifiedClientProfile() {
                             {planEnded ? 'Plan complete' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
                           </p>
                         </div>
-                        <div className="flex items-center gap-0.5 shrink-0">
+                        {/* -ms cancels the first button's padding so the
+                            stacked row's icon sits flush with the title */}
+                        <div className="flex items-center gap-0.5 shrink-0 -ms-2.5 sm:ms-0">
                           {/* A finished block that's working doesn't need
                               replacing — one tap starts the next cycle */}
                           {planEnded && (
@@ -842,17 +853,17 @@ export function UnifiedClientProfile() {
                               size="sm"
                               onClick={() => setShowContinueConfirm(true)}
                               disabled={isContinuingPlan}
-                              className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
+                              className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
                             >
                               <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
                               {isContinuingPlan ? 'Starting…' : 'Run again'}
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm" onClick={handleChangePlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
+                          <Button variant="ghost" size="sm" onClick={handleChangePlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
                             Change
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
+                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <Pencil className="w-3.5 h-3.5 mr-1.5" />
                             Edit
                           </Button>

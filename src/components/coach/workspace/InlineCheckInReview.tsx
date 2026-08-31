@@ -280,14 +280,16 @@ export function InlineCheckInReview({
               "flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-1",
               flaggedExercisesWithContext.length > 0 && "border-t pt-4 mt-4"
             )}>
-              <div className="text-2xl select-none sm:pl-1" aria-hidden="true">📋</div>
-              <div className="flex-1 min-w-0">
-                <p className="font-semibold antialiased">Time for a check-in?</p>
-                <p className="text-sm text-muted-foreground antialiased">
-                  See how {firstName}&apos;s training is going.
-                </p>
+              <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="text-2xl select-none sm:pl-1" aria-hidden="true">📋</div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold antialiased">Time for a check-in?</p>
+                  <p className="text-sm text-muted-foreground antialiased">
+                    See how {firstName}&apos;s training is going.
+                  </p>
+                </div>
               </div>
-              <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 active:scale-[0.96] transition-transform duration-150">
+              <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 ps-2.5 active:scale-[0.96] transition-transform duration-150">
                 <ClipboardCheck className="w-4 h-4 mr-2" />
                 {isSubmitting ? 'Sending…' : 'Send Check-in'}
               </Button>
@@ -308,15 +310,19 @@ export function InlineCheckInReview({
       <Wrapper>
         <div className={cn(isFlat ? '' : 'px-3 sm:px-6 py-6')}>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-1">
-            <span className="relative flex h-2.5 w-2.5 shrink-0 sm:ml-1.5" aria-hidden="true">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
-            </span>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
-              <p className="text-sm text-muted-foreground antialiased">
-                Check-in sent <span className="tabular-nums">{sentAgo}</span> — you&apos;ll review their answers here.
-              </p>
+            {/* Dot stays beside the heading on phones — alone on its own
+                stacked row it reads as a stray mark */}
+            <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
+              <span className="relative flex h-2.5 w-2.5 shrink-0 sm:ml-1.5" aria-hidden="true">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
+              </span>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
+                <p className="text-sm text-muted-foreground antialiased">
+                  Check-in sent <span className="tabular-nums">{sentAgo}</span> — you&apos;ll review their answers here.
+                </p>
+              </div>
             </div>
             {/* Escape hatch — sent by mistake or at a bad time */}
             {onCancelCheckIn && (

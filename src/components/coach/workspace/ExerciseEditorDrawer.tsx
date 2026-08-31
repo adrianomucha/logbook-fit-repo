@@ -182,7 +182,7 @@ export function ExerciseEditorContent({
           <button
             onClick={onClose}
             aria-label={`Back to ${dayName || 'workout'}`}
-            className="group p-2 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.94] transition-[color,background-color,transform] shrink-0"
+            className="group p-2 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.96] transition-[color,background-color,transform] shrink-0"
           >
             <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
           </button>
