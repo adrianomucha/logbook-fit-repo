@@ -52,6 +52,12 @@ interface InlineCheckInReviewProps {
   justSentFromParent?: boolean;
   /** Visual weight: 'card' (default) with border, 'flat' borderless */
   variant?: 'card' | 'flat';
+  /**
+   * The page header already offers "Send check-in" as its primary action —
+   * skip the idle prompt row so the same button never appears twice. With
+   * nothing else to show (no recent flags) the idle state renders nothing.
+   */
+  hideSendPrompt?: boolean;
 }
 
 export function InlineCheckInReview({
@@ -67,6 +73,7 @@ export function InlineCheckInReview({
   onMessageAboutFlag,
   justSentFromParent = false,
   variant = 'card',
+  hideSendPrompt = false,
 }: InlineCheckInReviewProps) {
   const [coachResponse, setCoachResponse] = useState('');
   const [responseError, setResponseError] = useState('');
@@ -224,35 +231,68 @@ export function InlineCheckInReview({
     );
   }
 
+  // "Sent to <name>" confirmation, shown for 5 seconds after either send
+  // button (this panel's or the page header's). Checked before the state
+  // branches: right after a header-initiated send the refetch hasn't landed
+  // yet, so activeCheckIn can still be null while the confirmation shows.
+  if (justSentCheckIn || justSentFromParent) {
+    return (
+      <Wrapper className="animate-fade-in-up">
+        <div className={cn("py-8", isFlat ? '' : 'px-3 sm:px-6')}>
+          <div className="flex flex-col items-center text-center gap-2">
+            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-full animate-bounce-once">
+              <SendHorizonal className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h3 className="font-bold text-lg antialiased">
+              Sent to {firstName}
+            </h3>
+            <p className="text-sm text-muted-foreground antialiased">
+              They&apos;ll see it next time they open the app.
+            </p>
+          </div>
+        </div>
+      </Wrapper>
+    );
+  }
+
   // State: No active check-in
   if (!activeCheckIn) {
+    // Nothing to say: the header carries the send action and there are no
+    // flags to surface — render nothing rather than a decorative card
+    if (hideSendPrompt && flaggedExercisesWithContext.length === 0) {
+      return null;
+    }
     return (
       <Wrapper>
         <div className={cn(isFlat ? '' : 'px-3 sm:px-6 pt-6 pb-6')}>
           {/* Show flagged exercises even without check-in */}
           {flaggedExercisesWithContext.length > 0 && (
-            <div className="mb-4">
-              <FlaggedExercisesSection
-                flags={flaggedExercisesWithContext}
-                onMessageAboutFlag={onMessageAboutFlag}
-              />
-            </div>
+            <FlaggedExercisesSection
+              flags={flaggedExercisesWithContext}
+              onMessageAboutFlag={onMessageAboutFlag}
+            />
           )}
 
-          <div className={cn(
-            "text-center py-6",
-            flaggedExercisesWithContext.length > 0 && "border-t"
-          )}>
-            <div className="text-3xl select-none mb-3">📋</div>
-            <p className="font-semibold antialiased">Time for a check-in?</p>
-            <p className="text-sm text-muted-foreground mb-4 antialiased">
-              See how {firstName}&apos;s training is going.
-            </p>
-            <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="active:scale-[0.96] transition-transform duration-150">
-              <ClipboardCheck className="w-4 h-4 mr-2" />
-              {isSubmitting ? 'Sending…' : 'Send Check-in'}
-            </Button>
-          </div>
+          {/* Quiet one-line prompt — this is a resting state, not a call to
+              arms, so it stays a slim row instead of a tall centered block */}
+          {!hideSendPrompt && (
+            <div className={cn(
+              "flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-1",
+              flaggedExercisesWithContext.length > 0 && "border-t pt-4 mt-4"
+            )}>
+              <div className="text-2xl select-none sm:pl-1" aria-hidden="true">📋</div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold antialiased">Time for a check-in?</p>
+                <p className="text-sm text-muted-foreground antialiased">
+                  See how {firstName}&apos;s training is going.
+                </p>
+              </div>
+              <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 active:scale-[0.96] transition-transform duration-150">
+                <ClipboardCheck className="w-4 h-4 mr-2" />
+                {isSubmitting ? 'Sending…' : 'Send Check-in'}
+              </Button>
+            </div>
+          )}
         </div>
       </Wrapper>
     );
@@ -262,98 +302,29 @@ export function InlineCheckInReview({
   if (activeCheckIn.status === 'pending') {
     const sentAgo = formatDistanceToNow(new Date(activeCheckIn.date), { addSuffix: true });
 
-    // Show a special "just sent" confirmation for 5 seconds
-    // Can be triggered from local button OR from parent (status header button)
-    if (justSentCheckIn || justSentFromParent) {
-      return (
-        <Wrapper className="animate-fade-in-up">
-          <div className={cn("py-8", isFlat ? '' : 'px-3 sm:px-6')}>
-            <div className="flex flex-col items-center text-center gap-2">
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-full animate-bounce-once">
-                <SendHorizonal className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <h3 className="font-bold text-lg antialiased">
-                Sent to {firstName}
-              </h3>
-              <p className="text-sm text-muted-foreground antialiased">
-                They&apos;ll see it next time they open the app.
-              </p>
-            </div>
-          </div>
-        </Wrapper>
-      );
-    }
-
+    // One calm status line, same slim-row shape as the idle prompt — the
+    // ball is in the client's court, so this state should ask for nothing.
     return (
       <Wrapper>
-        <div className={cn("pb-3", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
-          <h3 className="text-base font-semibold flex items-center gap-2 antialiased">
-            <span className="relative flex h-2.5 w-2.5 shrink-0">
+        <div className={cn(isFlat ? '' : 'px-3 sm:px-6 py-6')}>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-1">
+            <span className="relative flex h-2.5 w-2.5 shrink-0 sm:ml-1.5" aria-hidden="true">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
             </span>
-            Waiting on {firstName}
-          </h3>
-        </div>
-        <div className={cn("space-y-4", isFlat ? 'rounded-xl bg-warning/[0.07] p-4' : 'px-3 sm:px-6 pb-6')}>
-          {/* Timeline-style status */}
-          <div className="flex gap-3.5">
-            <div className="flex flex-col items-center pt-1.5">
-              <div className="w-2 h-2 rounded-full bg-success shrink-0" />
-              <div className="w-px flex-1 bg-success/30 my-1.5" />
-              <div className="w-2 h-2 rounded-full border-2 border-warning/50 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
+              <p className="text-sm text-muted-foreground antialiased">
+                Check-in sent <span className="tabular-nums">{sentAgo}</span> — you&apos;ll review their answers here.
+              </p>
             </div>
-            <div className="space-y-5 flex-1 -mt-0.5">
-              <div>
-                <p className="text-sm font-medium antialiased">
-                  Check-in sent <span className="text-muted-foreground font-normal tabular-nums">{sentAgo}</span>
-                </p>
-                <p className="font-prose text-[13px] text-muted-foreground mt-0.5 antialiased">
-                  {firstName} will see it next time they open the app.
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground antialiased">
-                  {firstName} responds
-                </p>
-                <p className="font-prose text-[13px] text-muted-foreground mt-0.5 antialiased">
-                  You&apos;ll review their feedback and reply here.
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* What client will answer — collapsible detail */}
-          <details className="text-xs text-muted-foreground group">
-            <summary className="font-medium cursor-pointer select-none hover:text-foreground transition-colors duration-150 list-none flex items-center gap-1.5 py-1 -my-1">
-              <svg className="w-3 h-3 transition-transform duration-200 group-open:rotate-90 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-              What {firstName} will answer
-            </summary>
-            <ul className="space-y-0.5 ml-[18px] mt-1.5 antialiased">
-              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How workouts felt</li>
-              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> How their body feels</li>
-              <li className="flex items-baseline gap-1.5"><span aria-hidden="true">·</span> Any notes or concerns</li>
-            </ul>
-          </details>
-
-          {/* Show flagged exercises while waiting */}
-          {flaggedExercisesWithContext.length > 0 && (
-            <div className="pt-3 border-t">
-              <FlaggedExercisesSection
-                flags={flaggedExercisesWithContext}
-                onMessageAboutFlag={onMessageAboutFlag}
-              />
-            </div>
-          )}
-
-          {/* Escape hatch — sent by mistake or at a bad time */}
-          {onCancelCheckIn && (
-            <div className="flex justify-end pt-1">
+            {/* Escape hatch — sent by mistake or at a bad time */}
+            {onCancelCheckIn && (
               <Button
                 variant="ghost"
                 size="sm"
                 disabled={isSubmitting}
-                className="text-muted-foreground hover:text-destructive"
+                className="self-start sm:self-auto shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={async () => {
                   if (isSubmitting) return;
                   setIsSubmitting(true);
@@ -364,8 +335,18 @@ export function InlineCheckInReview({
                   }
                 }}
               >
-                Withdraw check-in
+                Withdraw
               </Button>
+            )}
+          </div>
+
+          {/* Show flagged exercises while waiting */}
+          {flaggedExercisesWithContext.length > 0 && (
+            <div className="pt-4 mt-3 border-t">
+              <FlaggedExercisesSection
+                flags={flaggedExercisesWithContext}
+                onMessageAboutFlag={onMessageAboutFlag}
+              />
             </div>
           )}
         </div>
