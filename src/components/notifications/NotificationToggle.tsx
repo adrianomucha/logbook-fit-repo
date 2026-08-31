@@ -88,10 +88,28 @@ export function NotificationToggle({ className, hideWhenOn }: NotificationToggle
     >
       {isBusy ? (
         <Loader2 className="w-3 h-3 animate-spin shrink-0" aria-hidden="true" />
-      ) : isSubscribed ? (
-        <BellRing className="w-3 h-3 shrink-0" aria-hidden="true" />
       ) : (
-        <Bell className="w-3 h-3 shrink-0" aria-hidden="true" />
+        /* Both bells stay mounted and cross-fade, so toggling doesn't pop */
+        <span className="relative shrink-0" aria-hidden="true">
+          <span
+            className={cn(
+              'absolute inset-0 flex items-center justify-center',
+              'transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+              isSubscribed ? 'scale-100 opacity-100 blur-0' : 'scale-[0.25] opacity-0 blur-[4px]'
+            )}
+          >
+            <BellRing className="w-3 h-3" />
+          </span>
+          <span
+            className={cn(
+              'flex items-center justify-center',
+              'transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+              isSubscribed ? 'scale-[0.25] opacity-0 blur-[4px]' : 'scale-100 opacity-100 blur-0'
+            )}
+          >
+            <Bell className="w-3 h-3" />
+          </span>
+        </span>
       )}
       {isSubscribed ? 'Alerts on' : 'Turn on alerts'}
     </button>
