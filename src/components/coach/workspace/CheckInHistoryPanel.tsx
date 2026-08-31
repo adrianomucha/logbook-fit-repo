@@ -25,35 +25,25 @@ export interface CheckInScheduleSettings {
   dayOfWeek: number | null;
 }
 
-/** Cadence choices — must stay in sync with checkInScheduleSchema */
-const INTERVAL_OPTIONS: { value: number; label: string; summary: string }[] = [
-  { value: 3, label: 'Every 3 days', summary: 'every 3 days' },
-  { value: 7, label: 'Every week', summary: 'every week' },
-  { value: 14, label: 'Every 2 weeks', summary: 'every 2 weeks' },
-  { value: 28, label: 'Every 4 weeks', summary: 'every 4 weeks' },
+/** Cadence choices — must stay in sync with checkInScheduleSchema.
+ *  Lowercase labels: they complete the sentence "Sends [every week] on [Mondays]". */
+const INTERVAL_OPTIONS: { value: number; label: string }[] = [
+  { value: 3, label: 'every 3 days' },
+  { value: 7, label: 'every week' },
+  { value: 14, label: 'every 2 weeks' },
+  { value: 28, label: 'every 4 weeks' },
 ];
 
 // Coach-facing order Monday-first; values follow JS getDay() (0 = Sunday)
 const DAY_OPTIONS: { value: number; label: string }[] = [
-  { value: 1, label: 'Monday' },
-  { value: 2, label: 'Tuesday' },
-  { value: 3, label: 'Wednesday' },
-  { value: 4, label: 'Thursday' },
-  { value: 5, label: 'Friday' },
-  { value: 6, label: 'Saturday' },
-  { value: 0, label: 'Sunday' },
+  { value: 1, label: 'Mondays' },
+  { value: 2, label: 'Tuesdays' },
+  { value: 3, label: 'Wednesdays' },
+  { value: 4, label: 'Thursdays' },
+  { value: 5, label: 'Fridays' },
+  { value: 6, label: 'Saturdays' },
+  { value: 0, label: 'Sundays' },
 ];
-
-function scheduleSummary(schedule: CheckInScheduleSettings) {
-  if (!schedule.enabled) return 'Off — send check-ins by hand';
-  const interval =
-    INTERVAL_OPTIONS.find((o) => o.value === schedule.intervalDays)?.summary ??
-    `every ${schedule.intervalDays} days`;
-  const day = DAY_OPTIONS.find((o) => o.value === schedule.dayOfWeek);
-  return day && schedule.intervalDays >= 7
-    ? `Sends ${interval} on ${day.label}s`
-    : `Sends automatically ${interval}`;
-}
 
 interface CheckInHistoryPanelProps {
   checkIns: CheckIn[];
@@ -114,14 +104,24 @@ export function CheckInHistoryPanel({
 
   const firstName = clientName?.split(' ')[0] || clientName || 'Client';
 
+  // The whole setting reads as one sentence — "Sends every week on Mondays" —
+  // with the variable words as compact inline selects, so nothing has to line
+  // up against a grid it doesn't share.
+  const selectTriggerClasses =
+    'h-8 w-auto gap-1 rounded-md border-border/60 bg-background/60 px-2.5 text-sm font-medium text-foreground hover:border-border transition-colors';
+
   const scheduleToggle = hasPlan && schedule && onUpdateSchedule ? (
-    <div className="px-3 py-2 bg-muted/30 rounded-lg space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <CalendarCheck className="w-4 h-4 text-muted-foreground" />
-          <div>
+    <div className="px-3 py-2.5 bg-muted/30 rounded-lg">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 min-w-0">
+          <CalendarCheck className="w-4 h-4 text-muted-foreground shrink-0" />
+          <div className="min-w-0">
             <span className="text-sm font-medium">Automatic check-ins</span>
-            <p className="text-xs text-muted-foreground">{scheduleSummary(schedule)}</p>
+            {!schedule.enabled && (
+              <p className="text-xs text-muted-foreground">
+                Off — send check-ins by hand
+              </p>
+            )}
           </div>
         </div>
         <Switch
@@ -130,16 +130,14 @@ export function CheckInHistoryPanel({
         />
       </div>
       {schedule.enabled && (
-        <div className="grid grid-cols-2 gap-2 animate-in fade-in-0 slide-in-from-top-1 duration-150">
-          <div>
-            <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium block mb-1">
-              Frequency
-            </label>
+        <div className="mt-2.5 pt-2.5 pl-6 border-t border-border/50 animate-in fade-in-0 slide-in-from-top-1 duration-150">
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-sm text-muted-foreground">
+            <span>Sends</span>
             <Select
               value={String(schedule.intervalDays)}
               onValueChange={(v) => onUpdateSchedule({ intervalDays: Number(v) })}
             >
-              <SelectTrigger className="w-full bg-background/60">
+              <SelectTrigger aria-label="Frequency" className={selectTriggerClasses}>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -150,39 +148,37 @@ export function CheckInHistoryPanel({
                 ))}
               </SelectContent>
             </Select>
+            {/* Anchoring to a weekday only makes sense at a week or longer */}
+            {schedule.intervalDays >= 7 && (
+              <>
+                <span>on</span>
+                <Select
+                  value={schedule.dayOfWeek === null ? 'any' : String(schedule.dayOfWeek)}
+                  onValueChange={(v) =>
+                    onUpdateSchedule({ dayOfWeek: v === 'any' ? null : Number(v) })
+                  }
+                >
+                  <SelectTrigger aria-label="Day of week" className={selectTriggerClasses}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">any day</SelectItem>
+                    {DAY_OPTIONS.map((option) => (
+                      <SelectItem key={option.value} value={String(option.value)}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {schedule.dayOfWeek !== null && (
+                  <span className="text-xs text-muted-foreground/70">
+                    ({firstName}&apos;s local day)
+                  </span>
+                )}
+              </>
+            )}
           </div>
-          {/* Anchoring to a weekday only makes sense at a week or longer */}
-          {schedule.intervalDays >= 7 && (
-            <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium block mb-1">
-                Day
-              </label>
-              <Select
-                value={schedule.dayOfWeek === null ? 'any' : String(schedule.dayOfWeek)}
-                onValueChange={(v) =>
-                  onUpdateSchedule({ dayOfWeek: v === 'any' ? null : Number(v) })
-                }
-              >
-                <SelectTrigger className="w-full bg-background/60">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="any">Any day</SelectItem>
-                  {DAY_OPTIONS.map((option) => (
-                    <SelectItem key={option.value} value={String(option.value)}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
         </div>
-      )}
-      {schedule.enabled && schedule.dayOfWeek !== null && schedule.intervalDays >= 7 && (
-        <p className="text-[10px] text-muted-foreground/70">
-          Anchored to {firstName}&apos;s local day.
-        </p>
       )}
     </div>
   ) : null;
