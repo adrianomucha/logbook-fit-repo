@@ -33,6 +33,7 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { Button } from '@/components/ui/button';
+import { LoadErrorState } from '@/components/coach/EmptyStates';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -450,22 +451,13 @@ export function UnifiedClientProfile() {
     return (
       <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
-          <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
-            <div className="text-center py-12 px-6">
-              <div className="text-4xl select-none mb-4">📡</div>
-              <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Couldn&apos;t load this client</h2>
-              <p className="text-sm text-muted-foreground mb-5 antialiased">
-                Something went wrong on our end or with your connection.
-              </p>
-              <Button
-                onClick={() => refreshClient()}
-                className="active:scale-[0.96] transition-transform duration-150"
-              >
-                Try again
-              </Button>
-            </div>
-          </div>
+        <div className="max-w-7xl mx-auto px-3 pt-3 sm:px-4 sm:pt-7">
+          <LoadErrorState
+            kicker="Client profile · Signal lost"
+            title="Couldn't load this client"
+            onRetry={() => refreshClient()}
+            preview="profile"
+          />
         </div>
       </div>
     );

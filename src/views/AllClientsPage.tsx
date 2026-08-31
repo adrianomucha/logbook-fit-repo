@@ -7,11 +7,11 @@ import type { DashboardClient } from '@/types/api';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
-import { EmptyStateNoClients } from '@/components/coach/EmptyStates';
+import { EmptyStateNoClients, LoadErrorState } from '@/components/coach/EmptyStates';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
-import { Loader2, Plus, RefreshCw, Search } from 'lucide-react';
+import { Loader2, Plus, Search } from 'lucide-react';
 import {
   urgencyStyle,
   getSignal,
@@ -178,17 +178,11 @@ export function AllClientsPage() {
           </div>
         ) : error && clients.length === 0 ? (
           // A failed fetch must never masquerade as an empty roster
-          <div className="flex flex-col items-center text-center py-12 animate-enter">
-            <div className="text-4xl select-none mb-4">📡</div>
-            <h2 className="text-lg font-bold tracking-tight mb-1.5 antialiased">Couldn&apos;t load your clients</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">
-              Something went wrong on our end or with your connection.
-            </p>
-            <Button onClick={() => refresh()} className="active:scale-[0.96] transition-transform duration-150">
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Try again
-            </Button>
-          </div>
+          <LoadErrorState
+            kicker="Clients · Signal lost"
+            title="Couldn't load your clients"
+            onRetry={() => refresh()}
+          />
         ) : clients.length === 0 ? (
           <EmptyStateNoClients onInvite={() => setShowInviteModal(true)} />
         ) : visibleClients.length === 0 ? (

@@ -12,13 +12,13 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, PartyPopper, FlaskConical, RefreshCw, Trash2, FileSpreadsheet } from 'lucide-react';
+import { Plus, Loader2, PartyPopper, FlaskConical, Trash2, FileSpreadsheet } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
 import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
-import { EmptyStateNoPlans } from '@/components/coach/EmptyStates';
+import { EmptyStateNoPlans, LoadErrorState } from '@/components/coach/EmptyStates';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import { useCoachInvites } from '@/hooks/api/useCoachInvites';
@@ -359,17 +359,11 @@ export function CoachDashboard() {
             ) : dashboardError && dashboardClients.length === 0 ? (
               // A failed fetch must never masquerade as the "no clients yet"
               // onboarding state — a coach with a full roster would see it
-              <div className="flex flex-col items-center text-center py-12 animate-enter">
-                <div className="text-4xl select-none mb-4">📡</div>
-                <h2 className="text-lg font-bold tracking-tight mb-1.5 antialiased">Couldn&apos;t load your roster</h2>
-                <p className="text-sm text-muted-foreground mb-5 antialiased">
-                  Something went wrong on our end or with your connection.
-                </p>
-                <Button onClick={() => refreshDashboard()} className="active:scale-[0.96] transition-transform duration-150">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Try again
-                </Button>
-              </div>
+              <LoadErrorState
+                kicker="Roster · Signal lost"
+                title="Couldn't load your roster"
+                onRetry={() => refreshDashboard()}
+              />
             ) : showGettingStarted ? (
               <div className="animate-enter" style={{ animationDelay: '60ms' }}>
                 <GettingStartedCard
