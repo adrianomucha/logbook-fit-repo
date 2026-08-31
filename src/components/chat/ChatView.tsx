@@ -339,7 +339,7 @@ export function ChatView({
                             inputRef.current?.focus();
                           }}
                           className={cn(
-                            'text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground active:scale-[0.97] transition-[background-color,color,transform] duration-150 touch-manipulation min-h-[44px]',
+                            'text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground active:scale-[0.96] transition-[background-color,color,transform] duration-150 touch-manipulation min-h-[44px]',
                             isBrand
                               ? 'hover:bg-brand hover:text-brand-foreground'
                               : 'hover:bg-foreground hover:text-background'
@@ -524,12 +524,12 @@ export function ChatView({
               onClick={handleSend}
               disabled={!hasInput}
               className={cn(
-                'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-[background-color,color,transform] duration-200 ease-out touch-manipulation tap-target',
+                'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-[background-color,color,transform] duration-150 ease-out touch-manipulation tap-target',
                 hasInput
                   ? isBrand
                     // Volt = "go", same as the workout CTA
-                    ? 'bg-brand text-brand-foreground hover:bg-brand/90 active:scale-95 scale-100'
-                    : 'bg-foreground text-background hover:bg-foreground/90 active:scale-95 scale-100'
+                    ? 'bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] scale-100'
+                    : 'bg-foreground text-background hover:bg-foreground/90 active:scale-[0.96] scale-100'
                   : 'bg-muted/40 text-muted-foreground/30 scale-90 pointer-events-none'
               )}
               aria-label="Send message"

@@ -287,7 +287,7 @@ export function InlineCheckInReview({
                   See how {firstName}&apos;s training is going.
                 </p>
               </div>
-              <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 active:scale-[0.96] transition-transform duration-150">
+              <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 ps-2.5 active:scale-[0.96] transition-transform duration-150">
                 <ClipboardCheck className="w-4 h-4 mr-2" />
                 {isSubmitting ? 'Sending…' : 'Send Check-in'}
               </Button>

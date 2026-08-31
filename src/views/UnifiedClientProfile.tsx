@@ -604,7 +604,6 @@ export function UnifiedClientProfile() {
     <div className={cn(
       "bg-card rounded-xl overflow-hidden p-4 sm:p-5",
       "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
-      "transition-shadow duration-200",
       cardClassName
     )}>
       {children}
@@ -842,17 +841,17 @@ export function UnifiedClientProfile() {
                               size="sm"
                               onClick={() => setShowContinueConfirm(true)}
                               disabled={isContinuingPlan}
-                              className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
+                              className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
                             >
                               <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
                               {isContinuingPlan ? 'Starting…' : 'Run again'}
                             </Button>
                           )}
-                          <Button variant="ghost" size="sm" onClick={handleChangePlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
+                          <Button variant="ghost" size="sm" onClick={handleChangePlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
                             Change
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
+                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <Pencil className="w-3.5 h-3.5 mr-1.5" />
                             Edit
                           </Button>
