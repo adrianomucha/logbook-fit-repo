@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowRight, Download, FileSpreadsheet, Loader2, X } from 'lucide-react';
 import { Modal } from '../ui/Modal';
-import { Button } from '../ui/button';
+import { Button, buttonVariants } from '../ui/button';
 import { Input } from '../ui/input';
+import { cn } from '@/lib/utils';
 import { EmojiPicker } from './EmojiPicker';
 import { FieldLabel, FieldShell } from './shared/formSurfaces';
 import { ApiError } from '@/lib/api-client';
@@ -142,12 +143,19 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
             Download the template, fill in one row per exercise, then upload it
             back here. The example rows show the format.
           </p>
-          <Button asChild variant="outline" size="sm" className="shrink-0 rounded-xl gap-2">
-            <a href="/api/plans/import/template" download>
-              <Download className="w-4 h-4" aria-hidden="true" />
-              Download template
-            </a>
-          </Button>
+          {/* Styled directly with buttonVariants — this repo's Button doesn't
+              implement asChild, so wrapping the anchor left it unstyled */}
+          <a
+            href="/api/plans/import/template"
+            download
+            className={cn(
+              buttonVariants({ variant: 'outline', size: 'sm' }),
+              'shrink-0 self-start sm:self-center rounded-xl gap-2'
+            )}
+          >
+            <Download className="w-4 h-4" aria-hidden="true" />
+            Download template
+          </a>
         </div>
 
         {/* Step 2 — the filled-in file */}
