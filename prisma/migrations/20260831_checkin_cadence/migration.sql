@@ -4,7 +4,8 @@
 --
 -- "checkInIntervalDays": a new check-in is due this many days after the last.
 -- "checkInDayOfWeek": optional anchor weekday (0 = Sunday … 6 = Saturday,
--- UTC); NULL keeps today's behaviour of sending whenever the interval elapses.
+-- evaluated in the client's timezone, falling back to UTC); NULL keeps
+-- today's behaviour of sending whenever the interval elapses.
 -- Existing relationships keep their current weekly cadence via the default.
 ALTER TABLE "coach_client_relationships"
   ADD COLUMN "checkInIntervalDays" INTEGER NOT NULL DEFAULT 7,

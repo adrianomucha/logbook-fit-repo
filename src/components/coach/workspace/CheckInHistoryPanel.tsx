@@ -179,6 +179,11 @@ export function CheckInHistoryPanel({
           )}
         </div>
       )}
+      {schedule.enabled && schedule.dayOfWeek !== null && schedule.intervalDays >= 7 && (
+        <p className="text-[10px] text-muted-foreground/70">
+          Anchored to {firstName}&apos;s local day.
+        </p>
+      )}
     </div>
   ) : null;
 

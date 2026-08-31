@@ -1,5 +1,6 @@
 import prisma from "@/lib/prisma";
 import { notifyCheckInSent } from "@/lib/push";
+import { weekdayInTimeZone } from "@/lib/timezone";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_INTERVAL_DAYS = 7;
@@ -43,7 +44,9 @@ export async function expireStaleCheckIns(
  * in flight, and the most recent one is at least a full cadence old (or none
  * exists), a fresh PENDING check-in is created. The cadence is per
  * relationship: every `checkInIntervalDays` days, optionally anchored to a
- * weekday (`checkInDayOfWeek`, 0 = Sunday … 6 = Saturday, UTC).
+ * weekday (`checkInDayOfWeek`, 0 = Sunday … 6 = Saturday, evaluated in the
+ * client's timezone — the check-in is for them, so "Monday" means their
+ * Monday; UTC when their timezone is unknown).
  *
  * Called from two places: the nightly sweep (runScheduledCheckIns, the
  * authority — it reaches every client whether or not anyone opens the app),
@@ -77,8 +80,17 @@ export async function ensureScheduledCheckIn(relationship: {
     return null;
   }
 
-  if (dayOfWeek !== null && new Date().getUTCDay() !== dayOfWeek) {
-    return null;
+  if (dayOfWeek !== null) {
+    // "Monday" means the client's Monday, not the server's: resolve their
+    // stored IANA timezone (captured from the browser by TimezoneSync) and
+    // compare weekdays there. Unknown or invalid zones fall back to UTC.
+    const client = await prisma.clientProfile.findUnique({
+      where: { id: relationship.clientId },
+      select: { user: { select: { timezone: true } } },
+    });
+    if (weekdayInTimeZone(new Date(), client?.user.timezone) !== dayOfWeek) {
+      return null;
+    }
   }
 
   const latest = await prisma.checkIn.findFirst({

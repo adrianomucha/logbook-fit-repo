@@ -181,8 +181,9 @@ model CoachClientRelationship {
   // last. Coach-configurable per client (3, 7, 14 or 28 in the UI).
   checkInIntervalDays Int @default(7)
   // Optional anchor weekday for the cadence, 0 = Sunday … 6 = Saturday,
-  // evaluated in UTC (the nightly sweep runs 09:00 UTC). Null = send whenever
-  // the interval elapses. Ignored for intervals shorter than a week.
+  // evaluated in the client's timezone (User.timezone; UTC when unknown).
+  // Null = send whenever the interval elapses. Ignored for intervals shorter
+  // than a week.
   checkInDayOfWeek Int?
   // Termination audit: set when the coach ends the relationship or the
   // client unsubscribes. status becomes INACTIVE; the row is kept as history.

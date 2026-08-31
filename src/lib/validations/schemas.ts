@@ -178,6 +178,12 @@ export const coachRespondSchema = z.object({
   planAdjustment: z.boolean().optional(),
 });
 
+// IANA identifiers top out well under this ("America/Argentina/ComodRivadavia"
+// is 30 chars); the runtime Intl check in the route is the real gate.
+export const timezoneSchema = z.object({
+  timezone: z.string().min(1).max(64),
+});
+
 // Interval choices mirror the coach UI exactly — the server accepts nothing
 // looser (see backlog item on server validation drifting behind the UI).
 export const checkInScheduleSchema = z

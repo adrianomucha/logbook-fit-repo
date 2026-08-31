@@ -81,8 +81,11 @@ One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
 check-ins the client never answered and sends the ones that are due, for every
 active relationship with `checkInScheduleEnabled`. The cadence is per
 relationship (`checkInIntervalDays`, default 7, with an optional
-`checkInDayOfWeek` anchor evaluated in UTC), set by the coach from the client
-workspace's check-in tab.
+`checkInDayOfWeek` anchor evaluated in the client's timezone), set by the
+coach from the client workspace's check-in tab. Timezones are IANA
+identifiers on `User.timezone`, captured silently from the browser on app
+load (`TimezoneSync` → `PUT /api/account/timezone`); the scheduler falls
+back to UTC when one is missing or invalid.
 
 This is what makes "auto-sends on the configured cadence" true. Scheduling is also
 materialized opportunistically when either party loads check-in data, so a due

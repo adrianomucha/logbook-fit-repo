@@ -9,6 +9,9 @@ const db = vi.hoisted(() => ({
   coachClientRelationship: {
     findMany: vi.fn(),
   },
+  clientProfile: {
+    findUnique: vi.fn(),
+  },
 }));
 
 vi.mock("@/lib/prisma", () => ({ default: db }));
@@ -54,6 +57,7 @@ describe("ensureScheduledCheckIn", () => {
     db.checkIn.updateMany.mockResolvedValue({ count: 0 });
     db.checkIn.findFirst.mockResolvedValue(null);
     db.checkIn.create.mockResolvedValue(createdCheckIn("checkin-new"));
+    db.clientProfile.findUnique.mockResolvedValue({ user: { timezone: "UTC" } });
   });
 
   afterEach(() => {
@@ -229,6 +233,63 @@ describe("ensureScheduledCheckIn", () => {
         checkInDayOfWeek: FRIDAY,
       })
     ).toMatchObject({ id: "checkin-new" });
+  });
+
+  it("evaluates the anchor weekday in the client's timezone", async () => {
+    // 09:00 UTC Friday is 23:00 Thursday in Honolulu (UTC-10, no DST)
+    db.clientProfile.findUnique.mockResolvedValue({
+      user: { timezone: "Pacific/Honolulu" },
+    });
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - 10 * DAY_MS),
+    });
+
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: FRIDAY,
+      })
+    ).toBeNull();
+
+    const THURSDAY = 4;
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: THURSDAY,
+      })
+    ).toMatchObject({ id: "checkin-new" });
+  });
+
+  it("falls back to UTC when the client's timezone is missing or invalid", async () => {
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - 10 * DAY_MS),
+    });
+
+    db.clientProfile.findUnique.mockResolvedValue(null);
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: FRIDAY,
+      })
+    ).toMatchObject({ id: "checkin-new" });
+
+    db.checkIn.create.mockClear();
+    db.clientProfile.findUnique.mockResolvedValue({
+      user: { timezone: "Not/AZone" },
+    });
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: FRIDAY,
+      })
+    ).toMatchObject({ id: "checkin-new" });
+  });
+
+  it("skips the timezone lookup entirely when no anchor day is set", async () => {
+    await ensureScheduledCheckIn(activeRelationship);
+    expect(db.clientProfile.findUnique).not.toHaveBeenCalled();
   });
 
   it("ignores the anchor weekday for cadences shorter than a week", async () => {
