@@ -141,12 +141,12 @@ export function WorkoutHistoryPanel({
           >
             {showAll ? (
               <>
-                <ChevronUp className="w-4 h-4 mr-1" />
+                <ChevronUp className="w-4 h-4 me-1" />
                 Show less
               </>
             ) : (
               <>
-                <ChevronDown className="w-4 h-4 mr-1" />
+                <ChevronDown className="w-4 h-4 me-1" />
                 Show all ({rows.length - initialCount} more)
               </>
             )}

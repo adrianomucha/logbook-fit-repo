@@ -154,7 +154,7 @@ export function InteractiveWeeklyStrip({
           <span className="text-lg font-bold tabular-nums text-muted-foreground">
             {progress.total}
           </span>
-          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium ml-2">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium ms-2">
             {allDone ? 'Complete' : 'Sessions'}
           </span>
         </p>
@@ -196,7 +196,7 @@ export function InteractiveWeeklyStrip({
 
               {/* Inline expanded exercises */}
               {isExpanded && dayWorkout && (
-                <div className="pl-[60px] pr-3 pb-4 pt-1 animate-fade-in-up">
+                <div className="ps-[60px] pe-3 pb-4 pt-1 animate-fade-in-up">
                   {/* Exercise list */}
                   {dayWorkout.exercises && dayWorkout.exercises.length > 0 ? (
                     <div className="space-y-0">
@@ -206,7 +206,7 @@ export function InteractiveWeeklyStrip({
                           className="flex items-center text-[13px] py-1.5"
                         >
                           <span className="flex-1 truncate antialiased">{exercise.name}</span>
-                          <span className="font-mono text-xs text-muted-foreground shrink-0 tabular-nums antialiased ml-3">
+                          <span className="font-mono text-xs text-muted-foreground shrink-0 tabular-nums antialiased ms-3">
                             {exercise.sets}×{exercise.reps || '—'}
                             {exercise.weight && ` · ${exercise.weight}`}
                           </span>
@@ -247,7 +247,7 @@ export function InteractiveWeeklyStrip({
                         className="h-7 text-xs text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] duration-150 tap-target"
                         onClick={editHandler}
                       >
-                        <Edit2 className="w-3 h-3 mr-1" />
+                        <Edit2 className="w-3 h-3 me-1" />
                         Edit
                       </Button>
                     )}
@@ -295,7 +295,7 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       onClick={onClick}
       disabled={!isClickable}
       className={cn(
-        'flex items-center gap-3 px-3 py-3 w-full text-left transition-[background-color,transform] duration-150 min-h-[52px]',
+        'flex items-center gap-3 px-3 py-3 w-full text-start transition-[background-color,transform] duration-150 min-h-[52px]',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         isCurrent && 'bg-foreground/[0.03]',
         isClickable && 'hover:bg-muted/50 active:bg-muted/70 active:scale-[0.995] cursor-pointer',
@@ -313,8 +313,9 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
       </svg>
 
-      {/* Position number */}
-      <div className="w-10 shrink-0">
+      {/* Position number — min-w keeps the rows' columns aligned while
+          letting a longer translated "Day" label grow instead of clipping */}
+      <div className="min-w-10 shrink-0">
         {/* The current row's tint drops plain muted-foreground below 4.5:1 */}
         <p className={cn(
           'font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased',

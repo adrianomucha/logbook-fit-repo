@@ -136,7 +136,7 @@ export function CheckInHistoryPanel({
         />
       </div>
       {schedule.enabled && (
-        <div className="mt-2.5 pt-2.5 pl-6 border-t border-border/50 animate-in fade-in-0 slide-in-from-top-1 duration-150">
+        <div className="mt-2.5 pt-2.5 ps-6 border-t border-border/50 animate-in fade-in-0 slide-in-from-top-1 duration-150">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-sm text-muted-foreground">
             <span>Sends</span>
             <Select
@@ -236,7 +236,7 @@ export function CheckInHistoryPanel({
                 aria-expanded={isExpanded}
                 aria-label={`Check-in from ${format(checkInDate, 'MMMM d, yyyy')}`}
                 className={cn(
-                  'w-full text-left p-2.5 flex items-center justify-between gap-2 rounded-lg transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                  'w-full text-start p-2.5 flex items-center justify-between gap-2 rounded-lg transition-[background-color,transform] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
                   !isExpanded && 'hover:bg-muted/40 active:scale-[0.98]'
                 )}
               >
@@ -385,12 +385,12 @@ export function CheckInHistoryPanel({
           >
             {showAll ? (
               <>
-                <ChevronUp className="w-4 h-4 mr-1" />
+                <ChevronUp className="w-4 h-4 me-1" />
                 Show less
               </>
             ) : (
               <>
-                <ChevronDown className="w-4 h-4 mr-1" />
+                <ChevronDown className="w-4 h-4 me-1" />
                 Show all ({completedCheckIns.length - initialCount} more)
               </>
             )}

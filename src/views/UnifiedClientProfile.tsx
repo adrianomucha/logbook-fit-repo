@@ -651,7 +651,7 @@ export function UnifiedClientProfile() {
                       onClick={() => setShowEndConfirm(true)}
                       className="text-destructive focus:text-destructive"
                     >
-                      <UserMinus className="w-4 h-4 mr-2" />
+                      <UserMinus className="w-4 h-4 me-2" />
                       End coaching relationship
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -810,7 +810,7 @@ export function UnifiedClientProfile() {
                       tab.label
                     )}
                     {'count' in tab && tab.count > 0 && (
-                      <span className="ml-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
+                      <span className="ms-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
                         {tab.count}
                       </span>
                     )}
@@ -855,16 +855,16 @@ export function UnifiedClientProfile() {
                               disabled={isContinuingPlan}
                               className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
                             >
-                              <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                              <RotateCcw className="w-3.5 h-3.5 me-1.5" />
                               {isContinuingPlan ? 'Starting…' : 'Run again'}
                             </Button>
                           )}
                           <Button variant="ghost" size="sm" onClick={handleChangePlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
-                            <ArrowLeftRight className="w-3.5 h-3.5 mr-1.5" />
+                            <ArrowLeftRight className="w-3.5 h-3.5 me-1.5" />
                             Change
                           </Button>
                           <Button variant="ghost" size="sm" onClick={handleEditPlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
-                            <Pencil className="w-3.5 h-3.5 mr-1.5" />
+                            <Pencil className="w-3.5 h-3.5 me-1.5" />
                             Edit
                           </Button>
                         </div>
