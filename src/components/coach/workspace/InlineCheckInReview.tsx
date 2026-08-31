@@ -239,16 +239,20 @@ export function InlineCheckInReview({
             </div>
           )}
 
+          {/* Quiet one-line prompt — this is a resting state, not a call to
+              arms, so it stays a slim row instead of a tall centered block */}
           <div className={cn(
-            "text-center py-6",
-            flaggedExercisesWithContext.length > 0 && "border-t"
+            "flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-1",
+            flaggedExercisesWithContext.length > 0 && "border-t pt-4"
           )}>
-            <div className="text-3xl select-none mb-3">📋</div>
-            <p className="font-semibold antialiased">Time for a check-in?</p>
-            <p className="text-sm text-muted-foreground mb-4 antialiased">
-              See how {firstName}&apos;s training is going.
-            </p>
-            <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="active:scale-[0.96] transition-transform duration-150">
+            <div className="text-2xl select-none sm:pl-1" aria-hidden="true">📋</div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold antialiased">Time for a check-in?</p>
+              <p className="text-sm text-muted-foreground antialiased">
+                See how {firstName}&apos;s training is going.
+              </p>
+            </div>
+            <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 active:scale-[0.96] transition-transform duration-150">
               <ClipboardCheck className="w-4 h-4 mr-2" />
               {isSubmitting ? 'Sending…' : 'Send Check-in'}
             </Button>
@@ -286,7 +290,7 @@ export function InlineCheckInReview({
 
     return (
       <Wrapper>
-        <div className={cn("pb-3", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
+        <div className={cn("pb-3 flex items-center justify-between gap-2", isFlat ? '' : 'px-3 sm:px-6 pt-6')}>
           <h3 className="text-base font-semibold flex items-center gap-2 antialiased">
             <span className="relative flex h-2.5 w-2.5 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
@@ -294,6 +298,27 @@ export function InlineCheckInReview({
             </span>
             Waiting on {firstName}
           </h3>
+          {/* Escape hatch — sent by mistake or at a bad time. Lives beside the
+              status heading instead of floating in the tinted band below. */}
+          {onCancelCheckIn && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={isSubmitting}
+              className="shrink-0 text-muted-foreground hover:text-destructive"
+              onClick={async () => {
+                if (isSubmitting) return;
+                setIsSubmitting(true);
+                try {
+                  await onCancelCheckIn();
+                } finally {
+                  setIsSubmitting(false);
+                }
+              }}
+            >
+              Withdraw check-in
+            </Button>
+          )}
         </div>
         <div className={cn("space-y-4", isFlat ? 'rounded-xl bg-warning/[0.07] p-4' : 'px-3 sm:px-6 pb-6')}>
           {/* Timeline-style status */}
@@ -346,28 +371,6 @@ export function InlineCheckInReview({
             </div>
           )}
 
-          {/* Escape hatch — sent by mistake or at a bad time */}
-          {onCancelCheckIn && (
-            <div className="flex justify-end pt-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={isSubmitting}
-                className="text-muted-foreground hover:text-destructive"
-                onClick={async () => {
-                  if (isSubmitting) return;
-                  setIsSubmitting(true);
-                  try {
-                    await onCancelCheckIn();
-                  } finally {
-                    setIsSubmitting(false);
-                  }
-                }}
-              >
-                Withdraw check-in
-              </Button>
-            </div>
-          )}
         </div>
       </Wrapper>
     );

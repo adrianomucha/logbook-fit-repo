@@ -697,83 +697,76 @@ export function UnifiedClientProfile() {
         </div>
         )}
 
-        {/* Work column + reference rail. One column through tablet widths —
-            two columns at md was cramped enough to wrap the tab labels — then
-            at lg the page splits: the left column holds what the coach acts
-            on (check-in, then chat), the right rail holds what they consult
-            (plan / workouts / check-in history). Keeping the check-in inside
-            the 3/5 column also stops its idle and waiting states from
-            stretching into a mostly-empty full-width band. */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8 lg:gap-6 lg:items-start">
-          <div className="lg:col-span-3 min-w-0 space-y-6 sm:space-y-8">
-            {/* Check-in section. Rendered whenever the client has a plan, not only
-                while one is in flight: gating on activeCheckIn hid the panel's
-                "Send Check-in" button, and with the dashboard CTA only appearing
-                for clients already flagged as due, a coach could reach a client
-                with no way to start a check-in at all. With no active check-in the
-                panel shows its prompt plus any unaddressed flags. Past check-ins
-                still live in the History tab. */}
-            {plan && (
-            <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
-              <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
-              <SectionCard>
-                <InlineCheckInReview
-                  client={client}
-                  activeCheckIn={activeCheckIn}
-                  plan={plan}
-                  workoutCompletions={workoutCompletions}
-                  exerciseFlags={exerciseFlags}
-                  currentUserId={user?.id ?? ''}
-                  onCompleteCheckIn={handleCompleteCheckIn}
-                  onCreateCheckIn={handleCreateCheckIn}
-                  onCancelCheckIn={handleCancelCheckIn}
-                  onMessageAboutFlag={handleMessageAboutFlag}
-                  justSentFromParent={justSentCheckIn}
-                  variant="flat"
-                />
-              </SectionCard>
-            </section>
-            )}
+        {/* Check-in section. Rendered whenever the client has a plan, not only
+            while one is in flight: gating on activeCheckIn hid the panel's
+            "Send Check-in" button, and with the dashboard CTA only appearing
+            for clients already flagged as due, a coach could reach a client
+            with no way to start a check-in at all. With no active check-in the
+            panel shows its compact prompt plus any unaddressed flags. Past
+            check-ins still live in the History tab. */}
+        {plan && (
+        <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
+          <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
+          <SectionCard>
+            <InlineCheckInReview
+              client={client}
+              activeCheckIn={activeCheckIn}
+              plan={plan}
+              workoutCompletions={workoutCompletions}
+              exerciseFlags={exerciseFlags}
+              currentUserId={user?.id ?? ''}
+              onCompleteCheckIn={handleCompleteCheckIn}
+              onCreateCheckIn={handleCreateCheckIn}
+              onCancelCheckIn={handleCancelCheckIn}
+              onMessageAboutFlag={handleMessageAboutFlag}
+              justSentFromParent={justSentCheckIn}
+              variant="flat"
+            />
+          </SectionCard>
+        </section>
+        )}
 
-            {/* Messages */}
-            <section className="animate-enter" style={{ animationDelay: '180ms' }}>
-              <div ref={chatRef} className={cn(
-                "bg-card rounded-xl overflow-hidden lg:h-[520px] flex flex-col",
-                "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
-              )}>
-                <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 shrink-0">
-                  <div className="flex gap-1 items-center justify-between border-b border-border mb-0 -mt-1">
-                    <h2 className="pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
-                      Messages
-                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
-                    </h2>
-                    <NotificationToggle className="mb-1.5" />
-                  </div>
+        {/* Two equal columns: Chat + tabbed Plan/History. Matched heights keep
+            the pairing symmetric on desktop; one column through tablet widths,
+            where two columns wrapped the tab labels and truncated the plan
+            name. */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '200ms' }}>
+          {/* Messages */}
+          <section>
+            <div ref={chatRef} className={cn(
+              "bg-card rounded-xl overflow-hidden lg:h-[480px] flex flex-col",
+              "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
+            )}>
+              <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 shrink-0">
+                <div className="flex gap-1 items-center justify-between border-b border-border mb-0 -mt-1">
+                  <h2 className="pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
+                    Messages
+                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
+                  </h2>
+                  <NotificationToggle className="mb-1.5" />
                 </div>
-                <ChatView
-                  client={client}
-                  messages={messages}
-                  currentUserId={user?.id ?? ''}
-                  currentUserName={user?.name ?? 'Coach'}
-                  onSendMessage={handleSendMessage}
-                  hasEarlier={hasEarlierMessages}
-                  onLoadEarlier={loadEarlierMessages}
-                  initialPrefill={chatPrefill}
-                  /* Fixed height below lg so the history scrolls inside the card instead
-                     of stretching the page (flex-basis 0 from flex-1 would override h-[…]) */
-                  heightClass="h-[420px] lg:h-auto lg:flex-1 lg:min-h-0"
-                />
               </div>
-            </section>
-          </div>
+              <ChatView
+                client={client}
+                messages={messages}
+                currentUserId={user?.id ?? ''}
+                currentUserName={user?.name ?? 'Coach'}
+                onSendMessage={handleSendMessage}
+                hasEarlier={hasEarlierMessages}
+                onLoadEarlier={loadEarlierMessages}
+                initialPrefill={chatPrefill}
+                /* Fixed height below lg so the history scrolls inside the card instead
+                   of stretching the page (flex-basis 0 from flex-1 would override h-[…]) */
+                heightClass="h-[420px] lg:h-auto lg:flex-1 lg:min-h-0"
+              />
+            </div>
+          </section>
 
-          {/* Reference rail: tabbed Plan + History. Sticky under the nav on
-              desktop so the plan stays in view while the coach scrolls the
-              work column. The card hugs its content and only caps at the
-              viewport, so short plans don't leave a hollow card and long
-              ones scroll inside it. */}
-          <section ref={secondaryRef} className="lg:col-span-2 min-w-0 lg:sticky lg:top-20 animate-enter" style={{ animationDelay: '220ms' }}>
-            <SectionCard className="lg:max-h-[calc(100dvh-7rem)] lg:flex lg:flex-col">
+          {/* Secondary: Tabbed Plan + History.
+              Matches the chat card's height on desktop; footers pin to the bottom
+              edge (like the chat input) so spare space sits inside the card. */}
+          <section ref={secondaryRef}>
+            <SectionCard className="lg:h-[480px] lg:flex lg:flex-col">
               {/* Tab bar */}
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
                 {([
