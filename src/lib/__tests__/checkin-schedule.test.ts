@@ -30,14 +30,20 @@ function createdCheckIn(id: string) {
   };
 }
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const SEVEN_DAYS_MS = 7 * DAY_MS;
+// A Friday — getUTCDay() === 5
 const NOW = new Date("2026-08-07T09:00:00Z").getTime();
+const FRIDAY = 5;
+const MONDAY = 1;
 
 const activeRelationship = {
   coachId: "coach-1",
   clientId: "client-1",
   status: "ACTIVE",
   checkInScheduleEnabled: true,
+  checkInIntervalDays: 7,
+  checkInDayOfWeek: null as number | null,
 };
 
 describe("ensureScheduledCheckIn", () => {
@@ -131,6 +137,140 @@ describe("ensureScheduledCheckIn", () => {
     expect(await ensureScheduledCheckIn(activeRelationship)).toMatchObject({
       id: "checkin-new",
     });
+  });
+
+  it("defaults to weekly when the cadence fields are absent", async () => {
+    const { checkInIntervalDays, checkInDayOfWeek, ...legacy } =
+      activeRelationship;
+    void checkInIntervalDays;
+    void checkInDayOfWeek;
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - SEVEN_DAYS_MS - 60_000),
+    });
+
+    expect(await ensureScheduledCheckIn(legacy)).toMatchObject({
+      id: "checkin-new",
+    });
+  });
+
+  it("respects a longer cadence", async () => {
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - 8 * DAY_MS),
+    });
+
+    // 8 days since the last one: due weekly, not due every 2 weeks
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInIntervalDays: 14,
+      })
+    ).toBeNull();
+
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - 14 * DAY_MS - 60_000),
+    });
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInIntervalDays: 14,
+      })
+    ).toMatchObject({ id: "checkin-new" });
+  });
+
+  it("only sends on the anchor weekday when one is set", async () => {
+    // Due for over a week, but today (Friday) is not the anchor day
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - 10 * DAY_MS),
+    });
+
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: MONDAY,
+      })
+    ).toBeNull();
+    expect(db.checkIn.create).not.toHaveBeenCalled();
+
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: FRIDAY,
+      })
+    ).toMatchObject({ id: "checkin-new" });
+  });
+
+  it("waits for the anchor weekday before the very first check-in", async () => {
+    db.checkIn.findFirst.mockResolvedValue(null);
+
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: MONDAY,
+      })
+    ).toBeNull();
+  });
+
+  it("gives anchored cadences a one-day grace so sweep-hour jitter can't skip a week", async () => {
+    // Last check-in went out later in the day than today's sweep runs: only
+    // 6 days 21 hours have elapsed. Without the grace, "every Friday" would
+    // silently become "every other Friday".
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - SEVEN_DAYS_MS + 3 * 60 * 60 * 1000),
+    });
+
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInDayOfWeek: FRIDAY,
+      })
+    ).toMatchObject({ id: "checkin-new" });
+  });
+
+  it("ignores the anchor weekday for cadences shorter than a week", async () => {
+    db.checkIn.findFirst.mockResolvedValue({
+      status: "COMPLETED",
+      createdAt: new Date(NOW - 4 * DAY_MS),
+    });
+
+    // Today is Friday, anchor says Monday — a 3-day cadence sends anyway
+    expect(
+      await ensureScheduledCheckIn({
+        ...activeRelationship,
+        checkInIntervalDays: 3,
+        checkInDayOfWeek: MONDAY,
+      })
+    ).toMatchObject({ id: "checkin-new" });
+  });
+
+  it("scales the stale-pending window with the cadence, floored at two weeks", async () => {
+    await ensureScheduledCheckIn({
+      ...activeRelationship,
+      checkInIntervalDays: 28,
+    });
+    expect(db.checkIn.updateMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          createdAt: { lt: new Date(NOW - 56 * DAY_MS) },
+        }),
+      })
+    );
+
+    await ensureScheduledCheckIn({
+      ...activeRelationship,
+      checkInIntervalDays: 3,
+    });
+    expect(db.checkIn.updateMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          createdAt: { lt: new Date(NOW - 14 * DAY_MS) },
+        }),
+      })
+    );
   });
 });
 
