@@ -126,7 +126,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
           <Button
             onClick={handleSubmit}
             disabled={!canSubmit}
-            className="h-12 flex-1 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.98] transition-[background-color,transform] duration-150"
+            className="h-12 flex-1 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.96] transition-[background-color,transform] duration-150"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
             {isSubmitting ? 'Importing' : 'Import plan'}
@@ -150,7 +150,9 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
             download
             className={cn(
               buttonVariants({ variant: 'outline', size: 'sm' }),
-              'shrink-0 self-start sm:self-center rounded-xl gap-2'
+              // ps compensates for the leading icon's visual weight
+              'shrink-0 self-start sm:self-center rounded-xl gap-2 ps-2.5',
+              'active:scale-[0.96] transition-[color,background-color,transform] duration-150'
             )}
           >
             <Download className="w-4 h-4" aria-hidden="true" />
@@ -184,7 +186,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
                   if (fileInputRef.current) fileInputRef.current.value = '';
                 }}
                 disabled={isSubmitting}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground shrink-0"
+                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground shrink-0 tap-target"
                 aria-label="Remove file"
               >
                 <X className="w-4 h-4" />
