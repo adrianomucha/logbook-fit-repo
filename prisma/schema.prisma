@@ -61,6 +61,18 @@ enum WaitlistStatus {
   JOINED
 }
 
+enum FeedbackCategory {
+  BUG
+  IDEA
+  OTHER
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  RESOLVED
+}
+
 // How an exercise is measured. When TIME, the reps-shaped integer columns
 // (Exercise.defaultReps, WorkoutExercise.reps/repsMax, SetCompletion.actualReps)
 // hold a duration in seconds instead of a rep count.
@@ -113,6 +125,9 @@ model User {
 
   // Web Push endpoints — one row per browser/device that opted in
   pushSubscriptions PushSubscription[]
+
+  // Product feedback submitted from the in-app dialog
+  feedback Feedback[]
 
   @@index([email])
   @@index([role])
@@ -505,6 +520,38 @@ model PushSubscription {
 
   @@index([userId])
   @@map("push_subscriptions")
+}
+
+// ──────────────────────────────────────
+// PRODUCT FEEDBACK
+// ──────────────────────────────────────
+
+// In-app feedback from the account menu's "Send feedback" dialog, reviewed
+// on /admin/feedback. Lifecycle: NEW (just submitted) → REVIEWED (owner has
+// read it) → RESOLVED (acted on or consciously declined).
+model Feedback {
+  id       String           @id @default(uuid())
+  // SetNull, not Cascade: feedback is the owner's product-research record
+  // and should outlive the reporter's account.
+  userId   String?
+  // Captured at submit time — linked accounts can switch roles later, and
+  // "a coach said this" vs "a client said this" is half the signal.
+  role     UserRole
+  category FeedbackCategory
+  message  String           @db.VarChar(2000)
+  // Path the dialog was opened from, auto-captured — cheap context that
+  // turns "the table is broken" into "the plan editor's table is broken".
+  pageUrl  String?          @db.VarChar(1000)
+  status   FeedbackStatus   @default(NEW)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt]) // Admin inbox: NEW first, oldest first
+  @@index([userId])
+  @@map("feedback")
 }
 
 // ──────────────────────────────────────

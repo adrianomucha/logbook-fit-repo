@@ -196,6 +196,14 @@ export const clientErrorLimiter = rateLimit("client-error", {
   maxRequests: 20,
 });
 
+// Feedback is authenticated, so this is keyed by user id rather than IP:
+// generous enough for someone on a bug-reporting spree, tight enough that
+// one account can't fill the admin inbox.
+export const feedbackLimiter = rateLimit("feedback", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 10,
+});
+
 // Periodic cleanup of expired in-memory entries (every 5 minutes)
 if (!hasUpstash && typeof setInterval !== "undefined") {
   setInterval(() => {
