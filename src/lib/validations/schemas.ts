@@ -178,9 +178,30 @@ export const coachRespondSchema = z.object({
   planAdjustment: z.boolean().optional(),
 });
 
-export const checkInScheduleSchema = z.object({
-  enabled: z.boolean(),
+// IANA identifiers top out well under this ("America/Argentina/ComodRivadavia"
+// is 30 chars); the runtime Intl check in the route is the real gate.
+export const timezoneSchema = z.object({
+  timezone: z.string().min(1).max(64),
 });
+
+// Interval choices mirror the coach UI exactly — the server accepts nothing
+// looser (see backlog item on server validation drifting behind the UI).
+export const checkInScheduleSchema = z
+  .object({
+    enabled: z.boolean().optional(),
+    intervalDays: z
+      .union([z.literal(3), z.literal(7), z.literal(14), z.literal(28)])
+      .optional(),
+    // 0 = Sunday … 6 = Saturday (UTC); null = whenever the interval elapses
+    dayOfWeek: z.number().int().min(0).max(6).nullable().optional(),
+  })
+  .refine(
+    (d) =>
+      d.enabled !== undefined ||
+      d.intervalDays !== undefined ||
+      d.dayOfWeek !== undefined,
+    { message: "Provide at least one schedule setting" }
+  );
 
 // ──────────────────────────────────────
 // PLANS

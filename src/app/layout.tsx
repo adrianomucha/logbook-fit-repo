@@ -5,6 +5,7 @@ import { IBM_Plex_Mono, IBM_Plex_Sans } from 'next/font/google';
 import { SessionProvider } from '@/providers/SessionProvider';
 import { SWRProvider } from '@/providers/SWRProvider';
 import { ScrollToTop } from '@/components/ScrollToTop';
+import { TimezoneSync } from '@/components/TimezoneSync';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, SITE_URL } from '@/lib/seo';
 import '@/app/globals.css';
 
@@ -95,6 +96,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SessionProvider>
           <SWRProvider>
               <ScrollToTop />
+              <TimezoneSync />
               {children}
           </SWRProvider>
         </SessionProvider>

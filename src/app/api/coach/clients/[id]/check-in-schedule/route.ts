@@ -8,8 +8,10 @@ import { ensureScheduledCheckIn } from "@/lib/checkin-schedule";
 
 /**
  * PUT /api/coach/clients/[id]/check-in-schedule
- * Enables or disables the weekly auto check-in for one of the coach's clients.
- * Enabling immediately materializes a check-in if one is already due.
+ * Updates the auto check-in schedule for one of the coach's clients: on/off,
+ * cadence in days, and an optional anchor weekday. Partial — only the fields
+ * sent are changed. Enabling or shortening the cadence immediately
+ * materializes a check-in if one is already due.
  */
 export const PUT = withCoach(
   async (
@@ -22,7 +24,7 @@ export const PUT = withCoach(
 
     const result = await parseBody(req, checkInScheduleSchema);
     if (!result.success) return result.response;
-    const { enabled } = result.data;
+    const { enabled, intervalDays, dayOfWeek } = result.data;
 
     const relationship = await prisma.coachClientRelationship.findFirst({
       where: {
@@ -38,15 +40,34 @@ export const PUT = withCoach(
       );
     }
 
+    const nextIntervalDays = intervalDays ?? relationship.checkInIntervalDays;
+    // An anchor day only makes sense for cadences of a week or longer —
+    // dropping to a shorter interval clears it rather than leaving a stale
+    // setting that would silently reactivate on the next cadence change
+    const nextDayOfWeek =
+      nextIntervalDays < 7
+        ? null
+        : dayOfWeek !== undefined
+          ? dayOfWeek
+          : relationship.checkInDayOfWeek;
+
     const updated = await prisma.coachClientRelationship.update({
       where: { id: relationship.id },
-      data: { checkInScheduleEnabled: enabled },
-      select: { checkInScheduleEnabled: true },
+      data: {
+        checkInScheduleEnabled: enabled ?? relationship.checkInScheduleEnabled,
+        checkInIntervalDays: nextIntervalDays,
+        checkInDayOfWeek: nextDayOfWeek,
+      },
+      select: {
+        checkInScheduleEnabled: true,
+        checkInIntervalDays: true,
+        checkInDayOfWeek: true,
+      },
     });
 
-    // If a check-in is already overdue, turning the schedule on sends one now
-    if (enabled) {
-      await ensureScheduledCheckIn({ ...relationship, checkInScheduleEnabled: true });
+    // If a check-in is already overdue under the new settings, send one now
+    if (updated.checkInScheduleEnabled) {
+      await ensureScheduledCheckIn({ ...relationship, ...updated });
     }
 
     return NextResponse.json(updated);

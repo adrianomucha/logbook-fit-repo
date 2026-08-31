@@ -182,7 +182,7 @@ export function ClientCheckInForm() {
             ← Back
           </button>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium mb-1">Check-in</p>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Weekly check-in</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Time to check in</h1>
         </div>
 
         {/* Question 1: Effort Rating */}

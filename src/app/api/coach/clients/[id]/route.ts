@@ -175,6 +175,8 @@ export const GET = withCoach(
       joinedAt: relationship.createdAt,
       planStartDate: client.planStartDate,
       checkInScheduleEnabled: relationship.checkInScheduleEnabled,
+      checkInIntervalDays: relationship.checkInIntervalDays,
+      checkInDayOfWeek: relationship.checkInDayOfWeek,
       lastWorkoutAt,
       urgency,
       planStatus,

@@ -113,6 +113,10 @@ export interface ClientDetail {
   relationshipStatus: string;
   joinedAt: string;
   checkInScheduleEnabled: boolean;
+  /** Auto check-in cadence in days (3, 7, 14 or 28) */
+  checkInIntervalDays: number;
+  /** Anchor weekday for the cadence, 0 = Sunday … 6 = Saturday (UTC); null = any day */
+  checkInDayOfWeek: number | null;
   isSample: boolean;
   /** Most recent COMPLETED workout in the fetched window */
   lastWorkoutAt: string | null;

@@ -387,6 +387,8 @@ describe("apiClientDetailToClient", () => {
       relationshipStatus: "ACTIVE",
       joinedAt: "2025-01-15T00:00:00Z",
       checkInScheduleEnabled: false,
+      checkInIntervalDays: 7,
+      checkInDayOfWeek: null,
       isSample: false,
       completions: [],
       checkIns: [
@@ -418,6 +420,8 @@ describe("apiClientDetailToClient", () => {
       relationshipStatus: "INACTIVE",
       joinedAt: "2025-01-15T00:00:00Z",
       checkInScheduleEnabled: false,
+      checkInIntervalDays: 7,
+      checkInDayOfWeek: null,
       isSample: false,
       completions: [],
       checkIns: [],

@@ -20,7 +20,10 @@ import {
 } from '@/lib/adapters/api';
 import { cn } from '@/lib/utils';
 import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
-import { CheckInHistoryPanel } from '@/components/coach/workspace/CheckInHistoryPanel';
+import {
+  CheckInHistoryPanel,
+  CheckInScheduleSettings,
+} from '@/components/coach/workspace/CheckInHistoryPanel';
 import { WorkoutHistoryPanel } from '@/components/coach/workspace/WorkoutHistoryPanel';
 import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
@@ -97,8 +100,9 @@ export function UnifiedClientProfile() {
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showContinueConfirm, setShowContinueConfirm] = useState(false);
   const [isContinuingPlan, setIsContinuingPlan] = useState(false);
-  // Optimistic override for the weekly check-in schedule switch (null = follow server)
-  const [scheduleOverride, setScheduleOverride] = useState<boolean | null>(null);
+  // Optimistic override for the check-in schedule settings (null = follow server)
+  const [scheduleOverride, setScheduleOverride] =
+    useState<Partial<CheckInScheduleSettings> | null>(null);
 
   // Scroll to top on route change
   useEffect(() => {
@@ -419,15 +423,18 @@ export function UnifiedClientProfile() {
     }
   };
 
-  const handleToggleCheckInSchedule = async (enabled: boolean) => {
+  const handleUpdateCheckInSchedule = async (
+    update: Partial<CheckInScheduleSettings>
+  ) => {
     if (!clientId) return;
-    setScheduleOverride(enabled);
+    setScheduleOverride((prev) => ({ ...prev, ...update }));
     try {
       await apiFetch(`/api/coach/clients/${clientId}/check-in-schedule`, {
         method: 'PUT',
-        body: JSON.stringify({ enabled }),
+        body: JSON.stringify(update),
       });
-      // Enabling may auto-create a due check-in — refetch to show it
+      // Enabling or shortening the cadence may auto-create a due check-in —
+      // refetch to show it
       await refreshClient();
     } catch {
       toast.error('Failed to update the check-in schedule. Please try again.');
@@ -881,8 +888,17 @@ export function UnifiedClientProfile() {
                     clientName={client.name}
                     initialCount={3}
                     hasPlan={!!plan}
-                    scheduleEnabled={scheduleOverride ?? apiClient.checkInScheduleEnabled}
-                    onToggleSchedule={handleToggleCheckInSchedule}
+                    schedule={{
+                      enabled:
+                        scheduleOverride?.enabled ?? apiClient.checkInScheduleEnabled,
+                      intervalDays:
+                        scheduleOverride?.intervalDays ?? apiClient.checkInIntervalDays,
+                      dayOfWeek:
+                        scheduleOverride?.dayOfWeek !== undefined
+                          ? scheduleOverride.dayOfWeek
+                          : apiClient.checkInDayOfWeek,
+                    }}
+                    onUpdateSchedule={handleUpdateCheckInSchedule}
                     onEditResponse={handleEditCheckInResponse}
                   />
                 </div>

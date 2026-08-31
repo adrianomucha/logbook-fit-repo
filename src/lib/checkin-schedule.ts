@@ -1,11 +1,20 @@
 import prisma from "@/lib/prisma";
 import { notifyCheckInSent } from "@/lib/push";
+import { weekdayInTimeZone } from "@/lib/timezone";
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-// A PENDING check-in the client never answered goes stale after two full
-// cadences. Late responders still have a whole extra week to answer; after
-// that the check-in expires so it stops blocking the weekly schedule forever.
-const STALE_PENDING_MS = 2 * SEVEN_DAYS_MS;
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DEFAULT_INTERVAL_DAYS = 7;
+
+/**
+ * A PENDING check-in the client never answered goes stale after two full
+ * cadences — late responders still get a whole extra cycle to answer; after
+ * that the check-in expires so it stops blocking the schedule forever. Never
+ * shorter than two weeks: a 3-day cadence shouldn't expire a check-in the
+ * client would still plausibly answer.
+ */
+function stalePendingMs(intervalDays: number) {
+  return Math.max(2 * intervalDays, 14) * DAY_MS;
+}
 
 /**
  * Close out PENDING check-ins the client never answered.
@@ -14,23 +23,30 @@ const STALE_PENDING_MS = 2 * SEVEN_DAYS_MS;
  * exactly the quiet client the product exists to surface would stop being
  * checked on. Expired check-ins are hidden from history on both sides.
  */
-export async function expireStaleCheckIns(clientId: string) {
+export async function expireStaleCheckIns(
+  clientId: string,
+  intervalDays: number = DEFAULT_INTERVAL_DAYS
+) {
   await prisma.checkIn.updateMany({
     where: {
       clientId,
       status: "PENDING",
-      createdAt: { lt: new Date(Date.now() - STALE_PENDING_MS) },
+      createdAt: { lt: new Date(Date.now() - stalePendingMs(intervalDays)) },
     },
     data: { status: "EXPIRED" },
   });
 }
 
 /**
- * Materialize the weekly check-in schedule for one coach-client pair.
+ * Materialize the check-in schedule for one coach-client pair.
  *
  * If the relationship has the schedule enabled, there's no check-in currently
- * in flight, and the most recent one is at least 7 days old (or none exists),
- * a fresh PENDING check-in is created.
+ * in flight, and the most recent one is at least a full cadence old (or none
+ * exists), a fresh PENDING check-in is created. The cadence is per
+ * relationship: every `checkInIntervalDays` days, optionally anchored to a
+ * weekday (`checkInDayOfWeek`, 0 = Sunday … 6 = Saturday, evaluated in the
+ * client's timezone — the check-in is for them, so "Monday" means their
+ * Monday; UTC when their timezone is unknown).
  *
  * Called from two places: the nightly sweep (runScheduledCheckIns, the
  * authority — it reaches every client whether or not anyone opens the app),
@@ -44,17 +60,37 @@ export async function ensureScheduledCheckIn(relationship: {
   clientId: string;
   status: string;
   checkInScheduleEnabled: boolean;
+  checkInIntervalDays?: number;
+  checkInDayOfWeek?: number | null;
 }) {
   if (relationship.status !== "ACTIVE") {
     return null;
   }
 
+  const intervalDays = relationship.checkInIntervalDays ?? DEFAULT_INTERVAL_DAYS;
+  // An anchor day only makes sense for cadences of a week or longer
+  const dayOfWeek =
+    intervalDays >= 7 ? relationship.checkInDayOfWeek ?? null : null;
+
   // Runs even when the schedule is off — a manually sent check-in the client
   // ignored should also stop pinning the workspace to "waiting" forever
-  await expireStaleCheckIns(relationship.clientId);
+  await expireStaleCheckIns(relationship.clientId, intervalDays);
 
   if (!relationship.checkInScheduleEnabled) {
     return null;
+  }
+
+  if (dayOfWeek !== null) {
+    // "Monday" means the client's Monday, not the server's: resolve their
+    // stored IANA timezone (captured from the browser by TimezoneSync) and
+    // compare weekdays there. Unknown or invalid zones fall back to UTC.
+    const client = await prisma.clientProfile.findUnique({
+      where: { id: relationship.clientId },
+      select: { user: { select: { timezone: true } } },
+    });
+    if (weekdayInTimeZone(new Date(), client?.user.timezone) !== dayOfWeek) {
+      return null;
+    }
   }
 
   const latest = await prisma.checkIn.findFirst({
@@ -67,8 +103,16 @@ export async function ensureScheduledCheckIn(relationship: {
   if (latest && (latest.status === "PENDING" || latest.status === "CLIENT_RESPONDED")) {
     return null;
   }
-  if (latest && Date.now() - latest.createdAt.getTime() < SEVEN_DAYS_MS) {
-    return null;
+  if (latest) {
+    // Anchored cadences get a one-day grace: the sweep fires at a fixed hour,
+    // so demanding a full interval to the millisecond would skip the anchor
+    // day whenever the last check-in was created later in the day — turning
+    // "every Monday" into "every other Monday".
+    const requiredMs =
+      dayOfWeek !== null ? (intervalDays - 1) * DAY_MS : intervalDays * DAY_MS;
+    if (Date.now() - latest.createdAt.getTime() < requiredMs) {
+      return null;
+    }
   }
 
   const created = await prisma.checkIn.create({
@@ -101,7 +145,8 @@ export type ScheduleSweepResult = {
 
 /**
  * Sweep every active relationship: expire abandoned check-ins and send any
- * that are due. This is what makes "auto-sends every 7 days" true.
+ * that are due. This is what makes "auto-sends on the configured cadence"
+ * true.
  *
  * Before this existed, scheduling was materialized only when someone loaded
  * check-in data — so the quiet client the product exists to catch, who by
@@ -120,6 +165,8 @@ export async function runScheduledCheckIns(): Promise<ScheduleSweepResult> {
       clientId: true,
       status: true,
       checkInScheduleEnabled: true,
+      checkInIntervalDays: true,
+      checkInDayOfWeek: true,
     },
   });
 
