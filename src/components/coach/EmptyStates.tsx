@@ -1,4 +1,4 @@
-import { Plus, UserPlus } from 'lucide-react';
+import { FileSpreadsheet, Plus, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 /* Empty states as ghost previews: a faded mock of the list this screen will
@@ -141,7 +141,13 @@ export function EmptyStateNoClients({ onInvite }: { onInvite?: () => void }) {
   );
 }
 
-export function EmptyStateNoPlans({ onCreate }: { onCreate?: () => void }) {
+export function EmptyStateNoPlans({
+  onCreate,
+  onImport,
+}: {
+  onCreate?: () => void;
+  onImport?: () => void;
+}) {
   return (
     <EmptyStateShell
       preview={<GhostPlanList />}
@@ -149,13 +155,25 @@ export function EmptyStateNoPlans({ onCreate }: { onCreate?: () => void }) {
       title="Your blank canvas"
       body="Design a workout template, then assign it to any client. One plan, many athletes."
       cta={
-        <Button
-          onClick={onCreate}
-          className="h-11 px-6 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-[background-color,transform] duration-150"
-        >
-          <Plus className="w-4 h-4" />
-          Create Template
-        </Button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+          <Button
+            onClick={onCreate}
+            className="h-11 px-6 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-[background-color,transform] duration-150"
+          >
+            <Plus className="w-4 h-4" />
+            Create Template
+          </Button>
+          {onImport && (
+            <Button
+              onClick={onImport}
+              variant="outline"
+              className="h-11 px-6 rounded-xl gap-2 text-sm font-medium active:scale-[0.97] transition-transform duration-150"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              Import from Excel
+            </Button>
+          )}
+        </div>
       }
     />
   );
