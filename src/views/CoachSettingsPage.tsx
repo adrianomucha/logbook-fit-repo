@@ -6,12 +6,12 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Bell, KeyRound, Loader2, UserRound, Wrench, type LucideIcon } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
+import { PageHeader } from '@/components/coach/PageHeader';
 import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 import { PasswordRules } from '@/components/auth/PasswordRules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Separator } from '@/components/ui/separator';
 import { FormError } from '@/components/ui/form-error';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { apiFetch } from '@/lib/api-client';
@@ -25,31 +25,39 @@ const SECTIONS: { id: SettingsSection; label: string; icon: LucideIcon }[] = [
   { id: 'profile', label: 'Profile', icon: UserRound },
   { id: 'account', label: 'Account', icon: Wrench },
   { id: 'password', label: 'Password', icon: KeyRound },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
+  { id: 'notifications', label: 'Alerts', icon: Bell },
 ];
 
-function Label({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
+const cardClass =
+  'bg-card rounded-xl p-4 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]';
+
+const inputClass =
+  'h-11 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background';
+
+/** Uppercase tracked mono label — the product's data voice */
+function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
   return (
-    <label htmlFor={htmlFor} className="block text-sm font-medium leading-none">
+    <label
+      htmlFor={htmlFor}
+      className="block font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
+    >
       {children}
     </label>
   );
 }
 
-/** Muted helper line under a field — the layout's explanatory voice. */
+/** Muted helper line under a field. */
 function FieldHint({ children }: { children: React.ReactNode }) {
-  return <p className="text-[0.8rem] text-muted-foreground text-pretty">{children}</p>;
+  return <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{children}</p>;
 }
 
-/** Section heading + description + rule, shared by every pane. */
+/** Pane heading: bold title + one muted sentence, over a hairline. */
 function SectionHeader({ title, description }: { title: string; description: string }) {
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-medium">{title}</h2>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-      <Separator />
+    <div className="mb-5">
+      <h2 className="text-lg font-bold tracking-tight antialiased">{title}</h2>
+      <p className="text-sm text-muted-foreground mt-0.5 text-pretty">{description}</p>
+      <div className="h-px bg-border mt-4" aria-hidden="true" />
     </div>
   );
 }
@@ -92,7 +100,7 @@ function ProfileSection() {
         body: JSON.stringify({ name: name.trim(), bio: bio.trim() }),
       });
       await refresh();
-      toast.success('Profile updated');
+      toast.success('Profile saved');
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Couldn’t save your profile.');
     } finally {
@@ -101,19 +109,19 @@ function ProfileSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       <SectionHeader
         title="Profile"
-        description="This is how clients see you on invites and around the app."
+        description="How clients see you — on invites and around the app."
       />
 
-      <div className="space-y-8">
+      <div className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="settings-name">Name</Label>
+          <FieldLabel htmlFor="settings-name">Name</FieldLabel>
           <div className="flex items-center gap-3">
             <div
               className={cn(
-                'w-10 h-10 rounded-full flex items-center justify-center select-none text-sm font-bold shrink-0',
+                'w-11 h-11 rounded-full flex items-center justify-center select-none text-base font-bold shrink-0',
                 avatarColor(previewName)
               )}
               aria-hidden="true"
@@ -127,15 +135,25 @@ function ProfileSection() {
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
               maxLength={100}
+              className={inputClass}
             />
           </div>
-          <FieldHint>
-            Your public display name — it headlines every invite you send.
-          </FieldHint>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="settings-bio">Bio</Label>
+          <div className="flex items-baseline justify-between gap-2">
+            <FieldLabel htmlFor="settings-bio">Bio</FieldLabel>
+            {bio.length > 0 && (
+              <span
+                className={cn(
+                  'font-mono text-[10px] tracking-[0.08em] tabular-nums',
+                  bio.length >= BIO_MAX_LENGTH ? 'text-destructive' : 'text-muted-foreground/70'
+                )}
+              >
+                {bio.length}/{BIO_MAX_LENGTH}
+              </span>
+            )}
+          </div>
           <Textarea
             id="settings-bio"
             value={bio}
@@ -143,44 +161,36 @@ function ProfileSection() {
             placeholder="A line or two about how you coach"
             maxLength={BIO_MAX_LENGTH}
             rows={3}
-            className="resize-none"
+            className="rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background resize-none"
           />
-          <div className="flex items-baseline justify-between gap-2">
-            <FieldHint>New clients read this on the invite signup page.</FieldHint>
-            {bio.length > 0 && (
-              <span className="text-[0.8rem] tabular-nums text-muted-foreground shrink-0">
-                {bio.length}/{BIO_MAX_LENGTH}
-              </span>
-            )}
-          </div>
+          <FieldHint>New clients read this on the invite signup page.</FieldHint>
         </div>
 
         {/* Mirrors the invite signup hero, so "save" is never a leap of faith */}
-        <div className="space-y-2">
-          <Label>Invite preview</Label>
-          <div className="rounded-lg border border-border p-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">
-              Your coach
+        <div className="ps-3.5 border-s-2 border-brand">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+            What an invited client sees
+          </p>
+          <p className="text-base font-black uppercase tracking-tight antialiased">
+            {previewName} is expecting you
+          </p>
+          {bio.trim() && (
+            <p className="text-sm text-muted-foreground leading-relaxed mt-1 text-pretty">
+              {bio.trim()}
             </p>
-            <p className="text-base font-black uppercase tracking-tight antialiased">
-              {previewName} is expecting you
-            </p>
-            {bio.trim() && (
-              <p className="text-sm text-muted-foreground leading-relaxed mt-1.5 text-pretty">
-                {bio.trim()}
-              </p>
-            )}
-          </div>
+          )}
         </div>
 
-        <Button
-          onClick={handleSave}
-          disabled={!isDirty || isSaving || !name.trim()}
-          className="active:scale-[0.96] transition-transform duration-150"
-        >
-          {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
-          Update profile
-        </Button>
+        <div className="flex justify-end pt-1">
+          <Button
+            onClick={handleSave}
+            disabled={!isDirty || isSaving || !name.trim()}
+            className="active:scale-[0.96] transition-transform duration-150"
+          >
+            {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
+            Save profile
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -190,36 +200,41 @@ function ProfileSection() {
 function AccountSection() {
   const { user } = useCurrentUser();
 
+  const rows: { label: string; value: string; hint?: string }[] = [
+    { label: 'Email', value: user?.email ?? '—', hint: 'The address you sign in with.' },
+    {
+      label: 'Timezone',
+      value: user?.timezone ?? 'UTC',
+      hint: 'Detected from your browser — check-in schedules follow it automatically, even when you travel.',
+    },
+    {
+      label: 'Member since',
+      value: user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—',
+    },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div>
       <SectionHeader
         title="Account"
-        description="The basics behind your login. These update on their own."
+        description="The basics behind your login. These keep themselves up to date."
       />
 
-      <div className="space-y-8">
-        <div className="space-y-2">
-          <Label htmlFor="settings-email">Email</Label>
-          <Input id="settings-email" type="email" value={user?.email ?? ''} readOnly disabled />
-          <FieldHint>The address you sign in with.</FieldHint>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="settings-timezone">Timezone</Label>
-          <Input id="settings-timezone" type="text" value={user?.timezone ?? 'UTC'} readOnly disabled />
-          <FieldHint>
-            Detected from your browser — check-in schedules follow it automatically,
-            even when you travel.
-          </FieldHint>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Member since</Label>
-          <p className="text-sm text-muted-foreground">
-            {user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—'}
-          </p>
-        </div>
-      </div>
+      <dl>
+        {rows.map(({ label, value, hint }, index) => (
+          <div key={label} className={cn('py-3.5', index > 0 && 'border-t border-border/60')}>
+            <dt>
+              <FieldLabel>{label}</FieldLabel>
+            </dt>
+            <dd className="text-sm font-medium text-foreground mt-1 break-all">{value}</dd>
+            {hint && (
+              <dd className="mt-1">
+                <FieldHint>{hint}</FieldHint>
+              </dd>
+            )}
+          </div>
+        ))}
+      </dl>
     </div>
   );
 }
@@ -258,27 +273,28 @@ function PasswordSection() {
   };
 
   return (
-    <div className="space-y-6">
+    <div>
       <SectionHeader
         title="Password"
-        description="Change the password you sign in with. You'll stay signed in on this device."
+        description="Change the password you sign in with. You'll stay signed in here."
       />
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="settings-current-password">Current password</Label>
+          <FieldLabel htmlFor="settings-current-password">Current password</FieldLabel>
           <Input
             id="settings-current-password"
             type="password"
             autoComplete="current-password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
+            className={inputClass}
             required
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="settings-new-password">New password</Label>
+          <FieldLabel htmlFor="settings-new-password">New password</FieldLabel>
           <Input
             id="settings-new-password"
             type="password"
@@ -286,6 +302,7 @@ function PasswordSection() {
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Make it a strong one"
+            className={inputClass}
             required
           />
           {newPassword.length > 0 && <PasswordRules password={newPassword} />}
@@ -293,14 +310,16 @@ function PasswordSection() {
 
         {error && <FormError>{error}</FormError>}
 
-        <Button
-          type="submit"
-          disabled={isSaving || !currentPassword || !newPassword}
-          className="active:scale-[0.96] transition-transform duration-150"
-        >
-          {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
-          Change password
-        </Button>
+        <div className="flex justify-end pt-1">
+          <Button
+            type="submit"
+            disabled={isSaving || !currentPassword || !newPassword}
+            className="active:scale-[0.96] transition-transform duration-150"
+          >
+            {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
+            Change password
+          </Button>
+        </div>
       </form>
     </div>
   );
@@ -308,19 +327,19 @@ function PasswordSection() {
 
 function NotificationsSection() {
   return (
-    <div className="space-y-6">
+    <div>
       <SectionHeader
-        title="Notifications"
-        description="Decide how the app reaches you when you're not looking at it."
+        title="Alerts"
+        description="How the app reaches you when you're not looking at it."
       />
 
-      <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-4">
-        <div className="space-y-1">
-          <p className="text-sm font-medium leading-none">Message alerts</p>
-          <FieldHint>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-semibold leading-tight">Message alerts</p>
+          <p className="text-xs text-muted-foreground leading-relaxed mt-1 text-pretty">
             A push notification on this device when a client messages you.
             Alerts are per device — turn them on wherever you coach from.
-          </FieldHint>
+          </p>
         </div>
         <NotificationToggle className="shrink-0" />
       </div>
@@ -348,26 +367,28 @@ export function CoachSettingsPage() {
   const Pane = SECTION_PANES[section];
 
   return (
-    <div className="min-h-dvh bg-background pb-24 sm:pb-10">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="settings" />
 
-      <div className="max-w-5xl mx-auto px-4 pt-5 sm:pt-8 space-y-6 animate-enter">
-        <div className="space-y-0.5">
-          <h1 className="text-2xl font-bold tracking-tight antialiased">Settings</h1>
-          <p className="text-muted-foreground">
-            Manage your account and how clients see you.
-          </p>
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+        <div className="animate-enter mb-1.5 sm:mb-3">
+          <PageHeader
+            title="Settings"
+            subtitle="Your account · How clients see you"
+            breadcrumb={{ label: 'Dashboard', onClick: () => router.push('/coach') }}
+          />
         </div>
 
-        <Separator />
-
-        <div className="flex flex-col gap-6 lg:flex-row lg:gap-12">
-          {/* Sidebar collapses to a scrollable row on small screens */}
-          <nav
-            aria-label="Settings sections"
-            className="-mx-4 px-4 lg:mx-0 lg:px-0 lg:w-1/5 lg:shrink-0"
-          >
-            <ul className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 lg:gap-8 animate-enter">
+          {/* Section rail: underline tabs on mobile (the nav's idiom), a
+              side-rail list on desktop. Same voice as the header tabs. */}
+          <nav aria-label="Settings sections" className="lg:w-44 shrink-0">
+            <ul
+              className={cn(
+                'flex gap-5 overflow-x-auto scrollbar-hide -mx-3 px-3 border-b border-border',
+                'lg:flex-col lg:gap-1 lg:overflow-visible lg:mx-0 lg:px-0 lg:border-b-0'
+              )}
+            >
               {SECTIONS.map(({ id, label, icon: Icon }) => (
                 <li key={id} className="shrink-0">
                   <button
@@ -376,14 +397,16 @@ export function CoachSettingsPage() {
                     }
                     aria-current={section === id ? 'page' : undefined}
                     className={cn(
-                      'inline-flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium',
-                      'transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation',
+                      'inline-flex w-full items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
+                      'transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                      'border-b-2 px-0.5 pb-2.5 pt-1',
+                      'lg:border-b-0 lg:border-s-2 lg:px-3 lg:py-2',
                       section === id
-                        ? 'bg-muted text-foreground'
-                        : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                        ? 'border-foreground text-foreground'
+                        : 'border-transparent text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />
+                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     {label}
                   </button>
                 </li>
@@ -391,13 +414,17 @@ export function CoachSettingsPage() {
             </ul>
           </nav>
 
-          <main className="flex-1 lg:max-w-2xl">
+          <main className="flex-1 lg:max-w-2xl min-w-0">
             {isLoading || !user ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
               </div>
             ) : (
-              <Pane />
+              // Keyed so switching sections replays the enter animation —
+              // the same settle every other surface has
+              <div key={section} className={cn(cardClass, 'animate-enter')}>
+                <Pane />
+              </div>
             )}
           </main>
         </div>
