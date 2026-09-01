@@ -400,7 +400,10 @@ export function CoachSettingsPage() {
     <div className="min-h-dvh bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="settings" />
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
+      {/* Narrower measure than the roster pages: the rail plus one form
+          column is all this page is, and centering it keeps a wide screen
+          balanced instead of stranding the content on the left */}
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
         <div className="animate-enter mb-1.5 sm:mb-3">
           <PageHeader
             title="Settings"
@@ -446,7 +449,7 @@ export function CoachSettingsPage() {
             </ul>
           </nav>
 
-          <main className="flex-1 lg:max-w-2xl min-w-0">
+          <main className="flex-1 min-w-0">
             {isLoading || !user ? (
               <div className="flex items-center justify-center py-12" role="status">
                 <Loader2
