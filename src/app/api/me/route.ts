@@ -18,6 +18,7 @@ export async function GET() {
       email: true,
       name: true,
       role: true,
+      timezone: true,
       createdAt: true,
       linkedUserId: true,
       coachProfile: {

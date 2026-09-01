@@ -9,6 +9,7 @@ import {
   Loader2,
   LogOut,
   MessageSquarePlus,
+  Settings,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -163,6 +164,15 @@ export function AccountMenu({ className }: { className?: string }) {
           )}
 
           <DropdownMenuSeparator />
+          {/* Clients have no settings surface yet — the entry appears with it */}
+          {user?.role === 'COACH' && (
+            <DropdownMenuItem asChild className={itemClass}>
+              <Link href="/coach/settings">
+                <Settings className="h-3.5 w-3.5" aria-hidden="true" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             className={itemClass}
             onSelect={() => setIsFeedbackOpen(true)}

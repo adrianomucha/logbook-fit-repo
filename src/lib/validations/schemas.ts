@@ -93,6 +93,28 @@ export const passwordResetConfirmSchema = z.object({
 });
 
 // ──────────────────────────────────────
+// ACCOUNT SETTINGS
+// ──────────────────────────────────────
+
+export const BIO_MAX_LENGTH = 500;
+
+export const updateProfileSchema = z.object({
+  name: z.string().trim().min(1, "Name is required").max(100),
+  // Coach-only in practice — the API ignores it for accounts without a coach
+  // profile. Empty string clears the bio.
+  bio: z
+    .string()
+    .trim()
+    .max(BIO_MAX_LENGTH, `Keep the bio under ${BIO_MAX_LENGTH} characters`)
+    .optional(),
+});
+
+export const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1, "Current password is required"),
+  newPassword: passwordSchema,
+});
+
+// ──────────────────────────────────────
 // EXERCISES
 // ──────────────────────────────────────
 
