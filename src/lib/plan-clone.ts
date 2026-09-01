@@ -14,7 +14,6 @@ export interface ClonablePlan {
   id: string;
   name: string;
   description: string | null;
-  emoji: string;
   durationWeeks: number;
   workoutsPerWeek: number;
   sourceTemplateId: string | null;
@@ -50,7 +49,6 @@ export function buildPlanCloneData(template: ClonablePlan, coachProfileId: strin
     coachId: coachProfileId,
     name: template.name,
     description: template.description,
-    emoji: template.emoji,
     durationWeeks: template.durationWeeks,
     workoutsPerWeek: template.workoutsPerWeek,
     sourceTemplateId: template.sourceTemplateId ?? template.id,

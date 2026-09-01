@@ -4,7 +4,6 @@ import { Modal } from '../ui/Modal';
 import { Button, buttonVariants } from '../ui/button';
 import { Input } from '../ui/input';
 import { cn } from '@/lib/utils';
-import { EmojiPicker } from './EmojiPicker';
 import { ApiError } from '@/lib/api-client';
 import type { PlanSummary } from '@/types/api';
 
@@ -72,7 +71,6 @@ function nameFromFilename(filename: string): string {
  */
 export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModalProps) {
   const [name, setName] = useState('');
-  const [emoji, setEmoji] = useState('📋');
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +82,6 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
   useEffect(() => {
     if (isOpen) {
       setName('');
-      setEmoji('📋');
       setFile(null);
       setIsSubmitting(false);
       setError(null);
@@ -120,7 +117,6 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
       const formData = new FormData();
       formData.append('file', file);
       formData.append('name', name.trim());
-      formData.append('emoji', emoji);
 
       const res = await fetch('/api/plans/import', {
         method: 'POST',
@@ -250,11 +246,10 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
           <ImportStep
             number="3"
             title={<label htmlFor={ids.name}>Name your plan</label>}
-            description="Clients see this name and emoji on their plan."
+            description="Clients see this name on their plan."
             last
           >
             <div className="mt-2.5 flex items-center gap-1 rounded-2xl border border-border bg-muted/40 p-2 transition-colors focus-within:border-foreground/25 focus-within:bg-background">
-              <EmojiPicker value={emoji} onChange={setEmoji} className="w-10 h-10 shrink-0 bg-background" />
               <Input
                 id={ids.name}
                 placeholder="e.g., 4-Week Strength Foundation"

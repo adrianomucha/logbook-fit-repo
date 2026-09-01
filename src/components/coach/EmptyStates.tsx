@@ -90,7 +90,7 @@ function GhostRoster({ tone = 'live' }: { tone?: 'live' | 'lost' }) {
   );
 }
 
-/** Ghost of the Plans list: emoji tile, name, aligned mono stat columns. */
+/** Ghost of the Plans list: name, aligned mono stat columns. */
 function GhostPlanList() {
   const rows = [
     { name: 'w-32', opacity: 'opacity-100' },
@@ -110,14 +110,6 @@ function GhostPlanList() {
             className={`animate-ghost-row flex items-center gap-3 px-4 py-3.5 ${row.opacity}`}
             style={{ animationDelay: `${120 + i * 110}ms` }}
           >
-            <div className="relative w-9 h-9 rounded-lg bg-muted shrink-0">
-              {i === 0 && (
-                <span
-                  className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand ring-2 ring-card animate-bounce-once"
-                  style={{ animationDelay: '560ms' }}
-                />
-              )}
-            </div>
             <div className={`h-2.5 rounded-full bg-muted ${row.name}`} />
             <div className="ml-auto flex items-center gap-3 shrink-0">
               <div className="w-10 h-2 rounded-full bg-muted/70" />

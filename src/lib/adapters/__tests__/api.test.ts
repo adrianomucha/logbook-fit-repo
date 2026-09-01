@@ -18,7 +18,6 @@ describe("apiPlanToWorkoutPlan", () => {
     id: "plan-1",
     name: "Strength 101",
     description: "A beginner plan",
-    emoji: "💪",
     durationWeeks: 4,
     workoutsPerWeek: 3,
     coachId: "coach-1",
@@ -68,7 +67,6 @@ describe("apiPlanToWorkoutPlan", () => {
     expect(result.id).toBe("plan-1");
     expect(result.name).toBe("Strength 101");
     expect(result.description).toBe("A beginner plan");
-    expect(result.emoji).toBe("💪");
     expect(result.durationWeeks).toBe(4);
     expect(result.workoutsPerWeek).toBe(3);
     expect(result.createdAt).toBe("2025-01-01T00:00:00Z");

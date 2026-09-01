@@ -546,7 +546,6 @@ describe("createPlanSchema", () => {
     const result = createPlanSchema.safeParse({
       name: "Push Pull Legs",
       description: "Classic PPL split",
-      emoji: "💪",
       durationWeeks: 8,
       workoutsPerWeek: 6,
     });

@@ -142,7 +142,6 @@ export async function createSampleClient(
       name: SAMPLE_PLAN_NAME,
       description:
         "Demo plan powering your sample client. Removing the sample client removes this plan too (unless you've assigned it to someone real).",
-      emoji: "🧪",
       durationWeeks: 2,
       workoutsPerWeek: 3,
     },
