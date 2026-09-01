@@ -45,7 +45,6 @@ function planSummaryToWorkoutPlan(p: PlanSummary): WorkoutPlan {
     id: p.id,
     name: p.name,
     description: p.description ?? undefined,
-    emoji: p.emoji,
     durationWeeks: p.durationWeeks,
     workoutsPerWeek: p.workoutsPerWeek,
     weeks: p.weeks.map((w) => ({ id: w.id, weekNumber: w.weekNumber, days: [] })),
@@ -60,7 +59,6 @@ function planDetailToWorkoutPlan(p: PlanDetail): WorkoutPlan {
     id: p.id,
     name: p.name,
     description: p.description ?? undefined,
-    emoji: p.emoji,
     durationWeeks: p.durationWeeks,
     workoutsPerWeek: p.workoutsPerWeek,
     weeks: p.weeks.map((w) => ({
@@ -168,7 +166,6 @@ export function CoachDashboard() {
       const newPlan = await createPlan({
         name: formData.name,
         description: formData.description,
-        emoji: formData.emoji,
         durationWeeks: formData.durationWeeks,
         workoutsPerWeek: formData.workoutsPerWeek,
       });
@@ -370,7 +367,6 @@ export function CoachDashboard() {
                   greeting={getGreeting()}
                   hasPlan={apiPlans.length > 0}
                   planName={apiPlans[0]?.name}
-                  planEmoji={apiPlans[0]?.emoji}
                   pendingInvite={pendingInvite}
                   lastInviteExpired={lastInviteExpired}
                   onCreatePlan={() => {

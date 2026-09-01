@@ -9,7 +9,6 @@ const template: ClonablePlan = {
   id: 'template-1',
   name: 'Foundation Strength',
   description: 'Base block',
-  emoji: '💪',
   durationWeeks: 2,
   workoutsPerWeek: 2,
   sourceTemplateId: null,

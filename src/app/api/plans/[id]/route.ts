@@ -89,10 +89,9 @@ export const PUT = withCoach(
     }
 
     const body = await req.json();
-    const { name, description, emoji, durationWeeks, workoutsPerWeek } = body as {
+    const { name, description, durationWeeks, workoutsPerWeek } = body as {
       name?: string;
       description?: string;
-      emoji?: string;
       durationWeeks?: number;
       workoutsPerWeek?: number;
     };
@@ -121,7 +120,6 @@ export const PUT = withCoach(
       data: {
         ...(name !== undefined ? { name } : {}),
         ...(description !== undefined ? { description } : {}),
-        ...(emoji !== undefined ? { emoji } : {}),
         ...(durationWeeks !== undefined ? { durationWeeks } : {}),
         ...(workoutsPerWeek !== undefined ? { workoutsPerWeek } : {}),
         editedAt: new Date(),

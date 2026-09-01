@@ -15,13 +15,12 @@ const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 const importPlanMetaSchema = createPlanSchema.pick({
   name: true,
   description: true,
-  emoji: true,
 });
 
 /**
  * POST /api/plans/import
  * Creates a plan template from an uploaded .xlsx (multipart form: `file` plus
- * `name`/`description`/`emoji`). All-or-nothing: any bad row fails the whole
+ * `name`/`description`). All-or-nothing: any bad row fails the whole
  * upload with per-row errors (`rowErrors: [{ row, message }]`) so the coach
  * fixes the sheet and retries, instead of ending up with half a plan.
  */
@@ -59,7 +58,6 @@ export const POST = withCoach(
     const meta = importPlanMetaSchema.safeParse({
       name: form.get("name"),
       description: form.get("description") ?? undefined,
-      emoji: form.get("emoji") ?? undefined,
     });
     if (!meta.success) {
       const issue = meta.error.issues[0];
@@ -68,7 +66,7 @@ export const POST = withCoach(
         { status: 400 }
       );
     }
-    const { name, description, emoji } = meta.data;
+    const { name, description } = meta.data;
 
     const read = await readWorkoutRows(Buffer.from(await file.arrayBuffer()));
     if (!read.ok) {
@@ -136,7 +134,6 @@ export const POST = withCoach(
             coachId: coachProfileId,
             name,
             description,
-            emoji: emoji ?? "📋",
             durationWeeks: parsed.durationWeeks,
             workoutsPerWeek: parsed.workoutsPerWeek,
             weeks: {

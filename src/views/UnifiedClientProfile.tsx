@@ -196,7 +196,6 @@ export function UnifiedClientProfile() {
         id: p.id,
         name: p.name,
         description: p.description ?? undefined,
-        emoji: p.emoji,
         durationWeeks: p.durationWeeks,
         workoutsPerWeek: p.workoutsPerWeek,
         weeks: p.weeks.map((w) => ({
@@ -357,7 +356,6 @@ export function UnifiedClientProfile() {
       const newPlan = await createPlan({
         name: formData.name,
         description: formData.description,
-        emoji: formData.emoji,
         durationWeeks: formData.durationWeeks,
         workoutsPerWeek: formData.workoutsPerWeek,
       });
@@ -585,7 +583,7 @@ export function UnifiedClientProfile() {
     )
     : plan ? (
       <p className="text-[13px] text-muted-foreground antialiased">
-        {plan.emoji} {plan.name}
+        {plan.name}
       </p>
     ) : undefined;
 
@@ -835,7 +833,6 @@ export function UnifiedClientProfile() {
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-3 lg:shrink-0">
                         <div className="min-w-0">
                           <h3 className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
-                            <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
                             <span className="truncate">{plan.name}</span>
                           </h3>
                           <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground tabular-nums antialiased mt-1">

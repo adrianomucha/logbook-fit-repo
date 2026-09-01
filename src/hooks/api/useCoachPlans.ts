@@ -8,7 +8,6 @@ export function useCoachPlans() {
   const createPlan = async (planData: {
     name: string;
     description?: string;
-    emoji?: string;
     durationWeeks?: number;
     workoutsPerWeek?: number;
   }) => {

@@ -27,7 +27,7 @@ const MAX_AVATARS = 3;
 
 /**
  * Plan template row — one line in the grouped Plans list.
- * Emoji + black name on the left, aligned mono stat columns on the right;
+ * Black name on the left, aligned mono stat columns on the right;
  * live templates show the clients on them as a mini-avatar stack.
  */
 export function PlanTemplateCard({
@@ -65,11 +65,6 @@ export function PlanTemplateCard({
         }
       }}
     >
-      {/* Emoji tile */}
-      <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-muted/60 flex items-center justify-center text-lg sm:text-xl leading-none select-none shrink-0 group-hover:scale-105 transition-transform duration-150">
-        {plan.emoji || '💪'}
-      </div>
-
       {/* Name; stats collapse into a meta line under it on mobile */}
       <div className="flex-1 min-w-0">
         <h3 className="text-sm sm:text-[15px] font-black tracking-tight leading-tight truncate antialiased group-hover:translate-x-0.5 transition-transform duration-150">

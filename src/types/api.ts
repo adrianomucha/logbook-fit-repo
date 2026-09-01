@@ -49,7 +49,6 @@ export interface PlanSummary {
   coachId: string;
   name: string;
   description: string | null;
-  emoji: string;
   durationWeeks: number;
   workoutsPerWeek: number;
   createdAt: string;

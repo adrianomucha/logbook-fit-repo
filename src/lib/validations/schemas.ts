@@ -210,7 +210,6 @@ export const checkInScheduleSchema = z
 export const createPlanSchema = z.object({
   name: z.string().min(3, "Plan name must be at least 3 characters").max(50),
   description: z.string().max(200).optional().default(""),
-  emoji: z.string().max(10).optional(),
   durationWeeks: z.number().int().min(1).max(12).optional().default(4),
   workoutsPerWeek: z.number().int().min(1).max(7).optional().default(4),
 });
