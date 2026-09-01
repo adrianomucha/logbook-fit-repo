@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -14,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { FormError } from '@/components/ui/form-error';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import { avatarColor } from '@/lib/avatar-colors';
 import { passwordSchema, BIO_MAX_LENGTH } from '@/lib/validations/schemas';
 import { cn } from '@/lib/utils';
@@ -131,6 +132,7 @@ function ProfileSection() {
             <Input
               id="settings-name"
               type="text"
+              autoComplete="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
@@ -147,7 +149,7 @@ function ProfileSection() {
               <span
                 className={cn(
                   'font-mono text-[10px] tracking-[0.08em] tabular-nums',
-                  bio.length >= BIO_MAX_LENGTH ? 'text-destructive' : 'text-muted-foreground/70'
+                  bio.length >= BIO_MAX_LENGTH ? 'text-destructive' : 'text-muted-foreground'
                 )}
               >
                 {bio.length}/{BIO_MAX_LENGTH}
@@ -226,7 +228,7 @@ function AccountSection() {
             <dt>
               <FieldLabel>{label}</FieldLabel>
             </dt>
-            <dd className="text-sm font-medium text-foreground mt-1 break-all">{value}</dd>
+            <dd className="text-sm font-medium text-foreground mt-1 break-words">{value}</dd>
             {hint && (
               <dd className="mt-1">
                 <FieldHint>{hint}</FieldHint>
@@ -244,15 +246,28 @@ function PasswordSection() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // Which field the error belongs to — drives aria-invalid and focus, so the
+  // fix happens where the mistake is. null = form-level (rate limit, 500).
+  const [errorField, setErrorField] = useState<'current' | 'new' | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const currentRef = useRef<HTMLInputElement>(null);
+  const newRef = useRef<HTMLInputElement>(null);
+
+  const failField = (field: 'current' | 'new' | null, message: string) => {
+    setError(message);
+    setErrorField(field);
+    if (field === 'current') currentRef.current?.focus();
+    if (field === 'new') newRef.current?.focus();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setErrorField(null);
 
     const parsed = passwordSchema.safeParse(newPassword);
     if (!parsed.success) {
-      setError(parsed.error.issues[0]?.message ?? 'Pick a stronger password.');
+      failField('new', parsed.error.issues[0]?.message ?? 'Pick a stronger password.');
       return;
     }
 
@@ -266,7 +281,12 @@ function PasswordSection() {
       setNewPassword('');
       toast.success('Password changed');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Couldn’t change your password.');
+      // A 400 is the wrong current password; anything else (429, 500) is
+      // the form's problem, not a field's
+      failField(
+        e instanceof ApiError && e.status === 400 ? 'current' : null,
+        e instanceof Error ? e.message : 'Couldn’t change your password.'
+      );
     } finally {
       setIsSaving(false);
     }
@@ -276,18 +296,21 @@ function PasswordSection() {
     <div>
       <SectionHeader
         title="Password"
-        description="Change the password you sign in with. You'll stay signed in here."
+        description="Change the password you sign in with. You’ll stay signed in here."
       />
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
           <FieldLabel htmlFor="settings-current-password">Current password</FieldLabel>
           <Input
+            ref={currentRef}
             id="settings-current-password"
             type="password"
             autoComplete="current-password"
             value={currentPassword}
             onChange={(e) => setCurrentPassword(e.target.value)}
+            aria-invalid={errorField === 'current' || undefined}
+            aria-describedby={errorField === 'current' ? 'settings-password-error' : undefined}
             className={inputClass}
             required
           />
@@ -296,19 +319,26 @@ function PasswordSection() {
         <div className="space-y-2">
           <FieldLabel htmlFor="settings-new-password">New password</FieldLabel>
           <Input
+            ref={newRef}
             id="settings-new-password"
             type="password"
             autoComplete="new-password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
             placeholder="Make it a strong one"
+            aria-invalid={errorField === 'new' || undefined}
+            aria-describedby={errorField === 'new' ? 'settings-password-error' : undefined}
             className={inputClass}
             required
           />
           {newPassword.length > 0 && <PasswordRules password={newPassword} />}
         </div>
 
-        {error && <FormError>{error}</FormError>}
+        {error && (
+          <div id="settings-password-error">
+            <FormError>{error}</FormError>
+          </div>
+        )}
 
         <div className="flex justify-end pt-1">
           <Button
@@ -330,7 +360,7 @@ function NotificationsSection() {
     <div>
       <SectionHeader
         title="Alerts"
-        description="How the app reaches you when you're not looking at it."
+        description="How the app reaches you when you’re not looking at it."
       />
 
       <div className="flex items-start justify-between gap-4">
@@ -341,7 +371,7 @@ function NotificationsSection() {
             Alerts are per device — turn them on wherever you coach from.
           </p>
         </div>
-        <NotificationToggle className="shrink-0" />
+        <NotificationToggle className="shrink-0" showUnavailable />
       </div>
     </div>
   );
@@ -391,14 +421,16 @@ export function CoachSettingsPage() {
             >
               {SECTIONS.map(({ id, label, icon: Icon }) => (
                 <li key={id} className="shrink-0">
-                  <button
-                    onClick={() =>
-                      router.replace(`/coach/settings?section=${id}`, { scroll: false })
-                    }
+                  {/* Real links: the sections are deep-linkable URLs, so they
+                      earn cmd-click and copy-link for free */}
+                  <Link
+                    href={`/coach/settings?section=${id}`}
+                    replace
+                    scroll={false}
                     aria-current={section === id ? 'page' : undefined}
                     className={cn(
                       'inline-flex w-full items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
-                      'transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                      'transition-colors touch-manipulation tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                       'border-b-2 px-0.5 pb-2.5 pt-1',
                       'lg:border-b-0 lg:border-s-2 lg:px-3 lg:py-2',
                       section === id
@@ -408,7 +440,7 @@ export function CoachSettingsPage() {
                   >
                     <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                     {label}
-                  </button>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -416,13 +448,17 @@ export function CoachSettingsPage() {
 
           <main className="flex-1 lg:max-w-2xl min-w-0">
             {isLoading || !user ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+              <div className="flex items-center justify-center py-12" role="status">
+                <Loader2
+                  className="w-6 h-6 animate-spin text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <span className="sr-only">Loading settings</span>
               </div>
             ) : (
-              // Keyed so switching sections replays the enter animation —
-              // the same settle every other surface has
-              <div key={section} className={cn(cardClass, 'animate-enter')}>
+              // The page wrapper already animates in once; section switches
+              // swap instantly — repeated interactions get instant feedback
+              <div className={cardClass}>
                 <Pane />
               </div>
             )}

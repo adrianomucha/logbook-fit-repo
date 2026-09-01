@@ -50,7 +50,7 @@ export function PasswordRules({ password }: { password: string }) {
               key={rule.id}
               className={cn(
                 'inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors duration-200',
-                met ? 'text-success' : 'text-muted-foreground'
+                met ? 'text-success-text' : 'text-muted-foreground'
               )}
             >
               <span
