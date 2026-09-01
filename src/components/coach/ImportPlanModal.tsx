@@ -1,11 +1,10 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { ArrowRight, Download, FileSpreadsheet, Loader2, X } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button, buttonVariants } from '../ui/button';
 import { Input } from '../ui/input';
 import { cn } from '@/lib/utils';
 import { EmojiPicker } from './EmojiPicker';
-import { FieldLabel, FieldShell } from './shared/formSurfaces';
 import { ApiError } from '@/lib/api-client';
 import type { PlanSummary } from '@/types/api';
 
@@ -17,6 +16,47 @@ interface ImportPlanModalProps {
 }
 
 type RowError = { row: number; message: string };
+
+/**
+ * One row of the import story: a numbered badge on a stepper rail, a short
+ * title, at most one line of supporting copy, then the step's control. The
+ * rail makes the round-trip (download → fill in → upload → name it) read as
+ * a sequence instead of a pile of unrelated fields.
+ */
+function ImportStep({
+  number,
+  title,
+  description,
+  last = false,
+  children,
+}: {
+  number: string;
+  title: ReactNode;
+  description?: string;
+  last?: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <li className="flex gap-3.5">
+      <div className="flex flex-col items-center" aria-hidden="true">
+        <span className="w-6 h-6 shrink-0 rounded-full bg-muted flex items-center justify-center font-mono text-[11px] font-semibold text-muted-foreground tabular-nums">
+          {number}
+        </span>
+        {!last && <span className="w-px flex-1 bg-border mt-1.5" />}
+      </div>
+      <div className={cn('flex-1 min-w-0', !last && 'pb-6')}>
+        {/* leading-6 matches the 24px badge, so title and number share a center line */}
+        <div className="text-sm font-semibold antialiased leading-6">{title}</div>
+        {description && (
+          <p className="text-[13px] text-muted-foreground text-pretty antialiased mt-0.5">
+            {description}
+          </p>
+        )}
+        {children}
+      </div>
+    </li>
+  );
+}
 
 /** "hypertrophy_block-v2.xlsx" → "Hypertrophy block v2" */
 function nameFromFilename(filename: string): string {
@@ -135,102 +175,103 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
         </div>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Step 1 — the template. A plain anchor: same-origin GET rides the
-            session cookie, and the browser handles the download natively. */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-3.5">
-          <p className="flex-1 text-sm text-muted-foreground text-pretty antialiased">
-            Download the template, fill in one row per exercise, then upload it
-            back here. The example rows show the format.
-          </p>
-          {/* Styled directly with buttonVariants — this repo's Button doesn't
-              implement asChild, so wrapping the anchor left it unstyled */}
-          <a
-            href="/api/plans/import/template"
-            download
-            className={cn(
-              buttonVariants({ variant: 'outline', size: 'sm' }),
-              // ps compensates for the leading icon's visual weight
-              'shrink-0 self-start sm:self-center rounded-xl gap-2 ps-2.5',
-              'active:scale-[0.96] transition-[color,background-color,transform] duration-150'
-            )}
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* The dialog is a round trip told in order: spreadsheet out,
+            spreadsheet back in, name the result. Only the real dropzone
+            keeps a dashed border — dashed means "drop here", nothing else. */}
+        <ol>
+          <ImportStep
+            number="1"
+            title="Download the template"
+            description="One row per exercise — the example rows show the format."
           >
-            <Download className="w-4 h-4" aria-hidden="true" />
-            Download template
-          </a>
-        </div>
-
-        {/* Step 2 — the filled-in file */}
-        <div>
-          <FieldLabel htmlFor={ids.file} className="mb-2">
-            Filled-in template
-          </FieldLabel>
-          <input
-            ref={fileInputRef}
-            id={ids.file}
-            type="file"
-            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            className="sr-only"
-            onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
-          />
-          {file ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-150">
-              <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-              {/* Truncation hides the middle of long filenames — keep the
-                  full name reachable */}
-              <span className="flex-1 min-w-0 truncate text-sm font-medium antialiased" title={file.name}>{file.name}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  handleFileChange(null);
-                  if (fileInputRef.current) fileInputRef.current.value = '';
-                }}
-                disabled={isSubmitting}
-                className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground shrink-0 tap-target"
-                aria-label="Remove file"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              className="w-full flex items-center justify-center gap-2.5 rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground transition-colors hover:border-foreground/25 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            {/* A plain anchor: same-origin GET rides the session cookie, and
+                the browser handles the download natively. Styled directly
+                with buttonVariants — this repo's Button doesn't implement
+                asChild, so wrapping the anchor left it unstyled. */}
+            <a
+              href="/api/plans/import/template"
+              download
+              className={cn(
+                buttonVariants({ variant: 'outline', size: 'sm' }),
+                // ps compensates for the leading icon's visual weight
+                'mt-2.5 rounded-xl gap-2 ps-2.5',
+                'active:scale-[0.96] transition-[color,background-color,transform] duration-150'
+              )}
             >
-              <FileSpreadsheet className="w-5 h-5" aria-hidden="true" />
-              Choose the .xlsx file
-            </button>
-          )}
-        </div>
+              <Download className="w-4 h-4" aria-hidden="true" />
+              Download template
+            </a>
+          </ImportStep>
 
-        {/* Step 3 — plan identity, same hero field as the create dialog */}
-        <FieldShell
-          label="Plan name"
-          htmlFor={ids.name}
-          trailing={
-            name.length >= 40 ? (
-              <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50">
-                {name.length}/50
-              </span>
-            ) : null
-          }
-        >
-          <div className="flex items-center gap-1 px-2 pb-2 pt-1">
-            <EmojiPicker value={emoji} onChange={setEmoji} className="w-10 h-10 shrink-0 bg-background" />
-            <Input
-              id={ids.name}
-              placeholder="e.g., 4-Week Strength Foundation"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="h-10 flex-1 min-w-0 border-0 bg-transparent px-2 text-base font-semibold tracking-tight placeholder:font-normal placeholder:tracking-normal focus-visible:ring-0 focus-visible:ring-offset-0"
-              maxLength={50}
-              aria-describedby={error ? ids.error : undefined}
+          <ImportStep number="2" title="Fill it in, then upload it back">
+            <input
+              ref={fileInputRef}
+              id={ids.file}
+              aria-label="Filled-in template file"
+              type="file"
+              accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              className="sr-only"
+              onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
             />
-          </div>
-        </FieldShell>
+            {file ? (
+              <div className="mt-2.5 flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-150">
+                <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
+                {/* Truncation hides the middle of long filenames — keep the
+                    full name reachable */}
+                <span className="flex-1 min-w-0 truncate text-sm font-medium antialiased" title={file.name}>{file.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    handleFileChange(null);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                  }}
+                  disabled={isSubmitting}
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground shrink-0 tap-target"
+                  aria-label="Remove file"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="mt-2.5 w-full flex items-center justify-center gap-2.5 rounded-2xl border border-dashed border-border bg-muted/20 px-4 py-6 text-sm text-muted-foreground transition-colors hover:border-foreground/25 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              >
+                <FileSpreadsheet className="w-5 h-5" aria-hidden="true" />
+                Choose the .xlsx file
+              </button>
+            )}
+          </ImportStep>
+
+          <ImportStep
+            number="3"
+            title={<label htmlFor={ids.name}>Name your plan</label>}
+            description="Clients see this name and emoji on their plan."
+            last
+          >
+            <div className="mt-2.5 flex items-center gap-1 rounded-2xl border border-border bg-muted/40 p-2 transition-colors focus-within:border-foreground/25 focus-within:bg-background">
+              <EmojiPicker value={emoji} onChange={setEmoji} className="w-10 h-10 shrink-0 bg-background" />
+              <Input
+                id={ids.name}
+                placeholder="e.g., 4-Week Strength Foundation"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-10 flex-1 min-w-0 border-0 bg-transparent px-2 text-base font-semibold tracking-tight placeholder:font-normal placeholder:tracking-normal focus-visible:ring-0 focus-visible:ring-offset-0"
+                maxLength={50}
+                aria-describedby={error ? ids.error : undefined}
+              />
+              {name.length >= 40 && (
+                <span className="font-mono text-[10px] tabular-nums text-muted-foreground/50 pe-2 shrink-0">
+                  {name.length}/50
+                </span>
+              )}
+            </div>
+          </ImportStep>
+        </ol>
 
         {error && (
           <div id={ids.error} role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 space-y-2 animate-in fade-in-0 slide-in-from-top-1 duration-150">
