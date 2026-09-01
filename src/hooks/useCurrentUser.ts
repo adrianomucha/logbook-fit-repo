@@ -8,6 +8,7 @@ interface UserProfile {
   email: string;
   name: string;
   role: 'COACH' | 'CLIENT';
+  avatarUrl: string | null;
   timezone: string;
   createdAt: string;
   coachProfile: { id: string; bio: string } | null;

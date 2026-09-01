@@ -18,6 +18,7 @@ export async function GET() {
       email: true,
       name: true,
       role: true,
+      avatarUrl: true,
       timezone: true,
       createdAt: true,
       linkedUserId: true,

@@ -204,6 +204,13 @@ export const changePasswordLimiter = rateLimit("change-password", {
   maxRequests: 5,
 });
 
+// Avatar uploads move megabytes into storage, so one account can't fill the
+// bucket in a loop. Keyed by user id (the endpoint is authenticated).
+export const avatarUploadLimiter = rateLimit("avatar-upload", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 20,
+});
+
 // Feedback is authenticated, so this is keyed by user id rather than IP:
 // generous enough for someone on a bug-reporting spree, tight enough that
 // one account can't fill the admin inbox.

@@ -97,7 +97,17 @@ export function AccountMenu({ className }: { className?: string }) {
           )}
         >
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted/40 font-mono text-[10px] font-semibold uppercase tracking-[0.04em] text-foreground">
-            {monogram}
+            {user?.avatarUrl ? (
+              // Remote storage URL — same next/image trade-off as SignupClient
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="h-full w-full rounded-full object-cover"
+              />
+            ) : (
+              monogram
+            )}
             {isAdmin && (
               <span
                 className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-brand ring-2 ring-background"

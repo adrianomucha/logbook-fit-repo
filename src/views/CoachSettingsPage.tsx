@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Bell, KeyRound, Loader2, UserRound, Wrench, type LucideIcon } from 'lucide-react';
+import { Bell, Camera, KeyRound, Loader2, UserRound, Wrench, type LucideIcon } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { NotificationToggle } from '@/components/notifications/NotificationToggle';
@@ -73,6 +73,50 @@ function ProfileSection() {
   const [bio, setBio] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [isSeeded, setIsSeeded] = useState(false);
+  const [isPhotoBusy, setIsPhotoBusy] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const avatarUrl = user?.avatarUrl ?? null;
+
+  const handlePhotoFile = async (file: File | undefined) => {
+    if (!file || isPhotoBusy) return;
+    if (file.size > 4 * 1024 * 1024) {
+      toast.error('Choose an image under 4MB');
+      return;
+    }
+    setIsPhotoBusy(true);
+    try {
+      // Raw bytes, not JSON — the server sniffs the real type from them
+      const res = await fetch('/api/account/avatar', {
+        method: 'PUT',
+        body: file,
+        cache: 'no-store',
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || 'Upload failed');
+      }
+      await refresh();
+      toast.success('Photo updated');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Couldn’t upload the photo.');
+    } finally {
+      setIsPhotoBusy(false);
+    }
+  };
+
+  const handlePhotoRemove = async () => {
+    if (isPhotoBusy) return;
+    setIsPhotoBusy(true);
+    try {
+      await apiFetch('/api/account/avatar', { method: 'DELETE' });
+      await refresh();
+      toast.success('Photo removed');
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Couldn’t remove the photo.');
+    } finally {
+      setIsPhotoBusy(false);
+    }
+  };
 
   // Seed the form once the profile arrives; never clobber in-progress edits
   // on background revalidation.
@@ -118,16 +162,54 @@ function ProfileSection() {
 
       <div className="space-y-5">
         <div className="space-y-2">
-          <FieldLabel htmlFor="settings-name">Name</FieldLabel>
+          <FieldLabel htmlFor="settings-name">Photo &amp; name</FieldLabel>
           <div className="flex items-center gap-3">
-            <div
-              className={cn(
-                'w-11 h-11 rounded-full flex items-center justify-center select-none text-base font-bold shrink-0',
-                avatarColor(previewName)
-              )}
-              aria-hidden="true"
-            >
-              {previewName.charAt(0).toUpperCase()}
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={isPhotoBusy}
+                aria-label={avatarUrl ? 'Change profile photo' : 'Add profile photo'}
+                className="block w-11 h-11 rounded-full overflow-hidden touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.96] transition-transform duration-150"
+              >
+                {avatarUrl ? (
+                  // Storage URLs are remote; next/image would need a
+                  // remotePatterns allowlist (same call as SignupClient)
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span
+                    className={cn(
+                      'w-full h-full flex items-center justify-center select-none text-base font-bold',
+                      avatarColor(previewName)
+                    )}
+                  >
+                    {previewName.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                {isPhotoBusy && (
+                  <span className="absolute inset-0 flex items-center justify-center rounded-full bg-background/70">
+                    <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+                  </span>
+                )}
+              </button>
+              <span
+                className="absolute -bottom-0.5 -end-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-foreground text-background ring-2 ring-card pointer-events-none"
+                aria-hidden="true"
+              >
+                <Camera className="h-2.5 w-2.5" />
+              </span>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => {
+                  void handlePhotoFile(e.target.files?.[0]);
+                  // Same file picked twice still fires onChange
+                  e.target.value = '';
+                }}
+              />
             </div>
             <Input
               id="settings-name"
@@ -139,6 +221,19 @@ function ProfileSection() {
               maxLength={100}
               className={inputClass}
             />
+          </div>
+          <div className="flex items-baseline justify-between gap-2">
+            <FieldHint>JPG, PNG, or WebP, up to 4MB.</FieldHint>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={() => void handlePhotoRemove()}
+                disabled={isPhotoBusy}
+                className="shrink-0 text-xs text-muted-foreground hover:text-foreground transition-colors touch-manipulation tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm disabled:opacity-50"
+              >
+                Remove photo
+              </button>
+            )}
           </div>
         </div>
 
@@ -170,12 +265,28 @@ function ProfileSection() {
 
         {/* Mirrors the invite signup hero, so "save" is never a leap of faith */}
         <div className="ps-3.5 border-s-2 border-brand">
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">
             What an invited client sees
           </p>
-          <p className="text-base font-black uppercase tracking-tight antialiased">
-            {previewName} is expecting you
-          </p>
+          <div className="flex items-center gap-2">
+            <div
+              className={cn(
+                'w-5 h-5 rounded-full overflow-hidden flex items-center justify-center shrink-0',
+                avatarUrl ? 'bg-muted' : avatarColor(previewName)
+              )}
+              aria-hidden="true"
+            >
+              {avatarUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={avatarUrl} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-[9px] font-bold uppercase">{previewName.charAt(0)}</span>
+              )}
+            </div>
+            <p className="text-base font-black uppercase tracking-tight antialiased">
+              {previewName} is expecting you
+            </p>
+          </div>
           {bio.trim() && (
             <p className="text-sm text-muted-foreground leading-relaxed mt-1 text-pretty">
               {bio.trim()}
