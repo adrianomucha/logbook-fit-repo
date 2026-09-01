@@ -904,7 +904,7 @@ export function UnifiedClientProfile() {
                   )}
                 </div>
               ) : secondaryTab === 'workouts' ? (
-                <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+                <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:flex lg:flex-col">
                   <WorkoutHistoryPanel
                     completions={apiClient.completions}
                     clientName={client.name}
@@ -912,7 +912,7 @@ export function UnifiedClientProfile() {
                   />
                 </div>
               ) : (
-                <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
+                <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:flex lg:flex-col">
                   <CheckInHistoryPanel
                     checkIns={checkIns}
                     clientId={client.id}

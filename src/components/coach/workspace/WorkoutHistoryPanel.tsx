@@ -45,12 +45,14 @@ export function WorkoutHistoryPanel({
     (c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt)
   );
 
+  // Same shape as the plan tab's empty state (InlinePlanEditor) so the three
+  // tabs read as one family
   if (rows.length === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center text-center py-8 space-y-1.5">
-        <div className="text-3xl select-none mb-2">🏋️</div>
-        <p className="text-sm font-medium antialiased">No workouts yet</p>
-        <p className="text-xs text-muted-foreground antialiased">
+      <div className="h-full lg:flex-1 lg:min-h-0 flex flex-col items-center justify-center text-center py-8">
+        <div className="text-4xl select-none mb-4 animate-bounce-once">🏋️</div>
+        <p className="font-semibold antialiased">No workouts yet</p>
+        <p className="text-sm text-muted-foreground antialiased">
           Workouts {firstName} completes will show up here.
         </p>
       </div>
