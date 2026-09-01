@@ -174,7 +174,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
             onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
           />
           {file ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3">
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-150">
               <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
               {/* Truncation hides the middle of long filenames — keep the
                   full name reachable */}
@@ -233,7 +233,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
         </FieldShell>
 
         {error && (
-          <div id={ids.error} role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 space-y-2">
+          <div id={ids.error} role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 space-y-2 animate-in fade-in-0 slide-in-from-top-1 duration-150">
             <p className="text-sm font-medium text-destructive antialiased">{error}</p>
             {rowErrors.length > 0 && (
               <ul className="max-h-36 overflow-y-auto overscroll-contain space-y-1">
