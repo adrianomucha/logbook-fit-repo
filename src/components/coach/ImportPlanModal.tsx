@@ -129,7 +129,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
             className="h-12 flex-1 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.96] transition-[background-color,transform] duration-150"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-            {isSubmitting ? 'Importing' : 'Import plan'}
+            {isSubmitting ? 'Importing…' : 'Import plan'}
             {!isSubmitting && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
           </Button>
         </div>
@@ -176,7 +176,9 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
           {file ? (
             <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3">
               <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-              <span className="flex-1 min-w-0 truncate text-sm font-medium antialiased">{file.name}</span>
+              {/* Truncation hides the middle of long filenames — keep the
+                  full name reachable */}
+              <span className="flex-1 min-w-0 truncate text-sm font-medium antialiased" title={file.name}>{file.name}</span>
               <Button
                 type="button"
                 variant="ghost"
