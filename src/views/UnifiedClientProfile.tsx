@@ -19,7 +19,8 @@ import {
   apiClientDetailToClient,
 } from '@/lib/adapters/api';
 import { cn } from '@/lib/utils';
-import { InlineCheckInReview } from '@/components/coach/workspace/InlineCheckInReview';
+import { InlineCheckInReview, SENT_UNDO_WINDOW_MS } from '@/components/coach/workspace/InlineCheckInReview';
+import { useHiddenPendingCheckIn } from '@/hooks/useHiddenPendingCheckIn';
 import {
   CheckInHistoryPanel,
   CheckInScheduleSettings,
@@ -96,6 +97,9 @@ export function UnifiedClientProfile() {
   const [chatPrefill, setChatPrefill] = useState<string | undefined>(undefined);
   const [secondaryTab, setSecondaryTab] = useState<'plan' | 'workouts' | 'history'>('plan');
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
+  // Id of the check-in the coach just sent, so Undo can unsend it before
+  // the client refetch has caught up and activeCheckInId still reads null.
+  const sentCheckInIdRef = useRef<string | null>(null);
   const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showContinueConfirm, setShowContinueConfirm] = useState(false);
@@ -233,6 +237,15 @@ export function UnifiedClientProfile() {
     };
   }, [activeCheckInDetail, apiClient, user]);
 
+
+  // "Hide until they respond": per-device, keyed by the pending check-in's
+  // id so it lapses on its own when a new one is sent or this one is answered.
+  const pendingCheckInId = activeCheckIn?.status === 'pending' ? activeCheckInId : null;
+  const {
+    hidden: pendingHidden,
+    hide: hidePending,
+    unhide: unhidePending,
+  } = useHiddenPendingCheckIn(pendingCheckInId);
   // Unread = messages from the client's user not yet marked read. Best-effort:
   // the messages API stamps the thread read on fetch (backlog #15).
   const hasUnread = useMemo(
@@ -249,11 +262,12 @@ export function UnifiedClientProfile() {
     if (!clientId || activeCheckIn || isSendingCheckIn) return;
     setIsSendingCheckIn(true);
     try {
-      await createCheckInForClient(clientId);
+      const created = await createCheckInForClient(clientId);
+      sentCheckInIdRef.current = created.id;
       refreshClient();
       setJustSentCheckIn(true);
       clearTimeout(sentTimerRef.current);
-      sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
+      sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), SENT_UNDO_WINDOW_MS);
       handleScrollToCheckIn();
     } catch (err) {
       toast.error(err instanceof ApiError && err.status === 409 ? err.message : 'Failed to send check-in. Please try again.');
@@ -287,7 +301,8 @@ export function UnifiedClientProfile() {
   const handleCreateCheckIn = async () => {
     if (!clientId) return;
     try {
-      await createCheckInForClient(clientId);
+      const created = await createCheckInForClient(clientId);
+      sentCheckInIdRef.current = created.id;
       refreshClient();
     } catch (err) {
       toast.error(err instanceof ApiError && err.status === 409 ? err.message : 'Failed to create check-in. Please try again.');
@@ -296,15 +311,31 @@ export function UnifiedClientProfile() {
     }
   };
 
-  const handleCancelCheckIn = async () => {
-    if (!activeCheckInId) return;
+  // Backs both Undo (right after sending) and the confirmed Unsend on the
+  // waiting card. Prefers the live active id; falls back to the one we just
+  // created when the refetch hasn't landed yet.
+  const handleUnsendCheckIn = async () => {
+    const id = activeCheckInId ?? sentCheckInIdRef.current;
+    if (!id) return;
+    const name = apiClient?.user.name?.split(' ')[0] || 'They';
     try {
-      await apiFetch(`/api/check-ins/${activeCheckInId}`, { method: 'DELETE' });
-      toast.success('Check-in withdrawn');
+      await apiFetch(`/api/check-ins/${id}`, { method: 'DELETE' });
+      toast.success('Check-in unsent');
     } catch {
-      toast.error('Couldn’t withdraw the check-in. They may have just responded.');
+      toast.error(`Couldn’t unsend the check-in. ${name} may have just responded.`);
     }
+    sentCheckInIdRef.current = null;
+    clearTimeout(sentTimerRef.current);
+    setJustSentCheckIn(false);
     refreshClient();
+  };
+
+  const handleHidePending = () => {
+    hidePending();
+    const name = apiClient?.user.name?.split(' ')[0] || 'they';
+    toast(`Hidden until ${name} responds`, {
+      action: { label: 'Undo', onClick: unhidePending },
+    });
   };
 
   const handleEditCheckInResponse = async (checkInId: string, coachFeedback: string) => {
@@ -717,7 +748,12 @@ export function UnifiedClientProfile() {
             inside the panel whenever the header already carries Send, so the
             same button never appears twice on one screen. Past check-ins
             still live in the History tab. */}
-        {plan && (activeCheckIn || justSentCheckIn || hasRecentFlags || primaryAction.kind !== 'send') && (
+        {plan && (
+          justSentCheckIn
+          || hasRecentFlags
+          // A hidden pending card renders nothing unless there are flags (above)
+          || (activeCheckIn ? !pendingHidden : primaryAction.kind !== 'send')
+        ) && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
           <SectionCard>
@@ -730,7 +766,9 @@ export function UnifiedClientProfile() {
               currentUserId={user?.id ?? ''}
               onCompleteCheckIn={handleCompleteCheckIn}
               onCreateCheckIn={handleCreateCheckIn}
-              onCancelCheckIn={handleCancelCheckIn}
+              onUnsendCheckIn={handleUnsendCheckIn}
+              pendingHidden={pendingHidden}
+              onHidePending={handleHidePending}
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
               variant="flat"

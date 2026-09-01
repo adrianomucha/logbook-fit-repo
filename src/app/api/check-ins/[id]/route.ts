@@ -67,7 +67,7 @@ export async function GET(
 
 /**
  * DELETE /api/check-ins/[id]
- * Coach withdraws a check-in they sent, while it's still unanswered.
+ * Coach unsends a check-in they sent, while it's still unanswered.
  * Once the client has responded (or it's completed), it's part of the
  * conversation and can't be deleted.
  */
