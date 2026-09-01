@@ -1,7 +1,13 @@
 'use client';
 
+import { Suspense } from 'react';
 import { CoachSettingsPage } from '@/views/CoachSettingsPage';
 
 export default function CoachSettingsRoute() {
-  return <CoachSettingsPage />;
+  // Suspense boundary for useSearchParams (?section=) — same pattern as /coach
+  return (
+    <Suspense>
+      <CoachSettingsPage />
+    </Suspense>
+  );
 }
