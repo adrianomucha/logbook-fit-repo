@@ -189,18 +189,25 @@ export function CheckInHistoryPanel({
     </div>
   ) : null;
 
-  // Empty state
+  // Empty state — the tab content fills the card on large screens, so the
+  // message is centred in the available height (top-hugging reads as a
+  // layout bug) and the schedule widget stays pinned to the bottom edge,
+  // where it lives once there are check-ins.
   if (completedCheckIns.length === 0) {
     return (
-      <div className="space-y-3">
-        <div className="text-center py-8 space-y-1.5">
+      <div className="h-full flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-center text-center py-8 space-y-1.5">
           <div className="text-3xl select-none mb-2">💬</div>
           <p className="text-sm font-medium antialiased">No check-ins yet</p>
           <p className="text-xs text-muted-foreground antialiased">
             Completed check-ins with {firstName} will show up here.
           </p>
         </div>
-        {scheduleToggle}
+        {scheduleToggle && (
+          <div className="pt-2">
+            {scheduleToggle}
+          </div>
+        )}
       </div>
     );
   }

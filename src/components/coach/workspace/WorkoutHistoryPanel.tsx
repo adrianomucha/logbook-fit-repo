@@ -47,7 +47,7 @@ export function WorkoutHistoryPanel({
 
   if (rows.length === 0) {
     return (
-      <div className="text-center py-8 space-y-1.5">
+      <div className="h-full flex flex-col items-center justify-center text-center py-8 space-y-1.5">
         <div className="text-3xl select-none mb-2">🏋️</div>
         <p className="text-sm font-medium antialiased">No workouts yet</p>
         <p className="text-xs text-muted-foreground antialiased">
