@@ -132,7 +132,7 @@ the app work. Do it first; it is also independently useful to the web app.
       the session (auth already refuses `deletedAt != null`). Password
       re-entry in the body for confirmation. Expose it in the web account menu
       too — it is a backlog item (#30) anyway. — M
-- [ ] **1.6 Reviewer accounts.** Seed script (not the demo seeder) that
+- [x] **1.6 Reviewer accounts.** Seed script (not the demo seeder) that
       creates a real coach + client pair with an assigned plan, a pending
       check-in and a message thread, for App Review notes. Run once against
       production; document the credentials in the App Store Connect review

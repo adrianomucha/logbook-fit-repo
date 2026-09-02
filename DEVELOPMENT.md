@@ -108,6 +108,22 @@ TOKEN=$(curl -s -X POST localhost:3000/api/auth/mobile/login \
 curl -s localhost:3000/api/me -H "Authorization: Bearer $TOKEN"
 ```
 
+## App Review accounts
+
+App Store reviewers sign in against production, where the seeded demo logins
+are locked. `prisma/seed_reviewer.ts` creates a real coach + client pair with
+an assigned plan, a pending check-in, one answered check-in and an unread
+chat thread — enough to walk every client screen. Credentials come from the
+environment and belong in App Store Connect's review notes only:
+
+```bash
+REVIEWER_COACH_EMAIL=... REVIEWER_CLIENT_EMAIL=... REVIEWER_PASSWORD='...' \
+  npx tsx prisma/seed_reviewer.ts
+```
+
+Re-running reuses the accounts and resets their password (that is how you
+rotate it); the plan, check-ins and messages are only created when missing.
+
 ## Scheduled work
 
 One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
