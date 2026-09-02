@@ -1,9 +1,9 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { Message, Client } from '@/types';
 import { Send, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { avatarColor } from '@/lib/avatar-colors';
 import { toast } from 'sonner';
 
 // Server-side cap on message content (sendMessageSchema)
@@ -27,6 +27,8 @@ interface ChatViewProps {
   heightClass?: string;
   /** Optional: name of the person on the other end (shown in empty state) */
   peerName?: string;
+  /** Optional: the peer's photo, shown wherever their monogram would be */
+  peerAvatarUrl?: string | null;
   /** Optional: tappable conversation starter chips for the empty state */
   conversationStarters?: string[];
   /**
@@ -78,6 +80,7 @@ export function ChatView({
   initialPrefill,
   heightClass = 'h-[350px] sm:h-[600px]',
   peerName,
+  peerAvatarUrl,
   conversationStarters,
   variant = 'default',
 }: ChatViewProps) {
@@ -301,14 +304,12 @@ export function ChatView({
                     {isBrand ? (
                       /* The person, not a pictogram — this thread is the
                          coaching relationship, so lead with the coach */
-                      <div
-                        className={cn(
-                          'relative w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3',
-                          avatarColor(peerLabel)
-                        )}
-                        aria-hidden="true"
-                      >
-                        <span className="text-lg font-bold uppercase">{peerLabel.charAt(0)}</span>
+                      <div className="relative w-14 h-14 mx-auto mb-3" aria-hidden="true">
+                        <UserAvatar
+                          name={peerLabel}
+                          avatarUrl={peerAvatarUrl}
+                          className="w-14 h-14 text-lg"
+                        />
                         {/* Volt presence dot — same accent the avatars in the
                             coach empty states carry */}
                         <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-brand ring-2 ring-card animate-bounce-once" />
@@ -383,16 +384,11 @@ export function ChatView({
                       {isBrand && !isCurrentUser && (
                         <div className="w-7 shrink-0" aria-hidden="true">
                           {isLastInGroup && (
-                            <div
-                              className={cn(
-                                'w-7 h-7 rounded-full flex items-center justify-center',
-                                avatarColor(peerLabel)
-                              )}
-                            >
-                              <span className="text-[10px] font-bold uppercase">
-                                {peerLabel.charAt(0)}
-                              </span>
-                            </div>
+                            <UserAvatar
+                              name={peerLabel}
+                              avatarUrl={peerAvatarUrl}
+                              className="w-7 h-7 text-[10px]"
+                            />
                           )}
                         </div>
                       )}

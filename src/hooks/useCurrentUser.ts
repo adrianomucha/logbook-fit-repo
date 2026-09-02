@@ -18,7 +18,10 @@ interface UserProfile {
     planStartDate: string | null;
     coachRelationship?: {
       status: string;
-      coach: { id: string; user: { id: string; name: string | null } };
+      coach: {
+        id: string;
+        user: { id: string; name: string | null; avatarUrl: string | null };
+      };
     } | null;
   } | null;
   isAdmin: boolean;

@@ -43,7 +43,7 @@ export async function GET() {
               coach: {
                 select: {
                   id: true,
-                  user: { select: { id: true, name: true } },
+                  user: { select: { id: true, name: true, avatarUrl: true } },
                 },
               },
             },

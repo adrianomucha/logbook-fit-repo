@@ -80,6 +80,7 @@ export async function GET() {
     select: {
       id: true,
       name: true,
+      avatarUrl: true,
       clientProfile: { select: { id: true } },
     },
   });
@@ -109,6 +110,7 @@ export async function GET() {
       return {
         userId: row.senderId,
         name: sender?.name ?? null,
+        avatarUrl: sender?.avatarUrl ?? null,
         /** Present when the sender is a client — the coach app routes by it */
         clientProfileId: sender?.clientProfile?.id ?? null,
         count: row._count._all,

@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,14 +9,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Edit, Copy, Archive, Trash2, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { avatarColor } from '@/lib/avatar-colors';
 import type { WorkoutPlan } from '@/types';
 
 interface PlanTemplateCardProps {
   plan: WorkoutPlan;
   clientCount: number;
   /** Names of clients on this plan — rendered as a mini-avatar stack when provided */
-  clientNames?: string[];
+  clients?: { name: string; avatarUrl: string | null }[];
   onEdit: () => void;
   onDuplicate?: () => void;
   onArchive?: () => void;
@@ -33,7 +33,7 @@ const MAX_AVATARS = 3;
 export function PlanTemplateCard({
   plan,
   clientCount,
-  clientNames,
+  clients,
   onEdit,
   onDuplicate,
   onArchive,
@@ -86,27 +86,23 @@ export function PlanTemplateCard({
       {/* Usage — clients on the plan as a mini-avatar stack, volt dot marks it live */}
       <span className="w-auto sm:w-[84px] flex items-center justify-end shrink-0">
         {clientCount > 0 ? (
-          clientNames && clientNames.length > 0 ? (
+          clients && clients.length > 0 ? (
             <span
               className="relative flex items-center -space-x-1.5"
-              title={clientNames.join(', ')}
-              aria-label={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} on this plan: ${clientNames.join(', ')}`}
+              title={clients.map((c) => c.name).join(", ")}
+              aria-label={`${clientCount} ${clientCount === 1 ? 'client' : 'clients'} on this plan: ${clients.map((c) => c.name).join(", ")}`}
             >
-              {clientNames.slice(0, MAX_AVATARS).map((name, i) => (
-                <span
+              {clients.slice(0, MAX_AVATARS).map(({ name, avatarUrl }, i) => (
+                <UserAvatar
                   key={`${name}-${i}`}
-                  className={cn(
-                    'w-6 h-6 rounded-full ring-2 ring-card flex items-center justify-center',
-                    'text-[10px] font-bold select-none antialiased',
-                    avatarColor(name)
-                  )}
-                >
-                  {name.charAt(0).toUpperCase()}
-                </span>
+                  name={name}
+                  avatarUrl={avatarUrl}
+                  className="w-6 h-6 ring-2 ring-card text-[10px]"
+                />
               ))}
-              {clientNames.length > MAX_AVATARS && (
+              {clients.length > MAX_AVATARS && (
                 <span className="w-6 h-6 rounded-full ring-2 ring-card bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground tabular-nums select-none">
-                  +{clientNames.length - MAX_AVATARS}
+                  +{clients.length - MAX_AVATARS}
                 </span>
               )}
               {/* volt live-dot on the stack's corner */}

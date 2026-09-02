@@ -8,8 +8,8 @@ import type { WorkoutPlan } from '@/types';
 interface PlanTemplateListProps {
   templates: WorkoutPlan[];
   getClientCount: (planId: string) => number;
-  /** Names of clients on a plan — rendered as a mini-avatar stack on live rows */
-  getClientNames?: (planId: string) => string[];
+  /** Clients on a plan — rendered as a mini-avatar stack on live rows */
+  getClients?: (planId: string) => { name: string; avatarUrl: string | null }[];
   onEdit: (planId: string) => void;
   onDelete: (planId: string) => void;
 }
@@ -31,7 +31,7 @@ const byUpdatedDesc = (a: WorkoutPlan, b: WorkoutPlan) =>
 export function PlanTemplateList({
   templates,
   getClientCount,
-  getClientNames,
+  getClients,
   onEdit,
   onDelete,
 }: PlanTemplateListProps) {
@@ -137,7 +137,7 @@ export function PlanTemplateList({
                     key={plan.id}
                     plan={plan}
                     clientCount={getClientCount(plan.id)}
-                    clientNames={getClientNames?.(plan.id)}
+                    clients={getClients?.(plan.id)}
                     onEdit={() => onEdit(plan.id)}
                     onDelete={() => onDelete(plan.id)}
                   />

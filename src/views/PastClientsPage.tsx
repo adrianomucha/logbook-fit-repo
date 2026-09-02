@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePastClients } from '@/hooks/api/useCoachClients';
@@ -7,11 +8,9 @@ import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api-client';
-import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Loader2, RotateCcw } from 'lucide-react';
-import { avatarColor } from '@/components/coach/shared/clientSignals';
 
 function PastClientRow({
   client,
@@ -27,14 +26,11 @@ function PastClientRow({
 
   return (
     <div className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4">
-      <div
-        className={cn(
-          'w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center select-none text-sm sm:text-base font-bold flex-shrink-0 opacity-50',
-          avatarColor(displayName)
-        )}
-      >
-        {displayName.charAt(0).toUpperCase()}
-      </div>
+      <UserAvatar
+        name={displayName}
+        avatarUrl={client.user.avatarUrl}
+        className="w-10 h-10 sm:w-11 sm:h-11 text-sm sm:text-base opacity-50"
+      />
       <div className="flex-1 min-w-0">
         <h3 className="text-sm sm:text-[15px] font-semibold truncate leading-tight text-muted-foreground">
           {displayName}
