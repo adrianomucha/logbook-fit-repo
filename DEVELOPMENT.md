@@ -74,6 +74,56 @@ Gotchas:
 - Client-side crashes are reported to `POST /api/client-errors` and logged as
   `[CLIENT_ERROR_ALERT]` — include that tag in your log alert too.
 
+## Native app auth (bearer tokens)
+
+Browsers hold the NextAuth session in a cookie. The iOS app has no cookie
+jar worth trusting, so it carries the same kind of JWT in an
+`Authorization: Bearer <token>` header instead. Every API route reads the
+session through `getSession()` (`src/lib/session.ts`), which accepts either;
+route code never learns which.
+
+- `POST /api/auth/mobile/login` `{email, password}` → `{token, expiresAt, user}`.
+  Same checks as the web sign-in (`src/lib/credentials.ts`): demo lock (403,
+  `code: "demo_locked"`), rate limit by IP + email (429, `code: "rate_limited"`),
+  and a generic 401 for a wrong email or password.
+- `POST /api/auth/mobile/refresh` with a still-valid bearer → a fresh 30-day
+  token, after re-checking the account exists and isn't a locked demo. A 401
+  here means "sign in again".
+- Tokens are encrypted with `NEXTAUTH_SECRET`, live 30 days like the cookie,
+  and are stateless — `getSession()` does one primary-key lookup per request
+  so a deleted user (`deletedAt`) is turned away on every device at once.
+- `DELETE /api/me` `{password}` retires the signed-in account
+  (`src/lib/account-deletion.ts`): ends every coaching relationship the way
+  the coach/client termination does, revokes open invites, drops push
+  devices, and scrubs name/email/password on the row (kept so the other
+  party's history stays intact). Demo accounts refuse. The web offers it
+  from the account menu; the app must too (App Store guideline 5.1.1(v)).
+
+Try it against a running dev server:
+
+```bash
+TOKEN=$(curl -s -X POST localhost:3000/api/auth/mobile/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"client@logbook.fit","password":"demo1234"}' | jq -r .token)
+curl -s localhost:3000/api/me -H "Authorization: Bearer $TOKEN"
+```
+
+## App Review accounts
+
+App Store reviewers sign in against production, where the seeded demo logins
+are locked. `prisma/seed_reviewer.ts` creates a real coach + client pair with
+an assigned plan, a pending check-in, one answered check-in and an unread
+chat thread — enough to walk every client screen. Credentials come from the
+environment and belong in App Store Connect's review notes only:
+
+```bash
+REVIEWER_COACH_EMAIL=... REVIEWER_CLIENT_EMAIL=... REVIEWER_PASSWORD='...' \
+  npx tsx prisma/seed_reviewer.ts
+```
+
+Re-running reuses the accounts and resets their password (that is how you
+rotate it); the plan, check-ins and messages are only created when missing.
+
 ## Scheduled work
 
 One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
@@ -168,6 +218,18 @@ Devices register through `POST /api/push/subscription`, and endpoints that
 return 404/410 are deleted on the next send. iOS only delivers Web Push to
 apps installed to the home screen (16.4+), which the toggle detects and says
 so instead of offering a button that can't work.
+
+**Push (native app).** The same `notify*` entry points also reach the iOS app
+through Expo's push service. `PushSubscription.provider` says which transport
+a row uses: `WEB` rows are browser subscriptions, `EXPO` rows hold an Expo
+push token in `endpoint` and no keys. The app registers with
+`POST /api/push/subscription` `{provider: "EXPO", token, deviceName?}` and
+leaves with `DELETE` and the same body. Nothing to configure server-side:
+Expo delivers with the app's own APNs credentials (`EXPO_ACCESS_TOKEN` is
+optional). Tokens Expo reports as `DeviceNotRegistered` are deleted on the
+next send, like a 410 on the web. The payload's `url` and `tag` arrive in the
+notification's `data`, and `tag` doubles as the APNs collapse id so a repeat
+from the same person replaces the last notification instead of stacking.
 
 ## Scripts
 

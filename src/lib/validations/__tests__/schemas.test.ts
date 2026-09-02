@@ -23,6 +23,9 @@ import {
   waitlistInviteSchema,
   feedbackSchema,
   feedbackStatusSchema,
+  pushSubscriptionSchema,
+  pushUnsubscribeSchema,
+  expoPushTokenSchema,
 } from "../schemas";
 
 // ──────────────────────────────────────
@@ -959,5 +962,54 @@ describe("feedbackStatusSchema", () => {
     expect(feedbackStatusSchema.safeParse({ status: "DONE" }).success).toBe(
       false
     );
+  });
+});
+
+describe("push subscription schemas", () => {
+  const web = {
+    endpoint: "https://web.push.apple.com/abc",
+    keys: { p256dh: "k1", auth: "k2" },
+    expirationTime: null,
+  };
+
+  it("accepts a browser subscription (bare toJSON shape)", () => {
+    const parsed = pushSubscriptionSchema.safeParse(web);
+    expect(parsed.success).toBe(true);
+    if (parsed.success) expect("provider" in parsed.data).toBe(false);
+  });
+
+  it("accepts an Expo registration", () => {
+    const parsed = pushSubscriptionSchema.safeParse({
+      provider: "EXPO",
+      token: "ExponentPushToken[xxxxxxxxxxxxxxxxxxxxxx]",
+      deviceName: "  Adrian's iPhone ",
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success && "provider" in parsed.data) {
+      expect(parsed.data.deviceName).toBe("Adrian's iPhone");
+    }
+  });
+
+  it("rejects an Expo registration whose token isn't one", () => {
+    expect(
+      pushSubscriptionSchema.safeParse({ provider: "EXPO", token: "https://not.a/token" })
+        .success
+    ).toBe(false);
+    expect(
+      pushSubscriptionSchema.safeParse({ provider: "EXPO", token: "ExpoPushToken[]" }).success
+    ).toBe(false);
+    expect(expoPushTokenSchema.safeParse("ExpoPushToken[abc]").success).toBe(true);
+  });
+
+  it("rejects a browser subscription missing its keys", () => {
+    expect(pushSubscriptionSchema.safeParse({ endpoint: web.endpoint }).success).toBe(false);
+  });
+
+  it("unsubscribes by endpoint or by Expo token", () => {
+    expect(pushUnsubscribeSchema.safeParse({ endpoint: web.endpoint }).success).toBe(true);
+    expect(
+      pushUnsubscribeSchema.safeParse({ provider: "EXPO", token: "ExponentPushToken[a]" }).success
+    ).toBe(true);
+    expect(pushUnsubscribeSchema.safeParse({ token: "ExponentPushToken[a]" }).success).toBe(false);
   });
 });
