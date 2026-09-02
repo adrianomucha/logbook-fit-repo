@@ -9,32 +9,20 @@ interface NotificationToggleProps {
   className?: string;
   /** Hide once notifications are on (for surfaces that only need the nudge) */
   hideWhenOn?: boolean;
-  /**
-   * 'inline' (default) is the quiet chat-surface mode: a subtle "Alerts on"
-   * status once subscribed, and nothing at all when push can't work here.
-   * 'settings' is for the settings page, where the copy promises this
-   * control: the subscribed label names the action ("Turn off alerts") and
-   * the unavailable state says why instead of vanishing.
-   */
-  variant?: 'inline' | 'settings';
 }
 
 /**
- * Per-device opt-in for message notifications.
+ * Per-device opt-in for message notifications — the quiet chat-surface pill.
+ * The settings page has its own fuller control (NotificationPreferenceTile).
  *
  * Renders nothing when push can't work here (unsupported browser, server
  * without VAPID keys) — an offer the app can't honour is worse than silence.
  * The two cases the user *can* act on get a line of copy instead: blocked
  * permission (browser settings) and iOS-in-a-tab (install the app first).
  */
-export function NotificationToggle({
-  className,
-  hideWhenOn,
-  variant = 'inline',
-}: NotificationToggleProps) {
+export function NotificationToggle({ className, hideWhenOn }: NotificationToggleProps) {
   const {
     available,
-    browserSupported,
     isSubscribed,
     isBlocked,
     needsInstall,
@@ -60,22 +48,7 @@ export function NotificationToggle({
     );
   }
 
-  if (!available) {
-    if (variant !== 'settings') return null;
-    return (
-      <p
-        className={cn(
-          'font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1.5',
-          className
-        )}
-      >
-        <BellOff className="w-3 h-3 shrink-0" aria-hidden="true" />
-        {/* A capable browser with available=false means the deployment has
-            no VAPID keys — don't blame the browser for a server gap */}
-        {browserSupported ? 'Alerts aren’t set up yet' : 'Not supported in this browser'}
-      </p>
-    );
-  }
+  if (!available) return null;
 
   if (isBlocked && !isSubscribed) {
     return (
@@ -147,11 +120,7 @@ export function NotificationToggle({
           </span>
         </span>
       )}
-      {isSubscribed
-        ? variant === 'settings'
-          ? 'Turn off alerts'
-          : 'Alerts on'
-        : 'Turn on alerts'}
+      {isSubscribed ? 'Alerts on' : 'Turn on alerts'}
     </button>
   );
 }
