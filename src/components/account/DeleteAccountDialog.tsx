@@ -16,26 +16,35 @@ interface DeleteAccountDialogProps {
   role: 'COACH' | 'CLIENT' | undefined;
 }
 
+/** The typed phrase that arms the delete button. Exact, case-sensitive. */
+const CONFIRM_PHRASE = 'DELETE';
+
 /**
- * "Delete account", opened from the account menu. The password is the
- * confirmation — typing it is deliberate in a way a second "Are you sure?"
- * button never is. On success the session is ended client-side too; the
- * server already refuses it, so this is just not leaving a dead screen up.
+ * "Delete account" — reached from the danger zone in Settings → Account
+ * (both roles). Two proofs of intent: typing DELETE (can't be muscle
+ * memory) and the password (can't be someone else at an open laptop). On
+ * success the session is ended
+ * client-side too; the server already refuses it, so this is just not
+ * leaving a dead screen up.
  */
 export function DeleteAccountDialog({ isOpen, onClose, role }: DeleteAccountDialogProps) {
   const [password, setPassword] = useState('');
+  const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isArmed = confirmText === CONFIRM_PHRASE && password.length > 0;
 
   useEffect(() => {
     if (!isOpen) return;
     setPassword('');
+    setConfirmText('');
     setIsDeleting(false);
     setError(null);
   }, [isOpen]);
 
   const remove = async () => {
-    if (!password || isDeleting) return;
+    if (!isArmed || isDeleting) return;
     setIsDeleting(true);
     setError(null);
     try {
@@ -65,7 +74,7 @@ export function DeleteAccountDialog({ isOpen, onClose, role }: DeleteAccountDial
       isOpen={isOpen}
       onClose={onClose}
       title="Delete your account"
-      description="This can’t be undone. Confirm with your password."
+      description="This can’t be undone."
       footer={
         <div className="flex items-center justify-end gap-2">
           <Button variant="ghost" onClick={onClose} disabled={isDeleting}>
@@ -74,7 +83,7 @@ export function DeleteAccountDialog({ isOpen, onClose, role }: DeleteAccountDial
           <Button
             variant="destructive"
             onClick={remove}
-            disabled={isDeleting || !password}
+            disabled={isDeleting || !isArmed}
           >
             {isDeleting ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -115,6 +124,28 @@ export function DeleteAccountDialog({ isOpen, onClose, role }: DeleteAccountDial
 
         <div>
           <label
+            htmlFor="delete-account-confirm"
+            className="mb-2 block text-sm font-medium text-foreground"
+          >
+            Type <span className="font-mono font-semibold">{CONFIRM_PHRASE}</span> to
+            confirm
+          </label>
+          <Input
+            id="delete-account-confirm"
+            type="text"
+            autoComplete="off"
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck={false}
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            autoFocus
+            disabled={isDeleting}
+          />
+        </div>
+
+        <div>
+          <label
             htmlFor="delete-account-password"
             className="mb-2 block text-sm font-medium text-foreground"
           >
@@ -126,7 +157,6 @@ export function DeleteAccountDialog({ isOpen, onClose, role }: DeleteAccountDial
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            autoFocus
             disabled={isDeleting}
           />
         </div>

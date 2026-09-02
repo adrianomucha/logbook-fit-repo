@@ -7,7 +7,9 @@ import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { Home, Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export type CoachNavTab = 'dashboard' | 'clients' | 'plans';
+// 'settings' has no tab of its own — the settings page reaches through the
+// AccountMenu — but the nav accepts it so nothing else highlights there.
+export type CoachNavTab = 'dashboard' | 'clients' | 'plans' | 'settings';
 
 interface CoachNavProps {
   /** Currently active tab */
@@ -52,6 +54,9 @@ export function CoachNav({
         break;
       case 'plans':
         router.push('/coach?view=plans');
+        break;
+      case 'settings':
+        router.push('/coach/settings');
         break;
     }
   };

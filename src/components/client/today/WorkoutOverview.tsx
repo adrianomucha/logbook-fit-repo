@@ -90,7 +90,7 @@ export function WorkoutOverview({
         </p>
 
         {workoutDay.description && (
-          <p className="text-sm leading-relaxed text-muted-foreground mt-3 text-pretty">
+          <p className="text-sm leading-relaxed text-muted-foreground mt-3">
             {workoutDay.description}
           </p>
         )}

@@ -22,6 +22,8 @@ export async function GET() {
       email: true,
       name: true,
       role: true,
+      avatarUrl: true,
+      timezone: true,
       createdAt: true,
       linkedUserId: true,
       coachProfile: {
@@ -41,7 +43,7 @@ export async function GET() {
               coach: {
                 select: {
                   id: true,
-                  user: { select: { id: true, name: true } },
+                  user: { select: { id: true, name: true, avatarUrl: true } },
                 },
               },
             },

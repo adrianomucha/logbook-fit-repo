@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { useState, useMemo, useRef, useEffect, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCoachClientProfile } from '@/hooks/api/useCoachClientProfile';
@@ -14,7 +15,6 @@ import { PageHeader } from '@/components/coach/PageHeader';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
-import { avatarColor } from '@/lib/avatar-colors';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
 import { format, formatDistanceToNow, differenceInHours } from 'date-fns';
 
@@ -47,8 +47,9 @@ function SectionCard({ children, className }: { children: ReactNode; className?:
 // Page chrome shared by every state: nav, container, path-style header
 // ("‹ Client / Check-in") where the crumb is the way back to the profile.
 // The avatar rides the action slot as the page's identity anchor.
-function PageShell({ clientName, subtitle, onBack, children }: {
+function PageShell({ clientName, clientAvatar, subtitle, onBack, children }: {
   clientName: string;
+  clientAvatar?: string | null;
   subtitle?: ReactNode;
   onBack: () => void;
   children: ReactNode;
@@ -64,16 +65,11 @@ function PageShell({ clientName, subtitle, onBack, children }: {
               subtitle={subtitle}
               breadcrumb={{ label: clientName, onClick: onBack }}
               action={
-                <div
-                  className={cn(
-                    'w-10 h-10 rounded-full hidden sm:flex items-center justify-center',
-                    'text-sm font-bold select-none shrink-0',
-                    avatarColor(clientName)
-                  )}
-                  aria-hidden="true"
-                >
-                  {clientName.charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar
+                  name={clientName}
+                  avatarUrl={clientAvatar}
+                  className="hidden sm:flex w-10 h-10 text-sm"
+                />
               }
             />
           </div>
@@ -131,7 +127,12 @@ export function ClientCheckIn() {
   const responseRef = useRef<HTMLTextAreaElement>(null);
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (showSuccess) successHeadingRef.current?.focus();
+    if (!showSuccess) return;
+    // Focus announces the confirmation; preventScroll stops the browser
+    // from scrolling the heading up under the sticky header (which hid the
+    // check icon on phones). The page top shows the whole card.
+    window.scrollTo({ top: 0 });
+    successHeadingRef.current?.focus({ preventScroll: true });
   }, [showSuccess]);
 
   const isLoading = isClientLoading || (activeCheckInId && isCheckInLoading);
@@ -221,7 +222,7 @@ export function ClientCheckIn() {
         <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
           <SectionCard className="max-w-md mx-auto text-center py-12 animate-enter">
             <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
-            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can&apos;t find this client</h2>
+            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can’t find this client</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">They may have been removed, or the link might be outdated.</p>
             <Button onClick={() => router.push('/coach/clients')} className="active:scale-[0.96] transition-transform duration-150">Back to Clients</Button>
           </SectionCard>
@@ -252,7 +253,7 @@ export function ClientCheckIn() {
             </p>
             <div className="space-y-2">
               <Button onClick={handleBack} className="w-full active:scale-[0.96] transition-transform duration-150">
-                Back to {firstName}&apos;s profile
+                Back to {firstName}’s profile
               </Button>
               <Button variant="ghost" onClick={() => router.push('/coach')} className="w-full text-muted-foreground">
                 Back to dashboard
@@ -272,7 +273,7 @@ export function ClientCheckIn() {
   // State C: No active check-in
   if (!activeCheckIn && !activeCheckInId) {
     return (
-      <PageShell clientName={clientName} subtitle="No active check-in" onBack={handleBack}>
+      <PageShell clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null} subtitle="No active check-in" onBack={handleBack}>
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
           <SectionCard className="max-w-2xl text-center py-12">
             <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -308,7 +309,7 @@ export function ClientCheckIn() {
 
     return (
       <PageShell
-        clientName={clientName}
+        clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null}
         subtitle={`Sent ${sentAgo}`}
         onBack={handleBack}
       >
@@ -322,7 +323,7 @@ export function ClientCheckIn() {
               <>
                 <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Unsend this check-in?</h2>
                 <p className="text-sm text-muted-foreground text-pretty">
-                  {firstName} won&apos;t see it. You can send a new one any time.
+                  {firstName} won’t see it. You can send a new one any time.
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-5">
                   <Button
@@ -349,7 +350,7 @@ export function ClientCheckIn() {
               <>
                 <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Waiting for {firstName}</h2>
                 <p className="text-sm text-muted-foreground text-pretty">
-                  Check-in sent {sentAgo}. {firstName} hasn&apos;t responded yet.
+                  Check-in sent {sentAgo}. {firstName} hasn’t responded yet.
                 </p>
                 <Button
                   variant="ghost"
@@ -391,7 +392,7 @@ export function ClientCheckIn() {
 
   return (
     <PageShell
-      clientName={clientName}
+      clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null}
       subtitle={`Submitted ${submittedAgo}`}
       onBack={handleBack}
     >
@@ -404,7 +405,7 @@ export function ClientCheckIn() {
           {/* Client response — the page's headline data: bare mono-labelled
               vitals, no box-in-box */}
           <section className="animate-enter" style={{ animationDelay: '100ms' }}>
-            <SectionLabel>{firstName}&apos;s response</SectionLabel>
+            <SectionLabel>{firstName}’s response</SectionLabel>
             <SectionCard>
               {/* Answers in the brand's instrument-readout voice — mono caps,
                   like the profile's vitals; the emoji is the client's own pick
@@ -508,7 +509,7 @@ export function ClientCheckIn() {
                 checked={planAdjustment}
                 onCheckedChange={setPlanAdjustment}
               />
-              <span className="text-sm">I&apos;ll adjust the plan based on this feedback</span>
+              <span className="text-sm">I’ll adjust the plan based on this feedback</span>
             </label>
 
             {/* Submit — the page's one volt moment */}
@@ -522,7 +523,7 @@ export function ClientCheckIn() {
               Complete check-in
             </Button>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground text-center mt-2.5 antialiased">
-              Closes this check-in · saved to {firstName}&apos;s history
+              Closes this check-in · saved to {firstName}’s history
             </p>
           </SectionCard>
         </section>

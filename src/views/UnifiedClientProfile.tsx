@@ -491,8 +491,12 @@ export function UnifiedClientProfile() {
   // ---- Loading State ----
   if (isLoadingClient) {
     return (
-      <div className="min-h-dvh bg-background flex items-center justify-center animate-enter">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div
+        className="min-h-dvh bg-background flex items-center justify-center animate-enter"
+        role="status"
+      >
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Loading client</span>
       </div>
     );
   }
@@ -584,12 +588,11 @@ export function UnifiedClientProfile() {
       : 'no workouts logged yet'
     : null;
 
-  // Primary action — always give the coach one obvious next move, chosen by the
-  // client's state, so the page is never just a passive read-out. `kind` lets
-  // other parts of the page avoid repeating the same button.
-  const scrollToChat = () =>
-    chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const primaryAction: { label: string; onClick: () => void; disabled?: boolean; kind: 'assign' | 'review' | 'message' | 'send' } =
+  // Primary action — one obvious next move chosen by the client's state, or
+  // none: when the only thing left to do is reply, the chat card is already on
+  // the page, so a header button that merely scrolls to it would be redundant.
+  // `kind` lets other parts of the page avoid repeating the same button.
+  const primaryAction: { label: string; onClick: () => void; disabled?: boolean; kind: 'assign' | 'review' | 'send' } | null =
     !plan
       ? { label: 'Assign a plan', onClick: handleChangePlan, kind: 'assign' }
       : planEnded
@@ -597,10 +600,10 @@ export function UnifiedClientProfile() {
       : activeCheckIn?.status === 'responded'
         ? { label: 'Review check-in', onClick: handleScrollToCheckIn, kind: 'review' }
         : activeCheckIn?.status === 'pending'
-          ? { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' }
+          ? null
           : statusIsUrgent || !hasUnread
             ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn, kind: 'send' }
-            : { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' };
+            : null;
 
   // Build subtitle from status or plan. Urgent statuses get the warning voice
   // with the days detail folded in; everything else keeps a quiet metadata line.
@@ -653,23 +656,27 @@ export function UnifiedClientProfile() {
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
             action={
               <div className="flex items-center gap-2.5 shrink-0">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={primaryAction.onClick}
-                  disabled={primaryAction.disabled}
-                  className="active:scale-[0.96] transition-transform duration-150 tap-target"
-                >
-                  {primaryAction.label}
-                </Button>
+                {primaryAction && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={primaryAction.onClick}
+                    disabled={primaryAction.disabled}
+                    className="active:scale-[0.96] transition-transform duration-150 tap-target"
+                  >
+                    {primaryAction.label}
+                  </Button>
+                )}
                 {/* Rare/destructive actions live behind the header overflow,
-                    not on the page — the typed-name confirm is the real gate */}
+                    not on the page — the typed-name confirm is the real gate.
+                    Quiet ghost beside a primary button; a bordered button when
+                    it stands alone, so it reads as a control, not a stray glyph */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant={primaryAction ? 'ghost' : 'outline'}
                       size="icon"
-                      className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                      className="h-9 w-9 text-muted-foreground hover:text-foreground tap-target"
                       aria-label="More actions"
                     >
                       <MoreVertical className="w-4 h-4" />
@@ -752,7 +759,7 @@ export function UnifiedClientProfile() {
           justSentCheckIn
           || hasRecentFlags
           // A hidden pending card renders nothing unless there are flags (above)
-          || (activeCheckIn ? !pendingHidden : primaryAction.kind !== 'send')
+          || (activeCheckIn ? !pendingHidden : primaryAction?.kind !== 'send')
         ) && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
@@ -772,7 +779,7 @@ export function UnifiedClientProfile() {
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
               variant="flat"
-              hideSendPrompt={primaryAction.kind === 'send'}
+              hideSendPrompt={primaryAction?.kind === 'send'}
             />
           </SectionCard>
         </section>
@@ -830,6 +837,7 @@ export function UnifiedClientProfile() {
                   <button
                     key={tab.id}
                     onClick={() => setSecondaryTab(tab.id)}
+                    aria-current={secondaryTab === tab.id ? 'true' : undefined}
                     className={cn(
                       'pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target whitespace-nowrap',
                       secondaryTab === tab.id
@@ -846,7 +854,9 @@ export function UnifiedClientProfile() {
                       tab.label
                     )}
                     {'count' in tab && tab.count > 0 && (
-                      <span className="ms-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
+                      /* foreground/70, not muted-foreground: on bg-muted the
+                          latter measures 4.35:1 at 9px */
+                      <span className="ms-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-foreground/70">
                         {tab.count}
                       </span>
                     )}
@@ -916,7 +926,7 @@ export function UnifiedClientProfile() {
                         />
                       </div>
                       {/* Plan meta footer — pinned to the card's bottom edge on desktop */}
-                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40 lg:shrink-0">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40 lg:shrink-0 text-pretty leading-relaxed">
                         {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'}
                         {plan.workoutsPerWeek ? ` · ${plan.workoutsPerWeek}×/week` : ''}
                         {client.planStartDate ? ` · Started ${format(new Date(client.planStartDate), 'MMM d')}` : ''}

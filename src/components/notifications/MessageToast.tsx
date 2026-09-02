@@ -1,16 +1,17 @@
 'use client';
+import { UserAvatar } from '@/components/UserAvatar';
 
 import Link from 'next/link';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { avatarColor } from '@/lib/avatar-colors';
 import { ChevronIcon } from '@/components/coach/shared/clientSignals';
 
 interface MessageToastProps {
   /** Sonner's id for this toast, so the controls can close it */
   toastId: string | number;
   name: string;
+  avatarUrl?: string | null;
   preview: string;
   /** Where the conversation lives */
   href: string;
@@ -30,7 +31,7 @@ interface MessageToastProps {
  * use. Dismiss is a sibling rather than a child — a button inside a link is
  * invalid nesting — positioned over the card's top corner.
  */
-export function MessageToast({ toastId, name, preview, href }: MessageToastProps) {
+export function MessageToast({ toastId, name, avatarUrl, preview, href }: MessageToastProps) {
   return (
     <div
       className={cn(
@@ -54,16 +55,7 @@ export function MessageToast({ toastId, name, preview, href }: MessageToastProps
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2'
         )}
       >
-        <div
-          className={cn(
-            'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
-            'text-xs font-bold select-none',
-            avatarColor(name)
-          )}
-          aria-hidden="true"
-        >
-          {name.charAt(0).toUpperCase()}
-        </div>
+        <UserAvatar name={name} avatarUrl={avatarUrl} className="w-9 h-9 text-xs" />
 
         {/* pe-6 keeps the eyebrow clear of the dismiss control above it */}
         <div className="flex-1 min-w-0 pe-6">

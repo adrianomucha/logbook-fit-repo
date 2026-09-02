@@ -69,6 +69,14 @@ export function ExerciseCard({
 
   const setRows = Array.from({ length: exercise.sets }, (_, i) => i + 1);
 
+  // The countdown lives under the next set still to be done. One timer per
+  // exercise keeps a 3-set plank from stacking three stopwatches, and the
+  // timer moves down on its own as each set completes.
+  const nextSetNumber =
+    exercise.trackingType === 'TIME'
+      ? setRows.find((n) => !isSetCompleted(exercise.setCompletions, n))
+      : undefined;
+
   const handleFlagClick = () => {
     if (!isReadOnly && onToggleFlag) onToggleFlag();
   };
@@ -312,6 +320,7 @@ export function ExerciseCard({
                   }
                   isReadOnly={isReadOnly}
                   showDivider={idx > 0}
+                  showTimer={setNumber === nextSetNumber}
                 />
               );
             })}

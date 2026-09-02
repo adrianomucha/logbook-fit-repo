@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
@@ -15,7 +16,6 @@ import { Loader2, Plus, Search } from 'lucide-react';
 import {
   urgencyStyle,
   getSignal,
-  avatarColor,
   SignalLine,
   ChevronIcon,
   UnreadChip,
@@ -40,13 +40,14 @@ function ClientRow({ client, unreadCount }: { client: DashboardClient; unreadCou
         }
       }}
     >
-      <div className={cn(
-        'w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center select-none text-sm sm:text-base font-bold flex-shrink-0',
-        avatarColor(displayName),
-        client.urgency === 'ON_TRACK' && 'opacity-90'
-      )}>
-        {displayName.charAt(0).toUpperCase()}
-      </div>
+      <UserAvatar
+        name={displayName}
+        avatarUrl={client.user.avatarUrl}
+        className={cn(
+          'w-10 h-10 sm:w-11 sm:h-11 text-sm sm:text-base',
+          client.urgency === 'ON_TRACK' && 'opacity-90'
+        )}
+      />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5 sm:gap-2">
           <h3 className="text-sm sm:text-[15px] font-semibold truncate leading-tight">

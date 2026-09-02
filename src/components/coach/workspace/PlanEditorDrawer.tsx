@@ -392,7 +392,7 @@ export function PlanEditorDrawer({
         {plan && hasWeeks && (
           <>
             {/* Plan header — always visible */}
-            <div className="px-3 sm:px-4 py-3 border-b overflow-visible relative z-10 shrink-0">
+            <div className="px-4 py-3 border-b overflow-visible relative z-10 shrink-0">
               <SheetHeader>
                 <SheetTitle asChild>
                   <div className="flex items-center gap-2 min-w-0">
@@ -446,7 +446,7 @@ export function PlanEditorDrawer({
                 exerciseDrawerOpen && 'hidden sm:flex'
               )}>
                 {/* Week stepper — one grouped control instead of chevrons floating at the rail edges */}
-                <div className="px-2 pt-2 sm:px-3 sm:pt-3 pb-1 shrink-0">
+                <div className="px-4 pt-3 sm:px-3 pb-1 shrink-0">
                   <div className="flex items-center justify-between gap-0.5 rounded-lg bg-muted/60 p-0.5">
                     <Button
                       variant="ghost"
@@ -530,7 +530,13 @@ export function PlanEditorDrawer({
 
                 {/* Days — pill row on mobile */}
                 {hasDays && (
-                  <div className="sm:hidden flex gap-1.5 overflow-x-auto px-3 pb-3 scrollbar-none snap-x snap-mandatory">
+                  /* No scroll-snap: snapping pulled the first pill flush to the
+                      screen edge, ignoring the row's padding. Same 16px start
+                      edge as the header and the day content below. */
+                  /* Same 32px height, radius and muted tone as the week stepper
+                      above, so the two read as one control group; tap-target
+                      keeps the 44px hit area without the visual bulk */
+                  <div className="sm:hidden flex gap-1.5 overflow-x-auto px-4 pt-2 pb-3 scrollbar-hide">
                     {currentWeek.days.map((day, idx) => {
                       const isActive = clampedDay === idx;
                       const exerciseCount = day.exercises?.length || 0;
@@ -538,20 +544,21 @@ export function PlanEditorDrawer({
                         <button
                           key={day.id}
                           onClick={() => handleSelectDay(day.id)}
+                          aria-current={isActive ? 'true' : undefined}
                           className={cn(
-                            'flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl transition-[background-color,color,box-shadow] whitespace-nowrap min-h-[44px] shrink-0 snap-start',
+                            'flex items-center gap-1.5 h-8 px-3 rounded-lg transition-[background-color,color,transform] whitespace-nowrap shrink-0 tap-target',
                             isActive
-                              ? 'bg-foreground text-background shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
-                              : 'bg-muted/40 hover:bg-muted active:scale-[0.95]'
+                              ? 'bg-foreground text-background'
+                              : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground active:scale-[0.96]'
                           )}
                         >
-                          <span className="text-xs font-bold truncate max-w-[120px]">
+                          <span className="text-[12px] font-semibold truncate max-w-[160px] antialiased">
                             {day.name || `Day ${idx + 1}`}
                           </span>
                           {exerciseCount > 0 && (
                             <span className={cn(
-                              'font-mono text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md',
-                              isActive ? 'bg-background/20 text-background' : 'bg-foreground/10 text-muted-foreground'
+                              'font-mono text-[10px] tabular-nums font-semibold',
+                              isActive ? 'text-background/60' : 'text-muted-foreground/70'
                             )}>
                               {exerciseCount}
                             </span>
@@ -604,7 +611,9 @@ export function PlanEditorDrawer({
                     onBlur={commitDayDescription}
                     placeholder="Add a briefing for your client: what to expect, how to approach it…"
                     aria-label="Briefing"
-                    className="mt-1 border-0 shadow-none rounded-none px-0 py-0 min-h-0 text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                    // text-base below sm: a 14px field makes iOS zoom the whole
+                    // drawer by 16/14 on focus and keep it zoomed after blur
+                    className="mt-1 border-0 shadow-none rounded-none px-0 py-0 min-h-0 text-base sm:text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
                     rows={2}
                     maxLength={500}
                   />

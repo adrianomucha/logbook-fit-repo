@@ -1,10 +1,11 @@
-import { useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCheckIn } from '@/hooks/api/useCheckIn';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertTriangle, Check, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -29,6 +30,12 @@ export function ClientCheckInForm() {
   const router = useRouter();
 
   const { checkIn, isLoading, submitClientResponse, refresh } = useCheckIn(checkinId);
+  const { coach } = useCurrentUser();
+  const coachFirstName = coach?.user.name?.split(' ')[0] ?? null;
+
+  // The success screen replaces the form — move focus to its heading so the
+  // confirmation is announced, without scrolling it under anything
+  const successHeadingRef = useRef<HTMLHeadingElement>(null);
 
   const [effortRating, setEffortRating] = useState<string | null>(null);
   const [clientFeeling, setClientFeeling] = useState<string | null>(null);
@@ -36,6 +43,12 @@ export function ClientCheckInForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccess, setShowSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!showSuccess) return;
+    window.scrollTo({ top: 0 });
+    successHeadingRef.current?.focus({ preventScroll: true });
+  }, [showSuccess]);
 
   const effortLabelId = useId();
   const effortErrorId = useId();
@@ -77,16 +90,84 @@ export function ClientCheckInForm() {
   // revalidation flips status to CLIENT_RESPONDED, and the user must see
   // "Sent" rather than a cold "Already sent"
   if (showSuccess) {
+    // Echo what was sent — a receipt, so the moment isn't a void
+    const effort = EFFORT_OPTIONS.find((o) => o.value === effortRating);
+    const feeling = FEELING_OPTIONS.find((o) => o.value === clientFeeling);
+    const note = painBlockers.trim();
+
     return (
-      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
-          <div className="text-center py-12 px-6">
-            <CheckCircle2 className="w-14 h-14 mx-auto mb-4 text-success animate-bounce-once" />
-            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Sent to your coach</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">They&apos;ll read it and get back to you.</p>
-            {/* The 3s auto-redirect is gone, so the way out is an explicit control */}
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">
-              Back to dashboard
+      <div className="min-h-dvh bg-background px-4 pt-10 sm:pt-16 pb-10">
+        <div className="max-w-md mx-auto space-y-6 animate-enter">
+          {/* Volt check — the same celebration mark the coach's success screen
+              and the workout-complete state carry */}
+          <div className="w-16 h-16 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+            <Check className="w-8 h-8 text-brand-foreground" strokeWidth={3} aria-hidden="true" />
+          </div>
+
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2">
+              Check-in sent
+            </p>
+            <h1
+              ref={successHeadingRef}
+              tabIndex={-1}
+              className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-[0.95] text-balance antialiased focus:outline-none"
+            >
+              {coachFirstName ? `Sent to ${coachFirstName}` : 'Sent to your coach'}
+            </h1>
+            <p className="text-sm text-muted-foreground leading-relaxed mt-3">
+              {coachFirstName ?? 'Your coach'} will read it and get back to you — their reply
+              shows up on your dashboard.
+            </p>
+          </div>
+
+          {(effort || feeling || note) && (
+            <div className="rounded-2xl bg-card border border-border/70 px-4 divide-y divide-border/50">
+              {effort && (
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                    Workouts felt
+                  </span>
+                  <span className="text-sm font-semibold antialiased">
+                    {effort.emoji} {effort.label}
+                  </span>
+                </div>
+              )}
+              {feeling && (
+                <div className="flex items-center justify-between gap-4 py-3">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                    Body feels
+                  </span>
+                  <span className="text-sm font-semibold antialiased">
+                    {feeling.emoji} {feeling.label}
+                  </span>
+                </div>
+              )}
+              {note && (
+                <div className="py-3">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mb-1">
+                    Your note
+                  </p>
+                  <p className="text-sm leading-relaxed antialiased">{note}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div className="space-y-1.5 pt-1">
+            {/* Same volt CTA the today card uses — one clear way onward */}
+            <button
+              onClick={() => router.push('/client')}
+              className="w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              Back to today
+            </button>
+            <Button
+              variant="ghost"
+              onClick={() => router.push('/client?tab=chat')}
+              className="w-full text-muted-foreground"
+            >
+              Message {coachFirstName ?? 'your coach'}
             </Button>
           </div>
         </div>

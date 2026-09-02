@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DashboardClient } from '@/types/api';
@@ -8,7 +9,6 @@ import { cn } from '@/lib/utils';
 import {
   urgencyStyle,
   getSignal,
-  avatarColor,
   SignalLine,
   ChevronIcon,
   UnreadChip,
@@ -113,12 +113,11 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                     }
                   }}
                 >
-                  <div className={cn(
-                    'w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center select-none text-xs sm:text-sm font-bold flex-shrink-0',
-                    avatarColor(displayName)
-                  )}>
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
+                  <UserAvatar
+                    name={displayName}
+                    avatarUrl={client.user.avatarUrl}
+                    className="w-9 h-9 sm:w-10 sm:h-10 text-xs sm:text-sm"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <span className="text-sm sm:text-[15px] font-semibold truncate leading-tight">
@@ -182,12 +181,11 @@ export function ClientsRequiringAction({ clients }: ClientsRequiringActionProps)
                     }
                   }}
                 >
-                  <div className={cn(
-                    'w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center select-none text-xs sm:text-sm font-bold flex-shrink-0 opacity-90',
-                    avatarColor(displayName)
-                  )}>
-                    {displayName.charAt(0).toUpperCase()}
-                  </div>
+                  <UserAvatar
+                    name={displayName}
+                    avatarUrl={client.user.avatarUrl}
+                    className="w-9 h-9 sm:w-10 sm:h-10 text-xs sm:text-sm opacity-90"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <p className="text-sm sm:text-[15px] font-semibold truncate">

@@ -333,8 +333,10 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
 
       {/* Workout info */}
       <div className="flex-1 min-w-0">
+        {/* Two lines on phones: names like "Chest + Shoulders + Triceps"
+            lost their tail to an ellipsis at 390px, with no way to read it */}
         <p className={cn(
-          'text-sm font-bold truncate tracking-tight antialiased',
+          'text-sm font-bold tracking-tight antialiased leading-snug line-clamp-2 sm:line-clamp-1',
           isCompleted && 'text-foreground/80'
         )}>
           {day.workoutDay?.name || 'Workout'}
@@ -350,7 +352,9 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       {/* Status indicator */}
       <div className="shrink-0 flex items-center">
         {isCompleted && (
-          <svg className="w-5 h-5 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+          /* The AA text cut of the success hue: the fill shade is 2.3:1 on
+              white, under the 3:1 a lone status icon needs */
+          <svg className="w-5 h-5 text-success-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}

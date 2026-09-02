@@ -31,7 +31,7 @@ export const GET = withCoach(
         assignedTo: {
           select: {
             id: true,
-            user: { select: { name: true } },
+            user: { select: { name: true, avatarUrl: true } },
           },
         },
       },
@@ -50,7 +50,7 @@ export const GET = withCoach(
         assignedTo: {
           select: {
             id: true,
-            user: { select: { name: true } },
+            user: { select: { name: true, avatarUrl: true } },
           },
         },
       },

@@ -9,7 +9,7 @@ import {
   Loader2,
   LogOut,
   MessageSquarePlus,
-  Trash2,
+  Settings,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -20,7 +20,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { FeedbackDialog } from '@/components/feedback/FeedbackDialog';
-import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { cn } from '@/lib/utils';
 
@@ -56,7 +55,6 @@ export function AccountMenu({ className }: { className?: string }) {
   const { user, isAdmin, linkedAccount } = useCurrentUser();
   const [isSwitching, setIsSwitching] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
-  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const switchAccount = async () => {
     if (isSwitching) return;
@@ -99,7 +97,17 @@ export function AccountMenu({ className }: { className?: string }) {
           )}
         >
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted/40 font-mono text-[10px] font-semibold uppercase tracking-[0.04em] text-foreground">
-            {monogram}
+            {user?.avatarUrl ? (
+              // Remote storage URL — same next/image trade-off as SignupClient
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="h-full w-full rounded-full object-cover"
+              />
+            ) : (
+              monogram
+            )}
             {isAdmin && (
               <span
                 className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-brand ring-2 ring-background"
@@ -166,6 +174,14 @@ export function AccountMenu({ className }: { className?: string }) {
           )}
 
           <DropdownMenuSeparator />
+          {user?.role && (
+            <DropdownMenuItem asChild className={itemClass}>
+              <Link href={user.role === 'COACH' ? '/coach/settings' : '/client/settings'}>
+                <Settings className="h-3.5 w-3.5" aria-hidden="true" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             className={itemClass}
             onSelect={() => setIsFeedbackOpen(true)}
@@ -181,14 +197,6 @@ export function AccountMenu({ className }: { className?: string }) {
             Sign out
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className={cn(itemClass, 'text-destructive focus:text-destructive')}
-            onSelect={() => setIsDeleteOpen(true)}
-          >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-            Delete account
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -197,11 +205,6 @@ export function AccountMenu({ className }: { className?: string }) {
       <FeedbackDialog
         isOpen={isFeedbackOpen}
         onClose={() => setIsFeedbackOpen(false)}
-      />
-      <DeleteAccountDialog
-        isOpen={isDeleteOpen}
-        onClose={() => setIsDeleteOpen(false)}
-        role={user?.role}
       />
     </>
   );

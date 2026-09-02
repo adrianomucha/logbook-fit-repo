@@ -12,7 +12,8 @@ interface NotificationToggleProps {
 }
 
 /**
- * Per-device opt-in for message notifications.
+ * Per-device opt-in for message notifications — the quiet chat-surface pill.
+ * The settings page has its own fuller control (NotificationPreferenceTile).
  *
  * Renders nothing when push can't work here (unsupported browser, server
  * without VAPID keys) — an offer the app can't honour is worse than silence.
@@ -20,8 +21,16 @@ interface NotificationToggleProps {
  * permission (browser settings) and iOS-in-a-tab (install the app first).
  */
 export function NotificationToggle({ className, hideWhenOn }: NotificationToggleProps) {
-  const { available, isSubscribed, isBlocked, needsInstall, isBusy, isLoading, enable, disable } =
-    usePushNotifications();
+  const {
+    available,
+    isSubscribed,
+    isBlocked,
+    needsInstall,
+    isBusy,
+    isLoading,
+    enable,
+    disable,
+  } = usePushNotifications();
 
   if (isLoading) return null;
 

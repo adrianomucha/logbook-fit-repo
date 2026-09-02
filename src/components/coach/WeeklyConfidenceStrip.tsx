@@ -1,8 +1,8 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import type { DashboardClient } from '@/types/api';
 import { cn } from '@/lib/utils';
-import { avatarColor } from '@/components/coach/shared/clientSignals';
 
 interface WeeklyConfidenceStripProps {
   clients: DashboardClient[];
@@ -140,14 +140,16 @@ export function WeeklyConfidenceStrip({ clients }: WeeklyConfidenceStripProps) {
                   title={`${displayName} · ${BUCKET_LABEL[bucket]}`}
                   aria-label={`${displayName}, ${BUCKET_LABEL[bucket]}`}
                   className={cn(
-                    'relative w-9 h-9 rounded-full flex items-center justify-center select-none',
-                    'text-xs font-bold antialiased',
+                    'relative w-9 h-9 rounded-full',
                     'transition-transform duration-150 hover:scale-110 active:scale-95',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
-                    avatarColor(displayName)
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1'
                   )}
                 >
-                  {displayName.charAt(0).toUpperCase()}
+                  <UserAvatar
+                    name={displayName}
+                    avatarUrl={client.user.avatarUrl}
+                    className="w-9 h-9 text-xs"
+                  />
                   <span
                     className={cn(
                       'absolute -bottom-px -right-px w-3 h-3 rounded-full ring-2 ring-card',

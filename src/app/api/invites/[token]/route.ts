@@ -59,6 +59,7 @@ export async function GET(
     note: invite.note,
     coachName: invite.coach.user.name ?? 'Your coach',
     coachAvatar: invite.coach.user.avatarUrl,
+    coachBio: invite.coach.bio,
     expiresAt: invite.expiresAt.toISOString(),
   });
 }
