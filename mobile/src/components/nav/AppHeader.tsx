@@ -1,7 +1,8 @@
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/lib/auth';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Logo } from '@/components/brand/Logo';
 
 /** Two-letter monogram for the account trigger — falls back to the email's first letter. */
@@ -15,14 +16,16 @@ function initials(name?: string | null, email?: string | null) {
 
 /**
  * The client app's top bar — the web's ClientNav header on a phone: the
- * logotype on the left, the account monogram on the right. The monogram
- * opens the account menu (native action sheet on iOS).
+ * logotype on the left, the account trigger on the right — the profile
+ * photo when there is one, else the monogram. It opens the account menu.
  */
 export function AppHeader() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { session } = useAuth();
+  const { user } = useCurrentUser();
   const monogram = initials(session?.user.name, session?.user.email);
+  const avatarUrl = user?.avatarUrl ?? null;
 
   const openMenu = () => router.push('/account');
 
@@ -35,9 +38,13 @@ export function AppHeader() {
           accessibilityRole="button"
           accessibilityLabel="Account menu"
           hitSlop={8}
-          className="h-7 w-7 items-center justify-center rounded-full border border-border bg-muted/40 active:opacity-70"
+          className="h-7 w-7 items-center justify-center overflow-hidden rounded-full border border-border bg-muted/40 active:opacity-70"
         >
-          <Text className="font-mono-semibold text-[10px] uppercase tracking-[0.4px] text-foreground">{monogram}</Text>
+          {avatarUrl ? (
+            <Image source={{ uri: avatarUrl }} style={{ width: 26, height: 26, borderRadius: 13 }} accessibilityIgnoresInvertColors />
+          ) : (
+            <Text className="font-mono-semibold text-[10px] uppercase tracking-[0.4px] text-foreground">{monogram}</Text>
+          )}
         </Pressable>
       </View>
     </View>

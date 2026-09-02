@@ -16,6 +16,7 @@ import { EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { SessionCard } from '@/components/today/SessionCard';
 import { SessionCompleteCard } from '@/components/today/SessionCompleteCard';
 import { CoachContextStrip } from '@/components/today/CoachContextStrip';
+import { PhotoNudge } from '@/components/today/PhotoNudge';
 import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle';
 import { WeekOverview } from '@/components/today/WeekOverview';
 import { PendingCheckInBanner } from '@/components/checkin/PendingCheckInBanner';
@@ -137,6 +138,13 @@ export default function TodayScreen() {
           title={`${coach.user.name?.split(' ')[0] ?? 'Your coach'} is building your plan`}
           body="Usually ready within a day or two. Your workouts will appear right here."
         />
+        {!user?.avatarUrl ? (
+          <PhotoNudge
+            clientName={user?.name ?? ''}
+            coachName={coach.user.name ?? 'Your coach'}
+            onAddPhoto={() => router.push('/client/settings?section=profile')}
+          />
+        ) : null}
       </Screen>
     );
   }
@@ -252,11 +260,24 @@ export default function TodayScreen() {
               isSubmittingFeedback={isSendingFeedback}
               onSubmitFeedback={(rating, notes) => void sendFeedback(rating, notes)}
             />
-            {todayCoachNote && coach.user.name ? <CoachContextStrip coachName={coach.user.name} note={todayCoachNote} /> : null}
-            <Pressable onPress={restartWorkout} disabled={isRestarting} className="min-h-[36px] flex-row items-center justify-center gap-1.5 self-center px-3 active:opacity-70">
-              <Feather name="rotate-ccw" size={14} color="#737373" />
-              <Text className="font-sans-medium text-sm text-muted-foreground">{isRestarting ? 'Restarting…' : 'Restart workout'}</Text>
-            </Pressable>
+            {todayCoachNote && coach.user.name ? (
+              <CoachContextStrip coachName={coach.user.name} coachAvatar={coach.user.avatarUrl} note={todayCoachNote} />
+            ) : null}
+            {/* Restart — rare, deliberate action. A hairline footer row with a
+                reason on the left gives the quiet ghost button a place to
+                belong, instead of floating alone under the cards */}
+            <View className="flex-row items-center justify-between gap-4 border-t border-border/60 px-1 pt-4">
+              <Text className="font-sans text-xs text-muted-foreground">Logged by mistake?</Text>
+              <Pressable
+                onPress={restartWorkout}
+                disabled={isRestarting}
+                accessibilityRole="button"
+                className="-mr-2 min-h-[36px] flex-row items-center gap-1.5 rounded-md px-2 active:opacity-70"
+              >
+                <Feather name="rotate-ccw" size={14} color="#737373" />
+                <Text className="font-sans-medium text-sm text-muted-foreground">{isRestarting ? 'Restarting…' : 'Restart workout'}</Text>
+              </Pressable>
+            </View>
           </>
         ) : (
           <SessionCard

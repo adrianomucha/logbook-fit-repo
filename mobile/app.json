@@ -43,6 +43,12 @@
         {
           "color": "#c3f910"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Logbook uses your photos when you choose a profile picture."
+        }
       ]
     ],
     "owner": "logbook-fit",

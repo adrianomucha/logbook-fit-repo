@@ -18,6 +18,8 @@ export default function ClientLayout() {
       {/* Pushed from Workout; not tabs of their own */}
       <Tabs.Screen name="workout/[dayId]" options={{ href: null }} />
       <Tabs.Screen name="checkin/[checkinId]" options={{ href: null }} />
+      {/* From the account menu; the web's /client/settings */}
+      <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );
 }

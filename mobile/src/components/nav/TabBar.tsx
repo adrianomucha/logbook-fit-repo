@@ -42,7 +42,10 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 
   // Only routes that are real tabs (workout/[dayId] is hidden with href: null)
   const routes = state.routes.filter((r) => TABS.some((t) => t.name === r.name));
-  const activeName = state.routes[state.index]?.name;
+  // Settings is pushed from the account menu but lives under Workout, the
+  // way the web's /client/settings keeps the nav's Workout tab lit.
+  const currentName = state.routes[state.index]?.name;
+  const activeName = currentName === 'settings' ? 'index' : currentName;
   const activeIndex = routes.findIndex((r) => r.name === activeName);
   const columnWidth = width / routes.length;
 

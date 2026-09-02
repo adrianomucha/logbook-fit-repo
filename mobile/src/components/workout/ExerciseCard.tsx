@@ -50,6 +50,11 @@ export function ExerciseCard({
   const isTime = exercise.trackingType === 'TIME';
   const setNumbers = Array.from({ length: exercise.sets }, (_, i) => i + 1);
 
+  // The countdown lives under the next set still to be done. One timer per
+  // exercise keeps a 3-set plank from stacking three stopwatches, and the
+  // timer moves down on its own as each set completes.
+  const nextSetNumber = isTime ? setNumbers.find((n) => !isSetCompleted(exercise.setCompletions, n)) : undefined;
+
   // Toggle every set in one go — completing also persists actuals per set,
   // exactly like a per-set tap, so bulk-completed exercises still log data.
   const toggleAll = () => {
@@ -196,6 +201,7 @@ export function ExerciseCard({
                   onChangeWeight={(weight) => onUpdateSet(exercise.workoutExerciseId, setNumber, { actualWeight: weight })}
                   isReadOnly={isReadOnly}
                   showDivider={idx > 0}
+                  showTimer={setNumber === nextSetNumber}
                 />
               );
             })}

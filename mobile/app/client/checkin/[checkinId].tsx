@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { ApiError } from '@/lib/api';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCheckIn } from '@/hooks/useCheckIns';
 import { Button, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ChoiceGrid, type Choice } from '@/components/checkin/ChoiceGrid';
@@ -38,12 +39,92 @@ function Terminal({ icon, tone, title, body, onBack }: { icon: 'alert-triangle' 
   );
 }
 
+/**
+ * The success screen replaces the form — the web's redesigned confirmation:
+ * volt check, "Sent to <coach>", and a receipt of what was sent so the
+ * moment isn't a void. Two ways onward: back to today, or the chat.
+ */
+function SentScreen({
+  coachFirstName,
+  effort,
+  feeling,
+  note,
+  onHome,
+  onMessage,
+}: {
+  coachFirstName: string | null;
+  effort?: Choice;
+  feeling?: Choice;
+  note: string;
+  onHome: () => void;
+  onMessage: () => void;
+}) {
+  const insets = useSafeAreaInsets();
+  const receipt = [
+    effort ? { label: 'Workouts felt', value: `${effort.emoji} ${effort.label}` } : null,
+    feeling ? { label: 'Body feels', value: `${feeling.emoji} ${feeling.label}` } : null,
+  ].filter((r): r is { label: string; value: string } => r !== null);
+
+  return (
+    <ScrollView
+      className="flex-1 bg-background"
+      contentContainerStyle={{ paddingTop: insets.top + 40, paddingBottom: insets.bottom + 40, paddingHorizontal: 16 }}
+    >
+      <View className="gap-6">
+        {/* Volt check — the same celebration mark the workout-complete state carries */}
+        <View className="h-16 w-16 items-center justify-center rounded-full bg-brand">
+          <Feather name="check" size={32} color="#1e2702" />
+        </View>
+
+        <View>
+          <Eyebrow className="mb-2">Check-in sent</Eyebrow>
+          <Text accessibilityRole="header" className="font-sans-bold text-3xl uppercase leading-[34px] tracking-tight text-foreground">
+            {coachFirstName ? `Sent to ${coachFirstName}` : 'Sent to your coach'}
+          </Text>
+          <Text className="mt-3 font-sans text-sm leading-5 text-muted-foreground">
+            {coachFirstName ?? 'Your coach'} will read it and get back to you — their reply shows up on your dashboard.
+          </Text>
+        </View>
+
+        {receipt.length > 0 || note ? (
+          <View className="rounded-2xl border border-border/70 bg-card px-4">
+            {receipt.map((row, index) => (
+              <View key={row.label} className={`flex-row items-center justify-between gap-4 py-3 ${index > 0 ? 'border-t border-border/50' : ''}`}>
+                <Text className="font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">{row.label}</Text>
+                <Text className="font-sans-semibold text-sm text-foreground">{row.value}</Text>
+              </View>
+            ))}
+            {note ? (
+              <View className={`py-3 ${receipt.length > 0 ? 'border-t border-border/50' : ''}`}>
+                <Text className="mb-1 font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">Your note</Text>
+                <Text className="font-sans text-sm leading-5 text-foreground">{note}</Text>
+              </View>
+            ) : null}
+          </View>
+        ) : null}
+
+        <View className="gap-1.5 pt-1">
+          {/* Same volt CTA the today card uses — one clear way onward */}
+          <Button variant="brand" onPress={onHome}>
+            Back to today
+          </Button>
+          <Pressable onPress={onMessage} accessibilityRole="button" className="h-11 items-center justify-center rounded-xl active:opacity-70">
+            <Text className="font-sans-medium text-sm text-muted-foreground">Message {coachFirstName ?? 'your coach'}</Text>
+          </Pressable>
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
 /** The client's check-in form — the web's ClientCheckInForm, one to one. */
 export default function CheckInScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { checkinId } = useLocalSearchParams<{ checkinId: string }>();
   const { checkIn, isLoading, submitClientResponse, refresh } = useCheckIn(checkinId ?? null);
+  const { coach } = useCurrentUser();
+  const coachFirstName = coach?.user.name?.split(' ')[0] ?? null;
 
   const [effortRating, setEffortRating] = useState<string | null>(null);
   const [clientFeeling, setClientFeeling] = useState<string | null>(null);
@@ -61,7 +142,16 @@ export default function CheckInScreen() {
   // Checked before the status gate: the post-submit revalidation flips the
   // status, and the person must see "Sent" rather than a cold "Already sent".
   if (showSuccess) {
-    return <Terminal icon="check-circle" tone="success" title="Sent to your coach" body="They'll read it and get back to you." onBack={goHome} />;
+    return (
+      <SentScreen
+        coachFirstName={coachFirstName}
+        effort={EFFORT_OPTIONS.find((o) => o.value === effortRating)}
+        feeling={FEELING_OPTIONS.find((o) => o.value === clientFeeling)}
+        note={painBlockers.trim()}
+        onHome={goHome}
+        onMessage={() => router.replace('/client/chat')}
+      />
+    );
   }
   if (checkIn.status === 'EXPIRED') {
     return <Terminal icon="alert-triangle" tone="muted" title="Check-in expired" body="This check-in is no longer open — the next one will appear on your dashboard." onBack={goHome} />;
