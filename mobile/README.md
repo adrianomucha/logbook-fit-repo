@@ -27,6 +27,15 @@ npm run typecheck         # tsc
 npm run export:ios        # full Metro bundle for iOS; catches config and import errors
 ```
 
+## Push notifications
+
+The opt-in (account screen, chat header) registers an Expo push token with
+`POST /api/push/subscription`. Expo can only mint a token when the app has
+an EAS project id, so until `eas init` has run and written
+`extra.eas.projectId` into `app.json`, the toggle reports "Available in the
+App Store build" and hides itself. Tapping a notification opens the screen
+its `url` names (`src/lib/push.ts` maps the web paths).
+
 ## Layout
 
 ```

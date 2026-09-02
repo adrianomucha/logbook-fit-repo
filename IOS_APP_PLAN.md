@@ -190,7 +190,7 @@ Each maps 1:1 onto endpoints that exist today.
 | 4 | Check-in respond + history ✅ | `GET /api/client/check-ins`, `GET /api/check-ins/[id]`, `PUT /api/check-ins/[id]/client-respond` | `views/ClientCheckIn.tsx`, `ClientCheckInForm.tsx` | M |
 | 5 | Chat with coach (tab 2) ✅ | `GET /api/messages/[userId]`, `POST /api/messages`, `GET /api/messages/unread` | `components/chat/ChatView.tsx`, `hooks/api/useMessages.ts` | M |
 | 6 | Progress (tab 3) ✅ | `GET /api/client/progress` | `components/client/progress/*` | S |
-| 7 | Account: timezone sync, notifications toggle, feedback, sign out, **delete account** | `PUT /api/account/timezone`, `POST/DELETE /api/push/subscription`, `POST /api/feedback`, `DELETE /api/me` | `AccountMenu.tsx`, `NotificationToggle.tsx` | M |
+| 7 | Account: timezone sync, notifications toggle, feedback, sign out, **delete account** ✅ | `PUT /api/account/timezone`, `POST/DELETE /api/push/subscription`, `POST /api/feedback`, `DELETE /api/me` | `AccountMenu.tsx`, `NotificationToggle.tsx` | M |
 | 8 | Empty / edge states: no coach yet, awaiting plan, plan ended | already in the `week-overview` payload (`planEnded`) and `/api/me` | `WelcomeAwaitingPlan.tsx`, `SessionCompleteCard.tsx` | S |
 
 Port the *hook logic* nearly verbatim — `useWorkoutExecution`'s single-flight
@@ -214,15 +214,15 @@ npm. `babel-preset-expo` and `@expo/metro-runtime` must be top-level deps.
 
 ## 4. Phase 3 — Push, deep links, TestFlight
 
-- [ ] **4.1 Permission flow.** Ask on the first meaningful moment (after the
+- [x] **4.1 Permission flow.** (built; asks when the person turns alerts on — needs the EAS project id in app.json to go live) Ask on the first meaningful moment (after the
       first workout is finished or the first check-in answered), never on
       launch. Register the Expo token with `POST /api/push/subscription`;
       unregister on sign-out and on account deletion. — S
-- [ ] **4.2 Deep links.** `expo-notifications` response listener → router push
+- [x] **4.2 Deep links.** (notification taps; universal links still to do) `expo-notifications` response listener → router push
       to `data.url`. Universal links for `https://logbook.fit/client/*`
       (apple-app-site-association served by Next from `public/.well-known`),
       so a link in an email opens the app when installed. — M
-- [ ] **4.3 Foreground refresh.** On `AppState` → active, revalidate the
+- [x] **4.3 Foreground refresh.** On `AppState` → active, revalidate the
       week overview, unread count and the open thread — the native equivalent
       of the `visibilitychange` fix. — S
 - [ ] **4.4 Haptics + keyboard.** Set toggle and finish get `expo-haptics`;

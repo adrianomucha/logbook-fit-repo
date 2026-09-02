@@ -9,6 +9,7 @@ import { useClientPlan } from '@/hooks/useClientWeek';
 import { AppHeader } from '@/components/nav/AppHeader';
 import { ChatView } from '@/components/chat/ChatView';
 import { EmptyState, LoadingScreen } from '@/components/ui';
+import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 
 /** The Chat tab — the web's ClientChatHeader plus ChatView in the brand voice. */
 export default function ChatScreen() {
@@ -56,6 +57,7 @@ export default function ChatScreen() {
               <Text className="mb-0.5 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Your coach</Text>
               <Text className="font-sans-bold text-xl leading-6 tracking-tight text-foreground" numberOfLines={1}>{coachName}</Text>
             </View>
+            <NotificationToggle />
           </View>
           <View className="mb-3 flex-1 overflow-hidden rounded-2xl border border-border/70 bg-card">
             <ChatView

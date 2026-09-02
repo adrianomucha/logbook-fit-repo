@@ -1,4 +1,5 @@
-import { ActionSheetIOS, Alert, Platform, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAuth } from '@/lib/auth';
 import { Logo } from '@/components/brand/Logo';
@@ -19,25 +20,11 @@ function initials(name?: string | null, email?: string | null) {
  */
 export function AppHeader() {
   const insets = useSafeAreaInsets();
-  const { session, signOut } = useAuth();
+  const router = useRouter();
+  const { session } = useAuth();
   const monogram = initials(session?.user.name, session?.user.email);
 
-  const openMenu = () => {
-    const title = session?.user.email ?? undefined;
-    if (Platform.OS === 'ios') {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { title, options: ['Sign out', 'Cancel'], destructiveButtonIndex: 0, cancelButtonIndex: 1 },
-        (index) => {
-          if (index === 0) void signOut();
-        }
-      );
-      return;
-    }
-    Alert.alert(session?.user.name ?? 'Account', title, [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => void signOut() },
-    ]);
-  };
+  const openMenu = () => router.push('/account');
 
   return (
     <View className="border-b border-border bg-background/95" style={{ paddingTop: insets.top }}>

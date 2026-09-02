@@ -3,6 +3,7 @@ import { AppState } from 'react-native';
 import { SWRConfig } from 'swr';
 import { ApiError, apiFetch, fetcher } from './api';
 import { clearSession, loadSession, saveSession, type StoredSession } from './session-store';
+import { disablePush } from './push';
 
 type AuthStatus = 'loading' | 'signed-out' | 'signed-in';
 
@@ -14,6 +15,8 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+let syncedTimezone: string | null = null;
 
 /** Sign-in refusals the login screen can show. */
 export class SignInError extends Error {
@@ -46,6 +49,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<StoredSession | null>(null);
 
   const signOut = useCallback(async () => {
+    // No device should hear from us after sign-out; best effort, never blocking
+    await disablePush().catch(() => undefined);
     await clearSession();
     setSession(null);
     setStatus('signed-out');
@@ -99,6 +104,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(res);
     setStatus('signed-in');
   }, []);
+
+  // Keep User.timezone in step with the device (the web's TimezoneSync):
+  // the check-in scheduler anchors weekday cadences to it. Once per launch.
+  useEffect(() => {
+    if (status !== 'signed-in') return;
+    let timezone: string | undefined;
+    try {
+      timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return;
+    }
+    if (!timezone || syncedTimezone === timezone) return;
+    apiFetch('/api/account/timezone', { method: 'PUT', body: JSON.stringify({ timezone }) })
+      .then(() => {
+        syncedTimezone = timezone;
+      })
+      .catch(() => undefined);
+  }, [status]);
 
   const value = useMemo(
     () => ({ status, session, signIn, signOut }),
