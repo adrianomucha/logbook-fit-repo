@@ -150,8 +150,11 @@ export default function PrivacyPage() {
 
       <LegalSection title="How long we keep it">
         <p>
-          We keep your data while your account is active. If you want your
-          account and its data deleted, email us at{' '}
+          We keep your data while your account is active. You can delete your
+          account yourself from the account menu (your name and email are
+          removed; workouts and check-ins you shared with a coach stay in
+          their history as “Deleted account”). If you&rsquo;d rather we do it,
+          or want everything gone, email us at{' '}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
             className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
