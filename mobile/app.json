@@ -44,6 +44,12 @@
           "color": "#c3f910"
         }
       ]
-    ]
+    ],
+    "owner": "logbook-fit",
+    "extra": {
+      "eas": {
+        "projectId": "3ed74137-23ea-424e-be78-7487ad73b9c4"
+      }
+    }
   }
 }

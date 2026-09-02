@@ -36,6 +36,22 @@ an EAS project id, so until `eas init` has run and written
 App Store build" and hides itself. Tapping a notification opens the screen
 its `url` names (`src/lib/push.ts` maps the web paths).
 
+## Builds (EAS)
+
+The EAS project is `@logbook-fit/logbook-fit` (id in `app.json`). Profiles
+in `eas.json`:
+
+```bash
+npx eas-cli@latest build --profile production --platform ios   # App Store / TestFlight build
+npx eas-cli@latest submit --platform ios                       # upload the latest build to TestFlight
+npx eas-cli@latest build --profile development --platform ios  # dev client for a real device
+```
+
+The first iOS build asks to sign in to your Apple Developer account and
+generates the signing credentials for you. Both profiles point the app at
+production (`EXPO_PUBLIC_API_URL`); add a `preview` profile with a staging
+URL once a staging deployment exists.
+
 ## Layout
 
 ```
