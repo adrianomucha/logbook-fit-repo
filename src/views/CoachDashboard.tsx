@@ -20,6 +20,7 @@ import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
 import { EmptyStateNoPlans, LoadErrorState } from '@/components/coach/EmptyStates';
 import { PageHeader } from '@/components/coach/PageHeader';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
 import { useCoachInvites } from '@/hooks/api/useCoachInvites';
 import { useCoachPlans } from '@/hooks/api/useCoachPlans';
@@ -99,6 +100,8 @@ export function CoachDashboard() {
   const [showRemoveSampleConfirm, setShowRemoveSampleConfirm] = useState(false);
 
   // --- API hooks ---
+  // Same /api/me request the nav's account menu makes — SWR dedups it
+  const { user, isLoading: isUserLoading } = useCurrentUser();
   const { clients: dashboardClients, isLoading: isDashboardLoading, error: dashboardError, refresh: refreshDashboard } = useCoachDashboard();
   const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
   const { invites, isLoading: isInvitesLoading, refresh: refreshInvites } = useCoachInvites();
@@ -196,9 +199,11 @@ export function CoachDashboard() {
 
   // Which of the dashboard's three empty-ish states is on screen. Derived once
   // so the page header and the body below it can never disagree about it.
+  // The profile arrives with the rest so the getting-started ticks don't
+  // flip from to-do to done a beat after the card lands
   const isDashboardBootstrapping =
     isDashboardLoading ||
-    (!dashboardError && dashboardClients.length === 0 && (isPlansLoading || isInvitesLoading));
+    (!dashboardError && dashboardClients.length === 0 && (isPlansLoading || isInvitesLoading || isUserLoading));
   const showGettingStarted =
     !isDashboardBootstrapping && !dashboardError && dashboardClients.length === 0;
 
@@ -367,10 +372,13 @@ export function CoachDashboard() {
               <div className="animate-enter" style={{ animationDelay: '60ms' }}>
                 <GettingStartedCard
                   greeting={getGreeting()}
+                  hasPhoto={!!user?.avatarUrl}
+                  hasBio={!!user?.coachProfile?.bio?.trim()}
                   hasPlan={apiPlans.length > 0}
                   planName={apiPlans[0]?.name}
                   pendingInvite={pendingInvite}
                   lastInviteExpired={lastInviteExpired}
+                  onSetUpProfile={() => router.push('/coach/settings?section=profile')}
                   onCreatePlan={() => {
                     openEditorAfterCreate.current = true;
                     setShowPlanSetupModal(true);

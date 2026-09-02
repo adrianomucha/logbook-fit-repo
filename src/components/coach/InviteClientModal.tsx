@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import Link from 'next/link';
 import { Copy, Check, Share2, RefreshCw, Plus, Loader2 } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
@@ -6,6 +7,7 @@ import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Chip, FieldShell, StatusLine } from './shared/formSurfaces';
 import { apiFetch } from '@/lib/api-client';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface InviteClientModalProps {
   isOpen: boolean;
@@ -27,6 +29,12 @@ const canNativeShare = () =>
   typeof navigator !== 'undefined' && typeof navigator.share === 'function';
 
 export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
+  const { user } = useCurrentUser();
+  // The signup page this link opens leads with the coach's photo and bio.
+  // A coach with neither is about to send a bare page — say so here, at the
+  // moment of sending, not in a settings pane they may never open.
+  const profileIsBare =
+    !!user && !user.avatarUrl && !user.coachProfile?.bio?.trim();
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
   const [showEmail, setShowEmail] = useState(false);
@@ -240,6 +248,19 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           </FieldShell>
           <p className="text-xs text-muted-foreground/70 mt-1.5 px-1 antialiased text-pretty">
             Greets them at signup, then opens your chat.
+            {profileIsBare && (
+              <>
+                {' '}
+                Your photo and bio go there too —{' '}
+                <Link
+                  href="/coach/settings?section=profile"
+                  className="underline underline-offset-2 transition-colors hover:text-foreground"
+                >
+                  add yours
+                </Link>
+                .
+              </>
+            )}
           </p>
         </div>
 
