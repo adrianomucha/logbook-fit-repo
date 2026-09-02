@@ -668,13 +668,15 @@ export function UnifiedClientProfile() {
                   </Button>
                 )}
                 {/* Rare/destructive actions live behind the header overflow,
-                    not on the page — the typed-name confirm is the real gate */}
+                    not on the page — the typed-name confirm is the real gate.
+                    Quiet ghost beside a primary button; a bordered button when
+                    it stands alone, so it reads as a control, not a stray glyph */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button
-                      variant="ghost"
+                      variant={primaryAction ? 'ghost' : 'outline'}
                       size="icon"
-                      className="h-9 w-9 text-muted-foreground hover:text-foreground"
+                      className="h-9 w-9 text-muted-foreground hover:text-foreground tap-target"
                       aria-label="More actions"
                     >
                       <MoreVertical className="w-4 h-4" />
