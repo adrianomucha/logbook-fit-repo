@@ -2,12 +2,12 @@ import { useCallback, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { apiMessagesToMessages } from '@logbook/shared/adapters/api';
-import { avatarColor } from '@/lib/avatar-colors';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMessages } from '@/hooks/useMessages';
 import { useClientPlan } from '@/hooks/useClientWeek';
 import { AppHeader } from '@/components/nav/AppHeader';
 import { ChatView } from '@/components/chat/ChatView';
+import { UserAvatar } from '@/components/UserAvatar';
 import { EmptyState, LoadingScreen } from '@/components/ui';
 import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 
@@ -32,7 +32,6 @@ export default function ChatScreen() {
     active: focused,
   });
   const messages = useMemo(() => apiMessagesToMessages(apiMessages, clientProfileId ?? ''), [apiMessages, clientProfileId]);
-  const color = avatarColor(coachName);
 
   if (isLoading) return <LoadingScreen />;
 
@@ -49,8 +48,9 @@ export default function ChatScreen() {
       ) : (
         <View className="flex-1 px-4 pt-4">
           <View className="flex-row items-center gap-3 pb-4">
-            <View className="relative h-10 w-10 items-center justify-center rounded-full" style={{ backgroundColor: color.bg }}>
-              <Text className="font-sans-bold text-sm uppercase" style={{ color: color.text }}>{coachName.charAt(0)}</Text>
+            <View className="relative">
+              <UserAvatar name={coachName} avatarUrl={coach.user.avatarUrl} size={40} textSize={14} />
+              {/* Volt dot — the same brand accent the coach-side avatars carry */}
               <View className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-brand" />
             </View>
             <View className="flex-1">
@@ -64,6 +64,7 @@ export default function ChatScreen() {
               messages={messages}
               currentUserId={user?.id ?? ''}
               peerName={coachName}
+              peerAvatarUrl={coach.user.avatarUrl}
               onSendMessage={async (content) => {
                 await sendMessage(content);
               }}

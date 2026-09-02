@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { noWidows } from '../utils';
+import { noWidows } from '../no-widows';
 
 const NBSP = '\u00A0';
 

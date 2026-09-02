@@ -5,25 +5,34 @@ import { Feather } from '@expo/vector-icons';
 import { ApiError, apiFetch } from '@/lib/api';
 import { Button, Eyebrow } from '@/components/ui';
 
+/** The typed phrase that arms the delete button. Exact, case-sensitive. */
+const CONFIRM_PHRASE = 'DELETE';
+
 /**
- * "Delete account" — the web's DeleteAccountDialog. The password is the
- * confirmation; on success the caller ends the session.
+ * "Delete account" — the web's DeleteAccountDialog, reached from the danger
+ * zone in Settings → Account. Two proofs of intent: typing DELETE (can't be
+ * muscle memory) and the password (can't be someone else holding the
+ * phone). On success the caller ends the session.
  */
 export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visible: boolean; onClose: () => void; role: 'COACH' | 'CLIENT'; onDeleted: () => Promise<void> }) {
   const insets = useSafeAreaInsets();
   const [password, setPassword] = useState('');
+  const [confirmText, setConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!visible) return;
     setPassword('');
+    setConfirmText('');
     setIsDeleting(false);
     setError(null);
   }, [visible]);
 
+  const isArmed = confirmText === CONFIRM_PHRASE && password.length > 0;
+
   const remove = async () => {
-    if (!password || isDeleting) return;
+    if (!isArmed || isDeleting) return;
     setIsDeleting(true);
     setError(null);
     try {
@@ -45,7 +54,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
               <Feather name="x" size={20} color="#737373" />
             </Pressable>
           </View>
-          <Text className="mb-5 font-sans text-sm text-muted-foreground">This can’t be undone. Confirm with your password.</Text>
+          <Text className="mb-5 font-sans text-sm text-muted-foreground">This can’t be undone.</Text>
 
           <View className="gap-2">
             <Text className="font-sans text-sm leading-5 text-muted-foreground">You’ll be signed out everywhere and won’t be able to sign in again.</Text>
@@ -57,6 +66,25 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
           </View>
 
           <View className="mt-5">
+            <Text className="mb-2 font-sans-medium text-sm text-foreground">
+              Type <Text className="font-mono-semibold">{CONFIRM_PHRASE}</Text> to confirm
+            </Text>
+            <TextInput
+              className="h-12 rounded-lg border border-input bg-background px-3.5 font-mono text-base text-foreground"
+              value={confirmText}
+              onChangeText={setConfirmText}
+              placeholder={CONFIRM_PHRASE}
+              placeholderTextColor="#a3a3a3"
+              autoCapitalize="characters"
+              autoCorrect={false}
+              autoComplete="off"
+              autoFocus
+              editable={!isDeleting}
+              accessibilityLabel={`Type ${CONFIRM_PHRASE} to confirm`}
+            />
+          </View>
+
+          <View className="mt-4">
             <Eyebrow className="mb-2">Your password</Eyebrow>
             <TextInput
               className="h-12 rounded-lg border border-input bg-background px-3.5 font-sans text-base text-foreground"
@@ -65,7 +93,6 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
               secureTextEntry
               textContentType="password"
               autoComplete="current-password"
-              autoFocus
               editable={!isDeleting}
             />
           </View>
@@ -75,9 +102,9 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
             <Button variant="ghost" className="h-11 px-4" onPress={onClose} disabled={isDeleting}>Keep my account</Button>
             <Pressable
               onPress={remove}
-              disabled={isDeleting || !password}
+              disabled={isDeleting || !isArmed}
               accessibilityRole="button"
-              className={`h-11 flex-row items-center justify-center gap-2 rounded-xl bg-destructive px-5 active:opacity-80 ${isDeleting || !password ? 'opacity-60' : ''}`}
+              className={`h-11 flex-row items-center justify-center gap-2 rounded-xl bg-destructive px-5 active:opacity-80 ${isDeleting || !isArmed ? 'opacity-60' : ''}`}
             >
               <Feather name="trash-2" size={16} color="#fafafa" />
               <Text className="font-sans-bold text-sm uppercase tracking-[0.7px] text-destructive-foreground">Delete account</Text>

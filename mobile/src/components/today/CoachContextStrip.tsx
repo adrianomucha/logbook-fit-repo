@@ -1,19 +1,35 @@
 import { Text, View } from 'react-native';
-import { avatarColor } from '@/lib/avatar-colors';
+import { noWidows } from '@logbook/shared/no-widows';
+import { UserAvatar } from '@/components/UserAvatar';
 import { Eyebrow } from '@/components/ui';
 
-/** The coach's note for today's session — avatar, eyebrow, two lines, volt rail. */
-export function CoachContextStrip({ coachName, note }: { coachName: string; note: string }) {
-  const color = avatarColor(coachName);
+interface CoachContextStripProps {
+  coachName: string;
+  coachAvatar?: string | null;
+  note: string;
+}
+
+/**
+ * The coach's note for today's session, shown once the session is done.
+ * Same card anatomy as the hero above it (surface, radius, mono eyebrow) so
+ * the completed state reads as a stack of matched cards rather than a card
+ * with loose fragments underneath; the avatar and eyebrow carry the voice.
+ */
+export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContextStripProps) {
+  const coachFirst = coachName.split(' ')[0];
   return (
-    <View className="flex-row items-start gap-3 border-l-2 border-brand pl-3.5">
-      <View className="h-7 w-7 items-center justify-center rounded-full" style={{ backgroundColor: color.bg }}>
-        <Text className="font-sans-bold text-[10px] uppercase" style={{ color: color.text }}>{coachName.charAt(0)}</Text>
+    <View className="rounded-2xl border border-border/70 bg-card p-5">
+      <View className="flex-row items-center gap-2.5">
+        <UserAvatar name={coachName} avatarUrl={coachAvatar} size={28} textSize={10} />
+        <Eyebrow>
+          Coach note
+          <Text className="text-muted-foreground/50">{' · '}</Text>
+          {coachFirst}
+        </Eyebrow>
       </View>
-      <View className="flex-1">
-        <Eyebrow className="mb-0.5">Coach note</Eyebrow>
-        <Text className="font-sans text-sm leading-5 text-foreground/80" numberOfLines={2}>{note}</Text>
-      </View>
+      {/* Coach-written copy of unknowable length: glue the last pair so the
+          note never ends on a lone word, whatever the phone width */}
+      <Text className="mt-3 font-sans text-[15px] leading-6 text-foreground">{noWidows(note)}</Text>
     </View>
   );
 }

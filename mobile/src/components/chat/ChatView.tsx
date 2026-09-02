@@ -3,7 +3,7 @@ import { FlatList, Pressable, Text, TextInput, View, type NativeScrollEvent, typ
 import { Feather } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import type { Message } from '@logbook/shared/types';
-import { avatarColor } from '@/lib/avatar-colors';
+import { UserAvatar } from '@/components/UserAvatar';
 
 /** Server-side cap on message content (sendMessageSchema) */
 const MAX_MESSAGE_LENGTH = 5000;
@@ -15,6 +15,8 @@ interface ChatViewProps {
   messages: Message[];
   currentUserId: string;
   peerName: string;
+  /** The peer's photo, shown wherever their monogram would be */
+  peerAvatarUrl?: string | null;
   onSendMessage: (content: string) => Promise<void>;
   hasEarlier?: boolean;
   onLoadEarlier?: () => Promise<void>;
@@ -53,6 +55,7 @@ export function ChatView({
   messages,
   currentUserId,
   peerName,
+  peerAvatarUrl,
   onSendMessage,
   hasEarlier,
   onLoadEarlier,
@@ -70,7 +73,6 @@ export function ChatView({
   // Older pages arriving above must not count as new messages
   const suppressRef = useRef(false);
   const peerFirst = peerName.split(' ')[0];
-  const peerColor = avatarColor(peerName);
 
   // Group info is computed oldest-first (as the web does), then rendered
   // newest-first by the inverted list.
@@ -160,9 +162,7 @@ export function ChatView({
           {!mine ? (
             <View className="w-7">
               {isLastInGroup ? (
-                <View className="h-7 w-7 items-center justify-center rounded-full" style={{ backgroundColor: peerColor.bg }}>
-                  <Text className="font-sans-bold text-[10px] uppercase" style={{ color: peerColor.text }}>{peerName.charAt(0)}</Text>
-                </View>
+                <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size={28} textSize={10} />
               ) : null}
             </View>
           ) : null}
@@ -199,8 +199,8 @@ export function ChatView({
     <View className="flex-1">
       {messages.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6 py-8">
-          <View className="relative mb-3 h-14 w-14 items-center justify-center rounded-full" style={{ backgroundColor: peerColor.bg }}>
-            <Text className="font-sans-bold text-lg uppercase" style={{ color: peerColor.text }}>{peerName.charAt(0)}</Text>
+          <View className="relative mb-3">
+            <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size={56} textSize={18} />
             <View className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-brand" />
           </View>
           <Text className="mb-2 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Direct line</Text>

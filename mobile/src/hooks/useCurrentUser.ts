@@ -7,6 +7,8 @@ export interface UserProfile {
   email: string;
   name: string;
   role: 'COACH' | 'CLIENT';
+  avatarUrl: string | null;
+  timezone: string;
   createdAt: string;
   coachProfile: { id: string; bio: string | null } | null;
   clientProfile: {
@@ -15,7 +17,7 @@ export interface UserProfile {
     planStartDate: string | null;
     coachRelationship?: {
       status: string;
-      coach: { id: string; user: { id: string; name: string | null } };
+      coach: { id: string; user: { id: string; name: string | null; avatarUrl: string | null } };
     } | null;
   } | null;
   isAdmin: boolean;

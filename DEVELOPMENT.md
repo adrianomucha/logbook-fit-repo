@@ -83,6 +83,14 @@ token (next section). `mobile/README.md` has the layout and the no-Xcode
 checks (`npm run typecheck`, `npm run export:ios`); `IOS_APP_PLAN.md` has the
 roadmap and status.
 
+The app mirrors the client web screens one to one, so a change to a
+client-facing web screen should ship with its `mobile/` counterpart where
+practical. Logic that both need lives in `packages/shared` (the web keeps a
+one-line re-export at the old `src/lib` path); only the render layer is
+written twice. Profile photos upload as raw bytes to `PUT /api/account/avatar`
+with the bearer token (`mobile/src/lib/avatar.ts`), the one request that
+bypasses the shared JSON client.
+
 ## Native app auth (bearer tokens)
 
 Browsers hold the NextAuth session in a cookie. The iOS app has no cookie

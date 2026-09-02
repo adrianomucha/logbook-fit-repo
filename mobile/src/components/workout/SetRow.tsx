@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import type { TrackingType } from '@logbook/shared/reps';
 import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook/shared/workout-execution';
+import { SetTimer } from './SetTimer';
 
 interface SetRowProps {
   setNumber: number;
@@ -20,6 +21,11 @@ interface SetRowProps {
   onChangeWeight?: (weight: number) => void;
   isReadOnly?: boolean;
   showDivider?: boolean;
+  /**
+   * Show the countdown under this row. Only meaningful for TIME sets; the
+   * exercise card turns it on for the next set still to be done.
+   */
+  showTimer?: boolean;
 }
 
 /** Column widths shared with the header row in ExerciseCard: SET · LAST · WEIGHT · REPS · ✓ */
@@ -44,6 +50,7 @@ export function SetRow({
   onChangeWeight,
   isReadOnly = false,
   showDivider = false,
+  showTimer = false,
 }: SetRowProps) {
   const isTime = trackingType === 'TIME';
   const defaultReps = isTime ? parseTargetSeconds(repsTarget) : parseTargetReps(repsTarget);
@@ -81,11 +88,30 @@ export function SetRow({
     onToggle();
   };
 
+  // Countdown reached zero: the athlete held the full prescription, so log
+  // exactly those seconds and tick the set in one go. Bypasses toggle()
+  // because that reads the `reps` state, which hasn't re-rendered yet.
+  const completeWithSeconds = (seconds: number) => {
+    if (isReadOnly || completed) return;
+    setReps(String(seconds));
+    onChangeReps?.(seconds);
+    const w = parseFloat(weight);
+    if (!Number.isNaN(w) && w >= 0) onChangeWeight?.(w);
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    onToggle();
+  };
+
+  // Countdown from whatever is in the seconds cell — the athlete can retype
+  // it to hold longer or shorter than prescribed — else the prescription.
+  const typedSeconds = parseInt(reps, 10);
+  const timerTarget = !Number.isNaN(typedSeconds) && typedSeconds > 0 ? typedSeconds : defaultReps;
+  const showCountdown = isTime && showTimer && !completed && !isReadOnly;
+
   const inputClass = `h-11 rounded-lg text-center font-mono-bold text-base ${
     completed ? 'bg-transparent text-muted-foreground' : 'bg-muted/50 text-foreground'
   }`;
 
-  return (
+  const row = (
     <View className={`h-14 flex-row items-center gap-2 ${showDivider ? 'border-t border-border/30' : ''}`}>
       <Text
         style={{ width: SET_COLS.set }}
@@ -134,6 +160,20 @@ export function SetRow({
       >
         {completed ? <Feather name="check" size={16} color="#fafafa" /> : null}
       </Pressable>
+    </View>
+  );
+
+  if (!showCountdown) return row;
+
+  return (
+    <View>
+      {row}
+      <SetTimer
+        setNumber={setNumber}
+        targetSeconds={timerTarget}
+        onFinish={completeWithSeconds}
+        onStop={(seconds) => commitReps(String(seconds))}
+      />
     </View>
   );
 }
