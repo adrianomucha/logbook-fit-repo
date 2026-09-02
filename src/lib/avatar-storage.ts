@@ -39,9 +39,14 @@ export async function uploadAvatar(
   const cfg = config();
   if (!cfg) throw new Error("Avatar storage is not configured");
 
+  // Both headers, same value — how supabase-js authenticates. Legacy JWT
+  // service_role keys pass either way; new sb_secret_ keys are only valid
+  // as Bearer when they exactly equal the apikey header (per the API keys
+  // guide), so sending both supports both key formats.
   const res = await fetch(`${cfg.url}/storage/v1/object/${BUCKET}/${path}`, {
     method: "POST",
     headers: {
+      apikey: cfg.key,
       Authorization: `Bearer ${cfg.key}`,
       "Content-Type": contentType,
       "x-upsert": "true",
@@ -75,7 +80,7 @@ export async function deleteAvatarByUrl(publicUrl: string | null | undefined): P
   try {
     await fetch(`${cfg.url}/storage/v1/object/${BUCKET}/${path}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${cfg.key}` },
+      headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` },
     });
   } catch {
     // Cleanup only — an orphaned file costs kilobytes, a failed upload flow
