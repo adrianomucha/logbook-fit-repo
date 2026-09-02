@@ -588,12 +588,11 @@ export function UnifiedClientProfile() {
       : 'no workouts logged yet'
     : null;
 
-  // Primary action — always give the coach one obvious next move, chosen by the
-  // client's state, so the page is never just a passive read-out. `kind` lets
-  // other parts of the page avoid repeating the same button.
-  const scrollToChat = () =>
-    chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  const primaryAction: { label: string; onClick: () => void; disabled?: boolean; kind: 'assign' | 'review' | 'message' | 'send' } =
+  // Primary action — one obvious next move chosen by the client's state, or
+  // none: when the only thing left to do is reply, the chat card is already on
+  // the page, so a header button that merely scrolls to it would be redundant.
+  // `kind` lets other parts of the page avoid repeating the same button.
+  const primaryAction: { label: string; onClick: () => void; disabled?: boolean; kind: 'assign' | 'review' | 'send' } | null =
     !plan
       ? { label: 'Assign a plan', onClick: handleChangePlan, kind: 'assign' }
       : planEnded
@@ -601,10 +600,10 @@ export function UnifiedClientProfile() {
       : activeCheckIn?.status === 'responded'
         ? { label: 'Review check-in', onClick: handleScrollToCheckIn, kind: 'review' }
         : activeCheckIn?.status === 'pending'
-          ? { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' }
+          ? null
           : statusIsUrgent || !hasUnread
             ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn, kind: 'send' }
-            : { label: `Message ${firstName}`, onClick: scrollToChat, kind: 'message' };
+            : null;
 
   // Build subtitle from status or plan. Urgent statuses get the warning voice
   // with the days detail folded in; everything else keeps a quiet metadata line.
@@ -657,15 +656,17 @@ export function UnifiedClientProfile() {
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
             action={
               <div className="flex items-center gap-2.5 shrink-0">
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={primaryAction.onClick}
-                  disabled={primaryAction.disabled}
-                  className="active:scale-[0.96] transition-transform duration-150 tap-target"
-                >
-                  {primaryAction.label}
-                </Button>
+                {primaryAction && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={primaryAction.onClick}
+                    disabled={primaryAction.disabled}
+                    className="active:scale-[0.96] transition-transform duration-150 tap-target"
+                  >
+                    {primaryAction.label}
+                  </Button>
+                )}
                 {/* Rare/destructive actions live behind the header overflow,
                     not on the page — the typed-name confirm is the real gate */}
                 <DropdownMenu>
@@ -756,7 +757,7 @@ export function UnifiedClientProfile() {
           justSentCheckIn
           || hasRecentFlags
           // A hidden pending card renders nothing unless there are flags (above)
-          || (activeCheckIn ? !pendingHidden : primaryAction.kind !== 'send')
+          || (activeCheckIn ? !pendingHidden : primaryAction?.kind !== 'send')
         ) && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
@@ -776,7 +777,7 @@ export function UnifiedClientProfile() {
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
               variant="flat"
-              hideSendPrompt={primaryAction.kind === 'send'}
+              hideSendPrompt={primaryAction?.kind === 'send'}
             />
           </SectionCard>
         </section>
