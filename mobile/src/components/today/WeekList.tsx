@@ -35,18 +35,18 @@ export function WeekList({ days, onOpenDay }: WeekListProps) {
               <Text className="font-sans-semibold text-[15px] tracking-tight text-foreground" numberOfLines={1}>
                 {day.workoutDay?.name || 'Workout'}
               </Text>
-              <Text className="mt-0.5 font-mono text-[10px] text-muted-foreground">{count} exercises</Text>
+              <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground">{count} exercises</Text>
             </View>
             {isCompleted ? (
               <View className="h-6 w-6 items-center justify-center rounded-full bg-success/15">
                 <Feather name="check" size={14} color="#21c45d" />
               </View>
             ) : isInProgress ? (
-              <Text className="rounded-full bg-warning/15 px-2 py-1 font-mono-bold text-[10px] uppercase tracking-[1.4px] text-warning-text">
+              <Text className="rounded-full bg-warning/15 px-2 py-1 font-mono-bold text-[11px] uppercase tracking-[1.54px] text-warning-text">
                 In progress
               </Text>
             ) : isCurrent ? (
-              <Text className="rounded-full bg-brand px-2 py-1 font-mono-bold text-[10px] uppercase tracking-[1.4px] text-brand-foreground">
+              <Text className="rounded-full bg-brand px-2 py-1 font-mono-bold text-[11px] uppercase tracking-[1.54px] text-brand-foreground">
                 Up next
               </Text>
             ) : null}

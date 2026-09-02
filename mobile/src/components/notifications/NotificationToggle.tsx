@@ -16,7 +16,7 @@ export function NotificationToggle() {
     return (
       <View className="flex-row items-center gap-1.5">
         <Feather name="bell-off" size={12} color="#737373" />
-        <Text className="font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">Alerts off in Settings</Text>
+        <Text className="font-mono text-[11px] uppercase tracking-[1.32px] text-muted-foreground">Alerts off in Settings</Text>
       </View>
     );
   }
@@ -39,7 +39,7 @@ export function NotificationToggle() {
       className={`min-h-[32px] flex-row items-center gap-1.5 rounded-full px-3 py-1.5 active:opacity-70 ${isSubscribed ? '' : 'bg-muted/60'}`}
     >
       {isBusy ? <ActivityIndicator size="small" color="#737373" /> : <Feather name="bell" size={12} color={isSubscribed ? '#737373' : '#0a0a0a'} />}
-      <Text className={`font-mono-bold text-[10px] uppercase tracking-[1.2px] ${isSubscribed ? 'text-muted-foreground' : 'text-foreground'}`}>
+      <Text className={`font-mono-bold text-[11px] uppercase tracking-[1.32px] ${isSubscribed ? 'text-muted-foreground' : 'text-foreground'}`}>
         {isSubscribed ? 'Alerts on' : 'Turn on alerts'}
       </Text>
     </Pressable>

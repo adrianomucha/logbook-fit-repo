@@ -171,14 +171,14 @@ export function ExerciseCard({
 
           <View>
             <View className="flex-row items-center gap-2 pb-1">
-              <Text style={{ width: SET_COLS.set }} className="font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">
+              <Text style={{ width: SET_COLS.set }} className="font-mono text-[11px] uppercase tracking-[1.54px] text-muted-foreground">
                 Set
               </Text>
-              <Text className="flex-1 font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">Last</Text>
-              <Text style={{ width: SET_COLS.weight }} className="text-center font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">
+              <Text className="flex-1 font-mono text-[11px] uppercase tracking-[1.54px] text-muted-foreground">Last</Text>
+              <Text style={{ width: SET_COLS.weight }} className="text-center font-mono text-[11px] uppercase tracking-[1.54px] text-muted-foreground">
                 Weight
               </Text>
-              <Text style={{ width: SET_COLS.reps }} className="text-center font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">
+              <Text style={{ width: SET_COLS.reps }} className="text-center font-mono text-[11px] uppercase tracking-[1.54px] text-muted-foreground">
                 {isTime ? 'Sec' : 'Reps'}
               </Text>
               <View style={{ width: SET_COLS.check }} />

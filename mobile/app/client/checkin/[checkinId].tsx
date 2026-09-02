@@ -90,13 +90,13 @@ function SentScreen({
           <View className="rounded-2xl border border-border/70 bg-card px-4">
             {receipt.map((row, index) => (
               <View key={row.label} className={`flex-row items-center justify-between gap-4 py-3 ${index > 0 ? 'border-t border-border/50' : ''}`}>
-                <Text className="font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">{row.label}</Text>
+                <Text className="font-mono text-[11px] uppercase tracking-[1.54px] text-muted-foreground">{row.label}</Text>
                 <Text className="font-sans-semibold text-sm text-foreground">{row.value}</Text>
               </View>
             ))}
             {note ? (
               <View className={`py-3 ${receipt.length > 0 ? 'border-t border-border/50' : ''}`}>
-                <Text className="mb-1 font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">Your note</Text>
+                <Text className="mb-1 font-mono text-[11px] uppercase tracking-[1.54px] text-muted-foreground">Your note</Text>
                 <Text className="font-sans text-sm leading-5 text-foreground">{note}</Text>
               </View>
             ) : null}
@@ -250,7 +250,7 @@ export default function CheckInScreen() {
               textAlignVertical="top"
               maxLength={500}
             />
-            <Text className="mt-1 text-right font-mono-medium text-[10px] uppercase tracking-[1.2px] text-muted-foreground">{painBlockers.length}/500</Text>
+            <Text className="mt-1 text-right font-mono-medium text-[11px] uppercase tracking-[1.32px] text-muted-foreground">{painBlockers.length}/500</Text>
           </View>
 
           {recent.length > 0 ? (
@@ -265,7 +265,7 @@ export default function CheckInScreen() {
                         {c.day?.name ?? 'Workout'}
                       </Text>
                       {c.completedAt ? (
-                        <Text className="font-sans-medium text-[10px] uppercase tracking-[1.2px] text-muted-foreground">
+                        <Text className="font-sans-medium text-[11px] uppercase tracking-[1.32px] text-muted-foreground">
                           {format(new Date(c.completedAt), 'EEEE, MMM d')}
                         </Text>
                       ) : null}
@@ -279,7 +279,7 @@ export default function CheckInScreen() {
             </View>
           ) : (
             <View className="items-center rounded-lg bg-muted/40 py-6">
-              <Text className="font-sans-medium text-[10px] uppercase tracking-[1.2px] text-muted-foreground">No recent completed workouts</Text>
+              <Text className="font-sans-medium text-[11px] uppercase tracking-[1.32px] text-muted-foreground">No recent completed workouts</Text>
             </View>
           )}
 

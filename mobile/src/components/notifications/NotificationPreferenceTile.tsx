@@ -60,7 +60,7 @@ export function NotificationPreferenceTile() {
 
       <View className="min-w-0 flex-1">
         <View className="flex-row items-start justify-between gap-4">
-          <Text className="pt-0.5 font-sans-semibold text-sm leading-tight text-foreground">Message alerts</Text>
+          <Text className="pt-1 font-sans-semibold text-[15px] leading-5 text-foreground">Message alerts</Text>
           <Switch
             value={isSubscribed}
             onValueChange={(v) => void handleChange(v)}
@@ -71,14 +71,14 @@ export function NotificationPreferenceTile() {
           />
         </View>
 
-        <Text className="mt-1 font-sans text-xs leading-5 text-muted-foreground">
+        <Text className="mt-1.5 font-sans text-[13px] leading-[19px] text-muted-foreground">
           A push notification on this device when your coach messages you. Alerts are per device, so turn them on wherever you train from.
         </Text>
 
         {/* Status line — the product's mono data voice; a volt dot marks "on" */}
         <View className="mt-3 flex-row items-center gap-1.5" accessibilityLiveRegion="polite">
           <View className={`h-1.5 w-1.5 rounded-full ${isSubscribed ? 'bg-brand' : 'bg-muted-foreground/40'}`} />
-          <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-muted-foreground">{status}</Text>
+          <Text className="font-mono-medium text-[11px] uppercase tracking-[1.54px] text-muted-foreground">{status}</Text>
         </View>
       </View>
     </View>

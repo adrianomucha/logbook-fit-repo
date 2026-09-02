@@ -5,7 +5,7 @@ import Svg, { Polyline } from 'react-native-svg';
 /** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
 export function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <Text className={`font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground ${className}`}>
+    <Text className={`font-mono text-[11px] uppercase tracking-[1.76px] text-muted-foreground ${className}`}>
       {children}
     </Text>
   );

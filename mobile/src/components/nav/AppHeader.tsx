@@ -43,7 +43,7 @@ export function AppHeader() {
           {avatarUrl ? (
             <Image source={{ uri: avatarUrl }} style={{ width: 26, height: 26, borderRadius: 13 }} accessibilityIgnoresInvertColors />
           ) : (
-            <Text className="font-mono-semibold text-[10px] uppercase tracking-[0.4px] text-foreground">{monogram}</Text>
+            <Text className="font-mono-semibold text-[11px] uppercase tracking-[0.4px] text-foreground">{monogram}</Text>
           )}
         </Pressable>
       </View>

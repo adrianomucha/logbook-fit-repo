@@ -110,7 +110,7 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
         >
           {formatClock(timer.displaySeconds)}
         </Text>
-        <Text className="shrink text-right font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">{status}</Text>
+        <Text className="shrink text-right font-mono text-[11px] uppercase tracking-[1.54px] text-muted-foreground">{status}</Text>
       </View>
 
       <View className="mt-3 flex-row gap-2">

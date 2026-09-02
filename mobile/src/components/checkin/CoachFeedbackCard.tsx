@@ -8,7 +8,7 @@ export function CoachFeedbackCard({ checkIn, onViewDetails }: { checkIn: CheckIn
   const date = format(new Date(checkIn.completedAt || checkIn.date), 'MMM d');
   return (
     <View className="rounded-xl border-l-2 border-brand bg-muted/40 px-4 py-4">
-      <Text className="mb-1.5 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Coach feedback · {date}</Text>
+      <Text className="mb-1.5 font-mono text-[11px] uppercase tracking-[1.76px] text-muted-foreground">Coach feedback · {date}</Text>
       <Text className="mb-2 font-sans text-sm leading-5 text-foreground/80" numberOfLines={2}>
         {checkIn.coachResponse}
       </Text>

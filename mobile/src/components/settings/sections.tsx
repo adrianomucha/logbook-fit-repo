@@ -32,13 +32,13 @@ const inputClass = 'h-11 rounded-lg border border-border/60 bg-secondary/50 px-3
 /** Uppercase tracked mono label — the product's data voice */
 function FieldLabel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <Text className={`font-mono-medium text-[10px] uppercase tracking-[1.4px] text-muted-foreground ${className}`}>{children}</Text>
+    <Text className={`font-mono-medium text-[11px] uppercase tracking-[1.54px] text-muted-foreground ${className}`}>{children}</Text>
   );
 }
 
 /** Muted helper line under a field. */
 function FieldHint({ children }: { children: ReactNode }) {
-  return <Text className="font-sans text-xs leading-5 text-muted-foreground">{children}</Text>;
+  return <Text className="font-sans text-[13px] leading-[19px] text-muted-foreground">{children}</Text>;
 }
 
 /** Pane heading: bold title + one muted sentence, over a hairline. */
@@ -91,7 +91,7 @@ function Flash({ message }: { message: string | null }) {
   return (
     <View className="flex-1 flex-row items-center gap-1.5" accessibilityLiveRegion="polite">
       <Feather name="check" size={12} color="#157f3c" />
-      <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-success-text">{message}</Text>
+      <Text className="font-mono-medium text-[11px] uppercase tracking-[1.54px] text-success-text">{message}</Text>
     </View>
   );
 }
@@ -226,7 +226,7 @@ export function ProfileSection() {
             <FieldHint>JPG, PNG, or WebP, up to 4MB.</FieldHint>
             {avatarUrl ? (
               <Pressable onPress={() => void handlePhotoRemove()} disabled={isPhotoBusy} hitSlop={8} className="min-h-[32px] justify-center">
-                <Text className="font-sans text-xs text-muted-foreground">Remove photo</Text>
+                <Text className="font-sans text-[13px] text-muted-foreground">Remove photo</Text>
               </Pressable>
             ) : null}
           </View>
@@ -279,9 +279,9 @@ export function AccountSection() {
       <View className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
         <View className="flex-row items-center gap-1.5">
           <Feather name="alert-triangle" size={12} color="#c52020" />
-          <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-destructive">Danger zone</Text>
+          <Text className="font-mono-medium text-[11px] uppercase tracking-[1.54px] text-destructive">Danger zone</Text>
         </View>
-        <Text className="mt-1.5 font-sans text-xs leading-5 text-muted-foreground">
+        <Text className="mt-1.5 font-sans text-[13px] leading-[19px] text-muted-foreground">
           Deleting your account removes your name and email everywhere. Your coach keeps their history under “Deleted account”. This can’t be undone.
         </Text>
         <Pressable

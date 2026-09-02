@@ -155,7 +155,7 @@ export function ChatView({
       <View>
         {showDateSep ? (
           <View className="items-center py-4">
-            <Text className="font-mono-medium text-[10px] uppercase tracking-[1.6px] text-muted-foreground">{format(msgDate, 'EEEE, MMM d')}</Text>
+            <Text className="font-mono-medium text-[11px] uppercase tracking-[1.76px] text-muted-foreground">{format(msgDate, 'EEEE, MMM d')}</Text>
           </View>
         ) : null}
         <View className={`flex-row items-end gap-2 ${mine ? 'justify-end' : 'justify-start'} ${isFirstInGroup ? 'mt-4' : 'mt-[5px]'}`}>
@@ -172,9 +172,9 @@ export function ChatView({
           >
             {ctx ? (
               <View className={`-mx-0.5 mb-2 rounded-lg px-3 py-2.5 ${mine ? 'border-l-2 border-white/30 bg-white/10' : 'border-l-2 border-brand bg-background/60'}`}>
-                <Text className={`mb-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>Exercise</Text>
+                <Text className={`mb-0.5 font-sans-medium text-[11px] uppercase tracking-[1.32px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>Exercise</Text>
                 <Text className={`font-sans-bold text-sm tracking-tight ${mine ? 'text-white' : 'text-foreground'}`} numberOfLines={1}>{ctx.exerciseName}</Text>
-                <Text className={`mt-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>
+                <Text className={`mt-0.5 font-sans-medium text-[11px] uppercase tracking-[1.32px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>
                   {ctx.prescription} · {ctx.setsCompleted}/{ctx.totalSets} sets
                 </Text>
                 {ctx.flagNote ? (
@@ -186,7 +186,7 @@ export function ChatView({
           </View>
         </View>
         {isLastInGroup ? (
-          <Text className={`mt-1.5 font-mono text-[10px] text-muted-foreground ${mine ? 'pr-0.5 text-right' : 'pl-9 text-left'}`}>
+          <Text className={`mt-1.5 font-mono text-[11px] text-muted-foreground ${mine ? 'pr-0.5 text-right' : 'pl-9 text-left'}`}>
             {format(msgDate, 'h:mm a')}
             {mine && isNewest && message.read ? ' · Seen' : ''}
           </Text>
@@ -203,7 +203,7 @@ export function ChatView({
             <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size={56} textSize={18} />
             <View className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-brand" />
           </View>
-          <Text className="mb-2 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Direct line</Text>
+          <Text className="mb-2 font-mono text-[11px] uppercase tracking-[1.76px] text-muted-foreground">Direct line</Text>
           <Text className="font-sans-bold text-lg tracking-tight text-foreground">Talk to {peerFirst}</Text>
           <Text className="mt-2 max-w-[280px] text-center font-sans text-sm leading-5 text-muted-foreground">
             Questions, wins, sore spots — it all helps {peerFirst} coach you better.
@@ -247,7 +247,7 @@ export function ChatView({
                     void onLoadEarlier();
                   }}
                   disabled={isLoadingEarlier} className="rounded-full bg-muted/60 px-3.5 py-2 active:opacity-70">
-                  <Text className="font-mono-bold text-[10px] uppercase tracking-[1.5px] text-muted-foreground">
+                  <Text className="font-mono-bold text-[11px] uppercase tracking-[1.5px] text-muted-foreground">
                     {isLoadingEarlier ? 'Loading…' : 'Load earlier messages'}
                   </Text>
                 </Pressable>
@@ -261,7 +261,7 @@ export function ChatView({
         <View className="absolute inset-x-0 bottom-[68px] items-center">
           <Pressable onPress={scrollToBottom} className="min-h-[44px] flex-row items-center gap-1.5 rounded-full bg-brand px-3.5 py-1.5 active:opacity-80">
             <Feather name="chevron-down" size={12} color="#1e2702" />
-            <Text className="font-sans-bold text-[10px] uppercase tracking-[1.5px] text-brand-foreground">{unseenCount === 1 ? '1 new' : `${unseenCount} new`}</Text>
+            <Text className="font-sans-bold text-[11px] uppercase tracking-[1.5px] text-brand-foreground">{unseenCount === 1 ? '1 new' : `${unseenCount} new`}</Text>
           </Pressable>
         </View>
       ) : null}

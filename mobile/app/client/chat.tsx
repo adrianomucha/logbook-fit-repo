@@ -54,7 +54,7 @@ export default function ChatScreen() {
               <View className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-brand" />
             </View>
             <View className="flex-1">
-              <Text className="mb-0.5 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Your coach</Text>
+              <Text className="mb-0.5 font-mono text-[11px] uppercase tracking-[1.76px] text-muted-foreground">Your coach</Text>
               <Text className="font-sans-bold text-xl leading-6 tracking-tight text-foreground" numberOfLines={1}>{coachName}</Text>
             </View>
             <NotificationToggle />

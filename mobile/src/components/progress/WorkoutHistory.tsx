@@ -33,7 +33,7 @@ function HistoryItem({ completion, dayName, weekNumber, planName, last }: Item &
           </View>
           <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a3a3a3" />
         </View>
-        <Text className="mt-1 font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">
+        <Text className="mt-1 font-mono text-[11px] uppercase tracking-[1.32px] text-muted-foreground">
           {completion.completedAt ? format(parseISO(completion.completedAt), 'MMM d, yyyy') : 'In Progress'}
           {weekNumber != null ? ` · Week ${weekNumber}` : ''}
           {effort ? <Text className={`font-mono-bold ${effort.color}`}>{`  ${effort.label}`}</Text> : null}

@@ -56,7 +56,7 @@ export function FlagMessageSheet({ exercise, onClose, onSend }: FlagMessageSheet
               <Text className="mt-1 font-sans-bold text-sm text-foreground" numberOfLines={1}>
                 {exercise.exercise.name}
               </Text>
-              <Text className="mt-1 font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">
+              <Text className="mt-1 font-mono text-[11px] uppercase tracking-[1.32px] text-muted-foreground">
                 {formatExercisePrescription(exercise)} · {getCompletedSetsCount(exercise)}/{exercise.sets} sets done
               </Text>
               {exercise.flag?.note ? (
