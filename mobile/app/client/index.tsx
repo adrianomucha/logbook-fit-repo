@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { format } from 'date-fns';
@@ -12,7 +12,8 @@ import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
 import { Screen } from '@/components/Screen';
 import { Button, Card, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { SessionCard } from '@/components/today/SessionCard';
-import { WeekList } from '@/components/today/WeekList';
+import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle';
+import { WeekOverview } from '@/components/today/WeekOverview';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -31,6 +32,7 @@ const isNotFound = (e: unknown) => e instanceof ApiError && e.status === 404;
 export default function TodayScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
+  const [view, setView] = useState<WorkoutViewMode>('today');
   const { user, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
   const { weekOverview, error: weekError, isLoading: loadingWeek, refresh: refreshWeek } = useClientWeekOverview();
   const { plan: planDetail, error: planError, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
@@ -126,7 +128,17 @@ export default function TodayScreen() {
     <Screen onRefresh={refresh} refreshing={refreshing}>
       {header}
 
-      {weekOverview?.planEnded ? (
+      <ViewToggle value={view} onChange={setView} />
+
+      {view === 'weekly' && plan && weekOverview ? (
+        <WeekOverview
+          planName={plan.name}
+          weekNumber={weekOverview.weekNumber}
+          durationWeeks={weekOverview.plan.durationWeeks}
+          days={weekDays}
+          onOpenDay={openDay}
+        />
+      ) : weekOverview?.planEnded ? (
         <Card>
           <Eyebrow>Plan complete</Eyebrow>
           <Text className="mt-2 font-sans-bold text-2xl text-foreground">You finished {plan?.name}</Text>
@@ -153,18 +165,8 @@ export default function TodayScreen() {
           />
         )
       ) : (
-        <EmptyState title="Nothing scheduled" body="Every workout this week is done. Your coach will line up the next week." />
+        <EmptyState title="Nothing scheduled" body="Every workout this week is done. See the week for what's next." />
       )}
-
-      {plan && weekOverview && weekDays.length > 0 ? (
-        <WeekList
-          weekNumber={weekOverview.weekNumber}
-          durationWeeks={weekOverview.plan.durationWeeks}
-          planName={plan.name}
-          days={weekDays}
-          onOpenDay={openDay}
-        />
-      ) : null}
     </Screen>
   );
 }
