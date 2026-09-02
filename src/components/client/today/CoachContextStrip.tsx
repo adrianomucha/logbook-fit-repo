@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils';
+import { cn, noWidows } from '@/lib/utils';
 import { avatarColor } from '@/lib/avatar-colors';
 
 interface CoachContextStripProps {
@@ -47,8 +47,10 @@ export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContext
         </p>
       </div>
 
+      {/* Coach-written copy of unknowable length: glue the last pair so the
+          note never ends on a lone word, whatever the phone width */}
       <p className="mt-3 text-[15px] leading-relaxed text-foreground">
-        {note}
+        {noWidows(note)}
       </p>
     </div>
   );
