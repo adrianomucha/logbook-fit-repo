@@ -6,11 +6,10 @@ import type { WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { apiPlanToWorkoutPlan } from '@logbook/shared/adapters/api';
 import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
 import { ApiError } from '@/lib/api';
-import { useAuth } from '@/lib/auth';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
 import { Screen } from '@/components/Screen';
-import { Button, Card, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
+import { Card, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { SessionCard } from '@/components/today/SessionCard';
 import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle';
 import { WeekOverview } from '@/components/today/WeekOverview';
@@ -31,7 +30,6 @@ const isNotFound = (e: unknown) => e instanceof ApiError && e.status === 404;
  */
 export default function TodayScreen() {
   const router = useRouter();
-  const { signOut } = useAuth();
   const [view, setView] = useState<WorkoutViewMode>('today');
   const { user, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
   const { weekOverview, error: weekError, isLoading: loadingWeek, refresh: refreshWeek } = useClientWeekOverview();
@@ -89,16 +87,15 @@ export default function TodayScreen() {
   // No coach yet → nothing can be assigned; no plan yet → the coach is on it.
   if (!coach) {
     return (
-      <Screen onRefresh={refresh} refreshing={false}>
+      <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
         <EmptyState eyebrow="Getting started" title="Waiting for your coach" body="Once your coach connects with you, your plan shows up here." />
-        <Button variant="ghost" onPress={signOut}>Sign out</Button>
       </Screen>
     );
   }
   if ((planError && isNotFound(planError)) || (weekError && isNotFound(weekError))) {
     return (
-      <Screen onRefresh={refresh} refreshing={false}>
+      <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
         <EmptyState
           eyebrow="Getting started"
@@ -110,7 +107,7 @@ export default function TodayScreen() {
   }
   if (weekError || planError) {
     return (
-      <Screen onRefresh={refresh} refreshing={false}>
+      <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
         <EmptyState title="Couldn't load your plan" body="Pull down to try again." />
       </Screen>
@@ -125,7 +122,7 @@ export default function TodayScreen() {
   };
 
   return (
-    <Screen onRefresh={refresh} refreshing={refreshing}>
+    <Screen withHeader onRefresh={refresh} refreshing={refreshing}>
       {header}
 
       <ViewToggle value={view} onChange={setView} />
