@@ -1,17 +1,21 @@
 import { useMemo, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Alert, Pressable, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { format } from 'date-fns';
 import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
-import { ApiError } from '@/lib/api';
+import { ApiError, apiFetch } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
 import { useClientCheckIns, useClientProgress } from '@/hooks/useCheckIns';
+import { useMessages } from '@/hooks/useMessages';
 import { Screen } from '@/components/Screen';
-import { Card, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
+import { EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { SessionCard } from '@/components/today/SessionCard';
+import { SessionCompleteCard } from '@/components/today/SessionCompleteCard';
+import { CoachContextStrip } from '@/components/today/CoachContextStrip';
 import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle';
 import { WeekOverview } from '@/components/today/WeekOverview';
 import { PendingCheckInBanner } from '@/components/checkin/PendingCheckInBanner';
@@ -36,10 +40,14 @@ export default function TodayScreen() {
   const router = useRouter();
   const [view, setView] = useState<WorkoutViewMode>('today');
   const [showCheckInDetail, setShowCheckInDetail] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false);
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
   const { user, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
   const { weekOverview, error: weekError, isLoading: loadingWeek, refresh: refreshWeek } = useClientWeekOverview();
   const { plan: planDetail, error: planError, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
   const { checkIns: apiCheckIns, refresh: refreshCheckIns } = useClientCheckIns();
+  const { sendMessage } = useMessages(coach?.user.id ?? null);
   const { progress } = useClientProgress();
 
   const plan: WorkoutPlan | null = useMemo(() => (planDetail ? apiPlanToWorkoutPlan(planDetail) : null), [planDetail]);
@@ -144,6 +152,57 @@ export default function TodayScreen() {
   const state: 'scheduled' | 'in-progress' | 'completed' =
     today?.completion?.status === 'COMPLETED' ? 'completed' : today?.completion?.status === 'IN_PROGRESS' ? 'in-progress' : 'scheduled';
 
+  const todayCoachNote = today?.workoutDay?.exercises.find((e) => e.notes?.trim())?.notes;
+
+  // Effort feedback goes through the finish endpoint (already completed; the
+  // server just records the rating); a note rides along as a chat message.
+  const sendFeedback = async (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => {
+    const completionId = today?.completion?.id;
+    if (!completionId) return;
+    setIsSendingFeedback(true);
+    try {
+      await apiFetch(`/api/client/workout/${completionId}/finish`, { method: 'POST', body: JSON.stringify({ effortRating: rating }) });
+      if (notes) {
+        try {
+          await sendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
+        } catch {
+          Alert.alert('Feedback saved', 'Your note failed to send — try it from Chat.');
+        }
+      }
+      setFeedbackSent(true);
+      await refreshWeek();
+    } catch {
+      Alert.alert("Couldn't send feedback", 'Please try again.');
+    } finally {
+      setIsSendingFeedback(false);
+    }
+  };
+
+  const restartWorkout = () => {
+    const completionId = today?.completion?.id;
+    const dayId = today?.workoutDay?.id;
+    if (!completionId || !dayId) return;
+    Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this session are cleared.", [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Restart workout',
+        style: 'destructive',
+        onPress: async () => {
+          setIsRestarting(true);
+          try {
+            await apiFetch(`/api/client/workout/${completionId}/restart`, { method: 'POST' });
+            await refreshWeek();
+            router.push({ pathname: '/client/workout/[dayId]', params: { dayId } });
+          } catch {
+            Alert.alert("Couldn't restart", 'Please try again.');
+          } finally {
+            setIsRestarting(false);
+          }
+        },
+      },
+    ]);
+  };
+
   const openDay = (day: WeekDayInfo) => {
     if (day.workoutDay) router.push({ pathname: '/client/workout/[dayId]', params: { dayId: day.workoutDay.id } });
   };
@@ -183,14 +242,22 @@ export default function TodayScreen() {
           </Text>
         </View>
       ) : today?.workoutDay ? (
-        state === 'completed' ? (
-          <Card>
-            <Eyebrow>Today</Eyebrow>
-            <Text className="mt-2 font-sans-bold text-2xl text-foreground">Session done</Text>
-            <Text className="mt-2 font-sans text-sm leading-5 text-muted-foreground">
-              {today.workoutDay.name} is in the books. Rest up — the next one is below.
-            </Text>
-          </Card>
+        state === 'completed' && today.completion ? (
+          <>
+            <SessionCompleteCard
+              workoutName={today.workoutDay.name}
+              completion={today.completion}
+              coachName={coach.user.name}
+              feedbackSubmitted={feedbackSent || !!today.completion.effortRating}
+              isSubmittingFeedback={isSendingFeedback}
+              onSubmitFeedback={(rating, notes) => void sendFeedback(rating, notes)}
+            />
+            {todayCoachNote && coach.user.name ? <CoachContextStrip coachName={coach.user.name} note={todayCoachNote} /> : null}
+            <Pressable onPress={restartWorkout} disabled={isRestarting} className="min-h-[36px] flex-row items-center justify-center gap-1.5 self-center px-3 active:opacity-70">
+              <Feather name="rotate-ccw" size={14} color="#737373" />
+              <Text className="font-sans-medium text-sm text-muted-foreground">{isRestarting ? 'Restarting…' : 'Restart workout'}</Text>
+            </Pressable>
+          </>
         ) : (
           <SessionCard
             workoutDay={today.workoutDay}
