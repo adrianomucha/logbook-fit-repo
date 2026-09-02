@@ -2,12 +2,7 @@ import { useMemo } from 'react';
 import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { EnrichedWorkoutHistory } from './progress/EnrichedWorkoutHistory';
-import {
-  startOfWeek,
-  endOfWeek,
-  isWithinInterval,
-  parseISO,
-} from 'date-fns';
+import { getWeekVerdict, type WeekVerdict } from '@logbook/shared/progress';
 
 interface ProgressStats {
   totalWorkouts: number;
@@ -24,61 +19,8 @@ interface ProgressHistoryProps {
   progressStats?: ProgressStats;
 }
 
-/**
- * Generate a single-sentence verdict that connects the stats to how the client is doing.
- * This turns raw numbers into coaching-flavored encouragement.
- */
-type VerdictTone = 'success' | 'warning' | 'neutral';
-
-interface WeekProgress {
-  completed: number;
-  target: number;
-  text: string;
-  tone: VerdictTone;
-}
-
-function getWeekProgress(
-  completions: WorkoutCompletion[],
-  targetPerWeek: number,
-): WeekProgress {
-  const now = new Date();
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-  const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
-
-  const thisWeekCompleted = completions.filter((c) => {
-    if (!c.completedAt || c.status !== 'COMPLETED') return false;
-    const date = parseISO(c.completedAt);
-    return isWithinInterval(date, { start: weekStart, end: weekEnd });
-  }).length;
-
-  const totalCompleted = completions.filter((c) => c.status === 'COMPLETED').length;
-  const base = { completed: thisWeekCompleted, target: targetPerWeek };
-
-  if (totalCompleted === 0) {
-    return { ...base, text: 'Your first workout will kick things off.', tone: 'neutral' };
-  }
-  if (thisWeekCompleted >= targetPerWeek) {
-    return { ...base, text: 'Target hit. Consistency is building.', tone: 'success' };
-  }
-
-  const dayOfWeek = now.getDay() === 0 ? 7 : now.getDay();
-  const expectedByNow = Math.ceil((dayOfWeek / 7) * targetPerWeek);
-  if (thisWeekCompleted >= expectedByNow) {
-    const remaining = targetPerWeek - thisWeekCompleted;
-    return { ...base, text: remaining === 1 ? 'On pace, one more to go.' : `On pace, ${remaining} more to go.`, tone: 'success' };
-  }
-
-  if (thisWeekCompleted > 0) {
-    const remaining = targetPerWeek - thisWeekCompleted;
-    return { ...base, text: remaining === 1 ? 'Almost there, one more session.' : `${remaining} sessions to go.`, tone: 'warning' };
-  }
-
-  if (dayOfWeek <= 2) {
-    return { ...base, text: 'Week\'s just getting started.', tone: 'neutral' };
-  }
-
-  return { ...base, text: 'Still time to get sessions in.', tone: 'warning' };
-}
+// The verdict lives in @logbook/shared/progress so the app shares it.
+type VerdictTone = WeekVerdict['tone'];
 
 // Verdict text uses semantic tokens; the segment fill is always volt so the
 // strip reads the same as the dashboard's weekly progress strip.
@@ -96,7 +38,7 @@ export function ProgressHistory({
 }: ProgressHistoryProps) {
   const weekProgress = useMemo(() => {
     const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
-    return getWeekProgress(workoutCompletions, target);
+    return getWeekVerdict(workoutCompletions, target);
   }, [plan, workoutCompletions]);
 
   return (
