@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
+  AlertTriangle,
   Bell,
   Camera,
   KeyRound,
@@ -69,7 +70,7 @@ function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.R
 
 /** Muted helper line under a field. */
 function FieldHint({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs text-muted-foreground leading-relaxed text-pretty">{children}</p>;
+  return <p className="text-xs text-muted-foreground leading-relaxed">{children}</p>;
 }
 
 /** Pane heading: bold title + one muted sentence, over a hairline. */
@@ -77,7 +78,7 @@ function SectionHeader({ title, description }: { title: string; description: str
   return (
     <div className="mb-5">
       <h2 className="text-lg font-bold tracking-tight antialiased">{title}</h2>
-      <p className="text-sm text-muted-foreground mt-0.5 text-pretty">{description}</p>
+      <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
       <div className="h-px bg-border mt-4" aria-hidden="true" />
     </div>
   );
@@ -324,7 +325,7 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
                 </p>
               </div>
               {bio.trim() && (
-                <p className="text-sm text-muted-foreground leading-relaxed mt-1 text-pretty">
+                <p className="text-sm text-muted-foreground leading-relaxed mt-1">
                   {bio.trim()}
                 </p>
               )}
@@ -395,11 +396,12 @@ export function AccountSection({ role }: { role: SettingsRole }) {
           its own dialog (type DELETE + password). The dark: overrides match
           FormError — dark-scope --destructive is a fill shade, unreadable
           as text on black. */}
-      <div className="pt-4 border-t border-border/60">
-        <p className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive antialiased dark:text-red-300">
+      <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 dark:border-red-400/30 dark:bg-red-500/10">
+        <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive antialiased dark:text-red-300">
+          <AlertTriangle className="h-3 w-3 shrink-0" aria-hidden="true" />
           Danger zone
         </p>
-        <p className="text-xs text-muted-foreground leading-relaxed mt-1.5 text-pretty">
+        <p className="text-xs text-muted-foreground leading-relaxed mt-1.5">
           {isCoach
             ? 'Deleting your account ends every client relationship, takes your plans and exercise library with it, and can’t be undone.'
             : 'Deleting your account removes your name and email everywhere. Your coach keeps their history under “Deleted account”. This can’t be undone.'}
@@ -550,7 +552,7 @@ export function NotificationsSection({ role }: { role: SettingsRole }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
         <div className="min-w-0 sm:flex-1">
           <p className="text-sm font-semibold leading-tight">Message alerts</p>
-          <p className="text-xs text-muted-foreground leading-relaxed mt-1 text-pretty">
+          <p className="text-xs text-muted-foreground leading-relaxed mt-1">
             {role === 'coach'
               ? 'A push notification on this device when a client messages you.'
               : 'A push notification on this device when your coach messages you.'}{' '}
