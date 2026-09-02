@@ -1,5 +1,5 @@
 import prisma from "@/lib/prisma";
-import type { UserRole } from "@prisma/client";
+import type { Prisma, UserRole } from "@prisma/client";
 
 /**
  * Ends a coach-client relationship, initiated by either side (the coach
@@ -22,7 +22,22 @@ export async function endCoachClientRelationship(
   relationship: { id: string; coachId: string; clientId: string },
   endedBy: UserRole
 ) {
-  return prisma.$transaction(async (tx) => {
+  return prisma.$transaction((tx) =>
+    endCoachClientRelationshipIn(tx, relationship, endedBy)
+  );
+}
+
+/**
+ * The transactional core of endCoachClientRelationship, for callers that
+ * already hold a transaction — account deletion ends every relationship
+ * and retires the account in one commit.
+ */
+export async function endCoachClientRelationshipIn(
+  tx: Prisma.TransactionClient,
+  relationship: { id: string; coachId: string; clientId: string },
+  endedBy: UserRole
+) {
+  {
     const client = await tx.clientProfile.findUnique({
       where: { id: relationship.clientId },
       select: { activePlanId: true, planStartDate: true },
@@ -55,7 +70,7 @@ export async function endCoachClientRelationship(
     });
 
     return ended;
-  });
+  }
 }
 
 /**

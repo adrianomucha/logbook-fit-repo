@@ -54,7 +54,7 @@ Status: ✅ fixed on this branch · ⬜ open
 | 27 | ⬜ | Concurrent plan edits are last-write-wins (no version check); sample client pollutes roster counts server-side; invite list capped at 20 with no pagination; "expired" invites never persisted (dead enum value). | M |
 | 28 | ⬜ | Termination is silent for the client (plan/chat vanish, no explanation); no read-only view of past-client conversation history despite "nothing is deleted" copy. | M |
 | 29 | ⬜ | Loading states are bare spinners (no skeletons); success/error feedback inconsistent across mutations. | M |
-| 30 | ⬜ | No account deletion (soft-delete infra exists, no endpoint); one account can't be both coach and client; in-memory per-IP rate limiting resets per deploy. | M–L |
+| 30 | ⬜ | ~~No account deletion~~ ✅ (`DELETE /api/me` + account-menu dialog; ends relationships, revokes invites, scrubs the row); still open: one account can't be both coach and client; in-memory per-IP rate limiting resets per deploy. | M–L |
 
 ## P3 — Dead code & drift (cleanup)
 

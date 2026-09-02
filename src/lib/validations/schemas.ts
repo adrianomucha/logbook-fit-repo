@@ -100,6 +100,11 @@ export const mobileLoginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
+// Account deletion confirmation — the current password, presence only.
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Password is required"),
+});
+
 // ──────────────────────────────────────
 // EXERCISES
 // ──────────────────────────────────────

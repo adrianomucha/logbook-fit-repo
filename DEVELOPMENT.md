@@ -90,8 +90,14 @@ route code never learns which.
   token, after re-checking the account exists and isn't a locked demo. A 401
   here means "sign in again".
 - Tokens are encrypted with `NEXTAUTH_SECRET`, live 30 days like the cookie,
-  and are stateless — soft-deleting the user (`deletedAt`) is the kill switch
-  for both kinds.
+  and are stateless — `getSession()` does one primary-key lookup per request
+  so a deleted user (`deletedAt`) is turned away on every device at once.
+- `DELETE /api/me` `{password}` retires the signed-in account
+  (`src/lib/account-deletion.ts`): ends every coaching relationship the way
+  the coach/client termination does, revokes open invites, drops push
+  devices, and scrubs name/email/password on the row (kept so the other
+  party's history stays intact). Demo accounts refuse. The web offers it
+  from the account menu; the app must too (App Store guideline 5.1.1(v)).
 
 Try it against a running dev server:
 

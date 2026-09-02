@@ -126,7 +126,7 @@ the app work. Do it first; it is also independently useful to the web app.
       `{provider: "EXPO", token}`. `GET /api/push/config` reports Expo push as
       always-enabled (no VAPID needed for that path). Extend
       `lib/__tests__/push.test.ts`. — M
-- [ ] **1.5 `DELETE /api/me` (account deletion).** Soft-delete the user
+- [x] **1.5 `DELETE /api/me` (account deletion).** Soft-delete the user
       (`deletedAt`), end the coaching relationship through
       `lib/relationship-termination.ts`, delete push subscriptions, invalidate
       the session (auth already refuses `deletedAt != null`). Password
