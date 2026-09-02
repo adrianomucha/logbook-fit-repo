@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, Copy, FlaskConical, Loader2, Plus, UserPlus } from 'lucide-react';
+import { Check, Copy, FlaskConical, Loader2, Plus, UserPlus, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { QUICK_START_EXERCISES } from '@/lib/quick-start-exercises';
 import type { CoachInvite } from '@/types/api';
@@ -9,6 +9,10 @@ import type { CoachInvite } from '@/types/api';
 interface GettingStartedCardProps {
   /** Time-of-day greeting — doubles as the brand kicker on this screen */
   greeting: string;
+  /** Coach has uploaded a profile photo */
+  hasPhoto: boolean;
+  /** Coach has written a bio */
+  hasBio: boolean;
   /** Coach has at least one plan template */
   hasPlan: boolean;
   /** Name of the first plan, shown in the done state */
@@ -17,6 +21,7 @@ interface GettingStartedCardProps {
   pendingInvite: CoachInvite | null;
   /** Latest invite expired without being used (and none pending) */
   lastInviteExpired: boolean;
+  onSetUpProfile: () => void;
   onCreatePlan: () => void;
   onInviteClient: () => void;
   onAddSampleClient: () => void;
@@ -29,8 +34,9 @@ function daysUntil(iso: string): number {
 
 /**
  * First-session guide shown on the coach dashboard while the roster is empty.
- * Walks the coach from a stocked library to a sent invite — the activation
- * moment when Logbook starts working for them.
+ * Walks the coach from a stocked library, past the profile their invite
+ * leads with, to a sent invite — the activation moment when Logbook starts
+ * working for them.
  *
  * Laid out as two rails rather than one tall card: the brand statement on the
  * left, the checklist on the right. That keeps the whole screen inside the
@@ -39,10 +45,13 @@ function daysUntil(iso: string): number {
  */
 export function GettingStartedCard({
   greeting,
+  hasPhoto,
+  hasBio,
   hasPlan,
   planName,
   pendingInvite,
   lastInviteExpired,
+  onSetUpProfile,
   onCreatePlan,
   onInviteClient,
   onAddSampleClient,
@@ -51,6 +60,9 @@ export function GettingStartedCard({
   const [copied, setCopied] = useState(false);
 
   const inviteSent = !!pendingInvite;
+  // Either one clears the step: a coach who'd rather not post a photo still
+  // gets a full tick for the bio, instead of a nag they can never dismiss
+  const profileSet = hasPhoto || hasBio;
   const fullInviteLink =
     pendingInvite?.inviteLink && typeof window !== 'undefined'
       ? `${window.location.origin}${pendingInvite.inviteLink}`
@@ -84,6 +96,33 @@ export function GettingStartedCard({
       done: true,
       title: 'Exercise library stocked',
       body: `${QUICK_START_EXERCISES.length} common movements, ready to drop into any plan. Add your own anytime.`,
+    },
+    {
+      key: 'profile',
+      done: profileSet,
+      title: profileSet
+        ? hasPhoto && hasBio
+          ? 'Photo and bio added'
+          : hasPhoto
+            ? 'Photo added'
+            : 'Bio added'
+        : 'Add your photo and bio',
+      // The invite page leads with the coach — a face and a line about how
+      // they coach is what a prospective client reads before they commit
+      body: profileSet
+        ? 'Invited clients see it before they sign up, and in chat after.'
+        : 'Your invite page opens with them. A face and one line about how you coach — under a minute.',
+      action: !profileSet && (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onSetUpProfile}
+          className="active:scale-[0.96] transition-transform duration-150"
+        >
+          <UserRound className="w-4 h-4 mr-1.5" />
+          Set up profile
+        </Button>
+      ),
     },
     {
       key: 'plan',

@@ -456,6 +456,8 @@ export function ClientDashboard() {
                 coachName={coach?.user.name ?? 'Your coach'}
                 canMessage={!!coachUserId}
                 onMessageCoach={handleMessageCoach}
+                hasPhoto={!!user?.avatarUrl}
+                onAddPhoto={() => router.push('/client/settings?section=profile')}
               />
               {/* Quiet exit — wrong coach or changed your mind before day one */}
               <div className="flex justify-center">
