@@ -2,11 +2,19 @@ import { useCallback, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
 import { apiFetch, ApiError } from '@/lib/api-client';
-import type {
-  WorkoutDayDetail,
-  WorkoutExercise,
-  WorkoutSetCompletion,
-} from '@/types/api';
+import type { WorkoutDayDetail } from '@/types/api';
+import {
+  getCompletionStats,
+  upsertLocalSet,
+  isSetCompleted,
+  isExerciseComplete,
+  getCompletedSetsCount,
+  getNextIncompleteExerciseId,
+} from '@logbook/shared/workout-execution';
+
+// The pure parts live in @logbook/shared so the native app shares them;
+// re-exported here for the components that always imported them from the hook.
+export { isSetCompleted, isExerciseComplete, getCompletedSetsCount, getNextIncompleteExerciseId };
 
 export function useWorkoutExecution(dayId: string | null) {
   const { data, error, isLoading, mutate } = useSWR<WorkoutDayDetail>(
@@ -548,77 +556,4 @@ export function useWorkoutExecution(dayId: string | null) {
     flagExercise,
     refresh: mutate,
   };
-}
-
-/**
- * Update a set in the local cache, creating a placeholder row when the server
- * hasn't materialized one yet (the completion is only created on the first
- * interaction, so early toggles land before any rows exist).
- */
-function upsertLocalSet(
-  sets: WorkoutSetCompletion[],
-  setNumber: number,
-  patch: Partial<Pick<WorkoutSetCompletion, 'completed' | 'actualReps' | 'actualWeight'>>
-): WorkoutSetCompletion[] {
-  if (sets.some((s) => s.setNumber === setNumber)) {
-    return sets.map((s) => (s.setNumber === setNumber ? { ...s, ...patch } : s));
-  }
-  return [
-    ...sets,
-    {
-      id: `local-${setNumber}`,
-      setNumber,
-      completed: false,
-      actualWeight: null,
-      actualReps: null,
-      completedAt: null,
-      ...patch,
-    },
-  ];
-}
-
-/** Compute exercisesDone / exercisesTotal from the exercise list */
-function getCompletionStats(exercises: WorkoutExercise[]) {
-  const exercisesTotal = exercises.length;
-  let exercisesDone = 0;
-
-  for (const ex of exercises) {
-    const allDone =
-      ex.sets > 0 &&
-      ex.setCompletions.filter((s) => s.completed).length >= ex.sets;
-    if (allDone) exercisesDone++;
-  }
-
-  return { exercisesDone, exercisesTotal };
-}
-
-/** Check if a specific set is completed */
-export function isSetCompleted(
-  setCompletions: WorkoutSetCompletion[],
-  setNumber: number
-): boolean {
-  return setCompletions.some((s) => s.setNumber === setNumber && s.completed);
-}
-
-/** Check if all sets of an exercise are completed */
-export function isExerciseComplete(exercise: WorkoutExercise): boolean {
-  if (exercise.sets === 0) return true;
-  return (
-    exercise.setCompletions.filter((s) => s.completed).length >= exercise.sets
-  );
-}
-
-/** Count completed sets for an exercise */
-export function getCompletedSetsCount(exercise: WorkoutExercise): number {
-  return exercise.setCompletions.filter((s) => s.completed).length;
-}
-
-/** Get the first incomplete exercise's workoutExerciseId */
-export function getNextIncompleteExerciseId(
-  exercises: WorkoutExercise[]
-): string | null {
-  for (const ex of exercises) {
-    if (!isExerciseComplete(ex)) return ex.workoutExerciseId;
-  }
-  return null;
 }

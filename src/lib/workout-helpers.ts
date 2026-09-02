@@ -1,5 +1,3 @@
-/**
- * Fallback weekly session target when a plan has no workoutsPerWeek set.
- * One shared constant so different surfaces never assume different targets.
- */
-export const DEFAULT_WORKOUTS_PER_WEEK = 4;
+// Moved to @logbook/shared so the native app can use it; this keeps every
+// existing import working. New code may import from either path.
+export * from "@logbook/shared/workout-helpers";

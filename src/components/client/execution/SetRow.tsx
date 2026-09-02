@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { parseDurationInput, type TrackingType } from '@/lib/reps';
+import type { TrackingType } from '@/lib/reps';
+import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook/shared/workout-execution';
 import { SetTimer } from './SetTimer';
 
 /**
@@ -38,27 +39,8 @@ interface SetRowProps {
   showTimer?: boolean;
 }
 
-/** Highest number in the target ("6-8" → 8, 10 → 10) — the top of the prescribed range. */
-export function parseTargetReps(target?: string | number): number | undefined {
-  if (target == null) return undefined;
-  const nums = String(target).match(/\d+/g);
-  if (!nums || nums.length === 0) return undefined;
-  return Math.max(...nums.map(Number));
-}
-
-/** Top of a prescribed duration range in seconds ("30-60s" → 60, "1m 30s" → 90). */
-export function parseTargetSeconds(target?: string | number): number | undefined {
-  if (target == null) return undefined;
-  const { reps, repsMax } = parseDurationInput(target);
-  return repsMax ?? reps ?? undefined;
-}
-
-/** First number in the target weight ("50 lbs" → 50, 50 → 50). */
-export function parseTargetWeight(target?: string | number): number | undefined {
-  if (target == null) return undefined;
-  const m = String(target).match(/[\d.]+/);
-  return m ? Number(m[0]) : undefined;
-}
+// Prescription → default value parsing lives in @logbook/shared (the app uses it too)
+export { parseTargetReps, parseTargetSeconds, parseTargetWeight };
 
 export function SetRow({
   setNumber,

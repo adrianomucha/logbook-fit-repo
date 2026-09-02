@@ -7,7 +7,7 @@ import {
   apiClientDetailToWorkoutCompletions,
   apiClientDetailToClient,
 } from "../api";
-import type { PlanDetail } from "@/hooks/api/usePlanDetail";
+import type { PlanDetail } from "../../types/plan-detail";
 
 // ---------------------------------------------------------------------------
 // apiPlanToWorkoutPlan

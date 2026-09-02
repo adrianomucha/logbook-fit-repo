@@ -23,6 +23,7 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # Covers packages/shared too (its tests run under the root vitest)
       - name: Unit tests
         run: npm test
 
@@ -31,3 +32,33 @@ jobs:
       # dynamic and don't execute at build time.
       - name: Build
         run: npm run build
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      # React Native 0.87 / Metro 0.87 require Node 22.13+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      # A full Metro bundle for iOS: the closest thing to "does it build"
+      # without Xcode. Catches Babel/Metro config, NativeWind, and every
+      # import (including @logbook/shared) — not runtime behavior.
+      - name: Bundle (iOS)
+        run: npm run export:ios
+        env:
+          EXPO_OFFLINE: "1"
+          CI: "1"

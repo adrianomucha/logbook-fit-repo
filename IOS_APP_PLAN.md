@@ -137,7 +137,7 @@ the app work. Do it first; it is also independently useful to the web app.
       check-in and a message thread, for App Review notes. Run once against
       production; document the credentials in the App Store Connect review
       notes only, never in the repo. — S
-- [ ] **1.7 CI.** Add `mobile` typecheck + jest + eslint to `ci.yml`; add
+- [x] **1.7 CI.** Add `mobile` typecheck + jest + eslint to `ci.yml`; add
       `packages/shared` tests to the existing vitest run. — S
 
 Deliverable: the web app is unchanged for users, every API route accepts a
@@ -147,7 +147,7 @@ bearer token, and the check-in loop can reach a phone through APNs.
 
 ## 3. Phase 2 — The client app
 
-### 3.1 Extract `@logbook/shared` — M
+### 3.1 Extract `@logbook/shared` — M ✅ done
 
 Move, with re-export shims left behind:
 
@@ -164,7 +164,7 @@ Move, with re-export shims left behind:
 Rule for what goes in: pure TS, no `window`, no `next/*`, no React DOM.
 Anything with a test file in `lib/__tests__` moves with its test.
 
-### 3.2 Scaffold — S
+### 3.2 Scaffold — S ✅ done (`mobile/`, see its README)
 
 `npx create-expo-app mobile` with expo-router, TypeScript, NativeWind, SWR,
 `expo-secure-store` (token), `expo-notifications`, `expo-haptics`. Three EAS
@@ -184,13 +184,13 @@ Each maps 1:1 onto endpoints that exist today.
 
 | # | Screen | Endpoints | Web source to port | Effort |
 |---|--------|-----------|--------------------|--------|
-| 1 | Sign in / session gate | `POST /api/auth/mobile/login`, `/refresh`, `GET /api/me` | `app/login/page.tsx`, `useCurrentUser` | S |
-| 2 | Today + weekly overview (tab 1) | `GET /api/client/week-overview`, `/plan`, `/coach` | `views/ClientDashboard.tsx`, `components/client/today/*`, `weekly/*` | M |
-| 3 | Workout execution | `GET /api/client/workout/day/[id]`, `POST /workout/start`, `PUT /workout/[id]/sets`, `POST /finish`, `/restart`, `/flag` | `views/ClientWorkoutExecution.tsx`, `components/client/execution/*`, `hooks/api/useWorkoutExecution.ts` | L |
-| 4 | Check-in respond + history | `GET /api/client/check-ins`, `GET /api/check-ins/[id]`, `PUT /api/check-ins/[id]/client-respond` | `views/ClientCheckIn.tsx`, `ClientCheckInForm.tsx` | M |
-| 5 | Chat with coach (tab 2) | `GET /api/messages/[userId]`, `POST /api/messages`, `GET /api/messages/unread` | `components/chat/ChatView.tsx`, `hooks/api/useMessages.ts` | M |
-| 6 | Progress (tab 3) | `GET /api/client/progress` | `components/client/progress/*` | S |
-| 7 | Account: timezone sync, notifications toggle, feedback, sign out, **delete account** | `PUT /api/account/timezone`, `POST/DELETE /api/push/subscription`, `POST /api/feedback`, `DELETE /api/me` | `AccountMenu.tsx`, `NotificationToggle.tsx` | M |
+| 1 | Sign in / session gate ✅ | `POST /api/auth/mobile/login`, `/refresh`, `GET /api/me` | `app/login/page.tsx`, `useCurrentUser` | S |
+| 2 | Today + weekly overview (tab 1) ✅ | `GET /api/client/week-overview`, `/plan`, `/coach` | `views/ClientDashboard.tsx`, `components/client/today/*`, `weekly/*` | M |
+| 3 | Workout execution ✅ | `GET /api/client/workout/day/[id]`, `POST /workout/start`, `PUT /workout/[id]/sets`, `POST /finish`, `/restart`, `/flag` | `views/ClientWorkoutExecution.tsx`, `components/client/execution/*`, `hooks/api/useWorkoutExecution.ts` | L |
+| 4 | Check-in respond + history ✅ | `GET /api/client/check-ins`, `GET /api/check-ins/[id]`, `PUT /api/check-ins/[id]/client-respond` | `views/ClientCheckIn.tsx`, `ClientCheckInForm.tsx` | M |
+| 5 | Chat with coach (tab 2) ✅ | `GET /api/messages/[userId]`, `POST /api/messages`, `GET /api/messages/unread` | `components/chat/ChatView.tsx`, `hooks/api/useMessages.ts` | M |
+| 6 | Progress (tab 3) ✅ | `GET /api/client/progress` | `components/client/progress/*` | S |
+| 7 | Account: timezone sync, notifications toggle, feedback, sign out, **delete account** ✅ | `PUT /api/account/timezone`, `POST/DELETE /api/push/subscription`, `POST /api/feedback`, `DELETE /api/me` | `AccountMenu.tsx`, `NotificationToggle.tsx` | M |
 | 8 | Empty / edge states: no coach yet, awaiting plan, plan ended | already in the `week-overview` payload (`planEnded`) and `/api/me` | `WelcomeAwaitingPlan.tsx`, `SessionCompleteCard.tsx` | S |
 
 Port the *hook logic* nearly verbatim — `useWorkoutExecution`'s single-flight
@@ -201,21 +201,28 @@ a native toast, `visibilitychange` with `AppState`, `useKeyboardInset` with
 free).
 
 Coach role: one screen, "Your coaching workspace lives at logbook.fit", with
-an open-in-browser link. No coach UI in v1.
+an open-in-browser link. No coach UI in v1. ✅
+
+Toolchain notes from the scaffold (2026-09-02): Expo SDK 57, expo-router,
+NativeWind 4, TypeScript 6. `npx expo install` can't reach Expo's API from a
+Claude Code session (proxy), so dependency versions come from
+`node_modules/expo/bundledNativeModules.json` and are installed with plain
+npm. `babel-preset-expo` and `@expo/metro-runtime` must be top-level deps.
+`npm run export:ios` is the no-Xcode build check and runs in CI.
 
 ---
 
 ## 4. Phase 3 — Push, deep links, TestFlight
 
-- [ ] **4.1 Permission flow.** Ask on the first meaningful moment (after the
+- [x] **4.1 Permission flow.** (built; asks when the person turns alerts on — needs the EAS project id in app.json to go live) Ask on the first meaningful moment (after the
       first workout is finished or the first check-in answered), never on
       launch. Register the Expo token with `POST /api/push/subscription`;
       unregister on sign-out and on account deletion. — S
-- [ ] **4.2 Deep links.** `expo-notifications` response listener → router push
+- [x] **4.2 Deep links.** (notification taps; universal links still to do) `expo-notifications` response listener → router push
       to `data.url`. Universal links for `https://logbook.fit/client/*`
       (apple-app-site-association served by Next from `public/.well-known`),
       so a link in an email opens the app when installed. — M
-- [ ] **4.3 Foreground refresh.** On `AppState` → active, revalidate the
+- [x] **4.3 Foreground refresh.** On `AppState` → active, revalidate the
       week overview, unread count and the open thread — the native equivalent
       of the `visibilitychange` fix. — S
 - [ ] **4.4 Haptics + keyboard.** Set toggle and finish get `expo-haptics`;

@@ -1,0 +1,34 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@logbook/shared/types": [
+        "../packages/shared/src/types/index.ts"
+      ],
+      "@logbook/shared/*": [
+        "../packages/shared/src/*"
+      ],
+      "date-fns": [
+        "./node_modules/date-fns"
+      ],
+      "zod": [
+        "./node_modules/zod"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
