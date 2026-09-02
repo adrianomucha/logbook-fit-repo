@@ -71,24 +71,22 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
   const finalStretch = timer.isCountdown && running && timer.displaySeconds <= 5;
 
   return (
-    <div
-      role="group"
-      aria-label={label}
-      className="mb-2 flex items-center gap-3 rounded-xl bg-muted/50 px-4 py-3"
-    >
-      <div className="min-w-0 flex-1">
+    <div role="group" aria-label={label} className="mb-2 rounded-xl bg-muted/50 px-4 py-3">
+      {/* Clock on its own line: at phone width a 4xl "19:49" plus two labelled
+          buttons don't fit side by side, and the clock must never shrink. */}
+      <div className="flex items-baseline justify-between gap-3">
         <div
           role="timer"
           aria-live={running ? 'off' : 'polite'}
           aria-atomic="true"
           className={cn(
-            'font-mono text-4xl font-bold tabular-nums leading-none transition-colors',
+            'shrink-0 font-mono text-4xl font-bold tabular-nums leading-none transition-colors',
             done ? 'text-success-text' : finalStretch ? 'text-primary' : 'text-foreground'
           )}
         >
           {formatClock(timer.displaySeconds)}
         </div>
-        <div className="mt-1 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+        <div className="min-w-0 text-right font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
           {done
             ? 'Done'
             : timer.isCountdown
@@ -99,46 +97,48 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
         </div>
       </div>
 
-      {done ? (
-        <button
-          type="button"
-          onClick={timer.reset}
-          aria-label={`Reset set ${setNumber} timer`}
-          className={cn(controlClass, 'bg-background text-foreground hover:bg-accent')}
-        >
-          <RotateCcw className="h-4 w-4" aria-hidden="true" />
-          Reset
-        </button>
-      ) : (
-        <>
+      <div className="mt-3 flex gap-2">
+        {done ? (
           <button
             type="button"
-            onClick={running ? timer.pause : timer.start}
-            aria-label={running ? `Pause set ${setNumber} timer` : `Resume set ${setNumber} timer`}
-            className={cn(controlClass, 'bg-primary text-primary-foreground hover:bg-primary/90')}
+            onClick={timer.reset}
+            aria-label={`Reset set ${setNumber} timer`}
+            className={cn(controlClass, 'flex-1 bg-background text-foreground hover:bg-accent')}
           >
-            {running ? (
-              <Pause className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Play className="h-4 w-4" aria-hidden="true" />
-            )}
-            {running ? 'Pause' : 'Resume'}
+            <RotateCcw className="h-4 w-4" aria-hidden="true" />
+            Reset
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              timer.pause();
-              onStop(timer.elapsedSeconds);
-              timer.reset();
-            }}
-            aria-label={`Stop set ${setNumber} timer and log ${timer.elapsedSeconds} seconds`}
-            className={cn(controlClass, 'bg-background text-foreground hover:bg-accent')}
-          >
-            <Square className="h-4 w-4" aria-hidden="true" />
-            Stop
-          </button>
-        </>
-      )}
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={running ? timer.pause : timer.start}
+              aria-label={running ? `Pause set ${setNumber} timer` : `Resume set ${setNumber} timer`}
+              className={cn(controlClass, 'flex-1 bg-primary text-primary-foreground hover:bg-primary/90')}
+            >
+              {running ? (
+                <Pause className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <Play className="h-4 w-4" aria-hidden="true" />
+              )}
+              {running ? 'Pause' : 'Resume'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                timer.pause();
+                onStop(timer.elapsedSeconds);
+                timer.reset();
+              }}
+              aria-label={`Stop set ${setNumber} timer and log ${timer.elapsedSeconds} seconds`}
+              className={cn(controlClass, 'flex-1 bg-background text-foreground hover:bg-accent')}
+            >
+              <Square className="h-4 w-4" aria-hidden="true" />
+              Stop
+            </button>
+          </>
+        )}
+      </div>
     </div>
   );
 }
