@@ -30,8 +30,17 @@ export function NotificationToggle({
   hideWhenOn,
   showUnavailable,
 }: NotificationToggleProps) {
-  const { available, isSubscribed, isBlocked, needsInstall, isBusy, isLoading, enable, disable } =
-    usePushNotifications();
+  const {
+    available,
+    browserSupported,
+    isSubscribed,
+    isBlocked,
+    needsInstall,
+    isBusy,
+    isLoading,
+    enable,
+    disable,
+  } = usePushNotifications();
 
   if (isLoading) return null;
 
@@ -59,7 +68,9 @@ export function NotificationToggle({
         )}
       >
         <BellOff className="w-3 h-3 shrink-0" aria-hidden="true" />
-        Not supported in this browser
+        {/* A capable browser with available=false means the deployment has
+            no VAPID keys — don't blame the browser for a server gap */}
+        {browserSupported ? 'Alerts aren’t set up yet' : 'Not supported in this browser'}
       </p>
     );
   }

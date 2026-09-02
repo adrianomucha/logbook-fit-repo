@@ -19,6 +19,11 @@ interface PushConfig {
 export interface PushNotificationsState {
   /** Push is available in this browser AND configured on the server */
   available: boolean;
+  /**
+   * The browser itself has the push APIs — distinguishes "this browser
+   * can't" from "the server has no VAPID keys" when available is false.
+   */
+  browserSupported: boolean;
   /** This device is registered for notifications */
   isSubscribed: boolean;
   /** Browser permission was denied — only the user can undo this, in settings */
@@ -108,6 +113,7 @@ export function usePushNotifications(): PushNotificationsState {
 
   return {
     available: !!supported && !!config?.enabled && !!config.publicKey,
+    browserSupported: !!supported,
     isSubscribed,
     isBlocked: permission === 'denied',
     needsInstall,
