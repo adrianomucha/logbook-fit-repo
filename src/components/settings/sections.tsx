@@ -557,7 +557,7 @@ export function NotificationsSection({ role }: { role: SettingsRole }) {
             Alerts are per device — turn them on wherever you {role === 'coach' ? 'coach' : 'train'} from.
           </p>
         </div>
-        <NotificationToggle className="shrink-0 self-start" showUnavailable />
+        <NotificationToggle className="shrink-0 self-start" variant="settings" />
       </div>
     </div>
   );

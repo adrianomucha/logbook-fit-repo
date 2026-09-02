@@ -10,11 +10,13 @@ interface NotificationToggleProps {
   /** Hide once notifications are on (for surfaces that only need the nudge) */
   hideWhenOn?: boolean;
   /**
-   * Say "not supported" instead of vanishing when push can't work here.
-   * For surfaces whose copy promises this control (the settings page) —
-   * a described control that silently isn't there reads as broken.
+   * 'inline' (default) is the quiet chat-surface mode: a subtle "Alerts on"
+   * status once subscribed, and nothing at all when push can't work here.
+   * 'settings' is for the settings page, where the copy promises this
+   * control: the subscribed label names the action ("Turn off alerts") and
+   * the unavailable state says why instead of vanishing.
    */
-  showUnavailable?: boolean;
+  variant?: 'inline' | 'settings';
 }
 
 /**
@@ -28,7 +30,7 @@ interface NotificationToggleProps {
 export function NotificationToggle({
   className,
   hideWhenOn,
-  showUnavailable,
+  variant = 'inline',
 }: NotificationToggleProps) {
   const {
     available,
@@ -59,7 +61,7 @@ export function NotificationToggle({
   }
 
   if (!available) {
-    if (!showUnavailable) return null;
+    if (variant !== 'settings') return null;
     return (
       <p
         className={cn(
@@ -145,7 +147,11 @@ export function NotificationToggle({
           </span>
         </span>
       )}
-      {isSubscribed ? 'Alerts on' : 'Turn on alerts'}
+      {isSubscribed
+        ? variant === 'settings'
+          ? 'Turn off alerts'
+          : 'Alerts on'
+        : 'Turn on alerts'}
     </button>
   );
 }
