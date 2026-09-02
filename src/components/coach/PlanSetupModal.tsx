@@ -4,7 +4,6 @@ import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
-import { EmojiPicker } from './EmojiPicker';
 import { Chip, FieldLabel, FieldShell, StatusLine } from './shared/formSurfaces';
 import { cn } from '@/lib/utils';
 import type { PlanSetupFormData, PlanSetupFormErrors } from '../../types';
@@ -27,7 +26,6 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
   const [formData, setFormData] = useState<PlanSetupFormData>({
     name: '',
     description: '',
-    emoji: '💪',
     durationWeeks: 4,
     workoutsPerWeek: 4,
   });
@@ -56,7 +54,6 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
       setFormData({
         name: '',
         description: '',
-        emoji: '💪',
         durationWeeks: 4,
         workoutsPerWeek: 4,
       });
@@ -79,7 +76,6 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
     return (
       formData.name.trim() !== '' ||
       formData.description.trim() !== '' ||
-      formData.emoji !== '💪' ||
       formData.durationWeeks !== 4 ||
       formData.workoutsPerWeek !== 4
     );
@@ -235,7 +231,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           {' '}{formData.durationWeeks === 1 ? 'week' : 'weeks'}
         </StatusLine>
 
-        {/* Emoji + name — the hero field, one surface holding both */}
+        {/* Name — the hero field */}
         <div>
           <FieldShell
             label="Plan name"
@@ -249,13 +245,6 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             }
           >
             <div className="flex items-center gap-1 px-2 pb-2 pt-1">
-              <EmojiPicker
-                value={formData.emoji}
-                onChange={(emoji) => handleFieldChange('emoji', emoji)}
-                // Keeps its tile inside the shell — without a border it stops
-                // reading as something you can tap
-                className="w-10 h-10 shrink-0 bg-background"
-              />
               <Input
                 id={ids.name}
                 placeholder="e.g., 4-Week Strength Foundation"

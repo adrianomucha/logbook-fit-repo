@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { parseDurationInput, type TrackingType } from '@/lib/reps';
+import { SetTimer } from './SetTimer';
 
 /**
  * Shared grid template for the set table: SET · LAST · WEIGHT · REPS · ✓.
@@ -30,6 +31,11 @@ interface SetRowProps {
   isReadOnly?: boolean;
   /** If true, render a top border to separate from the previous row */
   showDivider?: boolean;
+  /**
+   * Show the countdown under this row. Only meaningful for TIME sets; the
+   * exercise card turns it on for the next set still to be done.
+   */
+  showTimer?: boolean;
 }
 
 /** Highest number in the target ("6-8" → 8, 10 → 10) — the top of the prescribed range. */
@@ -68,6 +74,7 @@ export function SetRow({
   onChangeWeight,
   isReadOnly = false,
   showDivider = false,
+  showTimer = false,
 }: SetRowProps) {
   const isTime = trackingType === 'TIME';
   // For TIME the "reps" cell holds seconds ("1m 30s" target → 90).
@@ -111,6 +118,24 @@ export function SetRow({
     onToggle();
   };
 
+  // Countdown reached zero: the athlete held the full prescription, so log
+  // exactly those seconds and tick the set in one go. Bypasses handleToggle
+  // because that reads the `reps` state, which hasn't re-rendered yet.
+  const completeWithSeconds = (seconds: number) => {
+    if (isReadOnly || completed) return;
+    setReps(String(seconds));
+    onChangeReps?.(seconds);
+    const w = parseFloat(weight);
+    if (!Number.isNaN(w) && w >= 0) onChangeWeight?.(w);
+    onToggle();
+  };
+
+  // Countdown from whatever is in the seconds cell — the athlete can retype
+  // it to hold longer or shorter than prescribed — else the prescription.
+  const typedSeconds = parseInt(reps, 10);
+  const timerTarget =
+    !Number.isNaN(typedSeconds) && typedSeconds > 0 ? typedSeconds : defaultReps;
+
   const cellInput = (opts: {
     value: string;
     placeholder?: string;
@@ -141,7 +166,9 @@ export function SetRow({
     />
   );
 
-  return (
+  const showCountdown = isTime && showTimer && !completed && !isReadOnly;
+
+  const row = (
     <div
       className={cn(
         SET_GRID,
@@ -197,6 +224,20 @@ export function SetRow({
       >
         {completed && <Check className="w-4 h-4 text-success-foreground animate-set-complete" />}
       </button>
+    </div>
+  );
+
+  if (!showCountdown) return row;
+
+  return (
+    <div>
+      {row}
+      <SetTimer
+        setNumber={setNumber}
+        targetSeconds={timerTarget}
+        onFinish={completeWithSeconds}
+        onStop={(seconds) => commitReps(String(seconds))}
+      />
     </div>
   );
 }

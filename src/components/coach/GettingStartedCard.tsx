@@ -13,7 +13,6 @@ interface GettingStartedCardProps {
   hasPlan: boolean;
   /** Name of the first plan, shown in the done state */
   planName?: string;
-  planEmoji?: string;
   /** Latest still-shareable invite, if any */
   pendingInvite: CoachInvite | null;
   /** Latest invite expired without being used (and none pending) */
@@ -42,7 +41,6 @@ export function GettingStartedCard({
   greeting,
   hasPlan,
   planName,
-  planEmoji,
   pendingInvite,
   lastInviteExpired,
   onCreatePlan,
@@ -92,7 +90,7 @@ export function GettingStartedCard({
       done: hasPlan,
       title: hasPlan ? (
         <>
-          First plan created{planName ? <>: {planEmoji ? `${planEmoji} ` : ''}<span className="text-foreground">{planName}</span></> : ''}
+          First plan created{planName ? <>: <span className="text-foreground">{planName}</span></> : ''}
         </>
       ) : (
         'Build your first plan'

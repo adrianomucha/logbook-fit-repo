@@ -27,7 +27,6 @@ export function apiPlanToWorkoutPlan(plan: PlanDetail): WorkoutPlan {
     id: plan.id,
     name: plan.name,
     description: plan.description ?? undefined,
-    emoji: plan.emoji,
     durationWeeks: plan.durationWeeks,
     workoutsPerWeek: plan.workoutsPerWeek,
     weeks: plan.weeks.map(

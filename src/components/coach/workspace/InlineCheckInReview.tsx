@@ -9,6 +9,8 @@ import {
   SendHorizonal,
   Flag,
   MessageSquare,
+  Undo2,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -24,6 +26,13 @@ import { completeCheckIn, createCheckIn } from '@/lib/checkin-helpers';
 // One shared feeling map for the whole loop (client form, standalone review,
 // this panel) — same labels, same AA-contrast status colors everywhere
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
+
+/**
+ * How long the "Sent to <name>" confirmation stays up with its Undo button.
+ * Long enough to catch a misclick, short enough that the panel settles into
+ * the waiting state before the coach moves on.
+ */
+export const SENT_UNDO_WINDOW_MS = 8000;
 
 interface FlaggedExerciseWithContext {
   flag: ExerciseFlag;
@@ -45,8 +54,15 @@ interface InlineCheckInReviewProps {
    */
   onCompleteCheckIn: (checkIn: CheckIn) => Promise<void> | void;
   onCreateCheckIn: (checkIn: CheckIn) => Promise<void> | void;
-  /** Withdraw a still-unanswered check-in (sent by mistake, wrong timing) */
-  onCancelCheckIn?: () => Promise<void> | void;
+  /**
+   * Unsend a still-unanswered check-in. Backs both the Undo button in the
+   * "Sent" confirmation and the confirmed Unsend on the waiting card. Should
+   * toast its own success/failure; the panel only resets its local state.
+   */
+  onUnsendCheckIn?: () => Promise<void> | void;
+  /** The coach chose to hide the waiting card until the client responds */
+  pendingHidden?: boolean;
+  onHidePending?: () => void;
   onMessageAboutFlag?: (flag: ExerciseFlag, exerciseName: string) => void;
   /** Signal from parent that check-in was just sent (for showing confirmation) */
   justSentFromParent?: boolean;
@@ -69,7 +85,9 @@ export function InlineCheckInReview({
   currentUserId,
   onCompleteCheckIn,
   onCreateCheckIn,
-  onCancelCheckIn,
+  onUnsendCheckIn,
+  pendingHidden = false,
+  onHidePending,
   onMessageAboutFlag,
   justSentFromParent = false,
   variant = 'card',
@@ -81,6 +99,8 @@ export function InlineCheckInReview({
   const [showSuccess, setShowSuccess] = useState(false);
   const [justSentCheckIn, setJustSentCheckIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Two-step unsend on the waiting card: first click asks, second confirms
+  const [confirmingUnsend, setConfirmingUnsend] = useState(false);
   const responseRef = useRef<HTMLTextAreaElement>(null);
 
   // Timer refs for cleanup on unmount
@@ -161,10 +181,27 @@ export function InlineCheckInReview({
       // on failure, so a 409/500 must not paint "Sent to <name>".
       await onCreateCheckIn(newCheckIn);
       setJustSentCheckIn(true);
-      sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), 5000);
+      sentTimerRef.current = setTimeout(() => setJustSentCheckIn(false), SENT_UNDO_WINDOW_MS);
     } catch {
       // Parent already surfaced the reason; just don't show the sent state.
     } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Shared by Undo (seconds after sending, no confirm) and the confirmed
+  // Unsend on the waiting card. Either way the panel drops its "sent" state
+  // and lets the parent's refetch decide what to show next — if the client
+  // answered in the meantime, that's the responded view, not an error.
+  const handleUnsend = async () => {
+    if (!onUnsendCheckIn || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await onUnsendCheckIn();
+    } finally {
+      clearTimeout(sentTimerRef.current);
+      setJustSentCheckIn(false);
+      setConfirmingUnsend(false);
       setIsSubmitting(false);
     }
   };
@@ -249,6 +286,20 @@ export function InlineCheckInReview({
             <p className="text-sm text-muted-foreground antialiased">
               They&apos;ll see it next time they open the app.
             </p>
+            {/* Undo window — unsend outright, no confirm: the coach just
+                pressed Send and is still looking at this exact card */}
+            {onUnsendCheckIn && (
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={isSubmitting}
+                className="mt-2 text-muted-foreground"
+                onClick={handleUnsend}
+              >
+                <Undo2 className="w-4 h-4 me-1.5" aria-hidden="true" />
+                {isSubmitting ? 'Unsending…' : 'Undo'}
+              </Button>
+            )}
           </div>
         </div>
       </Wrapper>
@@ -302,10 +353,29 @@ export function InlineCheckInReview({
 
   // State: Pending (waiting for client)
   if (activeCheckIn.status === 'pending') {
+    // Hidden by the coach: the flags still matter while they wait, the
+    // status row doesn't. With nothing else to show, render nothing.
+    if (pendingHidden) {
+      if (flaggedExercisesWithContext.length === 0) return null;
+      return (
+        <Wrapper>
+          <div className={cn(isFlat ? '' : 'px-3 sm:px-6 py-6')}>
+            <FlaggedExercisesSection
+              flags={flaggedExercisesWithContext}
+              onMessageAboutFlag={onMessageAboutFlag}
+            />
+          </div>
+        </Wrapper>
+      );
+    }
+
     const sentAgo = formatDistanceToNow(new Date(activeCheckIn.date), { addSuffix: true });
 
     // One calm status line, same slim-row shape as the idle prompt — the
     // ball is in the client's court, so this state should ask for nothing.
+    // The row's trailing actions are quiet: Unsend (two-step, so a stray
+    // click can't delete anything) and a close that hides the row until
+    // the client responds.
     return (
       <Wrapper>
         <div className={cn(isFlat ? '' : 'px-3 sm:px-6 py-6')}>
@@ -318,31 +388,70 @@ export function InlineCheckInReview({
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
               </span>
               <div className="flex-1 min-w-0">
-                <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
-                <p className="text-sm text-muted-foreground antialiased">
-                  Check-in sent <span className="tabular-nums">{sentAgo}</span> — you&apos;ll review their answers here.
-                </p>
+                {confirmingUnsend ? (
+                  <>
+                    <h3 className="font-semibold antialiased">Unsend this check-in?</h3>
+                    <p className="text-sm text-muted-foreground antialiased">
+                      {firstName} won&apos;t see it. You can send a new one any time.
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
+                    <p className="text-sm text-muted-foreground antialiased">
+                      Check-in sent <span className="tabular-nums">{sentAgo}</span> — you&apos;ll review their answers here.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
-            {/* Escape hatch — sent by mistake or at a bad time */}
-            {onCancelCheckIn && (
-              <Button
-                variant="ghost"
-                size="sm"
-                disabled={isSubmitting}
-                className="self-start sm:self-auto shrink-0 text-muted-foreground hover:text-destructive"
-                onClick={async () => {
-                  if (isSubmitting) return;
-                  setIsSubmitting(true);
-                  try {
-                    await onCancelCheckIn();
-                  } finally {
-                    setIsSubmitting(false);
-                  }
-                }}
-              >
-                Withdraw
-              </Button>
+
+            {confirmingUnsend ? (
+              <div className="flex items-center gap-1 self-start sm:self-auto shrink-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={isSubmitting}
+                  onClick={() => setConfirmingUnsend(false)}
+                >
+                  Keep
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  disabled={isSubmitting}
+                  onClick={handleUnsend}
+                >
+                  {isSubmitting ? 'Unsending…' : 'Unsend'}
+                </Button>
+              </div>
+            ) : (
+              (onUnsendCheckIn || onHidePending) && (
+                <div className="flex items-center gap-0.5 self-start sm:self-auto shrink-0 -me-1.5">
+                  {onUnsendCheckIn && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground"
+                      onClick={() => setConfirmingUnsend(true)}
+                    >
+                      Unsend
+                    </Button>
+                  )}
+                  {onHidePending && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-9 px-0 text-muted-foreground"
+                      aria-label={`Hide until ${firstName} responds`}
+                      title={`Hide until ${firstName} responds`}
+                      onClick={onHidePending}
+                    >
+                      <X className="w-4 h-4" aria-hidden="true" />
+                    </Button>
+                  )}
+                </div>
+              )
             )}
           </div>
 

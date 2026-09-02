@@ -92,6 +92,19 @@ export const passwordResetConfirmSchema = z.object({
   password: passwordSchema,
 });
 
+// Native-app sign-in. Only presence is checked: this is a *login*, so the
+// password rules that apply when picking one (passwordSchema) must not
+// lock out an account created before those rules existed.
+export const mobileLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1, "Password is required"),
+});
+
+// Account deletion confirmation — the current password, presence only.
+export const deleteAccountSchema = z.object({
+  password: z.string().min(1, "Password is required"),
+});
+
 // ──────────────────────────────────────
 // ACCOUNT SETTINGS
 // ──────────────────────────────────────
@@ -232,7 +245,6 @@ export const checkInScheduleSchema = z
 export const createPlanSchema = z.object({
   name: z.string().min(3, "Plan name must be at least 3 characters").max(50),
   description: z.string().max(200).optional().default(""),
-  emoji: z.string().max(10).optional(),
   durationWeeks: z.number().int().min(1).max(12).optional().default(4),
   workoutsPerWeek: z.number().int().min(1).max(7).optional().default(4),
 });
@@ -260,7 +272,7 @@ export const sendMessageSchema = z.object({
 
 // Shape produced by PushSubscription.toJSON() in the browser. The endpoint is
 // an https URL owned by the browser's push service (FCM, Mozilla, Apple).
-export const pushSubscriptionSchema = z.object({
+const webPushSubscriptionSchema = z.object({
   endpoint: z.string().url().max(1000),
   keys: z.object({
     p256dh: z.string().min(1).max(255),
@@ -268,9 +280,31 @@ export const pushSubscriptionSchema = z.object({
   }),
 });
 
-export const pushUnsubscribeSchema = z.object({
-  endpoint: z.string().url().max(1000),
+// What expo-notifications hands the native app. Mirrors Expo.isExpoPushToken
+// without importing the (Node-only) server SDK into this browser-shared file.
+const EXPO_PUSH_TOKEN_RE = /^(Expo|Exponent)PushToken\[[^\]]+\]$/;
+export const expoPushTokenSchema = z
+  .string()
+  .max(255)
+  .regex(EXPO_PUSH_TOKEN_RE, "Not an Expo push token");
+
+const expoPushSubscriptionSchema = z.object({
+  provider: z.literal("EXPO"),
+  token: expoPushTokenSchema,
+  // "Adrian's iPhone" — the app's equivalent of a browser's user-agent
+  deviceName: z.string().trim().max(255).optional(),
 });
+
+// Browsers send the bare toJSON() shape (no provider); the app says EXPO.
+export const pushSubscriptionSchema = z.union([
+  expoPushSubscriptionSchema,
+  webPushSubscriptionSchema,
+]);
+
+export const pushUnsubscribeSchema = z.union([
+  z.object({ provider: z.literal("EXPO"), token: expoPushTokenSchema }),
+  z.object({ endpoint: z.string().url().max(1000) }),
+]);
 
 // ──────────────────────────────────────
 // WORKOUTS

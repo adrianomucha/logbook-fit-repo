@@ -84,7 +84,7 @@ export const POST = withCoach(
   ) => {
     const result = await parseBody(req, createPlanSchema);
     if (!result.success) return result.response;
-    const { name, description, emoji, durationWeeks, workoutsPerWeek } = result.data;
+    const { name, description, durationWeeks, workoutsPerWeek } = result.data;
 
     // Check for duplicate name (scoped to coach's TEMPLATES — client
     // instances share their template's name by design)
@@ -111,7 +111,6 @@ export const POST = withCoach(
           coachId: coachProfileId,
           name,
           description,
-          emoji: emoji ?? "💪",
           durationWeeks: weeks,
           workoutsPerWeek: wpw,
         },

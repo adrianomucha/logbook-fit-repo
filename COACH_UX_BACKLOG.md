@@ -30,7 +30,7 @@ Status: ✅ fixed on this branch · ⬜ open
 | 8 | ✅ | **No "plan ended" state.** Client UI repeats the last week forever; week-overview API 404s and is swallowed; coach gets no "plan ends soon" warning. Highest-churn moment, unhandled. Now: `PLAN_ENDED` urgency + "Assign Next Plan" CTA, "final week" signal, client plan-complete celebration, unified week math. | High | M |
 | 9 | ✅ | **Coach can't see what actually happened.** Now: started-but-unfinished workouts appear in history ("Not finished"), and weight/rep deviations from the prescription show per workout ("Adjusted: Deadlift 185→155"). Flags on abandoned sessions surface in check-in review too. | High | M |
 | 10 | ✅ | **Double-send creates stacked check-ins.** `POST /api/check-ins` never checks for an open check-in; duplicates become invisible (UI shows only newest). Add a server-side guard. | High | S |
-| 11 | ✅ | **No edit/delete/cancel on check-ins.** Now: a still-unanswered check-in can be withdrawn (workspace + standalone page), and sent feedback is editable from check-in history (plan-adjustment flag and completion date preserved). | Medium | M |
+| 11 | ✅ | **No edit/delete/cancel on check-ins.** Now: a still-unanswered check-in can be unsent — an Undo window right after sending, a two-step Unsend on the waiting card (workspace + standalone page), and the waiting card can be hidden until the client responds — and sent feedback is editable from check-in history (plan-adjustment flag and completion date preserved). | Medium | M |
 | 12 | ⬜ | **"I'll adjust the plan" is untracked.** Client copy softened to "is adjusting" ✅; tracking actual follow-through (link the flag to a real plan edit, remind the coach) still open. | Medium | S–M |
 | 13 | ✅ | Silent message-send failure: input cleared before the request resolves, no maxLength (server caps 5000 → 400), no error toast. | High | S |
 | 14 | ✅ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false` — urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
@@ -54,7 +54,7 @@ Status: ✅ fixed on this branch · ⬜ open
 | 27 | ⬜ | Concurrent plan edits are last-write-wins (no version check); sample client pollutes roster counts server-side; invite list capped at 20 with no pagination; "expired" invites never persisted (dead enum value). | M |
 | 28 | ⬜ | Termination is silent for the client (plan/chat vanish, no explanation); no read-only view of past-client conversation history despite "nothing is deleted" copy. | M |
 | 29 | ⬜ | Loading states are bare spinners (no skeletons); success/error feedback inconsistent across mutations. | M |
-| 30 | ⬜ | No account deletion (soft-delete infra exists, no endpoint); one account can't be both coach and client; in-memory per-IP rate limiting resets per deploy. | M–L |
+| 30 | ⬜ | ~~No account deletion~~ ✅ (`DELETE /api/me` + account-menu dialog; ends relationships, revokes invites, scrubs the row); still open: one account can't be both coach and client; in-memory per-IP rate limiting resets per deploy. | M–L |
 
 ## P3 — Dead code & drift (cleanup)
 

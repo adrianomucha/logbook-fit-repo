@@ -26,12 +26,6 @@ const GroupLabel = ({ children }: { children: ReactNode }) => (
   </p>
 );
 
-const EmojiTile = ({ emoji }: { emoji?: string }) => (
-  <div className="w-9 h-9 rounded-lg bg-muted/60 flex items-center justify-center text-lg leading-none select-none shrink-0">
-    {emoji || '💪'}
-  </div>
-);
-
 const PlanMeta = ({ plan }: { plan: WorkoutPlan }) => (
   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mt-0.5">
     {metaLine(plan)}
@@ -163,7 +157,6 @@ export function AssignPlanModal({
           <div>
             <GroupLabel>Current plan</GroupLabel>
             <div className="flex items-center gap-3 rounded-xl bg-muted/40 p-3">
-              <EmojiTile emoji={currentPlan.emoji} />
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold truncate antialiased">{currentPlan.name}</p>
                 <PlanMeta plan={currentPlan} />
@@ -211,7 +204,6 @@ export function AssignPlanModal({
                     )}
                   >
                     <div className="flex items-center gap-3">
-                      <EmojiTile emoji={plan.emoji} />
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate antialiased">{plan.name}</p>
                         <PlanMeta plan={plan} />

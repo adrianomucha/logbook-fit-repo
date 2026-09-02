@@ -107,7 +107,6 @@ export function InlinePlanEditor({
         isFlat ? 'pb-2' : 'px-3 sm:px-6 pt-6 pb-2'
       )}>
         <div className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
-          <span className="text-lg shrink-0" aria-hidden="true">{plan.emoji || '💪'}</span>
           <span className="truncate">{plan.name}</span>
           <span className="text-xs text-muted-foreground font-normal shrink-0 tabular-nums">
             Week {currentWeekNum}

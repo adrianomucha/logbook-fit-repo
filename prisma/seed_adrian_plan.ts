@@ -155,7 +155,6 @@ async function main() {
       name: PLAN_NAME,
       description:
         "4-day hypertrophy split (revised v1.1). Double progression: start at the bottom of each rep range, add reps weekly to the top, then add a little weight and repeat. Leave 1–2 reps in the tank. Log time for planks and stretches.",
-      emoji: "💪",
       durationWeeks: DURATION_WEEKS,
       workoutsPerWeek: DAYS.length,
     },

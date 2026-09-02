@@ -156,20 +156,23 @@ export function ClientCheckIn() {
     }
   };
 
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  // Unsend is two-step (ask, then confirm) — it deletes the check-in outright,
+  // so a single stray click must never be enough.
+  const [confirmingUnsend, setConfirmingUnsend] = useState(false);
+  const [isUnsending, setIsUnsending] = useState(false);
 
-  const handleWithdrawCheckIn = async () => {
-    if (!activeCheckInId || isWithdrawing) return;
-    setIsWithdrawing(true);
+  const handleUnsendCheckIn = async () => {
+    if (!activeCheckInId || isUnsending) return;
+    setIsUnsending(true);
     try {
       await apiFetch(`/api/check-ins/${activeCheckInId}`, { method: 'DELETE' });
-      toast.success('Check-in withdrawn');
-      await refreshClient();
+      toast.success('Check-in unsent');
     } catch {
-      toast.error('Couldn’t withdraw the check-in. They may have just responded.');
-      await refreshClient();
+      toast.error(`Couldn’t unsend the check-in. ${firstName} may have just responded.`);
     } finally {
-      setIsWithdrawing(false);
+      setConfirmingUnsend(false);
+      setIsUnsending(false);
+      await refreshClient();
     }
   };
 
@@ -315,19 +318,49 @@ export function ClientCheckIn() {
               <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
               Awaiting response
             </span>
-            <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Waiting for {firstName}</h2>
-            <p className="text-sm text-muted-foreground text-pretty">
-              Check-in sent {sentAgo}. {firstName} hasn&apos;t responded yet.
-            </p>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-5 text-muted-foreground hover:text-destructive tap-target"
-              disabled={isWithdrawing}
-              onClick={handleWithdrawCheckIn}
-            >
-              {isWithdrawing ? 'Withdrawing…' : 'Withdraw check-in'}
-            </Button>
+            {confirmingUnsend ? (
+              <>
+                <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Unsend this check-in?</h2>
+                <p className="text-sm text-muted-foreground text-pretty">
+                  {firstName} won&apos;t see it. You can send a new one any time.
+                </p>
+                <div className="flex items-center justify-center gap-2 mt-5">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="tap-target"
+                    disabled={isUnsending}
+                    onClick={() => setConfirmingUnsend(false)}
+                  >
+                    Keep
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="tap-target"
+                    disabled={isUnsending}
+                    onClick={handleUnsendCheckIn}
+                  >
+                    {isUnsending ? 'Unsending…' : 'Unsend'}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Waiting for {firstName}</h2>
+                <p className="text-sm text-muted-foreground text-pretty">
+                  Check-in sent {sentAgo}. {firstName} hasn&apos;t responded yet.
+                </p>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="mt-5 text-muted-foreground tap-target"
+                  onClick={() => setConfirmingUnsend(true)}
+                >
+                  Unsend check-in
+                </Button>
+              </>
+            )}
           </SectionCard>
         </div>
 

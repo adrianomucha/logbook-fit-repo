@@ -54,10 +54,8 @@ export function PlanEditorDrawer({
   const [selectedWeek, setSelectedWeek] = useState(initialWeekIndex);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
 
-  // Plan name & emoji inline edit state
+  // Plan name inline edit state
   const [editingPlanName, setEditingPlanName] = useState(false);
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-  const emojiPickerRef = useRef<HTMLDivElement>(null);
 
   // Exercise editor drawer state
   const [exerciseDrawerOpen, setExerciseDrawerOpen] = useState(false);
@@ -268,33 +266,6 @@ export function PlanEditorDrawer({
     }
   };
 
-  // Commit emoji change to the API
-  const commitEmoji = async (emoji: string) => {
-    if (!plan || emoji === plan.emoji) return;
-    setShowEmojiPicker(false);
-    try {
-      await apiFetch(`/api/plans/${plan.id}`, {
-        method: 'PUT',
-        body: JSON.stringify({ emoji }),
-      });
-      onUpdatePlan({ ...plan, emoji, updatedAt: new Date().toISOString() });
-    } catch {
-      // silently fail — old emoji stays
-    }
-  };
-
-  // Close emoji picker on outside click
-  useEffect(() => {
-    if (!showEmojiPicker) return;
-    const handler = (e: MouseEvent) => {
-      if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) {
-        setShowEmojiPicker(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [showEmojiPicker]);
-
   // Commit the day name to the API on blur
   const commitDayName = async () => {
     if (!plan || !currentDay || localDayName === currentDay.name) return;
@@ -398,14 +369,12 @@ export function PlanEditorDrawer({
             <div className="p-4 border-b pr-4">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <span className="text-xl select-none">{plan.emoji || '💪'}</span>
                   <span className="truncate font-black tracking-tight">{plan.name}</span>
                 </SheetTitle>
                 <SheetDescription className="sr-only">Plan editor</SheetDescription>
               </SheetHeader>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
-              <div className="text-4xl select-none mb-1">📋</div>
               <p className="text-sm font-bold antialiased">No weeks in this plan</p>
               <p className="text-xs text-muted-foreground antialiased">
                 Try deleting it and creating a new one
@@ -427,35 +396,6 @@ export function PlanEditorDrawer({
               <SheetHeader>
                 <SheetTitle asChild>
                   <div className="flex items-center gap-2 min-w-0">
-                    {/* Emoji picker */}
-                    <div className="relative shrink-0" ref={emojiPickerRef}>
-                      <button
-                        onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                        className="text-lg leading-none p-1 -m-1 rounded-md hover:bg-muted active:scale-[0.96] transition-[background-color,transform]"
-                        aria-label="Change emoji"
-                      >
-                        {plan.emoji || '💪'}
-                      </button>
-                      {showEmojiPicker && (
-                        <div className="absolute top-full left-0 mt-2 bg-card border rounded-xl shadow-lg p-2 z-[100] animate-fade-in-up w-[220px]">
-                          <div className="grid grid-cols-6 gap-0.5">
-                            {['💪', '🏋️', '🔥', '⚡', '🎯', '🏆', '🦾', '💥', '🏃', '🧘', '🤸', '🚴', '🏊', '⭐', '🌟', '❤️', '🧠', '🍎'].map((e) => (
-                              <button
-                                key={e}
-                                onClick={() => commitEmoji(e)}
-                                className={cn(
-                                  'w-8 h-8 flex items-center justify-center rounded-md text-sm hover:bg-muted active:scale-[0.96] transition-[background-color,transform]',
-                                  e === plan.emoji && 'bg-muted ring-1 ring-foreground/20'
-                                )}
-                              >
-                                <span className="text-base leading-none">{e}</span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
                     {/* Plan name — click to edit */}
                     {editingPlanName ? (
                       <Input

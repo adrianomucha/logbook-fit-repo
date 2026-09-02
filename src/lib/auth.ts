@@ -1,9 +1,8 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import { loginLimiter } from "@/lib/rate-limit";
 import { isLockedDemoAccount } from "@/lib/demo";
+import { verifyCredentials } from "@/lib/credentials";
 import { verifySwitchToken } from "@/lib/switch-token";
 import { reportEnvProblemsOnce } from "@/lib/env-check";
 import {
@@ -24,63 +23,23 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
-        if (!credentials?.email || !credentials?.password) {
-          console.error("[AUTH] Missing credentials");
-          return null;
-        }
-
-        const email = credentials.email.trim().toLowerCase();
-
-        // Demo credentials are public (login page, repo), so hiding the
-        // buttons isn't enough — refuse the sign-in outright when demo
-        // mode is off. Thrown (not null) so the login page can say why:
-        // to a tester with the seeded credentials this otherwise looks
-        // exactly like a wrong password.
-        if (isLockedDemoAccount(email)) {
-          console.error("[AUTH] Demo account sign-in blocked (demo mode off)");
-          throw new Error(LOGIN_ERROR_DEMO_LOCKED);
-        }
-
-        // Rate limit by IP + email to prevent brute-force
+        // Same check as POST /api/auth/mobile/login (lib/credentials.ts).
+        // Refusals the login page may name are thrown (not null) so
+        // `signIn(..., { redirect: false })` surfaces them as `result.error`;
+        // everything else stays a generic null.
         const ip =
           (req?.headers && "x-forwarded-for" in req.headers
             ? (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
             : undefined) ?? "unknown";
-        // Log user ids rather than emails — emails are PII and login
-        // attempts (including attacker probes) shouldn't put them in logs.
-        const { allowed } = await loginLimiter(`${ip}:${email}`);
-        if (!allowed) {
-          console.error("[AUTH] Rate limited login attempt");
-          throw new Error(LOGIN_ERROR_RATE_LIMITED);
-        }
-
-        try {
-          const user = await prisma.user.findFirst({
-            where: { email, deletedAt: null },
-          });
-
-          if (!user) {
-            console.error("[AUTH] Login attempt for unknown email");
-            return null;
-          }
-
-          const passwordMatch = await bcrypt.compare(credentials.password, user.passwordHash);
-          if (!passwordMatch) {
-            console.error("[AUTH] Password mismatch for user:", user.id);
-            return null;
-          }
-
-          console.log("[AUTH] Login successful for user:", user.id);
-          return {
-            id: user.id,
-            email: user.email,
-            role: user.role,
-            name: user.name,
-          };
-        } catch (error) {
-          console.error("[AUTH] Error in authorize:", error);
-          return null;
-        }
+        const check = await verifyCredentials({
+          email: credentials?.email,
+          password: credentials?.password,
+          ip,
+        });
+        if (check.ok) return check.user;
+        if (check.reason === "demo_locked") throw new Error(LOGIN_ERROR_DEMO_LOCKED);
+        if (check.reason === "rate_limited") throw new Error(LOGIN_ERROR_RATE_LIMITED);
+        return null;
       },
     }),
     // Linked-account switch: redeems the short-lived token minted by

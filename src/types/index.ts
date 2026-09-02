@@ -33,7 +33,6 @@ export interface WorkoutPlan {
   id: string;
   name: string;
   description?: string;
-  emoji?: string;
   durationWeeks?: number;
   workoutsPerWeek?: number;
   weeks: WorkoutWeek[];
@@ -175,7 +174,6 @@ export type Role = 'coach' | 'client';
 export interface PlanSetupFormData {
   name: string;
   description: string;
-  emoji: string;
   durationWeeks: number;
   workoutsPerWeek: number;
 }
