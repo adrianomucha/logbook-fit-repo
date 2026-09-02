@@ -18,7 +18,8 @@ const isSectionId = (value: unknown): value is SettingsSectionId =>
 
 /**
  * The client's settings — the web's /client/settings: one column under the
- * app header, volt-underlined section tabs, the pane in a card. Deep-links
+ * app header, volt-underlined section tabs, the pane in a card. Back returns
+ * to the page that opened it (Account, or the photo nudge). Deep-links
  * as /client/settings?section=… so the photo nudge can land on Profile.
  */
 export default function SettingsScreen() {
@@ -30,6 +31,13 @@ export default function SettingsScreen() {
   useEffect(() => {
     if (isSectionId(requested)) setSection(requested);
   }, [requested]);
+
+  // Back to wherever Settings was opened from (the account page, the photo
+  // nudge on Today); a cold deep link has nowhere to go but Today.
+  const goBack = () => {
+    if (router.canGoBack()) router.back();
+    else router.replace('/client');
+  };
 
   return (
     <View className="flex-1 bg-background">
@@ -44,13 +52,13 @@ export default function SettingsScreen() {
           <View className="gap-4">
             <View>
               <Pressable
-                onPress={() => router.push('/client')}
+                onPress={goBack}
                 hitSlop={8}
                 accessibilityRole="button"
                 className="-ml-1 mb-1 min-h-[36px] flex-row items-center gap-0.5 self-start active:opacity-70"
               >
                 <Feather name="chevron-left" size={14} color="#737373" />
-                <Text className="font-mono-medium text-[11px] uppercase tracking-[1.3px] text-muted-foreground">Today</Text>
+                <Text className="font-mono-medium text-[11px] uppercase tracking-[1.3px] text-muted-foreground">Back</Text>
               </Pressable>
               <Text className="font-sans-bold text-2xl tracking-tight text-foreground">Settings</Text>
             </View>
