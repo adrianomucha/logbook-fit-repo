@@ -222,7 +222,7 @@ export function ClientCheckIn() {
         <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
           <SectionCard className="max-w-md mx-auto text-center py-12 animate-enter">
             <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
-            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can&apos;t find this client</h2>
+            <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can’t find this client</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">They may have been removed, or the link might be outdated.</p>
             <Button onClick={() => router.push('/coach/clients')} className="active:scale-[0.96] transition-transform duration-150">Back to Clients</Button>
           </SectionCard>
@@ -253,7 +253,7 @@ export function ClientCheckIn() {
             </p>
             <div className="space-y-2">
               <Button onClick={handleBack} className="w-full active:scale-[0.96] transition-transform duration-150">
-                Back to {firstName}&apos;s profile
+                Back to {firstName}’s profile
               </Button>
               <Button variant="ghost" onClick={() => router.push('/coach')} className="w-full text-muted-foreground">
                 Back to dashboard
@@ -323,7 +323,7 @@ export function ClientCheckIn() {
               <>
                 <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Unsend this check-in?</h2>
                 <p className="text-sm text-muted-foreground text-pretty">
-                  {firstName} won&apos;t see it. You can send a new one any time.
+                  {firstName} won’t see it. You can send a new one any time.
                 </p>
                 <div className="flex items-center justify-center gap-2 mt-5">
                   <Button
@@ -350,7 +350,7 @@ export function ClientCheckIn() {
               <>
                 <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Waiting for {firstName}</h2>
                 <p className="text-sm text-muted-foreground text-pretty">
-                  Check-in sent {sentAgo}. {firstName} hasn&apos;t responded yet.
+                  Check-in sent {sentAgo}. {firstName} hasn’t responded yet.
                 </p>
                 <Button
                   variant="ghost"
@@ -405,7 +405,7 @@ export function ClientCheckIn() {
           {/* Client response — the page's headline data: bare mono-labelled
               vitals, no box-in-box */}
           <section className="animate-enter" style={{ animationDelay: '100ms' }}>
-            <SectionLabel>{firstName}&apos;s response</SectionLabel>
+            <SectionLabel>{firstName}’s response</SectionLabel>
             <SectionCard>
               {/* Answers in the brand's instrument-readout voice — mono caps,
                   like the profile's vitals; the emoji is the client's own pick
@@ -509,7 +509,7 @@ export function ClientCheckIn() {
                 checked={planAdjustment}
                 onCheckedChange={setPlanAdjustment}
               />
-              <span className="text-sm">I&apos;ll adjust the plan based on this feedback</span>
+              <span className="text-sm">I’ll adjust the plan based on this feedback</span>
             </label>
 
             {/* Submit — the page's one volt moment */}
@@ -523,7 +523,7 @@ export function ClientCheckIn() {
               Complete check-in
             </Button>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground text-center mt-2.5 antialiased">
-              Closes this check-in · saved to {firstName}&apos;s history
+              Closes this check-in · saved to {firstName}’s history
             </p>
           </SectionCard>
         </section>

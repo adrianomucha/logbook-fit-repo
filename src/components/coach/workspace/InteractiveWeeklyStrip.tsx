@@ -352,7 +352,9 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
       {/* Status indicator */}
       <div className="shrink-0 flex items-center">
         {isCompleted && (
-          <svg className="w-5 h-5 text-success" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
+          /* The AA text cut of the success hue: the fill shade is 2.3:1 on
+              white, under the 3:1 a lone status icon needs */
+          <svg className="w-5 h-5 text-success-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
             <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
         )}

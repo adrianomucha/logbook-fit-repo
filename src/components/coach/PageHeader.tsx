@@ -23,7 +23,9 @@ export function PageHeader({ title, subtitle, action, breadcrumb }: PageHeaderPr
             {breadcrumb.label}
           </button>
         )}
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight antialiased truncate">
+        {/* Wrap on phones: beside the action block a truncated name has
+            nowhere else on the page to be read in full */}
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight antialiased break-words sm:truncate">
           {title}
         </h1>
         {subtitle != null && (

@@ -284,7 +284,7 @@ export function InlineCheckInReview({
               Sent to {firstName}
             </h3>
             <p className="text-sm text-muted-foreground antialiased">
-              They&apos;ll see it next time they open the app.
+              They’ll see it next time they open the app.
             </p>
             {/* Undo window — unsend outright, no confirm: the coach just
                 pressed Send and is still looking at this exact card */}
@@ -336,7 +336,7 @@ export function InlineCheckInReview({
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold antialiased">Time for a check-in?</p>
                   <p className="text-sm text-muted-foreground antialiased">
-                    See how {firstName}&apos;s training is going.
+                    See how {firstName}’s training is going.
                   </p>
                 </div>
               </div>
@@ -392,14 +392,14 @@ export function InlineCheckInReview({
                   <>
                     <h3 className="font-semibold antialiased">Unsend this check-in?</h3>
                     <p className="text-sm text-muted-foreground antialiased">
-                      {firstName} won&apos;t see it. You can send a new one any time.
+                      {firstName} won’t see it. You can send a new one any time.
                     </p>
                   </>
                 ) : (
                   <>
                     <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
                     <p className="text-sm text-muted-foreground antialiased">
-                      Check-in sent <span className="tabular-nums">{sentAgo}</span> — you&apos;ll review their answers here.
+                      Check-in sent <span className="tabular-nums">{sentAgo}</span> — you’ll review their answers here.
                     </p>
                   </>
                 )}
@@ -586,7 +586,7 @@ export function InlineCheckInReview({
               checked={planAdjustment}
               onCheckedChange={(checked) => setPlanAdjustment(!!checked)}
             />
-            <span className="text-sm">I&apos;ll adjust the plan based on this feedback</span>
+            <span className="text-sm">I’ll adjust the plan based on this feedback</span>
           </label>
 
           {/* Submit — the section's one volt moment */}

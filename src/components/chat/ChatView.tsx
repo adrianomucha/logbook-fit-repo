@@ -482,7 +482,7 @@ export function ChatView({
             <button
               onClick={() => scrollToBottom(false)}
               className={cn(
-                'flex items-center gap-1.5 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200 touch-manipulation rounded-full tap-target',
+                'flex items-center gap-1.5 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200 motion-reduce:animate-none touch-manipulation rounded-full tap-target',
                 isBrand
                   ? 'bg-brand text-brand-foreground hover:bg-brand/90'
                   : 'bg-foreground text-background hover:bg-foreground/90'
