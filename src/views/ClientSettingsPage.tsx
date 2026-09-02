@@ -63,26 +63,29 @@ export function ClientSettingsPage() {
           </h1>
         </div>
 
-        {/* Section tabs — brand underline, matching the nav's own tabs */}
+        {/* Section tabs — brand underline, matching the nav's own tabs.
+            Fixed segments, never a scroller: four tabs share the row, so
+            there is nothing to pan and the bar stays put under a thumb.
+            Icons yield below 400px so the labels always fit. */}
         <nav aria-label="Settings sections" className="animate-enter">
-          <ul className="flex gap-5 overflow-x-auto scrollbar-hide -mx-4 px-4 border-b border-border">
+          <ul className="flex border-b border-border sm:gap-2">
             {SETTINGS_SECTIONS.map(({ id, label, icon: Icon }) => (
-              <li key={id} className="shrink-0">
+              <li key={id} className="flex-1 min-w-0 sm:flex-none">
                 <Link
                   href={`/client/settings?section=${id}`}
                   replace
                   scroll={false}
                   aria-current={section === id ? 'page' : undefined}
                   className={cn(
-                    'inline-flex items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
+                    'inline-flex w-full items-center justify-center gap-1.5 sm:justify-start sm:gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
                     'transition-colors touch-manipulation tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                    'border-b-2 px-0.5 pb-2.5 pt-1',
+                    'border-b-2 px-1 sm:px-0.5 pb-2.5 pt-1',
                     section === id
                       ? 'border-brand text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                  <Icon className="hidden min-[400px]:block h-3.5 w-3.5 shrink-0" aria-hidden="true" />
                   {label}
                 </Link>
               </li>
