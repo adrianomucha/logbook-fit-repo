@@ -201,14 +201,20 @@ export function AccountMenu({ className }: { className?: string }) {
             Sign out
           </DropdownMenuItem>
 
-          <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className={cn(itemClass, 'text-destructive focus:text-destructive')}
-            onSelect={() => setIsDeleteOpen(true)}
-          >
-            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-            Delete account
-          </DropdownMenuItem>
+          {/* Clients only: coaches delete from Settings → Account, where a
+              destructive action isn't one tap below "Sign out" */}
+          {user?.role === 'CLIENT' && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className={cn(itemClass, 'text-destructive focus:text-destructive')}
+                onSelect={() => setIsDeleteOpen(true)}
+              >
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                Delete account
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
 

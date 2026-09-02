@@ -5,10 +5,20 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Bell, Camera, KeyRound, Loader2, UserRound, Wrench, type LucideIcon } from 'lucide-react';
+import {
+  Bell,
+  Camera,
+  KeyRound,
+  Loader2,
+  Trash2,
+  UserRound,
+  Wrench,
+  type LucideIcon,
+} from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { NotificationToggle } from '@/components/notifications/NotificationToggle';
+import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog';
 import { PasswordRules } from '@/components/auth/PasswordRules';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -309,9 +319,10 @@ function ProfileSection() {
   );
 }
 
-/** Read-only account facts: email, timezone, membership date. */
+/** Read-only account facts, plus the one destructive action. */
 function AccountSection() {
   const { user } = useCurrentUser();
+  const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const rows: { label: string; value: string; hint?: string }[] = [
     { label: 'Email', value: user?.email ?? '—', hint: 'The address you sign in with.' },
@@ -348,6 +359,34 @@ function AccountSection() {
           </div>
         ))}
       </dl>
+
+      {/* The one destructive action, kept out of the account menu and behind
+          its own dialog (type DELETE + password). The dark: overrides match
+          FormError — dark-scope --destructive is a fill shade, unreadable
+          as text on black. */}
+      <div className="mt-4 rounded-lg border border-destructive/30 p-4 dark:border-red-400/30">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive antialiased dark:text-red-300">
+          Danger zone
+        </p>
+        <p className="text-xs text-muted-foreground leading-relaxed mt-1.5 text-pretty">
+          Deleting your account ends every client relationship, takes your plans
+          and exercise library with it, and can’t be undone.
+        </p>
+        <Button
+          variant="outline"
+          onClick={() => setIsDeleteOpen(true)}
+          className="mt-3 border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-500/10 dark:hover:text-red-300 active:scale-[0.96] transition-transform duration-150"
+        >
+          <Trash2 className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+          Delete account…
+        </Button>
+      </div>
+
+      <DeleteAccountDialog
+        isOpen={isDeleteOpen}
+        onClose={() => setIsDeleteOpen(false)}
+        role={user?.role}
+      />
     </div>
   );
 }
