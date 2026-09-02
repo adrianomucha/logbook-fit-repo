@@ -54,16 +54,13 @@ export function CoachSettingsPage() {
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 lg:gap-8 animate-enter">
           {/* Section rail: underline tabs on mobile (the nav's idiom), a
-              side-rail list on desktop. Same voice as the header tabs. */}
+              side-rail list on desktop. Fixed segments below lg — four tabs
+              share the row, so nothing scrolls or pans under a thumb; icons
+              yield below 400px so the labels always fit. */}
           <nav aria-label="Settings sections" className="lg:w-44 shrink-0">
-            <ul
-              className={cn(
-                'flex gap-5 overflow-x-auto scrollbar-hide -mx-3 px-3 border-b border-border',
-                'lg:flex-col lg:gap-1 lg:overflow-visible lg:mx-0 lg:px-0 lg:border-b-0'
-              )}
-            >
+            <ul className="flex border-b border-border lg:flex-col lg:gap-1 lg:border-b-0">
               {SETTINGS_SECTIONS.map(({ id, label, icon: Icon }) => (
-                <li key={id} className="shrink-0">
+                <li key={id} className="flex-1 min-w-0 lg:flex-none">
                   {/* Real links: the sections are deep-linkable URLs, so they
                       earn cmd-click and copy-link for free */}
                   <Link
@@ -72,16 +69,19 @@ export function CoachSettingsPage() {
                     scroll={false}
                     aria-current={section === id ? 'page' : undefined}
                     className={cn(
-                      'inline-flex w-full items-center gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
+                      'inline-flex w-full items-center justify-center gap-1.5 lg:justify-start lg:gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
                       'transition-colors touch-manipulation tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                      'border-b-2 px-0.5 pb-2.5 pt-1',
+                      'border-b-2 px-1 pb-2.5 pt-1',
                       'lg:border-b-0 lg:border-s-2 lg:px-3 lg:py-2',
                       section === id
                         ? 'border-foreground text-foreground'
                         : 'border-transparent text-muted-foreground hover:text-foreground'
                     )}
                   >
-                    <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    <Icon
+                      className="hidden min-[400px]:block h-3.5 w-3.5 shrink-0"
+                      aria-hidden="true"
+                    />
                     {label}
                   </Link>
                 </li>
