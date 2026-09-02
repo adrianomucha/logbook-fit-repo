@@ -11,6 +11,12 @@
       ],
       "@logbook/shared/*": [
         "../packages/shared/src/*"
+      ],
+      "date-fns": [
+        "./node_modules/date-fns"
+      ],
+      "zod": [
+        "./node_modules/zod"
       ]
     }
   },
