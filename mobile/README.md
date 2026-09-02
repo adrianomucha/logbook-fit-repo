@@ -36,7 +36,7 @@ app/                 expo-router routes — mirrors the web's /client/* paths so
   index.tsx          front door: login / coach / client
   login.tsx
   coach.tsx          "your workspace is on the web"
-  client/            tabs: Today, Chat, Progress (+ workout/[dayId])
+  client/            tabs: Today, Chat, Progress; workout/[dayId] is the live session
 src/
   lib/auth.tsx       session provider (keychain, refresh, 401 → sign out) + SWR config
   lib/api.ts         @logbook/shared API client with origin + bearer

@@ -17,7 +17,7 @@ export default function ClientLayout() {
         tabBarActiveTintColor: '#0a0a0a',
         tabBarInactiveTintColor: '#737373',
         tabBarStyle: { borderTopColor: '#e5e5e5' },
-        tabBarLabelStyle: { fontFamily: 'IBMPlexMono_500Medium', fontSize: 10, letterSpacing: 1, textTransform: 'uppercase' },
+        tabBarLabelStyle: { fontFamily: 'IBMPlexMono_500Medium', fontSize: 10, letterSpacing: 1.2, textTransform: 'uppercase' },
       }}
     >
       <Tabs.Screen

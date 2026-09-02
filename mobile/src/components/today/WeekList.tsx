@@ -62,11 +62,11 @@ export function WeekList({ weekNumber, durationWeeks, planName, days, onOpenDay 
                   <Feather name="check" size={14} color="#21c45d" />
                 </View>
               ) : isInProgress ? (
-                <Text className="rounded-full bg-warning/15 px-2 py-1 font-mono-bold text-[10px] uppercase tracking-[1.5px] text-warning-text">
+                <Text className="rounded-full bg-warning/15 px-2 py-1 font-mono-bold text-[10px] uppercase tracking-[1.4px] text-warning-text">
                   In progress
                 </Text>
               ) : isCurrent ? (
-                <Text className="rounded-full bg-brand px-2 py-1 font-mono-bold text-[10px] uppercase tracking-[1.5px] text-brand-foreground">
+                <Text className="rounded-full bg-brand px-2 py-1 font-mono-bold text-[10px] uppercase tracking-[1.4px] text-brand-foreground">
                   Up next
                 </Text>
               ) : null}

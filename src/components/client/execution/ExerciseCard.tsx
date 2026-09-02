@@ -2,8 +2,8 @@ import { useId } from 'react';
 import { Input } from '@/components/ui/input';
 import { Check, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { formatDuration } from '@/lib/reps';
-import type { LastPerformance, WorkoutExercise } from '@/types/api';
+import type { WorkoutExercise } from '@/types/api';
+import { formatLastCompact } from '@logbook/shared/workout-execution';
 import {
   SetRow,
   SET_GRID,
@@ -16,15 +16,6 @@ import {
   getCompletedSetsCount,
   isSetCompleted,
 } from '@/hooks/api/useWorkoutExecution';
-
-/** Compact last-session cell for the set table: "52.5×8" / "12" / "60s" — empty if nothing logged. */
-function formatLastCompact(p: LastPerformance, isTime: boolean): string {
-  const repsPart = p.reps != null ? (isTime ? formatDuration(p.reps) : String(p.reps)) : null;
-  if (p.weight != null) {
-    return repsPart != null ? `${p.weight}×${repsPart}` : String(p.weight);
-  }
-  return repsPart ?? '';
-}
 
 interface ExerciseCardProps {
   exercise: WorkoutExercise;

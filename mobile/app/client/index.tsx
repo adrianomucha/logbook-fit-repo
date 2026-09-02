@@ -78,7 +78,7 @@ export default function TodayScreen() {
   const header = (
     <View className="pt-2">
       <Eyebrow>{format(new Date(), 'EEEE, MMMM d')}</Eyebrow>
-      <Text className="mt-1.5 font-sans-bold text-[28px] leading-8 text-foreground" numberOfLines={1}>
+      <Text className="mt-1.5 font-sans-bold text-2xl leading-7 tracking-tight text-foreground" numberOfLines={1}>
         {firstName ? `${greeting()}, ${firstName}` : greeting()}
       </Text>
     </View>

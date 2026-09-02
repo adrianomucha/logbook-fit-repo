@@ -4,7 +4,7 @@ import { ActivityIndicator, Pressable, Text, View, type PressableProps } from 'r
 /** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
 export function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <Text className={`font-mono text-[10px] uppercase tracking-[2px] text-muted-foreground ${className}`}>
+    <Text className={`font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground ${className}`}>
       {children}
     </Text>
   );
@@ -44,7 +44,7 @@ export function Button({ children, variant = 'primary', loading, disabled, class
       {loading ? (
         <ActivityIndicator color={variant === 'brand' ? '#1e2702' : variant === 'primary' ? '#fafafa' : '#737373'} />
       ) : (
-        <Text className={`font-sans-bold text-sm uppercase tracking-[1.5px] ${text}`}>{children}</Text>
+        <Text className={`font-sans-bold text-sm uppercase tracking-[0.7px] ${text}`}>{children}</Text>
       )}
     </Pressable>
   );
