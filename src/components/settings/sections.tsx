@@ -395,7 +395,7 @@ export function AccountSection({ role }: { role: SettingsRole }) {
           its own dialog (type DELETE + password). The dark: overrides match
           FormError — dark-scope --destructive is a fill shade, unreadable
           as text on black. */}
-      <div className="mt-4 rounded-lg border border-destructive/30 p-4 dark:border-red-400/30">
+      <div className="pt-4 border-t border-border/60">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive antialiased dark:text-red-300">
           Danger zone
         </p>
