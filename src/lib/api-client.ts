@@ -1,38 +1,11 @@
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string
-  ) {
-    super(message);
-    this.name = "ApiError";
-  }
-}
+// The web's API client: same origin, cookie auth — nothing to configure.
+// The client itself lives in @logbook/shared so the native app can build one
+// with its own origin and bearer token.
+import { createApiClient } from "@logbook/shared/api-client";
 
-export const fetcher = async <T = unknown>(url: string): Promise<T> => {
-  // `no-store` is load-bearing, not hygiene: iOS Safari (and installed PWAs
-  // in particular) will happily answer a repeat GET from its heuristic cache,
-  // which is how a polled chat thread can sit frozen until the app is closed
-  // and reopened.
-  const res = await fetch(url, { cache: "no-store" });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new ApiError(res.status, body.error || "Request failed");
-  }
-  return res.json();
-};
+export { ApiError } from "@logbook/shared/api-client";
 
-export async function apiFetch<T = unknown>(
-  url: string,
-  options?: RequestInit
-): Promise<T> {
-  const res = await fetch(url, {
-    cache: "no-store",
-    ...options,
-    headers: { "Content-Type": "application/json", ...options?.headers },
-  });
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({ error: "Unknown error" }));
-    throw new ApiError(res.status, body.error || "Request failed");
-  }
-  return res.json();
-}
+const client = createApiClient();
+
+export const fetcher = client.fetcher;
+export const apiFetch = client.apiFetch;

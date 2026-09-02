@@ -155,6 +155,9 @@ It answers `{ok, relationshipsScanned, checkInsCreated, failures}` and logs
 ## Project Structure
 
 ```
+packages/shared/      @logbook/shared — types, zod schemas, adapters and pure
+                      helpers used by both the web app and the native app
+                      (see packages/shared/README.md)
 src/
 ├── app/
 │   ├── api/              # 33 API route handlers
@@ -175,10 +178,12 @@ src/
 ├── views/                # Page-level view components
 ├── lib/
 │   ├── auth.ts           # NextAuth config
+│   ├── session.ts        # Cookie or bearer → Session, for every API route
 │   ├── prisma.ts         # Prisma singleton
 │   ├── scoping.ts        # RBAC scoping utilities
-│   └── middleware/        # withCoach / withClient guards
-└── types/
+│   ├── middleware/        # withCoach / withClient guards
+│   └── reps.ts, …        # One-line re-exports of the @logbook/shared modules
+└── types/                # Re-exports of @logbook/shared/types
 prisma/
 ├── schema.prisma         # 16 models, 7 enums
 ├── seed.ts               # Demo data seeder

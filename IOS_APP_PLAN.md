@@ -147,7 +147,7 @@ bearer token, and the check-in loop can reach a phone through APNs.
 
 ## 3. Phase 2 — The client app
 
-### 3.1 Extract `@logbook/shared` — M
+### 3.1 Extract `@logbook/shared` — M ✅ done
 
 Move, with re-export shims left behind:
 

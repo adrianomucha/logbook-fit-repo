@@ -28,6 +28,12 @@
       "@/*": [
         "./src/*"
       ],
+      "@logbook/shared/types": [
+        "./packages/shared/src/types/index.ts"
+      ],
+      "@logbook/shared/*": [
+        "./packages/shared/src/*"
+      ],
       "@prisma/*": [
         "./generated/prisma/*"
       ]
@@ -42,6 +48,7 @@
   ],
   "exclude": [
     "node_modules",
+    "mobile",
     "prisma/seed.ts",
     "prisma.config.ts"
   ]

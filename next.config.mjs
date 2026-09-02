@@ -32,6 +32,11 @@ const securityHeaders = [
 ];
 
 const nextConfig = {
+  // @logbook/shared is TypeScript source shared with the native app (see
+  // packages/shared/README.md); compile it in place instead of expecting a
+  // build output.
+  transpilePackages: ["@logbook/shared"],
+  eslint: { dirs: ["src", "packages"] },
   // The Documents folder is iCloud-synced, which evicts build artifacts
   // mid-compilation. The build dir must stay inside the project (Next.js runs
   // the build's require() from distDir, so node_modules has to be reachable by
