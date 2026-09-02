@@ -265,29 +265,34 @@ export default function WorkoutScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-background" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {/* Header — stays put while the list scrolls */}
-      <View className="border-b border-border bg-background px-4 pb-3" style={{ paddingTop: insets.top }}>
+      {/* Header — the web's WorkoutHeader: back + count row, eyebrow, full title, volt progress bar */}
+      <View className="border-b border-border bg-background px-4 pb-4" style={{ paddingTop: insets.top }}>
         <View className="h-12 flex-row items-center justify-between">
-          <Pressable onPress={goBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back" className="-ml-2 h-11 w-11 items-center justify-center">
-            <Feather name="arrow-left" size={22} color="#0a0a0a" />
+          <Pressable onPress={goBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back" className="-ml-2 h-11 w-11 items-center justify-center active:opacity-70">
+            <Feather name="arrow-left" size={20} color="#0a0a0a" />
           </Pressable>
-          <View className="flex-row items-center gap-3">
+          <View className="flex-row items-center gap-1">
             {isReadOnly ? (
-              <Pressable onPress={onRestartPress} disabled={isRestarting} hitSlop={8} className="flex-row items-center gap-1.5">
-                <Feather name="rotate-ccw" size={14} color="#737373" />
-                <Eyebrow>Restart</Eyebrow>
+              <Pressable onPress={onRestartPress} disabled={isRestarting} hitSlop={8} accessibilityRole="button" accessibilityLabel="Restart workout" className="h-10 w-10 items-center justify-center active:opacity-70">
+                <Feather name="rotate-ccw" size={18} color="#737373" />
               </Pressable>
             ) : null}
-            <Text className="font-mono text-xs text-muted-foreground">
-              {stats.exercisesDone}/{stats.exercisesTotal}
+            <Text className="font-mono-bold text-sm text-foreground">
+              {stats.exercisesDone}
+              <Text className="text-muted-foreground">/{stats.exercisesTotal}</Text>
             </Text>
           </View>
         </View>
         {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
-        <Text className="mt-1 font-sans-bold text-xl tracking-tight text-foreground" numberOfLines={2}>
+        <Text className="mt-1 font-sans-bold text-2xl leading-7 tracking-tight text-foreground">
           {stripDayPrefix(day.name ?? 'Workout')}
         </Text>
-        <View className="mt-3 h-1 overflow-hidden rounded-full bg-muted">
+        <View
+          accessibilityRole="progressbar"
+          accessibilityLabel="Workout progress"
+          accessibilityValue={{ min: 0, max: stats.exercisesTotal, now: stats.exercisesDone }}
+          className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-muted"
+        >
           <View className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
         </View>
       </View>
