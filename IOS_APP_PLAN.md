@@ -190,8 +190,7 @@ Each maps 1:1 onto endpoints that exist today.
 | 4 | Check-in respond + history ✅ | `GET /api/client/check-ins`, `GET /api/check-ins/[id]`, `PUT /api/check-ins/[id]/client-respond` | `views/ClientCheckIn.tsx`, `ClientCheckInForm.tsx` | M |
 | 5 | Chat with coach (tab 2) ✅ | `GET /api/messages/[userId]`, `POST /api/messages`, `GET /api/messages/unread` | `components/chat/ChatView.tsx`, `hooks/api/useMessages.ts` | M |
 | 6 | Progress (tab 3) ✅ | `GET /api/client/progress` | `components/client/progress/*` | S |
-| 7 | Account menu: feedback, sign out, timezone sync ✅ | `PUT /api/account/timezone`, `POST /api/feedback` | `AccountMenu.tsx` | S |
-| 7b | Settings: profile photo + name, account facts + **delete account** (danger zone), password, alerts ✅ | `PUT/DELETE /api/account/avatar`, `PUT /api/account/profile`, `PUT /api/account/password`, `POST/DELETE /api/push/subscription`, `DELETE /api/me` | `views/ClientSettingsPage.tsx`, `components/settings/sections.tsx`, `NotificationPreferenceTile.tsx` | M |
+| 7 | Account (native grouped-list stack): profile card → Edit Profile (photo, name), account facts, Change Password, message alerts, feedback, sign out, **delete account** ✅ | `PUT/DELETE /api/account/avatar`, `PUT /api/account/profile`, `PUT /api/account/password`, `PUT /api/account/timezone`, `POST/DELETE /api/push/subscription`, `POST /api/feedback`, `DELETE /api/me` | `AccountMenu.tsx`, `views/ClientSettingsPage.tsx`, `components/settings/sections.tsx` (same endpoints; the *layout* follows the HIG, not the web — see the parity rule) | M |
 | 8 | Empty / edge states: no coach yet, awaiting plan, plan ended | already in the `week-overview` payload (`planEnded`) and `/api/me` | `WelcomeAwaitingPlan.tsx`, `SessionCompleteCard.tsx` | S |
 
 Port the *hook logic* nearly verbatim — `useWorkoutExecution`'s single-flight
@@ -211,6 +210,15 @@ pass. From here, a change to a client-facing web screen ports to `mobile/`
 in the same PR where practical; anything that is logic rather than render
 goes into `@logbook/shared` first (`set-timer`, `no-widows`, …) so both
 apps run the same code.
+
+The one deliberate exception is Account/Settings: it keeps the web's
+endpoints, copy and fields but takes the iOS shape — a native navigation
+stack (large title, back chevrons, swipe back), inset-grouped lists with
+44pt rows, an action sheet for the photo, Save in the navigation bar —
+because a tabbed settings page reads as a website on a phone, and Apple's
+Human Interface Guidelines are what App Review and users measure it by.
+Text never drops below 11pt (the tab bar keeps Apple's own 10pt label
+size); body copy is 17pt in rows and 13pt in footers; Dynamic Type stays on.
 
 Toolchain notes from the scaffold (2026-09-02): Expo SDK 57, expo-router,
 NativeWind 4, TypeScript 6. `npx expo install` can't reach Expo's API from a

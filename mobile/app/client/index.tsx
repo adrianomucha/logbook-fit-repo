@@ -144,7 +144,7 @@ export default function TodayScreen() {
           <PhotoNudge
             clientName={user?.name ?? ''}
             coachName={coach.user.name ?? 'Your coach'}
-            onAddPhoto={() => router.push('/client/settings?section=profile')}
+            onAddPhoto={() => router.push('/client/account/profile')}
           />
         ) : null}
       </Screen>
