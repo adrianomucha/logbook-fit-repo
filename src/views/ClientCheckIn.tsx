@@ -127,7 +127,12 @@ export function ClientCheckIn() {
   const responseRef = useRef<HTMLTextAreaElement>(null);
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => {
-    if (showSuccess) successHeadingRef.current?.focus();
+    if (!showSuccess) return;
+    // Focus announces the confirmation; preventScroll stops the browser
+    // from scrolling the heading up under the sticky header (which hid the
+    // check icon on phones). The page top shows the whole card.
+    window.scrollTo({ top: 0 });
+    successHeadingRef.current?.focus({ preventScroll: true });
   }, [showSuccess]);
 
   const isLoading = isClientLoading || (activeCheckInId && isCheckInLoading);
