@@ -116,30 +116,34 @@ export function WelcomeAwaitingPlan({
       )}
 
       {/* Photo nudge — the coach sees the client as a monogram on their
-          roster until this is set. Quieter than the say-hi card: one row,
-          the monogram they'd otherwise be, and a small outline action. */}
+          roster until this is set. Quieter than the say-hi card: the
+          monogram they'd otherwise be, one line, and a small outline action.
+          The button sits beside the text where there's room and drops
+          under it on a phone, so the title never wraps around it. */}
       {!hasPhoto && (
-        <div className="flex items-center gap-3 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3.5">
-          <span
-            className={cn(
-              'w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold select-none',
-              avatarColor(clientName)
-            )}
-            aria-hidden="true"
-          >
-            {firstName.charAt(0).toUpperCase()}
-          </span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold leading-snug antialiased">Put a face to your name</p>
-            <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed antialiased">
-              {coachFirstName} sees this on your card. A photo helps.
-            </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3.5">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            <span
+              className={cn(
+                'w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-sm font-bold select-none',
+                avatarColor(clientName)
+              )}
+              aria-hidden="true"
+            >
+              {firstName.charAt(0).toUpperCase()}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold leading-snug antialiased">Put a face to your name</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed antialiased">
+                {coachFirstName} sees this on your card. A photo helps.
+              </p>
+            </div>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={onAddPhoto}
-            className="shrink-0 active:scale-[0.96] transition-transform duration-150"
+            className="shrink-0 self-start sm:self-auto ms-12 sm:ms-0 active:scale-[0.96] transition-transform duration-150"
           >
             <Camera className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
             Add photo
