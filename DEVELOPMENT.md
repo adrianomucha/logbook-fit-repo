@@ -74,6 +74,15 @@ Gotchas:
 - Client-side crashes are reported to `POST /api/client-errors` and logged as
   `[CLIENT_ERROR_ALERT]` — include that tag in your log alert too.
 
+## Native app
+
+The iOS app lives in `mobile/` (Expo / React Native) and is its own npm
+project with its own lockfile — `cd mobile && npm install && npx expo start`.
+It consumes `packages/shared` as source and talks to the API with a bearer
+token (next section). `mobile/README.md` has the layout and the no-Xcode
+checks (`npm run typecheck`, `npm run export:ios`); `IOS_APP_PLAN.md` has the
+roadmap and status.
+
 ## Native app auth (bearer tokens)
 
 Browsers hold the NextAuth session in a cookie. The iOS app has no cookie
@@ -155,6 +164,7 @@ It answers `{ok, relationshipsScanned, checkInsCreated, failures}` and logs
 ## Project Structure
 
 ```
+mobile/               The iOS app (Expo / React Native) — own package.json
 packages/shared/      @logbook/shared — types, zod schemas, adapters and pure
                       helpers used by both the web app and the native app
                       (see packages/shared/README.md)
