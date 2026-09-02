@@ -491,8 +491,12 @@ export function UnifiedClientProfile() {
   // ---- Loading State ----
   if (isLoadingClient) {
     return (
-      <div className="min-h-dvh bg-background flex items-center justify-center animate-enter">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      <div
+        className="min-h-dvh bg-background flex items-center justify-center animate-enter"
+        role="status"
+      >
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" aria-hidden="true" />
+        <span className="sr-only">Loading client</span>
       </div>
     );
   }
@@ -830,6 +834,7 @@ export function UnifiedClientProfile() {
                   <button
                     key={tab.id}
                     onClick={() => setSecondaryTab(tab.id)}
+                    aria-current={secondaryTab === tab.id ? 'true' : undefined}
                     className={cn(
                       'pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target whitespace-nowrap',
                       secondaryTab === tab.id
@@ -846,7 +851,9 @@ export function UnifiedClientProfile() {
                       tab.label
                     )}
                     {'count' in tab && tab.count > 0 && (
-                      <span className="ms-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-muted-foreground">
+                      /* foreground/70, not muted-foreground: on bg-muted the
+                          latter measures 4.35:1 at 9px */
+                      <span className="ms-1.5 inline-flex items-center justify-center min-w-[18px] px-1 py-0.5 rounded-full bg-muted text-[9px] leading-none tabular-nums text-foreground/70">
                         {tab.count}
                       </span>
                     )}
