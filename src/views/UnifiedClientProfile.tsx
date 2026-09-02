@@ -916,7 +916,7 @@ export function UnifiedClientProfile() {
                         />
                       </div>
                       {/* Plan meta footer — pinned to the card's bottom edge on desktop */}
-                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40 lg:shrink-0">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40 lg:shrink-0 text-pretty leading-relaxed">
                         {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'}
                         {plan.workoutsPerWeek ? ` · ${plan.workoutsPerWeek}×/week` : ''}
                         {client.planStartDate ? ` · Started ${format(new Date(client.planStartDate), 'MMM d')}` : ''}

@@ -333,8 +333,10 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
 
       {/* Workout info */}
       <div className="flex-1 min-w-0">
+        {/* Two lines on phones: names like "Chest + Shoulders + Triceps"
+            lost their tail to an ellipsis at 390px, with no way to read it */}
         <p className={cn(
-          'text-sm font-bold truncate tracking-tight antialiased',
+          'text-sm font-bold tracking-tight antialiased leading-snug line-clamp-2 sm:line-clamp-1',
           isCompleted && 'text-foreground/80'
         )}>
           {day.workoutDay?.name || 'Workout'}
