@@ -545,8 +545,10 @@ export function NotificationsSection({ role }: { role: SettingsRole }) {
         description="How the app reaches you when you’re not looking at it."
       />
 
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
+      {/* Stacked on phones: side-by-side, the toggle's status line would
+          squeeze the description into a one-word column */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="min-w-0 sm:flex-1">
           <p className="text-sm font-semibold leading-tight">Message alerts</p>
           <p className="text-xs text-muted-foreground leading-relaxed mt-1 text-pretty">
             {role === 'coach'
@@ -555,7 +557,7 @@ export function NotificationsSection({ role }: { role: SettingsRole }) {
             Alerts are per device — turn them on wherever you {role === 'coach' ? 'coach' : 'train'} from.
           </p>
         </div>
-        <NotificationToggle className="shrink-0" showUnavailable />
+        <NotificationToggle className="shrink-0 self-start" showUnavailable />
       </div>
     </div>
   );
