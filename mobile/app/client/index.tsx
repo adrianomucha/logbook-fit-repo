@@ -2,17 +2,21 @@ import { useMemo, useState } from 'react';
 import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { format } from 'date-fns';
-import type { WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
-import { apiPlanToWorkoutPlan } from '@logbook/shared/adapters/api';
+import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
+import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
 import { ApiError } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
+import { useClientCheckIns, useClientProgress } from '@/hooks/useCheckIns';
 import { Screen } from '@/components/Screen';
 import { Card, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { SessionCard } from '@/components/today/SessionCard';
 import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle';
 import { WeekOverview } from '@/components/today/WeekOverview';
+import { PendingCheckInBanner } from '@/components/checkin/PendingCheckInBanner';
+import { CoachFeedbackCard } from '@/components/checkin/CoachFeedbackCard';
+import { CheckInDetailSheet } from '@/components/checkin/CheckInDetailSheet';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -31,9 +35,12 @@ const isNotFound = (e: unknown) => e instanceof ApiError && e.status === 404;
 export default function TodayScreen() {
   const router = useRouter();
   const [view, setView] = useState<WorkoutViewMode>('today');
+  const [showCheckInDetail, setShowCheckInDetail] = useState(false);
   const { user, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
   const { weekOverview, error: weekError, isLoading: loadingWeek, refresh: refreshWeek } = useClientWeekOverview();
   const { plan: planDetail, error: planError, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
+  const { checkIns: apiCheckIns, refresh: refreshCheckIns } = useClientCheckIns();
+  const { progress } = useClientProgress();
 
   const plan: WorkoutPlan | null = useMemo(() => (planDetail ? apiPlanToWorkoutPlan(planDetail) : null), [planDetail]);
 
@@ -58,6 +65,25 @@ export default function TodayScreen() {
       }));
   }, [weekOverview, clientProfileId]);
 
+  const checkIns: CheckIn[] = useMemo(
+    () => apiCheckIns.map((ci) => apiCheckInToCheckIn(ci, clientProfileId ?? '', coach?.user.id ?? '')),
+    [apiCheckIns, clientProfileId, coach]
+  );
+  const pendingCheckIn = useMemo(() => checkIns.find((c) => c.status === 'pending') ?? null, [checkIns]);
+  // Newest completed check-in with a reply, whenever it arrived — the one
+  // reply the whole loop exists to deliver must not vanish on a Monday.
+  const latestFeedbackCheckIn = useMemo(
+    () =>
+      checkIns
+        .filter((c) => c.status === 'completed' && c.completedAt)
+        .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0] ?? null,
+    [checkIns]
+  );
+  const allCompletions: WorkoutCompletion[] = useMemo(
+    () => (progress?.allCompletions ? apiProgressToWorkoutCompletions(progress.allCompletions) : completions),
+    [progress, completions]
+  );
+
   const { weekDays, today } = useMemo(() => {
     if (!plan || !weekOverview || !clientProfileId) return { weekDays: [] as WeekDayInfo[], today: null };
     const week = plan.weeks.find((w) => w.weekNumber === weekOverview.weekNumber);
@@ -69,6 +95,7 @@ export default function TodayScreen() {
   const refresh = () => {
     void refreshWeek();
     void refreshPlan();
+    void refreshCheckIns();
   };
   const refreshing = (loadingWeek || loadingPlan) && !!weekOverview;
 
@@ -125,24 +152,36 @@ export default function TodayScreen() {
     <Screen withHeader onRefresh={refresh} refreshing={refreshing}>
       {header}
 
+      {pendingCheckIn ? (
+        <PendingCheckInBanner onComplete={() => router.push({ pathname: '/client/checkin/[checkinId]', params: { checkinId: pendingCheckIn.id } })} />
+      ) : null}
+
       <ViewToggle value={view} onChange={setView} />
 
       {view === 'weekly' && plan && weekOverview ? (
-        <WeekOverview
-          planName={plan.name}
-          weekNumber={weekOverview.weekNumber}
-          durationWeeks={weekOverview.plan.durationWeeks}
-          days={weekDays}
-          onOpenDay={openDay}
-        />
+        <>
+          <WeekOverview
+            planName={plan.name}
+            weekNumber={weekOverview.weekNumber}
+            durationWeeks={weekOverview.plan.durationWeeks}
+            days={weekDays}
+            onOpenDay={openDay}
+          />
+          {latestFeedbackCheckIn ? (
+            <CoachFeedbackCard checkIn={latestFeedbackCheckIn} onViewDetails={() => setShowCheckInDetail(true)} />
+          ) : null}
+        </>
       ) : weekOverview?.planEnded ? (
-        <Card>
-          <Eyebrow>Plan complete</Eyebrow>
-          <Text className="mt-2 font-sans-bold text-2xl text-foreground">You finished {plan?.name}</Text>
-          <Text className="mt-2 font-sans text-sm leading-5 text-muted-foreground">
-            Nice work. Your coach will assign what's next.
+        <View className="items-center rounded-2xl border border-border/70 bg-card px-6 py-10">
+          <Text className="mb-4 text-5xl">🏁</Text>
+          <Eyebrow className="mb-1.5">Plan complete</Eyebrow>
+          <Text className="mb-2 text-center font-sans-bold text-2xl tracking-tight text-foreground">You finished {plan?.name}</Text>
+          <Text className="max-w-xs text-center font-sans text-sm leading-5 text-muted-foreground">
+            All {weekOverview.plan.durationWeeks} weeks are behind you
+            {progress?.stats?.totalWorkouts ? `, ${progress.stats.totalWorkouts} workouts logged` : ''}.{' '}
+            {coach.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block.
           </Text>
-        </Card>
+        </View>
       ) : today?.workoutDay ? (
         state === 'completed' ? (
           <Card>
@@ -164,6 +203,14 @@ export default function TodayScreen() {
       ) : (
         <EmptyState title="Nothing scheduled" body="Every workout this week is done. See the week for what's next." />
       )}
+
+      <CheckInDetailSheet
+        checkIn={latestFeedbackCheckIn}
+        visible={showCheckInDetail}
+        onClose={() => setShowCheckInDetail(false)}
+        completedWorkouts={allCompletions}
+        plan={plan}
+      />
     </Screen>
   );
 }

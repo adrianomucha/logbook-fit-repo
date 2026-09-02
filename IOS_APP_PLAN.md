@@ -187,7 +187,7 @@ Each maps 1:1 onto endpoints that exist today.
 | 1 | Sign in / session gate ✅ | `POST /api/auth/mobile/login`, `/refresh`, `GET /api/me` | `app/login/page.tsx`, `useCurrentUser` | S |
 | 2 | Today + weekly overview (tab 1) ✅ | `GET /api/client/week-overview`, `/plan`, `/coach` | `views/ClientDashboard.tsx`, `components/client/today/*`, `weekly/*` | M |
 | 3 | Workout execution ✅ | `GET /api/client/workout/day/[id]`, `POST /workout/start`, `PUT /workout/[id]/sets`, `POST /finish`, `/restart`, `/flag` | `views/ClientWorkoutExecution.tsx`, `components/client/execution/*`, `hooks/api/useWorkoutExecution.ts` | L |
-| 4 | Check-in respond + history | `GET /api/client/check-ins`, `GET /api/check-ins/[id]`, `PUT /api/check-ins/[id]/client-respond` | `views/ClientCheckIn.tsx`, `ClientCheckInForm.tsx` | M |
+| 4 | Check-in respond + history ✅ | `GET /api/client/check-ins`, `GET /api/check-ins/[id]`, `PUT /api/check-ins/[id]/client-respond` | `views/ClientCheckIn.tsx`, `ClientCheckInForm.tsx` | M |
 | 5 | Chat with coach (tab 2) | `GET /api/messages/[userId]`, `POST /api/messages`, `GET /api/messages/unread` | `components/chat/ChatView.tsx`, `hooks/api/useMessages.ts` | M |
 | 6 | Progress (tab 3) | `GET /api/client/progress` | `components/client/progress/*` | S |
 | 7 | Account: timezone sync, notifications toggle, feedback, sign out, **delete account** | `PUT /api/account/timezone`, `POST/DELETE /api/push/subscription`, `POST /api/feedback`, `DELETE /api/me` | `AccountMenu.tsx`, `NotificationToggle.tsx` | M |

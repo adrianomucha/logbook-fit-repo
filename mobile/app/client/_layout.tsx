@@ -15,8 +15,9 @@ export default function ClientLayout() {
       <Tabs.Screen name="index" options={{ title: 'Workout' }} />
       <Tabs.Screen name="chat" options={{ title: 'Chat' }} />
       <Tabs.Screen name="progress" options={{ title: 'Progress' }} />
-      {/* Pushed from Workout; not a tab of its own */}
+      {/* Pushed from Workout; not tabs of their own */}
       <Tabs.Screen name="workout/[dayId]" options={{ href: null }} />
+      <Tabs.Screen name="checkin/[checkinId]" options={{ href: null }} />
     </Tabs>
   );
 }
