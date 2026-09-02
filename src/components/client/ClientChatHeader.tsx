@@ -1,9 +1,9 @@
-import { avatarColor } from '@/lib/avatar-colors';
+import { UserAvatar } from '@/components/UserAvatar';
 import { NotificationToggle } from '@/components/notifications/NotificationToggle';
-import { cn } from '@/lib/utils';
 
 interface ClientChatHeaderProps {
   coachName: string;
+  coachAvatar?: string | null;
 }
 
 /**
@@ -11,18 +11,12 @@ interface ClientChatHeaderProps {
  * avatar in the shared deterministic color, "Your coach" eyebrow — so the
  * thread reads as a line to a person, not a generic "Messages" screen.
  */
-export function ClientChatHeader({ coachName }: ClientChatHeaderProps) {
+export function ClientChatHeader({ coachName, coachAvatar }: ClientChatHeaderProps) {
   return (
     <div className="shrink-0 py-4 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
-        <div
-          className={cn(
-            'relative w-10 h-10 rounded-full flex items-center justify-center shrink-0',
-            avatarColor(coachName)
-          )}
-          aria-hidden="true"
-        >
-          <span className="text-sm font-bold uppercase">{coachName.charAt(0)}</span>
+        <div className="relative w-10 h-10 shrink-0" aria-hidden="true">
+          <UserAvatar name={coachName} avatarUrl={coachAvatar} className="w-10 h-10 text-sm" />
           {/* Volt dot — the same brand accent the coach-side avatars carry */}
           <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand ring-2 ring-background" />
         </div>

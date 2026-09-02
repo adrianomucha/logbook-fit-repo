@@ -1,3 +1,4 @@
+import { UserAvatar } from '@/components/UserAvatar';
 import { useState, useMemo, useRef, useEffect, ReactNode } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCoachClientProfile } from '@/hooks/api/useCoachClientProfile';
@@ -14,7 +15,6 @@ import { PageHeader } from '@/components/coach/PageHeader';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
-import { avatarColor } from '@/lib/avatar-colors';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
 import { format, formatDistanceToNow, differenceInHours } from 'date-fns';
 
@@ -47,8 +47,9 @@ function SectionCard({ children, className }: { children: ReactNode; className?:
 // Page chrome shared by every state: nav, container, path-style header
 // ("‹ Client / Check-in") where the crumb is the way back to the profile.
 // The avatar rides the action slot as the page's identity anchor.
-function PageShell({ clientName, subtitle, onBack, children }: {
+function PageShell({ clientName, clientAvatar, subtitle, onBack, children }: {
   clientName: string;
+  clientAvatar?: string | null;
   subtitle?: ReactNode;
   onBack: () => void;
   children: ReactNode;
@@ -64,16 +65,11 @@ function PageShell({ clientName, subtitle, onBack, children }: {
               subtitle={subtitle}
               breadcrumb={{ label: clientName, onClick: onBack }}
               action={
-                <div
-                  className={cn(
-                    'w-10 h-10 rounded-full hidden sm:flex items-center justify-center',
-                    'text-sm font-bold select-none shrink-0',
-                    avatarColor(clientName)
-                  )}
-                  aria-hidden="true"
-                >
-                  {clientName.charAt(0).toUpperCase()}
-                </div>
+                <UserAvatar
+                  name={clientName}
+                  avatarUrl={clientAvatar}
+                  className="hidden sm:flex w-10 h-10 text-sm"
+                />
               }
             />
           </div>
@@ -272,7 +268,7 @@ export function ClientCheckIn() {
   // State C: No active check-in
   if (!activeCheckIn && !activeCheckInId) {
     return (
-      <PageShell clientName={clientName} subtitle="No active check-in" onBack={handleBack}>
+      <PageShell clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null} subtitle="No active check-in" onBack={handleBack}>
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
           <SectionCard className="max-w-2xl text-center py-12">
             <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
@@ -308,7 +304,7 @@ export function ClientCheckIn() {
 
     return (
       <PageShell
-        clientName={clientName}
+        clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null}
         subtitle={`Sent ${sentAgo}`}
         onBack={handleBack}
       >
@@ -391,7 +387,7 @@ export function ClientCheckIn() {
 
   return (
     <PageShell
-      clientName={clientName}
+      clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null}
       subtitle={`Submitted ${submittedAgo}`}
       onBack={handleBack}
     >

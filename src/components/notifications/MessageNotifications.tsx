@@ -67,6 +67,7 @@ export function MessageNotifications() {
           <MessageToast
             toastId={id}
             name={name}
+            avatarUrl={thread.avatarUrl}
             preview={thread.preview}
             href={href}
           />

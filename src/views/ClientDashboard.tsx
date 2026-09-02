@@ -427,7 +427,7 @@ export function ClientDashboard() {
         )}>
           {isChat ? (
             <>
-              <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} />
+              <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} coachAvatar={coach?.user.avatarUrl} />
               <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
                 <ChatView
                   client={client}
@@ -439,6 +439,7 @@ export function ClientDashboard() {
                   onLoadEarlier={loadEarlierMessages}
                   heightClass="flex-1 min-h-0"
                   peerName={coach?.user.name ?? 'Coach'}
+                  peerAvatarUrl={coach?.user.avatarUrl}
                   conversationStarters={[
                     'Hi! Just signed up 👋',
                     'Here’s what I want to work on…',
@@ -593,7 +594,7 @@ export function ClientDashboard() {
             todayCompletion={todayCompletion}
             coachNote={todayCoachNote}
             coachName={coach?.user.name ?? undefined}
-            coachAvatar={undefined}
+            coachAvatar={coach?.user.avatarUrl ?? undefined}
             feedbackSubmitted={feedbackSent || !!todayCompletion?.effortRating}
             isSendingFeedback={isSendingFeedback}
             onStartWorkout={handleStartWorkout}
@@ -634,7 +635,7 @@ export function ClientDashboard() {
 
         {currentView === 'chat' && coachUserId && (
           <>
-            <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} />
+            <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} coachAvatar={coach?.user.avatarUrl} />
             {/* Contained module — hairline card, matching the rest of the client pages */}
             <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
               <ChatView
@@ -647,6 +648,7 @@ export function ClientDashboard() {
                 onLoadEarlier={loadEarlierMessages}
                 heightClass="flex-1 min-h-0"
                 peerName={coach?.user.name ?? 'Coach'}
+                peerAvatarUrl={coach?.user.avatarUrl}
                 conversationStarters={[
                   'How should I warm up?',
                   'Feeling sore today',

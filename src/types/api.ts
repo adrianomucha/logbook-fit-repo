@@ -57,7 +57,7 @@ export interface PlanSummary {
   weeks: { id: string; weekNumber: number }[];
   assignedTo: {
     id: string;
-    user: { name: string | null };
+    user: { name: string | null; avatarUrl: string | null };
   }[];
 }
 
@@ -259,6 +259,7 @@ export interface UnreadThread {
   /** The other person's user id */
   userId: string;
   name: string | null;
+  avatarUrl: string | null;
   /** Set when the sender is a client — the coach app routes by this id */
   clientProfileId: string | null;
   count: number;
