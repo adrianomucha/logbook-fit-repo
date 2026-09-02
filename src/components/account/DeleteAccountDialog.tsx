@@ -20,10 +20,10 @@ interface DeleteAccountDialogProps {
 const CONFIRM_PHRASE = 'DELETE';
 
 /**
- * "Delete account" — reached from Settings → Account for coaches, and from
- * the account menu for clients (who have no settings page yet). Two proofs
- * of intent: typing DELETE (can't be muscle memory) and the password (can't
- * be someone else at an open laptop). On success the session is ended
+ * "Delete account" — reached from the danger zone in Settings → Account
+ * (both roles). Two proofs of intent: typing DELETE (can't be muscle
+ * memory) and the password (can't be someone else at an open laptop). On
+ * success the session is ended
  * client-side too; the server already refuses it, so this is just not
  * leaving a dead screen up.
  */
