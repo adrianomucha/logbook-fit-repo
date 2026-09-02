@@ -74,6 +74,34 @@ Gotchas:
 - Client-side crashes are reported to `POST /api/client-errors` and logged as
   `[CLIENT_ERROR_ALERT]` — include that tag in your log alert too.
 
+## Native app auth (bearer tokens)
+
+Browsers hold the NextAuth session in a cookie. The iOS app has no cookie
+jar worth trusting, so it carries the same kind of JWT in an
+`Authorization: Bearer <token>` header instead. Every API route reads the
+session through `getSession()` (`src/lib/session.ts`), which accepts either;
+route code never learns which.
+
+- `POST /api/auth/mobile/login` `{email, password}` → `{token, expiresAt, user}`.
+  Same checks as the web sign-in (`src/lib/credentials.ts`): demo lock (403,
+  `code: "demo_locked"`), rate limit by IP + email (429, `code: "rate_limited"`),
+  and a generic 401 for a wrong email or password.
+- `POST /api/auth/mobile/refresh` with a still-valid bearer → a fresh 30-day
+  token, after re-checking the account exists and isn't a locked demo. A 401
+  here means "sign in again".
+- Tokens are encrypted with `NEXTAUTH_SECRET`, live 30 days like the cookie,
+  and are stateless — soft-deleting the user (`deletedAt`) is the kill switch
+  for both kinds.
+
+Try it against a running dev server:
+
+```bash
+TOKEN=$(curl -s -X POST localhost:3000/api/auth/mobile/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"client@logbook.fit","password":"demo1234"}' | jq -r .token)
+curl -s localhost:3000/api/me -H "Authorization: Bearer $TOKEN"
+```
+
 ## Scheduled work
 
 One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at

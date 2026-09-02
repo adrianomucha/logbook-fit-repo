@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { isLockedDemoAccount } from "@/lib/demo";
 import prisma from "@/lib/prisma";
 import { notifyNewMessage } from "@/lib/push";
@@ -13,7 +12,7 @@ import { sendMessageSchema } from "@/lib/validations/schemas";
  * CoachClientRelationship. Supports optional exercise context references.
  */
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session || isLockedDemoAccount(session.user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

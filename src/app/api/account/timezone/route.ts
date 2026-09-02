@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import prisma from "@/lib/prisma";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { parseBody } from "@/lib/validations/parseBody";
@@ -17,7 +16,7 @@ export const dynamic = "force-dynamic";
  * scheduler reads it to anchor weekday cadences to the client's local day.
  */
 export async function PUT(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session?.user?.id || isLockedDemoAccount(session.user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

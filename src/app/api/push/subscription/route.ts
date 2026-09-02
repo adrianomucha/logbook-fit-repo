@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { isLockedDemoAccount } from "@/lib/demo";
 import prisma from "@/lib/prisma";
 import { isPushConfigured } from "@/lib/push";
@@ -19,7 +18,7 @@ import {
  * stacking duplicates — which would deliver every notification twice.
  */
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session || isLockedDemoAccount(session.user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
  * can't unsubscribe another's devices.
  */
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
   if (!session || isLockedDemoAccount(session.user.email)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

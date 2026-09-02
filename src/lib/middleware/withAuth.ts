@@ -1,6 +1,5 @@
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import { getCoachProfileId, getClientProfileId } from "@/lib/scoping";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { Session } from "next-auth";
@@ -25,7 +24,7 @@ type ClientHandler = (
  */
 export function withCoach(handler: CoachHandler) {
   return async (req: Request, ctx: { params: Promise<Record<string, string>> }) => {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (
       !session ||
       session.user.role !== "COACH" ||
@@ -48,7 +47,7 @@ export function withCoach(handler: CoachHandler) {
  */
 export function withClient(handler: ClientHandler) {
   return async (req: Request, ctx: { params: Promise<Record<string, string>> }) => {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (
       !session ||
       session.user.role !== "CLIENT" ||

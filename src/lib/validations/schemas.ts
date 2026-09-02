@@ -92,6 +92,14 @@ export const passwordResetConfirmSchema = z.object({
   password: passwordSchema,
 });
 
+// Native-app sign-in. Only presence is checked: this is a *login*, so the
+// password rules that apply when picking one (passwordSchema) must not
+// lock out an account created before those rules existed.
+export const mobileLoginSchema = z.object({
+  email: z.string().trim().toLowerCase().email(),
+  password: z.string().min(1, "Password is required"),
+});
+
 // ──────────────────────────────────────
 // EXERCISES
 // ──────────────────────────────────────

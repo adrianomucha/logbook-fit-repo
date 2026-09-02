@@ -97,7 +97,7 @@ old `src/` path, so the web app does not change a single import.
 Everything here is server-side TypeScript with vitest coverage, and unblocks
 the app work. Do it first; it is also independently useful to the web app.
 
-- [ ] **1.1 Bearer-token sessions.** New `src/lib/session.ts` exporting
+- [x] **1.1 Bearer-token sessions.** New `src/lib/session.ts` exporting
       `getSession(req)`: when an `Authorization: Bearer <jwt>` header is
       present, `decode()` it with `next-auth/jwt` (same `NEXTAUTH_SECRET`,
       same claims `userId`/`role`/`email`/`name`) and return a `Session`-shaped
@@ -106,13 +106,13 @@ the app work. Do it first; it is also independently useful to the web app.
       (mechanical). `src/middleware.ts` only matches pages, so it is untouched.
       Reject soft-deleted and demo-locked users exactly as the cookie path
       does. — M
-- [ ] **1.2 `POST /api/auth/mobile/login`.** `{email, password}` →
+- [x] **1.2 `POST /api/auth/mobile/login`.** `{email, password}` →
       `{token, expiresAt, user}`. Extract the credential checks from the
       NextAuth `authorize` (demo lock, `loginLimiter` by IP+email, bcrypt,
       `deletedAt: null`) into a shared `lib/credentials.ts` so web and mobile
       cannot drift. Mint with `encode()` from `next-auth/jwt`, 30 days like
       the web. — S
-- [ ] **1.3 `POST /api/auth/mobile/refresh`.** Valid token in → fresh token
+- [x] **1.3 `POST /api/auth/mobile/refresh`.** Valid token in → fresh token
       out (sliding expiry), so a daily user is never logged out. Same
       demo/deleted checks. — S
 - [ ] **1.4 APNs via Expo push.** Migration: `PushSubscription` gains
@@ -287,10 +287,15 @@ submitted build**, with the first TestFlight around week four.
 
 ---
 
-## 9. Open questions for the owner
+## 9. Decisions (2026-09-02)
 
-1. Confirm **Expo over SwiftUI** (§1.2). The whole plan changes shape if not.
-2. Confirm **client-only v1** (§1.1), coach triage later.
-3. Is there an Apple Developer account and a preferred bundle id?
-4. Staging: is there a staging deployment with its own database for the
-   `preview` build profile, or should TestFlight builds hit production?
+1. **Expo** (§1.2). Confirmed.
+2. **Client-only v1** (§1.1). Confirmed; coach triage is a later phase.
+3. **Apple Developer account exists.** Bundle id still to pick; the plan
+   assumes `fit.logbook.app`.
+4. **No staging database.** The only Logbook Supabase project is production
+   (`logbook-fit`, us-east-1). Until a staging project exists, the
+   `preview` build profile points at production and the reviewer accounts
+   (§2 1.6) live there. Adding a staging project is a §2-sized task on its
+   own: a second Supabase project, a Vercel preview env with its own
+   `DATABASE_URL`/`DIRECT_URL`, and `MIGRATE_ON_PREVIEW=true`.
