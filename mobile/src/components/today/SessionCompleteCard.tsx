@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import type { WorkoutCompletion } from '@logbook/shared/types';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
-import { Button, Card, Eyebrow } from '@/components/ui';
+import { BoldCheck, Button, Card, Eyebrow } from '@/components/ui';
 
 type EffortRating = 'EASY' | 'MEDIUM' | 'HARD';
 
@@ -58,18 +57,18 @@ export function SessionCompleteCard({
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
           <Eyebrow>{day ? `Session complete · Day ${day}` : 'Session complete'}</Eyebrow>
-          <Text className="mt-2.5 font-sans-bold text-[26px] leading-[30px] tracking-tight text-foreground">{title}</Text>
+          <Text className="mt-2.5 font-sans-bold text-[26px] leading-[30px] text-foreground" style={{ letterSpacing: -0.65 }}>{title}</Text>
           {subtitle ? <Text className="mt-1.5 font-sans text-[15px] text-muted-foreground">{subtitle}</Text> : null}
         </View>
         <View className="h-11 w-11 items-center justify-center rounded-full bg-brand">
-          <Feather name="check" size={20} color="#1e2702" />
+          <BoldCheck size={20} color="#1e2702" />
         </View>
       </View>
 
       <View className="mt-4 flex-row items-baseline border-t border-border/50 pt-4">
         {stats.map(([value, unit], i) => (
           <Text key={unit} className="font-mono text-[13px]">
-            {i > 0 ? <Text className="text-muted-foreground/40">{'  ·  '}</Text> : null}
+            {i > 0 ? <Text className="text-muted-foreground/40">{'\u2002·\u2002'}</Text> : null}
             <Text className="font-mono-semibold text-foreground">{value}</Text>
             <Text className="text-muted-foreground"> {unit}</Text>
           </Text>
@@ -82,7 +81,7 @@ export function SessionCompleteCard({
 
       {feedbackSubmitted ? (
         <View className="mt-5 flex-row items-center gap-2 border-t border-border/50 pt-4">
-          <Feather name="check" size={14} color="#157f3c" />
+          <BoldCheck size={14} color="#157f3c" strokeWidth={3} />
           <Text className="font-mono text-[11px] uppercase tracking-[1.5px] text-muted-foreground">
             Feedback sent{coachFirst ? ` to ${coachFirst}` : ''}
           </Text>

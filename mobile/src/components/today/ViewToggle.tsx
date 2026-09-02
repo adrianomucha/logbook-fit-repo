@@ -23,7 +23,7 @@ export function ViewToggle({ value, onChange }: { value: WorkoutViewMode; onChan
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
             onPress={() => onChange(id)}
-            className={`flex-1 items-center justify-center rounded-lg ${active ? 'border border-border bg-card' : ''}`}
+            className={`flex-1 items-center justify-center rounded-lg ${active ? 'border border-border/70 bg-card' : ''}`}
           >
             <Text className={`font-mono-medium text-[11px] uppercase tracking-[1.3px] ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
               {label}

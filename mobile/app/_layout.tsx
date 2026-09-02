@@ -58,9 +58,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#ffffff' } }}>
-        <Stack.Screen name="account" options={{ presentation: 'modal' }} />
-      </Stack>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#ffffff' } }} />
     </AuthProvider>
   );
 }

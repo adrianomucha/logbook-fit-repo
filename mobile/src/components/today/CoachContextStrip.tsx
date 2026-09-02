@@ -23,7 +23,7 @@ export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContext
         <UserAvatar name={coachName} avatarUrl={coachAvatar} size={28} textSize={10} />
         <Eyebrow>
           Coach note
-          <Text className="text-muted-foreground/50">{' · '}</Text>
+          <Text className="text-muted-foreground/50">{'\u2002·\u2002'}</Text>
           {coachFirst}
         </Eyebrow>
       </View>

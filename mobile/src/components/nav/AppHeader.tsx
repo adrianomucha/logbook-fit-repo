@@ -17,7 +17,7 @@ function initials(name?: string | null, email?: string | null) {
 /**
  * The client app's top bar — the web's ClientNav header on a phone: the
  * logotype on the left, the account trigger on the right — the profile
- * photo when there is one, else the monogram. It opens the account menu.
+ * photo when there is one, else the monogram. It opens the account page.
  */
 export function AppHeader() {
   const insets = useSafeAreaInsets();
@@ -27,7 +27,7 @@ export function AppHeader() {
   const monogram = initials(session?.user.name, session?.user.email);
   const avatarUrl = user?.avatarUrl ?? null;
 
-  const openMenu = () => router.push('/account');
+  const openMenu = () => router.push('/client/account');
 
   return (
     <View className="border-b border-border bg-background/95" style={{ paddingTop: insets.top }}>

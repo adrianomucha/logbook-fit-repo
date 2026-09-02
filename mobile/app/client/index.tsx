@@ -113,8 +113,10 @@ export default function TodayScreen() {
   const firstName = user?.name?.split(' ')[0];
   const header = (
     <View className="pt-2">
-      <Eyebrow>{format(new Date(), 'EEEE, MMMM d')}</Eyebrow>
-      <Text className="mt-1.5 font-sans-bold text-2xl leading-7 tracking-tight text-foreground" numberOfLines={1}>
+      <Text className="font-mono text-[11px] uppercase tracking-[1.76px] text-muted-foreground" numberOfLines={1}>
+        {format(new Date(), 'EEEE, MMMM d')}
+      </Text>
+      <Text className="mt-1.5 font-sans-bold text-2xl leading-[30px] text-foreground" style={{ letterSpacing: -0.6 }} numberOfLines={1}>
         {firstName ? `${greeting()}, ${firstName}` : greeting()}
       </Text>
     </View>
@@ -272,10 +274,10 @@ export default function TodayScreen() {
                 onPress={restartWorkout}
                 disabled={isRestarting}
                 accessibilityRole="button"
-                className="-mr-2 min-h-[36px] flex-row items-center gap-1.5 rounded-md px-2 active:opacity-70"
+                className="-mr-3 h-8 flex-row items-center gap-1.5 rounded-md px-3 active:opacity-70"
               >
                 <Feather name="rotate-ccw" size={14} color="#737373" />
-                <Text className="font-sans-medium text-sm text-muted-foreground">{isRestarting ? 'Restarting…' : 'Restart workout'}</Text>
+                <Text className="font-sans-medium text-xs text-muted-foreground">{isRestarting ? 'Restarting…' : 'Restart workout'}</Text>
               </Pressable>
             </View>
           </>

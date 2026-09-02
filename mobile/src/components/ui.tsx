@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View, type PressableProps } from 'react-native';
+import Svg, { Polyline } from 'react-native-svg';
 
 /** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
 export function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -65,5 +66,14 @@ export function LoadingScreen() {
     <View className="flex-1 items-center justify-center bg-background">
       <ActivityIndicator color="#0a0a0a" />
     </View>
+  );
+}
+
+/** The web's lucide check at a heavy stroke — the celebration mark. Feather's is fixed at 2. */
+export function BoldCheck({ size, color, strokeWidth = 3.5 }: { size: number; color: string; strokeWidth?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Polyline points="20 6 9 17 4 12" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
   );
 }

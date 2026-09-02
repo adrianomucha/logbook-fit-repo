@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { ApiError } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCheckIn } from '@/hooks/useCheckIns';
-import { Button, Eyebrow, LoadingScreen } from '@/components/ui';
+import { BoldCheck, Button, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ChoiceGrid, type Choice } from '@/components/checkin/ChoiceGrid';
 
 const EFFORT_OPTIONS: Choice[] = [
@@ -73,7 +73,7 @@ function SentScreen({
       <View className="gap-6">
         {/* Volt check — the same celebration mark the workout-complete state carries */}
         <View className="h-16 w-16 items-center justify-center rounded-full bg-brand">
-          <Feather name="check" size={32} color="#1e2702" />
+          <BoldCheck size={32} color="#1e2702" strokeWidth={3} />
         </View>
 
         <View>

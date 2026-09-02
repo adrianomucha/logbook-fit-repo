@@ -24,7 +24,7 @@ export function Screen({ children, refreshing = false, onRefresh, bottomInset = 
         contentContainerStyle={{
           paddingTop: withHeader ? 16 : insets.top + 8,
           paddingBottom: 24 + bottomInset,
-          paddingHorizontal: 20,
+          paddingHorizontal: 16,
         }}
         refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined}
         keyboardShouldPersistTaps="handled"
