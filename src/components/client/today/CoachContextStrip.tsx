@@ -12,7 +12,7 @@ interface CoachContextStripProps {
  * The coach's note for today's session, shown once the session is done.
  * Same card anatomy as the hero above it (surface, radius, mono eyebrow) so
  * the completed state reads as a stack of matched cards rather than a card
- * with loose fragments underneath; the volt rail marks the coach's voice.
+ * with loose fragments underneath; the avatar and eyebrow carry the voice.
  */
 export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContextStripProps) {
   const coachFirst = coachName.split(' ')[0];
@@ -47,7 +47,7 @@ export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContext
         </p>
       </div>
 
-      <p className="mt-4 pl-4 border-l-2 border-brand text-[15px] leading-relaxed text-foreground">
+      <p className="mt-3 text-[15px] leading-relaxed text-foreground">
         {note}
       </p>
     </div>
