@@ -2,6 +2,19 @@
 const isVercel = process.env.VERCEL === "1";
 const isDev = process.env.NODE_ENV === "development";
 
+// Profile photos are served from Supabase Storage, so its origin must be an
+// allowed image source. Derived from the same env var the upload route uses;
+// inlined at build time, so setting SUPABASE_URL needs a redeploy (which the
+// upload feature needs anyway). Without it, photos would upload fine and
+// then render as broken images.
+const supabaseOrigin = (() => {
+  try {
+    return process.env.SUPABASE_URL ? new URL(process.env.SUPABASE_URL).origin : null;
+  } catch {
+    return null;
+  }
+})();
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -23,7 +36,7 @@ const securityHeaders = [
       // and a websocket back to the dev server.
       `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob:",
+      `img-src 'self' data: blob:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
       "font-src 'self'",
       `connect-src 'self'${isDev ? " ws://localhost:3000" : ""}`,
       "frame-ancestors 'none'",
