@@ -2,6 +2,9 @@
   "name": "logbook-mobile",
   "version": "0.1.0",
   "main": "expo-router/entry",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "dependencies": {
     "@expo-google-fonts/ibm-plex-mono": "^0.4.1",
     "@expo-google-fonts/ibm-plex-sans": "^0.4.1",

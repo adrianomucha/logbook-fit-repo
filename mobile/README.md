@@ -7,6 +7,8 @@ talks to the same API as the web app using a bearer token
 
 ## Run it
 
+Needs Node 22 or newer (React Native 0.87's Metro refuses older Node).
+
 ```bash
 cd mobile
 npm install
