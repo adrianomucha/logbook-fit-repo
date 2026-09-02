@@ -378,12 +378,14 @@ export function InlineCheckInReview({
     // the client responds.
     return (
       <Wrapper>
-        <div className={cn(isFlat ? '' : 'px-3 sm:px-6 py-6')}>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 py-1">
+        <div className={cn(isFlat ? '' : 'px-4 py-5 sm:px-6 sm:py-6')}>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-1">
             {/* Dot stays beside the heading on phones — alone on its own
                 stacked row it reads as a stray mark */}
-            <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
-              <span className="relative flex h-2.5 w-2.5 shrink-0 sm:ms-1.5" aria-hidden="true">
+            {/* items-start + a 7px nudge: the dot sits on the heading's line
+                instead of floating mid-paragraph once the description wraps */}
+            <div className="flex-1 flex items-start gap-3 sm:gap-4 min-w-0">
+              <span className="relative flex h-2.5 w-2.5 shrink-0 mt-[7px] sm:ms-1.5" aria-hidden="true">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-warning opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-warning" />
               </span>
@@ -407,7 +409,7 @@ export function InlineCheckInReview({
             </div>
 
             {confirmingUnsend ? (
-              <div className="flex items-center gap-1 self-start sm:self-auto shrink-0">
+              <div className="flex items-center gap-1 self-start sm:self-auto shrink-0 ms-2.5 sm:ms-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -427,7 +429,7 @@ export function InlineCheckInReview({
               </div>
             ) : (
               (onUnsendCheckIn || onHidePending) && (
-                <div className="flex items-center gap-0.5 self-start sm:self-auto shrink-0 -me-1.5">
+                <div className="flex items-center gap-1 self-start sm:self-auto shrink-0 ms-2.5 sm:ms-0 sm:-me-1.5">
                   {onUnsendCheckIn && (
                     <Button
                       variant="ghost"
@@ -439,15 +441,19 @@ export function InlineCheckInReview({
                     </Button>
                   )}
                   {onHidePending && (
+                    /* A bare ✕ beside "Unsend" reads as "cancel" on a phone,
+                        where the row stacks under the text — say "Hide" there
+                        and keep the quiet icon on the desktop row */
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="w-9 px-0 text-muted-foreground"
+                      className="text-muted-foreground sm:w-9 sm:px-0"
                       aria-label={`Hide until ${firstName} responds`}
                       title={`Hide until ${firstName} responds`}
                       onClick={onHidePending}
                     >
-                      <X className="w-4 h-4" aria-hidden="true" />
+                      <span className="sm:hidden">Hide</span>
+                      <X className="w-4 h-4 hidden sm:block" aria-hidden="true" />
                     </Button>
                   )}
                 </div>
