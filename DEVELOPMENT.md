@@ -87,10 +87,7 @@ The app mirrors the client web screens one to one, so a change to a
 client-facing web screen should ship with its `mobile/` counterpart where
 practical. Logic that both need lives in `packages/shared` (the web keeps a
 one-line re-export at the old `src/lib` path); only the render layer is
-written twice. Account/Settings is the deliberate exception: same endpoints
-and copy, but laid out the iOS way (native navigation stack, inset-grouped
-lists — `mobile/src/components/settings/GroupedList.tsx`) rather than the
-web's tabbed page. Profile photos upload as raw bytes to `PUT /api/account/avatar`
+written twice. Profile photos upload as raw bytes to `PUT /api/account/avatar`
 with the bearer token (`mobile/src/lib/avatar.ts`), the one request that
 bypasses the shared JSON client.
 
