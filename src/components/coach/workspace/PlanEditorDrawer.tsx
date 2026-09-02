@@ -533,7 +533,10 @@ export function PlanEditorDrawer({
                   /* No scroll-snap: snapping pulled the first pill flush to the
                       screen edge, ignoring the row's padding. Same 16px start
                       edge as the header and the day content below. */
-                  <div className="sm:hidden flex gap-1.5 overflow-x-auto px-4 pb-3 scrollbar-hide">
+                  /* Same 32px height, radius and muted tone as the week stepper
+                      above, so the two read as one control group; tap-target
+                      keeps the 44px hit area without the visual bulk */
+                  <div className="sm:hidden flex gap-1.5 overflow-x-auto px-4 pt-2 pb-3 scrollbar-hide">
                     {currentWeek.days.map((day, idx) => {
                       const isActive = clampedDay === idx;
                       const exerciseCount = day.exercises?.length || 0;
@@ -541,20 +544,21 @@ export function PlanEditorDrawer({
                         <button
                           key={day.id}
                           onClick={() => handleSelectDay(day.id)}
+                          aria-current={isActive ? 'true' : undefined}
                           className={cn(
-                            'flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl transition-[background-color,color,box-shadow] whitespace-nowrap min-h-[44px] shrink-0',
+                            'flex items-center gap-1.5 h-8 px-3 rounded-lg transition-[background-color,color,transform] whitespace-nowrap shrink-0 tap-target',
                             isActive
-                              ? 'bg-foreground text-background shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
-                              : 'bg-muted/40 hover:bg-muted active:scale-[0.95]'
+                              ? 'bg-foreground text-background'
+                              : 'bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground active:scale-[0.96]'
                           )}
                         >
-                          <span className="text-xs font-bold truncate max-w-[120px]">
+                          <span className="text-[12px] font-semibold truncate max-w-[160px] antialiased">
                             {day.name || `Day ${idx + 1}`}
                           </span>
                           {exerciseCount > 0 && (
                             <span className={cn(
-                              'font-mono text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md',
-                              isActive ? 'bg-background/20 text-background' : 'bg-foreground/10 text-muted-foreground'
+                              'font-mono text-[10px] tabular-nums font-semibold',
+                              isActive ? 'text-background/60' : 'text-muted-foreground/70'
                             )}>
                               {exerciseCount}
                             </span>
