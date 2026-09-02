@@ -112,17 +112,23 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Restart — rare, deliberate action: quiet ghost, never competing with the card */}
+      {/* Restart — rare, deliberate action. A hairline footer row with a
+          reason on the left gives the quiet ghost button a place to belong,
+          instead of floating alone under the cards */}
       {actionState === 'completed' && onRestartWorkout && (
-        <div className="animate-fade-in-up flex justify-center" style={{ animationDelay: '150ms' }}>
+        <div
+          className="animate-fade-in-up flex items-center justify-between gap-4 border-t border-border/60 pt-4 px-1"
+          style={{ animationDelay: '150ms' }}
+        >
+          <p className="text-xs text-muted-foreground">Logged by mistake?</p>
           <Button
             variant="ghost"
             size="sm"
             onClick={onRestartWorkout}
             disabled={isRestarting}
-            className="text-muted-foreground hover:text-foreground"
+            className="-mr-2 text-muted-foreground hover:text-foreground tap-target"
           >
-            <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+            <RotateCcw className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
             {isRestarting ? 'Restarting…' : 'Restart workout'}
           </Button>
         </div>
