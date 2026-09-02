@@ -245,7 +245,7 @@ export const sendMessageSchema = z.object({
 
 // Shape produced by PushSubscription.toJSON() in the browser. The endpoint is
 // an https URL owned by the browser's push service (FCM, Mozilla, Apple).
-export const pushSubscriptionSchema = z.object({
+const webPushSubscriptionSchema = z.object({
   endpoint: z.string().url().max(1000),
   keys: z.object({
     p256dh: z.string().min(1).max(255),
@@ -253,9 +253,31 @@ export const pushSubscriptionSchema = z.object({
   }),
 });
 
-export const pushUnsubscribeSchema = z.object({
-  endpoint: z.string().url().max(1000),
+// What expo-notifications hands the native app. Mirrors Expo.isExpoPushToken
+// without importing the (Node-only) server SDK into this browser-shared file.
+const EXPO_PUSH_TOKEN_RE = /^(Expo|Exponent)PushToken\[[^\]]+\]$/;
+export const expoPushTokenSchema = z
+  .string()
+  .max(255)
+  .regex(EXPO_PUSH_TOKEN_RE, "Not an Expo push token");
+
+const expoPushSubscriptionSchema = z.object({
+  provider: z.literal("EXPO"),
+  token: expoPushTokenSchema,
+  // "Adrian's iPhone" — the app's equivalent of a browser's user-agent
+  deviceName: z.string().trim().max(255).optional(),
 });
+
+// Browsers send the bare toJSON() shape (no provider); the app says EXPO.
+export const pushSubscriptionSchema = z.union([
+  expoPushSubscriptionSchema,
+  webPushSubscriptionSchema,
+]);
+
+export const pushUnsubscribeSchema = z.union([
+  z.object({ provider: z.literal("EXPO"), token: expoPushTokenSchema }),
+  z.object({ endpoint: z.string().url().max(1000) }),
+]);
 
 // ──────────────────────────────────────
 // WORKOUTS

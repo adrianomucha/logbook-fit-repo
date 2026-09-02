@@ -81,6 +81,15 @@ enum TrackingType {
   TIME
 }
 
+// Which transport delivers to a PushSubscription row.
+//   WEB  — browser Web Push: `endpoint` is the push-service URL, keys present
+//   EXPO — native app via Expo's push service: `endpoint` holds the Expo push
+//          token ("ExponentPushToken[…]"), no keys
+enum PushProvider {
+  WEB
+  EXPO
+}
+
 enum ExerciseCategory {
   CHEST
   BACK
@@ -507,11 +516,14 @@ model Message {
 // Rows are deleted when the push service reports the endpoint is gone
 // (404/410) — that is the only reliable "user uninstalled the PWA" signal.
 model PushSubscription {
-  id         String   @id @default(uuid())
+  id         String       @id @default(uuid())
   userId     String
-  endpoint   String   @unique
-  p256dh     String // Client public key for payload encryption
-  auth       String // Client auth secret for payload encryption
+  provider   PushProvider @default(WEB)
+  // Web Push: the push-service URL. Expo: the device's push token. Both are
+  // globally unique per device, so re-registering updates instead of stacking.
+  endpoint   String       @unique
+  p256dh     String? // Web Push only: client public key for payload encryption
+  auth       String? // Web Push only: client auth secret for payload encryption
   userAgent  String? // Debugging aid: which device this row belongs to
   createdAt  DateTime @default(now())
   lastUsedAt DateTime @default(now())

@@ -115,7 +115,7 @@ the app work. Do it first; it is also independently useful to the web app.
 - [x] **1.3 `POST /api/auth/mobile/refresh`.** Valid token in → fresh token
       out (sliding expiry), so a daily user is never logged out. Same
       demo/deleted checks. — S
-- [ ] **1.4 APNs via Expo push.** Migration: `PushSubscription` gains
+- [x] **1.4 APNs via Expo push.** Migration: `PushSubscription` gains
       `provider PushProvider @default(WEB)` (`WEB | EXPO`); `p256dh`/`auth`
       become nullable; `endpoint` holds the Expo push token for `EXPO` rows
       (its `@unique` still dedupes per device). `sendPushToUser` fans out per

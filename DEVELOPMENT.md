@@ -197,6 +197,18 @@ return 404/410 are deleted on the next send. iOS only delivers Web Push to
 apps installed to the home screen (16.4+), which the toggle detects and says
 so instead of offering a button that can't work.
 
+**Push (native app).** The same `notify*` entry points also reach the iOS app
+through Expo's push service. `PushSubscription.provider` says which transport
+a row uses: `WEB` rows are browser subscriptions, `EXPO` rows hold an Expo
+push token in `endpoint` and no keys. The app registers with
+`POST /api/push/subscription` `{provider: "EXPO", token, deviceName?}` and
+leaves with `DELETE` and the same body. Nothing to configure server-side:
+Expo delivers with the app's own APNs credentials (`EXPO_ACCESS_TOKEN` is
+optional). Tokens Expo reports as `DeviceNotRegistered` are deleted on the
+next send, like a 410 on the web. The payload's `url` and `tag` arrive in the
+notification's `data`, and `tag` doubles as the APNs collapse id so a repeat
+from the same person replaces the last notification instead of stacking.
+
 ## Scripts
 
 | Command | Description |

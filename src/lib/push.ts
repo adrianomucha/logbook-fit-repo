@@ -12,7 +12,9 @@
  * Generate a pair with: npx web-push generate-vapid-keys
  */
 import webpush from "web-push";
+import { Expo, type ExpoPushMessage } from "expo-server-sdk";
 import prisma from "@/lib/prisma";
+import type { PushSubscription } from "@prisma/client";
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
@@ -51,27 +53,117 @@ export interface PushPayload {
   tag?: string;
 }
 
-/**
- * Send a notification to every device a user has registered.
- * Returns the number of endpoints that accepted it (0 when push is
- * unconfigured, the user has no devices, or every send failed).
- */
-export async function sendPushToUser(
-  userId: string,
-  payload: PushPayload
-): Promise<number> {
-  if (!ensureVapid()) return 0;
+// ──────────────────────────────────────
+// Expo (native app) transport
+// ──────────────────────────────────────
 
-  const subscriptions = await prisma.pushSubscription.findMany({
-    where: { userId },
-  });
-  if (subscriptions.length === 0) return 0;
+/**
+ * Expo's push service needs nothing from this server to deliver: the app's
+ * EAS project holds the APNs key, and the token the device registers is the
+ * whole address. So unlike Web Push there is no "configured" state — an
+ * EXPO row is always deliverable. EXPO_ACCESS_TOKEN is optional and only
+ * checked by Expo once "enhanced push security" is switched on for the
+ * project.
+ */
+let expoClient: Expo | null = null;
+function expo(): Expo {
+  if (!expoClient) {
+    const accessToken = process.env.EXPO_ACCESS_TOKEN;
+    expoClient = new Expo(accessToken ? { accessToken } : {});
+  }
+  return expoClient;
+}
+
+/** A day-old "new message" ping is still useful; older than that is noise. */
+const PUSH_TTL_SEC = 60 * 60 * 24;
+
+/** APNs rejects a collapse id over 64 bytes; ours are ascii, so chars work. */
+const COLLAPSE_ID_MAX = 64;
+
+/**
+ * The Expo message for a payload. Pure so it can be unit-tested. `url` and
+ * `tag` ride in `data` for the app's notification handler; `tag` also
+ * becomes the collapse id (later notification replaces earlier, like the
+ * service worker's `tag`) and the thread id (grouped on the lock screen).
+ */
+export function buildExpoMessage(
+  token: string,
+  payload: PushPayload
+): ExpoPushMessage {
+  const collapse = payload.tag?.slice(0, COLLAPSE_ID_MAX);
+  return {
+    to: token,
+    title: payload.title,
+    body: payload.body,
+    sound: "default",
+    ttl: PUSH_TTL_SEC,
+    data: { url: payload.url, ...(payload.tag ? { tag: payload.tag } : {}) },
+    ...(collapse ? { collapseId: collapse, threadId: collapse } : {}),
+  };
+}
+
+interface SendOutcome {
+  delivered: number;
+  /** Endpoints/tokens the provider says will never deliver again. */
+  stale: string[];
+}
+
+async function sendExpoPush(
+  subscriptions: PushSubscription[],
+  payload: PushPayload
+): Promise<SendOutcome> {
+  const outcome: SendOutcome = { delivered: 0, stale: [] };
+  if (subscriptions.length === 0) return outcome;
+
+  const messages = subscriptions.map((sub) =>
+    buildExpoMessage(sub.endpoint, payload)
+  );
+
+  // Expo caps a request at 100 messages; chunking keeps a coach with many
+  // devices (or a future fan-out) inside it.
+  for (const chunk of expo().chunkPushNotifications(messages)) {
+    let tickets;
+    try {
+      tickets = await expo().sendPushNotificationsAsync(chunk);
+    } catch (error) {
+      console.error("[PUSH] expo send failed:", error);
+      continue;
+    }
+    // The nth ticket answers the nth message of the chunk.
+    tickets.forEach((ticket, i) => {
+      if (ticket.status === "ok") {
+        outcome.delivered += 1;
+        return;
+      }
+      // The app was uninstalled or its token rotated — nothing will ever be
+      // delivered there again, so drop the row (Web Push's 404/410).
+      if (ticket.details?.error === "DeviceNotRegistered") {
+        outcome.stale.push(String(chunk[i].to));
+      } else {
+        console.error("[PUSH] expo rejected:", ticket.details?.error ?? ticket.message);
+      }
+    });
+  }
+  return outcome;
+}
+
+// ──────────────────────────────────────
+// Web Push (browser) transport
+// ──────────────────────────────────────
+
+async function sendWebPush(
+  subscriptions: PushSubscription[],
+  payload: PushPayload
+): Promise<SendOutcome> {
+  const outcome: SendOutcome = { delivered: 0, stale: [] };
+  if (subscriptions.length === 0 || !ensureVapid()) return outcome;
 
   const body = JSON.stringify(payload);
-  const staleEndpoints: string[] = [];
-
-  const results = await Promise.all(
+  await Promise.all(
     subscriptions.map(async (sub) => {
+      // A WEB row always has keys (enforced by a DB check); guard anyway so a
+      // bad row can't throw its way out of a notification.
+      if (!sub.p256dh || !sub.auth) return;
       try {
         await webpush.sendNotification(
           {
@@ -79,33 +171,55 @@ export async function sendPushToUser(
             keys: { p256dh: sub.p256dh, auth: sub.auth },
           },
           body,
-          { TTL: 60 * 60 * 24 } // A day-old "new message" ping is still useful
+          { TTL: PUSH_TTL_SEC }
         );
-        return true;
+        outcome.delivered += 1;
       } catch (error) {
         // 404/410 mean the browser threw the subscription away (permission
         // revoked, PWA uninstalled, profile cleared). Nothing will ever be
         // delivered there again, so drop the row.
         const statusCode = (error as { statusCode?: number }).statusCode;
         if (statusCode === 404 || statusCode === 410) {
-          staleEndpoints.push(sub.endpoint);
+          outcome.stale.push(sub.endpoint);
         } else {
           console.error("[PUSH] send failed:", statusCode ?? error);
         }
-        return false;
       }
     })
   );
+  return outcome;
+}
 
-  if (staleEndpoints.length > 0) {
+/**
+ * Send a notification to every device a user has registered — browsers over
+ * Web Push, the native app over Expo — and return how many accepted it
+ * (0 when the user has no devices, Web Push is unconfigured and they only
+ * have browsers, or every send failed).
+ */
+export async function sendPushToUser(
+  userId: string,
+  payload: PushPayload
+): Promise<number> {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { userId },
+  });
+  if (subscriptions.length === 0) return 0;
+
+  const [web, native] = await Promise.all([
+    sendWebPush(subscriptions.filter((s) => s.provider === "WEB"), payload),
+    sendExpoPush(subscriptions.filter((s) => s.provider === "EXPO"), payload),
+  ]);
+
+  const stale = [...web.stale, ...native.stale];
+  if (stale.length > 0) {
     await prisma.pushSubscription
-      .deleteMany({ where: { endpoint: { in: staleEndpoints } } })
+      .deleteMany({ where: { endpoint: { in: stale } } })
       .catch(() => {
         /* cleanup is opportunistic */
       });
   }
 
-  const delivered = results.filter(Boolean).length;
+  const delivered = web.delivered + native.delivered;
   if (delivered > 0) {
     await prisma.pushSubscription
       .updateMany({
