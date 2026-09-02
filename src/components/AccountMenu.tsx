@@ -9,6 +9,7 @@ import {
   Loader2,
   LogOut,
   MessageSquarePlus,
+  Settings,
   Trash2,
 } from 'lucide-react';
 import {
@@ -99,7 +100,17 @@ export function AccountMenu({ className }: { className?: string }) {
           )}
         >
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted/40 font-mono text-[10px] font-semibold uppercase tracking-[0.04em] text-foreground">
-            {monogram}
+            {user?.avatarUrl ? (
+              // Remote storage URL — same next/image trade-off as SignupClient
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={user.avatarUrl}
+                alt=""
+                className="h-full w-full rounded-full object-cover"
+              />
+            ) : (
+              monogram
+            )}
             {isAdmin && (
               <span
                 className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-brand ring-2 ring-background"
@@ -166,6 +177,15 @@ export function AccountMenu({ className }: { className?: string }) {
           )}
 
           <DropdownMenuSeparator />
+          {/* Clients have no settings surface yet — the entry appears with it */}
+          {user?.role === 'COACH' && (
+            <DropdownMenuItem asChild className={itemClass}>
+              <Link href="/coach/settings">
+                <Settings className="h-3.5 w-3.5" aria-hidden="true" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem
             className={itemClass}
             onSelect={() => setIsFeedbackOpen(true)}

@@ -2,6 +2,7 @@ import crypto from "crypto";
 import prisma from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
 import { endCoachClientRelationshipIn } from "@/lib/relationship-termination";
+import { deleteAvatarByUrl } from "@/lib/avatar-storage";
 
 /**
  * Retires an account at its owner's request (App Store guideline 5.1.1(v)
@@ -37,7 +38,15 @@ export interface DeletionSummary {
 }
 
 export async function deleteAccount(userId: string): Promise<DeletionSummary> {
-  return prisma.$transaction((tx) => deleteAccountIn(tx, userId));
+  const user = await prisma.user.findFirst({
+    where: { id: userId, deletedAt: null },
+    select: { avatarUrl: true },
+  });
+  const summary = await prisma.$transaction((tx) => deleteAccountIn(tx, userId));
+  // Only after commit: the row no longer references the file, and a storage
+  // hiccup must never undo an account deletion (best-effort by design).
+  await deleteAvatarByUrl(user?.avatarUrl);
+  return summary;
 }
 
 export async function deleteAccountIn(

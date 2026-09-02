@@ -196,6 +196,21 @@ export const clientErrorLimiter = rateLimit("client-error", {
   maxRequests: 20,
 });
 
+// Verifying the current password is a bcrypt oracle, so keep the budget
+// tight. Keyed by user id (the endpoint is authenticated): a stolen session
+// can't grind at the password, and a shared IP doesn't lock anyone else out.
+export const changePasswordLimiter = rateLimit("change-password", {
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  maxRequests: 5,
+});
+
+// Avatar uploads move megabytes into storage, so one account can't fill the
+// bucket in a loop. Keyed by user id (the endpoint is authenticated).
+export const avatarUploadLimiter = rateLimit("avatar-upload", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 20,
+});
+
 // Feedback is authenticated, so this is keyed by user id rather than IP:
 // generous enough for someone on a bug-reporting spree, tight enough that
 // one account can't fill the admin inbox.

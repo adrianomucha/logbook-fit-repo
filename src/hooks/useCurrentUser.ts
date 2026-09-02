@@ -8,6 +8,8 @@ interface UserProfile {
   email: string;
   name: string;
   role: 'COACH' | 'CLIENT';
+  avatarUrl: string | null;
+  timezone: string;
   createdAt: string;
   coachProfile: { id: string; bio: string } | null;
   clientProfile: {
@@ -25,7 +27,7 @@ interface UserProfile {
 
 export function useCurrentUser() {
   const { data: session, status } = useSession();
-  const { data: user, error, isLoading: isLoadingProfile } = useSWR<UserProfile>(
+  const { data: user, error, isLoading: isLoadingProfile, mutate } = useSWR<UserProfile>(
     status === 'authenticated' ? '/api/me' : null
   );
 
@@ -43,6 +45,8 @@ export function useCurrentUser() {
     isAdmin: user?.isAdmin ?? false,
     /** This person's paired account, if one is linked and switchable */
     linkedAccount: user?.linkedAccount ?? null,
+    /** Revalidate /api/me — call after mutating profile data */
+    refresh: mutate,
     error,
   };
 }

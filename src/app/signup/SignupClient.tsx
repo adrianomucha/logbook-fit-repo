@@ -20,6 +20,7 @@ interface InviteInfo {
   note?: string | null;
   coachName?: string;
   coachAvatar?: string | null;
+  coachBio?: string | null;
   expiresAt?: string;
   reason?: 'not_found' | 'used' | 'expired';
 }
@@ -361,6 +362,11 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-[0.95] text-balance antialiased">
               {coachName} is expecting you
             </h1>
+            {inviteInfo?.coachBio && (
+              <p className="text-sm text-muted-foreground leading-relaxed mt-3 text-pretty">
+                {inviteInfo.coachBio}
+              </p>
+            )}
           </div>
 
           {inviteInfo?.note && (

@@ -12,6 +12,9 @@ const tx = vi.hoisted(() => ({
 
 vi.mock("@/lib/prisma", () => ({
   default: {
+    // deleteAccount reads avatarUrl outside the transaction (for the
+    // post-commit storage cleanup); undefined here means "no photo"
+    user: { findFirst: vi.fn() },
     $transaction: vi.fn(async (fn: (t: typeof tx) => Promise<unknown>) => fn(tx)),
   },
 }));

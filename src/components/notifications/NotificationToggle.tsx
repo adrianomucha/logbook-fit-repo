@@ -9,6 +9,12 @@ interface NotificationToggleProps {
   className?: string;
   /** Hide once notifications are on (for surfaces that only need the nudge) */
   hideWhenOn?: boolean;
+  /**
+   * Say "not supported" instead of vanishing when push can't work here.
+   * For surfaces whose copy promises this control (the settings page) —
+   * a described control that silently isn't there reads as broken.
+   */
+  showUnavailable?: boolean;
 }
 
 /**
@@ -19,7 +25,11 @@ interface NotificationToggleProps {
  * The two cases the user *can* act on get a line of copy instead: blocked
  * permission (browser settings) and iOS-in-a-tab (install the app first).
  */
-export function NotificationToggle({ className, hideWhenOn }: NotificationToggleProps) {
+export function NotificationToggle({
+  className,
+  hideWhenOn,
+  showUnavailable,
+}: NotificationToggleProps) {
   const { available, isSubscribed, isBlocked, needsInstall, isBusy, isLoading, enable, disable } =
     usePushNotifications();
 
@@ -39,7 +49,20 @@ export function NotificationToggle({ className, hideWhenOn }: NotificationToggle
     );
   }
 
-  if (!available) return null;
+  if (!available) {
+    if (!showUnavailable) return null;
+    return (
+      <p
+        className={cn(
+          'font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground flex items-center gap-1.5',
+          className
+        )}
+      >
+        <BellOff className="w-3 h-3 shrink-0" aria-hidden="true" />
+        Not supported in this browser
+      </p>
+    );
+  }
 
   if (isBlocked && !isSubscribed) {
     return (
