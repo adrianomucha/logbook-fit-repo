@@ -59,8 +59,10 @@ export function NotificationPreferenceTile() {
       </View>
 
       <View className="min-w-0 flex-1">
-        <View className="flex-row items-start justify-between gap-4">
-          <Text className="pt-1 font-sans-semibold text-[15px] leading-5 text-foreground">Message alerts</Text>
+        {/* Title row is the icon well's height, so title, switch and icon
+            share one centre line; the description hangs below */}
+        <View className="h-10 flex-row items-center justify-between gap-4">
+          <Text className="font-sans-semibold text-[15px] leading-5 text-foreground">Message alerts</Text>
           <Switch
             value={isSubscribed}
             onValueChange={(v) => void handleChange(v)}
@@ -71,7 +73,7 @@ export function NotificationPreferenceTile() {
           />
         </View>
 
-        <Text className="mt-1.5 font-sans text-[13px] leading-[19px] text-muted-foreground">
+        <Text className="mt-1 font-sans text-[13px] leading-[19px] text-muted-foreground">
           A push notification on this device when your coach messages you. Alerts are per device, so turn them on wherever you train from.
         </Text>
 
