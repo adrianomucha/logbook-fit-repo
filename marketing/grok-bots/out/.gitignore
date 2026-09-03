@@ -1,0 +1,3 @@
+# Raw API responses are debugging noise; the merged groups.json/csv and
+# state.json are the product of a run and are meant to be committed.
+raw/
