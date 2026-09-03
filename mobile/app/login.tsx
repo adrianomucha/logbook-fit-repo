@@ -6,7 +6,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { SignInError, useAuth } from '@/lib/auth';
 import { WEB_URL } from '@/lib/config';
-import { Logo } from '@/components/brand/Logo';
 
 const inputClass =
   'h-12 rounded-lg border border-border/60 bg-secondary/50 px-3.5 font-sans text-base text-foreground';
@@ -28,11 +27,10 @@ function MonoLink({ children, onPress }: { children: string; onPress: () => void
 const openWeb = (path: string) => WebBrowser.openBrowserAsync(`${WEB_URL}${path}`);
 
 /**
- * Sign in — the web's /login at phone width, one to one: the volt hairline
- * and hairline app bar (logo, "Create account"), the headline block over a
+ * Sign in — the web's /login at phone width: the headline block over a
  * volt-tick divider, the form, the volt arrow button, and the © / Privacy /
- * Terms footer. Accounts are created from a coach's invite link on the
- * web, so the header's escape hatch opens that page in the browser.
+ * Terms footer. No app bar: the app is the brand, and accounts are created
+ * from a coach's invite link on the web, so there is no "Create account".
  */
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -62,21 +60,6 @@ export default function LoginScreen() {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      {/* Volt hairline — the brand panel, collapsed to a line on a phone */}
-      <View className="h-1 bg-brand" />
-
-      {/* Hairline app bar */}
-      <View className="h-14 flex-row items-center border-b border-border px-5">
-        <Logo markSize={20} />
-        <Pressable
-          onPress={() => void openWeb('/signup')}
-          accessibilityRole="button"
-          className="ml-auto h-10 justify-center rounded-lg border border-border px-4 active:bg-muted"
-        >
-          <Text className="font-sans-medium text-sm text-foreground">Create account</Text>
-        </Pressable>
-      </View>
-
       <KeyboardAvoidingView className="flex-1" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <ScrollView
           className="flex-1"
