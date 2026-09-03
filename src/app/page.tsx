@@ -369,9 +369,14 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-14">
             {/* Stretch to the list's exact height on desktop so both columns
                 end on the same line; the 4:5 ratio stays for stacked mobile */}
+            {/* Shot brief:
+                Screenshot of the check-in review. The client's effort rating and
+                notes on one side, the exercises they flagged that week sitting
+                right beside them, and the coach's reply box below. Crop tight
+                enough that the flagged exercise stays readable, because that
+                context is exactly what a group chat never gives you. */}
             <ImageSlot
               label="In the product: the check-in review"
-              description="Screenshot of the check-in review. The client's effort rating and notes on one side, the exercises they flagged that week sitting right beside them, and the coach's reply box below. Crop tight enough that the flagged exercise stays readable, because that context is exactly what a group chat never gives you."
               className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
             />
             <div className="lg:order-1">
@@ -413,9 +418,15 @@ export default function HomePage() {
         {/* For coaches */}
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
+            {/* Shot brief:
+                Screenshot of the urgency-sorted dashboard, and the single most
+                important image on the page: it's the proof of the headline. Show
+                a full client list ranked with at-risk on top, and make sure a
+                silence signal like 'last logged 12 days ago' is legible on the
+                first row. Favour this over the plan builder, which every
+                competitor also has. */}
             <ImageSlot
               label="In the product: who needs you today"
-              description="Screenshot of the urgency-sorted dashboard, and the single most important image on the page: it's the proof of the headline. Show a full client list ranked with at-risk on top, and make sure a silence signal like 'last logged 12 days ago' is legible on the first row. Favour this over the plan builder, which every competitor also has."
               className="aspect-[4/5] rounded-xl"
             />
             <div>
@@ -440,9 +451,14 @@ export default function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
+              {/* Shot brief:
+                  Photo of a client's phone held in a real gym, the Today view on
+                  screen mid-session, a loaded bar soft in the background. Shot from
+                  the client's own eye line rather than as a staged flat-lay. The
+                  point is that logging happens between sets, in the room, in
+                  seconds. */}
               <ImageSlot
                 label="Between sets"
-                description="Photo of a client's phone held in a real gym, the Today view on screen mid-session, a loaded bar soft in the background. Shot from the client's own eye line rather than as a staged flat-lay. The point is that logging happens between sets, in the room, in seconds."
                 className="aspect-[4/5] rounded-xl"
               />
             </div>
