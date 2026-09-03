@@ -1,107 +1,90 @@
-# Grok group-finder bots
+# Grok bots: finding US Facebook groups full of coaches
 
-A few small "bots" that use Grok (xAI) with its built-in web search to find
-**US Facebook groups where Logbook.fit's future users — independent fitness
-coaches — already hang out**, and keep them in one deduplicated lead list.
+Six Grok bots, no code and no API. Each bot is a **Grok Workspace** with its
+own custom instructions plus a **weekly Automation** that searches the web
+and emails you a CSV of Facebook groups where Logbook.fit's future users
+(independent fitness coaches) already hang out. Results go into one Google
+Sheet; you do the joining and posting as a human.
 
-Each bot is a persona hunting one slice of the ICP:
+| Bot | File | Hunts for |
+|-----|------|-----------|
+| Independent personal trainers | `bots/pt-independent.md` | PTs running their own client roster |
+| Online fitness coaches | `bots/online-coaching.md` | Online and hybrid coaches |
+| Strength & conditioning coaches | `bots/strength-coaches.md` | S&C, powerlifting, weightlifting, CrossFit coaches |
+| Nutrition & health coaches | `bots/nutrition-hybrid.md` | Nutrition coaches who also program training |
+| Small gym & studio owners | `bots/gym-studio-owners.md` | Owners who coach and care about retention |
+| Verifier | `bots/verifier.md` | Re-checks every URL before you act on it |
 
-| Bot | Looking for |
-|-----|-------------|
-| `pt-independent` | Independent personal trainers running their own client roster |
-| `online-coaching` | Online / hybrid fitness coaches |
-| `strength-coaches` | S&C, powerlifting, weightlifting, CrossFit-style coaches |
-| `nutrition-hybrid` | Nutrition & health coaches who also program training |
-| `gym-studio-owners` | Small gym / private studio owners who coach |
+## Setup (about 45 minutes, once)
 
-A run makes one Grok research call per **query × region**. Grok searches the
-web (and optionally X) itself, returns groups as JSON, and the CLI merges them
-into `out/groups.json` + `out/groups.csv`. A second **verifier** pass re-checks
-each URL and pulls member count, privacy, rules and activity.
+You need a Grok account at grok.com (Automations are available on every
+plan; email triggers need SuperGrok, which these bots do not use).
 
-## Setup
+1. **Lead tracker.** Google Sheets → File → Import → `lead-tracker-template.csv`.
+   This is the channel where everything lands. Details in `playbook.md`.
+2. **For each of the five finder bots** (open its file under `bots/`):
+   1. Grok → Workspaces → New. Name: `Logbook · <bot name>`.
+   2. Custom instructions → paste section 1 of the bot file.
+   3. Upload `product-brief.md` to the Workspace.
+   4. Run the kickoff prompts in section 2, one at a time. Paste each CSV
+      block into the tracker. Expect 10–20 groups per prompt, with overlap.
+   5. Grok → Automations → New. Paste section 3. Schedule weekly, Monday
+      07:00 your time. Deliver by email + app notification.
+3. **Verifier.** Create its Workspace from `bots/verifier.md` section 1.
+   No Automation; you run it by hand on new rows.
+4. **Gmail filter** for the digests (see `playbook.md`).
 
-1. Get an API key at <https://console.x.ai> and add to `.env`:
+After the kickoff runs you should have 60–120 candidate groups across the
+five bots before dedup, and a first shortlist within the hour.
 
-   ```env
-   XAI_API_KEY="xai-..."
-   # optional
-   GROK_MODEL="grok-4.5"           # default; grok-4.6 is stronger and ~4× the price
-   GROK_REASONING_EFFORT="low"     # unset = model default
-   ```
+## How the bots work
 
-2. `npm install` (already done if you run the app).
+- Every answer is a CSV block with a fixed header, so it pastes straight
+  into the sheet. Columns: name, url, privacy, members, region, audience,
+  fit (1–5), promo_policy, activity, confidence, sources, notes.
+- The fit rubric is in `product-brief.md` and repeated in every prompt:
+  5 = independent coaches with their own roster talking client management
+  and business, down to 1 = poor fit.
+- Bots are told never to invent URLs (they write `NONE`), to stay US-only,
+  to skip enthusiast and find-a-trainer groups, and to skip anything in
+  `groups-seen.csv` (your tracker export, re-uploaded every two weeks).
+- Weekly Automations rotate through 12 regions by ISO week number, so all
+  five bots cover the same metro in the same week (`regions.md`). Any
+  region can also be run by hand: `Run your search for Texas.`
 
-## Run
+## Files
 
-```bash
-npm run grok-bots -- --list                       # see bots
-npm run grok-bots -- --all --dry-run              # print prompts, no API calls
-npm run grok-bots -- --all                        # every bot, nationwide (17 calls)
-npm run grok-bots -- --bot pt-independent --regions 5   # + top 5 US metros
-npm run grok-bots -- --bot online-coaching --region "Texas" --region "Florida"
-npm run grok-bots -- --verify                     # verify every unverified URL
-npm run grok-bots -- --all --regions 10 --verify  # the full thing
+```
+marketing/grok-bots/
+├── README.md                 this file
+├── playbook.md               channel setup, weekly cadence, posting rules, post templates
+├── product-brief.md          upload to every Workspace
+├── regions.md                the 12-week region rotation (+ second lap)
+├── lead-tracker-template.csv header for the Google Sheet
+└── bots/
+    ├── pt-independent.md
+    ├── online-coaching.md
+    ├── strength-coaches.md
+    ├── nutrition-hybrid.md
+    ├── gym-studio-owners.md
+    └── verifier.md
 ```
 
-Flags: `--limit <n>` groups per call (default 15), `--concurrency <n>`
-(default 2), `--force` to redo combos already in `out/state.json`,
-`--model`, `--reasoning low|medium|high`, `--no-x-search`.
+## Tuning
 
-Runs are **idempotent and resumable**: every finished (bot, query, region)
-combo is recorded in `out/state.json` and skipped next time, and results are
-written after every call, so you can Ctrl-C and re-run. Region list lives in
-`bots.ts` (`US_REGIONS`): 23 metros, then 18 states.
+- Bot returns enthusiast groups: tighten the TARGET line in its
+  instructions and add "skip groups whose name mentions weight loss,
+  challenge, or accountability buddies".
+- Bot keeps returning the same groups: re-upload a fresh `groups-seen.csv`.
+- Too few results for a metro: that is real; most coach communities are
+  national. Let the rotation move on.
+- Custom instructions are capped at about 4,000 characters in Grok; every
+  bot file stays under that.
 
-## Output
+## Guardrails
 
-`out/groups.csv` — one row per unique group, sorted verified → fit → size:
-
-| column | meaning |
-|--------|---------|
-| `fit_score` | 5 = independent coaches talking client management/business … 1 = poor fit |
-| `verified` | `true` verifier confirmed it exists and is US; `false` rejected; empty = not checked |
-| `privacy`, `members_estimate`, `region`, `audience` | what's publicly visible |
-| `promo_policy` | what the group rules say about self-promotion, when visible |
-| `activity_signal` | e.g. "10+ posts/day", "last post 2024" |
-| `bots`, `sources` | which bots found it and where |
-
-`out/groups.json` is the same data with everything (queries, timestamps,
-rationale) — treat it as the source of truth and the CSV as the export.
-`out/raw/` keeps every raw API response (gitignored) for debugging empty or
-odd results.
-
-Dedup key is the canonical group URL (`m.`/`www.`/`/about`/query strings
-collapsed), falling back to the normalised name for groups Grok found but
-couldn't link; a later sighting with the URL upgrades that row.
-
-## Cost
-
-Rough: a discovery call is ~5–15k input tokens (search results) and ~2k
-output. On grok-4.5 that is a few cents per call; `--all --regions 10` is
-~190 calls. The summary line at the end prints token totals (and dollars,
-when the API returns `cost_usd`). Check current prices at
-<https://docs.x.ai/developers/models>.
-
-## Guardrails (read this)
-
-- **Discovery only.** These bots search the public web; they never log into
-  Facebook, join groups, scrape members, or post. Automating a Facebook
-  account is against Meta's terms and gets accounts banned — do the joining
-  and posting yourself.
-- **Respect group rules.** `promo_policy` is there so you don't get kicked
-  on day one. Value-first posts (retention tips, check-in templates) beat
-  "check out my app". Many groups have promo days.
-- **Grok can hallucinate.** The prompt forbids inventing URLs and the
-  verifier re-checks them, but always eyeball a group before spending time on
-  it. Member counts are what a search snippet said, not live numbers.
-- Search results reflect what Google/Bing indexed; private groups with
-  little public footprint will show up with `url: null` or not at all.
-
-## Adding / tuning bots
-
-Edit `bots.ts`: add an entry to `BOTS` (id, name, persona, queries) or change
-the queries. The system prompt (`DISCOVERY_SYSTEM_PROMPT`) carries the
-product context and the fit-score rubric — tune it there if results skew
-toward the wrong audience. `groups.test.ts` covers the merge/dedup/CSV logic:
-`npx vitest run marketing/grok-bots`.
+The bots only research the public web. Nothing here logs into Facebook,
+joins groups, scrapes members, or posts. Automating a Facebook account is
+against Meta's terms and gets accounts banned; the playbook keeps the
+human parts human. Grok can hallucinate: the Verifier and your own eyes
+are the last check before you invest time in a group.

@@ -12,8 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "postinstall": "prisma generate",
-    "grok-bots": "tsx marketing/grok-bots/run.ts"
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
