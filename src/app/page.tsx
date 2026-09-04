@@ -419,16 +419,15 @@ export default function HomePage() {
         {/* For coaches */}
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
-            {/* Shot brief:
-                Screenshot of the urgency-sorted dashboard, and the single most
-                important image on the page: it's the proof of the headline. Show
-                a full client list ranked with at-risk on top, and make sure a
-                silence signal like 'last logged 12 days ago' is legible on the
-                first row. Favour this over the plan builder, which every
-                competitor also has. */}
+            {/* The single most important image on the page: it's the proof of
+                the headline. A coach at a desk on the gym floor, the dashboard
+                open on his laptop with the roster ranked by who needs him. */}
             <ImageSlot
               label="In the product: who needs you today"
+              src="/landing/coach-dashboard.webp"
+              alt="A coach at a desk in a gym, reviewing his client dashboard on a laptop with clients ranked by who needs attention"
               className="aspect-[4/5] rounded-xl"
+              objectPosition="center 45%"
             />
             <div>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
