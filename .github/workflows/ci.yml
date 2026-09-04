@@ -62,3 +62,17 @@ jobs:
         env:
           EXPO_OFFLINE: "1"
           CI: "1"
+
+  # Fails the build if a credential lands in the commits being pushed or in a
+  # PR's diff. Added after a live Supabase access token was committed to
+  # .mcp.json in Feb 2026 (see SECURITY_INCIDENT_MCP_TOKEN.md).
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
