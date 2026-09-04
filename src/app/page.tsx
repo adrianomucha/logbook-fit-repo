@@ -420,14 +420,13 @@ export default function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             {/* The single most important image on the page: it's the proof of
-                the headline. A coach at a desk on the gym floor, the dashboard
-                open on his laptop with the roster ranked by who needs him. */}
+                the headline. The coach dashboard itself, the week strip on top
+                and the roster ranked by who needs attention beneath it. */}
             <ImageSlot
               label="In the product: who needs you today"
               src="/landing/coach-dashboard.webp"
-              alt="A coach at a desk in a gym, reviewing his client dashboard on a laptop with clients ranked by who needs attention"
+              alt="The Logbook coach dashboard: a week strip showing seven clients, six pending and one at risk, above a Needs Attention list ranked by urgency"
               className="aspect-[4/5] rounded-xl"
-              objectPosition="center 45%"
             />
             <div>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
