@@ -8,9 +8,11 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { cn } from '@/lib/utils';
 
 const SECTIONS = [
+  { label: 'Overview', href: '/admin' },
   { label: 'Waitlist', href: '/admin/waitlist' },
   { label: 'Accounts', href: '/admin/users' },
   { label: 'Feedback', href: '/admin/feedback' },
+  { label: 'Health', href: '/admin/health' },
 ] as const;
 
 /**
@@ -49,8 +51,12 @@ export function AdminHeader() {
           >
             {SECTIONS.map(({ label, href }) => {
               // startsWith, not equality: any future detail page under a
-              // section keeps that section marked.
-              const isActive = pathname?.startsWith(href) ?? false;
+              // section keeps that section marked. The index tab is the one
+              // exception — every section starts with "/admin".
+              const isActive =
+                href === '/admin'
+                  ? pathname === '/admin'
+                  : (pathname?.startsWith(href) ?? false);
               return (
                 <Link
                   key={href}
