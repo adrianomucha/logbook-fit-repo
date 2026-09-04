@@ -379,6 +379,7 @@ export default function HomePage() {
               alt="A client sitting on a bench in a gym, answering her weekly check-in on her phone"
               className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
               objectPosition="center 35%"
+              hideCaption
             />
             <div className="lg:order-1">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -420,14 +421,14 @@ export default function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             {/* The single most important image on the page: it's the proof of
-                the headline. A coach at a desk on the gym floor, the dashboard
-                open on his laptop with the roster ranked by who needs him. */}
+                the headline. The coach dashboard itself, the week strip on top
+                and the roster ranked by who needs attention beneath it. */}
             <ImageSlot
               label="In the product: who needs you today"
               src="/landing/coach-dashboard.webp"
-              alt="A coach at a desk in a gym, reviewing his client dashboard on a laptop with clients ranked by who needs attention"
+              alt="The Logbook coach dashboard: a week strip showing seven clients, six pending and one at risk, above a Needs Attention list ranked by urgency"
               className="aspect-[4/5] rounded-xl"
-              objectPosition="center 45%"
+              hideCaption
             />
             <div>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -451,15 +452,16 @@ export default function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
-              {/* Shot brief:
-                  Photo of a client's phone held in a real gym, the Today view on
-                  screen mid-session, a loaded bar soft in the background. Shot from
-                  the client's own eye line rather than as a staged flat-lay. The
-                  point is that logging happens between sets, in the room, in
-                  seconds. */}
+              {/* A client on the bench between sets, phone in hand, with the
+                  exercise card from the Today view over the photo: two sets
+                  logged, the third about to be, the coach's cue right there.
+                  Captions are off on every slot; the photos carry it. */}
               <ImageSlot
                 label="Between sets"
+                src="/landing/client-between-sets.webp"
+                alt="A client sitting on a gym bench between sets, logging a set on her phone: the Dumbbell Goblet Squat card shows two of three sets done and the coach's cue to keep the chest tall"
                 className="aspect-[4/5] rounded-xl"
+                hideCaption
               />
             </div>
             <div className="lg:order-1">
