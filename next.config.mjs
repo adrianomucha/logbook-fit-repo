@@ -57,6 +57,16 @@ const nextConfig = {
   // ".nosync" suffix keeps the dir in place but tells iCloud Drive to leave it
   // alone. Covered by `tmp/` in .gitignore.
   ...(isVercel ? {} : { distDir: "tmp/logbook-next.nosync" }),
+  // The admin area used to be one route per section; it is now a single
+  // page switched by ?tab=. Keep the old URLs (bookmarks, log links) working.
+  async redirects() {
+    return [
+      { source: "/admin/waitlist", destination: "/admin?tab=waitlist", permanent: false },
+      { source: "/admin/users", destination: "/admin?tab=accounts", permanent: false },
+      { source: "/admin/feedback", destination: "/admin?tab=feedback", permanent: false },
+      { source: "/admin/health", destination: "/admin?tab=health", permanent: false },
+    ];
+  },
   async headers() {
     return [
       {

@@ -1,19 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { AccountMenu } from '@/components/AccountMenu';
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { cn } from '@/lib/utils';
-
-const SECTIONS = [
-  { label: 'Overview', href: '/admin' },
-  { label: 'Waitlist', href: '/admin/waitlist' },
-  { label: 'Accounts', href: '/admin/users' },
-  { label: 'Feedback', href: '/admin/feedback' },
-  { label: 'Health', href: '/admin/health' },
-] as const;
+import { AdminTabBar } from './AdminTabs';
 
 /**
  * Nav chrome for the admin surfaces — same shape as the coach and client
@@ -22,7 +13,6 @@ const SECTIONS = [
  * has ("/" resolves there too, and covers the moment before /api/me lands).
  */
 export function AdminHeader() {
-  const pathname = usePathname();
   const { role } = useCurrentUser();
 
   const homeHref = role === 'COACH' ? '/coach' : role === 'CLIENT' ? '/client' : '/';
@@ -44,36 +34,8 @@ export function AdminHeader() {
           {/* Brand / nav divider */}
           <div className="h-3.5 w-px bg-border" aria-hidden="true" />
 
-          {/* Section tabs — underline indicator sits on the header hairline */}
-          <nav
-            className="flex items-stretch self-stretch gap-4 sm:gap-5"
-            aria-label="Admin sections"
-          >
-            {SECTIONS.map(({ label, href }) => {
-              // startsWith, not equality: any future detail page under a
-              // section keeps that section marked. The index tab is the one
-              // exception — every section starts with "/admin".
-              const isActive =
-                href === '/admin'
-                  ? pathname === '/admin'
-                  : (pathname?.startsWith(href) ?? false);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={cn(
-                    'inline-flex items-center border-b-2 px-0.5 font-mono text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
-                    isActive
-                      ? 'border-foreground text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
-                  )}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Section tabs — switch in place, see AdminTabs.tsx */}
+          <AdminTabBar />
         </div>
 
         <AccountMenu />

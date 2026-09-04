@@ -175,7 +175,10 @@ digging through Vercel logs.
 
 ## Admin
 
-`/admin` (allowlisted by `ADMIN_EMAILS`) has five tabs. **Overview** is
+`/admin` (allowlisted by `ADMIN_EMAILS`) is a single page with five tabs,
+switched on the client and mirrored to `?tab=` (the old per-section URLs
+redirect). Every panel is server-rendered and streamed in behind its own
+fallback, so switching costs no request. **Overview** is
 aggregate usage — people, activity, funnel, weekly signups and workouts —
 with demo and sample accounts excluded and chat reported as counts only,
 never message text. **Waitlist**, **Accounts** and **Feedback** are the

@@ -1,13 +1,6 @@
-import { getServerSession } from 'next-auth';
-import { notFound } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
 import { CRON_JOBS, latestCronRuns } from '@/lib/cron-runs';
-import { overallLevel, runHealthChecks } from '@/lib/health';
+import { overallLevel, type HealthCheck } from '@/lib/health';
 import { HealthDot, healthLabel } from './HealthDot';
-
-export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Health · Admin', robots: { index: false } };
 
 const dateTimeFmt = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -25,16 +18,13 @@ function summarize(summary: unknown): string {
     .join(' · ');
 }
 
-export default async function HealthAdminPage() {
-  const session = await getServerSession(authOptions);
-
-  // Same posture as the other admin pages: non-admins get a 404, not a redirect.
-  if (!isAdminEmail(session?.user?.email)) {
-    notFound();
-  }
-
+/**
+ * Health tab. The probes are started once by the /admin page and shared with
+ * the overview's status badge, so a visit runs each check exactly once.
+ */
+export async function HealthPanel({ checks: pending }: { checks: Promise<HealthCheck[]> }) {
   const [checks, runs] = await Promise.all([
-    runHealthChecks(),
+    pending,
     latestCronRuns(CRON_JOBS.checkIns, 14).catch(() => []),
   ]);
   const overall = overallLevel(checks);
