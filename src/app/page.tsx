@@ -369,15 +369,16 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-14">
             {/* Stretch to the list's exact height on desktop so both columns
                 end on the same line; the 4:5 ratio stays for stacked mobile */}
-            {/* Shot brief:
-                Screenshot of the check-in review. The client's effort rating and
-                notes on one side, the exercises they flagged that week sitting
-                right beside them, and the coach's reply box below. Crop tight
-                enough that the flagged exercise stays readable, because that
-                context is exactly what a group chat never gives you. */}
+            {/* A client answering her weekly check-in from the bench, phone in
+                hand, the rack still loaded behind her. The point of the shot:
+                the check-in happens in the room, in the moment, not in a group
+                chat later that night. */}
             <ImageSlot
-              label="In the product: the check-in review"
+              label="The check-in, done from the bench"
+              src="/landing/checkin-gym.webp"
+              alt="A client sitting on a bench in a gym, answering her weekly check-in on her phone"
               className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
+              objectPosition="center 35%"
             />
             <div className="lg:order-1">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
