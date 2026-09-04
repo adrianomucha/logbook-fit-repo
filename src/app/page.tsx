@@ -372,12 +372,16 @@ export default function HomePage() {
             {/* A coach reading a client's check-in on his phone between
                 sessions, with the review card over the photo: her notes and the
                 exercise she flagged that week, sitting right beside each other.
-                That context is exactly what a group chat never gives you. */}
+                That context is exactly what a group chat never gives you.
+                On desktop the slot is narrower than 4:5, so the crop is
+                anchored near the left edge: the card and the coach stay whole
+                and the towel shelves on the right take the trim. */}
             <ImageSlot
               label="The check-in review"
               src="/landing/checkin-gym.webp"
               alt="A coach in a gym reading a client's check-in on his phone: her notes about heavy Romanian deadlifts and a tight lower back, with the exercise she flagged that week beside them"
               className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
+              objectPosition="8% center"
               hideCaption
             />
             <div className="lg:order-1">
