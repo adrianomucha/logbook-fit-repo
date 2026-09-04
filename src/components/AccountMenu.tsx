@@ -21,15 +21,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { FeedbackDialog } from '@/components/feedback/FeedbackDialog';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { ADMIN_TABS, adminTabHref } from '@/app/admin/tabs';
 import { cn } from '@/lib/utils';
 
-const ADMIN_LINKS = [
-  { label: 'Overview', href: '/admin' },
-  { label: 'Waitlist', href: '/admin/waitlist' },
-  { label: 'Accounts', href: '/admin/users' },
-  { label: 'Feedback', href: '/admin/feedback' },
-  { label: 'Health', href: '/admin/health' },
-] as const;
+// One entry per admin tab; /admin is a single page switched by ?tab=.
+const ADMIN_LINKS = ADMIN_TABS.map(({ key, label }) => ({
+  label,
+  href: adminTabHref(key),
+}));
 
 const itemClass =
   'cursor-pointer gap-2 text-[13px] text-muted-foreground focus:text-foreground';

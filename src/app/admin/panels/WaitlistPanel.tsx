@@ -1,15 +1,8 @@
-import { getServerSession } from 'next-auth';
-import { notFound } from 'next/navigation';
 import { Download } from 'lucide-react';
 import type { WaitlistStatus } from '@prisma/client';
-import { authOptions } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
 import { waitlistInvitePath } from '@/lib/waitlist';
 import prisma from '@/lib/prisma';
 import { InviteActions } from './InviteActions';
-
-export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Waitlist · Admin', robots: { index: false } };
 
 const dateFmt = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -51,15 +44,8 @@ function StatusBadge({
   );
 }
 
-export default async function WaitlistAdminPage() {
-  const session = await getServerSession(authOptions);
-
-  // Not an admin → 404 rather than a login redirect, so the route's
-  // existence isn't advertised to signed-in non-admins.
-  if (!isAdminEmail(session?.user?.email)) {
-    notFound();
-  }
-
+/** Waitlist tab. Access is checked once by the /admin page that renders it. */
+export async function WaitlistPanel() {
   const entries = await prisma.waitlistEntry.findMany({
     orderBy: { createdAt: 'desc' },
     select: {

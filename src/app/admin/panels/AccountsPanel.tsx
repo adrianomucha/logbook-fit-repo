@@ -1,13 +1,6 @@
-import { getServerSession } from 'next-auth';
-import { notFound } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
 import { isDemoAccount, isLockedDemoAccount } from '@/lib/demo';
 import prisma from '@/lib/prisma';
 import { ResetPasswordButton } from './ResetPasswordButton';
-
-export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Accounts · Admin', robots: { index: false } };
 
 const dateFmt = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -26,14 +19,8 @@ function FlagChip({ label, title }: { label: string; title?: string }) {
   );
 }
 
-export default async function AccountsAdminPage() {
-  const session = await getServerSession(authOptions);
-
-  // Same posture as the waitlist page: non-admins get a 404, not a redirect.
-  if (!isAdminEmail(session?.user?.email)) {
-    notFound();
-  }
-
+/** Accounts tab. Access is checked once by the /admin page that renders it. */
+export async function AccountsPanel() {
   // Every account ever created, deleted ones included — this page is the
   // owner's registry of the legacy era as much as the current one.
   const users = await prisma.user.findMany({

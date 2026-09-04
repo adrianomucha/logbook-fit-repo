@@ -1,12 +1,5 @@
-import { getServerSession } from 'next-auth';
-import { notFound } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
-import { isAdminEmail } from '@/lib/admin';
 import prisma from '@/lib/prisma';
 import { FeedbackStatusActions } from './FeedbackStatusActions';
-
-export const dynamic = 'force-dynamic';
-export const metadata = { title: 'Feedback · Admin', robots: { index: false } };
 
 const dateFmt = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -28,14 +21,8 @@ function CategoryChip({ category }: { category: keyof typeof CATEGORY_LABELS }) 
   );
 }
 
-export default async function FeedbackAdminPage() {
-  const session = await getServerSession(authOptions);
-
-  // Same posture as the other admin pages: non-admins get a 404, not a redirect.
-  if (!isAdminEmail(session?.user?.email)) {
-    notFound();
-  }
-
+/** Feedback tab. Access is checked once by the /admin page that renders it. */
+export async function FeedbackPanel() {
   const entries = await prisma.feedback.findMany({
     // Inbox order: everything unresolved first, newest of those on top,
     // resolved history below

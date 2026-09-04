@@ -6,6 +6,7 @@ import { isAdminEmail } from '@/lib/admin';
 import { emailConfigStatus } from '@/lib/services/email';
 import { envProblems, reportEnvProblemsOnce } from '@/lib/env-check';
 import { AdminHeader } from './AdminHeader';
+import { AdminTabProvider } from './AdminTabs';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,8 +44,11 @@ export default async function AdminLayout({
         : [mailer.reason];
 
   return (
-    // h-dvh + overflow-hidden: admin pages never scroll the window — long
-    // tables scroll inside their own container instead.
+    // The tab provider wraps header and page together so the header's tab
+    // strip and the page's panels share one notion of "active".
+    // h-dvh + overflow-hidden: admin never scrolls the window — long tables
+    // scroll inside their own container instead.
+    <AdminTabProvider>
     <div className="flex h-dvh flex-col overflow-hidden bg-background">
       <AdminHeader />
       {problems.length > 0 && (
@@ -74,5 +78,6 @@ export default async function AdminLayout({
       )}
       {children}
     </div>
+    </AdminTabProvider>
   );
 }
