@@ -25,16 +25,23 @@ blobs reachable from `main` and 100+ branches. Treat it as harvested.
 Order matters. Revoking the token is the only step that actually closes the
 hole; the history rewrite only stops new scrapers from finding it.
 
-- [ ] **1. Revoke the token now.** Supabase Dashboard → Account → Access
-      Tokens → delete `sbp_b584…`. Do not assume GitHub's secret scanning
-      already did it (this repo does not have Advanced Security enabled, so it
-      did not). Mint a new token, and put it only in your shell environment /
-      `.env` (never in a tracked file). The tracked `.mcp.json` already reads
-      `${SUPABASE_ACCESS_TOKEN}` from the environment; keep it that way.
-- [ ] **2. Look for abuse since 2026-02-27.** Supabase Dashboard →
-      Organization → Audit Logs (and the project's Auth / Postgres logs).
-      Anything you don't recognise means the database must be treated as
-      breached:
+- [x] **1. Revoke the token.** Done: checked Supabase → Account → Access
+      Tokens on 2026-09-04 and `sbp_b584…` is not there. The only tokens are
+      two created on 2026-07-06 (the day the file was cleaned up), both
+      "Never used". So the token was live on a public repo from 2026-02-27
+      to about 2026-07-06, roughly four months. Keep new tokens in your shell
+      environment / `.env` only; the tracked `.mcp.json` already reads
+      `${SUPABASE_ACCESS_TOKEN}` from the environment. If the Supabase MCP is
+      not actually in use (both tokens are unused), delete them too.
+- [ ] **2. Look for abuse between 2026-02-27 and 2026-07-06.** Supabase
+      Dashboard → Organization → Audit Logs (and the project's Auth /
+      Postgres logs). Audit-log retention depends on the plan and is short on
+      Free/Pro, so it probably no longer covers that window. If you cannot
+      see the whole window, you cannot rule out that someone minted DB
+      credentials with the token, so do the cheap part of the breach
+      response anyway: rotate the database password now (it invalidates any
+      connection string that was pulled). Anything you actually see and
+      don't recognise means the database must be treated as breached:
       - [ ] rotate the database password (Project Settings → Database),
       - [ ] rotate `NEXTAUTH_SECRET` and `CRON_SECRET` in Vercel,
       - [ ] force a password reset for every user, and consider notifying them
@@ -79,4 +86,5 @@ hole; the history rewrite only stops new scrapers from finding it.
 | 2026-02-27 | `e11bc86` commits `.mcp.json` with live Supabase PAT + Framer MCP secret |
 | 2026-07-06 | `5437778` removes the values from the tracked file; history untouched |
 | 2026-07-07 | `b2ec7eb`, `f9f5d10` finish the cleanup, drop the Framer server |
+| 2026-07-06 | Leaked token no longer present in Supabase Access Tokens; two replacement tokens created (never used) |
 | 2026-09-04 | Exposure re-verified from a public, unauthenticated fetch; this runbook and the scrub script added |
