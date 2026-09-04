@@ -11,7 +11,7 @@ placeholders:
 | Secret | Grants |
 | --- | --- |
 | `SUPABASE_ACCESS_TOKEN` (`sbp_b584…`) | Full Supabase **Management API** access to the whole account: mint DB credentials, read connection strings, connect to Postgres as owner, pause or delete projects. Bypasses RLS and every app-level guard. |
-| Framer / unframer MCP `id` + `secret` | Whoever holds it can read and edit the Framer site through the MCP endpoint. |
+| Framer / unframer MCP `id` + `secret` | Read/edit access to the Framer site through the MCP endpoint. Framer is no longer used and the server entry was dropped in July, so this is only live if the unframer endpoint or Framer account still exists. |
 | `SUPABASE_PROJECT_REF` (`lbpuqjwmvwzdfzykxlci`) | Not a secret by itself, but it tells an attacker exactly which project the token unlocks. |
 
 The values were removed from the file on 2026-07-06 (`5437778`) and 2026-07-07
@@ -40,8 +40,11 @@ hole; the history rewrite only stops new scrapers from finding it.
       - [ ] force a password reset for every user, and consider notifying them
             (emails, coach ↔ client messages, and client health notes were
             reachable).
-- [ ] **3. Rotate the Framer MCP secret** (Framer / unframer dashboard →
-      MCP). It was in the same file.
+- [ ] **3. Make sure the Framer side is dead.** Framer is no longer used, so
+      there is nothing to rotate. Instead, confirm the unframer MCP endpoint
+      (and, if you no longer need it, the Framer account) is deleted. The
+      leaked `id` + `secret` keep working for as long as that endpoint exists.
+      The scrub script still redacts both values from history.
 - [ ] **4. Scrub the git history.** Run, from anywhere (it never touches your
       working copy):
 
