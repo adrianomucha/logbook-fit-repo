@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { bearerToken, isValidCronToken } from "@/lib/admin";
 import { runScheduledCheckIns } from "@/lib/checkin-schedule";
+import { CRON_JOBS, recordCronRun } from "@/lib/cron-runs";
 
 /**
  * Scheduled check-in sweep. Wired to a nightly Vercel cron (see vercel.json),
@@ -14,6 +15,9 @@ import { runScheduledCheckIns } from "@/lib/checkin-schedule";
  *
  * GET and POST both run it: Vercel Cron issues GET, while a human re-running
  * it by hand (or a future queue) naturally reaches for POST.
+ *
+ * Every invocation is recorded in `cron_runs` (see lib/cron-runs.ts) so
+ * /admin/health can tell "ran quietly" from "never ran".
  */
 async function handle(req: Request) {
   if (!isValidCronToken(bearerToken(req))) {
@@ -28,7 +32,11 @@ async function handle(req: Request) {
   }
 
   try {
-    const result = await runScheduledCheckIns();
+    const result = await recordCronRun(
+      CRON_JOBS.checkIns,
+      runScheduledCheckIns,
+      (r) => r.failures === 0
+    );
     // Logged so a quiet sweep is still visible in the deploy's logs; the
     // alert tag fires only when a client actually failed.
     console.log("[CRON] Check-in sweep:", JSON.stringify(result));

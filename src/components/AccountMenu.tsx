@@ -24,9 +24,11 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { cn } from '@/lib/utils';
 
 const ADMIN_LINKS = [
+  { label: 'Overview', href: '/admin' },
   { label: 'Waitlist', href: '/admin/waitlist' },
   { label: 'Accounts', href: '/admin/users' },
   { label: 'Feedback', href: '/admin/feedback' },
+  { label: 'Health', href: '/admin/health' },
 ] as const;
 
 const itemClass =
