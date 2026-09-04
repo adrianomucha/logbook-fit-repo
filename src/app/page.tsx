@@ -379,6 +379,7 @@ export default function HomePage() {
               alt="A client sitting on a bench in a gym, answering her weekly check-in on her phone"
               className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
               objectPosition="center 35%"
+              hideCaption
             />
             <div className="lg:order-1">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -427,6 +428,7 @@ export default function HomePage() {
               src="/landing/coach-dashboard.webp"
               alt="The Logbook coach dashboard: a week strip showing seven clients, six pending and one at risk, above a Needs Attention list ranked by urgency"
               className="aspect-[4/5] rounded-xl"
+              hideCaption
             />
             <div>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -453,7 +455,7 @@ export default function HomePage() {
               {/* A client on the bench between sets, phone in hand, with the
                   exercise card from the Today view over the photo: two sets
                   logged, the third about to be, the coach's cue right there.
-                  The card runs to the bottom edge, so the caption is off. */}
+                  Captions are off on every slot; the photos carry it. */}
               <ImageSlot
                 label="Between sets"
                 src="/landing/client-between-sets.webp"
