@@ -141,6 +141,23 @@ REVIEWER_COACH_EMAIL=... REVIEWER_CLIENT_EMAIL=... REVIEWER_PASSWORD='...' \
 Re-running reuses the accounts and resets their password (that is how you
 rotate it); the plan, check-ins and messages are only created when missing.
 
+## Demo account for coach calls
+
+For a setup or sales call with a coach, `prisma/seed_demo_call.ts` builds a
+real, unlocked coach account ("Jamie Porter") with a roster that puts a client
+in every dashboard bucket, a check-in waiting for review, a flagged exercise,
+unread chat and a client account the coach can switch into. The scenario,
+credentials handling and a suggested run of show are in
+[DEMO_CALL.md](DEMO_CALL.md).
+
+```bash
+DEMO_CALL_PASSWORD='...' npm run seed:demo-call
+```
+
+Re-running rebuilds the scenario from scratch with the timeline anchored to
+today, so run it the morning of a call and again afterwards to reset whatever
+was done live.
+
 ## Scheduled work
 
 One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
