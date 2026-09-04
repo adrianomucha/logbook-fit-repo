@@ -141,6 +141,50 @@ REVIEWER_COACH_EMAIL=... REVIEWER_CLIENT_EMAIL=... REVIEWER_PASSWORD='...' \
 Re-running reuses the accounts and resets their password (that is how you
 rotate it); the plan, check-ins and messages are only created when missing.
 
+## QA accounts
+
+Hands-on testing against production (or a preview that shares its database)
+needs accounts you can sign in to. Don't unlock the seeded demo accounts for
+that: their password is printed in this repo, and the lock
+(`src/lib/demo.ts`) is what keeps them harmless on the live site. Use real
+accounts with a private password instead. Two ways:
+
+**With data, in one command.** `prisma/seed_reviewer.ts` is not specific to
+App Review — it creates *any* real coach + client pair with a plan, a pending
+and an answered check-in, and a chat thread. Point it at the database you
+test against and pick QA emails you control (plus-addressing works, so
+password-reset emails reach you):
+
+```bash
+DATABASE_URL='<connection string of the database you test against>' \
+REVIEWER_COACH_EMAIL=you+qa-coach@yourdomain.com \
+REVIEWER_CLIENT_EMAIL=you+qa-client@yourdomain.com \
+REVIEWER_PASSWORD="$(openssl rand -base64 24)" \
+  npx tsx prisma/seed_reviewer.ts
+```
+
+Keep the password in your password manager only. The script refuses the demo
+emails and weak passwords, and re-running it with a new `REVIEWER_PASSWORD`
+rotates the credentials. Rename the accounts from their profile settings if
+"Casey Reviewer" bothers you.
+
+**Through the product, starting empty.** Exercises the real onboarding path
+every time you set one up:
+
+1. Join the waitlist with the QA coach email, then send the invite from
+   `/admin` → Waitlist (the invite link is shown there too, for when email
+   isn't configured). Open it and sign up as a coach.
+2. As that coach, create a client invite from the clients page and open its
+   `/signup?invite=…` link in a private window to create the QA client.
+
+Either way, two caveats:
+
+- QA accounts are ordinary users, so they **count in `/admin` → Overview**.
+  Only the demo emails and coach-created sample clients are excluded there.
+- There is no delete-account flow yet. To retire a QA account, rotate its
+  password out with a re-run of the script, or soft-delete it by setting
+  `users.deletedAt` in the database.
+
 ## Scheduled work
 
 One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
@@ -290,3 +334,7 @@ After seeding, log in with:
 |------|-------|----------|
 | Coach | `coach@logbook.fit` | `demo1234` |
 | Client | `client@logbook.fit` | `demo1234` |
+
+These work in local dev only. On every deployed build they are locked
+server-side unless `NEXT_PUBLIC_DEMO_MODE="true"` was set at build time — see
+[QA accounts](#qa-accounts) for testing against production.
