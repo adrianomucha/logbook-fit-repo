@@ -451,15 +451,16 @@ export default function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
-              {/* Shot brief:
-                  Photo of a client's phone held in a real gym, the Today view on
-                  screen mid-session, a loaded bar soft in the background. Shot from
-                  the client's own eye line rather than as a staged flat-lay. The
-                  point is that logging happens between sets, in the room, in
-                  seconds. */}
+              {/* A client on the bench between sets, phone in hand, with the
+                  exercise card from the Today view over the photo: two sets
+                  logged, the third about to be, the coach's cue right there.
+                  The card runs to the bottom edge, so the caption is off. */}
               <ImageSlot
                 label="Between sets"
+                src="/landing/client-between-sets.webp"
+                alt="A client sitting on a gym bench between sets, logging a set on her phone: the Dumbbell Goblet Squat card shows two of three sets done and the coach's cue to keep the chest tall"
                 className="aspect-[4/5] rounded-xl"
+                hideCaption
               />
             </div>
             <div className="lg:order-1">
