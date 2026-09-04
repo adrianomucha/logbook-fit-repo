@@ -599,3 +599,30 @@ model WaitlistEntry {
 
   @@map("waitlist_entries")
 }
+
+// ──────────────────────────────────────
+// OPERATIONS
+// ──────────────────────────────────────
+
+// One row per scheduled-job invocation, written by the job itself. This is the
+// only durable record of the nightly sweep having happened: Vercel's cron log
+// is per-deploy and scrolls away, and a cron that silently stops (secret
+// rotated, schedule dropped from vercel.json) is otherwise invisible until a
+// coach asks why check-ins stopped. /admin/health reads the latest row per job
+// and treats "no run in 36 hours" as an outage.
+model CronRun {
+  id         String    @id @default(uuid())
+  // Job identifier, e.g. "check-ins". Free-form so a second job needs no enum.
+  job        String    @db.VarChar(64)
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  // True only when the job ran to completion with zero failures.
+  ok         Boolean?
+  // The job's own result summary (e.g. {relationshipsScanned, checkInsCreated,
+  // failures}) or, on a crash, the error message.
+  summary    Json?
+  error      String?   @db.VarChar(2000)
+
+  @@index([job, startedAt]) // Latest run per job; recent history
+  @@map("cron_runs")
+}

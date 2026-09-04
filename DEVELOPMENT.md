@@ -167,7 +167,21 @@ curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://<host>/api/cron/che
 ```
 
 It answers `{ok, relationshipsScanned, checkInsCreated, failures}` and logs
-`[CRON_ALERT]` if any client failed.
+`[CRON_ALERT]` if any client failed. Every invocation also writes a row to
+`cron_runs` (start, finish, outcome, summary), which is what `/admin/health`
+reads: a sweep with no run in 36 hours is shown as down, so a cron that
+silently stops — rotated secret, schedule dropped — is visible without
+digging through Vercel logs.
+
+## Admin
+
+`/admin` (allowlisted by `ADMIN_EMAILS`) has five tabs. **Overview** is
+aggregate usage — people, activity, funnel, weekly signups and workouts —
+with demo and sample accounts excluded and chat reported as counts only,
+never message text. **Waitlist**, **Accounts** and **Feedback** are the
+working inboxes. **Health** runs live probes on every visit (Postgres,
+Upstash Redis, mailer config, the check-in sweep's last run, required env
+vars) and lists the sweep's recent runs.
 
 ## Project Structure
 

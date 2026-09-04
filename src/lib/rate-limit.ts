@@ -148,6 +148,18 @@ export function rateLimit(name: string, config: RateLimitConfig) {
 }
 
 /**
+ * Live probe of the distributed store, for /admin/health. Resolves
+ * "unconfigured" when Upstash env vars are absent (the in-memory fallback is
+ * in use), "ok" when Redis answers, and rejects when it doesn't — the same
+ * condition under which every limiter above is silently failing open.
+ */
+export async function pingRateLimitStore(): Promise<"ok" | "unconfigured"> {
+  if (!redis) return "unconfigured";
+  await redis.ping();
+  return "ok";
+}
+
+/**
  * Extract client IP from request headers (Vercel / reverse proxy).
  */
 export function getClientIp(req: Request): string {
