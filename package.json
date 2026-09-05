@@ -12,7 +12,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "seed:demo-call": "tsx prisma/seed_demo_call.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

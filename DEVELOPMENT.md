@@ -185,6 +185,23 @@ Either way, two caveats:
   password out with a re-run of the script, or soft-delete it by setting
   `users.deletedAt` in the database.
 
+## Demo account for coach calls
+
+For a setup or sales call with a coach, `prisma/seed_demo_call.ts` builds a
+real, unlocked coach account ("Jamie Porter") with a roster that puts a client
+in every dashboard bucket, a check-in waiting for review, a flagged exercise,
+unread chat and a client account the coach can switch into. The scenario,
+credentials handling and a suggested run of show are in
+[DEMO_CALL.md](DEMO_CALL.md).
+
+```bash
+DEMO_CALL_PASSWORD='...' npm run seed:demo-call
+```
+
+Re-running rebuilds the scenario from scratch with the timeline anchored to
+today, so run it the morning of a call and again afterwards to reset whatever
+was done live.
+
 ## Scheduled work
 
 One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
