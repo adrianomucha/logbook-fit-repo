@@ -369,16 +369,20 @@ export default function HomePage() {
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-14">
             {/* Stretch to the list's exact height on desktop so both columns
                 end on the same line; the 4:5 ratio stays for stacked mobile */}
-            {/* A client answering her weekly check-in from the bench, phone in
-                hand, the rack still loaded behind her. The point of the shot:
-                the check-in happens in the room, in the moment, not in a group
-                chat later that night. */}
+            {/* A coach reading a client's check-in on his phone between
+                sessions, with the review card over the photo: her notes and the
+                exercise she flagged that week, sitting right beside each other.
+                That context is exactly what a group chat never gives you.
+                On desktop the slot is narrower than 4:5, so the crop is
+                anchored near the left edge: the card and the coach stay whole
+                and the towel shelves on the right take the trim. */}
             <ImageSlot
-              label="The check-in, done from the bench"
+              label="The check-in review"
               src="/landing/checkin-gym.webp"
-              alt="A client sitting on a bench in a gym, answering her weekly check-in on her phone"
+              alt="A coach in a gym reading a client's check-in on his phone: her notes about heavy Romanian deadlifts and a tight lower back, with the exercise she flagged that week beside them"
               className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
-              objectPosition="center 35%"
+              objectPosition="8% center"
+              hideCaption
             />
             <div className="lg:order-1">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -420,14 +424,16 @@ export default function HomePage() {
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             {/* The single most important image on the page: it's the proof of
-                the headline. A coach at a desk on the gym floor, the dashboard
-                open on his laptop with the roster ranked by who needs him. */}
+                the headline. A coach at her laptop on the gym floor, with the
+                Needs Attention list from her dashboard over the photo, ranked
+                by who needs her first. The photo is exactly 4:5, so it fills
+                the slot with nothing cropped. */}
             <ImageSlot
               label="In the product: who needs you today"
               src="/landing/coach-dashboard.webp"
-              alt="A coach at a desk in a gym, reviewing his client dashboard on a laptop with clients ranked by who needs attention"
+              alt="A coach at a laptop in a gym, with her dashboard's Needs Attention list over the photo: seven clients ranked by urgency, the first waiting on a plan"
               className="aspect-[4/5] rounded-xl"
-              objectPosition="center 45%"
+              hideCaption
             />
             <div>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -454,7 +460,7 @@ export default function HomePage() {
               {/* A client on the bench between sets, phone in hand, with the
                   exercise card from the Today view over the photo: two sets
                   logged, the third about to be, the coach's cue right there.
-                  The card runs to the bottom edge, so the caption is off. */}
+                  Captions are off on every slot; the photos carry it. */}
               <ImageSlot
                 label="Between sets"
                 src="/landing/client-between-sets.webp"
