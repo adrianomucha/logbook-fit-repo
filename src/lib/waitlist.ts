@@ -34,3 +34,51 @@ export function appBaseUrl(): string {
 export function waitlistInvitePath(token: string): string {
   return `/signup?beta=${encodeURIComponent(token)}`;
 }
+
+/**
+ * The optional setup-call booking page (a Calendly event link, or any
+ * scheduling URL), or null when none is configured. Only https URLs count:
+ * a typo here would otherwise ship as a dead link in every invitation.
+ *
+ * This is the preferred route for setup help — a coach picks a slot
+ * themselves instead of replying and waiting. When it's set, the invitation
+ * email and the account-creation page link to it; the reply-to-book line
+ * (WAITLIST_REPLY_TO_EMAIL) is only used when this is unset.
+ */
+export function setupCallBookingUrl(): string | null {
+  const raw = process.env.SETUP_CALL_BOOKING_URL?.trim();
+  if (!raw) return null;
+  try {
+    const url = new URL(raw);
+    return url.protocol === "https:" ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Pre-fills the booking page with what we already know so the coach doesn't
+ * retype it. Calendly reads `name` and `email` from the query string; other
+ * schedulers may not, so the params are only added for calendly.com hosts.
+ * Pure, so the client-side signup page can call it with the email it has.
+ */
+export function withBookingPrefill(
+  bookingUrl: string,
+  prefill: { email?: string | null; name?: string | null }
+): string {
+  let url: URL;
+  try {
+    url = new URL(bookingUrl);
+  } catch {
+    return bookingUrl;
+  }
+  const host = url.hostname.toLowerCase();
+  if (host !== "calendly.com" && !host.endsWith(".calendly.com")) {
+    return bookingUrl;
+  }
+  const email = prefill.email?.trim();
+  const name = prefill.name?.trim();
+  if (email) url.searchParams.set("email", email);
+  if (name) url.searchParams.set("name", name);
+  return url.toString();
+}

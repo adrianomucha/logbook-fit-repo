@@ -13,10 +13,17 @@ function stashEnv(keys: string[]) {
 }
 
 beforeEach(() => {
-  stashEnv(["RESEND_API_KEY", "WAITLIST_FROM_EMAIL", "WAITLIST_REPLY_TO_EMAIL", "NEXTAUTH_URL"]);
+  stashEnv([
+    "RESEND_API_KEY",
+    "WAITLIST_FROM_EMAIL",
+    "WAITLIST_REPLY_TO_EMAIL",
+    "SETUP_CALL_BOOKING_URL",
+    "NEXTAUTH_URL",
+  ]);
   process.env.RESEND_API_KEY = "re_test_key";
   process.env.WAITLIST_FROM_EMAIL = "Logbook.fit <hello@logbook.fit>";
   delete process.env.WAITLIST_REPLY_TO_EMAIL;
+  delete process.env.SETUP_CALL_BOOKING_URL;
   process.env.NEXTAUTH_URL = "https://logbook.fit";
 });
 
@@ -203,5 +210,50 @@ describe("setup-help reply route", () => {
     expect(body.text).toContain("optional setup call");
     expect(body.text).not.toContain("batches of 10");
     expect(body.html).not.toContain("batches of 10");
+  });
+});
+
+describe("setup-call booking link", () => {
+  function sentBody(fetchMock: ReturnType<typeof vi.fn>) {
+    const [, init] = fetchMock.mock.calls[0] as [string, { body: string }];
+    return JSON.parse(init.body) as { html: string; text: string };
+  }
+
+  it("links the invitation to the booking page, pre-filled with the coach's email", async () => {
+    process.env.SETUP_CALL_BOOKING_URL = "https://calendly.com/adrian/logbook-setup";
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendWaitlistInvite("coach@example.com", "https://logbook.fit/signup?beta=tok");
+    const body = sentBody(fetchMock);
+    const expected = "https://calendly.com/adrian/logbook-setup?email=coach%40example.com";
+    expect(body.html).toContain(`href="${expected}"`);
+    expect(body.html).toContain("Pick a time for an optional setup call");
+    expect(body.text).toContain(`Pick a time for an optional setup call: ${expected}`);
+    expect(body.text).toContain("whether or not you book a call");
+  });
+
+  it("prefers the booking page over the reply-to-book line when both are configured", async () => {
+    process.env.SETUP_CALL_BOOKING_URL = "https://calendly.com/adrian/logbook-setup";
+    process.env.WAITLIST_REPLY_TO_EMAIL = "Adrian <adrian@logbook.fit>";
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendWaitlistInvite("coach@example.com", "https://logbook.fit/signup?beta=tok");
+    const body = sentBody(fetchMock);
+    expect(body.html).toContain("calendly.com");
+    expect(body.html).not.toContain("Reply to this email");
+    expect(body.text).not.toContain("Reply to this email");
+  });
+
+  it("ignores a non-https booking URL rather than shipping a dead link", async () => {
+    process.env.SETUP_CALL_BOOKING_URL = "calendly.com/adrian/logbook-setup";
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendWaitlistInvite("coach@example.com", "https://logbook.fit/signup?beta=tok");
+    const body = sentBody(fetchMock);
+    expect(body.html).not.toContain("calendly.com");
+    expect(body.text).toContain("An optional setup call is available");
   });
 });

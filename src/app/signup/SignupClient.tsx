@@ -13,6 +13,7 @@ import { FormError } from '@/components/ui/form-error';
 import { avatarColor } from '@/lib/avatar-colors';
 import { passwordSchema } from '@/lib/validations/schemas';
 import { cn } from '@/lib/utils';
+import { withBookingPrefill } from '@/lib/waitlist';
 
 interface InviteInfo {
   valid: boolean;
@@ -51,15 +52,23 @@ function PageFrame({ children }: { children: React.ReactNode }) {
 interface SignupClientProps {
   coachSignupOpen: boolean;
   /**
+   * Booking page for the optional setup call (a Calendly link), or null.
+   * When set, an invited coach can pick a slot right from this page; the
+   * link is pre-filled with the email they're signing up with.
+   */
+  setupCallBookingUrl: string | null;
+  /**
    * True when invitation replies reach a monitored inbox, so the page may
    * tell an invited coach to "reply to your invitation email" for an
-   * optional setup call. Off, it still offers the call but names no route.
+   * optional setup call. Used only without a booking page. Off, the page
+   * still offers the call but names no route.
    */
   setupHelpByReply: boolean;
 }
 
 export default function SignupClient({
   coachSignupOpen,
+  setupCallBookingUrl,
   setupHelpByReply,
 }: SignupClientProps) {
   return (
@@ -70,13 +79,18 @@ export default function SignupClient({
     }>
       <SignupContent
         coachSignupOpen={coachSignupOpen}
+        setupCallBookingUrl={setupCallBookingUrl}
         setupHelpByReply={setupHelpByReply}
       />
     </Suspense>
   );
 }
 
-function SignupContent({ coachSignupOpen, setupHelpByReply }: SignupClientProps) {
+function SignupContent({
+  coachSignupOpen,
+  setupCallBookingUrl,
+  setupHelpByReply,
+}: SignupClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const inviteToken = searchParams?.get('invite') ?? null;
@@ -485,14 +499,36 @@ function SignupContent({ coachSignupOpen, setupHelpByReply }: SignupClientProps)
             )}
           </Button>
 
+          {/* Setup help is secondary and optional: account creation above
+              is the only action required. The booking link opens in a new
+              tab so a half-filled form here isn't lost, and carries the
+              email already typed so Calendly doesn't ask for it again. */}
           <p className="text-center text-xs text-muted-foreground text-pretty">
-            {!isCoachSignup
-              ? `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`
-              : betaToken && setupHelpByReply
-                ? 'Want a hand getting started? Reply to your invitation email to arrange an optional setup call.'
-                : betaToken
-                  ? 'Want a hand getting started? An optional setup call is available to help you set up your workspace.'
-                  : 'Your workspace comes ready with a starter exercise library.'}
+            {!isCoachSignup ? (
+              `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`
+            ) : betaToken && setupCallBookingUrl ? (
+              <>
+                Want a hand getting started?{' '}
+                <a
+                  href={withBookingPrefill(setupCallBookingUrl, {
+                    email: email.trim() || betaInfo?.email,
+                    name: name,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline underline-offset-2 transition-colors hover:text-foreground"
+                >
+                  Pick a time for an optional setup call
+                </a>
+                .
+              </>
+            ) : betaToken && setupHelpByReply ? (
+              'Want a hand getting started? Reply to your invitation email to arrange an optional setup call.'
+            ) : betaToken ? (
+              'Want a hand getting started? An optional setup call is available to help you set up your workspace.'
+            ) : (
+              'Your workspace comes ready with a starter exercise library.'
+            )}
           </p>
 
           <p className="text-center text-xs text-muted-foreground text-pretty">

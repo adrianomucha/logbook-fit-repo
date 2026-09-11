@@ -22,13 +22,21 @@
  *   WAITLIST_FROM_EMAIL — verified sender, e.g. "Logbook.fit <hello@logbook.fit>"
  *
  * Optional:
+ *   SETUP_CALL_BOOKING_URL — a Calendly (or similar) booking page. When set,
+ *     the invitation links to it as the optional setup-call route, with the
+ *     coach's email pre-filled.
  *   WAITLIST_REPLY_TO_EMAIL — a monitored inbox set as Reply-To on every
- *     send. The invitation email only tells coaches to "reply to arrange an
- *     optional setup call" when this is set; without it that instruction is
- *     left out rather than pointing replies at an inbox nobody reads.
+ *     send. Without a booking URL, the invitation tells coaches to "reply to
+ *     arrange an optional setup call" only when this is set; otherwise that
+ *     instruction is left out rather than pointing replies at an inbox
+ *     nobody reads.
  */
 
-import { appBaseUrl } from "@/lib/waitlist";
+import {
+  appBaseUrl,
+  setupCallBookingUrl,
+  withBookingPrefill,
+} from "@/lib/waitlist";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -260,11 +268,25 @@ function welcomeText(): string {
 }
 
 /**
- * The "want help?" paragraph of the invitation. Only asks the coach to reply
- * when a monitored Reply-To inbox is configured (see `setupHelpReplyTo`);
- * otherwise it offers the call without a route that would dead-end.
+ * How an invited coach can ask for the optional setup call. Resolved once
+ * per send so the HTML and plain-text parts always agree.
+ *   bookingUrl  — pick a slot yourself (preferred; pre-filled per coach)
+ *   replyToBook — reply to the email (only with a monitored Reply-To)
+ *   neither     — the call is still offered, without a route that dead-ends
  */
-function setupHelpHtml(replyToBook: boolean): string {
+interface SetupHelp {
+  bookingUrl: string | null;
+  replyToBook: boolean;
+}
+
+function setupHelpHtml({ bookingUrl, replyToBook }: SetupHelp): string {
+  if (bookingUrl) {
+    return `Want help getting started?
+              <a href="${bookingUrl}" style="color:${INK};font-weight:700;">Pick a time for an optional setup call</a>
+              and we&rsquo;ll help you set up your workspace and bring over
+              your client roster. You can start using Logbook.fit right away,
+              whether or not you book a call.`;
+  }
   return replyToBook
     ? `Want help getting started? Reply to this email to arrange an optional
               setup call. We&rsquo;ll help you set up your workspace and bring
@@ -276,7 +298,10 @@ function setupHelpHtml(replyToBook: boolean): string {
               not you book a call.`;
 }
 
-function setupHelpText(replyToBook: boolean): string {
+function setupHelpText({ bookingUrl, replyToBook }: SetupHelp): string {
+  if (bookingUrl) {
+    return `Want help getting started? Pick a time for an optional setup call: ${bookingUrl}\nWe'll help you set up your workspace and bring over your client roster. You can start using Logbook.fit right away, whether or not you book a call.`;
+  }
   return replyToBook
     ? "Want help getting started? Reply to this email to arrange an optional setup call. We'll help you set up your workspace and bring over your client roster. You can start using Logbook.fit right away, whether or not you book a call."
     : "Want help getting started? An optional setup call is available to help you set up your workspace and bring over your client roster. You can start using Logbook.fit right away, whether or not you book a call.";
@@ -285,7 +310,7 @@ function setupHelpText(replyToBook: boolean): string {
 function inviteHtml(
   inviteUrl: string,
   loginUrl: string,
-  replyToBook: boolean
+  setupHelp: SetupHelp
 ): string {
   return emailShell(
     "Create your coach account and get help setting up.",
@@ -306,7 +331,7 @@ function inviteHtml(
               </td></tr>
             </table>
             <p style="margin:0 0 24px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
-              ${setupHelpHtml(replyToBook)}
+              ${setupHelpHtml(setupHelp)}
             </p>
             <p style="margin:0 0 24px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
               This invitation link works once. If you&rsquo;ve already created
@@ -322,7 +347,7 @@ function inviteHtml(
 function inviteText(
   inviteUrl: string,
   loginUrl: string,
-  replyToBook: boolean
+  setupHelp: SetupHelp
 ): string {
   return [
     "LOGBOOK.FIT — PRIVATE BETA",
@@ -337,7 +362,7 @@ function inviteText(
     "",
     `Create your coach account: ${inviteUrl}`,
     "",
-    setupHelpText(replyToBook),
+    setupHelpText(setupHelp),
     "",
     `This invitation link works once. If you've already created your account, sign in instead: ${loginUrl}`,
     "",
@@ -484,21 +509,26 @@ export function sendWaitlistWelcome(to: string): Promise<boolean> {
  * surfaces the boolean to the admin (a false means "copy the link and send
  * it yourself"), unlike the fire-and-forget welcome email.
  *
- * The setup call is optional and account creation is the primary action:
- * the reply-to-book line only ships when `WAITLIST_REPLY_TO_EMAIL` routes
- * replies to a monitored inbox.
+ * The setup call is optional and account creation is the primary action.
+ * The call's route is the booking page (`SETUP_CALL_BOOKING_URL`, pre-filled
+ * with this coach's email) when there is one, else the reply-to-book line
+ * when `WAITLIST_REPLY_TO_EMAIL` routes replies to a monitored inbox.
  */
 export function sendWaitlistInvite(
   to: string,
   inviteUrl: string
 ): Promise<boolean> {
   const loginUrl = `${appBaseUrl()}/login`;
-  const replyToBook = setupHelpReplyTo() !== null;
+  const booking = setupCallBookingUrl();
+  const setupHelp: SetupHelp = {
+    bookingUrl: booking ? withBookingPrefill(booking, { email: to }) : null,
+    replyToBook: setupHelpReplyTo() !== null,
+  };
   return sendEmail(
     to,
     "Your Logbook.fit invitation is ready",
-    inviteHtml(inviteUrl, loginUrl, replyToBook),
-    inviteText(inviteUrl, loginUrl, replyToBook)
+    inviteHtml(inviteUrl, loginUrl, setupHelp),
+    inviteText(inviteUrl, loginUrl, setupHelp)
   );
 }
 

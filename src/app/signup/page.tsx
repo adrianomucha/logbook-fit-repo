@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import prisma from '@/lib/prisma';
-import { isCoachSignupOpen } from '@/lib/waitlist';
+import { isCoachSignupOpen, setupCallBookingUrl } from '@/lib/waitlist';
 import { setupHelpReplyTo } from '@/lib/services/email';
 import SignupClient from './SignupClient';
 
@@ -60,14 +60,16 @@ export async function generateMetadata({ searchParams }: SignupPageProps): Promi
 }
 
 export default function SignupPage() {
-  // Both gates are decided server-side (env never reaches the client
+  // All three are decided server-side (env never reaches the client
   // bundle). The API enforces the signup gate independently, so it only
-  // shapes which UI renders; the setup-help gate decides whether the page
-  // may tell an invited coach to reply to their invitation for a call —
-  // only when replies land in a monitored inbox.
+  // shapes which UI renders. The setup-help values decide how the page
+  // offers the optional call to an invited coach: a booking page to pick a
+  // slot on when one is configured, else "reply to your invitation" only
+  // when replies land in a monitored inbox.
   return (
     <SignupClient
       coachSignupOpen={isCoachSignupOpen()}
+      setupCallBookingUrl={setupCallBookingUrl()}
       setupHelpByReply={setupHelpReplyTo() !== null}
     />
   );
