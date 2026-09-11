@@ -48,23 +48,35 @@ function PageFrame({ children }: { children: React.ReactNode }) {
   return <AuthShell mode="signup">{children}</AuthShell>;
 }
 
+interface SignupClientProps {
+  coachSignupOpen: boolean;
+  /**
+   * True when invitation replies reach a monitored inbox, so the page may
+   * tell an invited coach to "reply to your invitation email" for an
+   * optional setup call. Off, it still offers the call but names no route.
+   */
+  setupHelpByReply: boolean;
+}
+
 export default function SignupClient({
   coachSignupOpen,
-}: {
-  coachSignupOpen: boolean;
-}) {
+  setupHelpByReply,
+}: SignupClientProps) {
   return (
     <Suspense fallback={
       <div className="min-h-dvh bg-background p-4 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
       </div>
     }>
-      <SignupContent coachSignupOpen={coachSignupOpen} />
+      <SignupContent
+        coachSignupOpen={coachSignupOpen}
+        setupHelpByReply={setupHelpByReply}
+      />
     </Suspense>
   );
 }
 
-function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
+function SignupContent({ coachSignupOpen, setupHelpByReply }: SignupClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const inviteToken = searchParams?.get('invite') ?? null;
@@ -249,15 +261,15 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             </h1>
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
-            We&rsquo;re onboarding coaches in small batches. Grab a spot on the
-            waitlist and we&rsquo;ll email your invite the moment one opens.
+            We invite coaches in small batches. Request an invite and
+            we&rsquo;ll email your account link when your spot opens.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Button
               onClick={() => router.push('/#waitlist')}
               className="bg-brand text-brand-foreground hover:bg-brand/90 font-bold uppercase tracking-wider"
             >
-              Join the waitlist
+              Request an invite
             </Button>
             <Button variant="outline" onClick={() => router.push('/login')}>
               Go to sign in
@@ -317,7 +329,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
                 <span className="text-brand" aria-hidden="true">
                   &#9679;
                 </span>{' '}
-                Invite accepted
+                Your invitation is ready
               </>
             ) : (
               'Get started'
@@ -328,7 +340,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
           </h1>
           <p className="text-sm text-muted-foreground leading-relaxed mt-3 text-pretty">
             {betaToken
-              ? 'Your spot in the private beta is ready. This link works once, and it’s yours.'
+              ? 'Set up your account to enter the private beta. Your workspace includes a starter exercise library.'
               : 'Know who needs you today, before they go quiet.'}
           </p>
         </div>
@@ -462,7 +474,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               </>
             ) : isCoachSignup ? (
               <>
-                Let&apos;s go
+                Create your coach account
                 <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
               </>
             ) : (
@@ -474,9 +486,13 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
           </Button>
 
           <p className="text-center text-xs text-muted-foreground text-pretty">
-            {isCoachSignup
-              ? 'Your workspace comes ready with a starter exercise library.'
-              : `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`}
+            {!isCoachSignup
+              ? `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`
+              : betaToken && setupHelpByReply
+                ? 'Want a hand getting started? Reply to your invitation email to arrange an optional setup call.'
+                : betaToken
+                  ? 'Want a hand getting started? An optional setup call is available to help you set up your workspace.'
+                  : 'Your workspace comes ready with a starter exercise library.'}
           </p>
 
           <p className="text-center text-xs text-muted-foreground text-pretty">

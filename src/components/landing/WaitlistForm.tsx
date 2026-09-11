@@ -52,6 +52,12 @@ function readAttribution() {
  * spends the confirmation, the highest-intent moment in the funnel, on one
  * optional qualifying question rather than on a receipt. The question sits
  * after the submit deliberately: extra fields before it would cost signups.
+ *
+ * The confirmation is careful about what it claims: the request is saved
+ * (that's all the 201 means), the invitation comes later, in a separate
+ * email. It never says a confirmation email was sent — delivery is
+ * best-effort server-side and not reported back — and never asks the coach
+ * to reply to an invitation that hasn't arrived yet.
  */
 export function WaitlistForm() {
   const inputId = useId();
@@ -131,13 +137,21 @@ export function WaitlistForm() {
           </svg>
         </span>
         <p className="pt-1.5 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-foreground/70 antialiased">
-          Request received
+          Request saved
         </p>
       </div>
       <p className="mt-5 text-[2rem] font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-[2.4rem]">
         You’re on
         <br />
         the list.
+      </p>
+      {/* Shown before the optional question, not only after it: a coach who
+          closes the tab at this point still knows what was saved and where
+          the invitation will arrive. */}
+      <p className="mt-4 text-sm leading-relaxed text-brand-foreground/80 antialiased">
+        Your request is saved. We’ll email your invitation to{' '}
+        <span className="font-semibold text-brand-foreground">{email}</span>{' '}
+        when your spot opens.
       </p>
     </>
   );
@@ -150,10 +164,11 @@ export function WaitlistForm() {
       >
         {confirmationHeader}
         <p className="mt-5 text-sm font-medium text-brand-foreground/75 antialiased">
-          One question so we can put you in the right batch:
+          Help us understand your coaching setup.
         </p>
         <p className="mt-1 text-base font-semibold antialiased">
-          How many clients are you coaching right now?
+          How many clients are you coaching right now?{' '}
+          <span className="font-normal text-brand-foreground/70">(Optional)</span>
         </p>
         <div className="mt-4 flex flex-wrap gap-2">
           {CLIENT_COUNTS.map((option, i) => (
@@ -188,15 +203,14 @@ export function WaitlistForm() {
         <div className="p-6 sm:p-7">
           {confirmationHeader}
           <p className="mt-4 text-sm leading-relaxed text-brand-foreground/80 antialiased">
-            Your invite lands by email. In the meantime, hit reply on it and tell
-            us what you’re using to keep track of clients today. We read every
-            one, and it shapes what we build next.
+            You don’t need to do anything else now. Your invitation will
+            include your account link and details of an optional setup call.
           </p>
         </div>
         {/* Echoes the page's black-on-volt marquee, inverted: a ticket-stub
             footer that closes the loop on the brand's ticker language. */}
         <p className="bg-brand-foreground px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-brand antialiased sm:px-7">
-          Invite incoming · Watch your inbox
+          Request saved · Invitation to follow
         </p>
       </div>
     );

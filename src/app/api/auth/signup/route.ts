@@ -97,7 +97,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
           {
             error:
-              "Coach signup is invite-only during the beta. Join the waitlist and we'll email your invite.",
+              "Coach signup is invite-only during the private beta. Request an invite and we'll email your account link when your spot opens.",
           },
           { status: 403 }
         );

@@ -143,6 +143,28 @@ const CHECK_IN_LOOP = [
   },
 ];
 
+// The invitation sequence, spelled out. "Small batches" on purpose, not a
+// number: the operating cadence isn't fixed, and a stale "10" would be a
+// promise the inbox can't keep. No invitation date, no call length either —
+// nothing here that isn't already true.
+const WHAT_HAPPENS_NEXT = [
+  {
+    step: '01',
+    title: 'Join the waitlist',
+    body: 'Leave your email to request access.',
+  },
+  {
+    step: '02',
+    title: 'Watch for your invitation',
+    body: 'We invite coaches in small batches so we can help each one get started.',
+  },
+  {
+    step: '03',
+    title: 'Start coaching',
+    body: 'Once invited, create your account and get started. Want a hand? An optional setup call is available to help you set up your workspace and bring over your client roster.',
+  },
+];
+
 const COACH_FEATURES = [
   {
     icon: LayoutDashboard,
@@ -218,10 +240,10 @@ export default function HomePage() {
   // ships from the CDN edge, which is the single biggest TTFB/LCP win available
   // to this page.
   //
-  // This is also why the proof line below quotes the batch size rather than a
-  // live signup count: counting rows would need a query per render and drag
-  // the page back off the CDN. Revisit with `revalidate` once the number is
-  // big enough to be worth showing.
+  // This is also why the copy below never quotes a live signup count:
+  // counting rows would need a query per render and drag the page back off
+  // the CDN. Revisit with `revalidate` once the number is big enough to be
+  // worth showing.
   return (
     <div className="bg-background">
       <script
@@ -270,21 +292,19 @@ export default function HomePage() {
               </span>
             </h1>
             <p className="mt-8 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
-              Clients go quiet weeks before they quit. Logbook.fit ranks your
-              roster by who needs you today.
+              Join the private beta for independent coaches. Plan workouts,
+              review client check-ins, and see who needs your attention in one
+              workspace.
             </p>
             <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
               <WaitlistForm />
-              <div className="mt-4 flex flex-col items-center gap-1.5 text-sm text-muted-foreground antialiased">
-                <p>Free during the beta. No spam, just your invite.</p>
-                <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                  <span className="font-medium text-foreground">
-                    We onboard in batches of 10
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>every coach gets a setup call</span>
-                </p>
-              </div>
+              {/* The form saves a waitlist request, not an account — say so
+                  here, before the click, so the confirmation card and the
+                  welcome email never have to walk anything back. */}
+              <p className="mt-4 text-sm text-muted-foreground antialiased">
+                Free during the private beta. We&rsquo;ll email you when your
+                spot opens.
+              </p>
             </div>
           </div>
         </div>
@@ -494,16 +514,38 @@ export default function HomePage() {
               <div className="mb-8 flex justify-center">
                 <LogoMark size={44} />
               </div>
-              <h2 className="text-[clamp(2.75rem,9vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
-                Get on
+              <h2 className="text-[clamp(2.5rem,8vw,5.5rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
+                Request your
                 <br />
-                the list<span className="text-brand">.</span>
+                invitation<span className="text-brand">.</span>
               </h2>
               <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
-                Ten coaches at a time. Every one gets a setup call where we import
-                your roster with you.
+                Try Logbook.fit with your clients during the free private beta.
+                We&rsquo;ll email your account link when your spot opens. Get
+                started on your own, with an optional setup call if you&rsquo;d
+                like help.
               </p>
-              <div className="mx-auto mt-9 max-w-md text-left">
+              {/* What happens next. The three steps make the sequence explicit
+                  (waitlist first, invitation later, account last) so nobody
+                  expects an account link the moment they submit. Left-aligned
+                  inside a centered section: numbered text reads as a list,
+                  not as three centered captions. */}
+              <ol className="mx-auto mt-10 grid max-w-3xl gap-6 text-left sm:grid-cols-3 sm:gap-8">
+                {WHAT_HAPPENS_NEXT.map((step) => (
+                  <li key={step.step} className="flex gap-3 sm:flex-col sm:gap-4">
+                    <span className="font-mono text-[11px] uppercase tracking-[0.16em] text-brand antialiased">
+                      {step.step}
+                    </span>
+                    <div>
+                      <h3 className="text-base font-bold antialiased">{step.title}</h3>
+                      <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground antialiased">
+                        {step.body}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+              <div className="mx-auto mt-10 max-w-md text-left">
                 <WaitlistForm />
               </div>
             </div>

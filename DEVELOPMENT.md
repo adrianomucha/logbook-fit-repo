@@ -56,6 +56,7 @@ Required env for a correct deploy:
 | `NEXTAUTH_URL` | emailed links point at the per-deploy `*.vercel.app` host |
 | `NEXT_PUBLIC_SITE_URL` | staging emits production canonicals/OG URLs |
 | `RESEND_API_KEY` + `WAITLIST_FROM_EMAIL` | every email silently skipped |
+| `WAITLIST_REPLY_TO_EMAIL` | (optional) no Reply-To on emails; the beta invitation and signup page offer the optional setup call without the "reply to book" route |
 | `ADMIN_EMAILS` | `/admin` 404s for everyone; no beta invites |
 | `UPSTASH_REDIS_REST_URL` + `_TOKEN` | rate limiting effectively off on serverless |
 | `CRON_SECRET` | the nightly check-in sweep refuses every call — weekly check-ins never send on their own |

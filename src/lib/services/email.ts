@@ -20,7 +20,15 @@
  * Required env to actually send:
  *   RESEND_API_KEY      — your Resend API key
  *   WAITLIST_FROM_EMAIL — verified sender, e.g. "Logbook.fit <hello@logbook.fit>"
+ *
+ * Optional:
+ *   WAITLIST_REPLY_TO_EMAIL — a monitored inbox set as Reply-To on every
+ *     send. The invitation email only tells coaches to "reply to arrange an
+ *     optional setup call" when this is set; without it that instruction is
+ *     left out rather than pointing replies at an inbox nobody reads.
  */
+
+import { appBaseUrl } from "@/lib/waitlist";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -72,7 +80,28 @@ export function emailConfigStatus():
       reason: `WAITLIST_FROM_EMAIL (currently "${from}") is not a valid sender. Use "email@example.com" or "Name <email@example.com>" with exactly one address — Resend rejects every send otherwise.`,
     };
   }
+  const replyTo = process.env.WAITLIST_REPLY_TO_EMAIL?.trim();
+  if (replyTo && !isValidFromField(replyTo)) {
+    return {
+      ok: false,
+      reason: `WAITLIST_REPLY_TO_EMAIL (currently "${replyTo}") is not a valid address. Use "email@example.com" or "Name <email@example.com>" with exactly one address, or unset it — until then replies are not routed and invitations don't offer the reply-to-book setup call.`,
+    };
+  }
   return { ok: true };
+}
+
+/**
+ * The monitored Reply-To inbox, or null when none is configured (or the
+ * configured value is malformed — a bad address is treated as unset so a
+ * typo can't route coach replies into the void). This is also the switch
+ * for the "reply to arrange a setup call" copy: the invitation email and
+ * the account-creation page only ask coaches to reply when a reply will
+ * actually reach someone.
+ */
+export function setupHelpReplyTo(): string | null {
+  const replyTo = process.env.WAITLIST_REPLY_TO_EMAIL?.trim();
+  if (!replyTo || !isValidFromField(replyTo)) return null;
+  return replyTo;
 }
 
 const BG = "#f5f5f5";
@@ -166,26 +195,42 @@ function stepRow(num: string, text: string, last = false): string {
               </tr>`;
 }
 
+/** Short sign-off shared by the waitlist emails — a person, not a system. */
+function signOffHtml(): string {
+  return `
+            <p style="margin:0 0 32px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${INK};">
+              Adrian<br>
+              <span style="color:${MUTED};">Logbook.fit</span>
+            </p>`;
+}
+
+const SIGN_OFF_TEXT = ["Adrian", "Logbook.fit"];
+
 function welcomeHtml(): string {
   return emailShell(
-    "We onboard coaches in small batches — your invite will land right here.",
-    `${heading("You&rsquo;re on", "the list.")}
+    "Your request is saved. Here&rsquo;s what happens next.",
+    `${heading("You&rsquo;re on", "the waitlist.")}
+            <p style="margin:0 0 20px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              Thanks for joining the waitlist for the Logbook.fit private beta.
+            </p>
             <p style="margin:0 0 24px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
-              Thanks for signing up for the Logbook.fit private beta. Here&rsquo;s
-              how it goes from here:
+              Logbook.fit brings your workout plans, client check-ins, and
+              follow-ups into one workspace. It&rsquo;s free to use during the
+              private beta.
             </p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;">
               <tr><td style="padding:8px 20px 20px 20px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                  ${stepRow("01", "You&rsquo;re in the queue &mdash; no forms, nothing else to fill in.")}
-                  ${stepRow("02", "We onboard coaches in batches of 10 to keep the beta sharp.")}
-                  ${stepRow("03", "Your invite lands in this inbox the moment your spot opens.", true)}
+                  ${stepRow("01", "Your request is saved. We invite coaches in small batches.")}
+                  ${stepRow("02", "When your spot opens, we&rsquo;ll send a separate email with your account link.")}
+                  ${stepRow("03", "Once invited, you can create your account and get started straight away. If you&rsquo;d like help, an optional setup call is available to set up your workspace and bring over your client roster.", true)}
                 </table>
               </td></tr>
             </table>
-            <p style="margin:24px 0 32px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
-              Nothing else to do for now. Just keep training.
-            </p>`
+            <p style="margin:24px 0 24px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              You don&rsquo;t need to do anything else for now.
+            </p>
+            ${signOffHtml()}`
   );
 }
 
@@ -193,56 +238,110 @@ function welcomeText(): string {
   return [
     "LOGBOOK.FIT — PRIVATE BETA",
     "",
-    "You're on the list.",
+    "You're on the waitlist.",
     "",
-    "Thanks for signing up for the Logbook.fit private beta. Here's how it goes from here:",
+    "Hi,",
     "",
-    "  01  You're in the queue — no forms, nothing else to fill in.",
-    "  02  We onboard coaches in batches of 10 to keep the beta sharp.",
-    "  03  Your invite lands in this inbox the moment your spot opens.",
+    "Thanks for joining the waitlist for the Logbook.fit private beta.",
     "",
-    "Nothing else to do for now. Just keep training.",
+    "Logbook.fit brings your workout plans, client check-ins, and follow-ups into one workspace. It's free to use during the private beta.",
+    "",
+    "We invite coaches in small batches. When your spot opens, we'll send a separate email with your account link.",
+    "",
+    "Once invited, you can create your account and get started straight away. If you'd like help, an optional setup call is available to set up your workspace and bring over your client roster.",
+    "",
+    "You don't need to do anything else for now.",
+    "",
+    ...SIGN_OFF_TEXT,
     "",
     "Plan · Train · Check in",
     "You're receiving this because you joined the waitlist at https://logbook.fit",
   ].join("\n");
 }
 
-function inviteHtml(inviteUrl: string): string {
+/**
+ * The "want help?" paragraph of the invitation. Only asks the coach to reply
+ * when a monitored Reply-To inbox is configured (see `setupHelpReplyTo`);
+ * otherwise it offers the call without a route that would dead-end.
+ */
+function setupHelpHtml(replyToBook: boolean): string {
+  return replyToBook
+    ? `Want help getting started? Reply to this email to arrange an optional
+              setup call. We&rsquo;ll help you set up your workspace and bring
+              over your client roster. You can start using Logbook.fit right
+              away, whether or not you book a call.`
+    : `Want help getting started? An optional setup call is available to
+              help you set up your workspace and bring over your client
+              roster. You can start using Logbook.fit right away, whether or
+              not you book a call.`;
+}
+
+function setupHelpText(replyToBook: boolean): string {
+  return replyToBook
+    ? "Want help getting started? Reply to this email to arrange an optional setup call. We'll help you set up your workspace and bring over your client roster. You can start using Logbook.fit right away, whether or not you book a call."
+    : "Want help getting started? An optional setup call is available to help you set up your workspace and bring over your client roster. You can start using Logbook.fit right away, whether or not you book a call.";
+}
+
+function inviteHtml(
+  inviteUrl: string,
+  loginUrl: string,
+  replyToBook: boolean
+): string {
   return emailShell(
-    "Your spot in the private beta just opened up — create your coach account.",
-    `${heading("Your invite", "is ready.")}
+    "Create your coach account and get help setting up.",
+    `${heading("Your invitation", "is ready.")}
+            <p style="margin:0 0 20px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              Your spot in the Logbook.fit private beta is ready.
+            </p>
             <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
-              Your spot in the Logbook.fit private beta just opened up. Create
-              your coach account and your workspace comes ready with a starter
-              exercise library.
+              Create your coach account to start exploring. Your workspace
+              includes a starter exercise library, and Logbook.fit is free to
+              use during the private beta.
             </p>
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
               <tr><td align="center" style="background:${LIME};border-radius:10px;">
                 <a href="${inviteUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
-                  Create your account&nbsp;&nbsp;&#8594;
+                  Create your coach account&nbsp;&nbsp;&#8594;
                 </a>
               </td></tr>
             </table>
-            <p style="margin:0 0 32px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
-              This link is yours alone and works once. If the button doesn&rsquo;t
-              work, paste this into your browser:<br>
+            <p style="margin:0 0 24px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              ${setupHelpHtml(replyToBook)}
+            </p>
+            <p style="margin:0 0 24px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
+              This invitation link works once. If you&rsquo;ve already created
+              your account,
+              <a href="${loginUrl}" style="color:${MUTED};">sign in instead</a>.
+              If the button doesn&rsquo;t work, paste this into your browser:<br>
               <a href="${inviteUrl}" style="color:${MUTED};word-break:break-all;">${inviteUrl}</a>
-            </p>`
+            </p>
+            ${signOffHtml()}`
   );
 }
 
-function inviteText(inviteUrl: string): string {
+function inviteText(
+  inviteUrl: string,
+  loginUrl: string,
+  replyToBook: boolean
+): string {
   return [
     "LOGBOOK.FIT — PRIVATE BETA",
     "",
-    "Your invite is ready.",
+    "Your invitation is ready.",
     "",
-    "Your spot in the Logbook.fit private beta just opened up. Create your coach account and your workspace comes ready with a starter exercise library.",
+    "Hi,",
     "",
-    `Create your account: ${inviteUrl}`,
+    "Your spot in the Logbook.fit private beta is ready.",
     "",
-    "This link is yours alone and works once.",
+    "Create your coach account to start exploring. Your workspace includes a starter exercise library, and Logbook.fit is free to use during the private beta.",
+    "",
+    `Create your coach account: ${inviteUrl}`,
+    "",
+    setupHelpText(replyToBook),
+    "",
+    `This invitation link works once. If you've already created your account, sign in instead: ${loginUrl}`,
+    "",
+    ...SIGN_OFF_TEXT,
     "",
     "Plan · Train · Check in",
     "You're receiving this because you joined the waitlist at https://logbook.fit",
@@ -327,6 +426,17 @@ async function sendEmail(
     return false;
   }
 
+  // Optional monitored inbox. A malformed value is reported once per send
+  // (and on the admin banner) and otherwise treated as unset, so it can't
+  // turn every email into a 422.
+  const replyTo = setupHelpReplyTo();
+  const rawReplyTo = process.env.WAITLIST_REPLY_TO_EMAIL?.trim();
+  if (rawReplyTo && !replyTo) {
+    console.error(
+      `${ALERT_TAG} WAITLIST_REPLY_TO_EMAIL ("${rawReplyTo}") is not a valid address — sending "${subject}" without a Reply-To.`
+    );
+  }
+
   try {
     const res = await fetch(RESEND_ENDPOINT, {
       method: "POST",
@@ -334,7 +444,14 @@ async function sendEmail(
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ from, to, subject, html, text }),
+      body: JSON.stringify({
+        from,
+        to,
+        subject,
+        html,
+        text,
+        ...(replyTo ? { reply_to: replyTo } : {}),
+      }),
     });
 
     if (!res.ok) {
@@ -352,7 +469,7 @@ async function sendEmail(
   }
 }
 
-/** Send the "you're on the list" confirmation after a landing-page signup. */
+/** Send the "you're on the waitlist" confirmation after a landing-page signup. */
 export function sendWaitlistWelcome(to: string): Promise<boolean> {
   return sendEmail(
     to,
@@ -363,19 +480,25 @@ export function sendWaitlistWelcome(to: string): Promise<boolean> {
 }
 
 /**
- * Send the beta invite with the single-use signup link. The caller surfaces
- * the boolean to the admin (a false means "copy the link and send it
- * yourself"), unlike the fire-and-forget welcome email.
+ * Send the beta invitation with the single-use signup link. The caller
+ * surfaces the boolean to the admin (a false means "copy the link and send
+ * it yourself"), unlike the fire-and-forget welcome email.
+ *
+ * The setup call is optional and account creation is the primary action:
+ * the reply-to-book line only ships when `WAITLIST_REPLY_TO_EMAIL` routes
+ * replies to a monitored inbox.
  */
 export function sendWaitlistInvite(
   to: string,
   inviteUrl: string
 ): Promise<boolean> {
+  const loginUrl = `${appBaseUrl()}/login`;
+  const replyToBook = setupHelpReplyTo() !== null;
   return sendEmail(
     to,
-    "Your Logbook.fit invite is ready",
-    inviteHtml(inviteUrl),
-    inviteText(inviteUrl)
+    "Your Logbook.fit invitation is ready",
+    inviteHtml(inviteUrl, loginUrl, replyToBook),
+    inviteText(inviteUrl, loginUrl, replyToBook)
   );
 }
 
