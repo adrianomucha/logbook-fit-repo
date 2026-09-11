@@ -44,6 +44,7 @@ export default function TodayScreen() {
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
+  const [isStarting, setIsStarting] = useState(false);
   const { user, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
   const { weekOverview, error: weekError, isLoading: loadingWeek, refresh: refreshWeek } = useClientWeekOverview();
   const { plan: planDetail, error: planError, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
@@ -215,6 +216,29 @@ export default function TodayScreen() {
     if (day.workoutDay) router.push({ pathname: '/client/workout/[dayId]', params: { dayId: day.workoutDay.id } });
   };
 
+  // "Start workout" is the client saying they're training now, so the session
+  // clock starts here. It used to start on the first logged set, which left
+  // the warm-up and the whole first exercise out of the duration the client,
+  // the coach and the history all see. Opening a day from the week view is
+  // still just a look and starts nothing. Idempotent on the server, so a
+  // second tap (or a day started on the web) is harmless; if the request
+  // fails, open the workout anyway — the first logged set still starts it.
+  const startToday = async () => {
+    if (!today?.workoutDay) return;
+    if (state === 'scheduled') {
+      setIsStarting(true);
+      try {
+        await apiFetch('/api/client/workout/start', { method: 'POST', body: JSON.stringify({ dayId: today.workoutDay.id }) });
+        void refreshWeek();
+      } catch {
+        // Fall through to the workout; the first set starts it.
+      } finally {
+        setIsStarting(false);
+      }
+    }
+    openDay(today);
+  };
+
   return (
     <Screen withHeader onRefresh={refresh} refreshing={refreshing}>
       {header}
@@ -285,7 +309,8 @@ export default function TodayScreen() {
             coachName={coach.user.name}
             state={state}
             completionPct={today.completion?.completionPct ?? 0}
-            onAction={() => openDay(today)}
+            isStarting={isStarting}
+            onAction={() => void startToday()}
           />
         )
       ) : (

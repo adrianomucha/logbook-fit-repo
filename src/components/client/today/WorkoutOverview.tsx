@@ -12,6 +12,8 @@ interface WorkoutOverviewProps {
   completionPct?: number;
   /** Start / resume the workout */
   onAction: () => void;
+  /** The action is in flight — the button waits so it can't fire twice */
+  isActionPending?: boolean;
 }
 
 function estimateDuration(exercises: WorkoutDay['exercises']): number {
@@ -40,6 +42,7 @@ export function WorkoutOverview({
   actionState,
   completionPct = 0,
   onAction,
+  isActionPending = false,
 }: WorkoutOverviewProps) {
   const exercises = workoutDay.exercises;
   const duration = estimateDuration(exercises);
@@ -117,7 +120,9 @@ export function WorkoutOverview({
 
         <button
           onClick={onAction}
-          className="mt-6 w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          disabled={isActionPending}
+          aria-busy={isActionPending}
+          className="mt-6 w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-70 disabled:pointer-events-none"
         >
           {inProgress ? (
             <>

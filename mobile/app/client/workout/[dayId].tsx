@@ -110,9 +110,12 @@ export default function WorkoutScreen() {
       durationMin: Math.round((Date.now() - startTime) / 60000),
     };
     try {
-      await finishWorkout();
+      const result = await finishWorkout();
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      setCelebration(summary);
+      // The server's duration is what the Today card and the coach see; show
+      // the same number here rather than the phone's own estimate.
+      const durationSec = result?.durationSec;
+      setCelebration(durationSec != null ? { ...summary, durationMin: Math.max(1, Math.round(durationSec / 60)) } : summary);
     } catch (err) {
       finishingRef.current = false;
       setIsFinishing(false);
