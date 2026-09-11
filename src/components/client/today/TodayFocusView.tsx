@@ -21,6 +21,8 @@ interface TodayFocusViewProps {
   feedbackSubmitted?: boolean;
   isSendingFeedback?: boolean;
   onStartWorkout: () => void;
+  /** The start request is in flight — the button waits so it can't fire twice */
+  isStartingWorkout?: boolean;
   onResumeWorkout: () => void;
   onRestartWorkout?: () => void;
   isRestarting?: boolean;
@@ -48,6 +50,7 @@ export function TodayFocusView({
   feedbackSubmitted,
   isSendingFeedback,
   onStartWorkout,
+  isStartingWorkout,
   onResumeWorkout,
   onRestartWorkout,
   isRestarting,
@@ -83,6 +86,7 @@ export function TodayFocusView({
             actionState={actionState === 'in-progress' ? 'in-progress' : 'scheduled'}
             completionPct={completionPct}
             onAction={actionState === 'in-progress' ? onResumeWorkout : onStartWorkout}
+            isActionPending={actionState !== 'in-progress' && isStartingWorkout}
           />
         </div>
       )}

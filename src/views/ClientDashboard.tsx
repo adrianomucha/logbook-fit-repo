@@ -255,10 +255,29 @@ export function ClientDashboard() {
     await sendMessage(content);
   };
 
-  const handleStartWorkout = () => {
-    if (todayWorkout?.workoutDay && currentWeek) {
-      router.push(`/client/workout/${currentWeek.id}/${todayWorkout.workoutDay.id}`);
+  // "Start workout" is the client saying they're training now, so the session
+  // clock starts here. It used to start on the first logged set, which left
+  // the warm-up and the whole first exercise out of the duration the client,
+  // the coach and the history all see. Opening a day from the week view is
+  // still just a look and starts nothing. Idempotent on the server, so a
+  // second click (or a day started on the phone) is harmless; if the request
+  // fails, open the workout anyway — the first logged set still starts it.
+  const [isStartingWorkout, setIsStartingWorkout] = useState(false);
+  const handleStartWorkout = async () => {
+    if (!todayWorkout?.workoutDay || !currentWeek) return;
+    setIsStartingWorkout(true);
+    try {
+      await apiFetch('/api/client/workout/start', {
+        method: 'POST',
+        body: JSON.stringify({ dayId: todayWorkout.workoutDay.id }),
+      });
+      void refreshWeek();
+    } catch {
+      // Fall through to the workout; the first set starts it.
+    } finally {
+      setIsStartingWorkout(false);
     }
+    router.push(`/client/workout/${currentWeek.id}/${todayWorkout.workoutDay.id}`);
   };
 
   const handleResumeWorkout = () => {
@@ -600,6 +619,7 @@ export function ClientDashboard() {
             feedbackSubmitted={feedbackSent || !!todayCompletion?.effortRating}
             isSendingFeedback={isSendingFeedback}
             onStartWorkout={handleStartWorkout}
+            isStartingWorkout={isStartingWorkout}
             onResumeWorkout={handleResumeWorkout}
             onRestartWorkout={handleRestartWorkout}
             isRestarting={isRestartingWorkout}

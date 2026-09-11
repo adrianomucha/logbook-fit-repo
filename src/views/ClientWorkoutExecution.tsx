@@ -223,7 +223,16 @@ export function ClientWorkoutExecution() {
     setShowPartialConfirm(false);
 
     try {
-      await finishWorkout();
+      const result = await finishWorkout();
+      // The server's duration is what the Today card and the coach see; show
+      // the same number here rather than the browser's own estimate.
+      if (result?.durationSec != null) {
+        setCompletedWorkoutData({
+          exercisesDone: stats.exercisesDone,
+          exercisesTotal: stats.exercisesTotal,
+          durationMin: Math.max(1, Math.round(result.durationSec / 60)),
+        });
+      }
       setShowCelebration(true);
       // No auto-dismiss timer: the effort-rating buttons are a live decision,
       // and a 6s redirect used to take them off screen mid-thought (WCAG 2.2.1).

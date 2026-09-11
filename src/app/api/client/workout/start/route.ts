@@ -32,7 +32,12 @@ export const POST = withClient(
 
       if (!created) {
         return NextResponse.json(
-          { id: completion.id, status: completion.status, message: "Workout already started" },
+          {
+            id: completion.id,
+            status: completion.status,
+            startedAt: completion.startedAt,
+            message: "Workout already started",
+          },
           { status: 200 }
         );
       }

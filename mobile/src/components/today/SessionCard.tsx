@@ -9,6 +9,8 @@ interface SessionCardProps {
   coachName?: string | null;
   state: 'scheduled' | 'in-progress' | 'completed';
   completionPct?: number;
+  /** The start request is in flight — the button waits so it can't fire twice */
+  isStarting?: boolean;
   onAction: () => void;
 }
 
@@ -26,7 +28,7 @@ function readableCategories(exercises: WorkoutDay['exercises']): string[] {
 }
 
 /** Today's hero: what the session is, how big, and the one button — the web's WorkoutOverview. */
-export function SessionCard({ workoutDay, coachName, state, completionPct = 0, onAction }: SessionCardProps) {
+export function SessionCard({ workoutDay, coachName, state, completionPct = 0, isStarting = false, onAction }: SessionCardProps) {
   const exercises = workoutDay.exercises;
   const totalSets = exercises.reduce((sum, e) => sum + e.sets, 0);
   const minutes = Math.max(10, Math.round(totalSets * 2));
@@ -79,7 +81,7 @@ export function SessionCard({ workoutDay, coachName, state, completionPct = 0, o
         ) : null}
 
         {state !== 'completed' ? (
-          <Button variant="brand" className="mt-6" onPress={onAction}>
+          <Button variant="brand" className="mt-6" onPress={onAction} loading={isStarting}>
             {state === 'in-progress' ? 'Continue workout' : 'Start workout'}
           </Button>
         ) : null}
