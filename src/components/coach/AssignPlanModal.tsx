@@ -1,7 +1,8 @@
-import { useState, useMemo, type ReactNode } from 'react';
+import { useState, useMemo } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
-import { Check, Dumbbell, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Check, Dumbbell, Loader2, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkoutPlan } from '@/types';
 
@@ -17,21 +18,25 @@ interface AssignPlanModalProps {
   clientName?: string;
 }
 
-const metaLine = (plan: WorkoutPlan) =>
-  `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'week' : 'weeks'} · ${plan.workoutsPerWeek}×/week`;
+const cardShadow =
+  'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]';
 
-const GroupLabel = ({ children }: { children: ReactNode }) => (
-  <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground font-medium antialiased mb-2 px-1">
-    {children}
-  </p>
-);
+const statClass =
+  'font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased';
 
-const PlanMeta = ({ plan }: { plan: WorkoutPlan }) => (
-  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mt-0.5">
-    {metaLine(plan)}
-  </p>
-);
+/** Search appears once the list is long enough that scanning stops being enough */
+const SEARCH_THRESHOLD = 6;
 
+const weeksLabel = (plan: WorkoutPlan) =>
+  `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'week' : 'weeks'}`;
+const perWeekLabel = (plan: WorkoutPlan) => `${plan.workoutsPerWeek}×/week`;
+
+/**
+ * Assign / switch a client's plan.
+ * One grouped list in the Plans page's voice — rows, not cards: the current
+ * plan pinned on top and tagged, templates below with aligned stat columns.
+ * Tap a row to pick it; the footer names what will happen.
+ */
 export function AssignPlanModal({
   isOpen,
   onClose,
@@ -44,6 +49,7 @@ export function AssignPlanModal({
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const [query, setQuery] = useState('');
 
   // Assignable templates (not archived), excluding whatever is already assigned
   const templatePlans = useMemo(
@@ -59,12 +65,19 @@ export function AssignPlanModal({
     [templatePlans, currentPlanId]
   );
 
+  const q = query.trim().toLowerCase();
+  const visiblePlans = q
+    ? selectablePlans.filter((p) => p.name.toLowerCase().includes(q))
+    : selectablePlans;
+  const showSearch = selectablePlans.length > SEARCH_THRESHOLD || q.length > 0;
+
+  const selectedPlan = selectablePlans.find((p) => p.id === selectedPlanId) ?? null;
   const firstName = clientName?.trim().split(/\s+/)[0];
 
   const title = (
     <>
       <span className="block font-mono text-[10px] font-normal uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
-        Assign plan
+        {currentPlan ? 'Change plan' : 'Assign plan'}
       </span>
       <span className="block text-lg sm:text-xl font-bold tracking-tight">
         {clientName ?? 'Choose a plan'}
@@ -72,10 +85,15 @@ export function AssignPlanModal({
     </>
   );
 
-  const handleClose = () => {
-    if (isSubmitting) return;
+  const reset = () => {
     setSelectedPlanId(null);
     setConfirmingRemove(false);
+    setQuery('');
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    reset();
     onClose();
   };
 
@@ -84,7 +102,7 @@ export function AssignPlanModal({
     setIsSubmitting(true);
     try {
       await onAssign(selectedPlanId);
-      setSelectedPlanId(null);
+      reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -100,8 +118,7 @@ export function AssignPlanModal({
     setIsSubmitting(true);
     try {
       await onUnassign();
-      setConfirmingRemove(false);
-      setSelectedPlanId(null);
+      reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -124,19 +141,46 @@ export function AssignPlanModal({
     );
   }
 
+  const confirmLabel = selectedPlan
+    ? currentPlan
+      ? 'Switch plan'
+      : firstName
+        ? `Assign to ${firstName}`
+        : 'Assign plan'
+    : currentPlan
+      ? 'Switch plan'
+      : 'Assign plan';
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
       title={title}
-      maxWidth="md"
+      maxWidth="lg"
       footer={
-        <div className="flex items-center justify-end gap-1.5">
+        <div className="flex items-center gap-1.5">
+          {/* Removal lives with the other actions, quiet until armed */}
+          {currentPlan && onUnassign && (
+            <button
+              onClick={handleRemove}
+              onBlur={() => setConfirmingRemove(false)}
+              disabled={isSubmitting}
+              className={cn(
+                'mr-auto text-sm font-medium antialiased rounded-md px-2 py-1.5 -ml-2 transition-colors tap-target',
+                'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
+                confirmingRemove
+                  ? 'text-destructive bg-destructive/10'
+                  : 'text-muted-foreground hover:text-destructive'
+              )}
+            >
+              {confirmingRemove ? 'Tap again to remove' : 'Remove plan'}
+            </button>
+          )}
           <Button
             variant="ghost"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
+            className="ml-auto text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
           >
             Cancel
           </Button>
@@ -146,93 +190,123 @@ export function AssignPlanModal({
             className="flex items-center gap-2 active:scale-[0.96] transition-transform duration-150 tap-target"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
-            {selectedPlanId && firstName ? `Assign to ${firstName}` : 'Assign plan'}
+            {confirmLabel}
           </Button>
         </div>
       }
     >
-      <div className="space-y-5">
-        {/* What's assigned now, with its removal action in context */}
-        {currentPlan && (
-          <div>
-            <GroupLabel>Current plan</GroupLabel>
-            <div className="flex items-center gap-3 rounded-xl bg-muted/40 p-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold truncate antialiased">{currentPlan.name}</p>
-                <PlanMeta plan={currentPlan} />
-              </div>
-              {onUnassign && (
-                <button
-                  onClick={handleRemove}
-                  disabled={isSubmitting}
-                  className={cn(
-                    'shrink-0 font-mono text-[10px] uppercase tracking-[0.14em] font-medium antialiased',
-                    'underline underline-offset-2 transition-colors tap-target disabled:opacity-50',
-                    confirmingRemove
-                      ? 'text-destructive'
-                      : 'text-muted-foreground hover:text-foreground'
-                  )}
-                >
-                  {confirmingRemove ? 'Confirm remove?' : 'Remove'}
-                </button>
-              )}
-            </div>
+      <div className="space-y-3">
+        {showSearch && (
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search plans..."
+              aria-label="Search plans"
+              className="pl-9"
+            />
           </div>
         )}
 
-        {/* Picker */}
-        <div>
-          {currentPlan && <GroupLabel>Switch to</GroupLabel>}
-          {selectablePlans.length > 0 ? (
-            <div className="space-y-2" role="radiogroup" aria-label="Plan templates">
-              {selectablePlans.map((plan) => {
+        <div className={cn('bg-card rounded-xl divide-y divide-border overflow-hidden', cardShadow)}>
+          {/* Current plan — pinned first, tagged rather than selectable */}
+          {currentPlan && !q && (
+            <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 bg-muted/40">
+              <div className="flex-1 min-w-0">
+                <p className="text-sm sm:text-[15px] font-black tracking-tight leading-tight truncate antialiased">
+                  {currentPlan.name}
+                </p>
+                <p className="flex items-center gap-1.5 mt-1 font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25 shrink-0" aria-hidden="true" />
+                  <span className="text-foreground">Current</span>
+                  <span className="sm:hidden text-muted-foreground">
+                    · {weeksLabel(currentPlan)} · {perWeekLabel(currentPlan)}
+                  </span>
+                </p>
+              </div>
+              <span className={cn(statClass, 'hidden sm:block w-[64px] text-right shrink-0')}>
+                {weeksLabel(currentPlan)}
+              </span>
+              <span className={cn(statClass, 'hidden sm:block w-[64px] text-right shrink-0')}>
+                {perWeekLabel(currentPlan)}
+              </span>
+              <span className="w-5 shrink-0" aria-hidden="true" />
+            </div>
+          )}
+
+          {visiblePlans.length > 0 ? (
+            <div role="radiogroup" aria-label="Plan templates" className="divide-y divide-border">
+              {visiblePlans.map((plan) => {
                 const isSelected = plan.id === selectedPlanId;
                 return (
                   <button
                     key={plan.id}
                     role="radio"
                     aria-checked={isSelected}
-                    onClick={() => setSelectedPlanId(isSelected ? null : plan.id)}
+                    onClick={() => {
+                      setConfirmingRemove(false);
+                      setSelectedPlanId(isSelected ? null : plan.id);
+                    }}
                     className={cn(
-                      'w-full text-start rounded-xl p-3 bg-card transition-[box-shadow,transform] duration-150',
-                      'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]',
-                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                      'cursor-pointer active:scale-[0.98]',
-                      isSelected
-                        ? 'ring-2 ring-brand'
-                        : 'hover:shadow-[0_2px_4px_rgba(0,0,0,0.06),0_4px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.08)]'
+                      'group relative w-full text-start flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 transition-colors',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
+                      isSelected ? 'bg-brand/10' : 'hover:bg-muted/50 active:bg-muted/70'
                     )}
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-semibold truncate antialiased">{plan.name}</p>
-                        <PlanMeta plan={plan} />
-                      </div>
-                      {/* Radio affordance — hairline circle, filled lime when picked */}
+                    {/* Volt edge marks the pick */}
+                    <span
+                      className={cn(
+                        'absolute left-0 inset-y-0 w-[3px] bg-brand transition-opacity duration-150',
+                        isSelected ? 'opacity-100' : 'opacity-0'
+                      )}
+                      aria-hidden="true"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm sm:text-[15px] font-black tracking-tight leading-tight truncate antialiased group-hover:translate-x-0.5 transition-transform duration-150">
+                        {plan.name}
+                      </p>
+                      <p className={cn(statClass, 'sm:hidden mt-0.5 truncate')}>
+                        {weeksLabel(plan)} · {perWeekLabel(plan)}
+                      </p>
+                    </div>
+                    <span className={cn(statClass, 'hidden sm:block w-[64px] text-right shrink-0')}>
+                      {weeksLabel(plan)}
+                    </span>
+                    <span className={cn(statClass, 'hidden sm:block w-[64px] text-right shrink-0')}>
+                      {perWeekLabel(plan)}
+                    </span>
+                    <span className="w-5 flex justify-end shrink-0" aria-hidden="true">
                       <span
                         className={cn(
-                          'w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-colors',
-                          isSelected
-                            ? 'bg-brand'
-                            : 'shadow-[inset_0_0_0_1.5px_hsl(var(--border))]'
+                          'w-5 h-5 rounded-full bg-brand flex items-center justify-center transition-[opacity,transform] duration-150',
+                          isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
                         )}
-                        aria-hidden="true"
                       >
-                        {isSelected && (
-                          <Check className="w-3 h-3 text-brand-foreground" strokeWidth={3} />
-                        )}
+                        <Check className="w-3 h-3 text-brand-foreground" strokeWidth={3} />
                       </span>
-                    </div>
+                    </span>
                   </button>
                 );
               })}
             </div>
           ) : (
-            <p className="text-[13px] text-muted-foreground antialiased px-1">
-              No other templates yet. Create one on the Plans page first.
+            <p className="text-[13px] text-muted-foreground antialiased px-4 py-6 text-center">
+              {q
+                ? <>No plans match &ldquo;{query.trim()}&rdquo;</>
+                : 'No other templates yet. Create one on the Plans page first.'}
             </p>
           )}
         </div>
+
+        {/* Say what a switch does before it happens */}
+        {selectedPlan && currentPlan && (
+          <p className="text-[13px] text-muted-foreground antialiased px-1">
+            {firstName ?? 'Your client'} starts week 1 of{' '}
+            <span className="font-semibold text-foreground">{selectedPlan.name}</span>.
+            Past workouts stay in their history.
+          </p>
+        )}
       </div>
     </Modal>
   );
