@@ -756,12 +756,17 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
 
-  const kind = (c: Completion) =>
-    c.status === 'IN_PROGRESS'
-      ? isAbandoned(c) ? 'short' : 'live'
-      : (c.completionPct ?? 100) < 100 ? 'short' : 'done';
+  // Meter fill: how much of the session got done. Unfinished sessions use
+  // exercises logged when known, else a sliver so the slot never reads empty
+  const fillPct = (c: Completion) => {
+    if (c.status === 'COMPLETED') return Math.max(12, c.completionPct ?? 100);
+    const done = c.exercisesDone ?? 0;
+    const total = c.exercisesTotal ?? 0;
+    return Math.max(12, total > 0 ? (done / total) * 100 : 0);
+  };
   const all = weeks.flatMap((w) => w.sessions);
-  const present = new Set(all.map(kind));
+  const hasFull = all.some((c) => fillPct(c) >= 100);
+  const hasPartial = all.some((c) => fillPct(c) < 100);
   const hasMissed = weeks.some((w) => w.missed > 0);
   const hasUpcoming = weeks.some((w) => w.upcoming > 0);
   const hasFlags = all.some((c) => (c.flags?.length ?? 0) > 0);
@@ -791,11 +796,11 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
 
               <div className="min-w-0 flex flex-wrap items-center gap-1">
                 {w.sessions.map((c) => {
-                  const k = kind(c);
+                  const live = c.status === 'IN_PROGRESS' && !isAbandoned(c);
                   const flags = c.flags ?? [];
                   const date = format(new Date((c.completedAt ?? c.startedAt) as string), 'EEE, MMM d');
                   const value = c.status === 'IN_PROGRESS'
-                    ? k === 'live' ? 'In progress' : 'Not finished'
+                    ? live ? 'In progress' : 'Not finished'
                     : `${Math.round(c.completionPct ?? 100)}% done`;
                   const isActive = activeId === c.id;
                   return (
@@ -809,10 +814,14 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                       className={cn(
                         slot, 'relative cursor-default transition-opacity duration-150',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card',
-                        k === 'done' ? 'bg-chart-done' : k === 'short' ? 'bg-chart-short' : 'bg-info',
                         activeId && !isActive && 'opacity-50'
                       )}
                     >
+                      {/* Volt meter: lighter step of the brand ramp as the
+                          track, brand fill rising with the share done */}
+                      <span className="absolute inset-0 rounded-[3px] overflow-hidden bg-brand/25 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" aria-hidden="true">
+                        <span className="absolute inset-x-0 bottom-0 bg-brand" style={{ height: `${fillPct(c)}%` }} />
+                      </span>
                       {flags.length > 0 && (
                         <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden="true" />
                       )}
@@ -841,10 +850,10 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                   );
                 })}
                 {Array.from({ length: w.missed }, (_, i) => (
-                  <span key={`m${i}`} className={cn(slot, 'shadow-[inset_0_0_0_1.5px_hsl(var(--chart-short))]')} aria-hidden="true" />
+                  <span key={`m${i}`} className={cn(slot, 'shadow-[inset_0_0_0_1.5px_hsl(var(--muted-foreground)/0.45)]')} aria-hidden="true" />
                 ))}
                 {Array.from({ length: w.upcoming }, (_, i) => (
-                  <span key={`u${i}`} className={cn(slot, 'border border-dashed border-muted-foreground/50')} aria-hidden="true" />
+                  <span key={`u${i}`} className={cn(slot, 'border border-dashed border-muted-foreground/40')} aria-hidden="true" />
                 ))}
               </div>
 
@@ -871,20 +880,22 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
 
       {/* Legend — identity never rides on color alone */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
-        {present.has('done') && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-done" />Done</span>
+        {hasFull && (
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-brand shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" />Done</span>
         )}
-        {present.has('short') && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-short" />Short or unfinished</span>
-        )}
-        {present.has('live') && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-info" />In progress</span>
+        {hasPartial && (
+          <span className="flex items-center gap-1.5">
+            <span className="relative w-2.5 h-2.5 rounded-[2px] overflow-hidden bg-brand/25 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
+              <span className="absolute inset-x-0 bottom-0 h-1/2 bg-brand" />
+            </span>
+            Partly done
+          </span>
         )}
         {hasMissed && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] shadow-[inset_0_0_0_1.5px_hsl(var(--chart-short))]" />Missed</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] shadow-[inset_0_0_0_1.5px_hsl(var(--muted-foreground)/0.45)]" />Missed</span>
         )}
         {hasUpcoming && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] border border-dashed border-muted-foreground/60" />Still to do</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] border border-dashed border-muted-foreground/40" />Still to do</span>
         )}
         {hasFlags && (
           <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-foreground" />Flagged</span>

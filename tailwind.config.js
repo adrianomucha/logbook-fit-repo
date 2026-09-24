@@ -54,7 +54,6 @@ module.exports = {
           text: "hsl(var(--success-text))",
         },
         chart: {
-          done: "hsl(var(--chart-done))",
           short: "hsl(var(--chart-short))",
         },
         warning: {
