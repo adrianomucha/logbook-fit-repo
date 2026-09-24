@@ -705,16 +705,16 @@ function SessionStrip({ rows, isAbandoned, since }: {
   const hasFlags = rows.some((c) => (c.flags?.length ?? 0) > 0);
 
   return (
-    <div className="px-4 sm:px-5 pt-5 pb-4">
+    <div className="px-4 sm:px-5 pt-8 pb-5">
       {/* Plot: 100% reference hairline on top, baseline below */}
-      <div className="relative h-16" onPointerLeave={() => setActiveId(null)}>
+      <div className="relative h-24" onPointerLeave={() => setActiveId(null)}>
         <div className="absolute inset-x-0 top-0 border-t border-border" aria-hidden="true" />
-        <span className="absolute right-0 -top-4 font-mono text-[9px] tracking-[0.12em] text-muted-foreground antialiased" aria-hidden="true">
+        <span className="absolute right-0 -top-5 font-mono text-[9px] tracking-[0.12em] text-muted-foreground antialiased" aria-hidden="true">
           100%
         </span>
         <div className="absolute inset-x-0 bottom-0 border-t border-border" aria-hidden="true" />
 
-        <div className="relative h-full flex items-end gap-[2px]">
+        <div className="relative h-full flex items-end">
           {days.map((day, di) => {
             // Edge columns anchor their tooltip inward so the card never clips it
             const edge = di < days.length * 0.2 ? 'left' : di > days.length * 0.8 ? 'right' : 'center';
@@ -740,8 +740,8 @@ function SessionStrip({ rows, isAbandoned, since }: {
                       onPointerEnter={() => setActiveId(c.id)}
                       onFocus={() => setActiveId(c.id)}
                       onBlur={() => setActiveId(null)}
-                      // Hit area is the full column height, wider than the mark
-                      className="group relative h-full flex-1 min-w-0 max-w-6 flex items-end cursor-default focus-visible:outline-none"
+                      // Hit area: full column height, padded wider than the slim mark
+                      className="group relative h-full w-2 sm:w-3 shrink-0 flex items-end cursor-default focus-visible:outline-none before:absolute before:inset-y-0 before:-inset-x-1.5 before:content-['']"
                     >
                       <span
                         className={cn(
@@ -791,13 +791,37 @@ function SessionStrip({ rows, isAbandoned, since }: {
         </div>
       </div>
 
-      <div className="flex justify-between mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased" aria-hidden="true">
-        <span>{format(since, 'MMM d')}</span>
-        <span>Today</span>
+      {/* Axis — the window's ends plus each Monday, on the day slots */}
+      <div className="flex mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased" aria-hidden="true">
+        {days.map((day, di) => {
+          const last = di === days.length - 1;
+          // Keep interior ticks clear of the end labels at any width
+          const pos = di / Math.max(1, days.length - 1);
+          const nearEdge = pos < 0.14 || pos > 0.82;
+          const label = di === 0
+            ? format(day, 'MMM d')
+            : last
+              ? 'Today'
+              : day.getDay() === 1 && !nearEdge
+                ? format(day, 'MMM d')
+                : null;
+          return (
+            <div key={day.toISOString()} className="relative flex-1 min-w-0 h-3">
+              {label && (
+                <span className={cn(
+                  'absolute top-0 whitespace-nowrap',
+                  di === 0 ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'
+                )}>
+                  {label}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       {/* Legend — identity never rides on color alone */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-5 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
         {present.has('done') && (
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-done" />As written</span>
         )}
