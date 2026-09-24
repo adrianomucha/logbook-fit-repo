@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
-import { format, formatDistanceToNow, differenceInHours, subDays, eachDayOfInterval, startOfDay } from 'date-fns';
+import { format, formatDistanceToNow, differenceInHours, subDays, startOfWeek, addWeeks, differenceInCalendarWeeks } from 'date-fns';
 
 /* ── Brand surface helpers — same vocabulary as the client profile ── */
 
@@ -366,7 +366,7 @@ export function ClientCheckIn() {
         </div>
 
         <div className="animate-enter" style={{ animationDelay: '200ms' }}>
-          <CheckInWorkouts client={client} exerciseNames={exerciseNames} />
+          <CheckInWorkouts client={client} exerciseNames={exerciseNames} weeklyTarget={plan?.workoutsPerWeek ?? null} />
         </div>
 
         {completedCheckIns.length > 0 && (
@@ -462,7 +462,7 @@ export function ClientCheckIn() {
               context the check-in payload lacks: abandoned sessions, mid-workout
               exercise flags, and prescription deviations */}
           <div className="animate-enter" style={{ animationDelay: '175ms' }}>
-            <CheckInWorkouts client={client} exerciseNames={exerciseNames} />
+            <CheckInWorkouts client={client} exerciseNames={exerciseNames} weeklyTarget={plan?.workoutsPerWeek ?? null} />
           </div>
 
           {/* Previous check-ins close the reading column (desktop) */}
@@ -562,9 +562,11 @@ function reviewWindow(client: ClientDetail): { since: Date; label: string } {
  * client's whole history: a readout of the period, a strip of every session,
  * the few that need a look up front, and the rest one tap away.
  */
-function CheckInWorkouts({ client, exerciseNames }: {
+function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
   client: ClientDetail;
   exerciseNames: Map<string, string>;
+  /** Plan's sessions per week — null until the plan loads, or with no plan */
+  weeklyTarget: number | null;
 }) {
   const [showAll, setShowAll] = useState(false);
   const { since, label } = reviewWindow(client);
@@ -588,16 +590,21 @@ function CheckInWorkouts({ client, exerciseNames }: {
   const pcts = completed.map((c) => c.completionPct).filter((p): p is number => p != null);
   const avgPct = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
   const flagCount = rows.reduce((n, c) => n + (c.flags?.length ?? 0), 0);
-  const unfinished = rows.filter(isAbandoned).length;
+
+  const weeks = buildWeeks(client.completions, since, weeklyTarget, client.planStartDate);
+  const missed = weeks.reduce((n, w) => n + w.missed, 0);
 
   const attention = rows.filter(needsLook);
   const rest = rows.filter((c) => !needsLook(c));
 
   const stats = [
-    { label: 'Workouts', value: String(completed.length), warn: false },
+    // With a target, count the same whole weeks the chart shows so they agree
+    weeklyTarget != null
+      ? { label: 'Workouts', value: String(weeks.reduce((n, w) => n + w.completed, 0)), warn: false }
+      : { label: 'Workouts', value: String(completed.length), warn: false },
+    { label: 'Missed', value: weeklyTarget != null ? String(missed) : '—', warn: missed > 0 },
     { label: 'Avg done', value: avgPct != null ? `${avgPct}%` : '—', warn: avgPct != null && avgPct < 90 },
     { label: 'Flags', value: String(flagCount), warn: flagCount > 0 },
-    { label: 'Not done', value: String(unfinished), warn: unfinished > 0 },
   ];
 
   return (
@@ -607,7 +614,7 @@ function CheckInWorkouts({ client, exerciseNames }: {
         'bg-card rounded-xl overflow-hidden',
         'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]'
       )}>
-        {rows.length === 0 ? (
+        {rows.length === 0 && weeklyTarget == null ? (
           <p className="px-4 sm:px-5 py-6 text-sm text-warning-text antialiased">
             No workouts logged since {format(since, 'MMM d')}.
           </p>
@@ -629,8 +636,8 @@ function CheckInWorkouts({ client, exerciseNames }: {
               ))}
             </div>
 
-            {/* One bar per session, oldest → newest; height is completion */}
-            <SessionStrip rows={rows} isAbandoned={isAbandoned} since={since} />
+            {/* Week by week against the plan's target */}
+            <WeeklyAdherence weeks={weeks} isAbandoned={isAbandoned} />
 
             {/* What to read before replying */}
             {attention.length > 0 ? (
@@ -644,6 +651,10 @@ function CheckInWorkouts({ client, exerciseNames }: {
                   ))}
                 </div>
               </div>
+            ) : rows.length === 0 ? (
+              <p className="border-t border-border px-4 sm:px-5 py-3 text-[13px] text-warning-text antialiased">
+                No workouts logged since {format(since, 'MMM d')}.
+              </p>
             ) : (
               <p className="border-t border-border px-4 sm:px-5 py-3 text-[13px] text-muted-foreground antialiased">
                 Every session finished as written — no flags from {firstName}.
@@ -682,55 +693,110 @@ function CheckInWorkouts({ client, exerciseNames }: {
   );
 }
 
-function SessionStrip({ rows, isAbandoned, since }: {
-  rows: Completion[];
+interface WeekRow {
+  start: Date;
+  planWeek: number | null;
+  sessions: Completion[];
+  completed: number;
+  target: number | null;
+  missed: number;
+  upcoming: number;
+  isCurrent: boolean;
+}
+
+/**
+ * Bucket sessions into the app's Monday-start training weeks, from the week
+ * the review window opens through this week, and compare each to the plan's
+ * weekly target. Weeks are counted whole — a check-in that lands mid-week
+ * still judges that week against its full target.
+ */
+function buildWeeks(
+  completions: Completion[],
+  since: Date,
+  target: number | null,
+  planStartDate: string | null,
+): WeekRow[] {
+  const thisWeek = startOfWeek(new Date(), { weekStartsOn: 1 });
+  const planWeek1 = planStartDate ? startOfWeek(new Date(planStartDate), { weekStartsOn: 1 }) : null;
+  const weeks: WeekRow[] = [];
+  for (let w = startOfWeek(since, { weekStartsOn: 1 }); w <= thisWeek; w = addWeeks(w, 1)) {
+    const end = addWeeks(w, 1);
+    const sessions = completions
+      .filter((c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt))
+      .filter((c) => {
+        const t = new Date((c.completedAt ?? c.startedAt) as string);
+        return t >= w && t < end;
+      })
+      .reverse(); // oldest first, left to right
+    const isCurrent = w.getTime() === thisWeek.getTime();
+    const open = target != null ? Math.max(0, target - sessions.length) : 0;
+    weeks.push({
+      start: w,
+      planWeek: planWeek1 ? differenceInCalendarWeeks(w, planWeek1, { weekStartsOn: 1 }) + 1 : null,
+      sessions,
+      completed: sessions.filter((c) => c.status === 'COMPLETED').length,
+      target,
+      // This week's open slots are still ahead of the client, not missed
+      missed: isCurrent ? 0 : open,
+      upcoming: isCurrent ? open : 0,
+      isCurrent,
+    });
+  }
+  return weeks;
+}
+
+/**
+ * One row per training week: a slot for every planned session — filled when
+ * done, amber when short or abandoned, hollow when missed, dashed while the
+ * week is still open. Answers "did they train as planned?" at a glance.
+ */
+function WeeklyAdherence({ weeks, isAbandoned }: {
+  weeks: WeekRow[];
   isAbandoned: (c: Completion) => boolean;
-  since: Date;
 }) {
   const [activeId, setActiveId] = useState<string | null>(null);
-
-  // One slot per day of the window, so rest days read as gaps on the baseline
-  const byDay = new Map<string, Completion[]>();
-  for (const c of rows) {
-    const key = format(new Date((c.completedAt ?? c.startedAt) as string), 'yyyy-MM-dd');
-    byDay.set(key, [c, ...(byDay.get(key) ?? [])]);
-  }
-  const days = eachDayOfInterval({ start: startOfDay(since), end: startOfDay(new Date()) });
 
   const kind = (c: Completion) =>
     c.status === 'IN_PROGRESS'
       ? isAbandoned(c) ? 'short' : 'live'
       : (c.completionPct ?? 100) < 100 ? 'short' : 'done';
-  const present = new Set(rows.map(kind));
-  const hasFlags = rows.some((c) => (c.flags?.length ?? 0) > 0);
+  const all = weeks.flatMap((w) => w.sessions);
+  const present = new Set(all.map(kind));
+  const hasMissed = weeks.some((w) => w.missed > 0);
+  const hasUpcoming = weeks.some((w) => w.upcoming > 0);
+  const hasFlags = all.some((c) => (c.flags?.length ?? 0) > 0);
+
+  const slot = 'w-5 h-5 sm:w-7 sm:h-7 rounded-[4px] shrink-0';
 
   return (
-    <div className="px-4 sm:px-5 pt-8 pb-5">
-      {/* Plot: 100% reference hairline on top, baseline below */}
-      <div className="relative h-24" onPointerLeave={() => setActiveId(null)}>
-        <div className="absolute inset-x-0 top-0 border-t border-border" aria-hidden="true" />
-        <span className="absolute right-0 -top-5 font-mono text-[9px] tracking-[0.12em] text-muted-foreground antialiased" aria-hidden="true">
-          100%
-        </span>
-        <div className="absolute inset-x-0 bottom-0 border-t border-border" aria-hidden="true" />
+    <div className="px-4 sm:px-5 py-4">
+      <ul className="space-y-2.5" onPointerLeave={() => setActiveId(null)}>
+        {weeks.map((w) => {
+          const summary = w.target != null
+            ? `${w.completed} of ${w.target} sessions${w.missed ? `, ${w.missed} missed` : ''}${w.isCurrent ? ', week in progress' : ''}`
+            : `${w.completed} ${w.completed === 1 ? 'session' : 'sessions'}`;
+          return (
+            <li
+              key={w.start.toISOString()}
+              className="flex items-center gap-3 sm:gap-4"
+              aria-label={`Week of ${format(w.start, 'MMM d')}: ${summary}`}
+            >
+              {/* Week label — plan week number when known, and its Monday */}
+              <div className="w-[76px] sm:w-[92px] shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums antialiased leading-tight">
+                <span className="block text-foreground font-medium">
+                  {w.isCurrent ? 'This week' : w.planWeek != null && w.planWeek > 0 ? `Week ${w.planWeek}` : format(w.start, 'MMM d')}
+                </span>
+                <span className="block text-muted-foreground">{format(w.start, 'MMM d')}</span>
+              </div>
 
-        <div className="relative h-full flex items-end">
-          {days.map((day, di) => {
-            // Edge columns anchor their tooltip inward so the card never clips it
-            const edge = di < days.length * 0.2 ? 'left' : di > days.length * 0.8 ? 'right' : 'center';
-            const sessions = byDay.get(format(day, 'yyyy-MM-dd')) ?? [];
-            return (
-              <div key={day.toISOString()} className="flex-1 min-w-0 h-full flex items-end justify-center gap-[2px]">
-                {sessions.map((c) => {
+              <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+                {w.sessions.map((c) => {
                   const k = kind(c);
-                  const unfinished = c.status === 'IN_PROGRESS';
-                  // Unfinished sessions have no percentage — a stub, never zero-height
-                  const pct = unfinished ? 10 : Math.max(6, c.completionPct ?? 100);
                   const flags = c.flags ?? [];
                   const date = format(new Date((c.completedAt ?? c.startedAt) as string), 'EEE, MMM d');
-                  const value = unfinished
+                  const value = c.status === 'IN_PROGRESS'
                     ? k === 'live' ? 'In progress' : 'Not finished'
-                    : `${Math.round(c.completionPct ?? 100)}%`;
+                    : `${Math.round(c.completionPct ?? 100)}% done`;
                   const isActive = activeId === c.id;
                   return (
                     <button
@@ -740,35 +806,24 @@ function SessionStrip({ rows, isAbandoned, since }: {
                       onPointerEnter={() => setActiveId(c.id)}
                       onFocus={() => setActiveId(c.id)}
                       onBlur={() => setActiveId(null)}
-                      // Hit area: full column height, padded wider than the slim mark
-                      className="group relative h-full w-2 sm:w-3 shrink-0 flex items-end cursor-default focus-visible:outline-none before:absolute before:inset-y-0 before:-inset-x-1.5 before:content-['']"
-                    >
-                      <span
-                        className={cn(
-                          'w-full rounded-t-[4px] transition-opacity duration-150',
-                          k === 'done' ? 'bg-chart-done' : k === 'short' ? 'bg-chart-short' : 'bg-info',
-                          activeId && !isActive && 'opacity-50',
-                          'group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-card'
-                        )}
-                        style={{ height: `${pct}%` }}
-                      />
-                      {flags.length > 0 && (
-                        <span
-                          className="absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-chart-short ring-2 ring-card"
-                          style={{ bottom: `calc(${pct}% + 4px)` }}
-                          aria-hidden="true"
-                        />
+                      className={cn(
+                        slot, 'relative cursor-default transition-opacity duration-150',
+                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card',
+                        k === 'done' ? 'bg-chart-done' : k === 'short' ? 'bg-chart-short' : 'bg-info',
+                        activeId && !isActive && 'opacity-50'
                       )}
-
+                    >
+                      {flags.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-foreground ring-2 ring-card" aria-hidden="true" />
+                      )}
                       {/* Tooltip — value leads, label follows */}
                       {isActive && (
                         <span
                           role="tooltip"
                           className={cn(
-                            'pointer-events-none absolute bottom-full mb-2 z-10',
+                            'pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10',
                             'w-max max-w-[220px] rounded-lg bg-popover text-popover-foreground px-3 py-2 text-left',
-                            'shadow-[0_4px_16px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.06)]',
-                            edge === 'left' ? 'left-0' : edge === 'right' ? 'right-0' : 'left-1/2 -translate-x-1/2'
+                            'shadow-[0_4px_16px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.06)]'
                           )}
                         >
                           <span className="block text-sm font-bold">{value}</span>
@@ -785,45 +840,39 @@ function SessionStrip({ rows, isAbandoned, since }: {
                     </button>
                   );
                 })}
+                {Array.from({ length: w.missed }, (_, i) => (
+                  <span key={`m${i}`} className={cn(slot, 'shadow-[inset_0_0_0_1.5px_hsl(var(--chart-short))]')} aria-hidden="true" />
+                ))}
+                {Array.from({ length: w.upcoming }, (_, i) => (
+                  <span key={`u${i}`} className={cn(slot, 'border-[1.5px] border-dashed border-border')} aria-hidden="true" />
+                ))}
               </div>
-            );
-          })}
-        </div>
-      </div>
 
-      {/* Axis — the window's ends plus each Monday, on the day slots */}
-      <div className="flex mt-2 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased" aria-hidden="true">
-        {days.map((day, di) => {
-          const last = di === days.length - 1;
-          // Keep interior ticks clear of the end labels at any width
-          const pos = di / Math.max(1, days.length - 1);
-          const nearEdge = pos < 0.14 || pos > 0.82;
-          const label = di === 0
-            ? format(day, 'MMM d')
-            : last
-              ? 'Today'
-              : day.getDay() === 1 && !nearEdge
-                ? format(day, 'MMM d')
-                : null;
-          return (
-            <div key={day.toISOString()} className="relative flex-1 min-w-0 h-3">
-              {label && (
-                <span className={cn(
-                  'absolute top-0 whitespace-nowrap',
-                  di === 0 ? 'left-0' : last ? 'right-0' : 'left-1/2 -translate-x-1/2'
-                )}>
-                  {label}
-                </span>
+              {/* Done vs. planned — the row's answer, in ink */}
+              <p className="shrink-0 font-mono text-xs tabular-nums antialiased" aria-hidden="true">
+                <span className="font-bold text-foreground">{w.completed}</span>
+                {w.target != null && <span className="text-muted-foreground"> / {w.target}</span>}
+              </p>
+
+              {/* Plain-language verdict fills the row on wider screens */}
+              {w.target != null && (
+                <p className="hidden sm:block flex-1 text-right text-xs text-muted-foreground antialiased" aria-hidden="true">
+                  {w.isCurrent
+                    ? w.upcoming > 0 ? `${w.upcoming} to go` : 'Target hit'
+                    : w.missed > 0
+                      ? <><span className="inline-block w-1.5 h-1.5 rounded-full bg-chart-short mr-1.5 align-middle" />{w.missed} missed</>
+                      : 'On target'}
+                </p>
               )}
-            </div>
+            </li>
           );
         })}
-      </div>
+      </ul>
 
       {/* Legend — identity never rides on color alone */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-5 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
         {present.has('done') && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-done" />As written</span>
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-done" />Done</span>
         )}
         {present.has('short') && (
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-short" />Short or unfinished</span>
@@ -831,10 +880,15 @@ function SessionStrip({ rows, isAbandoned, since }: {
         {present.has('live') && (
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-info" />In progress</span>
         )}
-        {hasFlags && (
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-chart-short" />Flagged</span>
+        {hasMissed && (
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] shadow-[inset_0_0_0_1.5px_hsl(var(--chart-short))]" />Missed</span>
         )}
-        <span className="ml-auto hidden sm:inline">Bar height = % completed</span>
+        {hasUpcoming && (
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] border border-dashed border-muted-foreground/60" />Still to do</span>
+        )}
+        {hasFlags && (
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-foreground" />Flagged</span>
+        )}
       </div>
     </div>
   );
