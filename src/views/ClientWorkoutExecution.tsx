@@ -441,12 +441,12 @@ export function ClientWorkoutExecution() {
       {/* Exercise list — one card per exercise, full width on a phone */}
       <div
         className={cn(
-          'px-3 sm:px-4 pt-4 max-w-2xl mx-auto w-full flex-1',
+          'px-4 pt-6 max-w-2xl mx-auto w-full flex-1',
           // The finish bar sits in normal flow below, so only modest clearance is needed
           isReadOnly ? 'pb-8' : 'pb-6'
         )}
       >
-        <section aria-label="Exercises" className="space-y-2">
+        <section aria-label="Exercises" className="space-y-3">
           {groupBySuperset(exercises).map((group, groupIndex) => {
             const renderCard = (exercise: WorkoutExercise, memberIndex: number) => (
               <ExerciseCard
@@ -474,9 +474,9 @@ export function ClientWorkoutExecution() {
             return (
               <div
                 key={group[0].workoutExerciseId}
-                className="rounded-[20px] bg-brand/15 p-1.5 pt-0"
+                className="rounded-[22px] bg-brand/15 p-2 pt-0"
               >
-                <div className="flex items-center gap-1.5 h-9 px-2.5">
+                <div className="flex items-center gap-1.5 h-11 px-3">
                   <Link2 className="w-3.5 h-3.5 text-foreground/60" />
                   <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/80">
                     Superset
@@ -485,7 +485,7 @@ export function ClientWorkoutExecution() {
                     · Alternate sets
                   </span>
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {group.map((exercise, memberIndex) => renderCard(exercise, memberIndex))}
                 </div>
               </div>

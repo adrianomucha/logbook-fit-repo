@@ -11,7 +11,7 @@ import { SetTimer } from './SetTimer';
  * Weight and reps split the free width, so at phone width each input is
  * ~100px wide — a comfortable thumb target mid-set.
  */
-export const SET_GRID = 'grid grid-cols-[2rem_1fr_1fr_3.5rem] gap-x-2 items-center';
+export const SET_GRID = 'grid grid-cols-[2rem_1fr_1fr_3.5rem] gap-x-2.5 items-center';
 
 interface SetRowProps {
   setNumber: number;
@@ -157,7 +157,7 @@ export function SetRow({
     <div
       className={cn(
         SET_GRID,
-        'h-16 px-1.5 -mx-1.5 rounded-xl transition-colors',
+        'h-[68px] px-2 -mx-2 rounded-xl transition-colors',
         isCurrent && 'bg-muted/40'
       )}
     >

@@ -145,7 +145,7 @@ export function WorkoutHeader({
       </header>
 
       {/* Large title — scrolls with the page */}
-      <div className="max-w-2xl mx-auto w-full px-5 pt-5 pb-1">
+      <div className="max-w-2xl mx-auto w-full px-5 pt-7 pb-1">
         {eyebrow && (
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
             {eyebrow}
@@ -154,7 +154,7 @@ export function WorkoutHeader({
         <h1 ref={titleRef} className="font-bold text-[28px] sm:text-3xl tracking-tight leading-[1.1] antialiased mt-1">
           {title}
         </h1>
-        <p className="font-mono text-xs tabular-nums text-muted-foreground mt-2">
+        <p className="font-mono text-xs tabular-nums text-muted-foreground mt-2.5">
           {exercisesTotal} {exercisesTotal === 1 ? 'exercise' : 'exercises'}
           <span className="mx-1.5 opacity-50">·</span>
           <span className={cn(setsDone > 0 && 'text-foreground font-bold')}>{setsDone}</span>/{setsTotal} sets

@@ -155,11 +155,11 @@ export function ExerciseCard({
           Expand and mark-all are siblings, never nested: a <button> may not
           contain another interactive element, and nesting them hid the
           mark-all control behind the outer button's accessible name. */}
-      <div className="flex items-center min-h-[68px] pr-1.5">
+      <div className="flex items-center min-h-[76px] pr-2">
         <button
           type="button"
           onClick={onToggleExpand}
-          className="flex-1 min-w-0 self-stretch flex items-center gap-3 text-left pl-4 pr-2 py-3 rounded-2xl active:scale-[0.99] transition-transform touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="flex-1 min-w-0 self-stretch flex items-center gap-3.5 text-left pl-5 pr-2 py-4 rounded-2xl active:scale-[0.99] transition-transform touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           aria-expanded={isExpanded}
           aria-label={`${exercise.exercise.name}, ${getPrescription()}`}
         >
@@ -174,7 +174,7 @@ export function ExerciseCard({
           </span>
 
           {/* Middle — name + prescription */}
-          <div className="flex-1 min-w-0 flex flex-col gap-1">
+          <div className="flex-1 min-w-0 flex flex-col gap-1.5">
             <div className="flex items-center gap-1.5">
               <p
                 className={cn(
@@ -222,9 +222,9 @@ export function ExerciseCard({
 
       {/* ── Expanded: coach tip + last time + set table + flag ── */}
       {isExpanded && (
-        <div className="px-3 pb-3 space-y-3 animate-fade-in-up">
+        <div className="px-4 pb-5 pt-1 space-y-5 animate-fade-in-up">
           {(exercise.coachNotes || lastTime) && (
-            <div className="px-1 space-y-2.5">
+            <div className="space-y-3">
               {/* Coach note — the volt rail alone marks the voice; no label line */}
               {exercise.coachNotes && (
                 <p className="pl-3 border-l-2 border-brand text-[15px] leading-relaxed text-foreground/80">
@@ -304,7 +304,7 @@ export function ExerciseCard({
           {/* Set table — SET · WEIGHT · REPS · ✓. Labels live in this header
               once, so the rows below are pure numbers. */}
           <div>
-            <div className={cn(SET_GRID, 'pb-0.5')}>
+            <div className={cn(SET_GRID, 'pb-2')}>
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
                 Set
               </span>
@@ -318,6 +318,7 @@ export function ExerciseCard({
               </span>
               <span aria-hidden="true" />
             </div>
+            <div className="space-y-1.5">
             {setRows.map((setNumber) => {
               const sc = exercise.setCompletions.find(
                 (s) => s.setNumber === setNumber
@@ -351,6 +352,7 @@ export function ExerciseCard({
                 />
               );
             })}
+            </div>
           </div>
 
           {/* Flag — a real button at the end of the exercise, not a caption */}
