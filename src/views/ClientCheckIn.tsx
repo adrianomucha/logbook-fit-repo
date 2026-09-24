@@ -766,11 +766,11 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
   const hasUpcoming = weeks.some((w) => w.upcoming > 0);
   const hasFlags = all.some((c) => (c.flags?.length ?? 0) > 0);
 
-  const slot = 'w-5 h-5 sm:w-7 sm:h-7 rounded-[4px] shrink-0';
+  const slot = 'w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[3px] shrink-0';
 
   return (
     <div className="px-4 sm:px-5 py-4">
-      <ul className="space-y-2.5" onPointerLeave={() => setActiveId(null)}>
+      <ul className="space-y-2" onPointerLeave={() => setActiveId(null)}>
         {weeks.map((w) => {
           const summary = w.target != null
             ? `${w.completed} of ${w.target} sessions${w.missed ? `, ${w.missed} missed` : ''}${w.isCurrent ? ', week in progress' : ''}`
@@ -778,18 +778,18 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
           return (
             <li
               key={w.start.toISOString()}
-              className="flex items-center gap-3 sm:gap-4"
+              className="flex items-center gap-2.5 sm:gap-3"
               aria-label={`Week of ${format(w.start, 'MMM d')}: ${summary}`}
             >
               {/* Week label — plan week number when known, and its Monday */}
-              <div className="w-[76px] sm:w-[92px] shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums antialiased leading-tight">
-                <span className="block text-foreground font-medium">
-                  {w.isCurrent ? 'This week' : w.planWeek != null && w.planWeek > 0 ? `Week ${w.planWeek}` : format(w.start, 'MMM d')}
+              <p className="w-[118px] shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] tabular-nums antialiased whitespace-nowrap">
+                <span className="text-foreground font-medium">
+                  {w.isCurrent ? 'This wk' : w.planWeek != null && w.planWeek > 0 ? `Wk ${w.planWeek}` : 'Wk'}
                 </span>
-                <span className="block text-muted-foreground">{format(w.start, 'MMM d')}</span>
-              </div>
+                <span className="text-muted-foreground"> · {format(w.start, 'MMM d')}</span>
+              </p>
 
-              <div className="min-w-0 flex flex-wrap items-center gap-1.5">
+              <div className="min-w-0 flex flex-wrap items-center gap-1">
                 {w.sessions.map((c) => {
                   const k = kind(c);
                   const flags = c.flags ?? [];
@@ -814,7 +814,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                       )}
                     >
                       {flags.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-foreground ring-2 ring-card" aria-hidden="true" />
+                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden="true" />
                       )}
                       {/* Tooltip — value leads, label follows */}
                       {isActive && (
@@ -844,12 +844,12 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                   <span key={`m${i}`} className={cn(slot, 'shadow-[inset_0_0_0_1.5px_hsl(var(--chart-short))]')} aria-hidden="true" />
                 ))}
                 {Array.from({ length: w.upcoming }, (_, i) => (
-                  <span key={`u${i}`} className={cn(slot, 'border-[1.5px] border-dashed border-border')} aria-hidden="true" />
+                  <span key={`u${i}`} className={cn(slot, 'border border-dashed border-muted-foreground/50')} aria-hidden="true" />
                 ))}
               </div>
 
               {/* Done vs. planned — the row's answer, in ink */}
-              <p className="shrink-0 font-mono text-xs tabular-nums antialiased" aria-hidden="true">
+              <p className="shrink-0 ml-1 font-mono text-[11px] tabular-nums antialiased" aria-hidden="true">
                 <span className="font-bold text-foreground">{w.completed}</span>
                 {w.target != null && <span className="text-muted-foreground"> / {w.target}</span>}
               </p>
@@ -870,7 +870,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
       </ul>
 
       {/* Legend — identity never rides on color alone */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-4 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
         {present.has('done') && (
           <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-done" />Done</span>
         )}
