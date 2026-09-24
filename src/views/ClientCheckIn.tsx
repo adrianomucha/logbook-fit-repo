@@ -9,14 +9,14 @@ import type { ClientDetail } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Check, ClipboardCheck, Flag, Loader2 } from 'lucide-react';
+import { Check, ChevronDown, ClipboardCheck, Flag, Loader2 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
-import { format, formatDistanceToNow, differenceInHours } from 'date-fns';
+import { format, formatDistanceToNow, differenceInHours, subDays, eachDayOfInterval, startOfDay } from 'date-fns';
 
 /* ── Brand surface helpers — same vocabulary as the client profile ── */
 
@@ -366,7 +366,7 @@ export function ClientCheckIn() {
         </div>
 
         <div className="animate-enter" style={{ animationDelay: '200ms' }}>
-          <RecentCompletionsList completions={client.completions} exerciseNames={exerciseNames} />
+          <CheckInWorkouts client={client} exerciseNames={exerciseNames} />
         </div>
 
         {completedCheckIns.length > 0 && (
@@ -462,7 +462,7 @@ export function ClientCheckIn() {
               context the check-in payload lacks: abandoned sessions, mid-workout
               exercise flags, and prescription deviations */}
           <div className="animate-enter" style={{ animationDelay: '175ms' }}>
-            <RecentCompletionsList completions={client.completions} exerciseNames={exerciseNames} />
+            <CheckInWorkouts client={client} exerciseNames={exerciseNames} />
           </div>
 
           {/* Previous check-ins close the reading column (desktop) */}
@@ -541,113 +541,268 @@ export function ClientCheckIn() {
 
 /* ── Inline sub-components ────────────────────────────────── */
 
-function RecentCompletionsList({ completions, exerciseNames }: {
-  completions: ClientDetail['completions'];
+type Completion = ClientDetail['completions'][number];
+
+/** Where the review window opens: the last closed check-in, else plan start, else two weeks back */
+function reviewWindow(client: ClientDetail): { since: Date; label: string } {
+  const lastClosed = client.checkIns.find((c) => c.status === 'COMPLETED');
+  if (lastClosed) {
+    const since = new Date(lastClosed.completedAt ?? lastClosed.createdAt);
+    return { since, label: `Since last check-in · ${format(since, 'MMM d')}` };
+  }
+  if (client.planStartDate) {
+    const since = new Date(client.planStartDate);
+    return { since, label: `Since plan start · ${format(since, 'MMM d')}` };
+  }
+  return { since: subDays(new Date(), 14), label: 'Last 14 days' };
+}
+
+/**
+ * The review's evidence, scoped to this check-in's window rather than the
+ * client's whole history: a readout of the period, a strip of every session,
+ * the few that need a look up front, and the rest one tap away.
+ */
+function CheckInWorkouts({ client, exerciseNames }: {
+  client: ClientDetail;
   exerciseNames: Map<string, string>;
 }) {
+  const [showAll, setShowAll] = useState(false);
+  const { since, label } = reviewWindow(client);
+  const firstName = (client.user.name ?? 'Client').split(' ')[0];
+
   // Completed workouts plus started-but-never-finished ones — abandonment
   // (and a flag raised mid-session) is exactly the signal to review
-  const rows = completions.filter(
-    (c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt)
-  );
-  if (rows.length === 0) return null;
+  const rows = client.completions
+    .filter((c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt))
+    .filter((c) => new Date((c.completedAt ?? c.startedAt) as string) >= since);
 
+  const isAbandoned = (c: Completion) =>
+    c.status === 'IN_PROGRESS' &&
+    differenceInHours(new Date(), new Date(c.startedAt as string)) >= 6;
+  const needsLook = (c: Completion) =>
+    (c.flags?.length ?? 0) > 0 ||
+    isAbandoned(c) ||
+    (c.status === 'COMPLETED' && c.completionPct != null && c.completionPct < 100);
+
+  const completed = rows.filter((c) => c.status === 'COMPLETED');
+  const pcts = completed.map((c) => c.completionPct).filter((p): p is number => p != null);
+  const avgPct = pcts.length ? Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length) : null;
   const flagCount = rows.reduce((n, c) => n + (c.flags?.length ?? 0), 0);
+  const unfinished = rows.filter(isAbandoned).length;
+
+  const attention = rows.filter(needsLook);
+  const rest = rows.filter((c) => !needsLook(c));
+
+  const stats = [
+    { label: 'Workouts', value: String(completed.length), warn: false },
+    { label: 'Avg done', value: avgPct != null ? `${avgPct}%` : '—', warn: avgPct != null && avgPct < 90 },
+    { label: 'Flags', value: String(flagCount), warn: flagCount > 0 },
+    { label: 'Not done', value: String(unfinished), warn: unfinished > 0 },
+  ];
 
   return (
     <section>
-      <SectionLabel>
-        Recent workouts · {rows.length}
-        {flagCount > 0 && (
-          <span className="text-warning-text"> · {flagCount} {flagCount === 1 ? 'flag' : 'flags'}</span>
-        )}
-      </SectionLabel>
-      <SectionCard className="space-y-1.5">
-        {rows.map((c) => {
-          const isUnfinished = c.status === 'IN_PROGRESS';
-          const timestamp = new Date((c.completedAt ?? c.startedAt) as string);
-          // A session started in the last few hours may still be live;
-          // older ones were walked away from
-          const abandoned = isUnfinished && differenceInHours(new Date(), timestamp) >= 6;
-          const deviations = getWorkoutDeviations(c.sets ?? []);
-          const flags = c.flags ?? [];
-          // Flags on exercises no longer in the plan (or before plan detail
-          // loads) fall back to the names carried on deviated sets
-          const flagName = (workoutExerciseId: string) =>
-            exerciseNames.get(workoutExerciseId) ??
-            c.sets?.find((s) => s.workoutExerciseId === workoutExerciseId)
-              ?.workoutExercise.exercise.name ??
-            'Exercise';
-          return (
-            <div key={c.id} className="px-3 py-2.5 rounded-lg bg-muted/40">
-              <div className="flex items-center gap-3">
-                <span
-                  className={cn(
-                    'w-2 h-2 rounded-full shrink-0',
-                    isUnfinished ? (abandoned ? 'bg-warning' : 'bg-info') : 'bg-success'
-                  )}
-                  aria-hidden="true"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold tracking-tight truncate">
-                    {/* The green dot is the only visual "completed" cue — say it */}
-                    {!isUnfinished && <span className="sr-only">Completed: </span>}
-                    {c.day?.name ?? 'Workout'}
+      <SectionLabel>{label}</SectionLabel>
+      <div className={cn(
+        'bg-card rounded-xl overflow-hidden',
+        'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]'
+      )}>
+        {rows.length === 0 ? (
+          <p className="px-4 sm:px-5 py-6 text-sm text-warning-text antialiased">
+            No workouts logged since {format(since, 'MMM d')}.
+          </p>
+        ) : (
+          <>
+            {/* Period readout — instrument voice, like the profile vitals */}
+            <div className="grid grid-cols-4 divide-x divide-border border-b border-border">
+              {stats.map((s) => (
+                <div key={s.label} className="min-w-0 px-3 sm:px-5 py-3">
+                  <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased truncate">
+                    {s.label}
                   </p>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium">
-                    {isUnfinished && 'Started '}
-                    {format(timestamp, 'EEE, MMM d')}
-                  </p>
-                </div>
-                {isUnfinished ? (
                   <p className={cn(
-                    'font-mono text-[10px] uppercase tracking-[0.12em] font-medium shrink-0',
-                    abandoned ? 'text-warning-text' : 'text-info'
+                    'text-lg sm:text-xl font-black tracking-tight tabular-nums mt-0.5',
+                    s.warn && 'text-warning-text'
                   )}>
-                    {abandoned ? 'Not finished' : 'In progress'}
+                    {s.value}
                   </p>
-                ) : c.completionPct != null ? (
-                  <p className={cn(
-                    'font-mono text-sm font-semibold tabular-nums shrink-0',
-                    c.completionPct < 100 && 'text-warning-text'
-                  )}>
-                    {Math.round(c.completionPct)}%
-                  </p>
-                ) : null}
-              </div>
-
-              {/* What the client changed vs. the prescription */}
-              {deviations.length > 0 && (
-                <p
-                  className="text-[11px] text-warning-text mt-1.5 pl-5 truncate antialiased"
-                  title={deviations.map(formatDeviation).join(' · ')}
-                >
-                  Adjusted: {deviations.slice(0, 2).map(formatDeviation).join(' · ')}
-                  {deviations.length > 2 && ` +${deviations.length - 2} more`}
-                </p>
-              )}
-
-              {/* Exercises flagged mid-workout — "help me" signals */}
-              {flags.map((f) => (
-                <div key={f.id} className="mt-2 ml-5 rounded-md bg-warning/10 px-2.5 py-2">
-                  <p className="flex items-center gap-1.5 text-xs font-bold text-warning-text">
-                    <Flag className="w-3 h-3 shrink-0" aria-hidden="true" />
-                    {/* The icon carries "flagged" only visually — say it */}
-                    <span className="sr-only">Flagged: </span>
-                    {flagName(f.workoutExerciseId)}
-                  </p>
-                  {f.note && (
-                    <p className="text-xs text-foreground/80 leading-relaxed mt-1">
-                      &ldquo;{f.note}&rdquo;
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
+
+            {/* One bar per session, oldest → newest; height is completion */}
+            <SessionStrip rows={rows} isAbandoned={isAbandoned} since={since} />
+
+            {/* What to read before replying */}
+            {attention.length > 0 ? (
+              <div className="border-t border-border">
+                <p className="px-4 sm:px-5 pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-warning-text font-medium antialiased">
+                  Needs a look · {attention.length}
+                </p>
+                <div className="divide-y divide-border">
+                  {attention.map((c) => (
+                    <WorkoutRow key={c.id} c={c} abandoned={isAbandoned(c)} exerciseNames={exerciseNames} />
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p className="border-t border-border px-4 sm:px-5 py-3 text-[13px] text-muted-foreground antialiased">
+                Every session finished as written — no flags from {firstName}.
+              </p>
+            )}
+
+            {/* Clean sessions stay folded */}
+            {rest.length > 0 && (
+              <div className="border-t border-border">
+                <button
+                  onClick={() => setShowAll(!showAll)}
+                  aria-expanded={showAll}
+                  className="w-full flex items-center justify-between gap-2 px-4 sm:px-5 py-3 text-start hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+                >
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
+                    {showAll ? 'Hide' : 'Show'} {rest.length} completed {rest.length === 1 ? 'workout' : 'workouts'}
+                  </span>
+                  <ChevronDown
+                    className={cn('w-4 h-4 text-muted-foreground transition-transform duration-150', showAll && 'rotate-180')}
+                    aria-hidden="true"
+                  />
+                </button>
+                {showAll && (
+                  <div className="divide-y divide-border border-t border-border">
+                    {rest.map((c) => (
+                      <WorkoutRow key={c.id} c={c} abandoned={false} exerciseNames={exerciseNames} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function SessionStrip({ rows, isAbandoned, since }: {
+  rows: Completion[];
+  isAbandoned: (c: Completion) => boolean;
+  since: Date;
+}) {
+  // One column per day of the window, so rest days read as gaps
+  const byDay = new Map<string, Completion[]>();
+  for (const c of rows) {
+    const key = format(new Date((c.completedAt ?? c.startedAt) as string), 'yyyy-MM-dd');
+    byDay.set(key, [c, ...(byDay.get(key) ?? [])]);
+  }
+  const days = eachDayOfInterval({ start: startOfDay(since), end: startOfDay(new Date()) });
+
+  return (
+    <div className="px-4 sm:px-5 pt-4 pb-3" aria-hidden="true">
+      <div className="flex items-end gap-[3px] h-9">
+        {days.map((day) => {
+          const sessions = byDay.get(format(day, 'yyyy-MM-dd')) ?? [];
+          return (
+            <div key={day.toISOString()} className="relative flex-1 min-w-0 h-full flex items-end gap-px">
+              {sessions.length === 0 ? (
+                <div className="w-full h-[3px] rounded-full bg-muted" />
+              ) : (
+                sessions.map((c) => {
+                  const unfinished = c.status === 'IN_PROGRESS';
+                  const live = unfinished && !isAbandoned(c);
+                  const pct = unfinished ? 12 : Math.max(12, c.completionPct ?? 100);
+                  return (
+                    <div
+                      key={c.id}
+                      className={cn(
+                        'relative flex-1 min-w-0 rounded-[2px]',
+                        live ? 'bg-info' : unfinished || pct < 100 ? 'bg-warning' : 'bg-success'
+                      )}
+                      style={{ height: `${pct}%` }}
+                    >
+                      {(c.flags?.length ?? 0) > 0 && (
+                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-warning-text" />
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
           );
         })}
-      </SectionCard>
-    </section>
+      </div>
+      <div className="flex justify-between mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased">
+        <span>{format(since, 'MMM d')}</span>
+        <span>Today</span>
+      </div>
+    </div>
+  );
+}
+
+function WorkoutRow({ c, abandoned, exerciseNames }: {
+  c: Completion;
+  abandoned: boolean;
+  exerciseNames: Map<string, string>;
+}) {
+  const isUnfinished = c.status === 'IN_PROGRESS';
+  const timestamp = new Date((c.completedAt ?? c.startedAt) as string);
+  const deviations = getWorkoutDeviations(c.sets ?? []);
+  const flags = c.flags ?? [];
+  // Flags on exercises no longer in the plan (or before plan detail
+  // loads) fall back to the names carried on deviated sets
+  const flagName = (workoutExerciseId: string) =>
+    exerciseNames.get(workoutExerciseId) ??
+    c.sets?.find((s) => s.workoutExerciseId === workoutExerciseId)
+      ?.workoutExercise.exercise.name ??
+    'Exercise';
+
+  return (
+    <div className="px-4 sm:px-5 py-3">
+      <div className="flex items-center gap-3">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold tracking-tight truncate">
+            {!isUnfinished && <span className="sr-only">Completed: </span>}
+            {c.day?.name ?? 'Workout'}
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums">
+            {isUnfinished && 'Started '}
+            {format(timestamp, 'EEE, MMM d')}
+          </p>
+        </div>
+        <p className={cn(
+          'font-mono text-xs font-semibold tabular-nums shrink-0',
+          isUnfinished
+            ? cn('text-[10px] uppercase tracking-[0.12em]', abandoned ? 'text-warning-text' : 'text-info')
+            : c.completionPct != null && c.completionPct < 100 && 'text-warning-text'
+        )}>
+          {isUnfinished
+            ? abandoned ? 'Not finished' : 'In progress'
+            : c.completionPct != null ? `${Math.round(c.completionPct)}%` : ''}
+        </p>
+      </div>
+
+      {/* What the client changed vs. the prescription */}
+      {deviations.length > 0 && (
+        <p
+          className="text-[11px] text-muted-foreground mt-1 truncate antialiased"
+          title={deviations.map(formatDeviation).join(' · ')}
+        >
+          Adjusted: {deviations.slice(0, 2).map(formatDeviation).join(' · ')}
+          {deviations.length > 2 && ` +${deviations.length - 2} more`}
+        </p>
+      )}
+
+      {/* Exercises flagged mid-workout — "help me" signals, quoted */}
+      {flags.map((f) => (
+        <p key={f.id} className="mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed">
+          <Flag className="w-3 h-3 mt-[3px] shrink-0 text-warning-text" aria-hidden="true" />
+          <span>
+            <span className="sr-only">Flagged: </span>
+            <span className="font-bold text-warning-text">{flagName(f.workoutExerciseId)}</span>
+            {f.note && <span className="text-foreground/80"> — &ldquo;{f.note}&rdquo;</span>}
+          </span>
+        </p>
+      ))}
+    </div>
   );
 }
 
