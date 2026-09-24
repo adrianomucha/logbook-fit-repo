@@ -45,6 +45,11 @@
        read as a conversation, not a fill; white on this blue is 6.6:1. */
     --chat-accent: 224 76% 48%;
     --chat-accent-foreground: 0 0% 100%;
+    /* Session chart marks — a recessive neutral for sessions done as written,
+       amber for short ones (in-progress reuses --info). Picked with the
+       dataviz validator: CVD ΔE ≥ 13 between neighbors, ≥ 3:1 on the card. */
+    --chart-done: 0 0% 32%;
+    --chart-short: 32 95% 44%;
     /* Content height of the fixed mobile tab bar, excluding the
        home-indicator inset. Every layout that has to clear the bar derives
        its padding from this, so the height lives in exactly one place. */
@@ -86,6 +91,8 @@
        ground; white on this blue is 5.2:1. */
     --chat-accent: 224 80% 55%;
     --chat-accent-foreground: 0 0% 100%;
+    --chart-done: 0 0% 45%;
+    --chart-short: 32 95% 44%;
   }
 }
 

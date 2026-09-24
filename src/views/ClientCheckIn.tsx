@@ -617,13 +617,12 @@ function CheckInWorkouts({ client, exerciseNames }: {
             <div className="grid grid-cols-4 divide-x divide-border border-b border-border">
               {stats.map((s) => (
                 <div key={s.label} className="min-w-0 px-3 sm:px-5 py-3">
-                  <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased truncate">
+                  <p className="flex items-center gap-1.5 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased truncate">
+                    {s.warn && <span className="w-1.5 h-1.5 rounded-full bg-chart-short shrink-0" aria-hidden="true" />}
                     {s.label}
+                    {s.warn && <span className="sr-only"> (needs attention)</span>}
                   </p>
-                  <p className={cn(
-                    'text-lg sm:text-xl font-black tracking-tight tabular-nums mt-0.5',
-                    s.warn && 'text-warning-text'
-                  )}>
+                  <p className="text-xl sm:text-2xl font-black tracking-tight mt-0.5">
                     {s.value}
                   </p>
                 </div>
@@ -688,7 +687,9 @@ function SessionStrip({ rows, isAbandoned, since }: {
   isAbandoned: (c: Completion) => boolean;
   since: Date;
 }) {
-  // One column per day of the window, so rest days read as gaps
+  const [activeId, setActiveId] = useState<string | null>(null);
+
+  // One slot per day of the window, so rest days read as gaps on the baseline
   const byDay = new Map<string, Completion[]>();
   for (const c of rows) {
     const key = format(new Date((c.completedAt ?? c.startedAt) as string), 'yyyy-MM-dd');
@@ -696,43 +697,120 @@ function SessionStrip({ rows, isAbandoned, since }: {
   }
   const days = eachDayOfInterval({ start: startOfDay(since), end: startOfDay(new Date()) });
 
+  const kind = (c: Completion) =>
+    c.status === 'IN_PROGRESS'
+      ? isAbandoned(c) ? 'short' : 'live'
+      : (c.completionPct ?? 100) < 100 ? 'short' : 'done';
+  const present = new Set(rows.map(kind));
+  const hasFlags = rows.some((c) => (c.flags?.length ?? 0) > 0);
+
   return (
-    <div className="px-4 sm:px-5 pt-4 pb-3" aria-hidden="true">
-      <div className="flex items-end gap-[3px] h-9">
-        {days.map((day) => {
-          const sessions = byDay.get(format(day, 'yyyy-MM-dd')) ?? [];
-          return (
-            <div key={day.toISOString()} className="relative flex-1 min-w-0 h-full flex items-end gap-px">
-              {sessions.length === 0 ? (
-                <div className="w-full h-[3px] rounded-full bg-muted" />
-              ) : (
-                sessions.map((c) => {
+    <div className="px-4 sm:px-5 pt-5 pb-4">
+      {/* Plot: 100% reference hairline on top, baseline below */}
+      <div className="relative h-16" onPointerLeave={() => setActiveId(null)}>
+        <div className="absolute inset-x-0 top-0 border-t border-border" aria-hidden="true" />
+        <span className="absolute right-0 -top-4 font-mono text-[9px] tracking-[0.12em] text-muted-foreground antialiased" aria-hidden="true">
+          100%
+        </span>
+        <div className="absolute inset-x-0 bottom-0 border-t border-border" aria-hidden="true" />
+
+        <div className="relative h-full flex items-end gap-[2px]">
+          {days.map((day, di) => {
+            // Edge columns anchor their tooltip inward so the card never clips it
+            const edge = di < days.length * 0.2 ? 'left' : di > days.length * 0.8 ? 'right' : 'center';
+            const sessions = byDay.get(format(day, 'yyyy-MM-dd')) ?? [];
+            return (
+              <div key={day.toISOString()} className="flex-1 min-w-0 h-full flex items-end justify-center gap-[2px]">
+                {sessions.map((c) => {
+                  const k = kind(c);
                   const unfinished = c.status === 'IN_PROGRESS';
-                  const live = unfinished && !isAbandoned(c);
-                  const pct = unfinished ? 12 : Math.max(12, c.completionPct ?? 100);
+                  // Unfinished sessions have no percentage — a stub, never zero-height
+                  const pct = unfinished ? 10 : Math.max(6, c.completionPct ?? 100);
+                  const flags = c.flags ?? [];
+                  const date = format(new Date((c.completedAt ?? c.startedAt) as string), 'EEE, MMM d');
+                  const value = unfinished
+                    ? k === 'live' ? 'In progress' : 'Not finished'
+                    : `${Math.round(c.completionPct ?? 100)}%`;
+                  const isActive = activeId === c.id;
                   return (
-                    <div
+                    <button
                       key={c.id}
-                      className={cn(
-                        'relative flex-1 min-w-0 rounded-[2px]',
-                        live ? 'bg-info' : unfinished || pct < 100 ? 'bg-warning' : 'bg-success'
-                      )}
-                      style={{ height: `${pct}%` }}
+                      type="button"
+                      aria-label={`${c.day?.name ?? 'Workout'}, ${date}: ${value}${flags.length ? `, ${flags.length} flagged` : ''}`}
+                      onPointerEnter={() => setActiveId(c.id)}
+                      onFocus={() => setActiveId(c.id)}
+                      onBlur={() => setActiveId(null)}
+                      // Hit area is the full column height, wider than the mark
+                      className="group relative h-full flex-1 min-w-0 max-w-6 flex items-end cursor-default focus-visible:outline-none"
                     >
-                      {(c.flags?.length ?? 0) > 0 && (
-                        <span className="absolute -top-2 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-warning-text" />
+                      <span
+                        className={cn(
+                          'w-full rounded-t-[4px] transition-opacity duration-150',
+                          k === 'done' ? 'bg-chart-done' : k === 'short' ? 'bg-chart-short' : 'bg-info',
+                          activeId && !isActive && 'opacity-50',
+                          'group-focus-visible:ring-2 group-focus-visible:ring-ring group-focus-visible:ring-offset-2 group-focus-visible:ring-offset-card'
+                        )}
+                        style={{ height: `${pct}%` }}
+                      />
+                      {flags.length > 0 && (
+                        <span
+                          className="absolute left-1/2 -translate-x-1/2 w-2 h-2 rounded-full bg-chart-short ring-2 ring-card"
+                          style={{ bottom: `calc(${pct}% + 4px)` }}
+                          aria-hidden="true"
+                        />
                       )}
-                    </div>
+
+                      {/* Tooltip — value leads, label follows */}
+                      {isActive && (
+                        <span
+                          role="tooltip"
+                          className={cn(
+                            'pointer-events-none absolute bottom-full mb-2 z-10',
+                            'w-max max-w-[220px] rounded-lg bg-popover text-popover-foreground px-3 py-2 text-left',
+                            'shadow-[0_4px_16px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.06)]',
+                            edge === 'left' ? 'left-0' : edge === 'right' ? 'right-0' : 'left-1/2 -translate-x-1/2'
+                          )}
+                        >
+                          <span className="block text-sm font-bold">{value}</span>
+                          <span className="block text-xs text-muted-foreground truncate">{c.day?.name ?? 'Workout'}</span>
+                          <span className="block font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-0.5">{date}</span>
+                          {flags.length > 0 && (
+                            <span className="flex items-center gap-1 text-xs font-semibold mt-1">
+                              <Flag className="w-3 h-3 shrink-0" aria-hidden="true" />
+                              {flags.length} flagged
+                            </span>
+                          )}
+                        </span>
+                      )}
+                    </button>
                   );
-                })
-              )}
-            </div>
-          );
-        })}
+                })}
+              </div>
+            );
+          })}
+        </div>
       </div>
-      <div className="flex justify-between mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased">
+
+      <div className="flex justify-between mt-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums antialiased" aria-hidden="true">
         <span>{format(since, 'MMM d')}</span>
         <span>Today</span>
+      </div>
+
+      {/* Legend — identity never rides on color alone */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-3 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
+        {present.has('done') && (
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-done" />As written</span>
+        )}
+        {present.has('short') && (
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-chart-short" />Short or unfinished</span>
+        )}
+        {present.has('live') && (
+          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-info" />In progress</span>
+        )}
+        {hasFlags && (
+          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-chart-short" />Flagged</span>
+        )}
+        <span className="ml-auto hidden sm:inline">Bar height = % completed</span>
       </div>
     </div>
   );

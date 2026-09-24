@@ -53,6 +53,10 @@ module.exports = {
           // AA-compliant shade for text on light surfaces (text-success-text)
           text: "hsl(var(--success-text))",
         },
+        chart: {
+          done: "hsl(var(--chart-done))",
+          short: "hsl(var(--chart-short))",
+        },
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
