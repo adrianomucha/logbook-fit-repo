@@ -6,10 +6,12 @@ import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook
 import { SetTimer } from './SetTimer';
 
 /**
- * Shared grid template for the set table: SET · LAST · WEIGHT · REPS · ✓.
+ * Shared grid template for the set table: SET · WEIGHT · REPS · ✓.
  * The header row in ExerciseCard uses the same template so columns align.
+ * Weight and reps split the free width, so at phone width each input is
+ * ~100px wide — a comfortable thumb target mid-set.
  */
-export const SET_GRID = 'grid grid-cols-[1.75rem_1fr_4.25rem_3.5rem_2rem] gap-x-2 items-center';
+export const SET_GRID = 'grid grid-cols-[2rem_1fr_1fr_3.5rem] gap-x-2 items-center';
 
 interface SetRowProps {
   setNumber: number;
@@ -23,15 +25,13 @@ interface SetRowProps {
   actualReps?: number | null;
   /** Logged weight for this set (null if not logged yet) */
   actualWeight?: number | null;
-  /** Last session's result, compact ("52.5×8") — rendered as the LAST column */
-  previous?: string;
   completed: boolean;
+  /** The next set to do: its number gets a filled badge so it's easy to find */
+  isCurrent?: boolean;
   onToggle: () => void;
   onChangeReps?: (reps: number) => void;
   onChangeWeight?: (weight: number) => void;
   isReadOnly?: boolean;
-  /** If true, render a top border to separate from the previous row */
-  showDivider?: boolean;
   /**
    * Show the countdown under this row. Only meaningful for TIME sets; the
    * exercise card turns it on for the next set still to be done.
@@ -49,13 +49,12 @@ export function SetRow({
   weightTarget,
   actualReps,
   actualWeight,
-  previous,
   completed,
+  isCurrent = false,
   onToggle,
   onChangeReps,
   onChangeWeight,
   isReadOnly = false,
-  showDivider = false,
   showTimer = false,
 }: SetRowProps) {
   const isTime = trackingType === 'TIME';
@@ -128,14 +127,18 @@ export function SetRow({
     <input
       type="text"
       inputMode={opts.inputMode}
+      enterKeyHint="done"
       value={opts.value}
       placeholder={opts.placeholder ?? '—'}
       disabled={isReadOnly}
       aria-label={`Set ${setNumber} ${opts.label}`}
       onChange={(e) => opts.onChange(e.target.value)}
+      // Select on focus: one tap then type the new number, no backspacing
+      onFocus={(e) => e.currentTarget.select()}
       className={cn(
-        // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
-        'h-11 w-full rounded-lg text-center font-mono text-base sm:text-sm font-bold tabular-nums outline-none transition-colors',
+        // 18px on mobile: big enough to read at arm's length, and anything
+        // under 16px would trigger iOS focus zoom
+        'h-12 w-full min-w-0 rounded-xl text-center font-mono text-lg font-bold tabular-nums outline-none transition-colors',
         // Full-strength muted-foreground: any alpha below 100% drops this text
         // under 4.5:1 on the card, and these cells hold logged training data.
         'placeholder:font-semibold placeholder:text-muted-foreground disabled:opacity-100',
@@ -143,7 +146,7 @@ export function SetRow({
           ? 'bg-transparent text-muted-foreground'
           // ring-foreground/20 measured 1.6:1 against the card — too faint to
           // read as a focus indicator on the screen's main data-entry control.
-          : 'bg-muted/50 text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
+          : 'bg-muted text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
       )}
     />
   );
@@ -154,23 +157,22 @@ export function SetRow({
     <div
       className={cn(
         SET_GRID,
-        'h-[56px]',
-        showDivider && 'border-t border-border/30'
+        'h-16 px-1.5 -mx-1.5 rounded-xl transition-colors',
+        isCurrent && 'bg-muted/40'
       )}
     >
-      {/* Two-step hierarchy that still clears AA: the live set number carries
-          full foreground weight, a logged one recedes to muted-foreground. */}
+      {/* Set badge — filled for the set to do now, muted once logged */}
       <span
         className={cn(
-          'font-mono text-sm font-bold tabular-nums transition-colors',
-          completed ? 'text-muted-foreground' : 'text-foreground'
+          'w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm font-bold tabular-nums transition-colors',
+          isCurrent
+            ? 'bg-foreground text-background'
+            : completed
+              ? 'text-muted-foreground'
+              : 'text-foreground'
         )}
       >
         {setNumber}
-      </span>
-
-      <span className="font-mono text-xs tabular-nums text-muted-foreground truncate">
-        {previous || '—'}
       </span>
 
       {cellInput({
@@ -189,6 +191,8 @@ export function SetRow({
         label: isTime ? 'seconds' : 'reps',
       })}
 
+      {/* A wide, square-ish button rather than a small circle: this is the
+          tap the athlete makes after every set, often with chalky hands. */}
       <button
         type="button"
         onClick={handleToggle}
@@ -196,15 +200,20 @@ export function SetRow({
         aria-label={completed ? `Mark set ${setNumber} incomplete` : `Mark set ${setNumber} complete`}
         aria-pressed={completed}
         className={cn(
-          'w-8 h-8 rounded-full border-2 flex items-center justify-center justify-self-end transition-[background-color,border-color] duration-200 touch-manipulation',
+          'h-12 w-full rounded-xl border-2 flex items-center justify-center transition-[background-color,border-color,color,transform] duration-200 touch-manipulation',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-          !isReadOnly && 'active:scale-[0.92] cursor-pointer',
+          !isReadOnly && 'active:scale-[0.94] cursor-pointer',
           completed
-            ? 'bg-success border-success'
-            : 'border-foreground/15 bg-transparent hover:border-foreground/30'
+            ? 'bg-success border-success text-success-foreground'
+            : isCurrent
+              ? 'border-foreground/40 bg-background text-foreground/70 hover:border-foreground/60'
+              : 'border-foreground/20 bg-transparent text-foreground/40 hover:border-foreground/40'
         )}
       >
-        {completed && <Check className="w-4 h-4 text-success-foreground animate-set-complete" />}
+        <Check
+          className={cn('w-5 h-5', completed && 'animate-set-complete')}
+          strokeWidth={completed ? 3 : 2.5}
+        />
       </button>
     </div>
   );

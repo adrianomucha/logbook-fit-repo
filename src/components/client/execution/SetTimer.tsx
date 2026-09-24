@@ -26,7 +26,7 @@ function vibrate() {
 }
 
 const controlClass =
-  'inline-flex h-11 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.97]';
+  'inline-flex h-12 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-semibold transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.97]';
 
 /**
  * Countdown for a single TIME set. Idle it is one slim "Start" line so a
@@ -56,7 +56,7 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
         }
         className={cn(
           controlClass,
-          'mb-2 h-10 w-full border border-dashed border-foreground/20 bg-transparent text-foreground hover:border-foreground/40 hover:bg-muted/40'
+          'mb-2 mt-1 h-12 w-full border-2 border-dashed border-foreground/20 bg-transparent text-foreground hover:border-foreground/40 hover:bg-muted/40'
         )}
       >
         <Play className="h-4 w-4" aria-hidden="true" />
@@ -71,7 +71,7 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
   const finalStretch = timer.isCountdown && running && timer.displaySeconds <= 5;
 
   return (
-    <div role="group" aria-label={label} className="mb-2 rounded-xl bg-muted/50 px-4 py-3">
+    <div role="group" aria-label={label} className="mb-2 mt-1 rounded-xl bg-muted/60 px-4 py-4">
       {/* Clock on its own line: at phone width a 4xl "19:49" plus two labelled
           buttons don't fit side by side, and the clock must never shrink. */}
       <div className="flex items-baseline justify-between gap-3">
@@ -80,7 +80,7 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
           aria-live={running ? 'off' : 'polite'}
           aria-atomic="true"
           className={cn(
-            'shrink-0 font-mono text-4xl font-bold tabular-nums leading-none transition-colors',
+            'shrink-0 font-mono text-5xl font-bold tabular-nums leading-none transition-colors',
             done ? 'text-success-text' : finalStretch ? 'text-primary' : 'text-foreground'
           )}
         >

@@ -1,6 +1,6 @@
 import { useId } from 'react';
 import { Input } from '@/components/ui/input';
-import { Check, Flag } from 'lucide-react';
+import { Check, Flag, MessageCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkoutExercise } from '@/types/api';
 import { formatLastCompact } from '@logbook/shared/workout-execution';
@@ -112,107 +112,142 @@ export function ExerciseCard({
     }
   };
 
+  // The set to do now: the first one not yet logged
+  const currentSetNumber = isReadOnly
+    ? undefined
+    : setRows.find((n) => !isSetCompleted(exercise.setCompletions, n));
+
+  const lastTime = exercise.lastPerformance
+    ? formatLastCompact(exercise.lastPerformance, exercise.trackingType === 'TIME')
+    : '';
+
+  const markAllCircle = (
+    <span
+      className={cn(
+        'w-8 h-8 rounded-full border-2 flex items-center justify-center transition-[background-color,border-color] duration-200',
+        isComplete
+          ? 'bg-success border-success'
+          : 'border-foreground/20 bg-transparent group-hover:border-foreground/40'
+      )}
+    >
+      {isComplete && (
+        <Check
+          className={cn('w-4 h-4 text-success-foreground', !isReadOnly && 'animate-set-complete')}
+          strokeWidth={3}
+        />
+      )}
+    </span>
+  );
+
   return (
-    <div id={id}>
+    <div
+      id={id}
+      className={cn(
+        'rounded-2xl border transition-[background-color,border-color,box-shadow] duration-200',
+        isExpanded
+          ? 'bg-card border-foreground/15 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)]'
+          : isComplete
+            ? 'bg-muted/40 border-transparent'
+            : 'bg-card border-border'
+      )}
+    >
       {/* ── Exercise row ──
           Expand and mark-all are siblings, never nested: a <button> may not
           contain another interactive element, and nesting them hid the
           mark-all control behind the outer button's accessible name. */}
-      <div className="flex items-center gap-3.5 min-h-[56px]">
+      <div className="flex items-center min-h-[68px] pr-1.5">
         <button
           type="button"
           onClick={onToggleExpand}
-          className="flex-1 min-w-0 flex items-center gap-3.5 text-left py-2.5 rounded-lg transition-colors hover:bg-muted/30 active:scale-[0.99] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="flex-1 min-w-0 self-stretch flex items-center gap-3 text-left pl-4 pr-2 py-3 rounded-2xl active:scale-[0.99] transition-transform touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
           aria-expanded={isExpanded}
           aria-label={`${exercise.exercise.name}, ${getPrescription()}`}
         >
           {/* Left — mono index, same voice as the dashboard preview list */}
           <span
             className={cn(
-              'font-mono text-[11px] font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
-              isComplete ? 'text-success' : 'text-muted-foreground'
+              'font-mono text-xs font-medium tabular-nums w-7 flex-shrink-0 transition-colors',
+              isComplete ? 'text-success-text' : 'text-muted-foreground'
             )}
           >
             {displayLabel}
           </span>
 
           {/* Middle — name + prescription */}
-          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+          <div className="flex-1 min-w-0 flex flex-col gap-1">
             <div className="flex items-center gap-1.5">
               <p
                 className={cn(
-                  'text-[15px] font-semibold tracking-tight leading-snug truncate transition-colors',
-                  isComplete ? 'text-muted-foreground' : 'text-foreground'
+                  'font-semibold tracking-tight leading-snug transition-colors',
+                  // The open exercise gets its full name; closed rows stay one line
+                  isExpanded ? 'text-lg' : 'text-base truncate',
+                  isComplete && !isExpanded ? 'text-muted-foreground' : 'text-foreground'
                 )}
               >
                 {exercise.exercise.name}
               </p>
               {isFlagged && (
-                <div className="w-1.5 h-1.5 rounded-full bg-warning flex-shrink-0" />
+                <Flag className="w-3.5 h-3.5 text-warning-text flex-shrink-0" aria-label="Flagged" />
               )}
             </div>
             <p className="font-mono text-xs tabular-nums text-muted-foreground">
               {getPrescription()}
               {completedSets > 0 && !isComplete && (
-                <span className="ml-1.5 text-success font-bold">
-                  {completedSets}/{exercise.sets}
+                <span className="ml-2 text-success-text font-bold">
+                  {completedSets}/{exercise.sets} done
                 </span>
               )}
             </p>
           </div>
         </button>
 
-        {/* Right — circle checkbox (toggles every set in one go) */}
+        {/* Right — circle checkbox (toggles every set in one go). The circle
+            stays 32px but the button around it is a full 48px target. */}
         {!isReadOnly ? (
           <button
             type="button"
             onClick={handleToggleAllSets}
             aria-pressed={isComplete}
-            className={cn(
-              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200 cursor-pointer touch-manipulation',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              isComplete
-                ? 'bg-success border-success'
-                : 'border-foreground/15 bg-transparent hover:border-foreground/30'
-            )}
+            className="group w-12 h-12 flex-shrink-0 rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:scale-[0.92] transition-transform focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label={isComplete ? 'Mark all sets incomplete' : 'Mark all sets complete'}
           >
-            {isComplete && (
-              <Check className="w-4 h-4 text-success-foreground animate-set-complete" />
-            )}
+            {markAllCircle}
           </button>
         ) : (
-          <div
-            className={cn(
-              'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200',
-              isComplete
-                ? 'bg-success border-success'
-                : 'border-foreground/15 bg-transparent'
-            )}
-          >
-            {isComplete && (
-              <Check className="w-4 h-4 text-success-foreground" />
-            )}
+          <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center">
+            {markAllCircle}
           </div>
         )}
       </div>
 
-      {/* ── Expanded: coach tip + set table + flag ── */}
+      {/* ── Expanded: coach tip + last time + set table + flag ── */}
       {isExpanded && (
-        <div className="pl-[42px] pr-1 pb-4 pt-1.5 space-y-3.5 animate-fade-in-up">
-          {/* Coach note — the volt rail alone marks the voice; no label line */}
-          {exercise.coachNotes && (
-            <p className="pl-3 border-l-2 border-brand text-sm leading-relaxed text-foreground/75">
-              {exercise.coachNotes}
-            </p>
+        <div className="px-3 pb-3 space-y-3 animate-fade-in-up">
+          {(exercise.coachNotes || lastTime) && (
+            <div className="px-1 space-y-2.5">
+              {/* Coach note — the volt rail alone marks the voice; no label line */}
+              {exercise.coachNotes && (
+                <p className="pl-3 border-l-2 border-brand text-[15px] leading-relaxed text-foreground/80">
+                  {exercise.coachNotes}
+                </p>
+              )}
+              {/* Last session, once — it's the same for every set, so it no
+                  longer takes a column of its own in each row */}
+              {lastTime && (
+                <p className="font-mono text-xs tabular-nums text-muted-foreground">
+                  <span className="uppercase tracking-[0.14em] text-[10px] mr-2">Last time</span>
+                  <span className="text-foreground font-bold">{lastTime}</span>
+                </p>
+              )}
+            </div>
           )}
 
           {/* Flag section */}
           {isFlagged && (
-            <div className="p-3 bg-warning/5 rounded-lg border border-warning/20">
-              <div className="flex items-center gap-2 mb-2">
-                <Flag className="w-4 h-4 text-warning" />
-                <span className="text-sm font-medium text-foreground">
+            <div className="p-3 bg-warning/5 rounded-xl border border-warning/25">
+              <div className="flex items-center gap-2 mb-2.5">
+                <Flag className="w-4 h-4 text-warning-text" />
+                <span className="text-sm font-semibold text-foreground">
                   Flagged for coach
                 </span>
               </div>
@@ -228,29 +263,32 @@ export function ExerciseCard({
                     value={flagNote || ''}
                     onChange={(e) => onUpdateFlagNote?.(e.target.value)}
                     maxLength={200}
+                    className="h-12 text-base bg-background"
                   />
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                      {(flagNote?.length || 0)}/200
-                    </span>
-                    <div className="flex items-center gap-4">
-                      {onToggleFlag && (
-                        <button
-                          type="button"
-                          onClick={handleFlagClick}
-                          className="text-sm text-muted-foreground hover:text-destructive transition-colors min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                        >
-                          Remove flag
-                        </button>
-                      )}
+                  <p className="font-mono text-[11px] tabular-nums text-muted-foreground text-right mt-1.5">
+                    {(flagNote?.length || 0)}/200
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {onToggleFlag && (
                       <button
                         type="button"
-                        onClick={onMessageCoach}
-                        className="text-sm text-primary hover:underline min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        onClick={handleFlagClick}
+                        className="h-11 rounded-xl border border-border bg-background text-sm font-medium text-muted-foreground hover:text-destructive transition-colors touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                       >
-                        Message coach
+                        Remove flag
                       </button>
-                    </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={onMessageCoach}
+                      className={cn(
+                        'h-11 rounded-xl bg-foreground text-background text-sm font-semibold inline-flex items-center justify-center gap-2 hover:bg-foreground/90 transition-colors touch-manipulation active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                        !onToggleFlag && 'col-span-2'
+                      )}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Message coach
+                    </button>
                   </div>
                 </>
               ) : (
@@ -263,15 +301,12 @@ export function ExerciseCard({
             </div>
           )}
 
-          {/* Set table — SET · LAST · WEIGHT · REPS · ✓. Labels live in this
-              header once, so the rows below are pure numbers. */}
+          {/* Set table — SET · WEIGHT · REPS · ✓. Labels live in this header
+              once, so the rows below are pure numbers. */}
           <div>
-            <div className={cn(SET_GRID, 'pb-1')}>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            <div className={cn(SET_GRID, 'pb-0.5')}>
+              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
                 Set
-              </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                Last
               </span>
               {/* Unit-neutral: no weightUnit column exists yet, so claiming
                   "LBS" for a kg-programming coach would be plain wrong */}
@@ -279,11 +314,11 @@ export function ExerciseCard({
                 Weight
               </span>
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
-                {exercise.trackingType === 'TIME' ? 'Sec' : 'Reps'}
+                {exercise.trackingType === 'TIME' ? 'Seconds' : 'Reps'}
               </span>
               <span aria-hidden="true" />
             </div>
-            {setRows.map((setNumber, idx) => {
+            {setRows.map((setNumber) => {
               const sc = exercise.setCompletions.find(
                 (s) => s.setNumber === setNumber
               );
@@ -296,15 +331,8 @@ export function ExerciseCard({
                   weightTarget={exercise.weight ?? undefined}
                   actualReps={sc?.actualReps ?? null}
                   actualWeight={sc?.actualWeight ?? null}
-                  previous={
-                    exercise.lastPerformance
-                      ? formatLastCompact(
-                          exercise.lastPerformance,
-                          exercise.trackingType === 'TIME'
-                        )
-                      : undefined
-                  }
                   completed={!!sc?.completed}
+                  isCurrent={setNumber === currentSetNumber}
                   onToggle={() =>
                     onToggleSet(exercise.workoutExerciseId, setNumber)
                   }
@@ -319,21 +347,20 @@ export function ExerciseCard({
                     })
                   }
                   isReadOnly={isReadOnly}
-                  showDivider={idx > 0}
                   showTimer={setNumber === nextSetNumber}
                 />
               );
             })}
           </div>
 
-          {/* Flag — quiet action at the end of the exercise */}
+          {/* Flag — a real button at the end of the exercise, not a caption */}
           {!isFlagged && !isReadOnly && (
             <button
               type="button"
               onClick={handleFlagClick}
-              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors touch-manipulation py-2 -my-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="w-full h-11 rounded-xl border border-dashed border-foreground/20 inline-flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Flag className="w-3.5 h-3.5" />
+              <Flag className="w-4 h-4" />
               Flag for coach
             </button>
           )}

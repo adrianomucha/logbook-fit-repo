@@ -298,6 +298,14 @@ export function ClientWorkoutExecution() {
     router.push('/client');
   };
 
+  // Progress is counted in sets, so the bar moves with every logged set
+  // rather than jumping once per finished exercise.
+  const setsTotal = exercises.reduce((sum, e) => sum + e.sets, 0);
+  const setsDone = exercises.reduce(
+    (sum, e) => sum + Math.min(getCompletedSetsCount(e), e.sets),
+    0
+  );
+
   // Loading state
   if (isLoading) {
     return (
@@ -412,12 +420,14 @@ export function ClientWorkoutExecution() {
 
   return (
     <div className="min-h-dvh bg-background flex flex-col">
-      {/* Sticky header */}
+      {/* Sticky bar + large title */}
       <WorkoutHeader
         workoutName={day.name ?? 'Workout'}
         dayLabel={day.orderIndex ? `Day ${day.orderIndex}` : undefined}
-        exercisesDone={stats.exercisesDone}
         exercisesTotal={stats.exercisesTotal}
+        setsDone={setsDone}
+        setsTotal={setsTotal}
+        startedAt={isReadOnly ? null : completion?.startedAt}
         onBack={handleBack}
         onRestart={handleRestartClick}
         isReadOnly={isReadOnly}
@@ -428,25 +438,16 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list — open and full-width: bigger tap targets mid-workout */}
+      {/* Exercise list — one card per exercise, full width on a phone */}
       <div
         className={cn(
-          'px-4 pt-4 max-w-2xl mx-auto w-full flex-1',
+          'px-3 sm:px-4 pt-4 max-w-2xl mx-auto w-full flex-1',
           // The finish bar sits in normal flow below, so only modest clearance is needed
           isReadOnly ? 'pb-8' : 'pb-6'
         )}
       >
-        <section aria-label="Exercises">
-          <div className="flex items-baseline justify-between mb-1 px-1">
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
-              Exercises
-            </h2>
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-              {stats.exercisesDone}/{exercises.length}
-            </span>
-          </div>
-          <div className="divide-y divide-border/50">
-            {groupBySuperset(exercises).map((group, groupIndex) => {
+        <section aria-label="Exercises" className="space-y-2">
+          {groupBySuperset(exercises).map((group, groupIndex) => {
             const renderCard = (exercise: WorkoutExercise, memberIndex: number) => (
               <ExerciseCard
                 key={exercise.workoutExerciseId}
@@ -465,32 +466,31 @@ export function ClientWorkoutExecution() {
             );
 
             if (!isSuperset(group)) {
-              return (
-                <div key={group[0].workoutExerciseId} className="py-1.5">
-                  {renderCard(group[0], 0)}
-                </div>
-              );
+              return renderCard(group[0], 0);
             }
 
-            // Superset: members share a volt left rail so they read as one station
+            // Superset: members sit in one volt-tinted tray so they read as a
+            // single station, without indenting the set table on a phone
             return (
-              <div key={group[0].workoutExerciseId} className="py-3.5">
-                <div className="flex items-center gap-1.5 mb-1">
-                  <Link2 className="w-3 h-3 text-muted-foreground/60" />
-                  <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+              <div
+                key={group[0].workoutExerciseId}
+                className="rounded-[20px] bg-brand/15 p-1.5 pt-0"
+              >
+                <div className="flex items-center gap-1.5 h-9 px-2.5">
+                  <Link2 className="w-3.5 h-3.5 text-foreground/60" />
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/80">
                     Superset
                   </span>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/60">
                     · Alternate sets
                   </span>
                 </div>
-                <div className="border-l-2 border-brand/60 pl-3 divide-y divide-border/40">
+                <div className="space-y-1.5">
                   {group.map((exercise, memberIndex) => renderCard(exercise, memberIndex))}
                 </div>
               </div>
             );
           })}
-          </div>
         </section>
       </div>
 
