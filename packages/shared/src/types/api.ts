@@ -239,6 +239,8 @@ export interface ClientProgress {
     avgCompletionPct: number;
     currentStreak: number;
     workoutsLast7Days: number;
+    /** All-time seconds trained. Optional so an app build on an older server still renders. */
+    totalDurationSec?: number;
   };
 }
 

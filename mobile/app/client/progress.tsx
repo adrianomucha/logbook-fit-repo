@@ -32,7 +32,9 @@ export default function ProgressScreen() {
   // Same shared helpers as the web's ProgressHistory, so both say the same thing
   const bests = useMemo(() => summarizePersonalBests(progress?.personalBests ?? [], plan?.id ?? null), [progress, plan]);
   const weeksOnTarget = useMemo(() => weeksOnTargetStreak(completions, target), [completions, target]);
-  const trainedSec = completions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? c.durationSec ?? 0 : 0), 0);
+  // All-time from the server, like the Workouts tile beside it; the history sum is the older-server fallback
+  const trainedSec =
+    progress?.stats.totalDurationSec ?? completions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? c.durationSec ?? 0 : 0), 0);
   const [trainedValue, trainedUnit] = formatTrainingTime(trainedSec);
   const tiles: [string, string][] = [
     [String(progress?.stats.totalWorkouts ?? 0), 'Workouts'],

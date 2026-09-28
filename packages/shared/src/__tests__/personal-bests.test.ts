@@ -69,6 +69,16 @@ describe('findPersonalBests', () => {
     ]);
   });
 
+  it('measures against the whole history, not just recent sessions', () => {
+    // An old 100 stands: climbing back to 80 then 85 is not a new best
+    const bests = findPersonalBests([
+      set('deadlift', '2025-06-01', 100, 5),
+      set('deadlift', '2026-09-01', 80, 5),
+      set('deadlift', '2026-09-08', 85, 5),
+    ]);
+    expect(bests).toEqual([]);
+  });
+
   it('ignores sets with no reps', () => {
     expect(findPersonalBests([set('row', '2026-09-01', 50, 0), set('row', '2026-09-02', 60, 0)])).toEqual([]);
   });

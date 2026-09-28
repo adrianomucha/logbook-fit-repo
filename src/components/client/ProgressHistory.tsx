@@ -19,6 +19,8 @@ interface ProgressStats {
   avgCompletionPct: number;
   currentStreak: number;
   workoutsLast7Days: number;
+  /** All-time seconds trained — pairs with totalWorkouts */
+  totalDurationSec?: number;
 }
 
 interface ProgressHistoryProps {
@@ -66,10 +68,11 @@ export function ProgressHistory({
     () => weeksOnTargetStreak(workoutCompletions, target),
     [workoutCompletions, target]
   );
-  const trainedSec = workoutCompletions.reduce(
-    (sum, c) => sum + (c.status === 'COMPLETED' ? c.durationSec ?? 0 : 0),
-    0
-  );
+  // All-time from the server, like the Workouts tile beside it; summing the
+  // (one-year) history is only the fallback for an older server
+  const trainedSec =
+    progressStats?.totalDurationSec ??
+    workoutCompletions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? c.durationSec ?? 0 : 0), 0);
   const [trainedValue, trainedUnit] = formatTrainingTime(trainedSec);
 
   const tiles: [string, string][] = [
