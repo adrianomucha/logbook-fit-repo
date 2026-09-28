@@ -15,6 +15,7 @@ import { Screen } from '@/components/Screen';
 import { EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { SessionCard } from '@/components/today/SessionCard';
 import { SessionCompleteCard } from '@/components/today/SessionCompleteCard';
+import { PlanCompleteCard } from '@/components/today/PlanCompleteCard';
 import { CoachContextStrip } from '@/components/today/CoachContextStrip';
 import { PhotoNudge } from '@/components/today/PhotoNudge';
 import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle';
@@ -247,9 +248,18 @@ export default function TodayScreen() {
         <PendingCheckInBanner onComplete={() => router.push({ pathname: '/client/checkin/[checkinId]', params: { checkinId: pendingCheckIn.id } })} />
       ) : null}
 
-      <ViewToggle value={view} onChange={setView} />
+      {/* A finished plan has no week to toggle to — same as the web */}
+      {!weekOverview?.planEnded ? <ViewToggle value={view} onChange={setView} /> : null}
 
-      {view === 'weekly' && plan && weekOverview ? (
+      {weekOverview?.planEnded && plan ? (
+        <PlanCompleteCard
+          plan={plan}
+          completions={allCompletions}
+          coachName={coach.user.name}
+          onMessageCoach={() => router.push('/client/chat')}
+          onViewProgress={() => router.push('/client/progress')}
+        />
+      ) : view === 'weekly' && plan && weekOverview ? (
         <>
           <WeekOverview
             planName={plan.name}
@@ -262,17 +272,6 @@ export default function TodayScreen() {
             <CoachFeedbackCard checkIn={latestFeedbackCheckIn} onViewDetails={() => setShowCheckInDetail(true)} />
           ) : null}
         </>
-      ) : weekOverview?.planEnded ? (
-        <View className="items-center rounded-2xl border border-border/70 bg-card px-6 py-10">
-          <Text className="mb-4 text-5xl">🏁</Text>
-          <Eyebrow className="mb-1.5">Plan complete</Eyebrow>
-          <Text className="mb-2 text-center font-sans-bold text-2xl tracking-tight text-foreground">You finished {plan?.name}</Text>
-          <Text className="max-w-xs text-center font-sans text-sm leading-5 text-muted-foreground">
-            All {weekOverview.plan.durationWeeks} weeks are behind you
-            {progress?.stats?.totalWorkouts ? `, ${progress.stats.totalWorkouts} workouts logged` : ''}.{' '}
-            {coach.user.name?.split(' ')[0] ?? 'Your coach'} will line up your next block.
-          </Text>
-        </View>
       ) : today?.workoutDay ? (
         state === 'completed' && today.completion ? (
           <>

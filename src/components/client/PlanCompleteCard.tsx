@@ -1,4 +1,5 @@
 import type { WorkoutCompletion, WorkoutPlan } from '@/types';
+import { summarizeCompletedPlan, formatTrainingTime } from '@logbook/shared/plan-summary';
 import { Button } from '@/components/ui/button';
 import { Flag, MessageCircle } from 'lucide-react';
 
@@ -11,47 +12,6 @@ interface PlanCompleteCardProps {
   onViewProgress: () => void;
 }
 
-interface Session {
-  weekNumber: number;
-  durationSec?: number;
-  done: boolean;
-}
-
-function listWeeks(nums: number[]): string {
-  if (nums.length === 1) return `week ${nums[0]}`;
-  return `weeks ${nums.slice(0, -1).join(', ')} and ${nums[nums.length - 1]}`;
-}
-
-/** One plain sentence about what was missed */
-function describeMisses(missed: Session[]): string {
-  if (missed.length === 0) return 'Didn’t miss a single session.';
-  const n = missed.length;
-  const noun = n === 1 ? 'session' : 'sessions';
-
-  const perWeek = new Map<number, number>();
-  for (const s of missed) perWeek.set(s.weekNumber, (perWeek.get(s.weekNumber) ?? 0) + 1);
-  const weekNums = [...perWeek.keys()].sort((a, b) => a - b);
-
-  if (weekNums.length === 1) {
-    return n === 1
-      ? `Missed 1 session, in week ${weekNums[0]}.`
-      : `Missed ${n} sessions, ${n === 2 ? 'both' : 'all'} in week ${weekNums[0]}.`;
-  }
-  // One week holding most of the misses is the story worth telling
-  const [worstWeek, worstCount] = [...perWeek.entries()].sort((a, b) => b[1] - a[1])[0];
-  if (worstCount > 1 && worstCount * 2 > n) {
-    return `Missed ${n} ${noun}, ${worstCount} of them in week ${worstWeek}.`;
-  }
-  if (weekNums.length <= 3) return `Missed ${n} ${noun} across ${listWeeks(weekNums)}.`;
-  return `Missed ${n} ${noun} across ${weekNums.length} weeks.`;
-}
-
-function formatTrainingTime(totalSec: number): [string, string] {
-  const minutes = Math.round(totalSec / 60);
-  if (minutes < 60) return [String(minutes), 'min'];
-  return [String(Math.round((minutes / 60) * 10) / 10), 'h'];
-}
-
 /**
  * Shown in place of the Today view once the plan has run its course. Same
  * anatomy as SessionCompleteCard (mono eyebrow, big title, volt mark, stat
@@ -60,7 +20,8 @@ function formatTrainingTime(totalSec: number): [string, string] {
  * No chart on purpose: a finished block is mostly "you did it", and every
  * per-week or per-session chart tried here read as a wall of volt. The
  * completion rate leads, one meter shows it, and a sentence names the
- * misses — which is the only detail a chart was adding.
+ * misses — which is the only detail a chart was adding. The numbers and
+ * wording come from @logbook/shared so the native card says the same.
  */
 export function PlanCompleteCard({
   plan,
@@ -70,44 +31,15 @@ export function PlanCompleteCard({
   onViewProgress,
 }: PlanCompleteCardProps) {
   const coachFirst = coachName?.split(' ')[0];
-  const weekCount = plan.durationWeeks || plan.weeks.length;
-
-  // Scoped to this plan: the progress stats are all-time, so a returning
-  // client's earlier blocks would inflate the numbers here
-  const byDay = new Map(
-    completions
-      .filter((c) => c.planId === plan.id && c.status === 'COMPLETED')
-      .map((c) => [c.dayId, c])
-  );
-
-  const sessions = plan.weeks.flatMap((week) =>
-    week.days
-      .filter((d) => d.exercises.length > 0)
-      .map<Session>((d) => {
-        const completion = byDay.get(d.id);
-        return {
-          weekNumber: week.weekNumber,
-          durationSec: completion?.durationSec,
-          done: !!completion,
-        };
-      })
-  );
-
-  const planned = sessions.length;
-  const completed = sessions.filter((s) => s.done).length;
-  const pct = planned > 0 ? Math.round((completed / planned) * 100) : 0;
-
-  const timed = sessions.filter((s) => s.done && s.durationSec);
-  const trainedSec = timed.reduce((sum, s) => sum + (s.durationSec ?? 0), 0);
+  const { weekCount, planned, completed, pct, trainedSec, avgSessionMin, missNote } =
+    summarizeCompletedPlan(plan, completions);
 
   const stats: [string | number, string][] = [];
-  if (trainedSec >= 60) {
+  if (trainedSec >= 60 && avgSessionMin !== null) {
     const [value, unit] = formatTrainingTime(trainedSec);
     stats.push([value, `${unit} trained`]);
-    stats.push([Math.round(trainedSec / timed.length / 60), 'min avg session']);
+    stats.push([avgSessionMin, 'min avg session']);
   }
-
-  const missNote = describeMisses(sessions.filter((s) => !s.done));
 
   return (
     <section
