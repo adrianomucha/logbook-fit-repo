@@ -1,4 +1,4 @@
-import { endOfWeek, getDay, isWithinInterval, parseISO, startOfWeek } from 'date-fns';
+import { addWeeks, endOfWeek, getDay, isWithinInterval, parseISO, startOfWeek } from 'date-fns';
 import type { WorkoutCompletion, WorkoutDay } from './types';
 
 /**
@@ -50,6 +50,32 @@ export function getWeekVerdict(completions: WorkoutCompletion[], targetPerWeek: 
     return { ...base, text: "Week's just getting started.", tone: 'neutral' };
   }
   return { ...base, text: 'Still time to get sessions in.', tone: 'warning' };
+}
+
+/**
+ * Consecutive weeks (Monday-start) that hit the weekly target, counting back
+ * from now. The week in progress counts once it's hit and never breaks the
+ * run while it's still open — Tuesday shouldn't read as a lost streak.
+ */
+export function weeksOnTargetStreak(completions: WorkoutCompletion[], targetPerWeek: number, now = new Date()): number {
+  if (targetPerWeek <= 0) return 0;
+  const perWeek = new Map<number, number>();
+  for (const c of completions) {
+    if (c.status !== 'COMPLETED' || !c.completedAt) continue;
+    const key = startOfWeek(parseISO(c.completedAt), { weekStartsOn: 1 }).getTime();
+    perWeek.set(key, (perWeek.get(key) ?? 0) + 1);
+  }
+
+  let week = startOfWeek(now, { weekStartsOn: 1 });
+  let streak = 0;
+  if ((perWeek.get(week.getTime()) ?? 0) >= targetPerWeek) streak++;
+  // 104 weeks back is plenty — history is fetched a year at a time
+  for (let i = 0; i < 104; i++) {
+    week = addWeeks(week, -1);
+    if ((perWeek.get(week.getTime()) ?? 0) < targetPerWeek) break;
+    streak++;
+  }
+  return streak;
 }
 
 /**

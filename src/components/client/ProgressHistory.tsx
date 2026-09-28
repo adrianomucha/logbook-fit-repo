@@ -2,13 +2,25 @@ import { useMemo } from 'react';
 import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { EnrichedWorkoutHistory } from './progress/EnrichedWorkoutHistory';
-import { getWeekVerdict, type WeekVerdict } from '@logbook/shared/progress';
+import { getWeekVerdict, weeksOnTargetStreak, type WeekVerdict } from '@logbook/shared/progress';
+import {
+  formatBestDelta,
+  formatBestValue,
+  formatBestWhen,
+  summarizePersonalBests,
+  type PersonalBest,
+} from '@logbook/shared/personal-bests';
+import { formatTrainingTime } from '@logbook/shared/plan-summary';
+import { Trophy } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ProgressStats {
   totalWorkouts: number;
   avgCompletionPct: number;
   currentStreak: number;
   workoutsLast7Days: number;
+  /** All-time seconds trained — pairs with totalWorkouts */
+  totalDurationSec?: number;
 }
 
 interface ProgressHistoryProps {
@@ -17,6 +29,8 @@ interface ProgressHistoryProps {
   plan: WorkoutPlan;
   workoutCompletions: WorkoutCompletion[];
   progressStats?: ProgressStats;
+  /** Every personal best in the history, newest first (from the progress API) */
+  personalBests?: PersonalBest[];
 }
 
 // The verdict lives in @logbook/shared/progress so the app shares it.
@@ -35,14 +49,95 @@ export function ProgressHistory({
   plan,
   workoutCompletions,
   progressStats,
+  personalBests,
 }: ProgressHistoryProps) {
-  const weekProgress = useMemo(() => {
-    const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
-    return getWeekVerdict(workoutCompletions, target);
-  }, [plan, workoutCompletions]);
+  const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
+  const weekProgress = useMemo(
+    () => getWeekVerdict(workoutCompletions, target),
+    [target, workoutCompletions]
+  );
+
+  // Bests set on this plan — the block's story. The shared helpers keep the
+  // numbers and wording identical to the app.
+  const bests = useMemo(
+    () => summarizePersonalBests(personalBests ?? [], plan.id),
+    [personalBests, plan.id]
+  );
+
+  const weeksOnTarget = useMemo(
+    () => weeksOnTargetStreak(workoutCompletions, target),
+    [workoutCompletions, target]
+  );
+  // All-time from the server, like the Workouts tile beside it; summing the
+  // (one-year) history is only the fallback for an older server
+  const trainedSec =
+    progressStats?.totalDurationSec ??
+    workoutCompletions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? c.durationSec ?? 0 : 0), 0);
+  const [trainedValue, trainedUnit] = formatTrainingTime(trainedSec);
+
+  const tiles: [string, string][] = [
+    [String(progressStats?.totalWorkouts ?? workoutCompletions.filter((c) => c.status === 'COMPLETED').length), 'Workouts'],
+    [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '—', 'Trained'],
+    [`${weeksOnTarget} ${weeksOnTarget === 1 ? 'wk' : 'wks'}`, 'On target'],
+  ];
 
   return (
     <div className="space-y-4 sm:space-y-6">
+        {/* Personal bests — the headline and the latest few in one card:
+            the count up top, then one line per best */}
+        <section
+          aria-label="Personal bests"
+          className="animate-fade-in-up rounded-2xl border border-border/70 bg-card"
+        >
+          <div className="flex items-center justify-between gap-4 px-4 pt-4 pb-3.5">
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+                Personal bests this block
+              </p>
+              {bests.count > 0 ? (
+                <p className="mt-1.5 flex items-baseline gap-2 antialiased">
+                  <span className="text-[32px] font-bold tracking-tight leading-none">{bests.count}</span>
+                  <span className="text-sm text-muted-foreground">
+                    across {bests.exercises} {bests.exercises === 1 ? 'lift' : 'lifts'}
+                    {bests.thisWeek > 0 ? ` · ${bests.thisWeek} this week` : ''}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed antialiased">
+                  None yet. Beat your last weight or reps on a lift and it shows up here.
+                </p>
+              )}
+            </div>
+            <div
+              className={cn(
+                'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
+                bests.count > 0
+                  ? 'bg-brand animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]'
+                  : 'bg-muted'
+              )}
+              aria-hidden="true"
+            >
+              <Trophy className={cn('w-4 h-4', bests.count > 0 ? 'text-brand-foreground' : 'text-muted-foreground')} />
+            </div>
+          </div>
+          {bests.latest.length > 0 && (
+            <ul aria-label="Latest bests" className="border-t border-border/60 divide-y divide-border/40">
+              {bests.latest.map((b) => (
+                <li key={`${b.completionId}-${b.exerciseId}`} className="flex items-baseline gap-3 px-4 py-2.5">
+                  <span className="flex-1 min-w-0 truncate text-sm font-semibold tracking-tight antialiased">
+                    {b.exerciseName}
+                  </span>
+                  <span className="font-mono text-[11px] text-muted-foreground shrink-0">{formatBestWhen(b.completedAt)}</span>
+                  <span className="font-mono text-[13px] font-semibold tabular-nums shrink-0">{formatBestValue(b)}</span>
+                  <span className="w-12 text-right font-mono text-xs tabular-nums text-success-text shrink-0">
+                    {formatBestDelta(b)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
         {/* Week progress tracker — same vocabulary as the dashboard's weekly strip */}
         {weekProgress && (
           <div className="animate-fade-in-up rounded-xl bg-muted/40 p-4">
@@ -83,37 +178,17 @@ export function ProgressHistory({
         )}
 
         {/* Overall stats */}
-        {progressStats && (
-          <div className="animate-fade-in-up grid grid-cols-3 gap-2" style={{ animationDelay: '25ms' }}>
-            <div className="bg-muted/40 rounded-xl px-3 py-4 text-center">
-              <p className="font-mono text-2xl font-bold tabular-nums leading-none">
-                {progressStats.totalWorkouts}
-              </p>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">
-                Total
-              </p>
+        <div className="animate-fade-in-up grid grid-cols-3 gap-2" style={{ animationDelay: '50ms' }}>
+          {tiles.map(([value, label]) => (
+            <div key={label} className="bg-muted/40 rounded-xl px-3 py-4 text-center">
+              <p className="font-mono text-xl font-bold tabular-nums leading-none">{value}</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">{label}</p>
             </div>
-            <div className="bg-muted/40 rounded-xl px-3 py-4 text-center">
-              <p className="font-mono text-2xl font-bold tabular-nums leading-none">
-                {progressStats.currentStreak}
-              </p>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">
-                Streak
-              </p>
-            </div>
-            <div className="bg-muted/40 rounded-xl px-3 py-4 text-center">
-              <p className="font-mono text-2xl font-bold tabular-nums leading-none">
-                {Math.round(progressStats.avgCompletionPct)}%
-              </p>
-              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground mt-2">
-                Avg
-              </p>
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
 
       {/* Workout History — the full log */}
-      <div className="animate-fade-in-up" style={{ animationDelay: '50ms' }}>
+      <div className="animate-fade-in-up" style={{ animationDelay: '75ms' }}>
         <EnrichedWorkoutHistory
           completions={workoutCompletions}
           plans={plans}
