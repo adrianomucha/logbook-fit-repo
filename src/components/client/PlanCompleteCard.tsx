@@ -1,10 +1,5 @@
-'use client';
-
-import { useState } from 'react';
 import type { WorkoutCompletion, WorkoutPlan } from '@/types';
-import { parseSessionName } from '@/lib/parse-session-name';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { Flag, MessageCircle } from 'lucide-react';
 
 interface PlanCompleteCardProps {
@@ -17,11 +12,38 @@ interface PlanCompleteCardProps {
 }
 
 interface Session {
-  id: string;
   weekNumber: number;
-  title: string;
   durationSec?: number;
   done: boolean;
+}
+
+function listWeeks(nums: number[]): string {
+  if (nums.length === 1) return `week ${nums[0]}`;
+  return `weeks ${nums.slice(0, -1).join(', ')} and ${nums[nums.length - 1]}`;
+}
+
+/** One plain sentence about what was missed */
+function describeMisses(missed: Session[]): string {
+  if (missed.length === 0) return 'Didn’t miss a single session.';
+  const n = missed.length;
+  const noun = n === 1 ? 'session' : 'sessions';
+
+  const perWeek = new Map<number, number>();
+  for (const s of missed) perWeek.set(s.weekNumber, (perWeek.get(s.weekNumber) ?? 0) + 1);
+  const weekNums = [...perWeek.keys()].sort((a, b) => a - b);
+
+  if (weekNums.length === 1) {
+    return n === 1
+      ? `Missed 1 session, in week ${weekNums[0]}.`
+      : `Missed ${n} sessions, ${n === 2 ? 'both' : 'all'} in week ${weekNums[0]}.`;
+  }
+  // One week holding most of the misses is the story worth telling
+  const [worstWeek, worstCount] = [...perWeek.entries()].sort((a, b) => b[1] - a[1])[0];
+  if (worstCount > 1 && worstCount * 2 > n) {
+    return `Missed ${n} ${noun}, ${worstCount} of them in week ${worstWeek}.`;
+  }
+  if (weekNums.length <= 3) return `Missed ${n} ${noun} across ${listWeeks(weekNums)}.`;
+  return `Missed ${n} ${noun} across ${weekNums.length} weeks.`;
 }
 
 function formatTrainingTime(totalSec: number): [string, string] {
@@ -35,11 +57,10 @@ function formatTrainingTime(totalSec: number): [string, string] {
  * anatomy as SessionCompleteCard (mono eyebrow, big title, volt mark, stat
  * band) scaled up to the whole block.
  *
- * The block is drawn as a row per week, split into one segment per planned
- * workout in plan order, rather than a bar whose height is the week's ratio.
- * Sessions are discrete: a 6-of-7 week as a bar is a sliver shorter than a
- * full one and hides which day was missed; as segments it's six volt and
- * one gray, with the count beside it.
+ * No chart on purpose: a finished block is mostly "you did it", and every
+ * per-week or per-session chart tried here read as a wall of volt. The
+ * completion rate leads, one meter shows it, and a sentence names the
+ * misses — which is the only detail a chart was adding.
  */
 export function PlanCompleteCard({
   plan,
@@ -48,7 +69,6 @@ export function PlanCompleteCard({
   onMessageCoach,
   onViewProgress,
 }: PlanCompleteCardProps) {
-  const [active, setActive] = useState<Session | null>(null);
   const coachFirst = coachName?.split(' ')[0];
   const weekCount = plan.durationWeeks || plan.weeks.length;
 
@@ -60,28 +80,22 @@ export function PlanCompleteCard({
       .map((c) => [c.dayId, c])
   );
 
-  const sortedWeeks = [...plan.weeks].sort((a, b) => a.weekNumber - b.weekNumber);
-  const weeks = sortedWeeks.map((week) =>
-    [...week.days]
-      .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+  const sessions = plan.weeks.flatMap((week) =>
+    week.days
       .filter((d) => d.exercises.length > 0)
       .map<Session>((d) => {
         const completion = byDay.get(d.id);
         return {
-          id: d.id,
           weekNumber: week.weekNumber,
-          title: parseSessionName(d.name).title,
           durationSec: completion?.durationSec,
           done: !!completion,
         };
       })
   );
 
-  const sessions = weeks.flat();
   const planned = sessions.length;
   const completed = sessions.filter((s) => s.done).length;
   const pct = planned > 0 ? Math.round((completed / planned) * 100) : 0;
-  const maxPerWeek = Math.max(0, ...weeks.map((w) => w.length));
 
   const timed = sessions.filter((s) => s.done && s.durationSec);
   const trainedSec = timed.reduce((sum, s) => sum + (s.durationSec ?? 0), 0);
@@ -93,12 +107,7 @@ export function PlanCompleteCard({
     stats.push([Math.round(trainedSec / timed.length / 60), 'min avg session']);
   }
 
-  const missed = sessions.filter((s) => !s.done);
-  const gridLabel =
-    `${completed} of ${planned} workouts done across ${weeks.length} weeks.` +
-    (missed.length > 0
-      ? ` Missed: ${missed.map((s) => `week ${s.weekNumber} ${s.title}`).join(', ')}.`
-      : '');
+  const missNote = describeMisses(sessions.filter((s) => !s.done));
 
   return (
     <section
@@ -114,9 +123,6 @@ export function PlanCompleteCard({
           <h1 className="text-[26px] sm:text-[28px] font-bold tracking-tight leading-[1.15] mt-2.5 text-balance antialiased">
             {plan.name}
           </h1>
-          <p className="text-[15px] text-muted-foreground mt-1.5 antialiased">
-            Every week of the block, behind you.
-          </p>
         </div>
         <div
           className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
@@ -137,94 +143,19 @@ export function PlanCompleteCard({
               {completed} of {planned} workouts done
             </p>
           </div>
-
-          {/* The block — a row per week, a segment per planned workout */}
-          <figure className="mt-5 m-0">
+          <div className="mt-4 h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
             <div
-              role="img"
-              aria-label={gridLabel}
-              className="space-y-1"
-              onPointerLeave={() => setActive(null)}
-            >
-              {weeks.map((week, i) => {
-                const weekDone = week.filter((s) => s.done).length;
-                return (
-                  <div key={sortedWeeks[i].id} className="flex items-center gap-3">
-                    <span className="w-7 shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
-                      W{sortedWeeks[i].weekNumber}
-                    </span>
-                    {/* Same column count on every row, so a short week ends
-                        early instead of stretching its segments */}
-                    <div
-                      className="flex-1 grid gap-[3px]"
-                      style={{ gridTemplateColumns: `repeat(${maxPerWeek}, minmax(0, 1fr))` }}
-                    >
-                      {week.map((s) => (
-                        // Taller hit area than the 8px mark
-                        <div
-                          key={s.id}
-                          onPointerEnter={() => setActive(s)}
-                          onClick={() => setActive(s)}
-                          className="h-4 flex items-center"
-                        >
-                          <div
-                            className={cn(
-                              'h-2 w-full rounded-[3px] origin-left animate-[completionPop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_both]',
-                              s.done ? 'bg-brand' : 'bg-muted ring-1 ring-inset ring-border',
-                              active?.id === s.id && 'ring-2 ring-foreground ring-offset-1 ring-offset-card'
-                            )}
-                            style={{ animationDelay: `${150 + i * 45}ms` }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                    <span className="w-8 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground">
-                      {weekDone}/{week.length}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Readout — the hovered/tapped session, else the key */}
-            <figcaption
-              className="h-4 mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground truncate"
-              aria-live="polite"
-            >
-              {active ? (
-                <>
-                  <span className="text-foreground">Week {active.weekNumber}</span>
-                  {' · '}
-                  {active.title}
-                  {' · '}
-                  {active.done
-                    ? active.durationSec
-                      ? `${Math.max(1, Math.round(active.durationSec / 60))} min`
-                      : 'done'
-                    : 'missed'}
-                </>
-              ) : (
-                <span className="flex items-center gap-4" aria-hidden="true">
-                  <span className="flex items-center gap-1.5">
-                    <span className="w-3 h-2 rounded-[2px] bg-brand" />
-                    Done
-                  </span>
-                  {missed.length > 0 && (
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-2 rounded-[2px] bg-muted ring-1 ring-inset ring-border" />
-                      Missed
-                    </span>
-                  )}
-                </span>
-              )}
-            </figcaption>
-          </figure>
+              className="h-full rounded-full bg-brand origin-left animate-[meterFill_0.7s_cubic-bezier(0.22,1,0.36,1)_0.15s_both]"
+              style={{ width: `${pct}%` }}
+            />
+          </div>
+          <p className="text-sm text-muted-foreground mt-3 antialiased">{missNote}</p>
         </>
       )}
 
       {/* Stat band — numbers carry the weight, units stay quiet */}
       {stats.length > 0 && (
-        <p className="font-mono text-[13px] tabular-nums mt-4 pt-4 border-t border-border/50">
+        <p className="font-mono text-[13px] tabular-nums mt-5 pt-4 border-t border-border/50">
           {stats.map(([value, unit], i) => (
             <span key={unit} className="whitespace-nowrap">
               {i > 0 && <span className="text-muted-foreground/40">&ensp;·&ensp;</span>}
