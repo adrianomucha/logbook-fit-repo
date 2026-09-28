@@ -138,7 +138,7 @@ export function SetRow({
       className={cn(
         // 18px on mobile: big enough to read at arm's length, and anything
         // under 16px would trigger iOS focus zoom
-        'h-12 w-full min-w-0 rounded-xl text-center font-mono text-lg font-bold tabular-nums outline-none transition-colors',
+        'h-12 w-full min-w-0 rounded-xl text-center font-mono text-lg font-semibold tabular-nums outline-none transition-colors',
         // Full-strength muted-foreground: any alpha below 100% drops this text
         // under 4.5:1 on the card, and these cells hold logged training data.
         'placeholder:font-semibold placeholder:text-muted-foreground disabled:opacity-100',
@@ -146,7 +146,7 @@ export function SetRow({
           ? 'bg-transparent text-muted-foreground'
           // ring-foreground/20 measured 1.6:1 against the card — too faint to
           // read as a focus indicator on the screen's main data-entry control.
-          : 'bg-muted text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
+          : 'bg-muted/70 text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
       )}
     />
   );
@@ -157,14 +157,14 @@ export function SetRow({
     <div
       className={cn(
         SET_GRID,
-        'h-[68px] px-2 -mx-2 rounded-xl transition-colors',
-        isCurrent && 'bg-muted/40'
+        'h-[68px]'
       )}
     >
-      {/* Set badge — filled for the set to do now, muted once logged */}
+      {/* Set badge — filled for the set to do now, muted once logged. The
+          only "you are here" cue: one clear signal beats three faint ones. */}
       <span
         className={cn(
-          'w-8 h-8 rounded-full flex items-center justify-center font-mono text-sm font-bold tabular-nums transition-colors',
+          'w-7 h-7 rounded-full flex items-center justify-center font-mono text-[13px] font-semibold tabular-nums transition-colors',
           isCurrent
             ? 'bg-foreground text-background'
             : completed
@@ -200,19 +200,22 @@ export function SetRow({
         aria-label={completed ? `Mark set ${setNumber} incomplete` : `Mark set ${setNumber} complete`}
         aria-pressed={completed}
         className={cn(
-          'h-12 w-full rounded-xl border-2 flex items-center justify-center transition-[background-color,border-color,color,transform] duration-200 touch-manipulation',
+          'h-12 w-full rounded-xl border-[1.5px] flex items-center justify-center transition-[background-color,border-color,color,transform] duration-200 touch-manipulation',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           !isReadOnly && 'active:scale-[0.94] cursor-pointer',
+          // Logged sets go solid ink, not green: the screen stays in the
+          // app's black-and-volt palette, and a column of saturated green
+          // blocks shouted louder than the numbers beside them.
           completed
-            ? 'bg-success border-success text-success-foreground'
+            ? 'bg-foreground border-foreground text-background'
             : isCurrent
-              ? 'border-foreground/40 bg-background text-foreground/70 hover:border-foreground/60'
-              : 'border-foreground/20 bg-transparent text-foreground/40 hover:border-foreground/40'
+              ? 'border-foreground/70 bg-background text-foreground hover:border-foreground'
+              : 'border-foreground/15 bg-transparent text-foreground/30 hover:border-foreground/35'
         )}
       >
         <Check
           className={cn('w-5 h-5', completed && 'animate-set-complete')}
-          strokeWidth={completed ? 3 : 2.5}
+          strokeWidth={completed ? 2.75 : 2.25}
         />
       </button>
     </div>

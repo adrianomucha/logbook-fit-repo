@@ -469,19 +469,20 @@ export function ClientWorkoutExecution() {
               return renderCard(group[0], 0);
             }
 
-            // Superset: members sit in one volt-tinted tray so they read as a
-            // single station, without indenting the set table on a phone
+            // Superset: a volt rail in the page gutter ties the members
+            // together, so the cards themselves keep their full width
             return (
-              <div
-                key={group[0].workoutExerciseId}
-                className="rounded-[22px] bg-brand/15 p-2 pt-0"
-              >
-                <div className="flex items-center gap-1.5 h-11 px-3">
-                  <Link2 className="w-3.5 h-3.5 text-foreground/60" />
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.14em] text-foreground/80">
+              <div key={group[0].workoutExerciseId} className="relative pt-1">
+                <span
+                  aria-hidden="true"
+                  className="absolute -left-2.5 top-10 bottom-3 w-[2px] rounded-full bg-brand"
+                />
+                <div className="flex items-center gap-1.5 h-8 px-1">
+                  <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-foreground">
                     Superset
                   </span>
-                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/60">
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
                     · Alternate sets
                   </span>
                 </div>

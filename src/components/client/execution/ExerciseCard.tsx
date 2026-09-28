@@ -124,15 +124,15 @@ export function ExerciseCard({
   const markAllCircle = (
     <span
       className={cn(
-        'w-8 h-8 rounded-full border-2 flex items-center justify-center transition-[background-color,border-color] duration-200',
+        'w-7 h-7 rounded-full border-[1.5px] flex items-center justify-center transition-[background-color,border-color] duration-200',
         isComplete
-          ? 'bg-success border-success'
+          ? 'bg-foreground border-foreground'
           : 'border-foreground/20 bg-transparent group-hover:border-foreground/40'
       )}
     >
       {isComplete && (
         <Check
-          className={cn('w-4 h-4 text-success-foreground', !isReadOnly && 'animate-set-complete')}
+          className={cn('w-3.5 h-3.5 text-background', !isReadOnly && 'animate-set-complete')}
           strokeWidth={3}
         />
       )}
@@ -145,10 +145,10 @@ export function ExerciseCard({
       className={cn(
         'rounded-2xl border transition-[background-color,border-color,box-shadow] duration-200',
         isExpanded
-          ? 'bg-card border-foreground/15 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(0,0,0,0.12)]'
+          ? 'bg-card border-border shadow-[0_1px_2px_rgba(0,0,0,0.03),0_12px_32px_-16px_rgba(0,0,0,0.10)]'
           : isComplete
-            ? 'bg-muted/40 border-transparent'
-            : 'bg-card border-border'
+            ? 'bg-muted/50 border-transparent'
+            : 'bg-card border-border/70'
       )}
     >
       {/* ── Exercise row ──
@@ -167,7 +167,7 @@ export function ExerciseCard({
           <span
             className={cn(
               'font-mono text-xs font-medium tabular-nums w-7 flex-shrink-0 transition-colors',
-              isComplete ? 'text-success-text' : 'text-muted-foreground'
+              'text-muted-foreground'
             )}
           >
             {displayLabel}
@@ -193,8 +193,8 @@ export function ExerciseCard({
             <p className="font-mono text-xs tabular-nums text-muted-foreground">
               {getPrescription()}
               {completedSets > 0 && !isComplete && (
-                <span className="ml-2 text-success-text font-bold">
-                  {completedSets}/{exercise.sets} done
+                <span className="ml-2 text-foreground font-semibold">
+                  {completedSets}/{exercise.sets}
                 </span>
               )}
             </p>
@@ -355,14 +355,14 @@ export function ExerciseCard({
             </div>
           </div>
 
-          {/* Flag — a real button at the end of the exercise, not a caption */}
+          {/* Flag — quiet, but still a full 44px-tall target */}
           {!isFlagged && !isReadOnly && (
             <button
               type="button"
               onClick={handleFlagClick}
-              className="w-full h-11 rounded-xl border border-dashed border-foreground/20 inline-flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground hover:border-foreground/40 transition-colors touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="-mt-3 -mb-2 h-11 px-3 -ml-1 rounded-lg inline-flex items-center gap-2 text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Flag className="w-4 h-4" />
+              <Flag className="w-3.5 h-3.5" />
               Flag for coach
             </button>
           )}

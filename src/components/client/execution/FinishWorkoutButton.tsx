@@ -17,7 +17,7 @@ export function FinishWorkoutButton({
 
   return (
     // sticky, not fixed: iOS Safari detaches fixed bars after keyboard/scroll events
-    <div className="sticky bottom-0 z-10 w-full bg-background/85 backdrop-blur-sm border-t border-border p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+    <div className="sticky bottom-0 z-10 w-full bg-background/90 backdrop-blur-md border-t border-border/60 p-3 sm:p-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
       <div className="max-w-2xl mx-auto">
         <button
           type="button"
@@ -25,15 +25,18 @@ export function FinishWorkoutButton({
           disabled={disabled}
           className={cn(
             'w-full h-14 rounded-xl text-sm font-bold uppercase tracking-wider transition-[background-color,transform] duration-150 touch-manipulation active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+            // Quiet until the work is done: a solid black slab under every
+            // set competed with the set buttons for attention. Volt once
+            // everything is logged, so finishing becomes the obvious next tap.
             allDone
               ? 'bg-brand text-brand-foreground hover:bg-brand/90'
-              : 'bg-foreground text-background hover:bg-foreground/90',
+              : 'bg-background text-foreground border border-foreground/15 hover:bg-muted/60',
             disabled && 'opacity-50 cursor-not-allowed'
           )}
         >
           Finish workout
           {!allDone && (
-            <span className="ml-2 font-mono tabular-nums opacity-50">
+            <span className="ml-2 font-mono tabular-nums text-muted-foreground">
               {exercisesDone}/{exercisesTotal}
             </span>
           )}

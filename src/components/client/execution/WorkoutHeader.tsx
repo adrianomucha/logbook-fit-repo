@@ -22,6 +22,18 @@ interface WorkoutHeaderProps {
   completedDate?: string;
 }
 
+/** A session open this long was abandoned, not trained through: hide its clock. */
+const STALE_SESSION_SECONDS = 6 * 60 * 60;
+
+/** "12:34" under an hour, "1:02:03" past it. */
+function formatElapsed(totalSeconds: number): string {
+  const s = Math.floor(totalSeconds);
+  if (s < 3600) return formatClock(s);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  return `${h}:${String(m).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+}
+
 /** Elapsed session time, ticking once a second. */
 function ElapsedClock({ startedAt }: { startedAt: string }) {
   const start = new Date(startedAt).getTime();
@@ -33,16 +45,21 @@ function ElapsedClock({ startedAt }: { startedAt: string }) {
   }, []);
 
   const seconds = Math.max(0, (now - start) / 1000);
+  if (!Number.isFinite(seconds) || seconds > STALE_SESSION_SECONDS) return null;
+
   return (
-    <span
-      className="font-mono text-sm font-bold tabular-nums"
-      // Announcing every tick would drown out everything else
-      aria-label={`Session time ${Math.floor(seconds / 60)} minutes`}
-      role="timer"
-      aria-live="off"
-    >
-      {formatClock(seconds)}
-    </span>
+    <div className="flex items-center gap-2 h-8 px-3 rounded-full bg-muted">
+      <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" aria-hidden="true" />
+      <span
+        className="font-mono text-sm font-semibold tabular-nums"
+        // Announcing every tick would drown out everything else
+        aria-label={`Session time ${Math.floor(seconds / 60)} minutes`}
+        role="timer"
+        aria-live="off"
+      >
+        {formatElapsed(seconds)}
+      </span>
+    </div>
   );
 }
 
@@ -120,10 +137,7 @@ export function WorkoutHeader({
                 <RotateCcw className="w-[18px] h-[18px]" />
               </button>
             ) : startedAt ? (
-              <div className="flex items-center gap-2 h-8 px-3 rounded-full bg-muted">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand animate-pulse" aria-hidden="true" />
-                <ElapsedClock startedAt={startedAt} />
-              </div>
+              <ElapsedClock startedAt={startedAt} />
             ) : null}
           </div>
         </div>
