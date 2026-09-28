@@ -794,7 +794,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                 <span className="text-muted-foreground"> · {format(w.start, 'MMM d')}</span>
               </p>
 
-              <div className="min-w-0 flex flex-wrap items-center gap-1">
+              <div className="shrink-0 flex items-center gap-1" style={{ minWidth: w.target != null ? `calc(${w.target} * 1rem + ${w.target - 1} * 0.25rem)` : undefined }}>
                 {w.sessions.map((c) => {
                   const live = c.status === 'IN_PROGRESS' && !isAbandoned(c);
                   const flags = c.flags ?? [];
@@ -857,22 +857,23 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                 ))}
               </div>
 
-              {/* Done vs. planned — the row's answer, in ink */}
-              <p className="shrink-0 ml-1 font-mono text-[11px] tabular-nums antialiased" aria-hidden="true">
-                <span className="font-bold text-foreground">{w.completed}</span>
-                {w.target != null && <span className="text-muted-foreground"> / {w.target}</span>}
+              {/* Done vs. planned, then the verdict — one phrase beside the slots */}
+              <p className="flex items-baseline gap-2 min-w-0 antialiased" aria-hidden="true">
+                <span className="w-9 shrink-0 font-mono text-[11px] tabular-nums">
+                  <span className="font-bold text-foreground">{w.completed}</span>
+                  {w.target != null && <span className="text-muted-foreground">/{w.target}</span>}
+                </span>
+                {w.target != null && (
+                  <span className={cn(
+                    'text-xs truncate',
+                    !w.isCurrent && w.missed > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
+                  )}>
+                    {w.isCurrent
+                      ? w.upcoming > 0 ? `${w.upcoming} to go` : 'Target hit'
+                      : w.missed > 0 ? `${w.missed} missed` : 'On target'}
+                  </span>
+                )}
               </p>
-
-              {/* Plain-language verdict fills the row on wider screens */}
-              {w.target != null && (
-                <p className="hidden sm:block flex-1 text-right text-xs text-muted-foreground antialiased" aria-hidden="true">
-                  {w.isCurrent
-                    ? w.upcoming > 0 ? `${w.upcoming} to go` : 'Target hit'
-                    : w.missed > 0
-                      ? <><span className="inline-block w-1.5 h-1.5 rounded-full bg-chart-short mr-1.5 align-middle" />{w.missed} missed</>
-                      : 'On target'}
-                </p>
-              )}
             </li>
           );
         })}
