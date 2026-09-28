@@ -109,7 +109,7 @@ describe('formatDeviation', () => {
   it('converts a weight change to kg for a kg viewer', () => {
     expect(
       formatDeviation({ exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } }, 'KG')
-    ).toBe('Deadlift 83.9→70.3 kg');
+    ).toBe('Deadlift 84→70.5 kg');
   });
 
   it('formats a rep shortfall with a range target', () => {

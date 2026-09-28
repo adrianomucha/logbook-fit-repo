@@ -231,7 +231,7 @@ export function InlinePlanEditor({
  */
 function ExerciseRow({ exercise }: { exercise: Exercise }) {
   const { weightUnit } = useCurrentUser();
-  // Build params string: "3×10 · 135 lb" / "3×10 · 61.2 kg" or "3×10-12"
+  // Build params string: "3×10 · 135 lb" / "3×10 · 61 kg" or "3×10-12"
   const parts: string[] = [];
 
   if (exercise.sets && exercise.reps) {

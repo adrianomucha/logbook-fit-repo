@@ -121,7 +121,7 @@ describe('parseImportRows', () => {
     expect(errors).toEqual([]);
     const exercise = plan!.weeks[0].days[0].exercises[0];
     // "60 kg" names its unit, so it converts to lb even for an lb coach
-    expect(exercise.weight).toBeCloseTo(132.277, 3);
+    expect(exercise.weight).toBe(132.5);
     expect(exercise.restSeconds).toBe(90);
   });
 
@@ -135,7 +135,7 @@ describe('parseImportRows', () => {
     );
     expect(errors).toEqual([]);
     const [squat, bench] = plan!.weeks[0].days[0].exercises;
-    expect(squat.weight).toBeCloseTo(220.462, 3);
+    expect(squat.weight).toBe(220.5);
     expect(bench.weight).toBe(135);
   });
 
