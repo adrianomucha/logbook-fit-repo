@@ -771,11 +771,12 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
   const hasUpcoming = weeks.some((w) => w.upcoming > 0);
   const hasFlags = all.some((c) => (c.flags?.length ?? 0) > 0);
 
-  const slot = 'w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[3px] shrink-0';
+  // Segments share the row: each week reads as one bar split into its sessions
+  const slot = 'h-2.5 flex-1 min-w-0 rounded-[3px]';
 
   return (
     <div className="px-4 sm:px-5 py-4">
-      <ul className="space-y-2" onPointerLeave={() => setActiveId(null)}>
+      <ul className="space-y-3" onPointerLeave={() => setActiveId(null)}>
         {weeks.map((w) => {
           const summary = w.target != null
             ? `${w.completed} of ${w.target} sessions${w.missed ? `, ${w.missed} missed` : ''}${w.isCurrent ? ', week in progress' : ''}`
@@ -783,7 +784,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
           return (
             <li
               key={w.start.toISOString()}
-              className="flex items-center gap-2.5 sm:gap-3"
+              className="flex items-center gap-3 sm:gap-4"
               aria-label={`Week of ${format(w.start, 'MMM d')}: ${summary}`}
             >
               {/* Week label — plan week number when known, and its Monday */}
@@ -794,7 +795,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                 <span className="text-muted-foreground"> · {format(w.start, 'MMM d')}</span>
               </p>
 
-              <div className="shrink-0 flex items-center gap-1" style={{ minWidth: w.target != null ? `calc(${w.target} * 1rem + ${w.target - 1} * 0.25rem)` : undefined }}>
+              <div className="flex-1 min-w-0 flex items-center gap-1">
                 {w.sessions.map((c) => {
                   const live = c.status === 'IN_PROGRESS' && !isAbandoned(c);
                   const flags = c.flags ?? [];
@@ -812,7 +813,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                       onFocus={() => setActiveId(c.id)}
                       onBlur={() => setActiveId(null)}
                       className={cn(
-                        slot, 'relative cursor-default transition-opacity duration-150',
+                        slot, 'relative cursor-default transition-opacity duration-150 before:absolute before:-inset-y-2 before:inset-x-0 before:content-[\'\']',
                         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-card',
                         activeId && !isActive && 'opacity-50'
                       )}
@@ -820,10 +821,10 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                       {/* Volt meter: lighter step of the brand ramp as the
                           track, brand fill rising with the share done */}
                       <span className="absolute inset-0 rounded-[3px] overflow-hidden bg-brand/25 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" aria-hidden="true">
-                        <span className="absolute inset-x-0 bottom-0 bg-brand" style={{ height: `${fillPct(c)}%` }} />
+                        <span className="absolute inset-y-0 left-0 bg-brand" style={{ width: `${fillPct(c)}%` }} />
                       </span>
                       {flags.length > 0 && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-foreground ring-2 ring-card" aria-hidden="true" />
+                        <span className="absolute top-1/2 right-1 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-foreground ring-2 ring-brand" aria-hidden="true" />
                       )}
                       {/* Tooltip — value leads, label follows */}
                       {isActive && (
@@ -850,29 +851,17 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                   );
                 })}
                 {Array.from({ length: w.missed }, (_, i) => (
-                  <span key={`m${i}`} className={cn(slot, 'shadow-[inset_0_0_0_1.5px_hsl(var(--muted-foreground)/0.45)]')} aria-hidden="true" />
+                  <span key={`m${i}`} className={cn(slot, 'bg-muted-foreground/20')} aria-hidden="true" />
                 ))}
                 {Array.from({ length: w.upcoming }, (_, i) => (
                   <span key={`u${i}`} className={cn(slot, 'border border-dashed border-muted-foreground/40')} aria-hidden="true" />
                 ))}
               </div>
 
-              {/* Done vs. planned, then the verdict — one phrase beside the slots */}
-              <p className="flex items-baseline gap-2 min-w-0 antialiased" aria-hidden="true">
-                <span className="w-9 shrink-0 font-mono text-[11px] tabular-nums">
-                  <span className="font-bold text-foreground">{w.completed}</span>
-                  {w.target != null && <span className="text-muted-foreground">/{w.target}</span>}
-                </span>
-                {w.target != null && (
-                  <span className={cn(
-                    'text-xs truncate',
-                    !w.isCurrent && w.missed > 0 ? 'text-foreground font-medium' : 'text-muted-foreground'
-                  )}>
-                    {w.isCurrent
-                      ? w.upcoming > 0 ? `${w.upcoming} to go` : 'Target hit'
-                      : w.missed > 0 ? `${w.missed} missed` : 'On target'}
-                  </span>
-                )}
+              {/* Done vs. planned — the row's answer, right-aligned in ink */}
+              <p className="w-8 shrink-0 text-right font-mono text-[11px] tabular-nums antialiased" aria-hidden="true">
+                <span className="font-semibold text-foreground">{w.completed}</span>
+                {w.target != null && <span className="text-muted-foreground">/{w.target}</span>}
               </p>
             </li>
           );
@@ -882,24 +871,24 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
       {/* Legend — identity never rides on color alone */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
         {hasFull && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] bg-brand shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" />Done</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-[2px] bg-brand shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" />Done</span>
         )}
         {hasPartial && (
           <span className="flex items-center gap-1.5">
-            <span className="relative w-2.5 h-2.5 rounded-[2px] overflow-hidden bg-brand/25 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
-              <span className="absolute inset-x-0 bottom-0 h-1/2 bg-brand" />
+            <span className="relative w-3 h-2 rounded-[2px] overflow-hidden bg-brand/25 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
+              <span className="absolute inset-y-0 left-0 w-1/2 bg-brand" />
             </span>
             Partly done
           </span>
         )}
         {hasMissed && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] shadow-[inset_0_0_0_1.5px_hsl(var(--muted-foreground)/0.45)]" />Missed</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-[2px] bg-muted-foreground/20" />Missed</span>
         )}
         {hasUpcoming && (
-          <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-[2px] border border-dashed border-muted-foreground/40" />Still to do</span>
+          <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-[2px] border border-dashed border-muted-foreground/40" />Still to do</span>
         )}
         {hasFlags && (
-          <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-foreground" />Flagged</span>
+          <span className="flex items-center gap-1.5"><span className="w-1.5 h-1.5 rounded-full bg-foreground" />Flagged</span>
         )}
       </div>
     </div>
