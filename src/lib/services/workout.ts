@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import { findPersonalBests, type PersonalBest } from "@logbook/shared/personal-bests";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -70,6 +71,8 @@ type ProgressResult = {
     currentStreak: number;
     workoutsLast7Days: number;
   };
+  /** Every personal best in the look-back window, newest first */
+  personalBests: PersonalBest[];
 };
 
 // ---------------------------------------------------------------------------
@@ -539,9 +542,56 @@ class WorkoutServiceImpl {
       effortRating: c.effortRating ?? undefined,
     }));
 
+    // Personal bests: every completed set in the same one-year window, with
+    // what was actually lifted (the client's override, else the prescription).
+    // A lift's baseline is its first session inside the window.
+    const setRows = await this.db.setCompletion.findMany({
+      where: {
+        completed: true,
+        workoutCompletion: {
+          clientId,
+          status: "COMPLETED",
+          completedAt: { gte: oneYearAgo },
+        },
+      },
+      select: {
+        actualWeight: true,
+        actualReps: true,
+        workoutCompletionId: true,
+        workoutCompletion: { select: { planId: true, completedAt: true } },
+        workoutExercise: {
+          select: {
+            weight: true,
+            reps: true,
+            trackingType: true,
+            exercise: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+    const personalBests = findPersonalBests(
+      setRows.flatMap((r) =>
+        r.workoutCompletion.completedAt
+          ? [
+              {
+                exerciseId: r.workoutExercise.exercise.id,
+                exerciseName: r.workoutExercise.exercise.name,
+                trackingType: r.workoutExercise.trackingType,
+                weight: r.actualWeight ?? r.workoutExercise.weight,
+                reps: r.actualReps ?? r.workoutExercise.reps,
+                completionId: r.workoutCompletionId,
+                planId: r.workoutCompletion.planId,
+                completedAt: r.workoutCompletion.completedAt.toISOString(),
+              },
+            ]
+          : [],
+      ),
+    );
+
     return {
       recentCompletions,
       allCompletions,
+      personalBests,
       stats: {
         totalWorkouts,
         avgCompletionPct: Math.round(avgCompletionPct * 100) / 100,

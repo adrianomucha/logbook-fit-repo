@@ -1,4 +1,5 @@
 /** Response types matching the database API endpoints */
+import type { PersonalBest } from "../personal-bests";
 
 // GET /api/coach/dashboard
 export interface DashboardClient {
@@ -230,6 +231,9 @@ export interface ClientProgress {
     day: { name: string | null; orderIndex: number } | null;
   }[];
   allCompletions: ClientProgressCompletion[];
+  /** Every personal best in the look-back window, newest first. Optional so
+   *  an app build talking to an older server still renders. */
+  personalBests?: PersonalBest[];
   stats: {
     totalWorkouts: number;
     avgCompletionPct: number;
