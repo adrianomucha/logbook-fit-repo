@@ -1,4 +1,5 @@
 import { differenceInCalendarDays, format, parseISO, startOfWeek } from "date-fns";
+import { formatWeight, toDisplayWeight, type WeightUnit } from "./weight-units";
 
 /**
  * Personal bests for the Progress tab, shared by web and app so both say
@@ -20,7 +21,7 @@ export interface LoggedSet {
   exerciseId: string;
   exerciseName: string;
   trackingType: "REPS" | "TIME";
-  /** What was lifted (the client's override, else the prescription); null = bodyweight */
+  /** What was lifted, stored lb (the client's override, else the prescription); null = bodyweight */
   weight: number | null;
   /** Reps done, or seconds held for TIME */
   reps: number;
@@ -40,7 +41,7 @@ export interface PersonalBest {
   weight: number | null;
   /** Reps, or seconds for a timed hold */
   reps: number;
-  /** Improvement over the previous best, in the kind's own unit */
+  /** Improvement over the previous best, in the kind's own unit (stored lb for weight) */
   delta: number;
 }
 
@@ -113,16 +114,28 @@ function formatSeconds(seconds: number): string {
   return s ? `${m}:${String(s).padStart(2, "0")}` : `${m} min`;
 }
 
-/** "95 × 5" · "15 reps" · "1:30" */
-export function formatBestValue(best: Pick<PersonalBest, "kind" | "weight" | "reps">): string {
+/** "95 lb × 5" · "15 reps" · "1:30" — weight in the viewer's unit */
+export function formatBestValue(
+  best: Pick<PersonalBest, "kind" | "weight" | "reps">,
+  unit: WeightUnit,
+): string {
   if (best.kind === "time") return formatSeconds(best.reps);
-  if (best.weight) return `${best.weight} × ${best.reps}`;
+  if (best.weight) return `${formatWeight(best.weight, unit)} × ${best.reps}`;
   return `${best.reps} reps`;
 }
 
-/** "+2.5" · "+1 rep" · "+10s" */
-export function formatBestDelta(best: Pick<PersonalBest, "kind" | "delta">): string {
-  if (best.kind === "weight") return `+${best.delta}`;
+/** "+2.5" · "+1 rep" · "+10s" — weight in the viewer's unit */
+export function formatBestDelta(
+  best: Pick<PersonalBest, "kind" | "delta" | "weight">,
+  unit: WeightUnit,
+): string {
+  if (best.kind === "weight") {
+    // The gap between the two displayed weights, so the row adds up. A
+    // jump smaller than half a unit still reads as a (minimal) gain.
+    const now = best.weight ?? 0;
+    const shown = toDisplayWeight(now, unit) - toDisplayWeight(now - best.delta, unit);
+    return `+${Math.max(0.5, shown)}`;
+  }
   if (best.kind === "time") return `+${best.delta}s`;
   return `+${best.delta} ${best.delta === 1 ? "rep" : "reps"}`;
 }

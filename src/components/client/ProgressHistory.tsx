@@ -13,6 +13,7 @@ import {
 import { formatTrainingTime } from '@logbook/shared/plan-summary';
 import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface ProgressStats {
   totalWorkouts: number;
@@ -52,6 +53,7 @@ export function ProgressHistory({
   personalBests,
 }: ProgressHistoryProps) {
   const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
+  const { weightUnit } = useCurrentUser();
   const weekProgress = useMemo(
     () => getWeekVerdict(workoutCompletions, target),
     [target, workoutCompletions]
@@ -128,9 +130,9 @@ export function ProgressHistory({
                     {b.exerciseName}
                   </span>
                   <span className="font-mono text-[11px] text-muted-foreground shrink-0">{formatBestWhen(b.completedAt)}</span>
-                  <span className="font-mono text-[13px] font-semibold tabular-nums shrink-0">{formatBestValue(b)}</span>
+                  <span className="font-mono text-[13px] font-semibold tabular-nums shrink-0">{formatBestValue(b, weightUnit)}</span>
                   <span className="w-12 text-right font-mono text-xs tabular-nums text-success-text shrink-0">
-                    {formatBestDelta(b)}
+                    {formatBestDelta(b, weightUnit)}
                   </span>
                 </li>
               ))}
