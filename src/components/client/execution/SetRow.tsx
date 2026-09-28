@@ -8,10 +8,12 @@ import { SetTimer } from './SetTimer';
 /**
  * Shared grid template for the set table: SET · WEIGHT · REPS · ✓.
  * The header row in ExerciseCard uses the same template so columns align.
+ * The ✓ column is 3rem and the card body is inset 1rem, so each set's check
+ * circle sits on the same vertical axis as the exercise's circle above it.
  * Weight and reps split the free width, so at phone width each input is
  * ~100px wide — a comfortable thumb target mid-set.
  */
-export const SET_GRID = 'grid grid-cols-[2rem_1fr_1fr_3.5rem] gap-x-2.5 items-center';
+export const SET_GRID = 'grid grid-cols-[2rem_1fr_1fr_3rem] gap-x-2.5 items-center';
 
 interface SetRowProps {
   setNumber: number;
@@ -191,8 +193,9 @@ export function SetRow({
         label: isTime ? 'seconds' : 'reps',
       })}
 
-      {/* A wide, square-ish button rather than a small circle: this is the
-          tap the athlete makes after every set, often with chalky hands. */}
+      {/* The same 40px circle as the exercise's check, on the same axis, so
+          the right edge reads as one column. tap-target stretches the hit
+          area past 44px for chalky hands. */}
       <button
         type="button"
         onClick={handleToggle}
@@ -200,7 +203,7 @@ export function SetRow({
         aria-label={completed ? `Mark set ${setNumber} incomplete` : `Mark set ${setNumber} complete`}
         aria-pressed={completed}
         className={cn(
-          'h-12 w-full rounded-xl border-[1.5px] flex items-center justify-center transition-[background-color,border-color,color,transform] duration-200 touch-manipulation',
+          'tap-target h-10 w-10 justify-self-center rounded-full border-[1.5px] flex items-center justify-center transition-[background-color,border-color,color,transform] duration-200 touch-manipulation',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           !isReadOnly && 'active:scale-[0.94] cursor-pointer',
           // Logged sets go solid ink, not green: the screen stays in the
@@ -210,12 +213,12 @@ export function SetRow({
             ? 'bg-foreground border-foreground text-background'
             : isCurrent
               ? 'border-foreground/70 bg-background text-foreground hover:border-foreground'
-              : 'border-foreground/15 bg-transparent text-foreground/30 hover:border-foreground/35'
+              : 'border-foreground/20 bg-transparent text-transparent hover:border-foreground/40'
         )}
       >
         <Check
-          className={cn('w-5 h-5', completed && 'animate-set-complete')}
-          strokeWidth={completed ? 2.75 : 2.25}
+          className={cn('w-[18px] h-[18px]', completed && 'animate-set-complete')}
+          strokeWidth={2.5}
         />
       </button>
     </div>

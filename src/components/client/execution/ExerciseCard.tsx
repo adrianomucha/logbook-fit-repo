@@ -124,7 +124,7 @@ export function ExerciseCard({
   const markAllCircle = (
     <span
       className={cn(
-        'w-7 h-7 rounded-full border-[1.5px] flex items-center justify-center transition-[background-color,border-color] duration-200',
+        'w-10 h-10 rounded-full border-[1.5px] flex items-center justify-center transition-[background-color,border-color] duration-200',
         isComplete
           ? 'bg-foreground border-foreground'
           : 'border-foreground/20 bg-transparent group-hover:border-foreground/40'
@@ -132,8 +132,8 @@ export function ExerciseCard({
     >
       {isComplete && (
         <Check
-          className={cn('w-3.5 h-3.5 text-background', !isReadOnly && 'animate-set-complete')}
-          strokeWidth={3}
+          className={cn('w-[18px] h-[18px] text-background', !isReadOnly && 'animate-set-complete')}
+          strokeWidth={2.5}
         />
       )}
     </span>
@@ -155,7 +155,7 @@ export function ExerciseCard({
           Expand and mark-all are siblings, never nested: a <button> may not
           contain another interactive element, and nesting them hid the
           mark-all control behind the outer button's accessible name. */}
-      <div className="flex items-center min-h-[76px] pr-2">
+      <div className="flex items-center min-h-[76px] pr-4">
         <button
           type="button"
           onClick={onToggleExpand}
