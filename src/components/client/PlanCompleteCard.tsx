@@ -35,10 +35,11 @@ function formatTrainingTime(totalSec: number): [string, string] {
  * anatomy as SessionCompleteCard (mono eyebrow, big title, volt mark, stat
  * band) scaled up to the whole block.
  *
- * The block is drawn as one cell per planned workout — weeks are columns,
- * sessions stack in plan order — rather than a bar per week. Sessions are
- * discrete: a 6-of-7 week as a bar is a sliver shorter than a full one and
- * hides which day was missed; as cells it's six volt squares and one gray.
+ * The block is drawn as a row per week, split into one segment per planned
+ * workout in plan order, rather than a bar whose height is the week's ratio.
+ * Sessions are discrete: a 6-of-7 week as a bar is a sliver shorter than a
+ * full one and hides which day was missed; as segments it's six volt and
+ * one gray, with the count beside it.
  */
 export function PlanCompleteCard({
   plan,
@@ -126,69 +127,73 @@ export function PlanCompleteCard({
       </div>
 
       {planned > 0 && (
-        <div className="mt-6 flex flex-wrap items-start justify-between gap-x-8 gap-y-5">
+        <>
           {/* Headline — the one number the block comes down to */}
-          <div className="shrink-0">
+          <div className="mt-6 flex items-baseline gap-3">
             <p className="text-[44px] font-bold tracking-tight leading-none antialiased">
               {pct}%
             </p>
-            <p className="text-sm text-muted-foreground mt-1.5 antialiased">
+            <p className="text-sm text-muted-foreground antialiased">
               {completed} of {planned} workouts done
             </p>
           </div>
 
-          {/* The block, one cell per planned workout */}
-          <figure className="min-w-0 max-w-full w-max m-0">
-            <div>
-              <div
-                role="img"
-                aria-label={gridLabel}
-                className="grid gap-1"
-                style={{
-                  gridTemplateColumns: `repeat(${weeks.length}, minmax(0, 18px))`,
-                  gridTemplateRows: `repeat(${maxPerWeek}, auto)`,
-                }}
-                onPointerLeave={() => setActive(null)}
-              >
-                {weeks.map((week, col) =>
-                  week.map((s, row) => (
+          {/* The block — a row per week, a segment per planned workout */}
+          <figure className="mt-5 m-0">
+            <div
+              role="img"
+              aria-label={gridLabel}
+              className="space-y-1"
+              onPointerLeave={() => setActive(null)}
+            >
+              {weeks.map((week, i) => {
+                const weekDone = week.filter((s) => s.done).length;
+                return (
+                  <div key={sortedWeeks[i].id} className="flex items-center gap-3">
+                    <span className="w-7 shrink-0 font-mono text-[10px] tabular-nums text-muted-foreground">
+                      W{sortedWeeks[i].weekNumber}
+                    </span>
+                    {/* Same column count on every row, so a short week ends
+                        early instead of stretching its segments */}
                     <div
-                      key={s.id}
-                      onPointerEnter={() => setActive(s)}
-                      onClick={() => setActive(s)}
-                      className={cn(
-                        'aspect-square rounded-[4px] animate-[completionPop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_both]',
-                        s.done ? 'bg-brand' : 'bg-muted ring-1 ring-inset ring-border',
-                        active?.id === s.id && 'ring-2 ring-inset ring-foreground'
-                      )}
-                      style={{
-                        gridColumn: col + 1,
-                        gridRow: row + 1,
-                        animationDelay: `${150 + col * 45}ms`,
-                      }}
-                    />
-                  ))
-                )}
-              </div>
-              <div
-                className="flex justify-between mt-1.5 font-mono text-[10px] tabular-nums text-muted-foreground"
-                aria-hidden="true"
-              >
-                <span>W{sortedWeeks[0].weekNumber}</span>
-                {sortedWeeks.length > 1 && <span>W{sortedWeeks[sortedWeeks.length - 1].weekNumber}</span>}
-              </div>
+                      className="flex-1 grid gap-[3px]"
+                      style={{ gridTemplateColumns: `repeat(${maxPerWeek}, minmax(0, 1fr))` }}
+                    >
+                      {week.map((s) => (
+                        // Taller hit area than the 8px mark
+                        <div
+                          key={s.id}
+                          onPointerEnter={() => setActive(s)}
+                          onClick={() => setActive(s)}
+                          className="h-4 flex items-center"
+                        >
+                          <div
+                            className={cn(
+                              'h-2 w-full rounded-[3px] origin-left animate-[completionPop_0.35s_cubic-bezier(0.34,1.56,0.64,1)_both]',
+                              s.done ? 'bg-brand' : 'bg-muted ring-1 ring-inset ring-border',
+                              active?.id === s.id && 'ring-2 ring-foreground ring-offset-1 ring-offset-card'
+                            )}
+                            style={{ animationDelay: `${150 + i * 45}ms` }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <span className="w-8 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground">
+                      {weekDone}/{week.length}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Readout — the hovered/tapped session, else the key. Held to
-                the grid's width (w-0 min-w-full) so a long session name wraps
-                instead of widening the figure and shifting the grid on hover */}
+            {/* Readout — the hovered/tapped session, else the key */}
             <figcaption
-              className="w-0 min-w-full h-7 mt-2 font-mono text-[10px] leading-[14px] uppercase tracking-[0.12em] text-muted-foreground line-clamp-2"
+              className="h-4 mt-3 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground truncate"
               aria-live="polite"
             >
               {active ? (
                 <>
-                  <span className="text-foreground">Wk {active.weekNumber}</span>
+                  <span className="text-foreground">Week {active.weekNumber}</span>
                   {' · '}
                   {active.title}
                   {' · '}
@@ -199,14 +204,14 @@ export function PlanCompleteCard({
                     : 'missed'}
                 </>
               ) : (
-                <span className="flex items-center gap-3" aria-hidden="true">
+                <span className="flex items-center gap-4" aria-hidden="true">
                   <span className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-[2px] bg-brand" />
+                    <span className="w-3 h-2 rounded-[2px] bg-brand" />
                     Done
                   </span>
                   {missed.length > 0 && (
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2 h-2 rounded-[2px] bg-muted ring-1 ring-inset ring-border" />
+                      <span className="w-3 h-2 rounded-[2px] bg-muted ring-1 ring-inset ring-border" />
                       Missed
                     </span>
                   )}
@@ -214,8 +219,7 @@ export function PlanCompleteCard({
               )}
             </figcaption>
           </figure>
-
-        </div>
+        </>
       )}
 
       {/* Stat band — numbers carry the weight, units stay quiet */}
