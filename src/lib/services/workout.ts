@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 import prisma from "@/lib/prisma";
+import { findPersonalBests, type PersonalBest } from "@logbook/shared/personal-bests";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -69,7 +70,10 @@ type ProgressResult = {
     avgCompletionPct: number;
     currentStreak: number;
     workoutsLast7Days: number;
+    totalDurationSec: number;
   };
+  /** Every personal best in the look-back window, newest first */
+  personalBests: PersonalBest[];
 };
 
 // ---------------------------------------------------------------------------
@@ -475,9 +479,13 @@ class WorkoutServiceImpl {
       where: { clientId, status: "COMPLETED" },
       _count: { _all: true },
       _avg: { completionPct: true },
+      _sum: { durationSec: true },
     });
     const totalWorkouts = agg._count._all;
     const avgCompletionPct = agg._avg.completionPct ?? 0;
+    // All-time, like totalWorkouts beside it on the Progress tab — the
+    // one-year window below would undercount a long-time client
+    const totalDurationSec = agg._sum.durationSec ?? 0;
 
     // One bounded read (index: [clientId, completedAt]) feeds the history list,
     // the last-7-days slice, and the streak — no second full-table scan.
@@ -539,14 +547,62 @@ class WorkoutServiceImpl {
       effortRating: c.effortRating ?? undefined,
     }));
 
+    // Personal bests: every completed set the client has ever logged, with
+    // what was actually lifted (the client's override, else the prescription).
+    // Deliberately not bounded to the one-year window: a best has to beat
+    // everything before it, and a record older than a year still counts —
+    // otherwise 80 → 85 after an old 100 would read as a new best. Only the
+    // bests themselves are trimmed to the window below. Rows are four small
+    // columns (~4k a year for a 5×/week client).
+    const setRows = await this.db.setCompletion.findMany({
+      where: {
+        completed: true,
+        workoutCompletion: { clientId, status: "COMPLETED" },
+      },
+      select: {
+        actualWeight: true,
+        actualReps: true,
+        workoutCompletionId: true,
+        workoutCompletion: { select: { planId: true, completedAt: true } },
+        workoutExercise: {
+          select: {
+            weight: true,
+            reps: true,
+            trackingType: true,
+            exercise: { select: { id: true, name: true } },
+          },
+        },
+      },
+    });
+    const personalBests = findPersonalBests(
+      setRows.flatMap((r) =>
+        r.workoutCompletion.completedAt
+          ? [
+              {
+                exerciseId: r.workoutExercise.exercise.id,
+                exerciseName: r.workoutExercise.exercise.name,
+                trackingType: r.workoutExercise.trackingType,
+                weight: r.actualWeight ?? r.workoutExercise.weight,
+                reps: r.actualReps ?? r.workoutExercise.reps,
+                completionId: r.workoutCompletionId,
+                planId: r.workoutCompletion.planId,
+                completedAt: r.workoutCompletion.completedAt.toISOString(),
+              },
+            ]
+          : [],
+      ),
+    ).filter((b) => new Date(b.completedAt) >= oneYearAgo);
+
     return {
       recentCompletions,
       allCompletions,
+      personalBests,
       stats: {
         totalWorkouts,
         avgCompletionPct: Math.round(avgCompletionPct * 100) / 100,
         currentStreak: streak,
         workoutsLast7Days: recentCompletions.length,
+        totalDurationSec,
       },
     };
   }

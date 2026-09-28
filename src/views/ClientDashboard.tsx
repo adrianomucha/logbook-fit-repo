@@ -669,6 +669,7 @@ export function ClientDashboard() {
               plan={plan}
               workoutCompletions={allWorkoutCompletions}
               progressStats={progress?.stats}
+              personalBests={progress?.personalBests}
             />
 
             {/* Coaching membership — quiet, at the very end of the page */}
