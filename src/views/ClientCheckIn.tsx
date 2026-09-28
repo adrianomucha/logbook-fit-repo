@@ -620,10 +620,13 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
           </p>
         ) : (
           <>
-            {/* Period readout — instrument voice, like the profile vitals */}
-            <div className="grid grid-cols-4 divide-x divide-border border-b border-border">
+            {/* Period readout — instrument voice, like the profile vitals.
+                Four across once the labels fit whole; 2×2 on the narrowest
+                phones. Hairlines come from the 1px gap over a border fill,
+                so they work for either arrangement. */}
+            <div className="grid grid-cols-2 min-[380px]:grid-cols-4 gap-px bg-border border-b border-border">
               {stats.map((s) => (
-                <div key={s.label} className="min-w-0 px-3 sm:px-5 py-3">
+                <div key={s.label} className="min-w-0 bg-card px-3 sm:px-5 py-3">
                   <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted-foreground font-medium antialiased whitespace-nowrap">
                     {s.warn && <span className="w-1.5 h-1.5 rounded-full bg-chart-short shrink-0" aria-hidden="true" />}
                     {s.label}
