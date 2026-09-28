@@ -10,6 +10,10 @@ git commit --author "Adrian Mucha <adrianomucha@gmail.com>" ...
 
 Credit Claude via a `Co-Authored-By` trailer in the commit message instead of as the commit author.
 
+## Web and native parity
+
+The web app (`src/`) and the native app (`mobile/`) must always match. When you change a client- or coach-facing screen, copy, or behavior on one, make the same change on the other in the same commit. Put shared logic and user-facing wording in `packages/shared` so both apps import it, not duplicate it.
+
 ## gstack
 
 Use the `/browse` skill from gstack for all web browsing. Never use `mcp__Claude_in_Chrome__*` tools.

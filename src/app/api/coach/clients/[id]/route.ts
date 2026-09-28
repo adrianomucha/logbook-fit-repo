@@ -161,6 +161,20 @@ export const GET = withCoach(
     const openCheckIn = client.checkIns.find(
       (ci) => ci.status === "PENDING" || ci.status === "CLIENT_RESPONDED"
     );
+    // Every finished workout on the active plan, however long the block.
+    // The 50-row window above can cut a long plan short, and the profile's
+    // adherence figure has to count all of it. Two small columns per row.
+    const activePlanCompletions = client.activePlan
+      ? await prisma.workoutCompletion.findMany({
+          where: {
+            clientId: clientProfileId,
+            planId: client.activePlan.id,
+            status: "COMPLETED",
+          },
+          select: { dayId: true, durationSec: true },
+        })
+      : [];
+
     const { urgency, planStatus } = getClientUrgency({
       hasPlan: !!client.activePlan,
       planStartDate: client.planStartDate,
@@ -180,6 +194,7 @@ export const GET = withCoach(
       lastWorkoutAt,
       urgency,
       planStatus,
+      activePlanCompletions,
     });
   }
 );

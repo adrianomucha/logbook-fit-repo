@@ -4,6 +4,7 @@ import { Message, Client } from '@/types';
 import { Send, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { stripFlagContext } from '@logbook/shared/flag-message';
 import { toast } from 'sonner';
 
 // Server-side cap on message content (sendMessageSchema)
@@ -444,7 +445,11 @@ export function ChatView({
                           </div>
                         )}
 
-                        <p className="font-prose text-[15px] leading-[1.55] whitespace-pre-wrap">{message.content}</p>
+                        {/* The card above already carries the flag context the
+                            text repeats at its top — show only the question */}
+                        <p className="font-prose text-[15px] leading-[1.55] whitespace-pre-wrap">
+                          {message.exerciseContext ? stripFlagContext(message.content) : message.content}
+                        </p>
                       </div>
                     </div>
 

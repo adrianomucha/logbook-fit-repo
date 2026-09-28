@@ -122,6 +122,11 @@ export interface ClientDetail {
   /** Same server-computed urgency the dashboard ranks by (lib/urgency.ts) */
   urgency: DashboardClient['urgency'];
   planStatus: DashboardClient['planStatus'];
+  /**
+   * Every COMPLETED workout on the active plan, uncapped — `completions`
+   * below is a recent window. Optional so older fixtures still type-check.
+   */
+  activePlanCompletions?: { dayId: string; durationSec: number | null }[];
   completions: {
     id: string;
     dayId: string;

@@ -17,6 +17,7 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Check, Dumbbell, Flag, Loader2, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
+import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 
 export function ClientWorkoutExecution() {
   const router = useRouter();
@@ -156,11 +157,14 @@ export function ClientWorkoutExecution() {
 
       // Exercise context travels inside the message text so the coach sees it
       // in any chat surface; the reference ids link it to the workout data
-      const contextLine = `🚩 ${messageSheetExercise.exercise.name} · ${prescription} · ${setsCompleted}/${messageSheetExercise.sets} sets done`;
-      const flagNote = messageSheetExercise.flag?.note ? `\n“${messageSheetExercise.flag.note}”` : '';
-      const question =
-        content.trim() || `I have a question about ${messageSheetExercise.exercise.name}`;
-      const messageContent = `${contextLine}${flagNote}\n\n${question}`;
+      const messageContent = buildFlagMessageContent({
+        exerciseName: messageSheetExercise.exercise.name,
+        prescription,
+        setsCompleted,
+        totalSets: messageSheetExercise.sets,
+        flagNote: messageSheetExercise.flag?.note,
+        question: content,
+      });
 
       // Send via messages API — recipient (the coach) is resolved server-side
       try {

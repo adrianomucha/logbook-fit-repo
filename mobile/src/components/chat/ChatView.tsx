@@ -3,6 +3,7 @@ import { FlatList, Pressable, Text, TextInput, View, type NativeScrollEvent, typ
 import { Feather } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import type { Message } from '@logbook/shared/types';
+import { stripFlagContext } from '@logbook/shared/flag-message';
 import { UserAvatar } from '@/components/UserAvatar';
 
 /** Server-side cap on message content (sendMessageSchema) */
@@ -182,7 +183,7 @@ export function ChatView({
                 ) : null}
               </View>
             ) : null}
-            <Text className={`font-sans text-[15px] leading-[23px] ${mine ? 'text-chat-accent-foreground' : 'text-foreground'}`}>{message.content}</Text>
+            <Text className={`font-sans text-[15px] leading-[23px] ${mine ? 'text-chat-accent-foreground' : 'text-foreground'}`}>{ctx ? stripFlagContext(message.content) : message.content}</Text>
           </View>
         </View>
         {isLastInGroup ? (

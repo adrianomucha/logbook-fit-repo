@@ -1,7 +1,8 @@
 import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Flag } from 'lucide-react';
+import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Client, WorkoutPlan, WorkoutCompletion } from '@/types';
 import {
@@ -23,6 +24,8 @@ interface InteractiveWeeklyStripProps {
   compact?: boolean;
   /** Skip Card wrapper — for embedding inside another container */
   variant?: 'card' | 'flat';
+  /** Exercises flagged per workout completion id — shown on finished rows */
+  flagCounts?: Record<string, number>;
 }
 
 export function InteractiveWeeklyStrip({
@@ -34,6 +37,7 @@ export function InteractiveWeeklyStrip({
   onEditPlan,
   compact = false,
   variant = 'card',
+  flagCounts,
 }: InteractiveWeeklyStripProps) {
   const [expandedOrderIndex, setExpandedOrderIndex] = useState<number | null>(null);
 
@@ -186,6 +190,7 @@ export function InteractiveWeeklyStrip({
             <div key={day.orderIndex}>
               <InteractiveDayRow
                 day={day}
+                flagCount={day.completion ? flagCounts?.[day.completion.id] ?? 0 : 0}
                 isExpanded={isExpanded}
                 onClick={() => {
                   if (day.workoutDay) {
@@ -225,9 +230,7 @@ export function InteractiveWeeklyStrip({
                           <span
                             className={cn(
                               'font-semibold',
-                              dayCompletion.effortRating === 'EASY' && 'text-success',
-                              dayCompletion.effortRating === 'MEDIUM' && 'text-warning',
-                              dayCompletion.effortRating === 'HARD' && 'text-destructive'
+                              EFFORT_TEXT[dayCompletion.effortRating]
                             )}
                           >
                             {dayCompletion.effortRating.toLowerCase()}
@@ -278,17 +281,28 @@ export function InteractiveWeeklyStrip({
   );
 }
 
+// The app's effort colour semantics (check-in form, session card, history):
+// easy = success, medium = neutral, hard = warning — AA text cuts
+const EFFORT_TEXT: Record<string, string> = {
+  EASY: 'text-success-text',
+  MEDIUM: 'text-foreground/70',
+  HARD: 'text-warning-text',
+};
+
 interface InteractiveDayRowProps {
   day: WeekDayInfo;
+  flagCount: number;
   isExpanded: boolean;
   onClick: () => void;
 }
 
-function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps) {
+function InteractiveDayRow({ day, flagCount, isExpanded, onClick }: InteractiveDayRowProps) {
   const isClickable = !!day.workoutDay;
   const isCompleted = day.status === 'COMPLETED';
   const isCurrent = day.status === 'CURRENT';
   const exerciseCount = day.workoutDay?.exercises?.length || 0;
+  const completion = isCompleted ? day.completion : null;
+  const durationMin = completion?.durationSec ? Math.max(1, Math.round(completion.durationSec / 60)) : null;
 
   return (
     <button
@@ -341,12 +355,41 @@ function InteractiveDayRow({ day, isExpanded, onClick }: InteractiveDayRowProps)
         )}>
           {day.workoutDay?.name || 'Workout'}
         </p>
-        <p className={cn(
-          'font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased',
-          isCurrent ? 'text-foreground/70' : 'text-muted-foreground'
-        )}>
-          {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
-        </p>
+        {/* A finished row says how it went — when, how hard, how long, and
+            any flags — instead of repeating the exercise count */}
+        {completion ? (
+          <p className="font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased text-muted-foreground flex items-center gap-1.5 flex-wrap">
+            {completion.completedAt && <span>Done {format(new Date(completion.completedAt), 'EEE')}</span>}
+            {completion.effortRating && (
+              <>
+                <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+                <span className={EFFORT_TEXT[completion.effortRating]}>{completion.effortRating.toLowerCase()}</span>
+              </>
+            )}
+            {durationMin && (
+              <>
+                <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+                <span>{durationMin} min</span>
+              </>
+            )}
+            {flagCount > 0 && (
+              <>
+                <span aria-hidden="true" className="text-muted-foreground/40">·</span>
+                <span className="inline-flex items-center gap-1 text-warning-text">
+                  <Flag className="w-3 h-3" aria-hidden="true" />
+                  {flagCount} flagged
+                </span>
+              </>
+            )}
+          </p>
+        ) : (
+          <p className={cn(
+            'font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased',
+            isCurrent ? 'text-foreground/70' : 'text-muted-foreground'
+          )}>
+            {exerciseCount} exercise{exerciseCount !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
 
       {/* Status indicator */}
