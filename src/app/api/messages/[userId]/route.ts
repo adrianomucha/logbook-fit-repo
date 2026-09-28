@@ -150,13 +150,17 @@ export async function GET(
       exerciseContext: {
         exerciseId: ref.id,
         exerciseName: ref.exercise.name,
-        prescription: formatPrescription({
-          sets: ref.sets,
-          reps: ref.reps,
-          repsMax: ref.repsMax,
-          weight: ref.weight,
-          trackingType: ref.trackingType,
-        }),
+        // In the viewer's unit — coach and client each read their own
+        prescription: formatPrescription(
+          {
+            sets: ref.sets,
+            reps: ref.reps,
+            repsMax: ref.repsMax,
+            weight: ref.weight,
+            trackingType: ref.trackingType,
+          },
+          currentUser.weightUnit
+        ),
         setsCompleted: setsForWorkout.filter((s) => s.completed).length,
         totalSets: ref.sets,
         flagNote: flag?.note ?? null,

@@ -86,14 +86,19 @@ describe('findPersonalBests', () => {
 
 describe('formatting', () => {
   it('formats values and deltas per kind', () => {
-    expect(formatBestValue({ kind: 'weight', weight: 95, reps: 5 })).toBe('95 × 5');
-    expect(formatBestValue({ kind: 'reps', weight: null, reps: 15 })).toBe('15 reps');
-    expect(formatBestValue({ kind: 'time', weight: null, reps: 90 })).toBe('1:30');
-    expect(formatBestValue({ kind: 'time', weight: null, reps: 45 })).toBe('45s');
-    expect(formatBestDelta({ kind: 'weight', delta: 2.5 })).toBe('+2.5');
-    expect(formatBestDelta({ kind: 'reps', delta: 1 })).toBe('+1 rep');
-    expect(formatBestDelta({ kind: 'reps', delta: 3 })).toBe('+3 reps');
-    expect(formatBestDelta({ kind: 'time', delta: 15 })).toBe('+15s');
+    expect(formatBestValue({ kind: 'weight', weight: 95, reps: 5 }, 'LB')).toBe('95 lb × 5');
+    expect(formatBestValue({ kind: 'weight', weight: 132.5, reps: 5 }, 'KG')).toBe('60 kg × 5');
+    expect(formatBestValue({ kind: 'reps', weight: null, reps: 15 }, 'KG')).toBe('15 reps');
+    expect(formatBestValue({ kind: 'time', weight: null, reps: 90 }, 'LB')).toBe('1:30');
+    expect(formatBestValue({ kind: 'time', weight: null, reps: 45 }, 'LB')).toBe('45s');
+    expect(formatBestDelta({ kind: 'weight', delta: 2.5, weight: 95 }, 'LB')).toBe('+2.5');
+    // 132.5 → 138 lb is 60 → 62.5 kg
+    expect(formatBestDelta({ kind: 'weight', delta: 5.5, weight: 138 }, 'KG')).toBe('+2.5');
+    // Under half a kilo still reads as a gain, never "+0"
+    expect(formatBestDelta({ kind: 'weight', delta: 0.5, weight: 135 }, 'KG')).toBe('+0.5');
+    expect(formatBestDelta({ kind: 'reps', delta: 1, weight: 95 }, 'LB')).toBe('+1 rep');
+    expect(formatBestDelta({ kind: 'reps', delta: 3, weight: null }, 'LB')).toBe('+3 reps');
+    expect(formatBestDelta({ kind: 'time', delta: 15, weight: null }, 'LB')).toBe('+15s');
   });
 
   it('says when relative to now', () => {

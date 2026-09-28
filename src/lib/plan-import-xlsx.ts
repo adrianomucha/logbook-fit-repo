@@ -51,7 +51,7 @@ const INSTRUCTIONS: string[] = [
   "Exercise — the exercise name. New names are added to your exercise library automatically.",
   `Sets — number of sets (1-${IMPORT_LIMITS.maxSets}).`,
   'Reps / Time — a count like "8", a range like "6-8", or a duration like "45s", "1:30", "20-30 min".',
-  "Weight — optional prescribed load, in the units you use with your clients.",
+  'Weight — optional prescribed load, in the unit set in your Settings (kg or lb). Write "60 kg" or "135 lb" to use the other one.',
   `Rest (sec) — optional rest between sets, in seconds (0-${IMPORT_LIMITS.maxRestSeconds}).`,
   "Notes — optional coaching cues shown to the client with the exercise.",
   'Superset — put "Y" to chain an exercise to the row above it as a superset.',

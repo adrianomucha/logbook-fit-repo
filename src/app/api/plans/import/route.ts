@@ -28,7 +28,7 @@ export const POST = withCoach(
   async (
     req: Request,
     _ctx: { params: Record<string, string> },
-    _session: Session,
+    session: Session,
     coachProfileId: string
   ) => {
     let form: FormData;
@@ -73,7 +73,12 @@ export const POST = withCoach(
       return NextResponse.json({ error: read.error }, { status: 400 });
     }
 
-    const { plan: parsed, errors } = parseImportRows(read.rows);
+    // Unlabelled weight cells are in the coach's own unit (Settings)
+    const coachUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { weightUnit: true },
+    });
+    const { plan: parsed, errors } = parseImportRows(read.rows, coachUser?.weightUnit);
     if (!parsed) {
       return NextResponse.json(
         {

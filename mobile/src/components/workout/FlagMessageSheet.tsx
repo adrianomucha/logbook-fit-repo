@@ -3,6 +3,7 @@ import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, TextInput, View
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { WorkoutExercise } from '@logbook/shared/types/api';
 import { formatExercisePrescription, getCompletedSetsCount } from '@logbook/shared/workout-execution';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button, Eyebrow } from '@/components/ui';
 
 interface FlagMessageSheetProps {
@@ -15,6 +16,7 @@ interface FlagMessageSheetProps {
 /** "Message coach" about a flagged exercise — the exercise context rides along automatically. */
 export function FlagMessageSheet({ exercise, onClose, onSend }: FlagMessageSheetProps) {
   const insets = useSafeAreaInsets();
+  const { weightUnit } = useCurrentUser();
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +59,7 @@ export function FlagMessageSheet({ exercise, onClose, onSend }: FlagMessageSheet
                 {exercise.exercise.name}
               </Text>
               <Text className="mt-1 font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">
-                {formatExercisePrescription(exercise)} · {getCompletedSetsCount(exercise)}/{exercise.sets} sets done
+                {formatExercisePrescription(exercise, weightUnit)} · {getCompletedSetsCount(exercise)}/{exercise.sets} sets done
               </Text>
               {exercise.flag?.note ? (
                 <Text className="mt-2 font-sans text-sm italic text-foreground">“{exercise.flag.note}”</Text>

@@ -11,7 +11,9 @@ import {
   parseTargetSeconds,
   parseTargetWeight,
 } from '@logbook/shared/workout-execution';
+import { weightUnitLabel } from '@logbook/shared/weight-units';
 import { Eyebrow } from '@/components/ui';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { SET_COLS, SetRow } from './SetRow';
 
 interface ExerciseCardProps {
@@ -46,7 +48,8 @@ export function ExerciseCard({
   const isFlagged = !!exercise.flag;
   const flagNote = exercise.flag?.note ?? '';
   const displayLabel = exerciseLabel.replace(/^\d+/, (n) => n.padStart(2, '0'));
-  const prescription = formatExercisePrescription(exercise);
+  const { weightUnit } = useCurrentUser();
+  const prescription = formatExercisePrescription(exercise, weightUnit);
   const isTime = exercise.trackingType === 'TIME';
   const setNumbers = Array.from({ length: exercise.sets }, (_, i) => i + 1);
 
@@ -175,8 +178,9 @@ export function ExerciseCard({
                 Set
               </Text>
               <Text className="flex-1 font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">Last</Text>
+              {/* The athlete's own unit — the cells below show and take it */}
               <Text style={{ width: SET_COLS.weight }} className="text-center font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">
-                Weight
+                {weightUnitLabel(weightUnit)}
               </Text>
               <Text style={{ width: SET_COLS.reps }} className="text-center font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">
                 {isTime ? 'Sec' : 'Reps'}
@@ -187,14 +191,17 @@ export function ExerciseCard({
               const sc = exercise.setCompletions.find((s) => s.setNumber === setNumber);
               return (
                 <SetRow
-                  key={`${setNumber}-${exercise.setCompletions.length === 0 ? 'fresh' : 'logged'}`}
+                  // weightUnit re-seeds the inputs if the unit resolves after
+                  // first paint — the cell text must match how it's read back
+                  key={`${setNumber}-${exercise.setCompletions.length === 0 ? 'fresh' : 'logged'}-${weightUnit}`}
                   setNumber={setNumber}
                   trackingType={exercise.trackingType}
                   repsTarget={exercise.reps ?? undefined}
                   weightTarget={exercise.weight ?? undefined}
+                  weightUnit={weightUnit}
                   actualReps={sc?.actualReps ?? null}
                   actualWeight={sc?.actualWeight ?? null}
-                  previous={exercise.lastPerformance ? formatLastCompact(exercise.lastPerformance, isTime) : undefined}
+                  previous={exercise.lastPerformance ? formatLastCompact(exercise.lastPerformance, isTime, weightUnit) : undefined}
                   completed={!!sc?.completed}
                   onToggle={() => onToggleSet(exercise.workoutExerciseId, setNumber)}
                   onChangeReps={(reps) => onUpdateSet(exercise.workoutExerciseId, setNumber, { actualReps: reps })}

@@ -25,6 +25,12 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { avatarColor } from '@/lib/avatar-colors';
 import { passwordSchema, BIO_MAX_LENGTH } from '@/lib/validations/schemas';
+import {
+  WEIGHT_UNITS,
+  WEIGHT_UNIT_SETTING,
+  weightUnitLabel,
+  type WeightUnit,
+} from '@logbook/shared/weight-units';
 import { cn } from '@/lib/utils';
 
 /**
@@ -348,7 +354,71 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
   );
 }
 
-/** Read-only account facts, plus the one destructive action. */
+/**
+ * kg / lb segmented switch. Saves on tap — there's nothing to review before
+ * committing a two-way choice — and paints the new unit optimistically.
+ */
+function WeightUnitField({ role }: { role: SettingsRole }) {
+  const { user, weightUnit, refresh } = useCurrentUser();
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleChange = async (next: WeightUnit) => {
+    if (!user || next === weightUnit || isSaving) return;
+    setIsSaving(true);
+    try {
+      await refresh(
+        async () => {
+          await apiFetch('/api/account/weight-unit', {
+            method: 'PUT',
+            body: JSON.stringify({ weightUnit: next }),
+          });
+          return { ...user, weightUnit: next };
+        },
+        { optimisticData: { ...user, weightUnit: next }, rollbackOnError: true }
+      );
+      toast.success(WEIGHT_UNIT_SETTING.saved(next));
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Couldn’t change the unit.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <div className="py-3.5 space-y-2">
+      <FieldLabel>{WEIGHT_UNIT_SETTING.label}</FieldLabel>
+      <div
+        role="group"
+        aria-label={WEIGHT_UNIT_SETTING.label}
+        className="flex h-10 w-40 rounded-xl bg-muted/60 p-1 gap-1"
+      >
+        {WEIGHT_UNITS.map((unit) => {
+          const isActive = weightUnit === unit;
+          return (
+            <button
+              key={unit}
+              type="button"
+              aria-pressed={isActive}
+              disabled={isSaving}
+              onClick={() => void handleChange(unit)}
+              className={cn(
+                'flex-1 rounded-lg font-mono text-[11px] uppercase tracking-[0.12em] font-medium transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                isActive
+                  ? 'bg-card text-foreground border border-border/70'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {weightUnitLabel(unit)}
+            </button>
+          );
+        })}
+      </div>
+      <FieldHint>{WEIGHT_UNIT_SETTING.hint[role]}</FieldHint>
+    </div>
+  );
+}
+
+/** Account facts and preferences, plus the one destructive action. */
 export function AccountSection({ role }: { role: SettingsRole }) {
   const { user } = useCurrentUser();
   const isCoach = role === 'coach';
@@ -373,10 +443,12 @@ export function AccountSection({ role }: { role: SettingsRole }) {
     <div>
       <SectionHeader
         title="Account"
-        description="The basics behind your login. These keep themselves up to date."
+        description="The basics behind your login, and how weights read."
       />
 
-      <dl>
+      <WeightUnitField role={role} />
+
+      <dl className="border-t border-border/60">
         {rows.map(({ label, value, hint }, index) => (
           <div key={label} className={cn('py-3.5', index > 0 && 'border-t border-border/60')}>
             <dt>

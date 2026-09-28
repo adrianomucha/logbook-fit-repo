@@ -9,6 +9,11 @@
  */
 
 import { parseDurationInput, parseRepsInput, TrackingType } from "./reps";
+import {
+  DEFAULT_WEIGHT_UNIT,
+  fromDisplayWeight,
+  type WeightUnit,
+} from "@logbook/shared/weight-units";
 
 // ──────────────────────────────────────
 // Template shape (shared by generator and parser)
@@ -148,6 +153,13 @@ function parseNumber(value: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+/** A unit written into a weight cell ("60 kg", "135lbs"), if any. */
+function weightCellUnit(value: string): WeightUnit | null {
+  if (/kg|kilo/i.test(value)) return "KG";
+  if (/lb|pound/i.test(value)) return "LB";
+  return null;
+}
+
 /**
  * A prescription cell counts as a duration when it carries a time marker —
  * "45s", "2 min", "1:30". Bare numbers and ranges ("8", "6-8", even "8 reps")
@@ -168,7 +180,11 @@ const SUPERSET_TOKENS = new Set(["y", "yes", "x", "true", "1", "✓", "✔"]);
  * uniform grid (every week gets the same day slots, like the manual plan
  * scaffold), so days a coach left empty still show up in the editor.
  */
-export function parseImportRows(rows: RawImportRow[]): {
+export function parseImportRows(
+  rows: RawImportRow[],
+  /** The importing coach's unit — read for weight cells that don't name one */
+  weightUnit: WeightUnit = DEFAULT_WEIGHT_UNIT
+): {
   plan: ParsedImportPlan | null;
   errors: ImportRowError[];
 } {
@@ -255,13 +271,15 @@ export function parseImportRows(rows: RawImportRow[]): {
       continue;
     }
 
+    // Read in the cell's own unit, else the coach's; stored as lb
     let weight: number | null = null;
     if (!blank(row.weight)) {
-      weight = parseNumber(row.weight!);
-      if (weight == null || weight < 0 || weight > IMPORT_LIMITS.maxWeight) {
+      const entered = parseNumber(row.weight!);
+      if (entered == null || entered < 0 || entered > IMPORT_LIMITS.maxWeight) {
         fail(`Weight must be a number between 0 and ${IMPORT_LIMITS.maxWeight}.`);
         continue;
       }
+      weight = fromDisplayWeight(entered, weightCellUnit(row.weight!) ?? weightUnit);
     }
 
     let restSeconds: number | null = null;

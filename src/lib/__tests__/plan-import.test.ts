@@ -119,10 +119,24 @@ describe('parseImportRows', () => {
       row({ rowNumber: 2, week: 'Week 1', day: 'Day 1', weight: '60 kg', rest: '90 sec' }),
     ]);
     expect(errors).toEqual([]);
-    expect(plan!.weeks[0].days[0].exercises[0]).toMatchObject({
-      weight: 60,
-      restSeconds: 90,
-    });
+    const exercise = plan!.weeks[0].days[0].exercises[0];
+    // "60 kg" names its unit, so it converts to lb even for an lb coach
+    expect(exercise.weight).toBe(132.5);
+    expect(exercise.restSeconds).toBe(90);
+  });
+
+  it('reads unlabelled weights in the coach unit and stores lb', () => {
+    const { plan, errors } = parseImportRows(
+      [
+        row({ rowNumber: 2, exercise: 'Squat', weight: '100' }),
+        row({ rowNumber: 3, exercise: 'Bench', weight: '135 lb' }),
+      ],
+      'KG'
+    );
+    expect(errors).toEqual([]);
+    const [squat, bench] = plan!.weeks[0].days[0].exercises;
+    expect(squat.weight).toBe(220.5);
+    expect(bench.weight).toBe(135);
   });
 
   it('lets a row name a day without prescribing an exercise', () => {

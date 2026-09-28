@@ -24,6 +24,7 @@ export async function GET() {
       role: true,
       avatarUrl: true,
       timezone: true,
+      weightUnit: true,
       createdAt: true,
       linkedUserId: true,
       coachProfile: {

@@ -32,6 +32,7 @@ import {
   type TrackingType,
 } from "@prisma/client";
 import { QUICK_START_EXERCISES } from "../src/lib/quick-start-exercises";
+import { fromDisplayWeight } from "../packages/shared/src/weight-units";
 import { isDemoAccount } from "../src/lib/demo";
 import { isCommonPassword } from "../src/lib/validations/schemas";
 
@@ -330,6 +331,8 @@ async function main() {
       passwordHash,
       name: "Jamie Porter",
       role: "COACH",
+      // The demo is programmed in kg; weights below convert to stored lb
+      weightUnit: "KG",
       createdAt: daysAgo(120),
       coachProfile: {
         create: {
@@ -401,7 +404,10 @@ async function main() {
                     sets: ex.sets,
                     reps: ex.reps,
                     repsMax: ex.repsMax,
-                    weight: ex.weight != null ? ex.weight + w * def.weeklyIncrement : null,
+                    weight:
+                      ex.weight != null
+                        ? fromDisplayWeight(ex.weight + w * def.weeklyIncrement, "KG")
+                        : null,
                     restSeconds: ex.rest,
                     coachNotes: ex.notes,
                   })),
@@ -442,6 +448,7 @@ async function main() {
         passwordHash,
         name: PEOPLE[handle].name,
         role: "CLIENT",
+        weightUnit: "KG",
         createdAt: joinedAt,
         clientProfile: { create: { createdAt: joinedAt } },
       },

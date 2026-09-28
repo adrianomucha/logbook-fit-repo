@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { format, formatDistanceToNow, differenceInHours, subDays, startOfWeek, addWeeks, differenceInCalendarWeeks } from 'date-fns';
 
 /* ── Brand surface helpers — same vocabulary as the client profile ── */
@@ -905,7 +906,8 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
 }) {
   const isUnfinished = c.status === 'IN_PROGRESS';
   const timestamp = new Date((c.completedAt ?? c.startedAt) as string);
-  const deviations = getWorkoutDeviations(c.sets ?? []);
+  const { weightUnit } = useCurrentUser();
+  const deviations = getWorkoutDeviations(c.sets ?? [], weightUnit);
   const flags = c.flags ?? [];
   // Flags on exercises no longer in the plan (or before plan detail
   // loads) fall back to the names carried on deviated sets
@@ -943,7 +945,7 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
       {/* What the client changed vs. the prescription */}
       {deviations.length > 0 && (
         <p className="text-xs leading-relaxed text-muted-foreground mt-1 break-words text-pretty antialiased">
-          Adjusted: {deviations.map(formatDeviation).join(' · ')}
+          Adjusted: {deviations.map((d) => formatDeviation(d, weightUnit)).join(' · ')}
         </p>
       )}
 

@@ -1,5 +1,6 @@
 import type { LastPerformance, WorkoutExercise, WorkoutSetCompletion } from './types/api';
 import { formatDuration, parseDurationInput } from './reps';
+import { formatWeight, formatWeightNumber, type WeightUnit } from './weight-units';
 
 /**
  * Pure logic of the live workout screen, shared by the web's
@@ -92,19 +93,27 @@ export function parseTargetWeight(target?: string | number): number | undefined 
   return m ? Number(m[0]) : undefined;
 }
 
-/** Compact last-session cell for the set table: "52.5×8" / "12" / "60s" — empty if nothing logged. */
-export function formatLastCompact(p: LastPerformance, isTime: boolean): string {
+/**
+ * Compact last-session cell for the set table: "52.5×8" / "12" / "60s" —
+ * empty if nothing logged. The weight is in the viewer's unit; the column
+ * header carries the unit label.
+ */
+export function formatLastCompact(p: LastPerformance, isTime: boolean, unit: WeightUnit): string {
   const repsPart = p.reps != null ? (isTime ? formatDuration(p.reps) : String(p.reps)) : null;
   if (p.weight != null) {
-    return repsPart != null ? `${p.weight}×${repsPart}` : String(p.weight);
+    const weight = formatWeightNumber(p.weight, unit);
+    return repsPart != null ? `${weight}×${repsPart}` : weight;
   }
   return repsPart ?? '';
 }
 
-/** Prescription subtitle: "3×10-12 · 50" */
-export function formatExercisePrescription(exercise: Pick<WorkoutExercise, 'sets' | 'reps' | 'weight'>): string {
+/** Prescription subtitle in the viewer's unit: "3×10-12 · 22.5 kg" */
+export function formatExercisePrescription(
+  exercise: Pick<WorkoutExercise, 'sets' | 'reps' | 'weight'>,
+  unit: WeightUnit
+): string {
   let text = exercise.reps ? `${exercise.sets}×${exercise.reps}` : `${exercise.sets} sets`;
-  if (exercise.weight) text += ` · ${exercise.weight}`;
+  if (exercise.weight) text += ` · ${formatWeight(exercise.weight, unit)}`;
   return text;
 }
 

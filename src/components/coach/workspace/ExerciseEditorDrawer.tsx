@@ -2,19 +2,25 @@ import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ChevronLeft, Library, Link2, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
 import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import {
+  formatWeightNumber,
+  fromDisplayWeight,
+  weightUnitLabel,
+  type WeightUnit,
+} from '@logbook/shared/weight-units';
+
+/** A stored (lb) weight as the form's text, in the coach's unit. */
+function toFormWeight(stored: string | number | undefined, unit: WeightUnit): string {
+  const n = stored != null && stored !== '' ? Number(stored) : NaN;
+  return Number.isNaN(n) ? '' : formatWeightNumber(n, unit);
+}
 
 interface ExerciseEditorContentProps {
   /** Existing exercise to edit, or null for new exercise */
@@ -63,13 +69,15 @@ export function ExerciseEditorContent({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
+  // Weights are stored lb; the form reads and takes the coach's own unit
+  const { weightUnit } = useCurrentUser();
+
   // Form state
   const [name, setName] = useState(exercise?.name || '');
   const [trackingType, setTrackingType] = useState<'REPS' | 'TIME'>(exercise?.trackingType || 'REPS');
   const [sets, setSets] = useState(exercise?.sets?.toString() || '3');
   const [reps, setReps] = useState(exercise?.reps || '10');
-  const [weight, setWeight] = useState(exercise?.weight || '');
-  const [weightUnit, setWeightUnit] = useState(exercise?.weightUnit || 'lbs');
+  const [weight, setWeight] = useState(toFormWeight(exercise?.weight, weightUnit));
   const [restSeconds, setRestSeconds] = useState(exercise?.restSeconds?.toString() || '');
   const [notes, setNotes] = useState(exercise?.notes || '');
   const [supersetWithPrevious, setSupersetWithPrevious] = useState(!!exercise?.supersetWithPrevious);
@@ -81,8 +89,7 @@ export function ExerciseEditorContent({
       setTrackingType(exercise.trackingType || 'REPS');
       setSets(exercise.sets?.toString() || '3');
       setReps(exercise.reps || '10');
-      setWeight(exercise.weight || '');
-      setWeightUnit(exercise.weightUnit || 'lbs');
+      setWeight(toFormWeight(exercise.weight, weightUnit));
       setRestSeconds(exercise.restSeconds?.toString() || '');
       setNotes(exercise.notes || '');
       setSupersetWithPrevious(!!exercise.supersetWithPrevious);
@@ -93,7 +100,6 @@ export function ExerciseEditorContent({
       setSets('3');
       setReps('10');
       setWeight('');
-      setWeightUnit('lbs');
       setRestSeconds('');
       setNotes('');
       setSupersetWithPrevious(false);
@@ -103,7 +109,7 @@ export function ExerciseEditorContent({
     setSelectedCategory(null);
     setShowDeleteConfirm(false);
     setIsSaving(false);
-  }, [exercise, open]);
+  }, [exercise, open, weightUnit]);
 
   // Filter exercises from library
   const filteredLibrary = useMemo(() => {
@@ -152,14 +158,22 @@ export function ExerciseEditorContent({
   const handleSave = async () => {
     if (isSaving || !canSave) return;
     setIsSaving(true);
+    // Back to stored lb; an untouched value keeps its exact stored number
+    const typedWeight = parseFloat(weight);
+    const savedWeight = Number.isNaN(typedWeight)
+      ? undefined
+      : String(
+          fromDisplayWeight(typedWeight, weightUnit, [
+            exercise?.weight ? Number(exercise.weight) : null,
+          ])
+        );
     const savedExercise: Exercise = {
       id: exercise?.id || `ex-${Date.now()}`,
       name: name.trim(),
       trackingType,
       sets: Math.max(1, parseInt(sets) || 3),
       reps,
-      weight: weight || undefined,
-      weightUnit,
+      weight: savedWeight,
       restSeconds: restSeconds ? Math.max(0, parseInt(restSeconds)) : undefined,
       notes: notes.trim() || undefined,
       supersetWithPrevious: previousExerciseName ? supersetWithPrevious : false,
@@ -388,24 +402,23 @@ export function ExerciseEditorContent({
                     Weight
                   </label>
                 </div>
-                <div className="flex gap-2">
+                {/* The coach's unit from Settings; clients each see their own */}
+                <div className="relative">
                   <Input
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
-                    placeholder="135"
+                    placeholder={weightUnit === 'KG' ? '60' : '135'}
+                    inputMode="decimal"
                     maxLength={20}
-                    className="flex-1 min-w-0 tabular-nums"
+                    aria-label={`Weight in ${weightUnitLabel(weightUnit)}`}
+                    className="pr-10 tabular-nums"
                   />
-                  <Select value={weightUnit} onValueChange={setWeightUnit}>
-                    <SelectTrigger className="w-[72px] shrink-0">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lbs">lbs</SelectItem>
-                      <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="bw">BW</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <span
+                    className="pointer-events-none absolute inset-y-0 right-3 flex items-center font-mono text-xs text-muted-foreground"
+                    aria-hidden="true"
+                  >
+                    {weightUnitLabel(weightUnit)}
+                  </span>
                 </div>
               </div>
               <div>

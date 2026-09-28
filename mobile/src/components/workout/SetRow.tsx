@@ -4,20 +4,26 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import type { TrackingType } from '@logbook/shared/reps';
 import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook/shared/workout-execution';
+import { fromDisplayWeight, toDisplayWeight, type WeightUnit } from '@logbook/shared/weight-units';
 import { SetTimer } from './SetTimer';
 
 interface SetRowProps {
   setNumber: number;
   trackingType: TrackingType;
   repsTarget?: string | number;
+  /** Coach-prescribed weight, stored lb */
   weightTarget?: string | number;
+  /** The athlete's unit — the weight cell shows and takes this */
+  weightUnit: WeightUnit;
   actualReps?: number | null;
+  /** Logged weight, stored lb */
   actualWeight?: number | null;
   /** Last session's result, compact ("52.5×8") */
   previous?: string;
   completed: boolean;
   onToggle: () => void;
   onChangeReps?: (reps: number) => void;
+  /** Called with the weight converted back to stored lb */
   onChangeWeight?: (weight: number) => void;
   isReadOnly?: boolean;
   showDivider?: boolean;
@@ -41,6 +47,7 @@ export function SetRow({
   trackingType,
   repsTarget,
   weightTarget,
+  weightUnit,
   actualReps,
   actualWeight,
   previous,
@@ -54,13 +61,18 @@ export function SetRow({
 }: SetRowProps) {
   const isTime = trackingType === 'TIME';
   const defaultReps = isTime ? parseTargetSeconds(repsTarget) : parseTargetReps(repsTarget);
-  const defaultWeight = parseTargetWeight(weightTarget);
+  // The cell works in the athlete's unit; storage is lb
+  const targetWeight = parseTargetWeight(weightTarget);
+  const defaultWeight = targetWeight != null ? toDisplayWeight(targetWeight, weightUnit) : undefined;
+  const loggedWeight = actualWeight != null ? toDisplayWeight(actualWeight, weightUnit) : undefined;
+  const logWeight = (typed: number) =>
+    onChangeWeight?.(fromDisplayWeight(typed, weightUnit, [actualWeight, targetWeight]));
 
   const [reps, setReps] = useState(
     actualReps != null ? String(actualReps) : defaultReps != null ? String(defaultReps) : ''
   );
   const [weight, setWeight] = useState(
-    actualWeight != null ? String(actualWeight) : defaultWeight != null ? String(defaultWeight) : ''
+    loggedWeight != null ? String(loggedWeight) : defaultWeight != null ? String(defaultWeight) : ''
   );
 
   const commitReps = (raw: string) => {
@@ -73,7 +85,7 @@ export function SetRow({
     const v = raw.replace(/[^\d.]/g, '');
     setWeight(v);
     const n = parseFloat(v);
-    if (!Number.isNaN(n) && n >= 0) onChangeWeight?.(n);
+    if (!Number.isNaN(n) && n >= 0) logWeight(n);
   };
 
   const toggle = () => {
@@ -82,7 +94,7 @@ export function SetRow({
       const r = parseInt(reps, 10);
       if (!Number.isNaN(r) && r >= 0) onChangeReps?.(r);
       const w = parseFloat(weight);
-      if (!Number.isNaN(w) && w >= 0) onChangeWeight?.(w);
+      if (!Number.isNaN(w) && w >= 0) logWeight(w);
       void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     onToggle();
@@ -96,7 +108,7 @@ export function SetRow({
     setReps(String(seconds));
     onChangeReps?.(seconds);
     const w = parseFloat(weight);
-    if (!Number.isNaN(w) && w >= 0) onChangeWeight?.(w);
+    if (!Number.isNaN(w) && w >= 0) logWeight(w);
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onToggle();
   };

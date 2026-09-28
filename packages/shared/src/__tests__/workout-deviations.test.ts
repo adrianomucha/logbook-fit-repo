@@ -35,14 +35,21 @@ describe('getWorkoutDeviations', () => {
       makeSet({ name: 'Squat', actualWeight: 100, weight: 100 }),
       makeSet({ name: 'Squat', actualReps: 10, reps: 10 }),
     ];
-    expect(getWorkoutDeviations(sets)).toEqual([]);
+    expect(getWorkoutDeviations(sets, 'LB')).toEqual([]);
   });
 
   it('reports a weight change', () => {
     const sets = [makeSet({ name: 'Deadlift', actualWeight: 155, weight: 185 })];
-    expect(getWorkoutDeviations(sets)).toEqual([
+    expect(getWorkoutDeviations(sets, 'LB')).toEqual([
       { exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } },
     ]);
+  });
+
+  it('ignores a weight change that rounds away in the viewer unit', () => {
+    // 100 → 100.5 lb is 45.5 kg both ways: nothing a kg coach could see
+    const sets = [makeSet({ name: 'Row', actualWeight: 100.5, weight: 100 })];
+    expect(getWorkoutDeviations(sets, 'KG')).toEqual([]);
+    expect(getWorkoutDeviations(sets, 'LB')).toHaveLength(1);
   });
 
   it('keeps the largest weight change across sets of one exercise', () => {
@@ -50,7 +57,7 @@ describe('getWorkoutDeviations', () => {
       makeSet({ name: 'Deadlift', setNumber: 2, actualWeight: 175, weight: 185 }),
       makeSet({ name: 'Deadlift', setNumber: 3, actualWeight: 155, weight: 185 }),
     ];
-    const [dev] = getWorkoutDeviations(sets);
+    const [dev] = getWorkoutDeviations(sets, 'LB');
     expect(dev.weight).toEqual({ prescribed: 185, actual: 155 });
   });
 
@@ -60,7 +67,7 @@ describe('getWorkoutDeviations', () => {
       makeSet({ name: 'Bench', actualReps: 12, reps: 8, repsMax: 10 }),
       makeSet({ name: 'Bench', actualReps: 5, reps: 8, repsMax: 10 }),
     ];
-    const [dev] = getWorkoutDeviations(sets);
+    const [dev] = getWorkoutDeviations(sets, 'LB');
     expect(dev.repsShort).toEqual({ actual: 5, min: 8, max: 10 });
   });
 
@@ -68,7 +75,7 @@ describe('getWorkoutDeviations', () => {
     const sets = [
       makeSet({ name: 'Plank', actualReps: 45, reps: 60, trackingType: 'TIME' }),
     ];
-    expect(getWorkoutDeviations(sets)).toEqual([]);
+    expect(getWorkoutDeviations(sets, 'LB')).toEqual([]);
   });
 
   it('groups weight and rep deviations per exercise', () => {
@@ -77,7 +84,7 @@ describe('getWorkoutDeviations', () => {
       makeSet({ name: 'Squat', actualReps: 4, reps: 6 }),
       makeSet({ name: 'Row', actualWeight: 60, weight: 50 }),
     ];
-    const devs = getWorkoutDeviations(sets);
+    const devs = getWorkoutDeviations(sets, 'LB');
     expect(devs).toHaveLength(2);
     expect(devs[0]).toEqual({
       exerciseName: 'Squat',
@@ -92,7 +99,7 @@ describe('getWorkoutDeviations', () => {
       makeSet({ name: 'Squat', workoutExerciseId: 'we-top', actualWeight: 130, weight: 140 }),
       makeSet({ name: 'Squat', workoutExerciseId: 'we-backoff', actualWeight: 90, weight: 100 }),
     ];
-    const devs = getWorkoutDeviations(sets);
+    const devs = getWorkoutDeviations(sets, 'LB');
     expect(devs).toHaveLength(2);
     expect(devs[0].weight).toEqual({ prescribed: 140, actual: 130 });
     expect(devs[1].weight).toEqual({ prescribed: 100, actual: 90 });
@@ -102,13 +109,19 @@ describe('getWorkoutDeviations', () => {
 describe('formatDeviation', () => {
   it('formats a weight change', () => {
     expect(
-      formatDeviation({ exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } })
-    ).toBe('Deadlift 185→155');
+      formatDeviation({ exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } }, 'LB')
+    ).toBe('Deadlift 185→155 lb');
+  });
+
+  it('converts a weight change to kg for a kg viewer', () => {
+    expect(
+      formatDeviation({ exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } }, 'KG')
+    ).toBe('Deadlift 84→70.5 kg');
   });
 
   it('formats a rep shortfall with a range target', () => {
     expect(
-      formatDeviation({ exerciseName: 'Bench', repsShort: { actual: 5, min: 8, max: 10 } })
+      formatDeviation({ exerciseName: 'Bench', repsShort: { actual: 5, min: 8, max: 10 } }, 'LB')
     ).toBe('Bench 5 reps (target 8–10)');
   });
 
@@ -118,7 +131,7 @@ describe('formatDeviation', () => {
         exerciseName: 'Squat',
         weight: { prescribed: 100, actual: 80 },
         repsShort: { actual: 4, min: 6, max: 6 },
-      })
-    ).toBe('Squat 100→80, 4 reps (target 6)');
+      }, 'LB')
+    ).toBe('Squat 100→80 lb, 4 reps (target 6)');
   });
 });

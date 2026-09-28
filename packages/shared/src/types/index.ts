@@ -6,8 +6,8 @@ export interface Exercise {
   trackingType?: 'REPS' | 'TIME';
   sets: number;
   reps?: string;
+  /** Prescribed weight as stored, in lb — format with weight-units for display */
   weight?: string;
-  weightUnit?: string;
   restSeconds?: number;
   notes?: string;
   completed?: boolean;

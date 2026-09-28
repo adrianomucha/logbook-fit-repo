@@ -21,7 +21,7 @@ const TONE_TEXT = { success: 'text-success-text', warning: 'text-warning-text', 
 /** The Progress tab — the web's ProgressHistory plus the coaching membership card. */
 export default function ProgressScreen() {
   const { mutate } = useSWRConfig();
-  const { coach, isLoading: loadingUser } = useCurrentUser();
+  const { coach, weightUnit, isLoading: loadingUser } = useCurrentUser();
   const { plan: planDetail, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
   const { progress, isLoading: loadingProgress, refresh: refreshProgress } = useClientProgress();
 
@@ -109,8 +109,8 @@ export default function ProgressScreen() {
                 >
                   <Text className="flex-1 font-sans-semibold text-sm tracking-tight text-foreground" numberOfLines={1}>{b.exerciseName}</Text>
                   <Text className="font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
-                  <Text className="font-mono-semibold text-[13px] text-foreground">{formatBestValue(b)}</Text>
-                  <Text className="w-12 text-right font-mono text-xs text-success-text">{formatBestDelta(b)}</Text>
+                  <Text className="font-mono-semibold text-[13px] text-foreground">{formatBestValue(b, weightUnit)}</Text>
+                  <Text className="w-12 text-right font-mono text-xs text-success-text">{formatBestDelta(b, weightUnit)}</Text>
                 </View>
               ))}
             </View>

@@ -1,5 +1,7 @@
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { formatStoredWeight } from '@logbook/shared/weight-units';
 
 interface ExerciseCardProps {
   exercise: Exercise;
@@ -16,10 +18,10 @@ export function ExerciseCard({
   exerciseIndex,
   onClick,
 }: ExerciseCardProps) {
-  // Format the weight display
-  const weightDisplay = exercise.weight
-    ? `@ ${exercise.weight}${!/[a-zA-Z]/.test(exercise.weight) ? ` ${(exercise as any).weightUnit || 'lbs'}` : ''}`
-    : null;
+  // Stored lb, shown in the coach's unit: "@ 60 kg"
+  const { weightUnit } = useCurrentUser();
+  const weight = formatStoredWeight(exercise.weight, weightUnit);
+  const weightDisplay = weight ? `@ ${weight}` : null;
 
   return (
     <button
