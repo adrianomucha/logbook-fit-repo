@@ -135,8 +135,8 @@ export function apiMessagesToMessages(
               prescription: m.exerciseContext.prescription,
               setsCompleted: m.exerciseContext.setsCompleted,
               totalSets: m.exerciseContext.totalSets,
-              ...(m.exerciseContext.flagNote
-                ? { flagNote: m.exerciseContext.flagNote }
+              ...(m.exerciseContext.flagNote?.trim()
+                ? { flagNote: m.exerciseContext.flagNote.trim() }
                 : {}),
             },
           }
@@ -203,7 +203,7 @@ export function apiClientDetailToExerciseFlags(
       workoutCompletionId: c.id,
       // Domain flags key exercises by WorkoutExercise id, matching plan rows
       exerciseId: f.workoutExerciseId,
-      note: f.note ?? undefined,
+      note: f.note?.trim() || undefined,
       flaggedAt: f.createdAt,
     })),
   );

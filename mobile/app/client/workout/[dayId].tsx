@@ -19,6 +19,7 @@ import { useWorkoutExecution } from '@/hooks/useWorkoutExecution';
 import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { FlagMessageSheet } from '@/components/workout/FlagMessageSheet';
+import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 
 const FINISH_BAR_HEIGHT = 56 + 24;
 
@@ -170,13 +171,17 @@ export default function WorkoutScreen() {
   const sendMessage = async (content: string) => {
     if (!messageExercise) return;
     const setsCompleted = getCompletedSetsCount(messageExercise);
-    const contextLine = `🚩 ${messageExercise.exercise.name} · ${formatExercisePrescription(messageExercise)} · ${setsCompleted}/${messageExercise.sets} sets done`;
-    const flagNote = messageExercise.flag?.note ? `\n“${messageExercise.flag.note}”` : '';
-    const question = content.trim() || `I have a question about ${messageExercise.exercise.name}`;
     await apiFetch('/api/messages', {
       method: 'POST',
       body: JSON.stringify({
-        content: `${contextLine}${flagNote}\n\n${question}`,
+        content: buildFlagMessageContent({
+          exerciseName: messageExercise.exercise.name,
+          prescription: formatExercisePrescription(messageExercise),
+          setsCompleted,
+          totalSets: messageExercise.sets,
+          flagNote: messageExercise.flag?.note,
+          question: content,
+        }),
         exerciseReferenceId: messageExercise.workoutExerciseId,
         ...(completionId ? { workoutReferenceId: completionId } : {}),
       }),
