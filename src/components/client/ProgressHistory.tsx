@@ -11,7 +11,7 @@ import {
   type PersonalBest,
 } from '@logbook/shared/personal-bests';
 import { formatTrainingTime } from '@logbook/shared/plan-summary';
-import { TrendingUp, Trophy } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface ProgressStats {
@@ -80,48 +80,59 @@ export function ProgressHistory({
 
   return (
     <div className="space-y-4 sm:space-y-6">
-        {/* Personal bests — the headline: what they can do now that they
-            couldn't before */}
+        {/* Personal bests — the headline and the latest few in one card:
+            the count up top, then one line per best */}
         <section
           aria-label="Personal bests"
-          className="animate-fade-in-up rounded-2xl border border-border/70 bg-card p-5"
+          className="animate-fade-in-up rounded-2xl border border-border/70 bg-card"
         >
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 px-4 pt-4 pb-3.5">
             <div className="min-w-0">
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
                 Personal bests this block
               </p>
               {bests.count > 0 ? (
-                <>
-                  <p className="text-[44px] font-bold tracking-tight leading-none mt-2.5 antialiased">
-                    {bests.count}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1.5 antialiased">
+                <p className="mt-1.5 flex items-baseline gap-2 antialiased">
+                  <span className="text-[32px] font-bold tracking-tight leading-none">{bests.count}</span>
+                  <span className="text-sm text-muted-foreground">
                     across {bests.exercises} {bests.exercises === 1 ? 'lift' : 'lifts'}
                     {bests.thisWeek > 0 ? ` · ${bests.thisWeek} this week` : ''}
-                  </p>
-                </>
+                  </span>
+                </p>
               ) : (
-                <>
-                  <p className="text-lg font-bold tracking-tight mt-2 antialiased">None yet</p>
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed antialiased">
-                    Beat your last weight or reps on a lift and it shows up here.
-                  </p>
-                </>
+                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed antialiased">
+                  None yet. Beat your last weight or reps on a lift and it shows up here.
+                </p>
               )}
             </div>
             <div
               className={cn(
-                'w-11 h-11 rounded-full flex items-center justify-center shrink-0',
+                'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
                 bests.count > 0
                   ? 'bg-brand animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]'
                   : 'bg-muted'
               )}
               aria-hidden="true"
             >
-              <Trophy className={cn('w-5 h-5', bests.count > 0 ? 'text-brand-foreground' : 'text-muted-foreground')} />
+              <Trophy className={cn('w-4 h-4', bests.count > 0 ? 'text-brand-foreground' : 'text-muted-foreground')} />
             </div>
           </div>
+          {bests.latest.length > 0 && (
+            <ul aria-label="Latest bests" className="border-t border-border/60 divide-y divide-border/40">
+              {bests.latest.map((b) => (
+                <li key={`${b.completionId}-${b.exerciseId}`} className="flex items-baseline gap-3 px-4 py-2.5">
+                  <span className="flex-1 min-w-0 truncate text-sm font-semibold tracking-tight antialiased">
+                    {b.exerciseName}
+                  </span>
+                  <span className="font-mono text-[11px] text-muted-foreground shrink-0">{formatBestWhen(b.completedAt)}</span>
+                  <span className="font-mono text-[13px] font-semibold tabular-nums shrink-0">{formatBestValue(b)}</span>
+                  <span className="w-12 text-right font-mono text-xs tabular-nums text-success-text shrink-0">
+                    {formatBestDelta(b)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {/* Week progress tracker — same vocabulary as the dashboard's weekly strip */}
@@ -161,30 +172,6 @@ export function ProgressHistory({
               ))}
             </div>
           </div>
-        )}
-
-        {/* Latest bests */}
-        {bests.latest.length > 0 && (
-          <section aria-labelledby="latest-bests" className="animate-fade-in-up" style={{ animationDelay: '25ms' }}>
-            <h2 id="latest-bests" className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2.5">
-              Latest bests
-            </h2>
-            <ul className="rounded-2xl border border-border/70 bg-card divide-y divide-border/60">
-              {bests.latest.map((b) => (
-                <li key={`${b.completionId}-${b.exerciseId}`} className="flex items-center gap-3 px-4 py-3">
-                  <TrendingUp className="w-4 h-4 text-success-text shrink-0" aria-hidden="true" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold tracking-tight truncate antialiased">{b.exerciseName}</p>
-                    <p className="font-mono text-[11px] text-muted-foreground mt-0.5">{formatBestWhen(b.completedAt)}</p>
-                  </div>
-                  <p className="font-mono text-sm font-semibold tabular-nums shrink-0">{formatBestValue(b)}</p>
-                  <p className="w-14 text-right font-mono text-xs tabular-nums text-success-text shrink-0">
-                    {formatBestDelta(b)}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </section>
         )}
 
         {/* Overall stats */}

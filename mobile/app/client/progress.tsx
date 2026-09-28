@@ -75,32 +75,44 @@ export default function ProgressScreen() {
       </View>
 
       <View className="-mt-2 gap-4">
-        {/* Personal bests — the headline */}
-        <View className="rounded-2xl border border-border/70 bg-card p-5" accessibilityLabel="Personal bests">
-          <View className="flex-row items-start justify-between gap-4">
+        {/* Personal bests — the count up top, then one line per latest best */}
+        <View className="rounded-2xl border border-border/70 bg-card" accessibilityLabel="Personal bests">
+          <View className="flex-row items-center justify-between gap-4 px-4 pb-3.5 pt-4">
             <View className="flex-1">
               <Eyebrow>Personal bests this block</Eyebrow>
               {bests.count > 0 ? (
-                <>
-                  <Text className="mt-2.5 font-sans-bold text-[44px] leading-[48px] tracking-tight text-foreground">{bests.count}</Text>
-                  <Text className="mt-1 font-sans text-sm text-muted-foreground">
+                <View className="mt-1.5 flex-row items-baseline gap-2">
+                  <Text className="font-sans-bold text-[32px] leading-[36px] tracking-tight text-foreground">{bests.count}</Text>
+                  <Text className="flex-1 font-sans text-sm text-muted-foreground">
                     across {bests.exercises} {bests.exercises === 1 ? 'lift' : 'lifts'}
                     {bests.thisWeek > 0 ? ` · ${bests.thisWeek} this week` : ''}
                   </Text>
-                </>
+                </View>
               ) : (
-                <>
-                  <Text className="mt-2 font-sans-bold text-lg tracking-tight text-foreground">None yet</Text>
-                  <Text className="mt-1 font-sans text-sm leading-5 text-muted-foreground">
-                    Beat your last weight or reps on a lift and it shows up here.
-                  </Text>
-                </>
+                <Text className="mt-1.5 font-sans text-sm leading-5 text-muted-foreground">
+                  None yet. Beat your last weight or reps on a lift and it shows up here.
+                </Text>
               )}
             </View>
-            <View className={`h-11 w-11 items-center justify-center rounded-full ${bests.count > 0 ? 'bg-brand' : 'bg-muted'}`}>
-              <Feather name="award" size={20} color={bests.count > 0 ? '#1e2702' : '#737373'} />
+            <View className={`h-9 w-9 items-center justify-center rounded-full ${bests.count > 0 ? 'bg-brand' : 'bg-muted'}`}>
+              <Feather name="award" size={16} color={bests.count > 0 ? '#1e2702' : '#737373'} />
             </View>
           </View>
+          {bests.latest.length > 0 ? (
+            <View className="border-t border-border/60" accessibilityLabel="Latest bests">
+              {bests.latest.map((b, i) => (
+                <View
+                  key={`${b.completionId}-${b.exerciseId}`}
+                  className={`flex-row items-baseline gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border/40' : ''}`}
+                >
+                  <Text className="flex-1 font-sans-semibold text-sm tracking-tight text-foreground" numberOfLines={1}>{b.exerciseName}</Text>
+                  <Text className="font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
+                  <Text className="font-mono-semibold text-[13px] text-foreground">{formatBestValue(b)}</Text>
+                  <Text className="w-12 text-right font-mono text-xs text-success-text">{formatBestDelta(b)}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
         </View>
 
         <View className="rounded-xl bg-muted/40 p-4">
@@ -119,28 +131,6 @@ export default function ProgressScreen() {
             ))}
           </View>
         </View>
-
-        {bests.latest.length > 0 ? (
-          <View>
-            <Eyebrow className="mb-2.5">Latest bests</Eyebrow>
-            <View className="rounded-2xl border border-border/70 bg-card">
-              {bests.latest.map((b, i) => (
-                <View
-                  key={`${b.completionId}-${b.exerciseId}`}
-                  className={`flex-row items-center gap-3 px-4 py-3 ${i > 0 ? 'border-t border-border/60' : ''}`}
-                >
-                  <Feather name="trending-up" size={16} color="#157f3c" />
-                  <View className="flex-1">
-                    <Text className="font-sans-bold text-sm tracking-tight text-foreground" numberOfLines={1}>{b.exerciseName}</Text>
-                    <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
-                  </View>
-                  <Text className="font-mono-semibold text-sm text-foreground">{formatBestValue(b)}</Text>
-                  <Text className="w-14 text-right font-mono text-xs text-success-text">{formatBestDelta(b)}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        ) : null}
 
         <View className="flex-row gap-2">
           {tiles.map(([value, label]) => (
