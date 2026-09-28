@@ -23,7 +23,7 @@ import { format, formatDistanceToNow, differenceInHours, subDays, startOfWeek, a
 // Section label: mono eyebrow outside the card; real <h2> for the outline.
 function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <div className="px-1 pb-2.5">
+    <div className="pb-2.5">
       <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
         {children}
       </h2>
@@ -288,7 +288,7 @@ export function ClientCheckIn() {
               disabled={isCreating}
               className="h-11 px-6 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
             >
-              {isCreating && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              {isCreating && <Loader2 className="w-4 h-4 animate-spin me-2" />}
               Send check-in
             </Button>
           </SectionCard>
@@ -450,7 +450,7 @@ export function ClientCheckIn() {
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
                     Notes from {firstName}
                   </p>
-                  <p className="border-l-2 border-brand/60 pl-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose text-pretty">
+                  <p className="border-s-2 border-brand/60 ps-3 text-base leading-relaxed text-foreground/90 max-w-prose text-pretty">
                     {activeCheckIn.painBlockers}
                   </p>
                 </div>
@@ -491,7 +491,7 @@ export function ClientCheckIn() {
                 }}
                 rows={6}
               />
-              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-right tabular-nums">
+              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium mt-1.5 text-end tabular-nums">
                 {coachResponse.length}/1000
               </p>
               {/* Stable live region so repeat empty submits re-announce */}
@@ -519,10 +519,10 @@ export function ClientCheckIn() {
               className="w-full h-12 mt-5 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
               size="lg"
             >
-              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              {isSubmitting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
               Complete check-in
             </Button>
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground text-center mt-2.5 antialiased">
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground text-center text-balance mt-2.5 antialiased">
               Closes this check-in · saved to {firstName}’s history
             </p>
           </SectionCard>
@@ -624,7 +624,7 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
             <div className="grid grid-cols-4 divide-x divide-border border-b border-border">
               {stats.map((s) => (
                 <div key={s.label} className="min-w-0 px-3 sm:px-5 py-3">
-                  <p className="flex items-center gap-1.5 font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased truncate">
+                  <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.1em] sm:tracking-[0.14em] text-muted-foreground font-medium antialiased whitespace-nowrap">
                     {s.warn && <span className="w-1.5 h-1.5 rounded-full bg-chart-short shrink-0" aria-hidden="true" />}
                     {s.label}
                     {s.warn && <span className="sr-only"> (needs attention)</span>}
@@ -641,7 +641,7 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
 
             {/* What to read before replying */}
             {attention.length > 0 ? (
-              <div className="border-t border-border">
+              <div className="mt-2">
                 <p className="px-4 sm:px-5 pt-3 font-mono text-[10px] uppercase tracking-[0.14em] text-warning-text font-medium antialiased">
                   Needs a look · {attention.length}
                 </p>
@@ -652,11 +652,11 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
                 </div>
               </div>
             ) : rows.length === 0 ? (
-              <p className="border-t border-border px-4 sm:px-5 py-3 text-[13px] text-warning-text antialiased">
+              <p className="px-4 sm:px-5 pb-4 text-sm text-warning-text antialiased text-pretty">
                 No workouts logged since {format(since, 'MMM d')}.
               </p>
             ) : (
-              <p className="border-t border-border px-4 sm:px-5 py-3 text-[13px] text-muted-foreground antialiased">
+              <p className="px-4 sm:px-5 pb-4 text-sm text-muted-foreground antialiased text-pretty">
                 Every session finished as written — no flags from {firstName}.
               </p>
             )}
@@ -669,11 +669,11 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
                   aria-expanded={showAll}
                   className="w-full flex items-center justify-between gap-2 px-4 sm:px-5 py-3 text-start hover:bg-muted/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
                 >
-                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
+                  <span className="text-sm font-medium text-foreground antialiased">
                     {showAll ? 'Hide' : 'Show'} {rest.length} completed {rest.length === 1 ? 'workout' : 'workouts'}
                   </span>
                   <ChevronDown
-                    className={cn('w-4 h-4 text-muted-foreground transition-transform duration-150', showAll && 'rotate-180')}
+                    className={cn('w-4 h-4 text-foreground transition-transform duration-150', showAll && 'rotate-180')}
                     aria-hidden="true"
                   />
                 </button>
@@ -821,10 +821,10 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                       {/* Volt meter: lighter step of the brand ramp as the
                           track, brand fill rising with the share done */}
                       <span className="absolute inset-0 rounded-[3px] overflow-hidden bg-brand/25 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" aria-hidden="true">
-                        <span className="absolute inset-y-0 left-0 bg-brand" style={{ width: `${fillPct(c)}%` }} />
+                        <span className="absolute inset-y-0 start-0 bg-brand" style={{ width: `${fillPct(c)}%` }} />
                       </span>
                       {flags.length > 0 && (
-                        <span className="absolute top-1/2 right-1 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-foreground ring-2 ring-brand" aria-hidden="true" />
+                        <span className="absolute top-1/2 end-1 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-foreground ring-2 ring-brand" aria-hidden="true" />
                       )}
                       {/* Tooltip — value leads, label follows */}
                       {isActive && (
@@ -832,12 +832,12 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                           role="tooltip"
                           className={cn(
                             'pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10',
-                            'w-max max-w-[220px] rounded-lg bg-popover text-popover-foreground px-3 py-2 text-left',
+                            'w-max max-w-[220px] rounded-lg bg-popover text-popover-foreground px-3 py-2 text-start',
                             'shadow-[0_4px_16px_rgba(0,0,0,0.12),0_0_0_1px_rgba(0,0,0,0.06)]'
                           )}
                         >
                           <span className="block text-sm font-bold">{value}</span>
-                          <span className="block text-xs text-muted-foreground truncate">{c.day?.name ?? 'Workout'}</span>
+                          <span className="block text-xs leading-snug text-muted-foreground text-pretty">{c.day?.name ?? 'Workout'}</span>
                           <span className="block font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-0.5">{date}</span>
                           {flags.length > 0 && (
                             <span className="flex items-center gap-1 text-xs font-semibold mt-1">
@@ -859,7 +859,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
               </div>
 
               {/* Done vs. planned — the row's answer, right-aligned in ink */}
-              <p className="w-8 shrink-0 text-right font-mono text-[11px] tabular-nums antialiased" aria-hidden="true">
+              <p className="w-8 shrink-0 text-end font-mono text-xs tabular-nums antialiased" aria-hidden="true">
                 <span className="font-semibold text-foreground">{w.completed}</span>
                 {w.target != null && <span className="text-muted-foreground">/{w.target}</span>}
               </p>
@@ -869,14 +869,14 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
       </ul>
 
       {/* Legend — identity never rides on color alone */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 text-[11px] text-muted-foreground antialiased" aria-hidden="true">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 text-xs text-muted-foreground antialiased" aria-hidden="true">
         {hasFull && (
           <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-[2px] bg-brand shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" />Done</span>
         )}
         {hasPartial && (
           <span className="flex items-center gap-1.5">
             <span className="relative w-3 h-2 rounded-[2px] overflow-hidden bg-brand/25 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]">
-              <span className="absolute inset-y-0 left-0 w-1/2 bg-brand" />
+              <span className="absolute inset-y-0 start-0 w-1/2 bg-brand" />
             </span>
             Partly done
           </span>
@@ -914,9 +914,9 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
 
   return (
     <div className="px-4 sm:px-5 py-3">
-      <div className="flex items-center gap-3">
+      <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold tracking-tight truncate">
+          <p className="text-sm font-bold tracking-tight break-words text-pretty">
             {!isUnfinished && <span className="sr-only">Completed: </span>}
             {c.day?.name ?? 'Workout'}
           </p>
@@ -926,7 +926,7 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
           </p>
         </div>
         <p className={cn(
-          'font-mono text-xs font-semibold tabular-nums shrink-0',
+          'font-mono text-xs font-semibold tabular-nums shrink-0 pt-0.5',
           isUnfinished
             ? cn('text-[10px] uppercase tracking-[0.12em]', abandoned ? 'text-warning-text' : 'text-info')
             : c.completionPct != null && c.completionPct < 100 && 'text-warning-text'
@@ -939,12 +939,8 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
 
       {/* What the client changed vs. the prescription */}
       {deviations.length > 0 && (
-        <p
-          className="text-[11px] text-muted-foreground mt-1 truncate antialiased"
-          title={deviations.map(formatDeviation).join(' · ')}
-        >
-          Adjusted: {deviations.slice(0, 2).map(formatDeviation).join(' · ')}
-          {deviations.length > 2 && ` +${deviations.length - 2} more`}
+        <p className="text-xs leading-relaxed text-muted-foreground mt-1 break-words text-pretty antialiased">
+          Adjusted: {deviations.map(formatDeviation).join(' · ')}
         </p>
       )}
 
@@ -990,7 +986,7 @@ function PreviousCheckInsList({ checkIns }: {
               </p>
               {effort && (
                 <p className={cn(
-                  'font-mono text-[11px] font-bold uppercase tracking-[0.08em] antialiased',
+                  'font-mono text-xs font-bold uppercase tracking-[0.08em] antialiased',
                   'flex items-center gap-1.5 leading-none',
                   effort.text
                 )}>
