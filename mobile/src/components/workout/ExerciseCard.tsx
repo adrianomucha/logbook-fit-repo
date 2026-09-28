@@ -191,7 +191,9 @@ export function ExerciseCard({
               const sc = exercise.setCompletions.find((s) => s.setNumber === setNumber);
               return (
                 <SetRow
-                  key={`${setNumber}-${exercise.setCompletions.length === 0 ? 'fresh' : 'logged'}`}
+                  // weightUnit re-seeds the inputs if the unit resolves after
+                  // first paint — the cell text must match how it's read back
+                  key={`${setNumber}-${exercise.setCompletions.length === 0 ? 'fresh' : 'logged'}-${weightUnit}`}
                   setNumber={setNumber}
                   trackingType={exercise.trackingType}
                   repsTarget={exercise.reps ?? undefined}

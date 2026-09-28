@@ -1,5 +1,5 @@
 import type { ClientDetail } from './types/api';
-import { formatWeightNumber, weightUnitLabel, type WeightUnit } from './weight-units';
+import { formatWeightNumber, toDisplayWeight, weightUnitLabel, type WeightUnit } from './weight-units';
 
 /**
  * What the client actually did vs. what was prescribed. A client quietly
@@ -16,7 +16,11 @@ export interface ExerciseDeviation {
 
 type CompletionSet = ClientDetail['completions'][number]['sets'][number];
 
-export function getWorkoutDeviations(sets: CompletionSet[]): ExerciseDeviation[] {
+/**
+ * Deviations as the viewer will read them: a weight change that rounds away
+ * in their unit (100 → 100.5 lb is 45.5 kg both ways) isn't one.
+ */
+export function getWorkoutDeviations(sets: CompletionSet[], unit: WeightUnit): ExerciseDeviation[] {
   const byExercise = new Map<string, ExerciseDeviation>();
 
   for (const set of sets) {
@@ -27,7 +31,11 @@ export function getWorkoutDeviations(sets: CompletionSet[]): ExerciseDeviation[]
     // different targets, and merging them mixes prescribed values.
     const key = set.workoutExerciseId ?? name;
 
-    if (set.actualWeight != null && we.weight != null && set.actualWeight !== we.weight) {
+    if (
+      set.actualWeight != null &&
+      we.weight != null &&
+      toDisplayWeight(set.actualWeight, unit) !== toDisplayWeight(we.weight, unit)
+    ) {
       const dev = byExercise.get(key) ?? { exerciseName: name };
       const delta = Math.abs(set.actualWeight - we.weight);
       const prevDelta = dev.weight

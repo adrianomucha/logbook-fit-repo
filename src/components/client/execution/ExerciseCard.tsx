@@ -287,7 +287,10 @@ export function ExerciseCard({
               );
               return (
                 <SetRow
-                  key={setNumber}
+                  // Re-seed the inputs if the unit resolves after first
+                  // paint (cold load, profile still in flight) — the cell
+                  // text must always be in the unit logWeight reads it as
+                  key={`${setNumber}-${weightUnit}`}
                   setNumber={setNumber}
                   trackingType={exercise.trackingType}
                   repsTarget={exercise.reps ?? undefined}

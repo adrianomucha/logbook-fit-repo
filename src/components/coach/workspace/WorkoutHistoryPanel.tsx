@@ -87,7 +87,7 @@ export function WorkoutHistoryPanel({
             completion.exercisesTotal != null &&
             completion.exercisesTotal > 0 &&
             (completion.exercisesDone ?? 0) < completion.exercisesTotal;
-          const deviations = getWorkoutDeviations(completion.sets ?? []);
+          const deviations = getWorkoutDeviations(completion.sets ?? [], weightUnit);
 
           return (
             <div

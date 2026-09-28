@@ -906,8 +906,8 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
 }) {
   const isUnfinished = c.status === 'IN_PROGRESS';
   const timestamp = new Date((c.completedAt ?? c.startedAt) as string);
-  const deviations = getWorkoutDeviations(c.sets ?? []);
   const { weightUnit } = useCurrentUser();
+  const deviations = getWorkoutDeviations(c.sets ?? [], weightUnit);
   const flags = c.flags ?? [];
   // Flags on exercises no longer in the plan (or before plan detail
   // loads) fall back to the names carried on deviated sets
