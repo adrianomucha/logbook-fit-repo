@@ -90,6 +90,14 @@ enum PushProvider {
   EXPO
 }
 
+// A person's display unit for weights. Storage is always pounds — every
+// weight column below holds lb, and the apps convert at the edges (see
+// packages/shared/src/weight-units.ts).
+enum WeightUnit {
+  KG
+  LB
+}
+
 enum ExerciseCategory {
   CHEST
   BACK
@@ -116,6 +124,9 @@ model User {
   role         UserRole
   avatarUrl    String?
   timezone     String    @default("UTC")
+  // kg or lb, picked in Settings. Only changes how weights read and are
+  // typed; stored weights are always lb.
+  weightUnit   WeightUnit @default(LB)
   // Owner-managed pairing with this person's other account (coach ↔ client),
   // stored symmetrically on both rows. Powers the nav's one-click account
   // switch. Written only by the owner (SQL/admin) — no user-facing API sets it.
@@ -261,7 +272,7 @@ model Exercise {
   trackingType  TrackingType     @default(REPS)
   defaultSets   Int?             @default(3)
   defaultReps   Int?             @default(10) // Seconds when trackingType = TIME
-  defaultWeight Float?
+  defaultWeight Float?           // lb (see WeightUnit)
   defaultRest   Int?             // seconds
   instructions  String?          // Coach's cue notes
   createdAt     DateTime         @default(now())
@@ -355,7 +366,7 @@ model WorkoutExercise {
   sets        Int     @default(3)
   reps        Int     @default(10) // Lower bound of the prescribed rep range (or the exact count)
   repsMax     Int?    // Upper bound when the coach prescribes a range, e.g. 6-8 → reps=6, repsMax=8
-  weight      Float?  // kg or lbs (user preference)
+  weight      Float?  // lb — shown in each viewer's WeightUnit
   restSeconds Int?    // Rest between sets
   coachNotes  String? // Per-workout coaching notes
   supersetWithPrevious Boolean @default(false) // Chains this exercise to the one above it into a superset
@@ -413,7 +424,7 @@ model SetCompletion {
   workoutExerciseId   String    // References WorkoutExercise, not Exercise
   setNumber           Int       // 1-indexed
   completed           Boolean   @default(false)
-  actualWeight        Float?    // Client override
+  actualWeight        Float?    // Client override, lb
   actualReps          Int?      // Client override
   completedAt         DateTime?
   createdAt           DateTime  @default(now())

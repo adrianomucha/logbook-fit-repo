@@ -2,6 +2,7 @@
 
 import { useSession } from 'next-auth/react';
 import useSWR from 'swr';
+import { normalizeWeightUnit, type WeightUnit } from '@logbook/shared/weight-units';
 
 interface UserProfile {
   id: string;
@@ -10,6 +11,7 @@ interface UserProfile {
   role: 'COACH' | 'CLIENT';
   avatarUrl: string | null;
   timezone: string;
+  weightUnit: WeightUnit;
   createdAt: string;
   coachProfile: { id: string; bio: string } | null;
   clientProfile: {
@@ -46,6 +48,8 @@ export function useCurrentUser() {
     coach: user?.clientProfile?.coachRelationship?.coach ?? null,
     /** On the ADMIN_EMAILS allowlist — shows the nav's Admin entry point */
     isAdmin: user?.isAdmin ?? false,
+    /** kg or lb — how this person reads and types weights (stored as lb) */
+    weightUnit: normalizeWeightUnit(user?.weightUnit),
     /** This person's paired account, if one is linked and switchable */
     linkedAccount: user?.linkedAccount ?? null,
     /** Revalidate /api/me — call after mutating profile data */

@@ -1,4 +1,5 @@
 import type { ClientDetail } from './types/api';
+import { formatWeightNumber, weightUnitLabel, type WeightUnit } from './weight-units';
 
 /**
  * What the client actually did vs. what was prescribed. A client quietly
@@ -52,10 +53,13 @@ export function getWorkoutDeviations(sets: CompletionSet[]): ExerciseDeviation[]
   return [...byExercise.values()];
 }
 
-export function formatDeviation(dev: ExerciseDeviation): string {
+/** "Deadlift 84→70.3 kg, 5 reps (target 8–10)" — weights in the viewer's unit. */
+export function formatDeviation(dev: ExerciseDeviation, unit: WeightUnit): string {
   const parts: string[] = [];
   if (dev.weight) {
-    parts.push(`${dev.weight.prescribed}→${dev.weight.actual}`);
+    parts.push(
+      `${formatWeightNumber(dev.weight.prescribed, unit)}→${formatWeightNumber(dev.weight.actual, unit)} ${weightUnitLabel(unit)}`
+    );
   }
   if (dev.repsShort) {
     const target =

@@ -8,6 +8,8 @@
  * display strings look like "60s", "1m 30s", "20-30 min".
  */
 
+import { formatWeight, type WeightUnit } from './weight-units';
+
 export type TrackingType = 'REPS' | 'TIME';
 
 /** Format a duration in seconds: 45 → "45s", 120 → "2 min", 90 → "1m 30s". */
@@ -45,17 +47,21 @@ export function formatReps(
 }
 
 /**
- * Format a full prescription for display: "4x 6-8 @ 135" — sets, the rep or
- * duration range, and the prescribed load when there is one. Used anywhere a
- * prescription is shown outside an editor (the chat's flagged-exercise card).
+ * Format a full prescription for display: "4x 6-8 @ 135 lb" — sets, the rep
+ * or duration range, and the prescribed load (stored lb) in the viewer's
+ * unit when there is one. Used anywhere a prescription is shown outside an
+ * editor (the chat's flagged-exercise card).
  */
-export function formatPrescription(exercise: {
-  sets: number;
-  reps: number;
-  repsMax?: number | null;
-  weight?: number | null;
-  trackingType?: TrackingType | string;
-}): string {
+export function formatPrescription(
+  exercise: {
+    sets: number;
+    reps: number;
+    repsMax?: number | null;
+    weight?: number | null;
+    trackingType?: TrackingType | string;
+  },
+  unit: WeightUnit
+): string {
   const tracking: TrackingType =
     exercise.trackingType === 'TIME' ? 'TIME' : 'REPS';
   let text = `${exercise.sets}x ${formatReps(
@@ -63,7 +69,7 @@ export function formatPrescription(exercise: {
     exercise.repsMax,
     tracking
   )}`;
-  if (exercise.weight != null) text += ` @ ${exercise.weight}`;
+  if (exercise.weight != null) text += ` @ ${formatWeight(exercise.weight, unit)}`;
   return text;
 }
 

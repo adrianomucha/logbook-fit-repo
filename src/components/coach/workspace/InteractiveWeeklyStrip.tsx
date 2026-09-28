@@ -5,6 +5,8 @@ import { Edit2, Flag } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Client, WorkoutPlan, WorkoutCompletion } from '@/types';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { formatStoredWeight } from '@logbook/shared/weight-units';
 import {
   getWeekDays,
   getWeekProgress,
@@ -40,6 +42,7 @@ export function InteractiveWeeklyStrip({
   flagCounts,
 }: InteractiveWeeklyStripProps) {
   const [expandedOrderIndex, setExpandedOrderIndex] = useState<number | null>(null);
+  const { weightUnit } = useCurrentUser();
 
   // Animate compact pills growing in on mount
   const [pillsMounted, setPillsMounted] = useState(false);
@@ -213,7 +216,7 @@ export function InteractiveWeeklyStrip({
                           <span className="flex-1 truncate antialiased">{exercise.name}</span>
                           <span className="font-mono text-xs text-muted-foreground shrink-0 tabular-nums antialiased ms-3">
                             {exercise.sets}×{exercise.reps || '—'}
-                            {exercise.weight && ` · ${exercise.weight}`}
+                            {exercise.weight && ` · ${formatStoredWeight(exercise.weight, weightUnit)}`}
                           </span>
                         </div>
                       ))}

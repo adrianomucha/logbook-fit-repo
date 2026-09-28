@@ -18,6 +18,8 @@ import { Button } from '@/components/ui/button';
 import { Check, Dumbbell, Flag, Loader2, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { buildFlagMessageContent } from '@logbook/shared/flag-message';
+import { formatWeight } from '@logbook/shared/weight-units';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 export function ClientWorkoutExecution() {
   const router = useRouter();
@@ -49,6 +51,7 @@ export function ClientWorkoutExecution() {
   const [showRestartConfirm, setShowRestartConfirm] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [messageSheetExercise, setMessageSheetExercise] = useState<WorkoutExercise | null>(null);
+  const { weightUnit } = useCurrentUser();
   const [completedWorkoutData, setCompletedWorkoutData] = useState<{
     exercisesDone: number;
     exercisesTotal: number;
@@ -152,7 +155,10 @@ export function ClientWorkoutExecution() {
       // Build prescription text
       const parts: string[] = [`${messageSheetExercise.sets}x`];
       if (messageSheetExercise.reps) parts.push(messageSheetExercise.reps);
-      if (messageSheetExercise.weight) parts.push(`@ ${messageSheetExercise.weight}`);
+      // In the sender's unit, labelled — the text is frozen once sent
+      if (messageSheetExercise.weight) {
+        parts.push(`@ ${formatWeight(messageSheetExercise.weight, weightUnit)}`);
+      }
       const prescription = parts.join(' ');
 
       // Exercise context travels inside the message text so the coach sees it
@@ -183,7 +189,7 @@ export function ClientWorkoutExecution() {
         throw new Error('send-failed'); // keeps the draft in the sheet
       }
     },
-    [messageSheetExercise, completionId]
+    [messageSheetExercise, completionId, weightUnit]
   );
 
   // Handle exercise expand toggle

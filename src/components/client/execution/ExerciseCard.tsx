@@ -3,7 +3,9 @@ import { Input } from '@/components/ui/input';
 import { Check, Flag } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkoutExercise } from '@/types/api';
-import { formatLastCompact } from '@logbook/shared/workout-execution';
+import { formatExercisePrescription, formatLastCompact } from '@logbook/shared/workout-execution';
+import { weightUnitLabel } from '@logbook/shared/weight-units';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   SetRow,
   SET_GRID,
@@ -55,17 +57,14 @@ export function ExerciseCard({
   const isFlagged = !!exercise.flag;
   const flagNote = exercise.flag?.note;
   const flagNoteId = useId();
+  const { weightUnit } = useCurrentUser();
 
   // Zero-pad the numeric part so labels line up with the dashboard's
   // exercise preview list: "4" → "04", "4B" → "04B".
   const displayLabel = exerciseLabel.replace(/^\d+/, (n) => n.padStart(2, '0'));
 
-  // Build prescription subtitle: "3×10-12 · 50 lbs"
-  const getPrescription = () => {
-    let text = exercise.reps ? `${exercise.sets}×${exercise.reps}` : `${exercise.sets} sets`;
-    if (exercise.weight) text += ` · ${exercise.weight}`;
-    return text;
-  };
+  // Prescription subtitle in the athlete's unit: "3×10-12 · 22.5 kg"
+  const getPrescription = () => formatExercisePrescription(exercise, weightUnit);
 
   const setRows = Array.from({ length: exercise.sets }, (_, i) => i + 1);
 
@@ -273,10 +272,9 @@ export function ExerciseCard({
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 Last
               </span>
-              {/* Unit-neutral: no weightUnit column exists yet, so claiming
-                  "LBS" for a kg-programming coach would be plain wrong */}
+              {/* The athlete's own unit — the cells below show and take it */}
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
-                Weight
+                {weightUnitLabel(weightUnit)}
               </span>
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
                 {exercise.trackingType === 'TIME' ? 'Sec' : 'Reps'}
@@ -294,13 +292,15 @@ export function ExerciseCard({
                   trackingType={exercise.trackingType}
                   repsTarget={exercise.reps ?? undefined}
                   weightTarget={exercise.weight ?? undefined}
+                  weightUnit={weightUnit}
                   actualReps={sc?.actualReps ?? null}
                   actualWeight={sc?.actualWeight ?? null}
                   previous={
                     exercise.lastPerformance
                       ? formatLastCompact(
                           exercise.lastPerformance,
-                          exercise.trackingType === 'TIME'
+                          exercise.trackingType === 'TIME',
+                          weightUnit
                         )
                       : undefined
                   }

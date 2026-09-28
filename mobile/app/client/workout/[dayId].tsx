@@ -16,6 +16,7 @@ import {
 } from '@logbook/shared/workout-execution';
 import { apiFetch } from '@/lib/api';
 import { useWorkoutExecution } from '@/hooks/useWorkoutExecution';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { FlagMessageSheet } from '@/components/workout/FlagMessageSheet';
@@ -33,6 +34,7 @@ export default function WorkoutScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { dayId } = useLocalSearchParams<{ dayId: string }>();
+  const { weightUnit } = useCurrentUser();
   const {
     day,
     exercises,
@@ -176,7 +178,7 @@ export default function WorkoutScreen() {
       body: JSON.stringify({
         content: buildFlagMessageContent({
           exerciseName: messageExercise.exercise.name,
-          prescription: formatExercisePrescription(messageExercise),
+          prescription: formatExercisePrescription(messageExercise, weightUnit),
           setsCompleted,
           totalSets: messageExercise.sets,
           flagNote: messageExercise.flag?.note,

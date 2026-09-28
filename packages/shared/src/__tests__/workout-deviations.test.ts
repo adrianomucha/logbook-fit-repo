@@ -102,13 +102,19 @@ describe('getWorkoutDeviations', () => {
 describe('formatDeviation', () => {
   it('formats a weight change', () => {
     expect(
-      formatDeviation({ exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } })
-    ).toBe('Deadlift 185→155');
+      formatDeviation({ exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } }, 'LB')
+    ).toBe('Deadlift 185→155 lb');
+  });
+
+  it('converts a weight change to kg for a kg viewer', () => {
+    expect(
+      formatDeviation({ exerciseName: 'Deadlift', weight: { prescribed: 185, actual: 155 } }, 'KG')
+    ).toBe('Deadlift 83.9→70.3 kg');
   });
 
   it('formats a rep shortfall with a range target', () => {
     expect(
-      formatDeviation({ exerciseName: 'Bench', repsShort: { actual: 5, min: 8, max: 10 } })
+      formatDeviation({ exerciseName: 'Bench', repsShort: { actual: 5, min: 8, max: 10 } }, 'LB')
     ).toBe('Bench 5 reps (target 8–10)');
   });
 
@@ -118,7 +124,7 @@ describe('formatDeviation', () => {
         exerciseName: 'Squat',
         weight: { prescribed: 100, actual: 80 },
         repsShort: { actual: 4, min: 6, max: 6 },
-      })
-    ).toBe('Squat 100→80, 4 reps (target 6)');
+      }, 'LB')
+    ).toBe('Squat 100→80 lb, 4 reps (target 6)');
   });
 });

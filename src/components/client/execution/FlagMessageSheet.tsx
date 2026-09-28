@@ -11,6 +11,8 @@ import {
 import { Send, Loader2 } from 'lucide-react';
 import type { WorkoutExercise } from '@/types/api';
 import { getCompletedSetsCount } from '@/hooks/api/useWorkoutExecution';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { formatWeight } from '@logbook/shared/weight-units';
 
 interface FlagMessageSheetProps {
   isOpen: boolean;
@@ -27,13 +29,14 @@ export function FlagMessageSheet({
 }: FlagMessageSheetProps) {
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
+  const { weightUnit } = useCurrentUser();
 
   // Build prescription text
   const getPrescription = () => {
     if (!exercise) return '';
     const parts: string[] = [`${exercise.sets}x`];
     if (exercise.reps) parts.push(exercise.reps);
-    if (exercise.weight) parts.push(`@ ${exercise.weight}`);
+    if (exercise.weight) parts.push(`@ ${formatWeight(exercise.weight, weightUnit)}`);
     return parts.join(' ');
   };
 

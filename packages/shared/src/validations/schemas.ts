@@ -1,4 +1,9 @@
 import { z } from "zod";
+import { WEIGHT_UNITS } from "../weight-units";
+
+// Weights travel in lb (the storage unit). 2,500 lb leaves room for a kg
+// coach's 1,000 kg once converted.
+const MAX_STORED_WEIGHT = 2500;
 
 // ──────────────────────────────────────
 // AUTH
@@ -154,7 +159,7 @@ export const createExerciseSchema = z.object({
   defaultSets: z.number().int().min(1).max(20).optional(),
   // Rep count, or seconds when trackingType = TIME (up to 1 hour)
   defaultReps: z.number().int().min(1).max(3600).optional(),
-  defaultWeight: z.number().min(0).max(1000).optional(),
+  defaultWeight: z.number().min(0).max(MAX_STORED_WEIGHT).optional(),
   defaultRest: z.number().int().min(0).max(600).optional(),
   instructions: z.string().max(1000).optional(),
 });
@@ -165,7 +170,7 @@ export const updateExerciseSchema = z.object({
   trackingType: trackingTypeEnum.optional(),
   defaultSets: z.number().int().min(1).max(20).optional(),
   defaultReps: z.number().int().min(1).max(3600).optional(),
-  defaultWeight: z.number().min(0).max(1000).nullable().optional(),
+  defaultWeight: z.number().min(0).max(MAX_STORED_WEIGHT).nullable().optional(),
   defaultRest: z.number().int().min(0).max(600).nullable().optional(),
   instructions: z.string().max(1000).nullable().optional(),
 });
@@ -181,7 +186,7 @@ export const addWorkoutExerciseSchema = z.object({
   // Rep count, or seconds when trackingType = TIME (up to 1 hour)
   reps: z.number().int().min(1).max(3600).optional(),
   repsMax: z.number().int().min(1).max(3600).nullable().optional(),
-  weight: z.number().min(0).max(1000).nullable().optional(),
+  weight: z.number().min(0).max(MAX_STORED_WEIGHT).nullable().optional(),
   restSeconds: z.number().int().min(0).max(600).nullable().optional(),
   coachNotes: z.string().max(1000).nullable().optional(),
   orderIndex: z.number().int().min(0).optional(),
@@ -217,6 +222,10 @@ export const coachRespondSchema = z.object({
 // is 30 chars); the runtime Intl check in the route is the real gate.
 export const timezoneSchema = z.object({
   timezone: z.string().min(1).max(64),
+});
+
+export const weightUnitSchema = z.object({
+  weightUnit: z.enum(WEIGHT_UNITS),
 });
 
 // Interval choices mirror the coach UI exactly — the server accepts nothing

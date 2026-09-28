@@ -20,6 +20,8 @@ import { cn } from '@/lib/utils';
 import { groupBySuperset, isSuperset } from '@/lib/superset';
 import { Client, WorkoutPlan, Exercise } from '@/types';
 import { getCurrentWeekNumber } from '@/lib/workout-week-helpers';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { formatStoredWeight } from '@logbook/shared/weight-units';
 
 interface InlinePlanEditorProps {
   client: Client;
@@ -228,7 +230,8 @@ export function InlinePlanEditor({
  * Simple read-only exercise row
  */
 function ExerciseRow({ exercise }: { exercise: Exercise }) {
-  // Build params string: "3×10 · 135 lbs" or "3×10-12" or "Bodyweight"
+  const { weightUnit } = useCurrentUser();
+  // Build params string: "3×10 · 135 lb" / "3×10 · 61.2 kg" or "3×10-12"
   const parts: string[] = [];
 
   if (exercise.sets && exercise.reps) {
@@ -240,11 +243,8 @@ function ExerciseRow({ exercise }: { exercise: Exercise }) {
     parts.push(`${exercise.sets} sets`);
   }
 
-  if (exercise.weight) {
-    const weight = exercise.weight;
-    const unit = exercise.weightUnit || 'lbs';
-    parts.push(/^\d+$/.test(weight) ? `${weight} ${unit}` : weight);
-  }
+  const weight = formatStoredWeight(exercise.weight, weightUnit);
+  if (weight) parts.push(weight);
 
   return (
     <div className="flex items-center justify-between py-2 px-0.5">

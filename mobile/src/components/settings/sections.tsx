@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { format } from 'date-fns';
 import { passwordSchema } from '@logbook/shared/validations/schemas';
+import { WEIGHT_UNITS, WEIGHT_UNIT_SETTING, weightUnitLabel, type WeightUnit } from '@logbook/shared/weight-units';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { AVATAR_MAX_BYTES, removeAvatar, uploadAvatar } from '@/lib/avatar';
@@ -241,7 +242,65 @@ export function ProfileSection() {
   );
 }
 
-/** Read-only account facts, plus the one destructive action. */
+/**
+ * kg / lb segmented switch — the web's WeightUnitField. Saves on tap and
+ * paints the new unit optimistically.
+ */
+function WeightUnitField() {
+  const { user, weightUnit, refresh } = useCurrentUser();
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useFlash();
+
+  const handleChange = async (next: WeightUnit) => {
+    if (!user || next === weightUnit || isSaving) return;
+    setIsSaving(true);
+    try {
+      await refresh(
+        async () => {
+          await apiFetch('/api/account/weight-unit', { method: 'PUT', body: JSON.stringify({ weightUnit: next }) });
+          return { ...user, weightUnit: next };
+        },
+        { optimisticData: { ...user, weightUnit: next }, rollbackOnError: true }
+      );
+      setFlash(WEIGHT_UNIT_SETTING.saved(next));
+    } catch (e) {
+      Alert.alert("Couldn't change the unit", e instanceof Error ? e.message : undefined);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <View className="gap-2 py-3.5">
+      <FieldLabel>{WEIGHT_UNIT_SETTING.label}</FieldLabel>
+      <View className="flex-row items-center gap-3">
+        <View accessibilityRole="radiogroup" accessibilityLabel={WEIGHT_UNIT_SETTING.label} className="h-10 w-40 flex-row gap-1 rounded-xl bg-muted/60 p-1">
+          {WEIGHT_UNITS.map((unit) => {
+            const active = weightUnit === unit;
+            return (
+              <Pressable
+                key={unit}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: active, disabled: isSaving }}
+                disabled={isSaving}
+                onPress={() => void handleChange(unit)}
+                className={`flex-1 items-center justify-center rounded-lg ${active ? 'border border-border bg-card' : ''}`}
+              >
+                <Text className={`font-mono-medium text-[11px] uppercase tracking-[1.3px] ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  {weightUnitLabel(unit)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+        <Flash message={flash} />
+      </View>
+      <FieldHint>{WEIGHT_UNIT_SETTING.hint.client}</FieldHint>
+    </View>
+  );
+}
+
+/** Account facts and preferences, plus the one destructive action. */
 export function AccountSection() {
   const { user } = useCurrentUser();
   const { signOut } = useAuth();
@@ -259,9 +318,11 @@ export function AccountSection() {
 
   return (
     <View>
-      <SectionHeader title="Account" description="The basics behind your login. These keep themselves up to date." />
+      <SectionHeader title="Account" description="The basics behind your login, and how weights read." />
 
-      <View>
+      <WeightUnitField />
+
+      <View className="border-t border-border/60">
         {rows.map(({ label, value, hint }, index) => (
           <View key={label} className={`py-3.5 ${index > 0 ? 'border-t border-border/60' : ''}`}>
             <FieldLabel>{label}</FieldLabel>

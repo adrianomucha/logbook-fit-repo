@@ -318,8 +318,8 @@ export interface WorkoutExercise {
   trackingType: 'REPS' | 'TIME';
   sets: number;
   reps: string | null;
-  /** Prescribed weight as stored (Prisma Float) — the unit is whatever the
-   *  coach programs in; there is no weightUnit column yet. */
+  /** Prescribed weight as stored (Prisma Float), always in lb — convert
+   *  with toDisplayWeight() for the viewer's unit (see weight-units.ts). */
   weight: number | null;
   restSeconds: number | null;
   coachNotes: string | null;

@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ClientDetail } from '@/types/api';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
 
 interface WorkoutHistoryPanelProps {
@@ -35,6 +36,7 @@ export function WorkoutHistoryPanel({
   initialCount = 5,
 }: WorkoutHistoryPanelProps) {
   const [showAll, setShowAll] = useState(false);
+  const { weightUnit } = useCurrentUser();
 
   const firstName = clientName?.split(' ')[0] || clientName || 'Client';
 
@@ -124,9 +126,9 @@ export function WorkoutHistoryPanel({
               {deviations.length > 0 && (
                 <p
                   className="text-[11px] text-warning/90 mt-1 truncate antialiased"
-                  title={deviations.map(formatDeviation).join(' · ')}
+                  title={deviations.map((d) => formatDeviation(d, weightUnit)).join(' · ')}
                 >
-                  Adjusted: {deviations.slice(0, 2).map(formatDeviation).join(' · ')}
+                  Adjusted: {deviations.slice(0, 2).map((d) => formatDeviation(d, weightUnit)).join(' · ')}
                   {deviations.length > 2 ? ` +${deviations.length - 2} more` : ''}
                 </p>
               )}
