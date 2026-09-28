@@ -56,15 +56,23 @@ export function formatTrainingTime(totalSec: number): [string, string] {
   return [String(Math.round((minutes / 60) * 10) / 10), "h"];
 }
 
+/** The only completion fields the summary reads */
+export type SummaryCompletion = Pick<WorkoutCompletion, "planId" | "dayId" | "status" | "durationSec">;
+
 /**
  * The numbers behind the plan-complete card, shared so the web and native
  * cards say exactly the same thing. Scoped to this plan: the progress
  * endpoint's stats are all-time, so a returning client's earlier blocks
  * would inflate them.
+ *
+ * `throughWeek` summarizes a plan still in progress ("adherence so far"):
+ * later weeks are left out, and the current week counts only what's been
+ * done, so an unfinished week never reads as missed sessions.
  */
 export function summarizeCompletedPlan(
   plan: WorkoutPlan,
-  completions: WorkoutCompletion[],
+  completions: SummaryCompletion[],
+  { throughWeek }: { throughWeek?: number } = {},
 ): PlanSummary {
   const byDay = new Map(
     completions
@@ -83,6 +91,11 @@ export function summarizeCompletedPlan(
           done: !!completion,
         };
       }),
+  ).filter(
+    (s) =>
+      throughWeek === undefined ||
+      s.weekNumber < throughWeek ||
+      (s.weekNumber === throughWeek && s.done),
   );
 
   const planned = sessions.length;

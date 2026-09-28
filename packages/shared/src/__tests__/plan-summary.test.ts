@@ -102,6 +102,13 @@ describe('summarizeCompletedPlan', () => {
     expect(s.avgSessionMin).toBe(55);
   });
 
+  it('counts only elapsed weeks for a plan in progress', () => {
+    // Week 1: 2 of 3 · week 2 (current): 1 done so far · week 3: not reached
+    const s = summarizeCompletedPlan(plan(3, 3), ['w1d1', 'w1d2', 'w2d1'].map((id) => done(id)), { throughWeek: 2 });
+    expect(s).toMatchObject({ planned: 4, completed: 3, pct: 75 });
+    expect(s.missNote).toBe('Missed 1 session, in week 1.');
+  });
+
   it('handles a plan with nothing planned', () => {
     const s = summarizeCompletedPlan(plan(2, 0), []);
     expect(s).toMatchObject({ planned: 0, pct: 0, avgSessionMin: null });

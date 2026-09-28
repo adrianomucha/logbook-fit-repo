@@ -20,7 +20,6 @@ import {
 } from '@/lib/adapters/api';
 import { cn } from '@/lib/utils';
 import { InlineCheckInReview, SENT_UNDO_WINDOW_MS } from '@/components/coach/workspace/InlineCheckInReview';
-import { useHiddenPendingCheckIn } from '@/hooks/useHiddenPendingCheckIn';
 import {
   CheckInHistoryPanel,
   CheckInScheduleSettings,
@@ -44,9 +43,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AlertCircle, ArrowLeftRight, Loader2, MoreVertical, Pencil, RotateCcw, UserMinus } from 'lucide-react';
+import { AlertCircle, ArrowLeftRight, Loader2, MessageCircle, MoreHorizontal, MoreVertical, Pencil, RotateCcw, Undo2, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
+import { addDays, format, formatDistanceToNowStrict, isThisYear, startOfWeek } from 'date-fns';
+import { summarizeCompletedPlan } from '@logbook/shared/plan-summary';
+import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -57,6 +58,63 @@ function daysAgoLabel(iso?: string | Date | null): string | null {
   return `${days}d ago`;
 }
 
+// Section label — consistent uppercase tracking with antialiased rendering.
+// Real <h2> so the page has a navigable heading outline, styled down to a label.
+// Module-level (not declared in render) so a re-render — the chat polls —
+// doesn't remount everything inside and snap open menus shut.
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="px-1 pb-2.5">
+      <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
+        {children}
+      </h2>
+    </div>
+  );
+}
+
+// Card surface — shadows over borders, concentric radii (outer 12px, inner content inherits)
+function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn(
+      "bg-card rounded-xl overflow-hidden p-4 sm:p-5",
+      "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
+      className
+    )}>
+      {children}
+    </div>
+  );
+}
+
+// One cell of the at-a-glance strip: label, value, and an optional quiet
+// line that says what the value refers to
+function Vital({
+  label,
+  sub,
+  action,
+  valueClassName,
+  children,
+}: {
+  label: string;
+  sub?: React.ReactNode;
+  action?: React.ReactNode;
+  valueClassName?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="min-w-0">
+      <div className="flex items-center justify-between gap-2 mb-1.5 h-4">
+        <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">{label}</p>
+        {action}
+      </div>
+      <div className={cn('font-mono text-lg font-semibold tabular-nums leading-none antialiased', valueClassName)}>
+        {children}
+      </div>
+      {sub && (
+        <p className="text-xs text-muted-foreground mt-1.5 truncate antialiased">{sub}</p>
+      )}
+    </div>
+  );
+}
 
 export function UnifiedClientProfile() {
   const params = useParams<{ clientId: string }>();
@@ -103,6 +161,7 @@ export function UnifiedClientProfile() {
   const [isSendingCheckIn, setIsSendingCheckIn] = useState(false);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [showContinueConfirm, setShowContinueConfirm] = useState(false);
+  const [showUnsendConfirm, setShowUnsendConfirm] = useState(false);
   const [isContinuingPlan, setIsContinuingPlan] = useState(false);
   // Optimistic override for the check-in schedule settings (null = follow server)
   const [scheduleOverride, setScheduleOverride] =
@@ -193,6 +252,13 @@ export function UnifiedClientProfile() {
     return exerciseFlags.some((ef) => recentCompletionIds.has(ef.workoutCompletionId));
   }, [workoutCompletions, exerciseFlags]);
 
+  // Flags per workout, for the plan rows' "2 flagged" note
+  const flagCountsByCompletion = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const f of exerciseFlags) counts[f.workoutCompletionId] = (counts[f.workoutCompletionId] ?? 0) + 1;
+    return counts;
+  }, [exerciseFlags]);
+
   // Adapted plan list for AssignPlanModal
   const plansList: WorkoutPlan[] = useMemo(
     () =>
@@ -238,14 +304,6 @@ export function UnifiedClientProfile() {
   }, [activeCheckInDetail, apiClient, user]);
 
 
-  // "Hide until they respond": per-device, keyed by the pending check-in's
-  // id so it lapses on its own when a new one is sent or this one is answered.
-  const pendingCheckInId = activeCheckIn?.status === 'pending' ? activeCheckInId : null;
-  const {
-    hidden: pendingHidden,
-    hide: hidePending,
-    unhide: unhidePending,
-  } = useHiddenPendingCheckIn(pendingCheckInId);
   // Unread = messages from the client's user not yet marked read. Best-effort:
   // the messages API stamps the thread read on fetch (backlog #15).
   const hasUnread = useMemo(
@@ -328,14 +386,6 @@ export function UnifiedClientProfile() {
     clearTimeout(sentTimerRef.current);
     setJustSentCheckIn(false);
     refreshClient();
-  };
-
-  const handleHidePending = () => {
-    hidePending();
-    const name = apiClient?.user.name?.split(' ')[0] || 'they';
-    toast(`Hidden until ${name} responds`, {
-      action: { label: 'Undo', onClick: unhidePending },
-    });
   };
 
   const handleEditCheckInResponse = async (checkInId: string, coachFeedback: string) => {
@@ -572,6 +622,37 @@ export function UnifiedClientProfile() {
   // lastCheckInDate isn't always populated on the client record — fall back to history
   const lastCheckInAt = client.lastCheckInDate ?? lastCompletedCheckIn?.completedAt ?? lastCompletedCheckIn?.date;
 
+  // Final week — the block ends Sunday, and the client's app is about to
+  // tell them their coach is lining up the next one
+  const isFinalWeek = !!plan && !!client.planStartDate
+    && getPlanProgressStatus(client.planStartDate, planTotalWeeks) === 'FINAL_WEEK';
+  const planEndsOn = plan && client.planStartDate
+    ? addDays(startOfWeek(new Date(client.planStartDate), { weekStartsOn: 1 }), planTotalWeeks * 7 - 1)
+    : null;
+
+  // Adherence — same shared summary the client's plan-complete card uses.
+  // Mid-plan it covers elapsed weeks only, so the week in progress never
+  // counts as missed. Prefers the uncapped plan-scoped list; the recent
+  // window is the fallback for an older server.
+  const planSummary = plan
+    ? summarizeCompletedPlan(
+        plan,
+        apiClient.activePlanCompletions
+          ? apiClient.activePlanCompletions.map((c) => ({
+              planId: plan.id,
+              dayId: c.dayId,
+              status: 'COMPLETED' as const,
+              durationSec: c.durationSec ?? undefined,
+            }))
+          : workoutCompletions,
+        planEnded ? {} : { throughWeek: currentWeekNum ?? 1 }
+      )
+    : null;
+
+  // Which workout "Last workout" was — "Today" alone said nothing new
+  const lastWorkoutDay = apiClient.completions.find((c) => c.status === 'COMPLETED')?.day;
+  const lastWorkoutName = lastWorkoutDay?.name ? parseSessionName(lastWorkoutDay.name) : null;
+
   // Derive inline status info from the same server-computed urgency the
   // dashboard ranks by, so this page can never disagree with the roster.
   // Suppress the urgent banner while a check-in is in flight — the
@@ -615,32 +696,12 @@ export function UnifiedClientProfile() {
         {urgentDetail && <span className="text-warning/70 normal-case tracking-normal tabular-nums">· {urgentDetail}</span>}
       </p>
     )
-    : plan ? (
+    : (
       <p className="text-[13px] text-muted-foreground antialiased">
-        {plan.name}
+        Client since {format(new Date(apiClient.joinedAt), isThisYear(new Date(apiClient.joinedAt)) ? 'MMM d' : 'MMM d, yyyy')}
+        {plan?.workoutsPerWeek ? ` · trains ${plan.workoutsPerWeek}×/week` : ''}
       </p>
-    ) : undefined;
-
-  // Section label helper — consistent uppercase tracking with antialiased rendering.
-  // Real <h2> so the page has a navigable heading outline, styled down to a label.
-  const SectionLabel = ({ children }: { children: React.ReactNode }) => (
-    <div className="px-1 pb-2.5">
-      <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
-        {children}
-      </h2>
-    </div>
-  );
-
-  // Card surface helper — shadows over borders, concentric radii (outer 12px, inner content inherits)
-  const SectionCard = ({ children, className: cardClassName }: { children: React.ReactNode; className?: string }) => (
-    <div className={cn(
-      "bg-card rounded-xl overflow-hidden p-4 sm:p-5",
-      "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
-      cardClassName
-    )}>
-      {children}
-    </div>
-  );
+    );
 
   return (
     <div className="min-h-dvh bg-background pb-24 sm:pb-4">
@@ -699,70 +760,229 @@ export function UnifiedClientProfile() {
 
         {/* ── Sections ── */}
 
-        {/* At-a-glance vitals — where the client is in the plan and how active they've been */}
+        {/* Final week / plan complete — the block's end is the coach's
+            next real decision, so it gets said before anything else */}
+        {plan && planSummary && planEndsOn && (isFinalWeek || planEnded) && (
+        <div className="animate-enter" style={{ animationDelay: '60ms' }}>
+          <SectionCard>
+            {planEnded ? (
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0 flex-1">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
+                    Plan complete · {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'} · ended {format(planEndsOn, 'MMM d')}
+                  </p>
+                  {planSummary.planned > 0 && (
+                    <>
+                      <div className="mt-2.5 flex items-baseline gap-3">
+                        <p className="text-[36px] font-bold tracking-tight leading-none antialiased">{planSummary.pct}%</p>
+                        <p className="text-sm text-muted-foreground antialiased">
+                          {planSummary.completed} of {planSummary.planned} workouts done
+                        </p>
+                      </div>
+                      <div className="mt-3 h-1.5 max-w-md rounded-full bg-muted overflow-hidden" aria-hidden="true">
+                        <div className="h-full rounded-full bg-brand" style={{ width: `${planSummary.pct}%` }} />
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-2.5 antialiased">{planSummary.missNote}</p>
+                    </>
+                  )}
+                </div>
+                {/* "Assign next plan" is the header's primary action here */}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowContinueConfirm(true)}
+                  disabled={isContinuingPlan}
+                  className="shrink-0 self-start sm:self-auto active:scale-[0.96] transition-transform duration-150"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+                  {isContinuingPlan ? 'Starting…' : 'Run it again'}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />
+                    Final week · ends {format(planEndsOn, 'EEE, MMM d')}
+                  </p>
+                  <p className="text-[15px] font-bold tracking-tight mt-1.5 antialiased">
+                    {firstName}&apos;s block wraps up this week
+                  </p>
+                  {/* Assigning starts a plan the same day, so the honest
+                      move now is the conversation, not the assign button */}
+                  <p className="text-sm text-muted-foreground mt-1 max-w-xl leading-relaxed antialiased">
+                    Their app will say you&apos;re lining up the next one. A new plan starts the day you
+                    assign it, so ask what they want next now and assign it once this one ends.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 shrink-0">
+                  <Button
+                    onClick={() => {
+                      setChatPrefill('You’re into the final week of this block. What do you want the next one to focus on?');
+                      chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="active:scale-[0.96] transition-transform duration-150"
+                  >
+                    <MessageCircle className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+                    Ask about next block
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push('/coach?view=plans')}
+                    className="active:scale-[0.96] transition-transform duration-150"
+                  >
+                    Build a plan
+                  </Button>
+                </div>
+              </div>
+            )}
+          </SectionCard>
+        </div>
+        )}
+
+        {/* At-a-glance vitals — where the client is, how consistent they've
+            been, what they last did, and where the check-in stands */}
         {plan && weekProgress && (
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
           <SectionCard>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-4">
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">This week</p>
-                <div className="flex items-center gap-3">
-                  <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">
-                    {weekProgress.completed}
-                    <span className="text-muted-foreground font-normal">/{weekProgress.total}</span>
-                  </p>
-                  <div className="flex gap-1 w-full max-w-[72px]" aria-hidden="true">
-                    {Array.from({ length: weekProgress.total }, (_, i) => (
-                      <div
-                        key={i}
-                        className={cn(
-                          'flex-1 h-1.5 rounded-full',
-                          i < weekProgress.completed ? 'bg-success' : 'bg-success/15'
-                        )}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Plan week</p>
-                <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">
-                  {planEnded
-                    ? <>Done <span className="text-muted-foreground font-normal">· {planTotalWeeks} wks</span></>
-                    : <>{currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span></>}
-                </p>
-              </div>
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Last workout</p>
-                <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased">{daysAgoLabel(lastWorkoutAt) ?? '—'}</p>
-              </div>
-              <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">Last check-in</p>
-                <p className={cn(
-                  "font-mono text-lg font-semibold tabular-nums leading-none antialiased",
-                  statusIsUrgent && "text-warning"
-                )}>{daysAgoLabel(lastCheckInAt) ?? 'None yet'}</p>
-              </div>
+            {/* Once the plan has ended, the banner above carries the plan,
+                the adherence and the final week — the strip keeps only what
+                still moves */}
+            <div className={cn(
+              'grid grid-cols-2 gap-x-6 gap-y-5',
+              !planEnded && 'sm:grid-cols-3 lg:grid-cols-5'
+            )}>
+              {!planEnded && (
+                <>
+                  <Vital label="This week">
+                    <div className="flex items-center gap-3">
+                      <p>
+                        {weekProgress.completed}
+                        <span className="text-muted-foreground font-normal">/{weekProgress.total}</span>
+                      </p>
+                      <div className="flex gap-1 w-full max-w-[72px]" aria-hidden="true">
+                        {Array.from({ length: weekProgress.total }, (_, i) => (
+                          <div
+                            key={i}
+                            className={cn(
+                              'flex-1 h-1.5 rounded-full',
+                              i < weekProgress.completed ? 'bg-success' : 'bg-success/15'
+                            )}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </Vital>
+                  <Vital
+                    label="Plan"
+                    sub={
+                      planEndsOn
+                        ? isFinalWeek
+                          ? `Final week · ends ${format(planEndsOn, 'EEE')}`
+                          : `Ends ${format(planEndsOn, 'MMM d')}`
+                        : undefined
+                    }
+                  >
+                    Wk {currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span>
+                  </Vital>
+                  <Vital
+                    label="Adherence"
+                    sub={
+                      planSummary && planSummary.planned > 0
+                        ? `${planSummary.completed} of ${planSummary.planned} so far`
+                        : 'None due yet'
+                    }
+                  >
+                    {planSummary && planSummary.planned > 0 ? `${planSummary.pct}%` : '—'}
+                  </Vital>
+                </>
+              )}
+              <Vital
+                label="Last workout"
+                sub={
+                  lastWorkoutName
+                    ? lastWorkoutName.day
+                      ? `Day ${lastWorkoutName.day} · ${lastWorkoutName.title}`
+                      : lastWorkoutName.title
+                    : undefined
+                }
+              >
+                {daysAgoLabel(lastWorkoutAt) ?? '—'}
+              </Vital>
+              {activeCheckIn?.status === 'pending' ? (
+                <Vital
+                  label="Check-in"
+                  sub={`Sent ${formatDistanceToNowStrict(new Date(activeCheckIn.date), { addSuffix: true })}`}
+                  action={
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6 -me-1.5 text-muted-foreground hover:text-foreground"
+                          aria-label="Check-in actions"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => setShowUnsendConfirm(true)}>
+                          <Undo2 className="w-4 h-4 me-2" />
+                          Unsend check-in
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  }
+                >
+                  Waiting
+                </Vital>
+              ) : activeCheckIn?.status === 'responded' ? (
+                <Vital
+                  label="Check-in"
+                  sub={activeCheckIn.clientRespondedAt
+                    ? `Replied ${formatDistanceToNowStrict(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })}`
+                    : 'Replied'}
+                >
+                  <button
+                    type="button"
+                    onClick={handleScrollToCheckIn}
+                    className="underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors"
+                  >
+                    To review
+                  </button>
+                </Vital>
+              ) : (
+                <Vital
+                  label="Check-in"
+                  sub={lastCheckInAt ? 'Last completed' : undefined}
+                  valueClassName={cn(statusIsUrgent && 'text-warning')}
+                >
+                  {daysAgoLabel(lastCheckInAt) ?? 'None yet'}
+                </Vital>
+              )}
             </div>
           </SectionCard>
         </div>
         )}
 
-        {/* Check-in section — only when it has something to show: an active
-            check-in, recent flags, or the send prompt when the header's
-            primary action is something other than "Send check-in" (the coach
-            must always have some way to start one). The prompt is suppressed
-            inside the panel whenever the header already carries Send, so the
-            same button never appears twice on one screen. Past check-ins
-            still live in the History tab. */}
+        {/* Check-in section — only when it has something to show: a reply to
+            review, recent flags, the "Sent" confirmation, or the send prompt
+            when the header's primary action is something other than "Send
+            check-in" (the coach must always have some way to start one).
+            A check-in that's just waiting lives in the strip's Check-in cell
+            — a full-width card for a state with nothing to do was noise — so
+            here it only shows the week's flags. Past check-ins live in the
+            History tab. */}
         {plan && (
           justSentCheckIn
           || hasRecentFlags
-          // A hidden pending card renders nothing unless there are flags (above)
-          || (activeCheckIn ? !pendingHidden : primaryAction?.kind !== 'send')
+          || activeCheckIn?.status === 'responded'
+          || (!activeCheckIn && primaryAction?.kind !== 'send')
         ) && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
-          <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
+          {/* The flags list titles itself; a "Check-in" label over it would mislabel it */}
+          {!(activeCheckIn?.status === 'pending' && !justSentCheckIn) && (
+            <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
+          )}
           <SectionCard>
             <InlineCheckInReview
               client={client}
@@ -774,8 +994,7 @@ export function UnifiedClientProfile() {
               onCompleteCheckIn={handleCompleteCheckIn}
               onCreateCheckIn={handleCreateCheckIn}
               onUnsendCheckIn={handleUnsendCheckIn}
-              pendingHidden={pendingHidden}
-              onHidePending={handleHidePending}
+              pendingHidden={activeCheckIn?.status === 'pending'}
               onMessageAboutFlag={handleMessageAboutFlag}
               justSentFromParent={justSentCheckIn}
               variant="flat"
@@ -785,13 +1004,15 @@ export function UnifiedClientProfile() {
         </section>
         )}
 
-        {/* Two equal columns: Chat + tabbed Plan/History. Matched heights keep
-            the pairing symmetric on desktop; one column through tablet widths,
+        {/* Chat + tabbed Plan/History. The plan side gets the wider column —
+            its rows carry names and results, while a chat thread reads fine
+            narrow and sat half empty at equal widths. Matched heights keep
+            the pairing tidy on desktop; one column through tablet widths,
             where two columns wrapped the tab labels and truncated the plan
             name. */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '200ms' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '200ms' }}>
           {/* Messages */}
-          <section>
+          <section className="lg:col-span-2">
             <div ref={chatRef} className={cn(
               "bg-card rounded-xl overflow-hidden lg:h-[480px] flex flex-col",
               "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
@@ -824,7 +1045,7 @@ export function UnifiedClientProfile() {
           {/* Secondary: Tabbed Plan + History.
               Matches the chat card's height on desktop; footers pin to the bottom
               edge (like the chat input) so spare space sits inside the card. */}
-          <section ref={secondaryRef}>
+          <section ref={secondaryRef} className="lg:col-span-3">
             <SectionCard className="lg:h-[480px] lg:flex lg:flex-col">
               {/* Tab bar — labels never wrap; "Training Plan" shortens to
                   "Plan" on phones where three full labels don't fit */}
@@ -890,20 +1111,6 @@ export function UnifiedClientProfile() {
                         {/* -ms cancels the first button's padding so the
                             stacked row's icon sits flush with the title */}
                         <div className="flex items-center gap-0.5 shrink-0 -ms-2.5 sm:ms-0">
-                          {/* A finished block that's working doesn't need
-                              replacing — one tap starts the next cycle */}
-                          {planEnded && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setShowContinueConfirm(true)}
-                              disabled={isContinuingPlan}
-                              className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5 me-1.5" />
-                              {isContinuingPlan ? 'Starting…' : 'Run again'}
-                            </Button>
-                          )}
                           <Button variant="ghost" size="sm" onClick={handleChangePlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
                             <ArrowLeftRight className="w-3.5 h-3.5 me-1.5" />
                             Change
@@ -923,6 +1130,7 @@ export function UnifiedClientProfile() {
                           workoutCompletions={workoutCompletions}
                           onEditPlan={handleEditPlan}
                           variant="flat"
+                          flagCounts={flagCountsByCompletion}
                         />
                       </div>
                       {/* Plan meta footer — pinned to the card's bottom edge on desktop */}
@@ -1017,6 +1225,18 @@ export function UnifiedClientProfile() {
         message={`${client.name?.split(' ')[0] || 'They'} starts back at week 1 from today with the same workouts, including any edits you made for them. Their completed weeks stay in their history.`}
         confirmLabel="Start week 1"
         icon={RotateCcw}
+      />
+      <ConfirmationModal
+        isOpen={showUnsendConfirm}
+        onClose={() => setShowUnsendConfirm(false)}
+        onConfirm={async () => {
+          await handleUnsendCheckIn();
+          setShowUnsendConfirm(false);
+        }}
+        title="Unsend this check-in?"
+        message={`${firstName} won’t see it anymore. You can send a new one any time.`}
+        confirmLabel="Unsend"
+        icon={Undo2}
       />
       <ConfirmationModal
         isOpen={showEndConfirm}
