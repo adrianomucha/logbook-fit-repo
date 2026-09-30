@@ -407,7 +407,7 @@ export function PlanEditorDrawer({
                   <span className="text-border" aria-hidden="true">/</span>
                   {plan.weeks.length} {plan.weeks.length === 1 ? 'wk' : 'wks'}
                   <span className="text-border" aria-hidden="true">/</span>
-                  {plan.weeks[0].days.length} days/wk
+                  {plan.weeks[0].days.length} {plan.weeks[0].days.length === 1 ? 'day' : 'days'}/wk
                 </p>
                 <SheetTitle asChild>
                   <div className="flex items-center gap-2 min-w-0 mt-1">

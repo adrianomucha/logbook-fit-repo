@@ -207,6 +207,26 @@ export function ExerciseEditorContent({
   );
   // Numbers read in the data voice, like the profile's vitals
   const numberInput = 'h-9 border-0 bg-transparent px-4 pb-2 pt-0.5 font-mono text-lg sm:text-lg font-semibold tabular-nums focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:font-normal placeholder:text-muted-foreground/40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+  const renderModeSwitch = (className: string, buttonClassName: string) => (
+    <div className={cn('rounded-lg border p-0.5', className)} role="group" aria-label="Editor mode">
+      <button
+        aria-pressed={mode === 'library'}
+        className={cn(segment(mode === 'library'), buttonClassName)}
+        onClick={() => setMode('library')}
+      >
+        <Library className="w-3 h-3" />
+        {isNew ? 'Library' : 'Replace'}
+      </button>
+      <button
+        aria-pressed={mode === 'custom'}
+        className={cn(segment(mode === 'custom'), buttonClassName)}
+        onClick={() => setMode('custom')}
+      >
+        <Plus className="w-3 h-3" />
+        {isNew ? 'Custom' : 'Details'}
+      </button>
+    </div>
+  );
   const unitSuffix = 'pointer-events-none absolute inset-y-0 right-4 flex items-center pb-1.5 font-mono text-xs text-muted-foreground';
 
   return (
@@ -224,27 +244,10 @@ export function ExerciseEditorContent({
             <span className="truncate">{dayName || 'Workout'}</span>
           </button>
 
-          {/* Mode switch */}
-          <div className="flex rounded-lg border p-0.5 shrink-0" role="group" aria-label="Editor mode">
-            <button
-              aria-pressed={mode === 'library'}
-              className={cn(segment(mode === 'library'), 'px-2.5 py-1 text-[10px]')}
-              onClick={() => setMode('library')}
-            >
-              <Library className="w-3 h-3" />
-              {isNew ? 'Library' : 'Replace'}
-            </button>
-            <button
-              aria-pressed={mode === 'custom'}
-              className={cn(segment(mode === 'custom'), 'px-2.5 py-1 text-[10px]')}
-              onClick={() => setMode('custom')}
-            >
-              <Plus className="w-3 h-3" />
-              {isNew ? 'Custom' : 'Details'}
-            </button>
-          </div>
+          {/* Mode switch — beside the back link on desktop */}
+          {renderModeSwitch('hidden sm:flex shrink-0', 'px-2.5 py-1 text-[10px]')}
         </div>
-        <h2 className="mt-2 flex items-baseline gap-2.5 min-w-0 text-xl font-bold tracking-tight leading-tight antialiased">
+        <h2 className="mt-2.5 flex items-baseline gap-2.5 min-w-0 text-2xl sm:text-xl font-bold tracking-tight leading-tight antialiased">
           {exerciseNumber && (
             <span className="font-mono text-sm font-semibold tabular-nums text-muted-foreground shrink-0">
               {String(exerciseNumber).padStart(2, '0')}
@@ -254,6 +257,9 @@ export function ExerciseEditorContent({
             {isNew ? 'Add exercise' : name.trim() || 'Untitled exercise'}
           </span>
         </h2>
+        {/* On mobile the switch gets its own full-width row, so the back
+            link isn't truncated and each half is a real tap target */}
+        {renderModeSwitch('flex sm:hidden mt-3', 'flex-1 justify-center h-9 text-[11px]')}
       </div>
 
       {/* Content */}
