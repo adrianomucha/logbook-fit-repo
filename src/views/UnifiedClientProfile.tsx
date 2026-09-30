@@ -128,7 +128,7 @@ export function UnifiedClientProfile() {
 
   // API hooks
   const { client: apiClient, isLoading: isLoadingClient, error: clientError, refresh: refreshClient } = useCoachClientProfile(clientId);
-  const { plan: apiPlan, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
+  const { plan: apiPlan, error: planError, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
   // markRead: the coach is on this client's profile, where the message panel
   // lives — reading the thread here is genuinely "reading" it. active: the
   // panel is always on screen here, so the thread polls at chat speed.
@@ -489,14 +489,18 @@ export function UnifiedClientProfile() {
         method: 'POST',
         body: JSON.stringify({ clientProfileId: clientId }),
       });
-      await Promise.all([refreshClient(), refreshPlan(), refreshCoachPlans()]);
-      const planName = coachPlans.find((p) => p.id === templateId)?.name;
-      const name = client?.name?.split(' ')[0] ?? 'Your client';
-      toast.success(planName ? `${name} is on ${planName}` : 'Plan assigned');
     } catch {
       toast.error('Failed to assign plan. Please try again.');
+      setShowAssignPlanModal(false);
+      return;
     }
+    // The assignment is saved; refreshing is best-effort, so a flaky
+    // refetch never reports a plan that did land as a failure
+    const planName = coachPlans.find((p) => p.id === templateId)?.name;
+    const name = client?.name?.split(' ')[0] ?? 'Your client';
+    toast.success(planName ? `${name} is on ${planName}` : 'Plan assigned');
     setShowAssignPlanModal(false);
+    await Promise.allSettled([refreshClient(), refreshPlan(), refreshCoachPlans()]);
   };
 
   const handleSendMessage = async (content: string) => {
@@ -721,13 +725,17 @@ export function UnifiedClientProfile() {
       </div>
     );
 
+  // Judged from the client record, not the plan detail: that loads a beat
+  // later, and a client mid-load must never be offered the first-plan picker
+  const hasNoPlan = !apiClient.activePlan;
+
   // No plan yet: tabs with nothing in them are just empty rooms, so only
   // the ones with history stay; alone, the plan tab needs no tab bar
   const secondaryTabs = ([
     { id: 'plan' as const, label: 'Training Plan', shortLabel: 'Plan' },
     { id: 'workouts' as const, label: 'Workouts', count: apiClient.completions.length },
     { id: 'history' as const, label: 'Check-ins', count: checkIns.filter(c => c.status === 'completed').length },
-  ] as const).filter((tab) => plan || !('count' in tab) || tab.count > 0);
+  ] as const).filter((tab) => !hasNoPlan || !('count' in tab) || tab.count > 0);
 
   return (
     <div className="min-h-dvh bg-background pb-24 sm:pb-4">
@@ -1080,7 +1088,7 @@ export function UnifiedClientProfile() {
               Matches the chat card's height on desktop; footers pin to the bottom
               edge (like the chat input) so spare space sits inside the card. */}
           {/* With no plan, picking one is the page's job — first on phones */}
-          <section ref={secondaryRef} className={cn('lg:col-span-3', !plan && 'order-first lg:order-none')}>
+          <section ref={secondaryRef} className={cn('lg:col-span-3', hasNoPlan && 'order-first lg:order-none')}>
             <SectionCard className="lg:h-[480px] lg:flex lg:flex-col">
               {/* Tab bar — labels never wrap; "Training Plan" shortens to
                   "Plan" on phones where three full labels don't fit */}
@@ -1171,6 +1179,20 @@ export function UnifiedClientProfile() {
                         {plan.sourceTemplateId ? ` · ${firstName}’s copy` : ''}
                       </p>
                     </>
+                  ) : !hasNoPlan ? (
+                    planError ? (
+                      <div className="flex flex-col items-center justify-center gap-2 py-10 text-center lg:flex-1">
+                        <p className="text-sm text-muted-foreground antialiased">Couldn&apos;t load {firstName}&apos;s plan.</p>
+                        <Button variant="outline" size="sm" onClick={() => refreshPlan()}>
+                          Try again
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center py-10 lg:flex-1" role="status">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />
+                        <span className="sr-only">Loading plan</span>
+                      </div>
+                    )
                   ) : (
                     <FirstPlanPicker
                       firstName={firstName}
