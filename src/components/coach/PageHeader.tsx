@@ -8,9 +8,11 @@ interface PageHeaderProps {
   action?: ReactNode;
   /** Renders a small "‹ Clients" back link above the title. */
   breadcrumb?: { label: string; onClick: () => void };
+  /** A face beside the title, for pages about one person */
+  avatar?: ReactNode;
 }
 
-export function PageHeader({ title, subtitle, action, breadcrumb }: PageHeaderProps) {
+export function PageHeader({ title, subtitle, action, breadcrumb, avatar }: PageHeaderProps) {
   return (
     <div className="flex items-start justify-between gap-4">
       <div className="min-w-0">
@@ -23,20 +25,25 @@ export function PageHeader({ title, subtitle, action, breadcrumb }: PageHeaderPr
             {breadcrumb.label}
           </button>
         )}
-        {/* Wrap on phones: beside the action block a truncated name has
-            nowhere else on the page to be read in full */}
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight antialiased break-words sm:truncate">
-          {title}
-        </h1>
-        {subtitle != null && (
-          typeof subtitle === 'string' ? (
-            <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground mt-1.5 antialiased">
-              {subtitle}
-            </p>
-          ) : (
-            <div className="mt-1.5">{subtitle}</div>
-          )
-        )}
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          {avatar}
+          <div className="min-w-0">
+            {/* Wrap on phones: beside the action block a truncated name has
+                nowhere else on the page to be read in full */}
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight antialiased break-words sm:truncate">
+              {title}
+            </h1>
+            {subtitle != null && (
+              typeof subtitle === 'string' ? (
+                <p className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground mt-1.5 antialiased">
+                  {subtitle}
+                </p>
+              ) : (
+                <div className="mt-1.5">{subtitle}</div>
+              )
+            )}
+          </div>
+        </div>
       </div>
       {action}
     </div>

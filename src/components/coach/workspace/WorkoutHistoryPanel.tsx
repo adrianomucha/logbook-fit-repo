@@ -47,8 +47,8 @@ export function WorkoutHistoryPanel({
     (c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt)
   );
 
-  // Same shape as the plan tab's empty state (InlinePlanEditor) so the three
-  // tabs read as one family
+  // Same shape as the Check-ins tab's empty state so the tabs read as one
+  // family
   if (rows.length === 0) {
     return (
       <div className="h-full lg:flex-1 lg:min-h-0 flex flex-col items-center justify-center text-center py-8">
