@@ -25,7 +25,7 @@ import {
   CheckInScheduleSettings,
 } from '@/components/coach/workspace/CheckInHistoryPanel';
 import { WorkoutHistoryPanel } from '@/components/coach/workspace/WorkoutHistoryPanel';
-import { InlinePlanEditor } from '@/components/coach/workspace/InlinePlanEditor';
+import { FirstPlanPicker } from '@/components/coach/workspace/FirstPlanPicker';
 import { InteractiveWeeklyStrip } from '@/components/coach/workspace/InteractiveWeeklyStrip';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { ChatView } from '@/components/chat/ChatView';
@@ -35,6 +35,8 @@ import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
+import { UserAvatar } from '@/components/UserAvatar';
+import { urgencyStyle } from '@/components/coach/shared/clientSignals';
 import { Button } from '@/components/ui/button';
 import { LoadErrorState } from '@/components/coach/EmptyStates';
 import {
@@ -48,6 +50,7 @@ import { toast } from 'sonner';
 import { addDays, format, formatDistanceToNowStrict, isThisYear, startOfWeek } from 'date-fns';
 import { summarizeCompletedPlan } from '@logbook/shared/plan-summary';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
+import { coachOpeners } from '@logbook/shared/client-profile';
 import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -125,7 +128,7 @@ export function UnifiedClientProfile() {
 
   // API hooks
   const { client: apiClient, isLoading: isLoadingClient, error: clientError, refresh: refreshClient } = useCoachClientProfile(clientId);
-  const { plan: apiPlan, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
+  const { plan: apiPlan, error: planError, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
   // markRead: the coach is on this client's profile, where the message panel
   // lives — reading the thread here is genuinely "reading" it. active: the
   // panel is always on screen here, so the thread polls at chat speed.
@@ -135,7 +138,7 @@ export function UnifiedClientProfile() {
     hasMore: hasEarlierMessages,
     loadOlder: loadEarlierMessages,
   } = useMessages(apiClient?.user.id ?? null, { markRead: true, active: true });
-  const { plans: coachPlans, createPlan, refresh: refreshCoachPlans } = useCoachPlans();
+  const { plans: coachPlans, createPlan, refresh: refreshCoachPlans, isLoading: isLoadingCoachPlans } = useCoachPlans();
 
   // Find active check-in from client's check-ins list
   const activeCheckInId = useMemo(() => {
@@ -486,12 +489,18 @@ export function UnifiedClientProfile() {
         method: 'POST',
         body: JSON.stringify({ clientProfileId: clientId }),
       });
-      refreshClient();
-      refreshPlan();
     } catch {
       toast.error('Failed to assign plan. Please try again.');
+      setShowAssignPlanModal(false);
+      return;
     }
+    // The assignment is saved; refreshing is best-effort, so a flaky
+    // refetch never reports a plan that did land as a failure
+    const planName = coachPlans.find((p) => p.id === templateId)?.name;
+    const name = client?.name?.split(' ')[0] ?? 'Your client';
+    toast.success(planName ? `${name} is on ${planName}` : 'Plan assigned');
     setShowAssignPlanModal(false);
+    await Promise.allSettled([refreshClient(), refreshPlan(), refreshCoachPlans()]);
   };
 
   const handleSendMessage = async (content: string) => {
@@ -672,10 +681,11 @@ export function UnifiedClientProfile() {
   // Primary action — one obvious next move chosen by the client's state, or
   // none: when the only thing left to do is reply, the chat card is already on
   // the page, so a header button that merely scrolls to it would be redundant.
+  // Same for a client with no plan: the plan picker leads the page.
   // `kind` lets other parts of the page avoid repeating the same button.
   const primaryAction: { label: string; onClick: () => void; disabled?: boolean; kind: 'assign' | 'review' | 'send' } | null =
     !plan
-      ? { label: 'Assign a plan', onClick: handleChangePlan, kind: 'assign' }
+      ? null
       : planEnded
       ? { label: 'Assign next plan', onClick: handleChangePlan, kind: 'assign' }
       : activeCheckIn?.status === 'responded'
@@ -685,6 +695,9 @@ export function UnifiedClientProfile() {
           : statusIsUrgent || !hasUnread
             ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn, kind: 'send' }
             : null;
+
+  // Same status chip the roster row shows, so the two pages read as one
+  const statusChip = urgencyStyle(apiClient.urgency);
 
   // Build subtitle from status or plan. Urgent statuses get the warning voice
   // with the days detail folded in; everything else keeps a quiet metadata line.
@@ -697,11 +710,32 @@ export function UnifiedClientProfile() {
       </p>
     )
     : (
-      <p className="text-[13px] text-muted-foreground antialiased">
-        Client since {format(new Date(apiClient.joinedAt), isThisYear(new Date(apiClient.joinedAt)) ? 'MMM d' : 'MMM d, yyyy')}
-        {plan?.workoutsPerWeek ? ` · trains ${plan.workoutsPerWeek}×/week` : ''}
-      </p>
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className={cn(
+          'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium leading-none whitespace-nowrap',
+          statusChip.chip
+        )}>
+          <span className={cn('w-1.5 h-1.5 rounded-full', statusChip.dot)} />
+          {statusChip.label}
+        </span>
+        <p className="text-[13px] text-muted-foreground antialiased">
+          Client since {format(new Date(apiClient.joinedAt), isThisYear(new Date(apiClient.joinedAt)) ? 'MMM d' : 'MMM d, yyyy')}
+          {plan?.workoutsPerWeek ? ` · trains ${plan.workoutsPerWeek}×/week` : ''}
+        </p>
+      </div>
     );
+
+  // Judged from the client record, not the plan detail: that loads a beat
+  // later, and a client mid-load must never be offered the first-plan picker
+  const hasNoPlan = !apiClient.activePlan;
+
+  // No plan yet: tabs with nothing in them are just empty rooms, so only
+  // the ones with history stay; alone, the plan tab needs no tab bar
+  const secondaryTabs = ([
+    { id: 'plan' as const, label: 'Training Plan', shortLabel: 'Plan' },
+    { id: 'workouts' as const, label: 'Workouts', count: apiClient.completions.length },
+    { id: 'history' as const, label: 'Check-ins', count: checkIns.filter(c => c.status === 'completed').length },
+  ] as const).filter((tab) => !hasNoPlan || !('count' in tab) || tab.count > 0);
 
   return (
     <div className="min-h-dvh bg-background pb-24 sm:pb-4">
@@ -714,6 +748,13 @@ export function UnifiedClientProfile() {
           <PageHeader
             title={client.name}
             subtitle={headerSubtitle}
+            avatar={
+              <UserAvatar
+                name={client.name}
+                avatarUrl={apiClient.user.avatarUrl}
+                className="w-12 h-12 sm:w-14 sm:h-14 text-lg sm:text-xl shrink-0"
+              />
+            }
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach') }}
             action={
               <div className="flex items-center gap-2.5 shrink-0">
@@ -1035,6 +1076,7 @@ export function UnifiedClientProfile() {
                 hasEarlier={hasEarlierMessages}
                 onLoadEarlier={loadEarlierMessages}
                 initialPrefill={chatPrefill}
+                conversationStarters={coachOpeners(firstName)}
                 /* Fixed height below lg so the history scrolls inside the card instead
                    of stretching the page (flex-basis 0 from flex-1 would override h-[…]) */
                 heightClass="h-[420px] lg:h-auto lg:flex-1 lg:min-h-0"
@@ -1045,16 +1087,14 @@ export function UnifiedClientProfile() {
           {/* Secondary: Tabbed Plan + History.
               Matches the chat card's height on desktop; footers pin to the bottom
               edge (like the chat input) so spare space sits inside the card. */}
-          <section ref={secondaryRef} className="lg:col-span-3">
+          {/* With no plan, picking one is the page's job — first on phones */}
+          <section ref={secondaryRef} className={cn('lg:col-span-3', hasNoPlan && 'order-first lg:order-none')}>
             <SectionCard className="lg:h-[480px] lg:flex lg:flex-col">
               {/* Tab bar — labels never wrap; "Training Plan" shortens to
                   "Plan" on phones where three full labels don't fit */}
+              {secondaryTabs.length > 1 && (
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
-                {([
-                  { id: 'plan' as const, label: 'Training Plan', shortLabel: 'Plan' },
-                  { id: 'workouts' as const, label: 'Workouts', count: apiClient.completions.length },
-                  { id: 'history' as const, label: 'Check-ins', count: checkIns.filter(c => c.status === 'completed').length },
-                ] as const).map((tab) => (
+                {secondaryTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setSecondaryTab(tab.id)}
@@ -1087,13 +1127,11 @@ export function UnifiedClientProfile() {
                   </button>
                 ))}
               </div>
+              )}
 
               {/* Tab content */}
-              {secondaryTab === 'plan' ? (
-                <div ref={planEditorRef} className={cn(
-                  "lg:flex-1 lg:min-h-0 lg:flex lg:flex-col",
-                  !plan && "flex items-center justify-center py-6"
-                )}>
+              {secondaryTab === 'plan' || !secondaryTabs.some((t) => t.id === secondaryTab) ? (
+                <div ref={planEditorRef} className="lg:flex-1 lg:min-h-0 lg:flex lg:flex-col">
                   {plan ? (
                     <>
                       {/* Plan actions row — stacked on phones so the plan
@@ -1141,18 +1179,28 @@ export function UnifiedClientProfile() {
                         {plan.sourceTemplateId ? ` · ${firstName}’s copy` : ''}
                       </p>
                     </>
+                  ) : !hasNoPlan ? (
+                    planError ? (
+                      <div className="flex flex-col items-center justify-center gap-2 py-10 text-center lg:flex-1">
+                        <p className="text-sm text-muted-foreground antialiased">Couldn&apos;t load {firstName}&apos;s plan.</p>
+                        <Button variant="outline" size="sm" onClick={() => refreshPlan()}>
+                          Try again
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center py-10 lg:flex-1" role="status">
+                        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />
+                        <span className="sr-only">Loading plan</span>
+                      </div>
+                    )
                   ) : (
-                    <InlinePlanEditor
-                      client={client}
-                      plan={plan}
-                      planStartDate={client.planStartDate}
-                      onUpdatePlan={handleUpdatePlan}
-                      onEditPlan={handleEditPlan}
-                      onChangePlan={handleChangePlan}
-                      onCreatePlan={handleCreateNewPlan}
-                      onUnassignPlan={handleUnassignPlan}
-                      exercisesCollapsed={false}
-                      variant="flat"
+                    <FirstPlanPicker
+                      firstName={firstName}
+                      plans={coachPlans}
+                      isLoading={isLoadingCoachPlans}
+                      onAssign={handleAssignPlan}
+                      onCreate={handleCreateNewPlan}
+                      onShowAll={handleChangePlan}
                     />
                   )}
                 </div>

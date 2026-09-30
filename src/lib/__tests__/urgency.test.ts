@@ -38,6 +38,26 @@ describe('getClientUrgency', () => {
     expect(result.urgencyOrder).toBe(2);
   });
 
+  it('not AT_RISK in the first week of a plan with no workouts yet', () => {
+    const result = getClientUrgency({
+      hasPlan: true,
+      planStartDate: daysAgo(2),
+      planDurationWeeks: 4,
+      lastWorkoutAt: null,
+    });
+    expect(result.urgency).toBe('ON_TRACK');
+  });
+
+  it('AT_RISK once a new plan has gone untouched for 7+ days', () => {
+    const result = getClientUrgency({
+      hasPlan: true,
+      planStartDate: daysAgo(8),
+      planDurationWeeks: 4,
+      lastWorkoutAt: daysAgo(30),
+    });
+    expect(result.urgency).toBe('AT_RISK');
+  });
+
   it('AT_RISK after 7+ days of silence, even with a check-in waiting', () => {
     const result = getClientUrgency({
       hasPlan: true,

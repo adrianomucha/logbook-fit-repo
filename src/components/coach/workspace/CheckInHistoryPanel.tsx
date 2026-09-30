@@ -196,8 +196,8 @@ export function CheckInHistoryPanel({
   if (completedCheckIns.length === 0) {
     return (
       <div className="h-full lg:flex-1 lg:min-h-0 flex flex-col">
-        {/* Same shape as the plan tab's empty state (InlinePlanEditor) so the
-            three tabs read as one family */}
+        {/* Same shape as the Workouts tab's empty state so the tabs read
+            as one family */}
         <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
           <div className="text-4xl select-none mb-4 animate-bounce-once">💬</div>
           <p className="font-semibold antialiased">No check-ins yet</p>

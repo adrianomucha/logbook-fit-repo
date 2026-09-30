@@ -62,11 +62,19 @@ export function getClientUrgency(input: ClientUrgencyInput): ClientUrgencyResult
     return { urgency: 'PLAN_ENDED', urgencyOrder: 1, planStatus };
   }
 
+  // Silence counts from the last workout or the plan's start, whichever is
+  // later — a client handed a plan this morning hasn't gone quiet, they just
+  // haven't had the chance to train yet
   const atRiskCutoff = Date.now() - AT_RISK_AFTER_DAYS * 24 * 60 * 60 * 1000;
   const lastWorkoutMs = input.lastWorkoutAt
     ? new Date(input.lastWorkoutAt).getTime()
     : null;
-  if (lastWorkoutMs === null || lastWorkoutMs < atRiskCutoff) {
+  const planStartMs = input.planStartDate
+    ? new Date(input.planStartDate).getTime()
+    : null;
+  const lastActivityMs =
+    lastWorkoutMs === null ? planStartMs : planStartMs === null ? lastWorkoutMs : Math.max(lastWorkoutMs, planStartMs);
+  if (lastActivityMs === null || lastActivityMs < atRiskCutoff) {
     return { urgency: 'AT_RISK', urgencyOrder: 2, planStatus };
   }
 
