@@ -7,6 +7,7 @@ function client(overrides: Partial<DashboardClient> = {}): DashboardClient {
     clientProfileId: 'cp1',
     user: { id: 'u1', name: 'Jean', email: 'jean@example.com', avatarUrl: null },
     activePlan: { id: 'p1', name: '4-Week Strength Foundation', durationWeeks: 4 },
+    planStartDate: null,
     lastWorkoutAt: null,
     pendingCheckIn: null,
     isSample: false,
@@ -95,6 +96,28 @@ describe('clientSignal', () => {
     expect(clientSignal(client({ urgency: 'PLAN_ENDED', activePlan: null }))).toEqual({
       lead: 'Ready for their next block',
       rest: [],
+    });
+  });
+
+  it('says a plan just started instead of an old workout from the last one', () => {
+    const now = new Date('2026-09-30T12:00:00Z').getTime();
+    const c = client({
+      planStartDate: new Date(now - 2 * 86_400_000).toISOString(),
+      lastWorkoutAt: new Date(now - 20 * 86_400_000).toISOString(),
+    });
+    expect(clientSignal(c, now)).toEqual({
+      rest: ['4-Week Strength Foundation', 'started 2d ago'],
+    });
+  });
+
+  it('goes back to the last workout once they train on the new plan', () => {
+    const now = new Date('2026-09-30T12:00:00Z').getTime();
+    const c = client({
+      planStartDate: new Date(now - 2 * 86_400_000).toISOString(),
+      lastWorkoutAt: new Date(now - 86_400_000).toISOString(),
+    });
+    expect(clientSignal(c, now)).toEqual({
+      rest: ['4-Week Strength Foundation', 'trained yesterday'],
     });
   });
 });

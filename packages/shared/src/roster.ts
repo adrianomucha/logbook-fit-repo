@@ -1,5 +1,6 @@
 import { startOfWeek } from 'date-fns';
 import type { DashboardClient } from './types/api';
+import { newPlanHint } from './urgency';
 
 /**
  * The coach's roster: one list that is both the home page and the client
@@ -152,7 +153,12 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
     case 'ON_TRACK': {
       if (plan) rest.push(plan);
       if (finalWeek) rest.push('final week, line up the next block');
-      if (client.lastWorkoutAt) {
+      // Inside the grace window of a plan they haven't trained on yet —
+      // say so, or a client with no recent workouts reads as a mistake
+      const justStarted = newPlanHint(client.planStartDate, client.lastWorkoutAt, now);
+      if (justStarted) {
+        rest.push(justStarted);
+      } else if (client.lastWorkoutAt) {
         const d = daysSince(client.lastWorkoutAt, now);
         rest.push(d <= 0 ? 'trained today' : d === 1 ? 'trained yesterday' : `last workout ${d}d ago`);
       }
