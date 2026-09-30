@@ -14,7 +14,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Link2,
+  X,
 } from 'lucide-react';
+import { TallyMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
 import { apiFetch } from '@/lib/api-client';
 import { parsePrescriptionInput } from '@/lib/reps';
@@ -122,21 +124,14 @@ export function PlanEditorDrawer({
   }, [resetKey, plan, initialWeekIndex, initialDayIndex]);
 
   // Navigate weeks — abandon any in-flight exercise edit, it belongs to the old day
-  const goToPrevWeek = () => {
-    if (selectedWeek > 0) {
-      closeExerciseEditor();
-      setSelectedWeek(selectedWeek - 1);
-      setSelectedDayId(null); // will auto-select first day via effect
-    }
+  const goToWeek = (weekIndex: number) => {
+    if (!plan || weekIndex === selectedWeek || weekIndex < 0 || weekIndex > plan.weeks.length - 1) return;
+    closeExerciseEditor();
+    setSelectedWeek(weekIndex);
+    setSelectedDayId(null); // will auto-select first day via effect
   };
-
-  const goToNextWeek = () => {
-    if (plan && selectedWeek < plan.weeks.length - 1) {
-      closeExerciseEditor();
-      setSelectedWeek(selectedWeek + 1);
-      setSelectedDayId(null); // will auto-select first day via effect
-    }
-  };
+  const goToPrevWeek = () => goToWeek(selectedWeek - 1);
+  const goToNextWeek = () => goToWeek(selectedWeek + 1);
 
   const handleSelectDay = (dayId: string) => {
     closeExerciseEditor();
@@ -391,11 +386,31 @@ export function PlanEditorDrawer({
             right — no pill scroller, no stacked chrome eating vertical space. */}
         {plan && hasWeeks && (
           <>
-            {/* Plan header — always visible */}
-            <div className="px-4 py-3 border-b overflow-visible relative z-10 shrink-0">
-              <SheetHeader>
+            {/* Plan header — always visible. Reads like the app's own pages:
+                a volt hairline on top, a mono eyebrow with the plan's shape,
+                then the name in display weight over faint logbook grid paper. */}
+            <div className="relative z-10 shrink-0 overflow-hidden border-b">
+              <div aria-hidden="true" className="h-0.5 bg-brand" />
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 opacity-[0.045] [mask-image:linear-gradient(to_right,black,transparent_70%)]"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)',
+                  backgroundSize: '16px 16px',
+                }}
+              />
+              <SheetHeader className="relative px-4 sm:px-5 pt-3 pb-3.5 space-y-0 text-left">
+                <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground tabular-nums antialiased">
+                  <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                  Plan
+                  <span className="text-border" aria-hidden="true">/</span>
+                  {plan.weeks.length} {plan.weeks.length === 1 ? 'wk' : 'wks'}
+                  <span className="text-border" aria-hidden="true">/</span>
+                  {plan.weeks[0].days.length} {plan.weeks[0].days.length === 1 ? 'day' : 'days'}/wk
+                </p>
                 <SheetTitle asChild>
-                  <div className="flex items-center gap-2 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0 mt-1">
                     {/* Plan name — click to edit */}
                     {editingPlanName ? (
                       <Input
@@ -411,23 +426,24 @@ export function PlanEditorDrawer({
                         maxLength={100}
                         aria-label="Plan name"
                         autoFocus
-                        className="font-black text-base h-auto py-1 px-2 tracking-tight min-w-0 flex-1"
+                        className="font-bold text-xl sm:text-xl h-auto py-0.5 px-2 -mx-2 tracking-tight min-w-0 flex-1"
                       />
                     ) : (
                       <button
                         onClick={() => { setEditingPlanName(true); setLocalPlanName(plan.name); }}
-                        className="font-black text-base tracking-tight truncate hover:text-muted-foreground transition-colors text-left min-w-0 flex-1"
+                        className="font-bold text-xl leading-tight tracking-tight truncate hover:text-muted-foreground transition-colors text-left min-w-0 flex-1 antialiased rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
                         {plan.name}
                       </button>
                     )}
 
-                    {/* Close drawer */}
+                    {/* Close drawer — same mono voice as the page's back link */}
                     <button
                       onClick={() => onOpenChange(false)}
-                      className="text-xs font-bold text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1 rounded-md hover:bg-muted"
+                      className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1 -me-2 rounded-md hover:bg-muted tap-target"
                     >
                       Close
+                      <X className="w-3.5 h-3.5" aria-hidden="true" />
                     </button>
                   </div>
                 </SheetTitle>
@@ -445,37 +461,69 @@ export function PlanEditorDrawer({
                 'shrink-0 border-b sm:border-b-0 sm:border-r sm:w-[264px] sm:bg-muted/30 flex flex-col',
                 exerciseDrawerOpen && 'hidden sm:flex'
               )}>
-                {/* Week stepper — one grouped control instead of chevrons floating at the rail edges */}
-                <div className="px-4 pt-3 sm:px-3 pb-1 shrink-0">
-                  <div className="flex items-center justify-between gap-0.5 rounded-lg bg-muted/60 p-0.5">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn(
-                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.96] transition-[background-color,color,transform]',
-                        selectedWeek === 0 && 'opacity-20 pointer-events-none'
-                      )}
-                      onClick={goToPrevWeek}
-                      disabled={selectedWeek === 0}
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </Button>
-                    <span className="font-mono text-[11px] font-semibold tabular-nums antialiased select-none">
-                      Week {selectedWeek + 1} <span className="text-muted-foreground font-normal">of {plan.weeks.length}</span>
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn(
-                        'h-7 w-7 shrink-0 rounded-md hover:bg-background active:scale-[0.96] transition-[background-color,color,transform]',
-                        selectedWeek === plan.weeks.length - 1 && 'opacity-20 pointer-events-none'
-                      )}
-                      onClick={goToNextWeek}
-                      disabled={selectedWeek === plan.weeks.length - 1}
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Button>
+                {/* Week — stated like the profile's "Wk 1 of 8" vital, with a
+                    tick per week underneath that doubles as a jump control */}
+                <div className="px-4 pt-3 sm:pt-4 pb-1 shrink-0">
+                  <div className="flex items-end justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
+                        Week
+                      </p>
+                      <p className="font-mono text-lg font-semibold tabular-nums leading-none antialiased select-none">
+                        {String(selectedWeek + 1).padStart(2, '0')}
+                        <span className="text-muted-foreground font-normal">/{String(plan.weeks.length).padStart(2, '0')}</span>
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Previous week"
+                        className={cn(
+                          'h-7 w-7 shrink-0 rounded-md active:scale-[0.96] transition-[background-color,color,transform,opacity]',
+                          selectedWeek === 0 && 'opacity-30 pointer-events-none'
+                        )}
+                        onClick={goToPrevWeek}
+                        disabled={selectedWeek === 0}
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        aria-label="Next week"
+                        className={cn(
+                          'h-7 w-7 shrink-0 rounded-md active:scale-[0.96] transition-[background-color,color,transform,opacity]',
+                          selectedWeek === plan.weeks.length - 1 && 'opacity-30 pointer-events-none'
+                        )}
+                        onClick={goToNextWeek}
+                        disabled={selectedWeek === plan.weeks.length - 1}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Button>
+                    </div>
                   </div>
+                  {plan.weeks.length > 1 && (
+                    <div className="hidden sm:flex gap-[3px] mt-2" role="group" aria-label="Jump to week">
+                      {plan.weeks.map((week, idx) => {
+                        const isActive = idx === clampedWeek;
+                        return (
+                          <button
+                            key={week.id}
+                            onClick={() => goToWeek(idx)}
+                            aria-label={`Week ${idx + 1}`}
+                            aria-current={isActive ? 'true' : undefined}
+                            className="group flex-1 py-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <span className={cn(
+                              'block h-1.5 rounded-full transition-colors duration-150',
+                              isActive ? 'bg-foreground' : 'bg-foreground/10 group-hover:bg-foreground/25'
+                            )} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Days — vertical list on desktop */}
@@ -504,9 +552,10 @@ export function PlanEditorDrawer({
                                 : 'hover:bg-muted text-foreground'
                             )}
                           >
+                            {/* Active row is the mark itself: dark tile, volt count */}
                             <span className={cn(
-                              'text-[11px] font-black tabular-nums w-5 shrink-0 select-none',
-                              isActive ? 'text-background/50' : 'text-muted-foreground'
+                              'font-mono text-[11px] font-semibold tabular-nums w-5 shrink-0 select-none',
+                              isActive ? 'text-brand' : 'text-muted-foreground'
                             )}>
                               {String(idx + 1).padStart(2, '0')}
                             </span>
@@ -514,10 +563,8 @@ export function PlanEditorDrawer({
                               {day.name || `Day ${idx + 1}`}
                             </span>
                             <span className={cn(
-                              'text-[10px] tabular-nums font-bold px-1.5 py-0.5 rounded-md shrink-0',
-                              isActive
-                                ? 'bg-background/20 text-background'
-                                : 'bg-muted/80 text-muted-foreground'
+                              'font-mono text-[11px] tabular-nums shrink-0',
+                              isActive ? 'text-background/60' : 'text-muted-foreground'
                             )}>
                               {exerciseCount || '—'}
                             </span>
@@ -558,7 +605,7 @@ export function PlanEditorDrawer({
                           {exerciseCount > 0 && (
                             <span className={cn(
                               'font-mono text-[10px] tabular-nums font-semibold',
-                              isActive ? 'text-background/60' : 'text-muted-foreground/70'
+                              isActive ? 'text-brand' : 'text-muted-foreground/70'
                             )}>
                               {exerciseCount}
                             </span>
@@ -591,6 +638,11 @@ export function PlanEditorDrawer({
               <div className="flex-1 min-h-0 overflow-y-auto">
                 {/* Day name & briefing — seamless inline fields, no boxed inputs */}
                 <div className="px-4 sm:px-5 pt-4 pb-3 border-b">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mb-1.5">
+                    Wk {String(clampedWeek + 1).padStart(2, '0')}
+                    <span className="text-border mx-1.5" aria-hidden="true">/</span>
+                    Day {String(clampedDay + 1).padStart(2, '0')}
+                  </p>
                   <Input
                     ref={dayNameInputRef}
                     value={localDayName}
@@ -603,7 +655,7 @@ export function PlanEditorDrawer({
                     placeholder={`Day ${clampedDay + 1}: name this workout`}
                     maxLength={80}
                     aria-label="Workout name"
-                    className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-lg font-semibold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                    className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-xl sm:text-xl font-bold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
                   />
                   <Textarea
                     value={localDayDescription}
@@ -635,8 +687,8 @@ export function PlanEditorDrawer({
                 <div className="divide-y">
                   {currentDay.exercises.length === 0 ? (
                     <div className="flex flex-col items-center py-16 px-8 text-center animate-fade-in-up">
-                      <div className="text-5xl select-none mb-4" role="img" aria-label="weightlifter">🏋️</div>
-                      <p className="text-base font-black mb-1 tracking-tight">No exercises yet</p>
+                      <TallyMark size={56} className="text-foreground/15 mb-3" />
+                      <p className="text-base font-bold mb-1 tracking-tight">No exercises yet</p>
                       <p className="text-sm text-muted-foreground mb-6 antialiased max-w-[240px]">
                         Tap below to start building this workout
                       </p>
@@ -679,13 +731,13 @@ export function PlanEditorDrawer({
                               className="animate-fade-in-up py-2"
                               style={{ animationDelay: `${baseIdx * 40}ms`, animationFillMode: 'backwards' }}
                             >
-                              <div className="flex items-center gap-1.5 px-4 pb-1">
+                              <div className="flex items-center gap-1.5 px-4 sm:px-5 pb-1">
                                 <Link2 className="w-3 h-3 text-muted-foreground/60" />
-                                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-muted-foreground/60">
+                                <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
                                   Superset
                                 </span>
                               </div>
-                              <div className="ml-4 border-l-2 border-foreground/15 divide-y divide-border/40">
+                              <div className="ml-4 sm:ml-5 border-l-2 border-foreground/15 divide-y divide-border/40">
                                 {group.map((exercise, memberIndex) => (
                                   <ExerciseCard
                                     key={exercise.id}
@@ -701,10 +753,10 @@ export function PlanEditorDrawer({
                       })()}
                       <button
                         onClick={handleAddExercise}
-                        className="w-full px-4 py-3.5 sm:py-3 text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
+                        className="w-full px-4 py-3.5 sm:py-3 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
                       >
                         <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
-                        Add Exercise
+                        Add exercise
                       </button>
                     </>
                   )}

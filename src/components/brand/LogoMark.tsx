@@ -39,6 +39,37 @@ export function LogoMark({ size = 24, className }: LogoMarkProps) {
   );
 }
 
+/**
+ * The mark's geometry without its tile — for illustrations and empty
+ * states, where a filled tile would read as a logo placement. Strokes
+ * inherit currentColor; the slash stays volt.
+ */
+export function TallyMark({ size = 48, className }: LogoMarkProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
+      fill="none"
+      aria-hidden="true"
+      className={cn('shrink-0', className)}
+    >
+      <path
+        d="M21 20v24M32 20v24M43 20v24"
+        stroke="currentColor"
+        strokeWidth="5"
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.5 41.5 49.5 22.5"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+        className="stroke-brand"
+      />
+    </svg>
+  );
+}
+
 interface LogoProps {
   /** Mark size in px */
   markSize?: number;

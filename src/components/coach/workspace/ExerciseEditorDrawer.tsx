@@ -1,14 +1,15 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { ChevronLeft, Library, Link2, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
 import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { TallyMark } from '@/components/brand/LogoMark';
+import { FieldLabel, FieldShell, StatusLine } from '../shared/formSurfaces';
 import {
   formatWeightNumber,
   fromDisplayWeight,
@@ -188,133 +189,158 @@ export function ExerciseEditorContent({
 
   const canSave = name.trim().length > 0 && parseInt(sets) > 0;
 
+  const idPrefix = useId();
+  const ids = {
+    name: `${idPrefix}-name`,
+    sets: `${idPrefix}-sets`,
+    reps: `${idPrefix}-reps`,
+    weight: `${idPrefix}-weight`,
+    rest: `${idPrefix}-rest`,
+    notes: `${idPrefix}-notes`,
+  };
+  const removeLink = 'w-full flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive hover:text-destructive/80 transition-colors py-1.5';
+
+  // Segmented controls share one shape: mono caps, the active option a dark tile
+  const segment = (active: boolean) => cn(
+    'flex items-center gap-1.5 rounded-md font-mono uppercase tracking-[0.12em] font-medium transition-[background-color,color]',
+    active ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'
+  );
+  // Numbers read in the data voice, like the profile's vitals
+  const numberInput = 'h-9 border-0 bg-transparent px-4 pb-2 pt-0.5 font-mono text-lg sm:text-lg font-semibold tabular-nums focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:font-normal placeholder:text-muted-foreground/40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+  const renderModeSwitch = (className: string, buttonClassName: string) => (
+    <div className={cn('rounded-lg border p-0.5', className)} role="group" aria-label="Editor mode">
+      <button
+        aria-pressed={mode === 'library'}
+        className={cn(segment(mode === 'library'), buttonClassName)}
+        onClick={() => setMode('library')}
+      >
+        <Library className="w-3 h-3" />
+        {isNew ? 'Library' : 'Replace'}
+      </button>
+      <button
+        aria-pressed={mode === 'custom'}
+        className={cn(segment(mode === 'custom'), buttonClassName)}
+        onClick={() => setMode('custom')}
+      >
+        <Plus className="w-3 h-3" />
+        {isNew ? 'Custom' : 'Details'}
+      </button>
+    </div>
+  );
+  const unitSuffix = 'pointer-events-none absolute inset-y-0 right-4 flex items-center pb-1.5 font-mono text-xs text-muted-foreground';
+
   return (
     <>
-      {/* Header — back button, title and mode switch in a single compact row */}
-      <div className="px-3 sm:px-4 py-3 border-b shrink-0">
-        <div className="flex items-center gap-2">
+      {/* Header — a mono back link to the day, the same shape as the page's
+          "‹ Clients" link, then the exercise in display weight */}
+      <div className="px-4 sm:px-5 pt-3 pb-3.5 border-b shrink-0">
+        <div className="flex items-center justify-between gap-3">
           <button
             onClick={onClose}
             aria-label={`Back to ${dayName || 'workout'}`}
-            className="group p-2 -m-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted active:scale-[0.96] transition-[color,background-color,transform] shrink-0"
+            className="group flex items-center gap-0.5 -ms-1.5 min-w-0 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring tap-target"
           >
-            <ChevronLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform duration-150" />
+            <ChevronLeft className="w-3.5 h-3.5 shrink-0 group-hover:-translate-x-0.5 transition-transform duration-150" />
+            <span className="truncate">{dayName || 'Workout'}</span>
           </button>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-[15px] font-black tracking-tight leading-tight truncate">
-              {isNew ? 'Add Exercise' : `Edit Exercise${exerciseNumber ? ` ${exerciseNumber}` : ''}`}
-            </h2>
-            <p className="text-[11px] text-muted-foreground/80 truncate mt-px">
-              {isNew ? 'Choose from library or create custom' : dayName || 'Modify exercise details'}
-            </p>
-          </div>
 
-          {/* Mode switch — segmented control */}
-          <div className="flex rounded-lg bg-muted p-0.5 shrink-0" role="group" aria-label="Editor mode">
-            <button
-              aria-pressed={mode === 'library'}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-[background-color,color,box-shadow]',
-                mode === 'library'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setMode('library')}
-            >
-              <Library className="w-3.5 h-3.5" />
-              {isNew ? 'Library' : 'Replace'}
-            </button>
-            <button
-              aria-pressed={mode === 'custom'}
-              className={cn(
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-[background-color,color,box-shadow]',
-                mode === 'custom'
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-              onClick={() => setMode('custom')}
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {isNew ? 'Custom' : 'Details'}
-            </button>
-          </div>
+          {/* Mode switch — beside the back link on desktop */}
+          {renderModeSwitch('hidden sm:flex shrink-0', 'px-2.5 py-1 text-[10px]')}
         </div>
+        <h2 className="mt-2.5 flex items-baseline gap-2.5 min-w-0 text-2xl sm:text-xl font-bold tracking-tight leading-tight antialiased">
+          {exerciseNumber && (
+            <span className="font-mono text-sm font-semibold tabular-nums text-muted-foreground shrink-0">
+              {String(exerciseNumber).padStart(2, '0')}
+            </span>
+          )}
+          <span className="truncate">
+            {isNew ? 'Add exercise' : name.trim() || 'Untitled exercise'}
+          </span>
+        </h2>
+        {/* On mobile the switch gets its own full-width row, so the back
+            link isn't truncated and each half is a real tap target */}
+        {renderModeSwitch('flex sm:hidden mt-3', 'flex-1 justify-center h-9 text-[11px]')}
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto">
         {mode === 'library' ? (
-          <div className="p-4 space-y-3">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search exercises..."
-                className="pl-9"
-              />
+          <>
+            <div className="px-4 sm:px-5 pt-4 pb-3 space-y-3">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search exercises…"
+                  aria-label="Search exercises"
+                  className="h-11 pl-10 rounded-xl bg-muted/40 focus-visible:bg-background"
+                />
+              </div>
+
+              {/* Category filter */}
+              <div className="flex gap-1.5 flex-wrap" role="group" aria-label="Filter by category">
+                {[null, ...categories].map((cat) => (
+                  <button
+                    key={cat ?? 'all'}
+                    type="button"
+                    aria-pressed={selectedCategory === cat}
+                    onClick={() => setSelectedCategory(cat)}
+                    className={cn(
+                      segment(selectedCategory === cat),
+                      'h-7 px-2.5 text-[10px] border',
+                      selectedCategory === cat ? 'border-foreground' : 'border-border hover:border-foreground/25'
+                    )}
+                  >
+                    {cat ?? 'All'}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            {/* Category filter */}
-            <div className="flex gap-1.5 flex-wrap">
-              <Badge
-                variant={selectedCategory === null ? 'default' : 'outline'}
-                className="cursor-pointer text-[10px]"
-                onClick={() => setSelectedCategory(null)}
-              >
-                All
-              </Badge>
-              {categories.map((cat) => (
-                <Badge
-                  key={cat}
-                  variant={selectedCategory === cat ? 'default' : 'outline'}
-                  className="cursor-pointer capitalize text-[10px]"
-                  onClick={() => setSelectedCategory(cat)}
-                >
-                  {cat}
-                </Badge>
-              ))}
+            {/* Library list — full-bleed rows, same rhythm as the day's exercise list */}
+            <div className="px-4 sm:px-5 py-2.5 border-y flex items-center justify-between">
+              <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
+                {searchQuery ? 'Results' : selectedCategory ?? 'Library'}
+              </span>
+              <span className="font-mono text-[11px] tabular-nums text-muted-foreground font-bold">
+                {filteredLibrary.length}
+              </span>
             </div>
-
-            {/* Exercise list */}
-            <div className="space-y-1">
+            <div className="divide-y">
               {filteredLibrary.map((ex) => (
                 <button
                   key={ex.id}
                   onClick={() => isNew ? handleSelectFromLibrary(ex) : handleReplaceWithLibrary(ex)}
-                  className={cn(
-                    'w-full text-left px-3 py-2.5 rounded-lg transition-colors',
-                    'hover:bg-muted/80 active:bg-muted'
-                  )}
+                  className="w-full flex items-center gap-3 text-left px-4 sm:px-5 py-3 transition-colors hover:bg-muted/60 active:bg-muted/80 group"
                 >
-                  <p className="font-bold text-sm truncate">{ex.name}</p>
-                  <div className="flex gap-2 mt-0.5 text-[11px] text-muted-foreground items-center">
-                    <span className="capitalize">{ex.category}</span>
-                    {ex.equipment && (
-                      <>
-                        <span className="text-border">·</span>
-                        <span>{ex.equipment}</span>
-                      </>
-                    )}
-                    {ex.defaultSets && ex.defaultReps && (
-                      <>
-                        <span className="text-border">·</span>
-                        <span className="tabular-nums">
-                          {ex.defaultSets} × {ex.defaultReps}
-                        </span>
-                      </>
-                    )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm leading-snug truncate group-hover:translate-x-0.5 transition-transform duration-150">
+                      {ex.name}
+                    </p>
+                    <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground truncate antialiased">
+                      {ex.category}
+                      {ex.equipment && <span className="text-border mx-1.5" aria-hidden="true">/</span>}
+                      {ex.equipment}
+                    </p>
                   </div>
+                  {ex.defaultSets && ex.defaultReps && (
+                    <span className="font-mono text-xs tabular-nums text-muted-foreground shrink-0 antialiased">
+                      <span className="font-semibold text-foreground">{ex.defaultSets}</span>
+                      <span className="mx-1">×</span>
+                      {ex.defaultReps}
+                    </span>
+                  )}
                 </button>
               ))}
               {filteredLibrary.length === 0 && (
-                <div className="text-center py-8">
-                  <div className="text-2xl select-none mb-2">🔍</div>
-                  <p className="text-sm text-muted-foreground antialiased">No exercises found</p>
+                <div className="flex flex-col items-center text-center py-10 px-8">
+                  <TallyMark size={44} className="text-foreground/15 mb-2" />
+                  <p className="text-sm font-bold tracking-tight">No exercises found</p>
                   <Button
                     variant="link"
-                    className="mt-2 text-xs"
+                    className="mt-1 text-xs"
                     onClick={() => {
                       setMode('custom');
                       setName(searchQuery);
@@ -325,133 +351,109 @@ export function ExerciseEditorContent({
                 </div>
               )}
             </div>
-          </div>
+          </>
         ) : (
-          /* Custom / Edit form */
-          <div className="p-4 space-y-5">
-            {/* Exercise Name */}
-            <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 block">
-                Exercise Name
-              </label>
+          /* Custom / Edit form — each field a filled shell holding its own
+             label, the same surfaces the coach dialogs are built from */
+          <div className="px-4 sm:px-5 py-4 space-y-3">
+            <FieldShell label="Exercise" htmlFor={ids.name}>
               <Input
+                id={ids.name}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Barbell Squat"
                 maxLength={100}
-                className="h-11 font-bold text-base sm:text-[15px] tracking-tight"
+                className="h-10 border-0 bg-transparent px-4 pb-2 pt-0.5 text-base sm:text-base font-bold tracking-tight placeholder:font-normal placeholder:tracking-normal focus-visible:ring-0 focus-visible:ring-offset-0"
               />
-            </div>
+            </FieldShell>
 
-            {/* Sets & Reps */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="flex items-center h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
-                    Sets
-                  </label>
-                </div>
+              <FieldShell label="Sets" htmlFor={ids.sets}>
                 <Input
+                  id={ids.sets}
                   type="number"
                   value={sets}
                   onChange={(e) => setSets(e.target.value)}
                   min={1}
                   max={20}
-                  className="tabular-nums"
+                  className={numberInput}
                 />
-              </div>
-              <div>
-                <div className="flex items-center justify-between gap-2 h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
-                    {trackingType === 'TIME' ? 'Time' : 'Reps'}
-                  </label>
-                  <div className="flex rounded-md bg-muted p-0.5" role="group" aria-label="Measure by">
+              </FieldShell>
+              <FieldShell
+                label={trackingType === 'TIME' ? 'Time' : 'Reps'}
+                htmlFor={ids.reps}
+                trailing={
+                  <div className="flex rounded-md border p-px -my-1 -me-1.5" role="group" aria-label="Measure by">
                     {(['REPS', 'TIME'] as const).map((t) => (
                       <button
                         key={t}
                         type="button"
                         onClick={() => handleTrackingTypeChange(t)}
                         aria-pressed={trackingType === t}
-                        className={cn(
-                          'px-2 py-0.5 rounded text-[10px] font-medium transition-[background-color,color,box-shadow]',
-                          trackingType === t
-                            ? 'bg-background text-foreground shadow-sm'
-                            : 'text-muted-foreground hover:text-foreground'
-                        )}
+                        className={cn(segment(trackingType === t), 'px-1.5 py-0.5 text-[9px] rounded')}
                       >
                         {t === 'REPS' ? 'Reps' : 'Time'}
                       </button>
                     ))}
                   </div>
-                </div>
+                }
+              >
                 <Input
+                  id={ids.reps}
                   value={reps}
                   onChange={(e) => setReps(e.target.value)}
-                  placeholder={trackingType === 'TIME' ? '60s or 30-60s' : '10 or 8-12'}
+                  placeholder={trackingType === 'TIME' ? '30-60s' : '8-12'}
                   maxLength={20}
-                  className="tabular-nums"
+                  className={numberInput}
                 />
-              </div>
-            </div>
+              </FieldShell>
 
-            {/* Weight & Rest */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <div className="flex items-center h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
-                    Weight
-                  </label>
-                </div>
-                {/* The coach's unit from Settings; clients each see their own */}
+              {/* The coach's unit from Settings; clients each see their own */}
+              <FieldShell label="Weight" htmlFor={ids.weight}>
                 <div className="relative">
                   <Input
+                    id={ids.weight}
                     value={weight}
                     onChange={(e) => setWeight(e.target.value)}
                     placeholder={weightUnit === 'KG' ? '60' : '135'}
                     inputMode="decimal"
                     maxLength={20}
                     aria-label={`Weight in ${weightUnitLabel(weightUnit)}`}
-                    className="pr-10 tabular-nums"
+                    className={cn(numberInput, 'pr-10')}
                   />
-                  <span
-                    className="pointer-events-none absolute inset-y-0 right-3 flex items-center font-mono text-xs text-muted-foreground"
-                    aria-hidden="true"
-                  >
+                  <span className={unitSuffix} aria-hidden="true">
                     {weightUnitLabel(weightUnit)}
                   </span>
                 </div>
-              </div>
-              <div>
-                <div className="flex items-center h-6 mb-1">
-                  <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium">
-                    Rest (sec)
-                  </label>
+              </FieldShell>
+              <FieldShell label="Rest" htmlFor={ids.rest}>
+                <div className="relative">
+                  <Input
+                    id={ids.rest}
+                    type="number"
+                    value={restSeconds}
+                    onChange={(e) => setRestSeconds(e.target.value)}
+                    placeholder="60"
+                    min={0}
+                    max={600}
+                    aria-label="Rest in seconds"
+                    className={cn(numberInput, 'pr-10')}
+                  />
+                  <span className={unitSuffix} aria-hidden="true">sec</span>
                 </div>
-                <Input
-                  type="number"
-                  value={restSeconds}
-                  onChange={(e) => setRestSeconds(e.target.value)}
-                  placeholder="60"
-                  min={0}
-                  max={600}
-                  className="tabular-nums"
-                />
-              </div>
+              </FieldShell>
             </div>
 
             {/* Superset toggle — only when there's an exercise above to pair with */}
             {previousExerciseName && (
-              <div className="flex items-center justify-between gap-3 rounded-lg border border-border/60 px-3 py-2.5">
+              <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3">
                 <div className="min-w-0">
-                  <label
-                    htmlFor="superset-toggle"
-                    className="text-sm font-medium flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Link2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  <FieldLabel htmlFor="superset-toggle" className="flex items-center gap-1.5 cursor-pointer">
+                    <Link2 className="w-3 h-3" />
                     Superset with previous
-                  </label>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
-                    Pairs with {previousExerciseName}, client alternates sets
+                  </FieldLabel>
+                  <p className="text-xs text-muted-foreground mt-1 line-clamp-2 antialiased">
+                    Pairs with <span className="font-semibold text-foreground">{previousExerciseName}</span>, client alternates sets
                   </p>
                 </div>
                 <Switch
@@ -462,44 +464,42 @@ export function ExerciseEditorContent({
               </div>
             )}
 
-            {/* Coaching Notes */}
-            <div>
-              <label className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground/70 font-medium mb-1.5 block">
-                Notes
-              </label>
+            <FieldShell label="Coaching notes" htmlFor={ids.notes}>
               <Textarea
+                id={ids.notes}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Form cues, progressions, modifications..."
+                placeholder="Form cues, progressions, modifications…"
                 rows={2}
                 maxLength={500}
-                className="resize-none"
+                className="min-h-[64px] resize-none border-0 bg-transparent px-4 pb-3 pt-1.5 text-base sm:text-sm leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
               />
-            </div>
+            </FieldShell>
           </div>
         )}
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t bg-background">
+      <div className="px-4 sm:px-5 py-4 border-t bg-background">
         {mode === 'custom' ? (
           <div className="space-y-2">
+            {/* The app's primary action: a volt fill, same as the coach dialogs */}
             <Button
               onClick={handleSave}
               disabled={!canSave || isSaving}
-              className="w-full"
+              className="w-full h-12 rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.98] transition-[background-color,transform] duration-150"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                isNew ? 'Add Exercise' : 'Save Changes'
+                isNew ? 'Add exercise' : 'Save changes'
               )}
             </Button>
 
             {!isNew && onDelete && (
               showDeleteConfirm ? (
                 <div className="flex items-center justify-center gap-3 py-1">
-                  <span className="text-xs text-muted-foreground">Remove?</span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Remove?</span>
                   <Button
                     variant="destructive"
                     size="sm"
@@ -521,29 +521,29 @@ export function ExerciseEditorContent({
               ) : (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full text-center text-xs text-destructive hover:text-destructive/80 transition-colors py-1.5"
+                  className={removeLink}
                 >
-                  <Trash2 className="w-3.5 h-3.5 inline mr-1" />
-                  Remove Exercise
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Remove exercise
                 </button>
               )
             )}
           </div>
         ) : (
           <div className="space-y-2">
-            <p className="text-center text-xs text-muted-foreground">
-              {isNew ? 'Select an exercise or switch to custom' : 'Select to replace current exercise'}
-            </p>
+            <StatusLine tone="idle">
+              {isNew ? 'Pick one, or switch to custom' : 'Pick one to replace this exercise'}
+            </StatusLine>
             {!isNew && onDelete && (
               <button
                 onClick={() => {
                   onDelete();
                   onClose();
                 }}
-                className="w-full text-center text-xs text-destructive hover:text-destructive/80 transition-colors py-1.5"
+                className={removeLink}
               >
-                <Trash2 className="w-3.5 h-3.5 inline mr-1" />
-                Remove Exercise
+                <Trash2 className="w-3.5 h-3.5" />
+                Remove exercise
               </button>
             )}
           </div>
