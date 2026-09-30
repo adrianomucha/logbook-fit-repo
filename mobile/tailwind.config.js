@@ -20,7 +20,6 @@ module.exports = {
         warning: { DEFAULT: '#f59f0a', foreground: '#171717', text: '#b35309' },
         info: { DEFAULT: '#2463eb', foreground: '#fafafa' },
         brand: { DEFAULT: '#c3f910', foreground: '#1e2702' },
-        'chat-accent': { DEFAULT: '#1d4fd7', foreground: '#ffffff' },
       },
       borderRadius: { lg: 10, md: 8, sm: 6 },
       // One face per class: native fonts are separate files per weight, so

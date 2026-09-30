@@ -69,10 +69,6 @@ module.exports = {
           DEFAULT: "hsl(var(--brand))",
           foreground: "hsl(var(--brand-foreground))",
         },
-        "chat-accent": {
-          DEFAULT: "hsl(var(--chat-accent))",
-          foreground: "hsl(var(--chat-accent-foreground))",
-        },
       },
       borderRadius: {
         lg: "var(--radius)",

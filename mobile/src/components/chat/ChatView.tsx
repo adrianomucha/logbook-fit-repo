@@ -47,8 +47,9 @@ function bubbleRadius(isCurrentUser: boolean, first: boolean, last: boolean) {
 
 /**
  * The client's chat with their coach — the web's ChatView in its 'brand'
- * voice: blue outgoing bubbles, the coach's avatar beside incoming groups,
- * date separators, a Seen receipt, the "N new" pill, and the volt send.
+ * voice: ink outgoing bubbles with volt-railed exercise cards, the coach's
+ * avatar beside incoming groups, date separators, a Seen receipt, the
+ * "N new" pill, and the volt send.
  * The list is inverted (newest at the bottom, pinned) so the keyboard and
  * new messages behave the way a native chat does.
  */
@@ -168,11 +169,11 @@ export function ChatView({
             </View>
           ) : null}
           <View
-            className={`max-w-[80%] px-4 py-2.5 ${mine ? 'bg-chat-accent' : 'bg-muted/50'}`}
+            className={`max-w-[80%] px-4 py-2.5 ${mine ? 'bg-foreground' : 'bg-muted/50'}`}
             style={bubbleRadius(mine, isFirstInGroup, isLastInGroup)}
           >
             {ctx ? (
-              <View className={`-mx-0.5 mb-2 rounded-lg px-3 py-2.5 ${mine ? 'border-l-2 border-white/30 bg-white/10' : 'border-l-2 border-brand bg-background/60'}`}>
+              <View className={`-mx-0.5 mb-2 rounded-lg px-3 py-2.5 ${mine ? 'border-l-2 border-brand bg-white/10' : 'border-l-2 border-brand bg-background/60'}`}>
                 <Text className={`mb-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>Exercise</Text>
                 <Text className={`font-sans-bold text-sm tracking-tight ${mine ? 'text-white' : 'text-foreground'}`} numberOfLines={1}>{ctx.exerciseName}</Text>
                 <Text className={`mt-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>
@@ -183,7 +184,7 @@ export function ChatView({
                 ) : null}
               </View>
             ) : null}
-            <Text className={`font-sans text-[15px] leading-[23px] ${mine ? 'text-chat-accent-foreground' : 'text-foreground'}`}>{ctx ? stripFlagContext(message.content) : message.content}</Text>
+            <Text className={`font-sans text-[15px] leading-[23px] ${mine ? 'text-background' : 'text-foreground'}`}>{ctx ? stripFlagContext(message.content) : message.content}</Text>
           </View>
         </View>
         {isLastInGroup ? (
