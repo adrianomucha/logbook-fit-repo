@@ -4,18 +4,17 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { PlanSetupFormData } from '@/types';
 import { formatReps } from '@/lib/reps';
-import { WeeklyConfidenceStrip } from '@/components/coach/WeeklyConfidenceStrip';
-import { ClientsRequiringAction } from '@/components/coach/ClientsRequiringAction';
+import { ClientRoster } from '@/components/coach/ClientRoster';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { ImportPlanModal } from '@/components/coach/ImportPlanModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
 import { Button } from '@/components/ui/button';
-import { Plus, Loader2, PartyPopper, FlaskConical, Trash2, FileSpreadsheet } from 'lucide-react';
+import { Plus, Loader2, FlaskConical, Trash2, FileSpreadsheet } from 'lucide-react';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { toast } from 'sonner';
-import { CoachNav, CoachNavTab } from '@/components/coach/CoachNav';
+import { CoachNav } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
 import { EmptyStateNoPlans, LoadErrorState } from '@/components/coach/EmptyStates';
@@ -28,10 +27,10 @@ import { usePlanDetail } from '@/hooks/api/usePlanDetail';
 import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import type { WorkoutPlan } from '@/types';
 import type { PlanSummary } from '@/types/api';
+import { rosterSummary } from '@logbook/shared/roster';
 
-type View = 'dashboard' | 'plans';
-
-const viewToNavTab = (view: View): CoachNavTab => view;
+// The roster is the coach's home, so /coach opens on it; Plans is ?view=plans
+type View = 'clients' | 'plans';
 
 function getGreeting(): string {
   const h = new Date().getHours();
@@ -89,7 +88,7 @@ function planDetailToWorkoutPlan(p: PlanDetail): WorkoutPlan {
 export function CoachDashboard() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [currentView, setCurrentView] = useState<View>('clients');
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
@@ -150,12 +149,9 @@ export function CoachDashboard() {
     return apiPlans.find((p) => p.id === planToDelete)?.name || '';
   }, [apiPlans, planToDelete]);
 
-  // Handle view query parameter
+  // The URL owns the view, so back/forward and a refresh land where they left
   useEffect(() => {
-    const view = searchParams?.get('view');
-    if (view === 'plans') {
-      setCurrentView('plans');
-    }
+    setCurrentView(searchParams?.get('view') === 'plans' ? 'plans' : 'clients');
   }, [searchParams]);
 
   const handleUpdatePlan = () => {
@@ -328,29 +324,26 @@ export function CoachDashboard() {
         onRefresh={() => { refreshEditingPlan(); refreshPlans(); }}
       />
 
-      <CoachNav
-        activeTab={viewToNavTab(currentView)}
-        onTabChange={(tab) => {
-          if (tab === 'clients') {
-            router.push('/coach/clients');
-          } else {
-            setCurrentView(tab as View);
-          }
-        }}
-      />
+      <CoachNav activeTab={currentView} />
 
       <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
 
-        {currentView === 'dashboard' && (
+        {currentView === 'clients' && (
           <div className="space-y-6 sm:space-y-8">
-            {/* The getting-started screen carries the greeting itself as its
-                brand kicker, so the standalone header would only repeat it.
-                Held back while loading too, so it doesn't flash in and out. */}
+            {/* The getting-started screen has its own greeting header and
+                invite step, so this one would only repeat it. Held back
+                while loading too, so it doesn't flash in and out. */}
             {!isDashboardBootstrapping && !showGettingStarted && (
               <div className="animate-enter">
                 <PageHeader
-                  title={getGreeting()}
-                  subtitle={dashboardClients.length > 0 ? 'Here\u2019s your roster' : undefined}
+                  title="Clients"
+                  subtitle={dashboardClients.length > 0 ? rosterSummary(dashboardClients) : undefined}
+                  action={
+                    <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
+                      <Plus className="w-4 h-4 mr-1.5" />
+                      Invite Client
+                    </Button>
+                  }
                 />
               </div>
             )}
@@ -411,21 +404,8 @@ export function CoachDashboard() {
                   </div>
                 )}
                 <div className="animate-enter" style={{ animationDelay: '60ms' }}>
-                  <WeeklyConfidenceStrip clients={dashboardClients} />
+                  <ClientRoster clients={dashboardClients} />
                 </div>
-                <div className="animate-enter" style={{ animationDelay: '120ms' }}>
-                  <ClientsRequiringAction clients={dashboardClients} />
-                </div>
-
-                {/* All-clear celebration — only when every client is on track */}
-                {dashboardClients.length > 0 && dashboardClients.every((c) => c.urgency === 'ON_TRACK') && (
-                  <div className="animate-enter flex items-center gap-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3.5" style={{ animationDelay: '180ms' }}>
-                    <PartyPopper className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 animate-bounce-once" />
-                    <p className="text-sm font-medium text-emerald-700 dark:text-emerald-300 antialiased">
-                      All clients on track. Nice coaching.
-                    </p>
-                  </div>
-                )}
               </>
             )}
           </div>

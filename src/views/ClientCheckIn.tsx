@@ -225,7 +225,7 @@ export function ClientCheckIn() {
             <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
             <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can’t find this client</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">They may have been removed, or the link might be outdated.</p>
-            <Button onClick={() => router.push('/coach/clients')} className="active:scale-[0.96] transition-transform duration-150">Back to Clients</Button>
+            <Button onClick={() => router.push('/coach')} className="active:scale-[0.96] transition-transform duration-150">Back to Clients</Button>
           </SectionCard>
         </div>
       </div>
@@ -257,7 +257,7 @@ export function ClientCheckIn() {
                 Back to {firstName}’s profile
               </Button>
               <Button variant="ghost" onClick={() => router.push('/coach')} className="w-full text-muted-foreground">
-                Back to dashboard
+                Back to clients
               </Button>
             </div>
           </SectionCard>

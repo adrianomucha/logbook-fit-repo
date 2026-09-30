@@ -4,12 +4,12 @@ import { MobileBottomNav } from '@/components/ui/mobile-bottom-nav';
 import { AccountMenu } from '@/components/AccountMenu';
 import { Logo } from '@/components/brand/LogoMark';
 import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
-import { Home, Users, Dumbbell } from 'lucide-react';
+import { Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // 'settings' has no tab of its own — the settings page reaches through the
 // AccountMenu — but the nav accepts it so nothing else highlights there.
-export type CoachNavTab = 'dashboard' | 'clients' | 'plans' | 'settings';
+export type CoachNavTab = 'clients' | 'plans' | 'settings';
 
 interface CoachNavProps {
   /** Currently active tab */
@@ -20,12 +20,10 @@ interface CoachNavProps {
    * the number through five call sites.
    */
   unreadCount?: number;
-  /** Handler for tab changes (for in-page view switching like CoachDashboard) */
-  onTabChange?: (tab: CoachNavTab) => void;
 }
 
+// The roster is home — there's no separate dashboard to keep in step with it
 const DESKTOP_TABS: { id: CoachNavTab; label: string }[] = [
-  { id: 'dashboard', label: 'Dashboard' },
   { id: 'clients', label: 'Clients' },
   { id: 'plans', label: 'Plans' },
 ];
@@ -33,24 +31,15 @@ const DESKTOP_TABS: { id: CoachNavTab; label: string }[] = [
 export function CoachNav({
   activeTab,
   unreadCount: unreadOverride,
-  onTabChange,
 }: CoachNavProps) {
   const router = useRouter();
   const { total } = useUnreadMessages();
   const unreadCount = unreadOverride ?? total;
 
   const handleTabClick = (tab: CoachNavTab) => {
-    if (onTabChange) {
-      onTabChange(tab);
-      return;
-    }
-
     switch (tab) {
-      case 'dashboard':
-        router.push('/coach');
-        break;
       case 'clients':
-        router.push('/coach/clients');
+        router.push('/coach');
         break;
       case 'plans':
         router.push('/coach?view=plans');
@@ -63,7 +52,6 @@ export function CoachNav({
 
   // Mobile bottom nav items
   const mobileNavItems = [
-    { id: 'dashboard' as const, label: 'Dashboard', icon: Home },
     { id: 'clients' as const, label: 'Clients', icon: Users, badge: unreadCount },
     { id: 'plans' as const, label: 'Plans', icon: Dumbbell },
   ];

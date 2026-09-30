@@ -512,7 +512,7 @@ export function UnifiedClientProfile() {
       await apiFetch(`/api/coach/clients/${clientId}`, { method: 'DELETE' });
       setShowEndConfirm(false);
       toast.success(`Ended coaching with ${client?.name ?? 'this client'}`);
-      router.push('/coach/clients');
+      router.push('/coach');
     } catch {
       toast.error('Failed to end the coaching relationship. Please try again.');
     }
@@ -583,7 +583,7 @@ export function UnifiedClientProfile() {
                 They may have been removed, or the link might be outdated.
               </p>
               <Button
-                onClick={() => router.push('/coach/clients')}
+                onClick={() => router.push('/coach')}
                 className="active:scale-[0.96] transition-transform duration-150"
               >
                 Back to Clients
@@ -714,7 +714,7 @@ export function UnifiedClientProfile() {
           <PageHeader
             title={client.name}
             subtitle={headerSubtitle}
-            breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
+            breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach') }}
             action={
               <div className="flex items-center gap-2.5 shrink-0">
                 {primaryAction && (

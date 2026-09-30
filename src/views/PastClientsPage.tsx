@@ -101,7 +101,7 @@ export function PastClientsPage() {
                 ? `${pastClients.length} ended ${pastClients.length === 1 ? 'relationship' : 'relationships'}. Nothing here is deleted`
                 : undefined
             }
-            breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach/clients') }}
+            breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach') }}
           />
         </div>
 
