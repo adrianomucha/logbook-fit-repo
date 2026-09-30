@@ -39,6 +39,12 @@ const SEVEN_DAYS_MS = 7 * DAY_MS;
 const NOW = new Date("2026-08-07T09:00:00Z").getTime();
 const FRIDAY = 5;
 const MONDAY = 1;
+// A plan that's been running well past any cadence
+const LONG_RUNNING_PLAN_START = new Date(NOW - 60 * DAY_MS);
+
+function clientProfile(planStartDate: Date | null, timezone = "UTC") {
+  return { planStartDate, user: { timezone } };
+}
 
 const activeRelationship = {
   coachId: "coach-1",
@@ -57,14 +63,16 @@ describe("ensureScheduledCheckIn", () => {
     db.checkIn.updateMany.mockResolvedValue({ count: 0 });
     db.checkIn.findFirst.mockResolvedValue(null);
     db.checkIn.create.mockResolvedValue(createdCheckIn("checkin-new"));
-    db.clientProfile.findUnique.mockResolvedValue({ user: { timezone: "UTC" } });
+    db.clientProfile.findUnique.mockResolvedValue(
+      clientProfile(LONG_RUNNING_PLAN_START)
+    );
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  it("creates the first check-in when the client has never had one", async () => {
+  it("creates the first check-in once the plan has run a full cadence", async () => {
     const created = await ensureScheduledCheckIn(activeRelationship);
 
     expect(created).toMatchObject({ id: "checkin-new" });
@@ -237,9 +245,9 @@ describe("ensureScheduledCheckIn", () => {
 
   it("evaluates the anchor weekday in the client's timezone", async () => {
     // 09:00 UTC Friday is 23:00 Thursday in Honolulu (UTC-10, no DST)
-    db.clientProfile.findUnique.mockResolvedValue({
-      user: { timezone: "Pacific/Honolulu" },
-    });
+    db.clientProfile.findUnique.mockResolvedValue(
+      clientProfile(LONG_RUNNING_PLAN_START, "Pacific/Honolulu")
+    );
     db.checkIn.findFirst.mockResolvedValue({
       status: "COMPLETED",
       createdAt: new Date(NOW - 10 * DAY_MS),
@@ -276,9 +284,9 @@ describe("ensureScheduledCheckIn", () => {
     ).toMatchObject({ id: "checkin-new" });
 
     db.checkIn.create.mockClear();
-    db.clientProfile.findUnique.mockResolvedValue({
-      user: { timezone: "Not/AZone" },
-    });
+    db.clientProfile.findUnique.mockResolvedValue(
+      clientProfile(LONG_RUNNING_PLAN_START, "Not/AZone")
+    );
     expect(
       await ensureScheduledCheckIn({
         ...activeRelationship,
@@ -287,9 +295,110 @@ describe("ensureScheduledCheckIn", () => {
     ).toMatchObject({ id: "checkin-new" });
   });
 
-  it("skips the timezone lookup entirely when no anchor day is set", async () => {
-    await ensureScheduledCheckIn(activeRelationship);
-    expect(db.clientProfile.findUnique).not.toHaveBeenCalled();
+  it("reads the client profile once for both plan start and timezone", async () => {
+    await ensureScheduledCheckIn({
+      ...activeRelationship,
+      checkInDayOfWeek: FRIDAY,
+    });
+    expect(db.clientProfile.findUnique).toHaveBeenCalledTimes(1);
+  });
+
+  describe("first check-in after a plan starts", () => {
+    it("does not send one the moment a plan is assigned", async () => {
+      // The reported bug: a brand-new client got "Waiting · Sent 4 seconds
+      // ago" right after the coach assigned their first plan.
+      db.clientProfile.findUnique.mockResolvedValue(
+        clientProfile(new Date(NOW - 4_000))
+      );
+
+      expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+      expect(db.checkIn.create).not.toHaveBeenCalled();
+      expect(push.notifyCheckInSent).not.toHaveBeenCalled();
+    });
+
+    it("waits a full cadence after the plan start", async () => {
+      db.clientProfile.findUnique.mockResolvedValue(
+        clientProfile(new Date(NOW - SEVEN_DAYS_MS + 60_000))
+      );
+      expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+
+      db.clientProfile.findUnique.mockResolvedValue(
+        clientProfile(new Date(NOW - SEVEN_DAYS_MS - 60_000))
+      );
+      expect(await ensureScheduledCheckIn(activeRelationship)).toMatchObject({
+        id: "checkin-new",
+      });
+    });
+
+    it("uses the relationship's cadence, not a fixed week", async () => {
+      db.clientProfile.findUnique.mockResolvedValue(
+        clientProfile(new Date(NOW - 10 * DAY_MS))
+      );
+      expect(
+        await ensureScheduledCheckIn({
+          ...activeRelationship,
+          checkInIntervalDays: 14,
+        })
+      ).toBeNull();
+
+      expect(
+        await ensureScheduledCheckIn({
+          ...activeRelationship,
+          checkInIntervalDays: 3,
+        })
+      ).toMatchObject({ id: "checkin-new" });
+    });
+
+    it("sends nothing to a client with no plan and no past check-ins", async () => {
+      db.clientProfile.findUnique.mockResolvedValue(clientProfile(null));
+
+      expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+      expect(db.checkIn.create).not.toHaveBeenCalled();
+    });
+
+    it("counts from a new plan that started after the last check-in", async () => {
+      // Last check-in is well past due, but the coach just switched plans —
+      // give the client a cadence on the new plan before asking about it.
+      db.checkIn.findFirst.mockResolvedValue({
+        status: "COMPLETED",
+        createdAt: new Date(NOW - 20 * DAY_MS),
+      });
+      db.clientProfile.findUnique.mockResolvedValue(
+        clientProfile(new Date(NOW - 2 * DAY_MS))
+      );
+      expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+
+      db.clientProfile.findUnique.mockResolvedValue(
+        clientProfile(new Date(NOW - SEVEN_DAYS_MS - 60_000))
+      );
+      expect(await ensureScheduledCheckIn(activeRelationship)).toMatchObject({
+        id: "checkin-new",
+      });
+    });
+
+    it("keeps counting from the last check-in when the plan started earlier", async () => {
+      db.checkIn.findFirst.mockResolvedValue({
+        status: "COMPLETED",
+        createdAt: new Date(NOW - 3 * DAY_MS),
+      });
+
+      expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+    });
+
+    it("gives an anchored first check-in the same one-day grace", async () => {
+      // Plan assigned last Friday afternoon; today's Friday sweep runs in the
+      // morning, 6 days 21 hours later. The anchor day must not be skipped.
+      db.clientProfile.findUnique.mockResolvedValue(
+        clientProfile(new Date(NOW - SEVEN_DAYS_MS + 3 * 60 * 60 * 1000))
+      );
+
+      expect(
+        await ensureScheduledCheckIn({
+          ...activeRelationship,
+          checkInDayOfWeek: FRIDAY,
+        })
+      ).toMatchObject({ id: "checkin-new" });
+    });
   });
 
   it("ignores the anchor weekday for cadences shorter than a week", async () => {
@@ -343,10 +452,26 @@ describe("runScheduledCheckIns", () => {
     db.checkIn.updateMany.mockResolvedValue({ count: 0 });
     db.checkIn.findFirst.mockResolvedValue(null);
     db.checkIn.create.mockResolvedValue(createdCheckIn("checkin-new"));
+    db.clientProfile.findUnique.mockResolvedValue(
+      clientProfile(LONG_RUNNING_PLAN_START)
+    );
   });
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it("does not send to a client whose plan was just assigned", async () => {
+    db.coachClientRelationship.findMany.mockResolvedValue([activeRelationship]);
+    db.clientProfile.findUnique.mockResolvedValue(
+      clientProfile(new Date(NOW - 60 * 60 * 1000))
+    );
+
+    expect(await runScheduledCheckIns()).toEqual({
+      relationshipsScanned: 1,
+      checkInsCreated: 0,
+      failures: 0,
+    });
   });
 
   it("sweeps only active relationships and counts what it sent", async () => {

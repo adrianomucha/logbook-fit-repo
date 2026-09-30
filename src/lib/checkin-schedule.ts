@@ -41,8 +41,9 @@ export async function expireStaleCheckIns(
  * Materialize the check-in schedule for one coach-client pair.
  *
  * If the relationship has the schedule enabled, there's no check-in currently
- * in flight, and the most recent one is at least a full cadence old (or none
- * exists), a fresh PENDING check-in is created. The cadence is per
+ * in flight, and a full cadence has passed since the later of the most recent
+ * check-in and the current plan's start, a fresh PENDING check-in is created.
+ * A client with neither a plan nor a past check-in gets nothing. The cadence is per
  * relationship: every `checkInIntervalDays` days, optionally anchored to a
  * weekday (`checkInDayOfWeek`, 0 = Sunday … 6 = Saturday, evaluated in the
  * client's timezone — the check-in is for them, so "Monday" means their
@@ -80,17 +81,19 @@ export async function ensureScheduledCheckIn(relationship: {
     return null;
   }
 
-  if (dayOfWeek !== null) {
-    // "Monday" means the client's Monday, not the server's: resolve their
-    // stored IANA timezone (captured from the browser by TimezoneSync) and
-    // compare weekdays there. Unknown or invalid zones fall back to UTC.
-    const client = await prisma.clientProfile.findUnique({
-      where: { id: relationship.clientId },
-      select: { user: { select: { timezone: true } } },
-    });
-    if (weekdayInTimeZone(new Date(), client?.user.timezone) !== dayOfWeek) {
-      return null;
-    }
+  const client = await prisma.clientProfile.findUnique({
+    where: { id: relationship.clientId },
+    select: { planStartDate: true, user: { select: { timezone: true } } },
+  });
+
+  // "Monday" means the client's Monday, not the server's: compare weekdays in
+  // their stored IANA timezone (captured from the browser by TimezoneSync).
+  // Unknown or invalid zones fall back to UTC.
+  if (
+    dayOfWeek !== null &&
+    weekdayInTimeZone(new Date(), client?.user.timezone) !== dayOfWeek
+  ) {
+    return null;
   }
 
   const latest = await prisma.checkIn.findFirst({
@@ -103,16 +106,27 @@ export async function ensureScheduledCheckIn(relationship: {
   if (latest && (latest.status === "PENDING" || latest.status === "CLIENT_RESPONDED")) {
     return null;
   }
-  if (latest) {
-    // Anchored cadences get a one-day grace: the sweep fires at a fixed hour,
-    // so demanding a full interval to the millisecond would skip the anchor
-    // day whenever the last check-in was created later in the day — turning
-    // "every Monday" into "every other Monday".
-    const requiredMs =
-      dayOfWeek !== null ? (intervalDays - 1) * DAY_MS : intervalDays * DAY_MS;
-    if (Date.now() - latest.createdAt.getTime() < requiredMs) {
-      return null;
-    }
+
+  // The cadence runs from whichever came later: the last check-in or the
+  // start of the current plan. Asking how training is going before the
+  // client has had a cycle on the plan is premature — a fresh plan would
+  // otherwise get a check-in seconds after it was assigned. A client with
+  // neither has nothing to check in on yet.
+  const anchorMs = Math.max(
+    latest?.createdAt.getTime() ?? -Infinity,
+    client?.planStartDate?.getTime() ?? -Infinity
+  );
+  if (anchorMs === -Infinity) {
+    return null;
+  }
+  // Anchored cadences get a one-day grace: the sweep fires at a fixed hour,
+  // so demanding a full interval to the millisecond would skip the anchor
+  // day whenever the last check-in (or plan start) was later in the day —
+  // turning "every Monday" into "every other Monday".
+  const requiredMs =
+    dayOfWeek !== null ? (intervalDays - 1) * DAY_MS : intervalDays * DAY_MS;
+  if (Date.now() - anchorMs < requiredMs) {
+    return null;
   }
 
   const created = await prisma.checkIn.create({
