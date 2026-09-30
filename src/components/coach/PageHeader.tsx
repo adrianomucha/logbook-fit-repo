@@ -18,9 +18,9 @@ export function PageHeader({ title, subtitle, action, breadcrumb, avatar }: Page
     <button
       onClick={breadcrumb.onClick}
       className={cn(
-        // Beside an avatar the title block is taller, so the crumb gets
-        // its own row instead of crowding the face
-        avatar ? 'mb-4 sm:mb-5' : 'mb-1',
+        // Same gap on every page, so the way back sits apart from the title
+        // whether or not a face is beside it
+        'mb-4 sm:mb-5',
         'flex items-center gap-0.5 -ms-1.5 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target'
       )}
     >
