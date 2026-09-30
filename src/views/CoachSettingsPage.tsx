@@ -48,7 +48,7 @@ export function CoachSettingsPage() {
           <PageHeader
             title="Settings"
             subtitle="Your account · How clients see you"
-            breadcrumb={{ label: 'Dashboard', onClick: () => router.push('/coach') }}
+            breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach') }}
           />
         </div>
 

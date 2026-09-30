@@ -1,6 +1,6 @@
 /**
- * Skeleton shown while the coach dashboard JS bundle loads.
- * Mirrors the CoachDashboard layout: header, stats strip, client list.
+ * Skeleton shown while the coach home JS bundle loads.
+ * Mirrors the roster layout: header, search bar, client list.
  */
 export default function CoachLoading() {
   return (
@@ -16,12 +16,8 @@ export default function CoachLoading() {
         {/* Title */}
         <div className="h-8 w-48 rounded bg-muted" />
 
-        {/* Stats strip */}
-        <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="h-20 rounded-xl bg-muted" />
-          ))}
-        </div>
+        {/* Search */}
+        <div className="h-10 rounded-lg bg-muted" />
 
         {/* Client list section */}
         <div className="space-y-3">

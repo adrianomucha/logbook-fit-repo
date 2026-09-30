@@ -1,7 +1,6 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { AllClientsPage } from '@/views/AllClientsPage';
-
+// The roster moved to the coach home — keep old links and bookmarks working
 export default function ClientsPage() {
-  return <AllClientsPage />;
+  redirect('/coach');
 }
