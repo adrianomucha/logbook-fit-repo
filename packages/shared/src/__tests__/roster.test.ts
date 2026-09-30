@@ -97,4 +97,17 @@ describe('clientSignal', () => {
       rest: [],
     });
   });
+
+  it('marks an on-track client with no workouts as just started, not at risk', () => {
+    expect(clientSignal(client({ urgency: 'ON_TRACK', lastWorkoutAt: null }))).toEqual({
+      rest: ['4-Week Strength Foundation', 'just started, no workouts yet'],
+    });
+  });
+
+  it('leads an at-risk client with no workouts with the silence', () => {
+    expect(clientSignal(client({ urgency: 'AT_RISK', lastWorkoutAt: null }))).toEqual({
+      lead: 'No workouts yet',
+      rest: ['4-Week Strength Foundation'],
+    });
+  });
 });

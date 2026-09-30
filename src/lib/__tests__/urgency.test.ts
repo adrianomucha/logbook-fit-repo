@@ -48,6 +48,26 @@ describe('getClientUrgency', () => {
     expect(result.urgency).toBe('ON_TRACK');
   });
 
+  it('not AT_RISK for a plan assigned moments ago', () => {
+    const result = getClientUrgency({
+      hasPlan: true,
+      planStartDate: new Date(Date.now() - 5_000),
+      planDurationWeeks: 4,
+      lastWorkoutAt: null,
+    });
+    expect(result.urgency).toBe('ON_TRACK');
+  });
+
+  it('a new plan restarts the clock for a client who went quiet on the last one', () => {
+    const result = getClientUrgency({
+      hasPlan: true,
+      planStartDate: daysAgo(1),
+      planDurationWeeks: 4,
+      lastWorkoutAt: daysAgo(30),
+    });
+    expect(result.urgency).toBe('ON_TRACK');
+  });
+
   it('AT_RISK once a new plan has gone untouched for 7+ days', () => {
     const result = getClientUrgency({
       hasPlan: true,
@@ -99,7 +119,8 @@ describe('getClientUrgency', () => {
   it('reports FINAL_WEEK planStatus without changing urgency', () => {
     const result = getClientUrgency({
       hasPlan: true,
-      planStartDate: '2026-07-13', // week 1 of a 1-week plan
+      // Local midnight: a UTC date string is still Sunday west of UTC
+      planStartDate: new Date(2026, 6, 13), // week 1 of a 1-week plan
       planDurationWeeks: 1,
       lastWorkoutAt: daysAgo(1),
     });

@@ -155,6 +155,11 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
       if (client.lastWorkoutAt) {
         const d = daysSince(client.lastWorkoutAt, now);
         rest.push(d <= 0 ? 'trained today' : d === 1 ? 'trained yesterday' : `last workout ${d}d ago`);
+      } else {
+        // On track without a workout only happens in a new plan's first
+        // week (after that it's At Risk) — say so, quietly, so the row
+        // doesn't look like an established client
+        rest.push('just started, no workouts yet');
       }
       return { rest };
     }
