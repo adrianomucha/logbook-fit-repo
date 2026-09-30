@@ -4,6 +4,7 @@ import {
   formatBestDelta,
   formatBestValue,
   formatBestWhen,
+  formatBestsNote,
   summarizePersonalBests,
   type LoggedSet,
 } from '../personal-bests';
@@ -119,5 +120,19 @@ describe('summarizePersonalBests', () => {
     const s = summarizePersonalBests(bests, 'p1', { now: new Date('2026-09-28T20:00:00Z') });
     expect(s).toMatchObject({ count: 2, exercises: 1, thisWeek: 1 });
     expect(s.latest.map((b) => b.weight)).toEqual([90, 85]);
+  });
+});
+
+describe('formatBestsNote', () => {
+  const summary = (count: number, exercises: number, thisWeek: number, shown: number) =>
+    ({ count, exercises, thisWeek, latest: Array(shown) }) as Parameters<typeof formatBestsNote>[0];
+
+  it('only mentions this week when the list shows every best', () => {
+    expect(formatBestsNote(summary(1, 1, 1, 1))).toBe('1 this week');
+    expect(formatBestsNote(summary(2, 2, 0, 2))).toBe('');
+  });
+
+  it('adds the total when the list is capped', () => {
+    expect(formatBestsNote(summary(12, 5, 2, 5))).toBe('12 across 5 lifts · 2 this week');
   });
 });

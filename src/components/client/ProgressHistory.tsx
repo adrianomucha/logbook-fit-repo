@@ -6,6 +6,7 @@ import { formatWeekStreak, getWeekVerdict, weeksTrainedStreak, type WeekVerdict 
 import { plausibleSessionSec } from '@logbook/shared/session-duration';
 import {
   formatBestDelta,
+  formatBestsNote,
   formatBestValue,
   formatBestWhen,
   summarizePersonalBests,
@@ -66,6 +67,7 @@ export function ProgressHistory({
     () => summarizePersonalBests(personalBests ?? [], plan.id),
     [personalBests, plan.id]
   );
+  const bestsNote = formatBestsNote(bests);
 
   // Weeks in a row with a session — consistency the client can keep, where
   // "weeks on target" read 0 all block for anyone training under the plan's count
@@ -88,50 +90,36 @@ export function ProgressHistory({
 
   return (
     <div className="space-y-4 sm:space-y-6">
-        {/* Personal bests — the headline and the latest few in one card:
-            the count up top, then one line per best */}
+        {/* Personal bests — a list, not a hero: the title with a quiet note,
+            then one line per best. "This week" below carries the page's big number. */}
         <section
           aria-label="Personal bests"
           className="animate-fade-in-up rounded-2xl border border-border/70 bg-card"
         >
-          <div className="flex items-center justify-between gap-4 px-4 pt-4 pb-3.5">
-            <div className="min-w-0">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                Personal bests this block
-              </p>
-              {bests.count > 0 ? (
-                <p className="mt-1.5 flex items-baseline gap-2 antialiased">
-                  <span className="text-[32px] font-bold tracking-tight leading-none">{bests.count}</span>
-                  <span className="text-sm text-muted-foreground">
-                    across {bests.exercises} {bests.exercises === 1 ? 'lift' : 'lifts'}
-                    {bests.thisWeek > 0 ? ` · ${bests.thisWeek} this week` : ''}
-                  </span>
-                </p>
-              ) : (
-                <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed antialiased">
-                  None yet. Beat your last weight or reps on a lift and it shows up here.
-                </p>
-              )}
-            </div>
-            <div
-              className={cn(
-                'w-9 h-9 rounded-full flex items-center justify-center shrink-0',
-                bests.count > 0
-                  ? 'bg-brand animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]'
-                  : 'bg-muted'
-              )}
-              aria-hidden="true"
-            >
-              <Trophy className={cn('w-4 h-4', bests.count > 0 ? 'text-brand-foreground' : 'text-muted-foreground')} />
-            </div>
+          <div className="flex items-baseline justify-between gap-4 px-4 pt-3.5 pb-3">
+            <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              <Trophy
+                className={cn('w-3 h-3 self-center', bests.count > 0 ? 'text-success-text' : 'text-muted-foreground')}
+                aria-hidden="true"
+              />
+              Personal bests this block
+            </p>
+            {bestsNote && (
+              <span className="font-mono text-[11px] tabular-nums text-muted-foreground shrink-0">{bestsNote}</span>
+            )}
           </div>
+          {bests.count === 0 && (
+            <p className="px-4 pb-4 -mt-1 text-sm text-muted-foreground leading-relaxed antialiased">
+              None yet. Beat your last weight or reps on a lift and it shows up here.
+            </p>
+          )}
           {bests.latest.length > 0 && (
             <ul aria-label="Latest bests" className="border-t border-border/60 divide-y divide-border/40">
               {bests.latest.map((b) => (
                 <li key={`${b.completionId}-${b.exerciseId}`} className="flex items-center gap-3 px-4 py-2.5">
                   {/* When sits under the lift on phones so the name isn't cut to a stub */}
                   <span className="flex-1 min-w-0 sm:flex sm:items-baseline sm:gap-3">
-                    <span className="block truncate text-sm font-semibold tracking-tight antialiased sm:flex-1">
+                    <span className="block line-clamp-2 sm:line-clamp-none sm:truncate text-sm font-semibold tracking-tight antialiased sm:flex-1">
                       {b.exerciseName}
                     </span>
                     <span className="block mt-0.5 sm:mt-0 font-mono text-[11px] text-muted-foreground sm:shrink-0">
