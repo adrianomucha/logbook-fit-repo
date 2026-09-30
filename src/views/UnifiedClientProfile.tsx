@@ -1273,7 +1273,10 @@ export function UnifiedClientProfile() {
         isOpen={showContinueConfirm}
         onClose={() => setShowContinueConfirm(false)}
         onConfirm={handleContinuePlan}
-        title={`Run ${plan?.name ?? 'this plan'} again?`}
+        /* The plan name rides in the eyebrow: interpolated into the title,
+           balanced wrapping split it mid-name ("Run 4 week / Metabolic…") */
+        eyebrow={plan?.name}
+        title="Run it again?"
         message={`${client.name?.split(' ')[0] || 'They'} starts back at week 1 from today with the same workouts, including any edits you made for them. Their completed weeks stay in their history.`}
         confirmLabel="Start week 1"
         icon={RotateCcw}

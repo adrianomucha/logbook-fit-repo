@@ -73,6 +73,7 @@ export function ConfirmationModal({
 }: ConfirmationModalProps) {
   const [isPending, setIsPending] = useState(false);
   const [typed, setTyped] = useState('');
+  const eyebrowId = useId();
   const titleId = useId();
   const messageId = useId();
 
@@ -122,7 +123,9 @@ export function ConfirmationModal({
         tabIndex={-1}
         role="alertdialog"
         aria-modal="true"
-        aria-labelledby={titleId}
+        // The eyebrow can carry the subject ("4 week Metabolic Reset") while
+        // the title asks the question — announce both, in reading order
+        aria-labelledby={`${eyebrowId} ${titleId}`}
         aria-describedby={messageId}
         className="relative flex w-full max-h-[calc(100dvh-2.5rem)] flex-col overflow-hidden rounded-t-2xl bg-background text-foreground pb-[env(safe-area-inset-bottom)] shadow-2xl ring-1 ring-border focus:outline-none sm:max-h-[85vh] sm:max-w-md sm:rounded-2xl sm:pb-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-200 sm:slide-in-from-bottom-0 sm:zoom-in-95 motion-reduce:animate-none"
       >
@@ -151,7 +154,10 @@ export function ConfirmationModal({
               <Icon className="h-[22px] w-[22px]" strokeWidth={2} aria-hidden="true" />
             </span>
             <div className="min-w-0 pt-0.5">
-              <span className="block font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              <span
+                id={eyebrowId}
+                className="block font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+              >
                 {eyebrow}
               </span>
               <h2
