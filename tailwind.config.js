@@ -1,5 +1,3 @@
-const plugin = require("tailwindcss/plugin")
-
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   darkMode: ["class"],
@@ -112,11 +110,5 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    require("tailwindcss-animate"),
-    // Touch-first input (phones and iPads): size controls up to Apple's
-    // 44pt minimum where an invisible tap-target would overlap a neighbour.
-    // Same name as Tailwind v4's built-in variant.
-    plugin(({ addVariant }) => addVariant("pointer-coarse", "@media (pointer: coarse)")),
-  ],
+  plugins: [require("tailwindcss-animate")],
 }

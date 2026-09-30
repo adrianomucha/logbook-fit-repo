@@ -351,7 +351,7 @@ export function PlanEditorDrawer({
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
               <div className="text-4xl select-none mb-1">😵</div>
               <p className="text-sm text-muted-foreground antialiased">{error}</p>
-              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="tap-target active:scale-[0.96] transition-transform duration-150">
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="active:scale-[0.96] transition-transform duration-150">
                 Close
               </Button>
             </div>
@@ -374,7 +374,7 @@ export function PlanEditorDrawer({
               <p className="text-xs text-muted-foreground antialiased">
                 Try deleting it and creating a new one
               </p>
-              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="tap-target active:scale-[0.96] transition-transform duration-150">
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="active:scale-[0.96] transition-transform duration-150">
                 Close
               </Button>
             </div>
@@ -431,11 +431,9 @@ export function PlanEditorDrawer({
                     ) : (
                       <button
                         onClick={() => { setEditingPlanName(true); setLocalPlanName(plan.name); }}
-                        className="font-bold text-xl leading-tight tracking-tight hover:text-muted-foreground transition-colors text-left min-w-0 flex-1 antialiased rounded-sm tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="font-bold text-xl leading-tight tracking-tight truncate hover:text-muted-foreground transition-colors text-left min-w-0 flex-1 antialiased rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                       >
-                        {/* Truncate on the inner span: overflow on the button
-                            itself would clip its 44pt tap-target */}
-                        <span className="block truncate">{plan.name}</span>
+                        {plan.name}
                       </button>
                     )}
 
@@ -464,9 +462,7 @@ export function PlanEditorDrawer({
                 exerciseDrawerOpen && 'hidden sm:flex'
               )}>
                 {/* Week — stated like the profile's "Wk 1 of 8" vital, with a
-                    tick per week underneath that doubles as a jump control.
-                    Ticks are too narrow for a 44pt touch target, so on touch
-                    they're display-only and the chevrons do the jumping. */}
+                    tick per week underneath that doubles as a jump control */}
                 <div className="px-4 pt-3 sm:pt-4 pb-1 shrink-0">
                   <div className="flex items-end justify-between gap-2">
                     <div className="min-w-0">
@@ -478,13 +474,13 @@ export function PlanEditorDrawer({
                         <span className="text-muted-foreground font-normal">/{String(plan.weeks.length).padStart(2, '0')}</span>
                       </p>
                     </div>
-                    <div className="flex items-center gap-1 pointer-coarse:gap-2">
+                    <div className="flex items-center gap-1">
                       <Button
                         variant="outline"
                         size="icon"
                         aria-label="Previous week"
                         className={cn(
-                          'h-7 w-7 pointer-coarse:h-9 pointer-coarse:w-9 shrink-0 rounded-md tap-target active:scale-[0.96] transition-[background-color,color,transform,opacity]',
+                          'h-7 w-7 shrink-0 rounded-md active:scale-[0.96] transition-[background-color,color,transform,opacity]',
                           selectedWeek === 0 && 'opacity-30 pointer-events-none'
                         )}
                         onClick={goToPrevWeek}
@@ -497,7 +493,7 @@ export function PlanEditorDrawer({
                         size="icon"
                         aria-label="Next week"
                         className={cn(
-                          'h-7 w-7 pointer-coarse:h-9 pointer-coarse:w-9 shrink-0 rounded-md tap-target active:scale-[0.96] transition-[background-color,color,transform,opacity]',
+                          'h-7 w-7 shrink-0 rounded-md active:scale-[0.96] transition-[background-color,color,transform,opacity]',
                           selectedWeek === plan.weeks.length - 1 && 'opacity-30 pointer-events-none'
                         )}
                         onClick={goToNextWeek}
@@ -517,7 +513,7 @@ export function PlanEditorDrawer({
                             onClick={() => goToWeek(idx)}
                             aria-label={`Week ${idx + 1}`}
                             aria-current={isActive ? 'true' : undefined}
-                            className="group flex-1 py-1.5 rounded-sm pointer-coarse:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            className="group flex-1 py-1.5 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                           >
                             <span className={cn(
                               'block h-1.5 rounded-full transition-colors duration-150',
@@ -550,7 +546,7 @@ export function PlanEditorDrawer({
                             key={day.id}
                             onClick={() => handleSelectDay(day.id)}
                             className={cn(
-                              'w-full flex items-center gap-2.5 px-2.5 py-2.5 pointer-coarse:py-3.5 rounded-lg text-left transition-[background-color,color] duration-150',
+                              'w-full flex items-center gap-2.5 px-2.5 py-2.5 rounded-lg text-left transition-[background-color,color] duration-150',
                               isActive
                                 ? 'bg-foreground text-background'
                                 : 'hover:bg-muted text-foreground'
@@ -659,7 +655,7 @@ export function PlanEditorDrawer({
                     placeholder={`Day ${clampedDay + 1}: name this workout`}
                     maxLength={80}
                     aria-label="Workout name"
-                    className="border-0 shadow-none rounded-none px-0 h-auto py-2 -mt-2 text-xl sm:text-xl font-bold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                    className="border-0 shadow-none rounded-none px-0 h-auto py-0 text-xl sm:text-xl font-bold tracking-tight focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
                   />
                   <Textarea
                     value={localDayDescription}
@@ -669,7 +665,7 @@ export function PlanEditorDrawer({
                     aria-label="Briefing"
                     // text-base below sm: a 14px field makes iOS zoom the whole
                     // drawer by 16/14 on focus and keep it zoomed after blur
-                    className="border-0 shadow-none rounded-none px-0 py-0 min-h-0 pointer-coarse:min-h-11 text-base sm:text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
+                    className="mt-1 border-0 shadow-none rounded-none px-0 py-0 min-h-0 text-base sm:text-sm text-muted-foreground leading-relaxed resize-none focus-visible:ring-0 placeholder:text-muted-foreground/40 antialiased"
                     rows={2}
                     maxLength={500}
                   />
@@ -757,7 +753,7 @@ export function PlanEditorDrawer({
                       })()}
                       <button
                         onClick={handleAddExercise}
-                        className="w-full px-4 py-3.5 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
+                        className="w-full px-4 py-3.5 sm:py-3 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted/80 active:scale-[0.98] transition-[color,background-color,transform] flex items-center justify-center gap-1.5 border-t border-dashed group"
                       >
                         <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform duration-200" />
                         Add exercise

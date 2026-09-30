@@ -198,7 +198,7 @@ export function ExerciseEditorContent({
     rest: `${idPrefix}-rest`,
     notes: `${idPrefix}-notes`,
   };
-  const removeLink = 'tap-target w-full flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive hover:text-destructive/80 transition-colors py-1.5';
+  const removeLink = 'w-full flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive hover:text-destructive/80 transition-colors py-1.5';
 
   // Segmented controls share one shape: mono caps, the active option a dark tile
   const segment = (active: boolean) => cn(
@@ -206,12 +206,12 @@ export function ExerciseEditorContent({
     active ? 'bg-foreground text-background' : 'text-muted-foreground hover:text-foreground'
   );
   // Numbers read in the data voice, like the profile's vitals
-  const numberInput = 'h-9 pointer-coarse:h-11 border-0 bg-transparent px-4 pb-2 pt-0.5 font-mono text-lg sm:text-lg font-semibold tabular-nums focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:font-normal placeholder:text-muted-foreground/40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
+  const numberInput = 'h-9 border-0 bg-transparent px-4 pb-2 pt-0.5 font-mono text-lg sm:text-lg font-semibold tabular-nums focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:font-normal placeholder:text-muted-foreground/40 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none';
   const renderModeSwitch = (className: string, buttonClassName: string) => (
     <div className={cn('rounded-lg border p-0.5', className)} role="group" aria-label="Editor mode">
       <button
         aria-pressed={mode === 'library'}
-        className={cn(segment(mode === 'library'), 'tap-target', buttonClassName)}
+        className={cn(segment(mode === 'library'), buttonClassName)}
         onClick={() => setMode('library')}
       >
         <Library className="w-3 h-3" />
@@ -219,7 +219,7 @@ export function ExerciseEditorContent({
       </button>
       <button
         aria-pressed={mode === 'custom'}
-        className={cn(segment(mode === 'custom'), 'tap-target', buttonClassName)}
+        className={cn(segment(mode === 'custom'), buttonClassName)}
         onClick={() => setMode('custom')}
       >
         <Plus className="w-3 h-3" />
@@ -233,7 +233,7 @@ export function ExerciseEditorContent({
     <>
       {/* Header — a mono back link to the day, the same shape as the page's
           "‹ Clients" link, then the exercise in display weight */}
-      <div className="px-4 sm:px-5 pt-4 pb-3.5 border-b shrink-0">
+      <div className="px-4 sm:px-5 pt-3 pb-3.5 border-b shrink-0">
         <div className="flex items-center justify-between gap-3">
           <button
             onClick={onClose}
@@ -259,7 +259,7 @@ export function ExerciseEditorContent({
         </h2>
         {/* On mobile the switch gets its own full-width row, so the back
             link isn't truncated and each half is a real tap target */}
-        {renderModeSwitch('flex sm:hidden mt-3', 'flex-1 justify-center h-10 text-[11px]')}
+        {renderModeSwitch('flex sm:hidden mt-3', 'flex-1 justify-center h-9 text-[11px]')}
       </div>
 
       {/* Content */}
@@ -280,7 +280,7 @@ export function ExerciseEditorContent({
               </div>
 
               {/* Category filter */}
-              <div className="flex gap-1.5 pointer-coarse:gap-2 flex-wrap" role="group" aria-label="Filter by category">
+              <div className="flex gap-1.5 flex-wrap" role="group" aria-label="Filter by category">
                 {[null, ...categories].map((cat) => (
                   <button
                     key={cat ?? 'all'}
@@ -289,7 +289,7 @@ export function ExerciseEditorContent({
                     onClick={() => setSelectedCategory(cat)}
                     className={cn(
                       segment(selectedCategory === cat),
-                      'h-7 pointer-coarse:h-9 min-w-11 justify-center px-2.5 text-[10px] border tap-target',
+                      'h-7 px-2.5 text-[10px] border',
                       selectedCategory === cat ? 'border-foreground' : 'border-border hover:border-foreground/25'
                     )}
                   >
@@ -340,7 +340,7 @@ export function ExerciseEditorContent({
                   <p className="text-sm font-bold tracking-tight">No exercises found</p>
                   <Button
                     variant="link"
-                    className="mt-1 text-xs tap-target"
+                    className="mt-1 text-xs"
                     onClick={() => {
                       setMode('custom');
                       setName(searchQuery);
@@ -363,7 +363,7 @@ export function ExerciseEditorContent({
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Barbell Squat"
                 maxLength={100}
-                className="h-10 pointer-coarse:h-11 border-0 bg-transparent px-4 pb-2 pt-0.5 text-base sm:text-base font-bold tracking-tight placeholder:font-normal placeholder:tracking-normal focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-10 border-0 bg-transparent px-4 pb-2 pt-0.5 text-base sm:text-base font-bold tracking-tight placeholder:font-normal placeholder:tracking-normal focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </FieldShell>
 
@@ -383,14 +383,14 @@ export function ExerciseEditorContent({
                 label={trackingType === 'TIME' ? 'Time' : 'Reps'}
                 htmlFor={ids.reps}
                 trailing={
-                  <div className="flex rounded-md border p-px -my-1 -me-1.5 pointer-coarse:translate-y-0.5" role="group" aria-label="Measure by">
+                  <div className="flex rounded-md border p-px -my-1 -me-1.5" role="group" aria-label="Measure by">
                     {(['REPS', 'TIME'] as const).map((t) => (
                       <button
                         key={t}
                         type="button"
                         onClick={() => handleTrackingTypeChange(t)}
                         aria-pressed={trackingType === t}
-                        className={cn(segment(trackingType === t), 'px-1.5 py-0.5 text-[9px] rounded tap-target pointer-coarse:px-2.5 pointer-coarse:text-[10px]')}
+                        className={cn(segment(trackingType === t), 'px-1.5 py-0.5 text-[9px] rounded')}
                       >
                         {t === 'REPS' ? 'Reps' : 'Time'}
                       </button>
@@ -460,7 +460,6 @@ export function ExerciseEditorContent({
                   id="superset-toggle"
                   checked={supersetWithPrevious}
                   onCheckedChange={setSupersetWithPrevious}
-                  className="tap-target"
                 />
               </div>
             )}
@@ -504,7 +503,6 @@ export function ExerciseEditorContent({
                   <Button
                     variant="destructive"
                     size="sm"
-                    className="tap-target"
                     onClick={() => {
                       onDelete();
                       onClose();
@@ -515,7 +513,6 @@ export function ExerciseEditorContent({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="tap-target"
                     onClick={() => setShowDeleteConfirm(false)}
                   >
                     Cancel
