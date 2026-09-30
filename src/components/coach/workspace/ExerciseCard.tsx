@@ -27,15 +27,15 @@ export function ExerciseCard({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left px-4 py-3.5 transition-[background-color,transform] group',
+        'w-full text-left px-4 sm:px-5 py-3.5 transition-[background-color,transform] group',
         'hover:bg-muted/60',
         'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
         'active:bg-muted/80 active:scale-[0.99]'
       )}
     >
       <div className="flex items-center gap-3">
-        {/* Exercise number — bold counter */}
-        <span className="text-[11px] font-black text-muted-foreground w-5 shrink-0 tabular-nums select-none">
+        {/* Exercise number — mono counter, the brand's data voice */}
+        <span className="font-mono text-[11px] font-semibold text-muted-foreground w-5 shrink-0 tabular-nums select-none">
           {String(exerciseIndex + 1).padStart(2, '0')}
         </span>
 
@@ -46,13 +46,15 @@ export function ExerciseCard({
           </div>
         </div>
 
-        {/* Stats badges */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <span className="text-[11px] tabular-nums font-bold bg-muted/80 text-muted-foreground px-1.5 py-0.5 rounded-md">
-            {exercise.sets} × {exercise.reps || '—'}
+        {/* Prescription — sets × reps as mono data, like the profile vitals */}
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="font-mono text-xs tabular-nums text-muted-foreground antialiased">
+            <span className="font-semibold text-foreground">{exercise.sets}</span>
+            <span className="mx-1">×</span>
+            {exercise.reps || '—'}
           </span>
           {weightDisplay && (
-            <span className="text-[11px] tabular-nums font-bold bg-foreground text-background px-1.5 py-0.5 rounded-md">
+            <span className="font-mono text-[11px] tabular-nums font-semibold bg-foreground text-background px-1.5 py-0.5 rounded-md">
               {weightDisplay}
             </span>
           )}
