@@ -11,9 +11,11 @@ import { workoutService } from "../workout";
 
 describe("calculateStreak", () => {
   beforeEach(() => {
-    // Fix "today" to 2025-03-15 for deterministic tests
+    // Fix "today" to 2025-03-15, noon local. calculateStreak buckets by the
+    // local calendar day, so fixtures are local wall-clock times — UTC
+    // instants would land on a different day east or west of Greenwich.
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2025-03-15T12:00:00Z"));
+    vi.setSystemTime(new Date("2025-03-15T12:00:00"));
   });
 
   afterEach(() => {
@@ -25,24 +27,24 @@ describe("calculateStreak", () => {
   });
 
   it("returns 1 for a workout today", () => {
-    const dates = [new Date("2025-03-15T08:00:00Z")];
+    const dates = [new Date("2025-03-15T08:00:00")];
     expect(workoutService.calculateStreak(dates)).toBe(1);
   });
 
   it("returns streak of consecutive days ending today", () => {
     const dates = [
-      new Date("2025-03-15T08:00:00Z"),
-      new Date("2025-03-14T09:00:00Z"),
-      new Date("2025-03-13T10:00:00Z"),
+      new Date("2025-03-15T08:00:00"),
+      new Date("2025-03-14T09:00:00"),
+      new Date("2025-03-13T10:00:00"),
     ];
     expect(workoutService.calculateStreak(dates)).toBe(3);
   });
 
   it("returns streak of consecutive days ending yesterday (today skipped)", () => {
     const dates = [
-      new Date("2025-03-14T08:00:00Z"),
-      new Date("2025-03-13T09:00:00Z"),
-      new Date("2025-03-12T10:00:00Z"),
+      new Date("2025-03-14T08:00:00"),
+      new Date("2025-03-13T09:00:00"),
+      new Date("2025-03-12T10:00:00"),
     ];
     // Today (Mar 15) has no workout, but streak counts from yesterday
     expect(workoutService.calculateStreak(dates)).toBe(3);
@@ -50,27 +52,27 @@ describe("calculateStreak", () => {
 
   it("breaks streak on a gap", () => {
     const dates = [
-      new Date("2025-03-15T08:00:00Z"),
-      new Date("2025-03-14T09:00:00Z"),
+      new Date("2025-03-15T08:00:00"),
+      new Date("2025-03-14T09:00:00"),
       // gap on Mar 13
-      new Date("2025-03-12T10:00:00Z"),
-      new Date("2025-03-11T10:00:00Z"),
+      new Date("2025-03-12T10:00:00"),
+      new Date("2025-03-11T10:00:00"),
     ];
     expect(workoutService.calculateStreak(dates)).toBe(2);
   });
 
   it("handles multiple workouts on the same day", () => {
     const dates = [
-      new Date("2025-03-15T08:00:00Z"),
-      new Date("2025-03-15T16:00:00Z"), // same day, different time
-      new Date("2025-03-14T09:00:00Z"),
+      new Date("2025-03-15T08:00:00"),
+      new Date("2025-03-15T16:00:00"), // same day, different time
+      new Date("2025-03-14T09:00:00"),
     ];
     expect(workoutService.calculateStreak(dates)).toBe(2);
   });
 
   it("returns 0 when last workout was 2+ days ago", () => {
     const dates = [
-      new Date("2025-03-12T08:00:00Z"), // 3 days ago
+      new Date("2025-03-12T08:00:00"), // 3 days ago
     ];
     // Today (Mar 15) skipped, yesterday (Mar 14) skipped → streak broken
     expect(workoutService.calculateStreak(dates)).toBe(0);
@@ -78,7 +80,7 @@ describe("calculateStreak", () => {
 
   it("handles a long streak", () => {
     const dates = Array.from({ length: 30 }, (_, i) => {
-      const d = new Date("2025-03-15T10:00:00Z");
+      const d = new Date("2025-03-15T10:00:00");
       d.setDate(d.getDate() - i);
       return d;
     });

@@ -8,8 +8,9 @@ function daysAgo(n: number): Date {
 describe('getClientUrgency', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // Wednesday, July 15 2026
-    vi.setSystemTime(new Date('2026-07-15T12:00:00Z'));
+    // Wednesday, July 15 2026, noon local — the plan-week math runs in local
+    // time, so "now" and plan start dates are pinned as local wall-clock times
+    vi.setSystemTime(new Date('2026-07-15T12:00:00'));
   });
 
   afterEach(() => {
@@ -25,7 +26,7 @@ describe('getClientUrgency', () => {
   it('PLAN_ENDED once the plan has run its course, even for an active trainee', () => {
     const result = getClientUrgency({
       hasPlan: true,
-      planStartDate: '2026-06-29', // started 2+ weeks before "now"
+      planStartDate: new Date('2026-06-29T12:00:00'), // started 2+ weeks before "now"
       planDurationWeeks: 2,
       lastWorkoutAt: daysAgo(1),
     });
@@ -119,8 +120,7 @@ describe('getClientUrgency', () => {
   it('reports FINAL_WEEK planStatus without changing urgency', () => {
     const result = getClientUrgency({
       hasPlan: true,
-      // Local midnight: a UTC date string is still Sunday west of UTC
-      planStartDate: new Date(2026, 6, 13), // week 1 of a 1-week plan
+      planStartDate: new Date('2026-07-13T12:00:00'), // week 1 of a 1-week plan
       planDurationWeeks: 1,
       lastWorkoutAt: daysAgo(1),
     });

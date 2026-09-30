@@ -23,6 +23,12 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # vitest strips types without checking them and `next build` only
+      # checks what the app imports, so test fixtures can drift from the
+      # types unnoticed. This checks everything tsconfig includes.
+      - name: Typecheck
+        run: npm run typecheck
+
       # Covers packages/shared too (its tests run under the root vitest)
       - name: Unit tests
         run: npm test
