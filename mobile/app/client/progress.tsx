@@ -6,7 +6,7 @@ import { apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@logbook/shared/workout-helpers';
 import { formatWeekStreak, getWeekVerdict, weeksTrainedStreak } from '@logbook/shared/progress';
 import { plausibleSessionSec } from '@logbook/shared/session-duration';
-import { formatBestDelta, formatBestValue, formatBestWhen, summarizePersonalBests } from '@logbook/shared/personal-bests';
+import { formatBestDelta, formatBestsNote, formatBestValue, formatBestWhen, summarizePersonalBests } from '@logbook/shared/personal-bests';
 import { formatTrainingTime } from '@logbook/shared/plan-summary';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan } from '@/hooks/useClientWeek';
@@ -29,6 +29,7 @@ export default function ProgressScreen() {
   const verdict = useMemo(() => getWeekVerdict(completions, target), [completions, target]);
   // Same shared helpers as the web's ProgressHistory, so both say the same thing
   const bests = useMemo(() => summarizePersonalBests(progress?.personalBests ?? [], plan?.id ?? null), [progress, plan]);
+  const bestsNote = formatBestsNote(bests);
   // Weeks in a row with a session — see weeksTrainedStreak for why not "weeks on target"
   const weekStreak = useMemo(() => weeksTrainedStreak(completions), [completions]);
   // All-time from the server, like the Workouts tile beside it; the history sum is the older-server fallback
@@ -59,38 +60,33 @@ export default function ProgressScreen() {
       </View>
 
       <View className="-mt-2 gap-4">
-        {/* Personal bests — the count up top, then one line per latest best */}
+        {/* Personal bests — a list, not a hero: the title with a quiet note, then one line per best.
+            "This week" below carries the page's big number. */}
         <View className="rounded-2xl border border-border/70 bg-card" accessibilityLabel="Personal bests">
-          <View className="flex-row items-center justify-between gap-4 px-4 pb-3.5 pt-4">
-            <View className="flex-1">
+          <View className="flex-row items-center justify-between gap-4 px-4 pb-3 pt-3.5">
+            <View className="flex-row items-center gap-1.5">
+              <Feather name="award" size={12} color={bests.count > 0 ? '#157f3c' : '#737373'} />
               <Eyebrow>Personal bests this block</Eyebrow>
-              {bests.count > 0 ? (
-                <View className="mt-1.5 flex-row items-baseline gap-2">
-                  <Text className="font-sans-bold text-[32px] leading-[36px] tracking-tight text-foreground">{bests.count}</Text>
-                  <Text className="flex-1 font-sans text-sm text-muted-foreground">
-                    across {bests.exercises} {bests.exercises === 1 ? 'lift' : 'lifts'}
-                    {bests.thisWeek > 0 ? ` · ${bests.thisWeek} this week` : ''}
-                  </Text>
-                </View>
-              ) : (
-                <Text className="mt-1.5 font-sans text-sm leading-5 text-muted-foreground">
-                  None yet. Beat your last weight or reps on a lift and it shows up here.
-                </Text>
-              )}
             </View>
-            <View className={`h-9 w-9 items-center justify-center rounded-full ${bests.count > 0 ? 'bg-brand' : 'bg-muted'}`}>
-              <Feather name="award" size={16} color={bests.count > 0 ? '#1e2702' : '#737373'} />
-            </View>
+            {bestsNote ? <Text className="font-mono text-[11px] text-muted-foreground">{bestsNote}</Text> : null}
           </View>
+          {bests.count === 0 ? (
+            <Text className="-mt-1 px-4 pb-4 font-sans text-sm leading-5 text-muted-foreground">
+              None yet. Beat your last weight or reps on a lift and it shows up here.
+            </Text>
+          ) : null}
           {bests.latest.length > 0 ? (
             <View className="border-t border-border/60" accessibilityLabel="Latest bests">
               {bests.latest.map((b, i) => (
                 <View
                   key={`${b.completionId}-${b.exerciseId}`}
-                  className={`flex-row items-baseline gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border/40' : ''}`}
+                  className={`flex-row items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border/40' : ''}`}
                 >
-                  <Text className="flex-1 font-sans-semibold text-sm tracking-tight text-foreground" numberOfLines={1}>{b.exerciseName}</Text>
-                  <Text className="font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
+                  {/* When sits under the lift so the name isn't cut to a stub */}
+                  <View className="flex-1">
+                    <Text className="font-sans-semibold text-sm tracking-tight text-foreground" numberOfLines={2}>{b.exerciseName}</Text>
+                    <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
+                  </View>
                   <Text className="font-mono-semibold text-[13px] text-foreground">{formatBestValue(b, weightUnit)}</Text>
                   <Text className="w-12 text-right font-mono text-xs text-success-text">{formatBestDelta(b, weightUnit)}</Text>
                 </View>

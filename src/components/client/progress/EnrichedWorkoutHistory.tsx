@@ -32,47 +32,33 @@ const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ entry }: { entry: 
 
   return (
     <div>
-      {/* One line: what it was and anything unusual about it on the left,
-          when / how long / how much on the right */}
+      {/* The name on top, one quiet line of detail under it. On wider
+          screens the detail moves to the right and the row is one line. */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className="w-full flex items-center gap-3 py-3 min-h-[44px] text-left hover:bg-muted/30 transition-colors touch-manipulation"
         aria-expanded={isExpanded}
       >
-        <span className="flex items-center gap-2 min-w-0 flex-1">
-          <span className="text-[15px] font-semibold tracking-tight leading-snug truncate">{entry.name}</span>
-          {entry.bests > 0 && (
-            <span
-              className="inline-flex items-center gap-0.5 shrink-0 font-mono text-[10px] font-bold tabular-nums text-success-text"
-              title={`${entry.bests} personal ${entry.bests === 1 ? 'best' : 'bests'}`}
-            >
-              <Trophy className="w-3 h-3" aria-hidden="true" />
-              {entry.bests > 1 && entry.bests}
-              <span className="sr-only">{entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}</span>
-            </span>
-          )}
-          {entry.partial && (
-            <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.1em] tabular-nums text-warning">
-              {completion.exercisesDone}/{completion.exercisesTotal}
-              <span className="sr-only"> exercises</span>
-            </span>
-          )}
-          {entry.effortCallout && (
-            <span
-              className={cn(
-                'shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.1em]',
-                EFFORT_COLOR[entry.effortCallout]
-              )}
-            >
-              {EFFORT_LABELS[entry.effortCallout]}
-            </span>
-          )}
+        <span className="flex-1 min-w-0 sm:flex sm:items-center sm:gap-4">
+          <span className="flex items-center gap-1.5 min-w-0 sm:flex-1">
+            <span className="text-[15px] font-semibold tracking-tight leading-snug truncate">{entry.name}</span>
+            {entry.bests > 0 && (
+              <Trophy
+                className="w-3.5 h-3.5 shrink-0 text-success-text"
+                aria-label={entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}
+              />
+            )}
+          </span>
+          <span className="block mt-0.5 sm:mt-0 sm:shrink-0 truncate font-mono text-[11px] tabular-nums text-muted-foreground">
+            {entry.meta}
+            {entry.effortLabel && ` · ${entry.effortLabel}`}
+            {entry.partialLabel && <span className="text-warning-text"> · {entry.partialLabel}</span>}
+          </span>
         </span>
-        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">{entry.meta}</span>
         {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+          <ChevronUp className="w-4 h-4 text-muted-foreground/50 shrink-0" />
         ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+          <ChevronDown className="w-4 h-4 text-muted-foreground/50 shrink-0" />
         )}
       </button>
 
@@ -175,7 +161,7 @@ export function EnrichedWorkoutHistory({
             <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] font-semibold text-foreground">
               {week.label}
             </h4>
-            <p className="font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums text-muted-foreground text-right">
+            <p className="text-xs tabular-nums text-muted-foreground text-right">
               {week.summary}
             </p>
           </div>

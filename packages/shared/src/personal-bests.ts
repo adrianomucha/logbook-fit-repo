@@ -161,7 +161,7 @@ export interface PersonalBestSummary {
   latest: PersonalBest[];
 }
 
-/** The hero numbers and the "Latest bests" list for one plan */
+/** The counts and the "Latest bests" list for one plan */
 export function summarizePersonalBests(
   bests: PersonalBest[],
   planId: string | null,
@@ -175,4 +175,20 @@ export function summarizePersonalBests(
     thisWeek: inPlan.filter((b) => parseISO(b.completedAt) >= weekStart).length,
     latest: inPlan.slice(0, limit),
   };
+}
+
+/**
+ * The quiet note beside the card's title — "1 this week", or with more
+ * bests than the list shows, "12 across 5 lifts · 2 this week". The list
+ * says the rest, so the card needs no headline number.
+ */
+export function formatBestsNote(summary: PersonalBestSummary): string {
+  return [
+    summary.count > summary.latest.length
+      ? `${summary.count} across ${summary.exercises} ${summary.exercises === 1 ? "lift" : "lifts"}`
+      : null,
+    summary.thisWeek > 0 ? `${summary.thisWeek} this week` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }

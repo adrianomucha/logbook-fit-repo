@@ -120,11 +120,15 @@ export interface HistoryEntry {
   planName: string;
   /** Not every exercise finished — the one state worth marking on the row */
   partial: boolean;
+  /** "2 of 5 exercises", only when partial */
+  partialLabel?: string;
   /** Effort to call out on the row: only when it breaks from the client's usual, so it means something */
   effortCallout?: EffortRating;
+  /** "Medium effort", only with a callout */
+  effortLabel?: string;
   /** Personal bests set in this session */
   bests: number;
-  /** "Tue 29 · 40m · 15 sets" — unknown parts left out */
+  /** "Tue 29 · 40m · 15 sets" — unknown parts left out. The row's quiet second line. */
   meta: string;
 }
 
@@ -189,15 +193,19 @@ export function buildWorkoutHistory(
     const dayIndex = week?.days.findIndex((d) => d.id === completion.dayId) ?? -1;
     const completedAt = parseISO(completion.completedAt!);
     const duration = plausibleSessionSec(completion.durationSec);
+    const partial = completion.exercisesTotal > 0 && completion.exercisesDone < completion.exercisesTotal;
+    const effortCallout =
+      completion.effortRating && completion.effortRating !== usualEffort ? completion.effortRating : undefined;
 
     const entry: HistoryEntry = {
       completion,
       name: getWorkoutDisplayName(day, dayIndex, completion),
       weekNumber: week?.weekNumber ?? null,
       planName: plan?.name || 'Earlier plan',
-      partial: completion.exercisesTotal > 0 && completion.exercisesDone < completion.exercisesTotal,
-      effortCallout:
-        completion.effortRating && completion.effortRating !== usualEffort ? completion.effortRating : undefined,
+      partial,
+      partialLabel: partial ? `${completion.exercisesDone} of ${completion.exercisesTotal} exercises` : undefined,
+      effortCallout,
+      effortLabel: effortCallout ? `${EFFORT_LABELS[effortCallout]} effort` : undefined,
       bests: bestsBySession.get(completion.id) ?? 0,
       meta: [
         format(completedAt, 'EEE d'),
