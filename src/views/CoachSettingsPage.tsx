@@ -7,21 +7,21 @@ import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import {
   AccountSection,
-  NotificationsSection,
-  PasswordSection,
+  PreferencesSection,
   ProfileSection,
   SETTINGS_SECTIONS,
+  resolveSettingsSection,
   settingsCardClass,
   type SettingsSectionId,
 } from '@/components/settings/sections';
+import { SETTINGS_SUMMARY } from '@logbook/shared/settings-sections';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { cn } from '@/lib/utils';
 
 const SECTION_PANES: Record<SettingsSectionId, () => React.JSX.Element> = {
   profile: () => <ProfileSection role="coach" />,
+  preferences: () => <PreferencesSection role="coach" />,
   account: () => <AccountSection role="coach" />,
-  password: () => <PasswordSection />,
-  notifications: () => <NotificationsSection role="coach" />,
 };
 
 export function CoachSettingsPage() {
@@ -29,10 +29,8 @@ export function CoachSettingsPage() {
   const searchParams = useSearchParams();
   const { user, isLoading } = useCurrentUser();
 
-  const requested = searchParams?.get('section');
-  const section: SettingsSectionId = SETTINGS_SECTIONS.some((s) => s.id === requested)
-    ? (requested as SettingsSectionId)
-    : 'profile';
+  // Old ?section=password / =notifications links land on the tab that now holds them
+  const section = resolveSettingsSection(searchParams?.get('section'));
 
   const Pane = SECTION_PANES[section];
 
@@ -47,14 +45,14 @@ export function CoachSettingsPage() {
         <div className="animate-enter mb-1.5 sm:mb-3">
           <PageHeader
             title="Settings"
-            subtitle="Your account · How clients see you"
+            subtitle={SETTINGS_SUMMARY}
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach') }}
           />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 lg:gap-8 animate-enter">
           {/* Section rail: underline tabs on mobile (the nav's idiom), a
-              side-rail list on desktop. Fixed segments below lg — four tabs
+              side-rail list on desktop. Fixed segments below lg — three tabs
               share the row, so nothing scrolls or pans under a thumb; icons
               yield below 400px so the labels always fit. */}
           <nav aria-label="Settings sections" className="lg:w-44 shrink-0">

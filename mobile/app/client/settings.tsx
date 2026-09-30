@@ -6,15 +6,12 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { AppHeader } from '@/components/nav/AppHeader';
 import {
   AccountSection,
-  NotificationsSection,
-  PasswordSection,
+  PreferencesSection,
   ProfileSection,
   SETTINGS_SECTIONS,
+  resolveSettingsSection,
   type SettingsSectionId,
 } from '@/components/settings/sections';
-
-const isSectionId = (value: unknown): value is SettingsSectionId =>
-  SETTINGS_SECTIONS.some((s) => s.id === value);
 
 /**
  * The client's settings — the web's /client/settings: one column under the
@@ -25,10 +22,11 @@ export default function SettingsScreen() {
   const router = useRouter();
   const { section: requested } = useLocalSearchParams<{ section?: string }>();
   const { user, isLoading } = useCurrentUser();
-  const [section, setSection] = useState<SettingsSectionId>(isSectionId(requested) ? requested : 'profile');
+  // Old ?section=password / =notifications links land on the tab that now holds them
+  const [section, setSection] = useState<SettingsSectionId>(resolveSettingsSection(requested));
 
   useEffect(() => {
-    if (isSectionId(requested)) setSection(requested);
+    if (requested !== undefined) setSection(resolveSettingsSection(requested));
   }, [requested]);
 
   return (
@@ -56,7 +54,7 @@ export default function SettingsScreen() {
             </View>
 
             {/* Section tabs — brand underline, matching the nav's own tabs.
-                Fixed segments, never a scroller: four tabs share the row. */}
+                Fixed segments, never a scroller: three tabs share the row. */}
             <View className="flex-row border-b border-border" accessibilityRole="tablist">
               {SETTINGS_SECTIONS.map(({ id, label }) => {
                 const active = section === id;
@@ -87,12 +85,10 @@ export default function SettingsScreen() {
               <View className="rounded-xl border border-border/70 bg-card p-4">
                 {section === 'profile' ? (
                   <ProfileSection />
-                ) : section === 'account' ? (
-                  <AccountSection />
-                ) : section === 'password' ? (
-                  <PasswordSection />
+                ) : section === 'preferences' ? (
+                  <PreferencesSection />
                 ) : (
-                  <NotificationsSection />
+                  <AccountSection />
                 )}
               </View>
             )}

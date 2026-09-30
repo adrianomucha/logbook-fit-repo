@@ -6,10 +6,10 @@ import { ChevronLeft, Loader2 } from 'lucide-react';
 import { ClientNav } from '@/components/client/ClientNav';
 import {
   AccountSection,
-  NotificationsSection,
-  PasswordSection,
+  PreferencesSection,
   ProfileSection,
   SETTINGS_SECTIONS,
+  resolveSettingsSection,
   settingsCardClass,
   type SettingsSectionId,
 } from '@/components/settings/sections';
@@ -18,9 +18,8 @@ import { cn } from '@/lib/utils';
 
 const SECTION_PANES: Record<SettingsSectionId, () => React.JSX.Element> = {
   profile: () => <ProfileSection role="client" />,
+  preferences: () => <PreferencesSection role="client" />,
   account: () => <AccountSection role="client" />,
-  password: () => <PasswordSection />,
-  notifications: () => <NotificationsSection role="client" />,
 };
 
 /**
@@ -34,10 +33,8 @@ export function ClientSettingsPage() {
   const searchParams = useSearchParams();
   const { user, isLoading } = useCurrentUser();
 
-  const requested = searchParams?.get('section');
-  const section: SettingsSectionId = SETTINGS_SECTIONS.some((s) => s.id === requested)
-    ? (requested as SettingsSectionId)
-    : 'profile';
+  // Old ?section=password / =notifications links land on the tab that now holds them
+  const section = resolveSettingsSection(searchParams?.get('section'));
 
   const Pane = SECTION_PANES[section];
 
@@ -64,7 +61,7 @@ export function ClientSettingsPage() {
         </div>
 
         {/* Section tabs — brand underline, matching the nav's own tabs.
-            Fixed segments, never a scroller: four tabs share the row, so
+            Fixed segments, never a scroller: three tabs share the row, so
             there is nothing to pan and the bar stays put under a thumb.
             Icons yield below 400px so the labels always fit. */}
         <nav aria-label="Settings sections" className="animate-enter">
