@@ -19,5 +19,7 @@ export const FIRST_PLAN_COPY = {
   subtitle: 'It starts today, on week 1.',
   noPlans: 'You haven’t built any plans yet.',
   build: 'Build a new plan',
+  buildHint: (firstName: string) => `From scratch, made for ${firstName}`,
   showAll: (count: number) => `See all ${count} plans`,
+  showAllHint: 'Search your whole library',
 } as const;

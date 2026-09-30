@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
-import { Loader2, Plus } from 'lucide-react';
+import { Loader2, Plus, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { FIRST_PLAN_COPY } from '@logbook/shared/client-profile';
 import type { PlanSummary } from '@/types/api';
 
@@ -56,8 +57,10 @@ export function FirstPlanPicker({
     }
   };
 
+  const hasMore = ranked.length > PREVIEW;
+
   return (
-    <div className="flex flex-col lg:h-full">
+    <div className="flex flex-col lg:flex-1 lg:min-h-0">
       <div className="pb-3">
         <h3 className="text-base font-semibold antialiased">{FIRST_PLAN_COPY.title(firstName)}</h3>
         <p className="text-sm text-muted-foreground mt-0.5 antialiased">{FIRST_PLAN_COPY.subtitle}</p>
@@ -97,22 +100,61 @@ export function FirstPlanPicker({
         </ul>
       )}
 
-      <div className="flex flex-wrap items-center gap-1 pt-3 -ms-2.5">
-        <Button
-          variant={visible.length === 0 ? 'default' : 'ghost'}
-          size="sm"
+      {/* The other ways in, as tiles pinned to the card's bottom edge — level
+          with the chat's composer beside it, so spare height sits above them
+          instead of trailing off below two small links */}
+      <div className={cn('grid gap-2 pt-4 lg:mt-auto', hasMore && 'sm:grid-cols-2')}>
+        <ActionTile
+          icon={<Plus className="w-4 h-4" />}
+          title={FIRST_PLAN_COPY.build}
+          hint={FIRST_PLAN_COPY.buildHint(firstName)}
           onClick={onCreate}
-          className={visible.length === 0 ? 'ms-2.5' : 'text-muted-foreground hover:text-foreground'}
-        >
-          <Plus className="w-3.5 h-3.5 me-1.5" />
-          {FIRST_PLAN_COPY.build}
-        </Button>
-        {ranked.length > PREVIEW && (
-          <Button variant="ghost" size="sm" onClick={onShowAll} className="text-muted-foreground hover:text-foreground">
-            {FIRST_PLAN_COPY.showAll(ranked.length)}
-          </Button>
+          dashed
+        />
+        {hasMore && (
+          <ActionTile
+            icon={<Search className="w-4 h-4" />}
+            title={FIRST_PLAN_COPY.showAll(ranked.length)}
+            hint={FIRST_PLAN_COPY.showAllHint}
+            onClick={onShowAll}
+          />
         )}
       </div>
     </div>
+  );
+}
+
+function ActionTile({
+  icon,
+  title,
+  hint,
+  onClick,
+  dashed,
+}: {
+  icon: ReactNode;
+  title: string;
+  hint: string;
+  onClick: () => void;
+  dashed?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'group flex items-center gap-3 rounded-lg border px-3 py-3 text-start',
+        'hover:bg-muted/50 active:scale-[0.98] transition-[background-color,border-color,transform] duration-150',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+        dashed ? 'border-dashed border-foreground/20 hover:border-foreground/40' : 'border-border'
+      )}
+    >
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground group-hover:bg-foreground group-hover:text-background transition-colors duration-150">
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium truncate antialiased">{title}</span>
+        <span className="block text-xs text-muted-foreground truncate mt-0.5 antialiased">{hint}</span>
+      </span>
+    </button>
   );
 }
