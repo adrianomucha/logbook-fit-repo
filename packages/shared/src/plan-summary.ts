@@ -1,4 +1,5 @@
 import type { WorkoutCompletion, WorkoutPlan } from "./types";
+import { plausibleSessionSec } from "./session-duration";
 
 interface Session {
   weekNumber: number;
@@ -87,7 +88,8 @@ export function summarizeCompletedPlan(
         const completion = byDay.get(d.id);
         return {
           weekNumber: week.weekNumber,
-          durationSec: completion?.durationSec,
+          // A session left open would swamp the block's total
+          durationSec: plausibleSessionSec(completion?.durationSec),
           done: !!completion,
         };
       }),

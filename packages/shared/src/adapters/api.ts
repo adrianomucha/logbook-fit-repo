@@ -167,6 +167,8 @@ export function apiProgressToWorkoutCompletions(
     exercisesTotal: c.exercisesTotal,
     durationSec: c.durationSec,
     effortRating: c.effortRating as WorkoutCompletion['effortRating'],
+    dayName: c.dayName,
+    setsDone: c.setsDone,
   }));
 }
 

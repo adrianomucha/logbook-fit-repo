@@ -35,6 +35,7 @@ import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserMinus } from 'lucide-react';
+import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
 
 // ---- Component ----
 
@@ -337,24 +338,25 @@ export function ClientDashboard() {
     try {
       await apiFetch('/api/client/coach', { method: 'DELETE' });
       setShowLeaveConfirm(false);
-      toast.success('You’ve left your coach');
+      toast.success(LEAVE_COACH_COPY.done);
       // Refetch the profile — the dashboard re-renders into the no-coach state
       await mutate('/api/me');
     } catch {
-      toast.error('Failed to leave your coach. Please try again.');
+      toast.error(`${LEAVE_COACH_COPY.failedTitle}. ${LEAVE_COACH_COPY.failed}`);
     }
   };
 
-  // Shared between the awaiting-plan and full dashboard branches
+  // The awaiting-plan screen's quiet exit; once training, leaving lives in
+  // Settings → Account (the shared wording keeps the two dialogs identical)
   const leaveCoachModal = (
     <ConfirmationModal
       isOpen={showLeaveConfirm}
       onClose={() => setShowLeaveConfirm(false)}
       onConfirm={handleLeaveCoach}
-      title="Leave your coach?"
-      message={`You'll stop training with ${coach?.user.name ?? 'your coach'}.`}
-      warningMessage="Your assigned plan is removed and messaging closes for both of you. Your workout history stays on your account."
-      confirmLabel="Leave coach"
+      title={LEAVE_COACH_COPY.title}
+      message={LEAVE_COACH_COPY.message(coach?.user.name)}
+      warningMessage={LEAVE_COACH_COPY.warning}
+      confirmLabel={LEAVE_COACH_COPY.confirm}
       confirmVariant="destructive"
       icon={UserMinus}
     />
@@ -671,25 +673,6 @@ export function ClientDashboard() {
               progressStats={progress?.stats}
               personalBests={progress?.personalBests}
             />
-
-            {/* Coaching membership — quiet, at the very end of the page */}
-            <div className="flex items-center justify-between rounded-xl border border-border/70 bg-card px-4 py-3">
-              <div className="min-w-0">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">Coaching</p>
-                <p className="text-sm font-medium truncate antialiased">
-                  Coached by {coach?.user.name ?? 'your coach'}
-                </p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowLeaveConfirm(true)}
-                className="text-muted-foreground hover:text-destructive shrink-0"
-              >
-                <UserMinus className="w-3.5 h-3.5 mr-1.5" />
-                Leave coach
-              </Button>
-            </div>
           </>
         )}
       </div>
@@ -702,7 +685,6 @@ export function ClientDashboard() {
         completedWorkouts={allWorkoutCompletions}
         plan={plan}
       />
-      {leaveCoachModal}
     </div>
   );
 }

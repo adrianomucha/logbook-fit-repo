@@ -10,10 +10,13 @@ import {
   Loader2,
   SlidersHorizontal,
   Trash2,
+  UserMinus,
   UserRound,
   type LucideIcon,
 } from 'lucide-react';
+import { useSWRConfig } from 'swr';
 import { NotificationPreferenceTile } from '@/components/notifications/NotificationPreferenceTile';
+import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { DeleteAccountDialog } from '@/components/account/DeleteAccountDialog';
 import { PasswordRules } from '@/components/auth/PasswordRules';
 import { Button } from '@/components/ui/button';
@@ -30,6 +33,7 @@ import {
   weightUnitLabel,
   type WeightUnit,
 } from '@logbook/shared/weight-units';
+import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
 import {
   SETTINGS_FIELD_COPY,
   SETTINGS_SECTION_COPY,
@@ -666,6 +670,8 @@ export function AccountSection({ role }: { role: SettingsRole }) {
         />
       </dl>
 
+      {!isCoach && <CoachingRow />}
+
       {/* The one destructive action, kept out of the account menu and behind
           its own dialog (type DELETE + password). The dark: overrides match
           FormError — dark-scope --destructive is a fill shade, unreadable
@@ -694,6 +700,64 @@ export function AccountSection({ role }: { role: SettingsRole }) {
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
         role={user?.role}
+      />
+    </div>
+  );
+}
+
+/**
+ * The client's coaching relationship and the way out of it. Here rather
+ * than on the Progress tab, whose job is the client's training record.
+ */
+function CoachingRow() {
+  const { coach } = useCurrentUser();
+  const { mutate } = useSWRConfig();
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
+  if (!coach) return null;
+
+  const leave = async () => {
+    try {
+      await apiFetch('/api/client/coach', { method: 'DELETE' });
+      setIsConfirmOpen(false);
+      toast.success(LEAVE_COACH_COPY.done);
+      // Refetch the profile — this row disappears and the app drops to the no-coach state
+      await mutate('/api/me');
+    } catch {
+      toast.error(`${LEAVE_COACH_COPY.failedTitle}. ${LEAVE_COACH_COPY.failed}`);
+    }
+  };
+
+  return (
+    <div className="py-3.5 border-t border-border/60 flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <FieldLabel>{LEAVE_COACH_COPY.sectionLabel}</FieldLabel>
+        <p className="text-sm font-medium text-foreground mt-1 truncate">
+          {LEAVE_COACH_COPY.coachedBy(coach.user.name)}
+        </p>
+        <div className="mt-1">
+          <FieldHint>{LEAVE_COACH_COPY.hint}</FieldHint>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={() => setIsConfirmOpen(true)}
+        className="shrink-0 text-muted-foreground hover:text-destructive"
+      >
+        <UserMinus className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
+        {LEAVE_COACH_COPY.action}
+      </Button>
+      <ConfirmationModal
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={leave}
+        title={LEAVE_COACH_COPY.title}
+        message={LEAVE_COACH_COPY.message(coach.user.name)}
+        warningMessage={LEAVE_COACH_COPY.warning}
+        confirmLabel={LEAVE_COACH_COPY.confirm}
+        confirmVariant="destructive"
+        icon={UserMinus}
       />
     </div>
   );

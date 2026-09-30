@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { findPersonalBests, type PersonalBest } from "@logbook/shared/personal-bests";
+import { MAX_SESSION_SEC, finishedSessionSec, plausibleSessionSec } from "@logbook/shared/session-duration";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -64,6 +65,8 @@ type ProgressResult = {
     exercisesTotal: number;
     durationSec?: number;
     effortRating?: string;
+    dayName?: string;
+    setsDone: number;
   }[];
   stats: {
     totalWorkouts: number;
@@ -309,11 +312,17 @@ class WorkoutServiceImpl {
     const completionPct =
       totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
     const now = new Date();
-    const durationSec = completion.startedAt
-      ? Math.floor(
-          (now.getTime() - completion.startedAt.getTime()) / 1000,
-        )
-      : null;
+    // Start → Finish, unless the session was left open for days; then the
+    // span of the logged sets is the honest answer
+    const setSpan = await this.db.setCompletion.aggregate({
+      where: { workoutCompletionId: params.completionId, completed: true },
+      _min: { completedAt: true },
+      _max: { completedAt: true },
+    });
+    const durationSec = finishedSessionSec(completion.startedAt, now, {
+      first: setSpan._min.completedAt,
+      last: setSpan._max.completedAt,
+    });
 
     return this.db.workoutCompletion.update({
       where: { id: params.completionId },
@@ -479,13 +488,22 @@ class WorkoutServiceImpl {
       where: { clientId, status: "COMPLETED" },
       _count: { _all: true },
       _avg: { completionPct: true },
+    });
+    // All-time, like totalWorkouts beside it on the Progress tab — the
+    // one-year window below would undercount a long-time client. Sessions
+    // left open for days (a stored "139h") are left out rather than let
+    // one of them outweigh a month of training.
+    const timed = await this.db.workoutCompletion.aggregate({
+      where: {
+        clientId,
+        status: "COMPLETED",
+        durationSec: { gt: 0, lte: MAX_SESSION_SEC },
+      },
       _sum: { durationSec: true },
     });
     const totalWorkouts = agg._count._all;
     const avgCompletionPct = agg._avg.completionPct ?? 0;
-    // All-time, like totalWorkouts beside it on the Progress tab — the
-    // one-year window below would undercount a long-time client
-    const totalDurationSec = agg._sum.durationSec ?? 0;
+    const totalDurationSec = timed._sum.durationSec ?? 0;
 
     // One bounded read (index: [clientId, completedAt]) feeds the history list,
     // the last-7-days slice, and the streak — no second full-table scan.
@@ -526,26 +544,10 @@ class WorkoutServiceImpl {
         completionPct: c.completionPct,
         exercisesDone: c.exercisesDone,
         exercisesTotal: c.exercisesTotal,
-        durationSec: c.durationSec,
+        durationSec: plausibleSessionSec(c.durationSec) ?? null,
         effortRating: c.effortRating,
         day: c.day ? { name: c.day.name, orderIndex: c.day.orderIndex } : null,
       }));
-
-    const allCompletions = windowRaw.map((c) => ({
-      id: c.id,
-      clientId,
-      planId: c.planId,
-      weekId: c.day?.weekId ?? "",
-      dayId: c.dayId,
-      status: c.status,
-      startedAt: c.startedAt?.toISOString() ?? undefined,
-      completedAt: c.completedAt?.toISOString() ?? undefined,
-      completionPct: c.completionPct ?? 0,
-      exercisesDone: c.exercisesDone ?? 0,
-      exercisesTotal: c.exercisesTotal ?? 0,
-      durationSec: c.durationSec ?? undefined,
-      effortRating: c.effortRating ?? undefined,
-    }));
 
     // Personal bests: every completed set the client has ever logged, with
     // what was actually lifted (the client's override, else the prescription).
@@ -592,6 +594,33 @@ class WorkoutServiceImpl {
           : [],
       ),
     ).filter((b) => new Date(b.completedAt) >= oneYearAgo);
+
+    // Sets actually logged per session, from the same rows — the history
+    // shows the real count instead of guessing three per exercise
+    const setsBySession = new Map<string, number>();
+    for (const r of setRows) {
+      setsBySession.set(r.workoutCompletionId, (setsBySession.get(r.workoutCompletionId) ?? 0) + 1);
+    }
+
+    const allCompletions = windowRaw.map((c) => ({
+      id: c.id,
+      clientId,
+      planId: c.planId,
+      weekId: c.day?.weekId ?? "",
+      dayId: c.dayId,
+      status: c.status,
+      startedAt: c.startedAt?.toISOString() ?? undefined,
+      completedAt: c.completedAt?.toISOString() ?? undefined,
+      completionPct: c.completionPct ?? 0,
+      exercisesDone: c.exercisesDone ?? 0,
+      exercisesTotal: c.exercisesTotal ?? 0,
+      durationSec: plausibleSessionSec(c.durationSec),
+      effortRating: c.effortRating ?? undefined,
+      // History spans plans; only the active plan's tree reaches the client.
+      // Unnamed days read "Day N", as the plan adapter names them.
+      dayName: c.day ? (c.day.name ?? `Day ${c.day.orderIndex}`) : undefined,
+      setsDone: setsBySession.get(c.id) ?? 0,
+    }));
 
     return {
       recentCompletions,

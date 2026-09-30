@@ -1,14 +1,13 @@
 import { useMemo } from 'react';
-import { Alert, Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useSWRConfig } from 'swr';
 import type { WorkoutPlan } from '@logbook/shared/types';
 import { apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@logbook/shared/workout-helpers';
-import { getWeekVerdict, weeksOnTargetStreak } from '@logbook/shared/progress';
+import { formatWeekStreak, getWeekVerdict, weeksTrainedStreak } from '@logbook/shared/progress';
+import { plausibleSessionSec } from '@logbook/shared/session-duration';
 import { formatBestDelta, formatBestValue, formatBestWhen, summarizePersonalBests } from '@logbook/shared/personal-bests';
 import { formatTrainingTime } from '@logbook/shared/plan-summary';
-import { apiFetch } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan } from '@/hooks/useClientWeek';
 import { useClientProgress } from '@/hooks/useCheckIns';
@@ -18,10 +17,9 @@ import { WorkoutHistory } from '@/components/progress/WorkoutHistory';
 
 const TONE_TEXT = { success: 'text-success-text', warning: 'text-warning-text', neutral: 'text-muted-foreground' } as const;
 
-/** The Progress tab — the web's ProgressHistory plus the coaching membership card. */
+/** The Progress tab — the web's ProgressHistory. Leaving a coach lives in Settings → Account. */
 export default function ProgressScreen() {
-  const { mutate } = useSWRConfig();
-  const { coach, weightUnit, isLoading: loadingUser } = useCurrentUser();
+  const { weightUnit, isLoading: loadingUser } = useCurrentUser();
   const { plan: planDetail, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
   const { progress, isLoading: loadingProgress, refresh: refreshProgress } = useClientProgress();
 
@@ -31,34 +29,18 @@ export default function ProgressScreen() {
   const verdict = useMemo(() => getWeekVerdict(completions, target), [completions, target]);
   // Same shared helpers as the web's ProgressHistory, so both say the same thing
   const bests = useMemo(() => summarizePersonalBests(progress?.personalBests ?? [], plan?.id ?? null), [progress, plan]);
-  const weeksOnTarget = useMemo(() => weeksOnTargetStreak(completions, target), [completions, target]);
+  // Weeks in a row with a session — see weeksTrainedStreak for why not "weeks on target"
+  const weekStreak = useMemo(() => weeksTrainedStreak(completions), [completions]);
   // All-time from the server, like the Workouts tile beside it; the history sum is the older-server fallback
   const trainedSec =
-    progress?.stats.totalDurationSec ?? completions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? c.durationSec ?? 0 : 0), 0);
+    progress?.stats.totalDurationSec ??
+    completions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? plausibleSessionSec(c.durationSec) ?? 0 : 0), 0);
   const [trainedValue, trainedUnit] = formatTrainingTime(trainedSec);
   const tiles: [string, string][] = [
     [String(progress?.stats.totalWorkouts ?? 0), 'Workouts'],
     [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '—', 'Trained'],
-    [`${weeksOnTarget} ${weeksOnTarget === 1 ? 'wk' : 'wks'}`, 'On target'],
+    [formatWeekStreak(weekStreak), 'Streak'],
   ];
-
-  const leaveCoach = () => {
-    Alert.alert('Leave your coach?', `You'll stop training with ${coach?.user.name ?? 'your coach'}. Your assigned plan is removed and messaging closes for both of you. Your workout history stays on your account.`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Leave coach',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await apiFetch('/api/client/coach', { method: 'DELETE' });
-            await mutate('/api/me');
-          } catch {
-            Alert.alert("Couldn't leave your coach", 'Please try again.');
-          }
-        },
-      },
-    ]);
-  };
 
   if (loadingUser || (!progress && loadingProgress) || (!planDetail && loadingPlan)) return <LoadingScreen />;
 
@@ -143,20 +125,7 @@ export default function ProgressScreen() {
           ))}
         </View>
 
-        <WorkoutHistory completions={completions} plans={plan ? [plan] : []} initialCount={10} />
-
-        {coach ? (
-          <View className="flex-row items-center justify-between rounded-xl border border-border/70 bg-card px-4 py-3">
-            <View className="flex-1">
-              <Eyebrow className="mb-0.5">Coaching</Eyebrow>
-              <Text className="font-sans-medium text-sm text-foreground" numberOfLines={1}>Coached by {coach.user.name ?? 'your coach'}</Text>
-            </View>
-            <Pressable onPress={leaveCoach} className="min-h-[36px] flex-row items-center gap-1.5 px-2 active:opacity-70">
-              <Feather name="user-minus" size={14} color="#737373" />
-              <Text className="font-sans-medium text-sm text-muted-foreground">Leave coach</Text>
-            </Pressable>
-          </View>
-        ) : null}
+        <WorkoutHistory completions={completions} plans={plan ? [plan] : []} personalBests={progress?.personalBests} />
       </View>
     </Screen>
   );
