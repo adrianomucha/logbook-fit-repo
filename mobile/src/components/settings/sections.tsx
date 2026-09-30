@@ -3,8 +3,10 @@ import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from 'reac
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { format } from 'date-fns';
+import { useSWRConfig } from 'swr';
 import { passwordSchema } from '@logbook/shared/validations/schemas';
 import { WEIGHT_UNITS, WEIGHT_UNIT_SETTING, weightUnitLabel, type WeightUnit } from '@logbook/shared/weight-units';
+import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { AVATAR_MAX_BYTES, removeAvatar, uploadAvatar } from '@/lib/avatar';
@@ -336,6 +338,8 @@ export function AccountSection() {
         ))}
       </View>
 
+      <CoachingRow />
+
       {/* The one destructive action, behind its own sheet (type DELETE + password) */}
       <View className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
         <View className="flex-row items-center gap-1.5">
@@ -364,6 +368,56 @@ export function AccountSection() {
           await signOut();
         }}
       />
+    </View>
+  );
+}
+
+/**
+ * The client's coaching relationship and the way out of it — the web's
+ * CoachingRow. Here rather than on the Progress tab, whose job is the
+ * client's training record.
+ */
+function CoachingRow() {
+  const { coach } = useCurrentUser();
+  const { mutate } = useSWRConfig();
+  if (!coach) return null;
+
+  const leave = () => {
+    Alert.alert(LEAVE_COACH_COPY.title, `${LEAVE_COACH_COPY.message(coach.user.name)} ${LEAVE_COACH_COPY.warning}`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: LEAVE_COACH_COPY.confirm,
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await apiFetch('/api/client/coach', { method: 'DELETE' });
+            // Refetch the profile — this row disappears and the app drops to the no-coach state
+            await mutate('/api/me');
+          } catch {
+            Alert.alert(LEAVE_COACH_COPY.failedTitle, LEAVE_COACH_COPY.failed);
+          }
+        },
+      },
+    ]);
+  };
+
+  return (
+    <View className="flex-row items-start justify-between gap-4 border-t border-border/60 py-3.5">
+      <View className="flex-1">
+        <FieldLabel>{LEAVE_COACH_COPY.sectionLabel}</FieldLabel>
+        <Text className="mt-1 font-sans-medium text-sm text-foreground" numberOfLines={1}>{LEAVE_COACH_COPY.coachedBy(coach.user.name)}</Text>
+        <View className="mt-1">
+          <FieldHint>{LEAVE_COACH_COPY.hint}</FieldHint>
+        </View>
+      </View>
+      <Pressable
+        onPress={leave}
+        accessibilityRole="button"
+        className="min-h-[36px] flex-row items-center gap-1.5 rounded-lg border border-border px-3 active:opacity-70"
+      >
+        <Feather name="user-minus" size={14} color="#737373" />
+        <Text className="font-sans-medium text-sm text-muted-foreground">{LEAVE_COACH_COPY.action}</Text>
+      </Pressable>
     </View>
   );
 }

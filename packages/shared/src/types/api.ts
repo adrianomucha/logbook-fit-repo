@@ -219,6 +219,9 @@ export interface ClientProgressCompletion {
   exercisesTotal: number;
   durationSec?: number;
   effortRating?: string;
+  /** Optional so an app build on an older server still renders */
+  dayName?: string;
+  setsDone?: number;
 }
 
 export interface ClientProgress {

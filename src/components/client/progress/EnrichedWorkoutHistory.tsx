@@ -1,144 +1,106 @@
 import { memo, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { WorkoutCompletion, WorkoutPlan, WorkoutDay, EffortRating } from '@/types';
-import { format, parseISO, getDay } from 'date-fns';
+import { WorkoutCompletion, WorkoutPlan, EffortRating } from '@/types';
+import { ChevronDown, ChevronUp, Dumbbell, Trophy } from 'lucide-react';
 import {
-  ChevronDown,
-  ChevronUp,
-  Dumbbell,
-} from 'lucide-react';
+  buildWorkoutHistory,
+  EFFORT_LABELS,
+  formatHistoryDuration,
+  type HistoryEntry,
+} from '@logbook/shared/progress';
 import { cn } from '@/lib/utils';
-
-/**
- * Get a user-friendly workout name with fallback chain
- * 1. day.name (e.g., "Upper Body Pull")
- * 2. Day index label (e.g., "Day 1")
- * 3. Date-based label (e.g., "Monday Workout" or "Workout · Feb 16")
- */
-function getWorkoutDisplayName(
-  day: WorkoutDay | undefined,
-  dayIndex: number,
-  completedAt: string | undefined
-): string {
-  // Prefer the day name if it exists
-  if (day?.name) {
-    return day.name;
-  }
-
-  // Fall back to day index
-  if (dayIndex >= 0) {
-    return `Day ${dayIndex + 1}`;
-  }
-
-  // Fall back to date-based label
-  if (completedAt) {
-    const date = parseISO(completedAt);
-    const dayOfWeek = getDay(date);
-    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    return `${dayNames[dayOfWeek]} Workout`;
-  }
-
-  // Last resort - but this should rarely happen
-  return 'Workout';
-}
 
 interface EnrichedWorkoutHistoryProps {
   completions: WorkoutCompletion[];
   plans: WorkoutPlan[];
-  initialCount?: number;
+  /** Bests mark the sessions they were set in */
+  personalBests?: { completionId: string }[];
+  /** Weeks shown before "Show all" */
+  initialWeeks?: number;
 }
 
-interface WorkoutHistoryItemProps {
-  completion: WorkoutCompletion;
-  dayName: string;
-  /** Null when the completion belongs to a plan we no longer have the tree
-   *  for (e.g. a previous plan) — claiming "Week 1" would be wrong. */
-  weekNumber: number | null;
-  planName: string;
-}
-
-const EFFORT_LABELS: Record<EffortRating, { label: string; color: string }> = {
-  EASY: { label: 'Easy', color: 'text-success' },
-  MEDIUM: { label: 'Medium', color: 'text-foreground' },
-  HARD: { label: 'Hard', color: 'text-warning' },
+const EFFORT_COLOR: Record<EffortRating, string> = {
+  EASY: 'text-success',
+  MEDIUM: 'text-foreground',
+  HARD: 'text-warning',
 };
 
-function formatDuration(seconds?: number): string {
-  if (!seconds) return '—';
-  const mins = Math.floor(seconds / 60);
-  if (mins < 60) return `${mins}m`;
-  const hours = Math.floor(mins / 60);
-  const remainingMins = mins % 60;
-  return `${hours}h ${remainingMins}m`;
-}
-
-const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ completion, dayName, weekNumber, planName }: WorkoutHistoryItemProps) {
+const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ entry }: { entry: HistoryEntry }) {
   const [isExpanded, setIsExpanded] = useState(false);
-
-  const effortInfo = completion.effortRating ? EFFORT_LABELS[completion.effortRating] : null;
-
-  // Calculate estimated volume (simplified)
-  const estimatedSets = completion.exercisesDone * 3; // Assume ~3 sets per exercise
+  const { completion } = entry;
+  const effort = completion.effortRating;
 
   return (
     <div>
+      {/* One line: what it was and anything unusual about it on the left,
+          when / how long / how much on the right */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full py-3.5 min-h-[44px] text-left hover:bg-muted/30 transition-colors touch-manipulation"
+        className="w-full flex items-center gap-3 py-3 min-h-[44px] text-left hover:bg-muted/30 transition-colors touch-manipulation"
         aria-expanded={isExpanded}
       >
-        {/* Row 1: Name + chevron */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <h4 className="text-[15px] font-semibold tracking-tight leading-snug truncate">{dayName}</h4>
-            {completion.status === 'COMPLETED' && (
-              <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
-            )}
-          </div>
-          {isExpanded ? (
-            <ChevronUp className="w-4 h-4 text-muted-foreground/60 shrink-0" />
-          ) : (
-            <ChevronDown className="w-4 h-4 text-muted-foreground/60 shrink-0" />
-          )}
-        </div>
-
-        {/* Row 2: Date · Week · Effort — mono data voice */}
-        <p className="font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums text-muted-foreground mt-1">
-          {completion.completedAt
-            ? format(parseISO(completion.completedAt), 'MMM d, yyyy')
-            : 'In Progress'}
-          {weekNumber != null && <>{' · '}Week {weekNumber}</>}
-          {effortInfo && (
-            <span className={cn('ml-1.5 font-bold', effortInfo.color)}>
-              {effortInfo.label}
+        <span className="flex items-center gap-2 min-w-0 flex-1">
+          <span className="text-[15px] font-semibold tracking-tight leading-snug truncate">{entry.name}</span>
+          {entry.bests > 0 && (
+            <span
+              className="inline-flex items-center gap-0.5 shrink-0 font-mono text-[10px] font-bold tabular-nums text-success-text"
+              title={`${entry.bests} personal ${entry.bests === 1 ? 'best' : 'bests'}`}
+            >
+              <Trophy className="w-3 h-3" aria-hidden="true" />
+              {entry.bests > 1 && entry.bests}
+              <span className="sr-only">{entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}</span>
             </span>
           )}
-        </p>
-
-        {/* Row 3: Quick stats */}
-        <p className="font-mono text-xs tabular-nums text-muted-foreground mt-1.5">
-          {completion.exercisesDone}/{completion.exercisesTotal} exercises
-          &ensp;·&ensp;{formatDuration(completion.durationSec)}
-          &ensp;·&ensp;~{estimatedSets} sets
-        </p>
+          {entry.partial && (
+            <span className="shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.1em] tabular-nums text-warning">
+              {completion.exercisesDone}/{completion.exercisesTotal}
+              <span className="sr-only"> exercises</span>
+            </span>
+          )}
+          {entry.effortCallout && (
+            <span
+              className={cn(
+                'shrink-0 font-mono text-[10px] font-bold uppercase tracking-[0.1em]',
+                EFFORT_COLOR[entry.effortCallout]
+              )}
+            >
+              {EFFORT_LABELS[entry.effortCallout]}
+            </span>
+          )}
+        </span>
+        <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground">{entry.meta}</span>
+        {isExpanded ? (
+          <ChevronUp className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+        ) : (
+          <ChevronDown className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+        )}
       </button>
 
       {/* Expanded details — same label ↔ value rows as Body Stats */}
       {isExpanded && (
         <div className="pb-4 pt-1 space-y-2.5 animate-fade-in-up">
           <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Completion</span>
-            <span className="font-mono font-medium tabular-nums">{Math.round(completion.completionPct)}%</span>
+            <span className="text-muted-foreground">Exercises</span>
+            <span className="font-mono font-medium tabular-nums">
+              {completion.exercisesDone}/{completion.exercisesTotal}
+            </span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Duration</span>
+            <span className="font-mono font-medium tabular-nums">{formatHistoryDuration(completion.durationSec)}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Effort</span>
-            <span className={cn('font-medium', effortInfo?.color)}>
-              {effortInfo ? effortInfo.label : '—'}
+            <span className={cn('font-medium', effort && EFFORT_COLOR[effort])}>
+              {effort ? EFFORT_LABELS[effort] : '—'}
             </span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Plan</span>
-            <span className="font-medium truncate ml-4">{planName}</span>
+            <span className="font-medium truncate ml-4">
+              {entry.planName}
+              {entry.weekNumber != null && ` · Week ${entry.weekNumber}`}
+            </span>
           </div>
         </div>
       )}
@@ -151,44 +113,23 @@ WorkoutHistoryItem.displayName = 'WorkoutHistoryItem';
 export function EnrichedWorkoutHistory({
   completions,
   plans,
-  initialCount = 5,
+  personalBests,
+  initialWeeks = 4,
 }: EnrichedWorkoutHistoryProps) {
   const [showAll, setShowAll] = useState(false);
 
-  const enrichedCompletions = useMemo(() => {
-    // Sort by completion date (newest first), then filter completed only
-    const sorted = [...completions]
-      .filter((c) => c.status === 'COMPLETED' && c.completedAt)
-      .sort((a, b) => {
-        const dateA = a.completedAt ? new Date(a.completedAt).getTime() : 0;
-        const dateB = b.completedAt ? new Date(b.completedAt).getTime() : 0;
-        return dateB - dateA;
-      });
+  // Grouping, naming and the week summaries live in @logbook/shared/progress
+  // so the app's log reads the same
+  const weeks = useMemo(
+    () => buildWorkoutHistory(completions, plans, personalBests),
+    [completions, plans, personalBests]
+  );
+  const sessionCount = weeks.reduce((sum, w) => sum + w.entries.length, 0);
 
-    return sorted.map((completion) => {
-      const plan = plans.find((p) => p.id === completion.planId);
-      const week = plan?.weeks.find((w) => w.id === completion.weekId);
-      const day = week?.days.find((d) => d.id === completion.dayId);
-      const dayIndex = week?.days.findIndex((d) => d.id === completion.dayId) ?? -1;
+  const displayedWeeks = showAll ? weeks : weeks.slice(0, initialWeeks);
+  const hiddenWeeks = weeks.length - initialWeeks;
 
-      return {
-        completion,
-        dayName: getWorkoutDisplayName(day, dayIndex, completion.completedAt),
-        // History spans plans, but only the active plan's tree is loaded —
-        // don't mislabel older work as "Week 1" of a plan it wasn't part of
-        weekNumber: week?.weekNumber ?? null,
-        planName: plan?.name || 'Earlier plan',
-      };
-    });
-  }, [completions, plans]);
-
-  const displayedCompletions = showAll
-    ? enrichedCompletions
-    : enrichedCompletions.slice(0, initialCount);
-
-  const hasMore = enrichedCompletions.length > initialCount;
-
-  if (enrichedCompletions.length === 0) {
+  if (weeks.length === 0) {
     return (
       <section
         aria-label="Workout history"
@@ -224,25 +165,29 @@ export function EnrichedWorkoutHistory({
         <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
           Workout history
         </h3>
-        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-          {enrichedCompletions.length}
-        </span>
+        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{sessionCount}</span>
       </div>
 
-      {/* Workout items — hairline dividers inside the card */}
-      <div className="divide-y divide-border/50 px-4">
-        {displayedCompletions.map((item) => (
-          <WorkoutHistoryItem
-            key={item.completion.id}
-            completion={item.completion}
-            dayName={item.dayName}
-            weekNumber={item.weekNumber}
-            planName={item.planName}
-          />
-        ))}
-      </div>
+      {/* One block per week: the week's line, then its sessions */}
+      {displayedWeeks.map((week, i) => (
+        <div key={week.key} className={cn(i > 0 && 'border-t border-border/50')}>
+          <div className="flex items-baseline justify-between gap-3 px-4 py-2 bg-muted/30">
+            <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] font-semibold text-foreground">
+              {week.label}
+            </h4>
+            <p className="font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums text-muted-foreground text-right">
+              {week.summary}
+            </p>
+          </div>
+          <div className="divide-y divide-border/40 px-4">
+            {week.entries.map((entry) => (
+              <WorkoutHistoryItem key={entry.completion.id} entry={entry} />
+            ))}
+          </div>
+        </div>
+      ))}
 
-      {hasMore && (
+      {hiddenWeeks > 0 && (
         <div className="border-t border-border/50">
           <Button
             variant="ghost"
@@ -258,7 +203,7 @@ export function EnrichedWorkoutHistory({
             ) : (
               <>
                 <ChevronDown className="w-4 h-4 mr-1" />
-                Show all ({enrichedCompletions.length - initialCount} more)
+                Show all ({hiddenWeeks} more {hiddenWeeks === 1 ? 'week' : 'weeks'})
               </>
             )}
           </Button>

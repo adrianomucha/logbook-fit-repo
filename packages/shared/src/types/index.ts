@@ -145,6 +145,10 @@ export interface WorkoutCompletion {
   exercisesTotal: number;
   durationSec?: number;
   effortRating?: EffortRating;  // Optional post-workout feedback
+  /** The day's name as the server knows it — history spans plans whose tree isn't loaded */
+  dayName?: string;
+  /** Sets actually logged, when the server counted them */
+  setsDone?: number;
 }
 
 // Set-level completion tracking

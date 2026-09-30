@@ -7,8 +7,6 @@ import {
   summarizePersonalBests,
   type LoggedSet,
 } from '../personal-bests';
-import { weeksOnTargetStreak } from '../progress';
-import type { WorkoutCompletion } from '../types';
 
 let n = 0;
 function set(
@@ -122,32 +120,5 @@ describe('summarizePersonalBests', () => {
     const s = summarizePersonalBests(bests, 'p1', { now: new Date('2026-09-28T20:00:00Z') });
     expect(s).toMatchObject({ count: 2, exercises: 1, thisWeek: 1 });
     expect(s.latest.map((b) => b.weight)).toEqual([90, 85]);
-  });
-});
-
-describe('weeksOnTargetStreak', () => {
-  const done = (iso: string): WorkoutCompletion => ({
-    id: `c${n++}`, clientId: 'c', planId: 'p', weekId: '', dayId: `d${n}`, status: 'COMPLETED',
-    completionPct: 100, exercisesDone: 1, exercisesTotal: 1, completedAt: iso,
-  });
-  // Monday 2026-09-28 is "now"; weeks start Sep 21, Sep 14, Sep 7
-  const now = new Date('2026-09-28T12:00:00');
-
-  it('counts back through weeks that hit the target, ignoring an open week', () => {
-    const c = [
-      '2026-09-21T10:00:00', '2026-09-23T10:00:00', // week of Sep 21: 2
-      '2026-09-14T10:00:00', '2026-09-16T10:00:00', // week of Sep 14: 2
-      '2026-09-08T10:00:00', // week of Sep 7: 1 — breaks
-    ].map(done);
-    expect(weeksOnTargetStreak(c, 2, now)).toBe(2);
-  });
-
-  it('adds the current week once it is hit', () => {
-    const c = ['2026-09-28T08:00:00', '2026-09-28T09:00:00', '2026-09-22T10:00:00', '2026-09-23T10:00:00'].map(done);
-    expect(weeksOnTargetStreak(c, 2, now)).toBe(2);
-  });
-
-  it('is zero when last week missed', () => {
-    expect(weeksOnTargetStreak(['2026-09-14T10:00:00', '2026-09-15T10:00:00'].map(done), 2, now)).toBe(0);
   });
 });

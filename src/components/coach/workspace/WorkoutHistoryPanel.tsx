@@ -7,6 +7,7 @@ import type { ClientDetail } from '@/types/api';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
+import { plausibleSessionSec } from '@logbook/shared/session-duration';
 
 interface WorkoutHistoryPanelProps {
   completions: ClientDetail['completions'];
@@ -23,7 +24,9 @@ const EFFORT_DISPLAY: Record<string, { label: string; text: string }> = {
   HARD: { label: 'Hard', text: 'text-warning' },
 };
 
-function formatDuration(seconds: number | null): string | null {
+function formatDuration(stored: number | null): string | null {
+  // A session left open for days isn't a duration worth showing
+  const seconds = plausibleSessionSec(stored);
   if (!seconds) return null;
   const mins = Math.round(seconds / 60);
   if (mins < 60) return `${mins}m`;

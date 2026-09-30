@@ -2,7 +2,8 @@ import { useMemo } from 'react';
 import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { EnrichedWorkoutHistory } from './progress/EnrichedWorkoutHistory';
-import { getWeekVerdict, weeksOnTargetStreak, type WeekVerdict } from '@logbook/shared/progress';
+import { formatWeekStreak, getWeekVerdict, weeksTrainedStreak, type WeekVerdict } from '@logbook/shared/progress';
+import { plausibleSessionSec } from '@logbook/shared/session-duration';
 import {
   formatBestDelta,
   formatBestValue,
@@ -66,21 +67,23 @@ export function ProgressHistory({
     [personalBests, plan.id]
   );
 
-  const weeksOnTarget = useMemo(
-    () => weeksOnTargetStreak(workoutCompletions, target),
-    [workoutCompletions, target]
-  );
+  // Weeks in a row with a session — consistency the client can keep, where
+  // "weeks on target" read 0 all block for anyone training under the plan's count
+  const weekStreak = useMemo(() => weeksTrainedStreak(workoutCompletions), [workoutCompletions]);
   // All-time from the server, like the Workouts tile beside it; summing the
   // (one-year) history is only the fallback for an older server
   const trainedSec =
     progressStats?.totalDurationSec ??
-    workoutCompletions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? c.durationSec ?? 0 : 0), 0);
+    workoutCompletions.reduce(
+      (sum, c) => sum + (c.status === 'COMPLETED' ? plausibleSessionSec(c.durationSec) ?? 0 : 0),
+      0
+    );
   const [trainedValue, trainedUnit] = formatTrainingTime(trainedSec);
 
   const tiles: [string, string][] = [
     [String(progressStats?.totalWorkouts ?? workoutCompletions.filter((c) => c.status === 'COMPLETED').length), 'Workouts'],
     [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '—', 'Trained'],
-    [`${weeksOnTarget} ${weeksOnTarget === 1 ? 'wk' : 'wks'}`, 'On target'],
+    [formatWeekStreak(weekStreak), 'Streak'],
   ];
 
   return (
@@ -194,7 +197,7 @@ export function ProgressHistory({
         <EnrichedWorkoutHistory
           completions={workoutCompletions}
           plans={plans}
-          initialCount={10}
+          personalBests={personalBests}
         />
       </div>
     </div>
