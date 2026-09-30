@@ -12,6 +12,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
     "seed:demo-call": "tsx prisma/seed_demo_call.ts"
   },

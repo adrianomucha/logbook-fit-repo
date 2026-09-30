@@ -8,6 +8,7 @@ import {
   apiClientDetailToClient,
 } from "../api";
 import type { PlanDetail } from "../../types/plan-detail";
+import type { ApiMessage, ClientDetail } from "../../types/api";
 
 // ---------------------------------------------------------------------------
 // apiPlanToWorkoutPlan
@@ -25,6 +26,7 @@ describe("apiPlanToWorkoutPlan", () => {
     updatedAt: "2025-01-02T00:00:00Z",
     editedAt: null,
     deletedAt: null,
+    sourceTemplateId: null,
     assignedTo: [],
     weeks: [
       {
@@ -230,7 +232,7 @@ describe("apiCheckInToCheckIn", () => {
 
 describe("apiMessagesToMessages", () => {
   it("reverses order (newest-first API → oldest-first domain)", () => {
-    const msgs = [
+    const msgs: ApiMessage[] = [
       {
         id: "m-2",
         content: "Second",
@@ -239,6 +241,7 @@ describe("apiMessagesToMessages", () => {
         senderId: "u-1",
         recipientId: "u-2",
         sender: { name: "Alice" },
+        exerciseContext: null,
       },
       {
         id: "m-1",
@@ -248,6 +251,7 @@ describe("apiMessagesToMessages", () => {
         senderId: "u-2",
         recipientId: "u-1",
         sender: { name: "Bob" },
+        exerciseContext: null,
       },
     ];
     const result = apiMessagesToMessages(msgs, "client-1");
@@ -259,7 +263,7 @@ describe("apiMessagesToMessages", () => {
   });
 
   it("handles null sender name", () => {
-    const msgs = [
+    const msgs: ApiMessage[] = [
       {
         id: "m-1",
         content: "Hi",
@@ -268,6 +272,7 @@ describe("apiMessagesToMessages", () => {
         senderId: "u-1",
         recipientId: "u-2",
         sender: { name: null },
+        exerciseContext: null,
       },
     ];
     const result = apiMessagesToMessages(msgs, "client-1");
@@ -317,10 +322,12 @@ describe("apiProgressToWorkoutCompletions", () => {
 
 describe("apiClientDetailToWorkoutCompletions", () => {
   it("maps coach client-detail completions", () => {
-    const completions = [
+    const completions: ClientDetail["completions"] = [
       {
         id: "wc-1",
         dayId: "day-1",
+        status: "COMPLETED",
+        startedAt: "2025-03-01T10:10:00Z",
         completedAt: "2025-03-01T11:00:00Z",
         completionPct: 100,
         exercisesDone: 5,
@@ -328,6 +335,8 @@ describe("apiClientDetailToWorkoutCompletions", () => {
         effortRating: "HARD",
         durationSec: 3000,
         day: { name: "Push", orderIndex: 1, week: { id: "week-1" } },
+        flags: [],
+        sets: [],
       },
     ];
     const result = apiClientDetailToWorkoutCompletions(
@@ -339,13 +348,16 @@ describe("apiClientDetailToWorkoutCompletions", () => {
     expect(result[0].planId).toBe("plan-1");
     expect(result[0].weekId).toBe("week-1");
     expect(result[0].status).toBe("COMPLETED");
+    expect(result[0].startedAt).toBe("2025-03-01T10:10:00Z");
   });
 
   it("handles null week with fallback", () => {
-    const completions = [
+    const completions: ClientDetail["completions"] = [
       {
         id: "wc-2",
         dayId: "day-2",
+        status: "IN_PROGRESS",
+        startedAt: null,
         completedAt: null,
         completionPct: null,
         exercisesDone: null,
@@ -353,6 +365,8 @@ describe("apiClientDetailToWorkoutCompletions", () => {
         effortRating: null,
         durationSec: null,
         day: { name: null, orderIndex: 2, week: null },
+        flags: [],
+        sets: [],
       },
     ];
     const result = apiClientDetailToWorkoutCompletions(
@@ -362,6 +376,8 @@ describe("apiClientDetailToWorkoutCompletions", () => {
     );
     expect(result[0].weekId).toBe("");
     expect(result[0].completionPct).toBe(0);
+    expect(result[0].status).toBe("IN_PROGRESS");
+    expect(result[0].startedAt).toBeUndefined();
   });
 });
 
@@ -371,7 +387,7 @@ describe("apiClientDetailToWorkoutCompletions", () => {
 
 describe("apiClientDetailToClient", () => {
   it("maps client detail to domain Client", () => {
-    const detail = {
+    const detail: ClientDetail = {
       id: "client-1",
       user: {
         id: "user-1",
@@ -388,9 +404,23 @@ describe("apiClientDetailToClient", () => {
       checkInIntervalDays: 7,
       checkInDayOfWeek: null,
       isSample: false,
+      lastWorkoutAt: null,
+      urgency: "ON_TRACK",
+      planStatus: "ACTIVE",
       completions: [],
       checkIns: [
-        { id: "ci-1", status: "COMPLETED", effortRating: null, createdAt: "2025-03-01T00:00:00Z", completedAt: "2025-03-02T00:00:00Z" },
+        {
+          id: "ci-1",
+          status: "COMPLETED",
+          effortRating: null,
+          clientFeeling: null,
+          painBlockers: null,
+          clientRespondedAt: null,
+          coachFeedback: null,
+          planAdjustment: false,
+          createdAt: "2025-03-01T00:00:00Z",
+          completedAt: "2025-03-02T00:00:00Z",
+        },
       ],
     };
     const result = apiClientDetailToClient(detail);
@@ -404,7 +434,7 @@ describe("apiClientDetailToClient", () => {
   });
 
   it("handles inactive client with no plan", () => {
-    const detail = {
+    const detail: ClientDetail = {
       id: "client-2",
       user: {
         id: "user-2",
@@ -421,6 +451,9 @@ describe("apiClientDetailToClient", () => {
       checkInIntervalDays: 7,
       checkInDayOfWeek: null,
       isSample: false,
+      lastWorkoutAt: null,
+      urgency: "NEEDS_PLAN",
+      planStatus: "NONE",
       completions: [],
       checkIns: [],
     };
