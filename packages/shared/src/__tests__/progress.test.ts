@@ -103,6 +103,8 @@ describe('buildWorkoutHistory', () => {
     const entries = buildWorkoutHistory(c, [], [], now).flatMap((w) => w.entries);
     expect(entries.map((e) => e.effortCallout)).toEqual(['MEDIUM', undefined, undefined, undefined]);
     expect(entries.map((e) => e.partial)).toEqual([false, true, false, false]);
+    expect(entries.map((e) => e.effortLabel)).toEqual(['Medium effort', undefined, undefined, undefined]);
+    expect(entries.map((e) => e.partialLabel)).toEqual([undefined, '2 of 5 exercises', undefined, undefined]);
   });
 
   it('calls out every rating while there are too few to have a usual', () => {

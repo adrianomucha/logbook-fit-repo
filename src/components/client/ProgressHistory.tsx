@@ -128,11 +128,16 @@ export function ProgressHistory({
           {bests.latest.length > 0 && (
             <ul aria-label="Latest bests" className="border-t border-border/60 divide-y divide-border/40">
               {bests.latest.map((b) => (
-                <li key={`${b.completionId}-${b.exerciseId}`} className="flex items-baseline gap-3 px-4 py-2.5">
-                  <span className="flex-1 min-w-0 truncate text-sm font-semibold tracking-tight antialiased">
-                    {b.exerciseName}
+                <li key={`${b.completionId}-${b.exerciseId}`} className="flex items-center gap-3 px-4 py-2.5">
+                  {/* When sits under the lift on phones so the name isn't cut to a stub */}
+                  <span className="flex-1 min-w-0 sm:flex sm:items-baseline sm:gap-3">
+                    <span className="block truncate text-sm font-semibold tracking-tight antialiased sm:flex-1">
+                      {b.exerciseName}
+                    </span>
+                    <span className="block mt-0.5 sm:mt-0 font-mono text-[11px] text-muted-foreground sm:shrink-0">
+                      {formatBestWhen(b.completedAt)}
+                    </span>
                   </span>
-                  <span className="font-mono text-[11px] text-muted-foreground shrink-0">{formatBestWhen(b.completedAt)}</span>
                   <span className="font-mono text-[13px] font-semibold tabular-nums shrink-0">{formatBestValue(b, weightUnit)}</span>
                   <span className="w-12 text-right font-mono text-xs tabular-nums text-success-text shrink-0">
                     {formatBestDelta(b, weightUnit)}

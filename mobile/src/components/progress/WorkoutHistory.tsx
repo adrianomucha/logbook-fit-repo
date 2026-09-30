@@ -17,37 +17,29 @@ function HistoryItem({ entry, last }: { entry: HistoryEntry; last: boolean }) {
   const effort = completion.effortRating;
   return (
     <View className={last ? '' : 'border-b border-border/40'}>
-      {/* One line: what it was and anything unusual on the left, when / how long / how much on the right */}
+      {/* The name on top, one quiet line of detail under it */}
       <Pressable
         onPress={() => setExpanded((v) => !v)}
         accessibilityRole="button"
         accessibilityState={{ expanded }}
         className="min-h-[44px] flex-row items-center gap-3 py-3 active:bg-muted/30"
       >
-        <View className="flex-1 flex-row items-center gap-2">
-          <Text className="shrink font-sans-semibold text-[15px] tracking-tight text-foreground" numberOfLines={1}>{entry.name}</Text>
-          {entry.bests > 0 ? (
-            <View
-              className="flex-row items-center gap-0.5"
-              accessibilityLabel={entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}
-            >
-              <Feather name="award" size={12} color="#157f3c" />
-              {entry.bests > 1 ? <Text className="font-mono-bold text-[10px] text-success-text">{entry.bests}</Text> : null}
-            </View>
-          ) : null}
-          {entry.partial ? (
-            <Text className="font-mono-bold text-[10px] uppercase tracking-[1px] text-warning-text" accessibilityLabel={`${completion.exercisesDone} of ${completion.exercisesTotal} exercises`}>
-              {completion.exercisesDone}/{completion.exercisesTotal}
-            </Text>
-          ) : null}
-          {entry.effortCallout ? (
-            <Text className={`font-mono-bold text-[10px] uppercase tracking-[1px] ${EFFORT_COLOR[entry.effortCallout]}`}>
-              {EFFORT_LABELS[entry.effortCallout]}
-            </Text>
-          ) : null}
+        <View className="flex-1">
+          <View className="flex-row items-center gap-1.5">
+            <Text className="shrink font-sans-semibold text-[15px] tracking-tight text-foreground" numberOfLines={1}>{entry.name}</Text>
+            {entry.bests > 0 ? (
+              <View accessibilityLabel={entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}>
+                <Feather name="award" size={14} color="#157f3c" />
+              </View>
+            ) : null}
+          </View>
+          <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground" numberOfLines={1}>
+            {entry.meta}
+            {entry.effortLabel ? ` · ${entry.effortLabel}` : ''}
+            {entry.partialLabel ? <Text className="text-warning-text">{` · ${entry.partialLabel}`}</Text> : null}
+          </Text>
         </View>
-        <Text className="font-mono text-[11px] text-muted-foreground">{entry.meta}</Text>
-        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#a3a3a3" />
+        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#c4c4c4" />
       </Pressable>
       {expanded ? (
         <View className="gap-2.5 pb-4 pt-1">
@@ -124,7 +116,7 @@ export function WorkoutHistory({
                 <Text className="font-mono-semibold text-[10px] uppercase tracking-[1.4px] text-foreground" accessibilityRole="header">
                   {week.label}
                 </Text>
-                <Text className="shrink text-right font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">{week.summary}</Text>
+                <Text className="shrink text-right font-sans text-xs text-muted-foreground">{week.summary}</Text>
               </View>
               <View className="px-4">
                 {week.entries.map((entry, j) => (

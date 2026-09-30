@@ -87,10 +87,13 @@ export default function ProgressScreen() {
               {bests.latest.map((b, i) => (
                 <View
                   key={`${b.completionId}-${b.exerciseId}`}
-                  className={`flex-row items-baseline gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border/40' : ''}`}
+                  className={`flex-row items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border/40' : ''}`}
                 >
-                  <Text className="flex-1 font-sans-semibold text-sm tracking-tight text-foreground" numberOfLines={1}>{b.exerciseName}</Text>
-                  <Text className="font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
+                  {/* When sits under the lift so the name isn't cut to a stub */}
+                  <View className="flex-1">
+                    <Text className="font-sans-semibold text-sm tracking-tight text-foreground" numberOfLines={1}>{b.exerciseName}</Text>
+                    <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
+                  </View>
                   <Text className="font-mono-semibold text-[13px] text-foreground">{formatBestValue(b, weightUnit)}</Text>
                   <Text className="w-12 text-right font-mono text-xs text-success-text">{formatBestDelta(b, weightUnit)}</Text>
                 </View>
