@@ -7,6 +7,7 @@ import { useSWRConfig } from 'swr';
 import { passwordSchema } from '@logbook/shared/validations/schemas';
 import { WEIGHT_UNITS, WEIGHT_UNIT_SETTING, weightUnitLabel, type WeightUnit } from '@logbook/shared/weight-units';
 import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
+import { SETTINGS_FIELD_COPY, SETTINGS_SECTION_COPY, type SettingsSectionId } from '@logbook/shared/settings-sections';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { AVATAR_MAX_BYTES, removeAvatar, uploadAvatar } from '@/lib/avatar';
@@ -18,17 +19,15 @@ import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
 
 /**
  * The settings panes — the web's components/settings/sections.tsx for the
- * client role. Same four panes, same endpoints; the screen owns the chrome.
+ * client role. Same three panes, same endpoints; the screen owns the chrome.
+ * Which tabs exist and what they say lives in @logbook/shared/settings-sections.
  */
 
-export type SettingsSectionId = 'profile' | 'account' | 'password' | 'notifications';
-
-export const SETTINGS_SECTIONS: { id: SettingsSectionId; label: string }[] = [
-  { id: 'profile', label: 'Profile' },
-  { id: 'account', label: 'Account' },
-  { id: 'password', label: 'Password' },
-  { id: 'notifications', label: 'Alerts' },
-];
+export {
+  SETTINGS_SECTIONS,
+  resolveSettingsSection,
+  type SettingsSectionId,
+} from '@logbook/shared/settings-sections';
 
 const inputClass = 'h-11 rounded-lg border border-border/60 bg-secondary/50 px-3.5 font-sans text-base text-foreground';
 
@@ -45,7 +44,9 @@ function FieldHint({ children }: { children: ReactNode }) {
 }
 
 /** Pane heading: bold title + one muted sentence, over a hairline. */
-function SectionHeader({ title, description }: { title: string; description: string }) {
+function SectionHeader({ section }: { section: SettingsSectionId }) {
+  const { title, description: descriptions } = SETTINGS_SECTION_COPY[section];
+  const description = descriptions.client;
   return (
     <View className="mb-5">
       <Text className="font-sans-bold text-lg tracking-tight text-foreground">{title}</Text>
@@ -185,7 +186,7 @@ export function ProfileSection() {
 
   return (
     <View>
-      <SectionHeader title="Profile" description="How your coach sees you — on your card in their app." />
+      <SectionHeader section="profile" />
 
       <View className="gap-5">
         <View className="gap-2">
@@ -302,40 +303,222 @@ function WeightUnitField() {
   );
 }
 
-/** Account facts and preferences, plus the one destructive action. */
+/** One read-only fact: mono label, the value, an optional hint. */
+function FactRow({ label, value, hint, className = '' }: { label: string; value: string; hint?: string; className?: string }) {
+  return (
+    <View className={`py-3.5 ${className}`}>
+      <FieldLabel>{label}</FieldLabel>
+      <Text className="mt-1 font-sans-medium text-sm text-foreground">{value}</Text>
+      {hint ? (
+        <View className="mt-1">
+          <FieldHint>{hint}</FieldHint>
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+/** How the app works for this person: alerts, weight unit, timezone. */
+export function PreferencesSection() {
+  const { user } = useCurrentUser();
+
+  return (
+    <View>
+      <SectionHeader section="preferences" />
+
+      <NotificationPreferenceTile />
+
+      <View className="mt-2">
+        <WeightUnitField />
+        <View className="border-t border-border/60">
+          <FactRow
+            label={SETTINGS_FIELD_COPY.timezone.label}
+            value={user?.timezone ?? 'UTC'}
+            hint={SETTINGS_FIELD_COPY.timezone.hint.client}
+          />
+        </View>
+      </View>
+    </View>
+  );
+}
+
+/**
+ * Signed-in password change — current password proves it's really them.
+ * Folded behind a button so the Account pane reads as facts first.
+ */
+function PasswordField() {
+  const copy = SETTINGS_FIELD_COPY.password;
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  // Which field the error belongs to — drives focus, so the fix happens
+  // where the mistake is. null = form-level (rate limit, 500).
+  const [errorField, setErrorField] = useState<'current' | 'new' | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [flash, setFlash] = useFlash();
+  const currentRef = useRef<TextInput>(null);
+  const newRef = useRef<TextInput>(null);
+
+  const close = () => {
+    setIsOpen(false);
+    setCurrentPassword('');
+    setNewPassword('');
+    setError(null);
+    setErrorField(null);
+  };
+
+  const failField = (field: 'current' | 'new' | null, message: string) => {
+    setError(message);
+    setErrorField(field);
+    if (field === 'current') currentRef.current?.focus();
+    if (field === 'new') newRef.current?.focus();
+  };
+
+  const handleSubmit = async () => {
+    if (isSaving || !currentPassword || !newPassword) return;
+    setError(null);
+    setErrorField(null);
+
+    const parsed = passwordSchema.safeParse(newPassword);
+    if (!parsed.success) {
+      failField('new', parsed.error.issues[0]?.message ?? 'Pick a stronger password.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await apiFetch('/api/account/password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      close();
+      setFlash(copy.saved);
+    } catch (e) {
+      // A 400 is the wrong current password; anything else (429, 500) is
+      // the form's problem, not a field's
+      failField(
+        e instanceof ApiError && e.status === 400 ? 'current' : null,
+        e instanceof Error ? e.message : 'Couldn’t change your password.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!isOpen) {
+    return (
+      <View className="border-t border-border/60 py-3.5">
+        <FieldLabel>{copy.label}</FieldLabel>
+        <View className="mt-1 flex-row items-center gap-3">
+          {flash ? (
+            <Flash message={flash} />
+          ) : (
+            <Text className="flex-1 font-sans-medium text-sm tracking-[3px] text-foreground" accessibilityElementsHidden importantForAccessibility="no">
+              ••••••••
+            </Text>
+          )}
+          <Pressable
+            onPress={() => setIsOpen(true)}
+            accessibilityRole="button"
+            className="h-9 items-center justify-center rounded-md border border-border bg-background px-3 active:scale-[0.96]"
+          >
+            <Text className="font-sans-medium text-sm text-foreground">{copy.open}</Text>
+          </Pressable>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View className="gap-4 border-t border-border/60 py-3.5">
+      <View className="gap-1">
+        <FieldLabel>{copy.open}</FieldLabel>
+        <FieldHint>{copy.hint}</FieldHint>
+      </View>
+
+      <View className="gap-2">
+        <FieldLabel>Current password</FieldLabel>
+        <TextInput
+          ref={currentRef}
+          autoFocus
+          className={`${inputClass} ${errorField === 'current' ? 'border-destructive' : ''}`}
+          value={currentPassword}
+          onChangeText={setCurrentPassword}
+          secureTextEntry
+          textContentType="password"
+          autoComplete="current-password"
+          accessibilityLabel="Current password"
+          returnKeyType="next"
+          onSubmitEditing={() => newRef.current?.focus()}
+        />
+      </View>
+
+      <View className="gap-2">
+        <FieldLabel>New password</FieldLabel>
+        <TextInput
+          ref={newRef}
+          className={`${inputClass} ${errorField === 'new' ? 'border-destructive' : ''}`}
+          value={newPassword}
+          onChangeText={setNewPassword}
+          placeholder="Make it a strong one"
+          placeholderTextColor="#737373"
+          secureTextEntry
+          textContentType="newPassword"
+          autoComplete="new-password"
+          accessibilityLabel="New password"
+          returnKeyType="done"
+          onSubmitEditing={() => void handleSubmit()}
+        />
+        {newPassword.length > 0 ? <PasswordRules password={newPassword} /> : null}
+      </View>
+
+      {error ? (
+        <View className="flex-row items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
+          <Feather name="alert-triangle" size={14} color="#c52020" style={{ marginTop: 2 }} />
+          <Text className="flex-1 font-sans text-sm text-destructive">{error}</Text>
+        </View>
+      ) : null}
+
+      <View className="flex-row items-center justify-end gap-2 pt-1">
+        <Pressable
+          onPress={close}
+          disabled={isSaving}
+          accessibilityRole="button"
+          className={`h-11 items-center justify-center rounded-lg px-4 active:scale-[0.96] ${isSaving ? 'opacity-50' : ''}`}
+        >
+          <Text className="font-sans-medium text-sm text-foreground">{copy.cancel}</Text>
+        </Pressable>
+        <SaveButton label={copy.submit} onPress={() => void handleSubmit()} disabled={!currentPassword || !newPassword} busy={isSaving} />
+      </View>
+    </View>
+  );
+}
+
+/** How they sign in — email and password — and the one destructive action. */
 export function AccountSection() {
   const { user } = useCurrentUser();
   const { signOut } = useAuth();
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const rows: { label: string; value: string; hint?: string }[] = [
-    { label: 'Email', value: user?.email ?? '—', hint: 'The address you sign in with.' },
-    {
-      label: 'Timezone',
-      value: user?.timezone ?? 'UTC',
-      hint: 'Detected from your phone — your check-in schedule follows it, even when you travel.',
-    },
-    { label: 'Member since', value: user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—' },
-  ];
-
   return (
     <View>
-      <SectionHeader title="Account" description="The basics behind your login, and how weights read." />
+      <SectionHeader section="account" />
 
-      <WeightUnitField />
+      <FactRow
+        label={SETTINGS_FIELD_COPY.email.label}
+        value={user?.email ?? '—'}
+        hint={SETTINGS_FIELD_COPY.email.hint}
+        className="pt-0"
+      />
+
+      <PasswordField />
 
       <View className="border-t border-border/60">
-        {rows.map(({ label, value, hint }, index) => (
-          <View key={label} className={`py-3.5 ${index > 0 ? 'border-t border-border/60' : ''}`}>
-            <FieldLabel>{label}</FieldLabel>
-            <Text className="mt-1 font-sans-medium text-sm text-foreground">{value}</Text>
-            {hint ? (
-              <View className="mt-1">
-                <FieldHint>{hint}</FieldHint>
-              </View>
-            ) : null}
-          </View>
-        ))}
+        <FactRow
+          label={SETTINGS_FIELD_COPY.memberSince.label}
+          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—'}
+        />
       </View>
 
       <CoachingRow />
@@ -418,123 +601,6 @@ function CoachingRow() {
         <Feather name="user-minus" size={14} color="#737373" />
         <Text className="font-sans-medium text-sm text-muted-foreground">{LEAVE_COACH_COPY.action}</Text>
       </Pressable>
-    </View>
-  );
-}
-
-/** Signed-in password change — current password proves it's really them. */
-export function PasswordSection() {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  // Which field the error belongs to — drives focus, so the fix happens
-  // where the mistake is. null = form-level (rate limit, 500).
-  const [errorField, setErrorField] = useState<'current' | 'new' | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const [flash, setFlash] = useFlash();
-  const currentRef = useRef<TextInput>(null);
-  const newRef = useRef<TextInput>(null);
-
-  const failField = (field: 'current' | 'new' | null, message: string) => {
-    setError(message);
-    setErrorField(field);
-    if (field === 'current') currentRef.current?.focus();
-    if (field === 'new') newRef.current?.focus();
-  };
-
-  const handleSubmit = async () => {
-    if (isSaving || !currentPassword || !newPassword) return;
-    setError(null);
-    setErrorField(null);
-
-    const parsed = passwordSchema.safeParse(newPassword);
-    if (!parsed.success) {
-      failField('new', parsed.error.issues[0]?.message ?? 'Pick a stronger password.');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await apiFetch('/api/account/password', {
-        method: 'PUT',
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      setCurrentPassword('');
-      setNewPassword('');
-      setFlash('Password changed');
-    } catch (e) {
-      // A 400 is the wrong current password; anything else (429, 500) is
-      // the form's problem, not a field's
-      failField(
-        e instanceof ApiError && e.status === 400 ? 'current' : null,
-        e instanceof Error ? e.message : 'Couldn’t change your password.'
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <View>
-      <SectionHeader title="Password" description="Change the password you sign in with. You’ll stay signed in here." />
-
-      <View className="gap-5">
-        <View className="gap-2">
-          <FieldLabel>Current password</FieldLabel>
-          <TextInput
-            ref={currentRef}
-            className={`${inputClass} ${errorField === 'current' ? 'border-destructive' : ''}`}
-            value={currentPassword}
-            onChangeText={setCurrentPassword}
-            secureTextEntry
-            textContentType="password"
-            autoComplete="current-password"
-            accessibilityLabel="Current password"
-            returnKeyType="next"
-            onSubmitEditing={() => newRef.current?.focus()}
-          />
-        </View>
-
-        <View className="gap-2">
-          <FieldLabel>New password</FieldLabel>
-          <TextInput
-            ref={newRef}
-            className={`${inputClass} ${errorField === 'new' ? 'border-destructive' : ''}`}
-            value={newPassword}
-            onChangeText={setNewPassword}
-            placeholder="Make it a strong one"
-            placeholderTextColor="#737373"
-            secureTextEntry
-            textContentType="newPassword"
-            autoComplete="new-password"
-            accessibilityLabel="New password"
-            returnKeyType="done"
-            onSubmitEditing={() => void handleSubmit()}
-          />
-          {newPassword.length > 0 ? <PasswordRules password={newPassword} /> : null}
-        </View>
-
-        {error ? (
-          <View className="flex-row items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
-            <Feather name="alert-triangle" size={14} color="#c52020" style={{ marginTop: 2 }} />
-            <Text className="flex-1 font-sans text-sm text-destructive">{error}</Text>
-          </View>
-        ) : null}
-
-        <View className="flex-row items-center justify-end gap-3 pt-1">
-          <Flash message={flash} />
-          <SaveButton label="Change password" onPress={() => void handleSubmit()} disabled={!currentPassword || !newPassword} busy={isSaving} />
-        </View>
-      </View>
-    </View>
-  );
-}
-
-export function NotificationsSection() {
-  return (
-    <View>
-      <SectionHeader title="Alerts" description="How the app reaches you when you’re not looking at it." />
-      <NotificationPreferenceTile />
     </View>
   );
 }

@@ -8,7 +8,6 @@ import {
   type LoggedSet,
 } from '../personal-bests';
 
-let n = 0;
 function set(
   exerciseId: string,
   day: string,

@@ -8,6 +8,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Eyebrow } from '@/components/ui';
 import { UserAvatar } from '@/components/UserAvatar';
 import { FeedbackSheet } from '@/components/account/FeedbackSheet';
+import { SETTINGS_SUMMARY } from '@logbook/shared/settings-sections';
 
 function Row({ icon, label, detail, onPress }: { icon: keyof typeof Feather.glyphMap; label: string; detail?: string; onPress: () => void }) {
   return (
@@ -60,7 +61,7 @@ export default function AccountScreen() {
       </View>
 
       <View className="mx-5 overflow-hidden rounded-2xl border border-border/70 bg-card">
-        <Row icon="settings" label="Settings" detail="Photo, name, password and alerts" onPress={openSettings} />
+        <Row icon="settings" label="Settings" detail={SETTINGS_SUMMARY} onPress={openSettings} />
         <View className="h-px bg-border/50" />
         <Row icon="message-square" label="Send feedback" detail="Report a bug or suggest an idea" onPress={() => setFeedbackOpen(true)} />
         <View className="h-px bg-border/50" />

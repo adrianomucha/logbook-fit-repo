@@ -5,14 +5,13 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import {
   AlertTriangle,
-  Bell,
   Camera,
   KeyRound,
   Loader2,
+  SlidersHorizontal,
   Trash2,
   UserMinus,
   UserRound,
-  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 import { useSWRConfig } from 'swr';
@@ -35,6 +34,13 @@ import {
   type WeightUnit,
 } from '@logbook/shared/weight-units';
 import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
+import {
+  SETTINGS_FIELD_COPY,
+  SETTINGS_SECTION_COPY,
+  SETTINGS_SECTIONS as SHARED_SECTIONS,
+  type SettingsRole,
+  type SettingsSectionId,
+} from '@logbook/shared/settings-sections';
 import { cn } from '@/lib/utils';
 
 /**
@@ -42,23 +48,23 @@ import { cn } from '@/lib/utils';
  * the client page (/client/settings). Each pane takes the role as a variant:
  * the API endpoints underneath are role-agnostic, so the differences are
  * copy and which fields exist (bio and the invite preview are coach-only).
- * The page shells own the chrome — nav, rail and card surface.
+ * The page shells own the chrome — nav, rail and card surface. Which tabs
+ * exist and what they say lives in @logbook/shared/settings-sections, so the
+ * native screen matches.
  */
 
-export type SettingsRole = 'coach' | 'client';
+export { resolveSettingsSection, type SettingsSectionId } from '@logbook/shared/settings-sections';
 
-export type SettingsSectionId = 'profile' | 'account' | 'password' | 'notifications';
+const SECTION_ICONS: Record<SettingsSectionId, LucideIcon> = {
+  profile: UserRound,
+  preferences: SlidersHorizontal,
+  account: KeyRound,
+};
 
-export const SETTINGS_SECTIONS: {
-  id: SettingsSectionId;
-  label: string;
-  icon: LucideIcon;
-}[] = [
-  { id: 'profile', label: 'Profile', icon: UserRound },
-  { id: 'account', label: 'Account', icon: Wrench },
-  { id: 'password', label: 'Password', icon: KeyRound },
-  { id: 'notifications', label: 'Alerts', icon: Bell },
-];
+export const SETTINGS_SECTIONS = SHARED_SECTIONS.map((section) => ({
+  ...section,
+  icon: SECTION_ICONS[section.id],
+}));
 
 export const settingsCardClass =
   'bg-card rounded-xl p-4 sm:p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]';
@@ -84,7 +90,9 @@ function FieldHint({ children }: { children: React.ReactNode }) {
 }
 
 /** Pane heading: bold title + one muted sentence, over a hairline. */
-function SectionHeader({ title, description }: { title: string; description: string }) {
+function SectionHeader({ section, role }: { section: SettingsSectionId; role: SettingsRole }) {
+  const { title, description: descriptions } = SETTINGS_SECTION_COPY[section];
+  const description = descriptions[role];
   return (
     <div className="mb-5">
       <h2 className="text-lg font-bold tracking-tight antialiased">{title}</h2>
@@ -192,14 +200,7 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
 
   return (
     <div>
-      <SectionHeader
-        title="Profile"
-        description={
-          isCoach
-            ? 'How clients see you — on invites and around the app.'
-            : 'How your coach sees you — on your card in their app.'
-        }
-      />
+      <SectionHeader section="profile" role={role} />
 
       <div className="space-y-5">
         <div className="space-y-2">
@@ -422,50 +423,251 @@ function WeightUnitField({ role }: { role: SettingsRole }) {
   );
 }
 
-/** Account facts and preferences, plus the one destructive action. */
+/** One read-only fact: mono label, the value, an optional hint. */
+function FactRow({
+  label,
+  value,
+  hint,
+  className,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn('py-3.5', className)}>
+      <dt>
+        <FieldLabel>{label}</FieldLabel>
+      </dt>
+      <dd className="text-sm font-medium text-foreground mt-1 break-words">{value}</dd>
+      {hint && (
+        <dd className="mt-1">
+          <FieldHint>{hint}</FieldHint>
+        </dd>
+      )}
+    </div>
+  );
+}
+
+/** How the app works for this person: alerts, weight unit, timezone. */
+export function PreferencesSection({ role }: { role: SettingsRole }) {
+  const { user } = useCurrentUser();
+
+  return (
+    <div>
+      <SectionHeader section="preferences" role={role} />
+
+      <NotificationPreferenceTile role={role} />
+
+      <div className="mt-2">
+        <WeightUnitField role={role} />
+        <dl className="border-t border-border/60">
+          <FactRow
+            label={SETTINGS_FIELD_COPY.timezone.label}
+            value={user?.timezone ?? 'UTC'}
+            hint={SETTINGS_FIELD_COPY.timezone.hint[role]}
+          />
+        </dl>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Signed-in password change — current password proves it's really them.
+ * Folded behind a button so the Account pane reads as facts first; opening
+ * it drops the cursor straight into the current password.
+ */
+function PasswordField() {
+  const copy = SETTINGS_FIELD_COPY.password;
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  // Which field the error belongs to — drives aria-invalid and focus, so the
+  // fix happens where the mistake is. null = form-level (rate limit, 500).
+  const [errorField, setErrorField] = useState<'current' | 'new' | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const currentRef = useRef<HTMLInputElement>(null);
+  const newRef = useRef<HTMLInputElement>(null);
+  const openRef = useRef<HTMLButtonElement>(null);
+  // Only hand focus back to the button after the form was open, not on mount
+  const wasOpen = useRef(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      currentRef.current?.focus();
+    } else if (wasOpen.current) {
+      openRef.current?.focus();
+    }
+    wasOpen.current = isOpen;
+  }, [isOpen]);
+
+  const close = () => {
+    setIsOpen(false);
+    setCurrentPassword('');
+    setNewPassword('');
+    setError(null);
+    setErrorField(null);
+  };
+
+  const failField = (field: 'current' | 'new' | null, message: string) => {
+    setError(message);
+    setErrorField(field);
+    if (field === 'current') currentRef.current?.focus();
+    if (field === 'new') newRef.current?.focus();
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setErrorField(null);
+
+    const parsed = passwordSchema.safeParse(newPassword);
+    if (!parsed.success) {
+      failField('new', parsed.error.issues[0]?.message ?? 'Pick a stronger password.');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await apiFetch('/api/account/password', {
+        method: 'PUT',
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+      close();
+      toast.success(copy.saved);
+    } catch (e) {
+      // A 400 is the wrong current password; anything else (429, 500) is
+      // the form's problem, not a field's
+      failField(
+        e instanceof ApiError && e.status === 400 ? 'current' : null,
+        e instanceof Error ? e.message : 'Couldn’t change your password.'
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  if (!isOpen) {
+    return (
+      <div className="py-3.5 border-t border-border/60 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <FieldLabel>{copy.label}</FieldLabel>
+          <p className="text-sm font-medium text-foreground mt-1 tracking-[0.2em]" aria-hidden="true">
+            ••••••••
+          </p>
+        </div>
+        <Button
+          ref={openRef}
+          variant="outline"
+          size="sm"
+          onClick={() => setIsOpen(true)}
+          className="shrink-0 active:scale-[0.96] transition-transform duration-150"
+        >
+          {copy.open}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="py-3.5 border-t border-border/60 space-y-4">
+      <div className="space-y-1">
+        <FieldLabel>{copy.open}</FieldLabel>
+        <FieldHint>{copy.hint}</FieldHint>
+      </div>
+
+      <div className="space-y-2">
+        <FieldLabel htmlFor="settings-current-password">Current password</FieldLabel>
+        <Input
+          ref={currentRef}
+          id="settings-current-password"
+          type="password"
+          autoComplete="current-password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          aria-invalid={errorField === 'current' || undefined}
+          aria-describedby={errorField === 'current' ? 'settings-password-error' : undefined}
+          className={inputClass}
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <FieldLabel htmlFor="settings-new-password">New password</FieldLabel>
+        <Input
+          ref={newRef}
+          id="settings-new-password"
+          type="password"
+          autoComplete="new-password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          placeholder="Make it a strong one"
+          aria-invalid={errorField === 'new' || undefined}
+          aria-describedby={errorField === 'new' ? 'settings-password-error' : undefined}
+          className={inputClass}
+          required
+        />
+        {newPassword.length > 0 && <PasswordRules password={newPassword} />}
+      </div>
+
+      {error && (
+        <div id="settings-password-error">
+          <FormError>{error}</FormError>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2 pt-1">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={close}
+          disabled={isSaving}
+          className="active:scale-[0.96] transition-transform duration-150"
+        >
+          {copy.cancel}
+        </Button>
+        <Button
+          type="submit"
+          disabled={isSaving || !currentPassword || !newPassword}
+          className="active:scale-[0.96] transition-transform duration-150"
+        >
+          {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
+          {copy.submit}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/** How they sign in — email and password — and the one destructive action. */
 export function AccountSection({ role }: { role: SettingsRole }) {
   const { user } = useCurrentUser();
   const isCoach = role === 'coach';
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const rows: { label: string; value: string; hint?: string }[] = [
-    { label: 'Email', value: user?.email ?? '—', hint: 'The address you sign in with.' },
-    {
-      label: 'Timezone',
-      value: user?.timezone ?? 'UTC',
-      hint: isCoach
-        ? 'Detected from your browser — check-in schedules follow it automatically, even when you travel.'
-        : 'Detected from your browser — your check-in schedule follows it, even when you travel.',
-    },
-    {
-      label: 'Member since',
-      value: user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—',
-    },
-  ];
-
   return (
     <div>
-      <SectionHeader
-        title="Account"
-        description="The basics behind your login, and how weights read."
-      />
+      <SectionHeader section="account" role={role} />
 
-      <WeightUnitField role={role} />
+      <dl>
+        <FactRow
+          label={SETTINGS_FIELD_COPY.email.label}
+          value={user?.email ?? '—'}
+          hint={SETTINGS_FIELD_COPY.email.hint}
+          className="pt-0"
+        />
+      </dl>
+
+      <PasswordField />
 
       <dl className="border-t border-border/60">
-        {rows.map(({ label, value, hint }, index) => (
-          <div key={label} className={cn('py-3.5', index > 0 && 'border-t border-border/60')}>
-            <dt>
-              <FieldLabel>{label}</FieldLabel>
-            </dt>
-            <dd className="text-sm font-medium text-foreground mt-1 break-words">{value}</dd>
-            {hint && (
-              <dd className="mt-1">
-                <FieldHint>{hint}</FieldHint>
-              </dd>
-            )}
-          </div>
-        ))}
+        <FactRow
+          label={SETTINGS_FIELD_COPY.memberSince.label}
+          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—'}
+        />
       </dl>
 
       {!isCoach && <CoachingRow />}
@@ -557,133 +759,6 @@ function CoachingRow() {
         confirmVariant="destructive"
         icon={UserMinus}
       />
-    </div>
-  );
-}
-
-/** Signed-in password change — current password proves it's really them. */
-export function PasswordSection() {
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  // Which field the error belongs to — drives aria-invalid and focus, so the
-  // fix happens where the mistake is. null = form-level (rate limit, 500).
-  const [errorField, setErrorField] = useState<'current' | 'new' | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-  const currentRef = useRef<HTMLInputElement>(null);
-  const newRef = useRef<HTMLInputElement>(null);
-
-  const failField = (field: 'current' | 'new' | null, message: string) => {
-    setError(message);
-    setErrorField(field);
-    if (field === 'current') currentRef.current?.focus();
-    if (field === 'new') newRef.current?.focus();
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setErrorField(null);
-
-    const parsed = passwordSchema.safeParse(newPassword);
-    if (!parsed.success) {
-      failField('new', parsed.error.issues[0]?.message ?? 'Pick a stronger password.');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await apiFetch('/api/account/password', {
-        method: 'PUT',
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-      setCurrentPassword('');
-      setNewPassword('');
-      toast.success('Password changed');
-    } catch (e) {
-      // A 400 is the wrong current password; anything else (429, 500) is
-      // the form's problem, not a field's
-      failField(
-        e instanceof ApiError && e.status === 400 ? 'current' : null,
-        e instanceof Error ? e.message : 'Couldn’t change your password.'
-      );
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  return (
-    <div>
-      <SectionHeader
-        title="Password"
-        description="Change the password you sign in with. You’ll stay signed in here."
-      />
-
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <div className="space-y-2">
-          <FieldLabel htmlFor="settings-current-password">Current password</FieldLabel>
-          <Input
-            ref={currentRef}
-            id="settings-current-password"
-            type="password"
-            autoComplete="current-password"
-            value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
-            aria-invalid={errorField === 'current' || undefined}
-            aria-describedby={errorField === 'current' ? 'settings-password-error' : undefined}
-            className={inputClass}
-            required
-          />
-        </div>
-
-        <div className="space-y-2">
-          <FieldLabel htmlFor="settings-new-password">New password</FieldLabel>
-          <Input
-            ref={newRef}
-            id="settings-new-password"
-            type="password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Make it a strong one"
-            aria-invalid={errorField === 'new' || undefined}
-            aria-describedby={errorField === 'new' ? 'settings-password-error' : undefined}
-            className={inputClass}
-            required
-          />
-          {newPassword.length > 0 && <PasswordRules password={newPassword} />}
-        </div>
-
-        {error && (
-          <div id="settings-password-error">
-            <FormError>{error}</FormError>
-          </div>
-        )}
-
-        <div className="flex justify-end pt-1">
-          <Button
-            type="submit"
-            disabled={isSaving || !currentPassword || !newPassword}
-            className="active:scale-[0.96] transition-transform duration-150"
-          >
-            {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
-            Change password
-          </Button>
-        </div>
-      </form>
-    </div>
-  );
-}
-
-export function NotificationsSection({ role }: { role: SettingsRole }) {
-  return (
-    <div>
-      <SectionHeader
-        title="Alerts"
-        description="How the app reaches you when you’re not looking at it."
-      />
-
-      <NotificationPreferenceTile role={role} />
     </div>
   );
 }
