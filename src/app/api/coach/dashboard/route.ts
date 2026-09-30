@@ -86,6 +86,7 @@ export const GET = withCoach(
         clientProfileId: client.id,
         user: client.user,
         activePlan: client.activePlan,
+        planStartDate: client.planStartDate,
         lastWorkoutAt: lastWorkout,
         pendingCheckIn: pendingCheckIn || null,
         isSample: client.isSample,

@@ -15,6 +15,8 @@ export interface DashboardClient {
     name: string;
     durationWeeks: number;
   } | null;
+  /** When the active plan started; the at-risk clock never runs before it */
+  planStartDate: string | null;
   lastWorkoutAt: string | null;
   pendingCheckIn: {
     id: string;

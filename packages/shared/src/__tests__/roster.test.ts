@@ -7,6 +7,7 @@ function client(overrides: Partial<DashboardClient> = {}): DashboardClient {
     clientProfileId: 'cp1',
     user: { id: 'u1', name: 'Jean', email: 'jean@example.com', avatarUrl: null },
     activePlan: { id: 'p1', name: '4-Week Strength Foundation', durationWeeks: 4 },
+    planStartDate: null,
     lastWorkoutAt: null,
     pendingCheckIn: null,
     isSample: false,
@@ -98,16 +99,25 @@ describe('clientSignal', () => {
     });
   });
 
-  it('marks an on-track client with no workouts as just started, not at risk', () => {
-    expect(clientSignal(client({ urgency: 'ON_TRACK', lastWorkoutAt: null }))).toEqual({
-      rest: ['4-Week Strength Foundation', 'just started, no workouts yet'],
+  it('says a plan just started instead of an old workout from the last one', () => {
+    const now = new Date('2026-09-30T12:00:00Z').getTime();
+    const c = client({
+      planStartDate: new Date(now - 2 * 86_400_000).toISOString(),
+      lastWorkoutAt: new Date(now - 20 * 86_400_000).toISOString(),
+    });
+    expect(clientSignal(c, now)).toEqual({
+      rest: ['4-Week Strength Foundation', 'started 2d ago'],
     });
   });
 
-  it('leads an at-risk client with no workouts with the silence', () => {
-    expect(clientSignal(client({ urgency: 'AT_RISK', lastWorkoutAt: null }))).toEqual({
-      lead: 'No workouts yet',
-      rest: ['4-Week Strength Foundation'],
+  it('goes back to the last workout once they train on the new plan', () => {
+    const now = new Date('2026-09-30T12:00:00Z').getTime();
+    const c = client({
+      planStartDate: new Date(now - 2 * 86_400_000).toISOString(),
+      lastWorkoutAt: new Date(now - 86_400_000).toISOString(),
+    });
+    expect(clientSignal(c, now)).toEqual({
+      rest: ['4-Week Strength Foundation', 'trained yesterday'],
     });
   });
 });

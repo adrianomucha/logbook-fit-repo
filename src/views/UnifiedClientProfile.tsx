@@ -51,6 +51,7 @@ import { addDays, format, formatDistanceToNowStrict, isThisYear, startOfWeek } f
 import { summarizeCompletedPlan } from '@logbook/shared/plan-summary';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
+import { newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -661,6 +662,9 @@ export function UnifiedClientProfile() {
   // Which workout "Last workout" was — "Today" alone said nothing new
   const lastWorkoutDay = apiClient.completions.find((c) => c.status === 'COMPLETED')?.day;
   const lastWorkoutName = lastWorkoutDay?.name ? parseSessionName(lastWorkoutDay.name) : null;
+  // A plan they haven't trained on yet, still inside the at-risk grace
+  // window — the same "started Nd ago" hint the roster row shows
+  const newPlanStarted = plan ? newPlanHint(client.planStartDate, lastWorkoutAt) : null;
 
   // Derive inline status info from the same server-computed urgency the
   // dashboard ranks by, so this page can never disagree with the roster.
@@ -940,11 +944,13 @@ export function UnifiedClientProfile() {
               <Vital
                 label="Last workout"
                 sub={
-                  lastWorkoutName
-                    ? lastWorkoutName.day
-                      ? `Day ${lastWorkoutName.day} · ${lastWorkoutName.title}`
-                      : lastWorkoutName.title
-                    : undefined
+                  newPlanStarted
+                    ? `Plan ${newPlanStarted}`
+                    : lastWorkoutName
+                      ? lastWorkoutName.day
+                        ? `Day ${lastWorkoutName.day} · ${lastWorkoutName.title}`
+                        : lastWorkoutName.title
+                      : undefined
                 }
               >
                 {daysAgoLabel(lastWorkoutAt) ?? '—'}
