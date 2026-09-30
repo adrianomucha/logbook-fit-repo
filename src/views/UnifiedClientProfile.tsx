@@ -1059,12 +1059,10 @@ export function UnifiedClientProfile() {
               "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
             )}>
               <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 shrink-0">
-                <div className="flex gap-1 items-center justify-between border-b border-border mb-0 -mt-1">
-                  <h2 className="pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium text-foreground antialiased relative">
-                    Messages
-                    <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
-                  </h2>
-                  <NotificationToggle className="mb-1.5" />
+                {/* A plain card title, not a tab: there's nothing to switch to */}
+                <div className="flex gap-2 items-center justify-between -mt-1">
+                  <h2 className="text-base font-semibold antialiased">Messages</h2>
+                  <NotificationToggle />
                 </div>
               </div>
               <ChatView
