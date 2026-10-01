@@ -34,10 +34,10 @@ interface ChatViewProps {
   conversationStarters?: string[];
   /**
    * Visual voice. 'default' is the quiet monochrome chat the coach dashboard
-   * uses. 'brand' is the client-facing treatment: ink outgoing bubbles with
-   * volt-railed exercise cards, the peer's avatar beside incoming groups, a
-   * warmer empty state, and a "Seen" receipt — the conversation reads as the
-   * product's own, not a generic messenger.
+   * uses. 'brand' is the client-facing treatment: ink outgoing bubbles, the
+   * peer's avatar beside incoming groups, a warmer empty state, and a "Seen"
+   * receipt — the conversation reads as the product's own, not a generic
+   * messenger.
    */
   variant?: 'default' | 'brand';
 }
@@ -404,14 +404,12 @@ export function ChatView({
                         {message.exerciseContext && (
                           <div className={cn(
                             'rounded-lg px-3 py-2.5 mb-2 -mx-0.5',
+                            // A plain tinted panel — no side rail; the tint
+                            // alone sets the card apart from the message
                             isCurrentUser
-                              ? isBrand
-                                // Volt rail on the ink bubble — the logo's own
-                                // pairing, and the same rail incoming cards carry
-                                ? 'bg-background/10 border-s-2 border-brand'
-                                : 'bg-background/10'
+                              ? 'bg-background/10'
                               : isBrand
-                                ? 'bg-background/60 border-s-2 border-brand'
+                                ? 'bg-background/60'
                                 : 'bg-muted/50'
                           )}>
                             {/* Label opacities are contrast-bound (WCAG AA 4.5:1):
@@ -432,7 +430,7 @@ export function ChatView({
                             </p>
                             {message.exerciseContext.flagNote && (
                               <p className={cn(
-                                'font-prose text-[13px] mt-1.5 italic border-s-2 border-current/20 ps-2',
+                                'font-prose text-[13px] mt-1.5 italic',
                                 isBrand && isCurrentUser ? 'opacity-80' : 'opacity-70'
                               )}>
                                 &ldquo;{message.exerciseContext.flagNote}&rdquo;

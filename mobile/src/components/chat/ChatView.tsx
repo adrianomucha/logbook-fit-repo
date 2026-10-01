@@ -47,9 +47,8 @@ function bubbleRadius(isCurrentUser: boolean, first: boolean, last: boolean) {
 
 /**
  * The client's chat with their coach — the web's ChatView in its 'brand'
- * voice: ink outgoing bubbles with volt-railed exercise cards, the coach's
- * avatar beside incoming groups, date separators, a Seen receipt, the
- * "N new" pill, and the volt send.
+ * voice: ink outgoing bubbles, the coach's avatar beside incoming groups,
+ * date separators, a Seen receipt, the "N new" pill, and the volt send.
  * The list is inverted (newest at the bottom, pinned) so the keyboard and
  * new messages behave the way a native chat does.
  */
@@ -173,14 +172,14 @@ export function ChatView({
             style={bubbleRadius(mine, isFirstInGroup, isLastInGroup)}
           >
             {ctx ? (
-              <View className={`-mx-0.5 mb-2 rounded-lg px-3 py-2.5 ${mine ? 'border-l-2 border-brand bg-white/10' : 'border-l-2 border-brand bg-background/60'}`}>
+              <View className={`-mx-0.5 mb-2 rounded-lg px-3 py-2.5 ${mine ? 'bg-white/10' : 'bg-background/60'}`}>
                 <Text className={`mb-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>Exercise</Text>
                 <Text className={`font-sans-bold text-sm tracking-tight ${mine ? 'text-white' : 'text-foreground'}`} numberOfLines={1}>{ctx.exerciseName}</Text>
                 <Text className={`mt-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>
                   {ctx.prescription} · {ctx.setsCompleted}/{ctx.totalSets} sets
                 </Text>
                 {ctx.flagNote ? (
-                  <Text className={`mt-1.5 border-l-2 pl-2 font-sans text-[13px] italic ${mine ? 'border-white/20 text-white/80' : 'border-foreground/20 text-foreground/70'}`}>“{ctx.flagNote}”</Text>
+                  <Text className={`mt-1.5 font-sans text-[13px] italic ${mine ? 'text-white/80' : 'text-foreground/70'}`}>“{ctx.flagNote}”</Text>
                 ) : null}
               </View>
             ) : null}
