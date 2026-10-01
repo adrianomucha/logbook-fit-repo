@@ -404,24 +404,38 @@ export function ChatView({
                         {message.exerciseContext && (
                           <div className={cn(
                             'rounded-lg px-3 py-2.5 mb-2 -mx-0.5',
-                            // A plain tinted panel — no side rail; the tint
-                            // alone sets the card apart from the message
+                            // Brand: a raised panel with a hairline edge all
+                            // round, so the card lifts off the bubble without
+                            // a side rail
                             isCurrentUser
-                              ? 'bg-background/10'
+                              ? isBrand
+                                ? 'bg-background/15 ring-1 ring-inset ring-background/10'
+                                : 'bg-background/10'
                               : isBrand
-                                ? 'bg-background/60'
+                                ? 'bg-background ring-1 ring-inset ring-border'
                                 : 'bg-muted/50'
                           )}>
                             {/* Label opacities are contrast-bound (WCAG AA 4.5:1):
                                 incoming needs 70 (50 was 3.7:1 on light); the
-                                brand's outgoing labels sit at 80 so the card
-                                reads clearly on ink, the default keeps 50
-                                (5.0:1 on near-black). */}
-                            <p className={cn(
-                              'text-[10px] uppercase tracking-[0.12em] font-medium mb-0.5',
-                              isCurrentUser ? (isBrand ? 'opacity-80' : 'opacity-50') : 'opacity-70'
-                            )}>Exercise</p>
-                            <p className="text-sm font-bold tracking-tight truncate">{message.exerciseContext.exerciseName}</p>
+                                default outgoing keeps 50 (5.0:1 on near-black).
+                                The brand eyebrow is volt on ink — the logo's
+                                pairing — and on the light incoming card, where
+                                volt text would fail contrast, a volt dot. */}
+                            {isBrand ? (
+                              <p className={cn(
+                                'flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] font-semibold mb-1',
+                                isCurrentUser ? 'text-brand' : 'text-foreground/70'
+                              )}>
+                                {!isCurrentUser && <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />}
+                                Exercise
+                              </p>
+                            ) : (
+                              <p className={cn(
+                                'text-[10px] uppercase tracking-[0.12em] font-medium mb-0.5',
+                                isCurrentUser ? 'opacity-50' : 'opacity-70'
+                              )}>Exercise</p>
+                            )}
+                            <p className={cn('font-bold tracking-tight truncate', isBrand ? 'text-[15px]' : 'text-sm')}>{message.exerciseContext.exerciseName}</p>
                             <p className={cn(
                               'text-[10px] uppercase tracking-[0.12em] font-medium mt-0.5',
                               isCurrentUser ? (isBrand ? 'opacity-80' : 'opacity-50') : 'opacity-70'

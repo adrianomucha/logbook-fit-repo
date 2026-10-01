@@ -172,9 +172,16 @@ export function ChatView({
             style={bubbleRadius(mine, isFirstInGroup, isLastInGroup)}
           >
             {ctx ? (
-              <View className={`-mx-0.5 mb-2 rounded-lg px-3 py-2.5 ${mine ? 'bg-white/10' : 'bg-background/60'}`}>
-                <Text className={`mb-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>Exercise</Text>
-                <Text className={`font-sans-bold text-sm tracking-tight ${mine ? 'text-white' : 'text-foreground'}`} numberOfLines={1}>{ctx.exerciseName}</Text>
+              // A raised panel with a hairline edge all round, so the card
+              // lifts off the bubble without a side rail
+              <View className={`-mx-0.5 mb-2 rounded-lg border px-3 py-2.5 ${mine ? 'border-white/10 bg-white/15' : 'border-border bg-background'}`}>
+                {/* Volt eyebrow on ink — the logo's pairing; on the light
+                    incoming card volt text would fail contrast, so a volt dot */}
+                <View className="mb-1 flex-row items-center gap-1.5">
+                  {!mine ? <View className="h-1.5 w-1.5 rounded-full bg-brand" /> : null}
+                  <Text className={`font-mono-semibold text-[10px] uppercase tracking-[1.6px] ${mine ? 'text-brand' : 'text-foreground/70'}`}>Exercise</Text>
+                </View>
+                <Text className={`font-sans-bold text-[15px] tracking-tight ${mine ? 'text-white' : 'text-foreground'}`} numberOfLines={1}>{ctx.exerciseName}</Text>
                 <Text className={`mt-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>
                   {ctx.prescription} · {ctx.setsCompleted}/{ctx.totalSets} sets
                 </Text>
