@@ -276,25 +276,32 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           <div className="space-y-3">
             {/* Email pre-fill stays out of the way until it's wanted */}
             {showEmail && (
-              <FieldShell label="Client email" htmlFor="invite-email">
-                <Input
-                  id="invite-email"
-                  ref={emailRef}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onBlur={applyEmail}
-                  placeholder="client@example.com"
-                  className="h-10 border-0 bg-transparent px-4 pb-3 pt-1 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      applyEmail();
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                />
-              </FieldShell>
+              <div>
+                <FieldShell label="Client email" htmlFor="invite-email">
+                  <Input
+                    id="invite-email"
+                    ref={emailRef}
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    onBlur={applyEmail}
+                    placeholder="client@example.com"
+                    className="h-10 border-0 bg-transparent px-4 pb-3 pt-1 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyEmail();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                  />
+                </FieldShell>
+                {/* Nothing is emailed — say so, or the coach waits on a send
+                    that never happens */}
+                <p className="text-xs text-muted-foreground/70 mt-1.5 px-1 antialiased text-pretty">
+                  Fills in their sign-up form. We don&apos;t email them, so send the link yourself.
+                </p>
+              </div>
             )}
 
             {/* Both secondary paths on one line, in the quietest tier */}

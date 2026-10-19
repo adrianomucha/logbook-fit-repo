@@ -38,7 +38,7 @@ export const POST = withCoach(
 
     if (relationship.endedBy === "CLIENT") {
       return NextResponse.json(
-        { error: "This client chose to leave. They can rejoin with a new invite link." },
+        { error: "This client chose to leave, so you can't restore them." },
         { status: 403 }
       );
     }

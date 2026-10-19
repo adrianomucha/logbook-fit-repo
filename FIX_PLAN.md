@@ -87,15 +87,22 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       (`ClientDashboard.tsx:388-403,457-462`, `src/lib/relationship-termination.ts`) — M
 - [ ] **2.2** Add `ClientNav`/`AccountMenu` (at minimum sign-out) to the no-coach and
       no-clientProfile screens. (`ClientDashboard.tsx:372-403`) — S
-- [ ] **2.3** Empty/mismatched week: explanatory state with a "message your coach"
+- [x] **2.3** Empty/mismatched week: explanatory state with a "message your coach"
       CTA instead of a bare greeting. (`ClientDashboard.tsx:204-210`,
       `TodayFocusView.tsx:65`) — S
-- [ ] **2.4** "Send Reminder": implement it (send a nudge message/push) or rename to
+      *Done:* "Nothing scheduled this week" on web and app, wording in
+      `packages/shared/src/client-empty-states.ts`.
+- [x] **2.4** "Send Reminder": implement it (send a nudge message/push) or rename to
       "View client". (`ClientsRequiringAction.tsx:46,73-83`) — S
-- [ ] **2.5** Invite email field: either send a real client-invite email (new
+      *Done as a rename:* the at-risk CTA is now "Reach Out" (it opens the chat).
+      Sending a real nudge is still open.
+- [x] **2.5** Invite email field: either send a real client-invite email (new
       template in `src/lib/services/email.ts`, send from `POST /api/invites`) or
       remove the field and fix "Waiting on client@x.com" copy.
       (`InviteClientModal.tsx:257-277`, `GettingStartedCard.tsx:114`) — S–M
+      *Done as copy:* the field says it only fills in the sign-up form and that
+      nothing is emailed; the card reads "For client@x.com". A real invite email
+      is still open.
 - [ ] **2.6** Empty-plan guard: block (or warn on) assigning a plan with zero
       exercises; return day/exercise counts from `GET /api/plans`.
       (`plans/[id]/assign/route.ts:82`, `plans/route.ts:26-29`) — S–M
@@ -113,6 +120,9 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       coach), which also gives churned clients a way back; fix the false
       "can rejoin with a new invite" copy meanwhile. (`api/auth/signup/route.ts:107-115`,
       `PastClientsPage.tsx:45`) — L (copy fix is S — do that immediately)
+      *Copy fix done:* "can rejoin with a new invite" is gone from Past clients,
+      the restore error, and the client's no-coach screen (web + app). The
+      accept path itself is still open.
 - [ ] **2.11** Past-client read-only view: make rows clickable to a read-only
       profile (history + conversation), per the "nothing is deleted" promise —
       or soften the promise. (`PastClientsPage.tsx:29-64`,

@@ -38,7 +38,6 @@ function PastClientRow({
         <p className="text-xs sm:text-sm text-muted-foreground/80 truncate mt-0.5 leading-snug">
           {leftThemselves ? 'Left' : 'Ended'}
           {client.endedAt ? ` ${format(new Date(client.endedAt), 'MMM d, yyyy')}` : ''}
-          {leftThemselves ? ' · can rejoin with a new invite' : ''}
         </p>
       </div>
       {!leftThemselves && (
