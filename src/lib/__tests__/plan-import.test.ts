@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectImportExercises,
+  importErrorBody,
   looksLikeDuration,
   matchHeader,
   parseImportRows,
@@ -179,6 +180,30 @@ describe('parseImportRows', () => {
     ]);
     expect(plan).toBeNull();
     expect(errors[0].row).toBe(2);
+  });
+
+  it('names the coach’s own sheet in errors for rows read from a free-form workbook', () => {
+    const { errors } = parseImportRows([
+      row({ rowNumber: 7, sheet: 'Week 2', sets: '45' }),
+      row({ rowNumber: 8, sets: '45' }),
+    ]);
+    expect(errors[0]).toEqual({ row: 7, sheet: 'Week 2', message: expect.stringContaining('Sets') });
+    expect(errors[1]).not.toHaveProperty('sheet');
+  });
+});
+
+describe('importErrorBody', () => {
+  it('uses a file-level error as the headline and lists only row errors', () => {
+    expect(importErrorBody([{ row: 0, message: 'The file has no workout rows.' }])).toEqual({
+      error: 'The file has no workout rows.',
+      rowErrors: [],
+    });
+    const body = importErrorBody([
+      { row: 3, message: 'a' },
+      { row: 4, sheet: 'Week 1', message: 'b' },
+    ]);
+    expect(body.error).toMatch(/2 problems/);
+    expect(body.rowErrors).toHaveLength(2);
   });
 });
 

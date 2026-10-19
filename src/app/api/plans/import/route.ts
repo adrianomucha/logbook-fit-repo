@@ -1,28 +1,44 @@
 import { NextResponse } from "next/server";
 import { Session } from "next-auth";
+import { z } from "zod";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { coachScope } from "@/lib/scoping";
 import { createPlanSchema } from "@/lib/validations/schemas";
-import { collectImportExercises, parseImportRows } from "@/lib/plan-import";
-import { readWorkoutRows } from "@/lib/plan-import-xlsx";
+import {
+  collectImportExercises,
+  IMPORT_COLUMNS,
+  IMPORT_LIMITS,
+  importErrorBody,
+  parseImportRows,
+} from "@/lib/plan-import";
 
-/** Filled-in templates are tiny; anything bigger than this isn't one. */
-const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
+const cellSchema = z.string().max(2000).nullable().optional();
 
-// Plan metadata comes from the upload form, not the sheet — same rules as a
-// manually created plan. Duration and schedule are derived from the rows.
-const importPlanMetaSchema = createPlanSchema.pick({
-  name: true,
-  description: true,
+/** A RawImportRow as the preview returned it; parseImportRows does the real checking. */
+const importRowSchema = z.object({
+  rowNumber: z.number().int().min(0),
+  sheet: z.string().max(200).optional(),
+  ...Object.fromEntries(IMPORT_COLUMNS.map((c) => [c.key, cellSchema])),
 });
+
+// Plan metadata comes from the dialog, not the sheet — same rules as a
+// manually created plan. Duration and schedule are derived from the rows.
+const importPlanSchema = createPlanSchema
+  .pick({ name: true, description: true })
+  .extend({
+    // Headroom over maxRows so an oversized plan gets parseImportRows' message
+    rows: z.array(importRowSchema).max(IMPORT_LIMITS.maxRows * 2),
+  });
 
 /**
  * POST /api/plans/import
- * Creates a plan template from an uploaded .xlsx (multipart form: `file` plus
- * `name`/`description`). All-or-nothing: any bad row fails the whole
- * upload with per-row errors (`rowErrors: [{ row, message }]`) so the coach
- * fixes the sheet and retries, instead of ending up with half a plan.
+ * Creates a plan template from the rows POST /api/plans/import/preview read
+ * out of the coach's spreadsheet, once they've reviewed them (JSON body:
+ * `name`, `description`, `rows`). The rows are parsed and bounds-checked
+ * again here — the client is not trusted to send back what the preview
+ * returned. All-or-nothing: any bad row fails the import with per-row
+ * errors (`rowErrors: [{ row, sheet?, message }]`).
  */
 export const POST = withCoach(
   async (
@@ -31,65 +47,25 @@ export const POST = withCoach(
     session: Session,
     coachProfileId: string
   ) => {
-    let form: FormData;
-    try {
-      form = await req.formData();
-    } catch {
+    const body = await req.json().catch(() => null);
+    const input = importPlanSchema.safeParse(body);
+    if (!input.success) {
+      const issue = input.error.issues[0];
       return NextResponse.json(
-        { error: "Expected a file upload" },
+        { error: issue?.path[0] === "name" ? issue.message : "Invalid import — upload the file again" },
         { status: 400 }
       );
     }
-
-    const file = form.get("file");
-    if (!(file instanceof File)) {
-      return NextResponse.json(
-        { error: "Attach the filled-in template file" },
-        { status: 400 }
-      );
-    }
-    if (file.size > MAX_UPLOAD_BYTES) {
-      return NextResponse.json(
-        { error: "File is too large — the filled-in template stays well under 2 MB" },
-        { status: 413 }
-      );
-    }
-
-    const meta = importPlanMetaSchema.safeParse({
-      name: form.get("name"),
-      description: form.get("description") ?? undefined,
-    });
-    if (!meta.success) {
-      const issue = meta.error.issues[0];
-      return NextResponse.json(
-        { error: issue ? issue.message : "Invalid plan details" },
-        { status: 400 }
-      );
-    }
-    const { name, description } = meta.data;
-
-    const read = await readWorkoutRows(Buffer.from(await file.arrayBuffer()));
-    if (!read.ok) {
-      return NextResponse.json({ error: read.error }, { status: 400 });
-    }
+    const { name, description, rows } = input.data;
 
     // Unlabelled weight cells are in the coach's own unit (Settings)
     const coachUser = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { weightUnit: true },
     });
-    const { plan: parsed, errors } = parseImportRows(read.rows, coachUser?.weightUnit);
+    const { plan: parsed, errors } = parseImportRows(rows, coachUser?.weightUnit);
     if (!parsed) {
-      return NextResponse.json(
-        {
-          error:
-            errors.length === 1 && errors[0].row === 0
-              ? errors[0].message
-              : `The file has ${errors.length} ${errors.length === 1 ? "problem" : "problems"} — fix the rows below and upload it again`,
-          rowErrors: errors.filter((e) => e.row > 0),
-        },
-        { status: 400 }
-      );
+      return NextResponse.json(importErrorBody(errors), { status: 400 });
     }
 
     // Same duplicate-name rule as POST /api/plans (scoped to templates)

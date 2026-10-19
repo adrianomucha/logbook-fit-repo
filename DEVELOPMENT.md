@@ -60,6 +60,7 @@ Required env for a correct deploy:
 | `UPSTASH_REDIS_REST_URL` + `_TOKEN` | rate limiting effectively off on serverless |
 | `CRON_SECRET` | the nightly check-in sweep refuses every call — weekly check-ins never send on their own |
 | `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | push notifications no-op (optional) |
+| `ANTHROPIC_API_KEY` | plan import only reads template-shaped spreadsheets; other layouts are rejected instead of read by AI (optional) |
 
 Gotchas:
 

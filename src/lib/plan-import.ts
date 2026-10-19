@@ -84,9 +84,14 @@ export function matchHeader(text: string): ImportColumnKey | null {
 export type RawImportRow = {
   /** 1-based Excel row number, for error messages that match what the coach sees. */
   rowNumber: number;
+  /**
+   * The coach's sheet the row came from, when it isn't the template's single
+   * Workouts sheet (rows read from a free-form workbook) — errors name it.
+   */
+  sheet?: string;
 } & Partial<Record<ImportColumnKey, string | null>>;
 
-export type ImportRowError = { row: number; message: string };
+export type ImportRowError = { row: number; sheet?: string; message: string };
 
 export type ParsedImportExercise = {
   name: string;
@@ -215,7 +220,12 @@ export function parseImportRows(
   const grid = new Map<number, Map<number, { name: string | null; exercises: ParsedImportExercise[] }>>();
 
   for (const row of contentRows) {
-    const fail = (message: string) => errors.push({ row: row.rowNumber, message });
+    const fail = (message: string) =>
+      errors.push(
+        row.sheet
+          ? { row: row.rowNumber, sheet: row.sheet, message }
+          : { row: row.rowNumber, message }
+      );
 
     const week = blank(row.week) ? null : parseIndex(row.week!);
     if (week == null || week < 1 || week > IMPORT_LIMITS.maxWeeks) {
@@ -368,3 +378,35 @@ export function collectImportExercises(
   }
   return [...byKey.values()];
 }
+
+/**
+ * The 400 body for a failed parse: one headline plus the per-row list the
+ * import dialog shows ({ row, sheet?, message }).
+ */
+export function importErrorBody(errors: ImportRowError[]): {
+  error: string;
+  rowErrors: ImportRowError[];
+} {
+  return {
+    error:
+      errors.length === 1 && errors[0].row === 0
+        ? errors[0].message
+        : `The file has ${errors.length} ${errors.length === 1 ? "problem" : "problems"} — fix the rows below and upload it again`,
+    rowErrors: errors.filter((e) => e.row > 0),
+  };
+}
+
+/** What POST /api/plans/import/preview returns for the coach to review. */
+export type PlanImportPreview = {
+  /** "template" when the sheet matched our columns, "ai" when a model read it */
+  source: "template" | "ai";
+  /** Sent back unchanged to POST /api/plans/import to create the plan */
+  rows: RawImportRow[];
+  plan: ParsedImportPlan;
+  /** Exercise names not yet in the coach's library — created on import */
+  newExercises: string[];
+  /** Things the AI reader skipped or guessed, for the coach to double-check */
+  warnings: string[];
+  /** The coach's unit, for showing the stored-lb weights */
+  weightUnit: WeightUnit;
+};
