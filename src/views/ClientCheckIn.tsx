@@ -232,37 +232,66 @@ export function ClientCheckIn() {
     );
   }
 
-  // Success screen — volt confirmation, same language as a finished workout
+  // Success screen — keeps the page chrome so the coach stays oriented, and
+  // reads as a receipt: volt confirmation, what was sent, where to go next
   if (showSuccess) {
     return (
-      <div className="min-h-dvh bg-background pb-24 sm:pb-4">
-        <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
-          <SectionCard className="max-w-md mx-auto text-center py-12 animate-enter">
-            <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
-              <Check className="w-8 h-8 text-brand-foreground" strokeWidth={3} />
+      <PageShell
+        clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null}
+        subtitle="Completed just now"
+        onBack={handleBack}
+      >
+        <div className="animate-enter" style={{ animationDelay: '100ms' }}>
+          <SectionCard className="max-w-2xl p-0 sm:p-0">
+            <div className="p-5 sm:p-6">
+              {/* Same volt confirmation as a finished workout */}
+              <div className="flex items-center gap-4">
+                <div className="shrink-0 w-12 h-12 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+                  <Check className="w-6 h-6 text-brand-foreground" strokeWidth={3} aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <h2
+                    ref={successHeadingRef}
+                    tabIndex={-1}
+                    className="text-xl font-bold tracking-tight focus:outline-none text-balance"
+                  >
+                    Check-in complete
+                  </h2>
+                  <p className="text-sm text-muted-foreground mt-0.5 text-pretty">
+                    Your response is on its way to {firstName}.
+                  </p>
+                </div>
+              </div>
+
+              {/* Receipt of what was sent — the brand's coach-note quote */}
+              <div className="mt-6 pt-5 border-t border-border/60">
+                <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
+                  You wrote
+                </p>
+                <p className="border-s-2 border-brand/60 ps-3 text-base leading-relaxed text-foreground/90 max-w-prose text-pretty whitespace-pre-line line-clamp-6">
+                  {coachResponse.trim()}
+                </p>
+                {planAdjustment && (
+                  <span className="inline-flex items-center gap-1.5 mt-4 rounded-full px-2.5 py-1 bg-muted text-foreground/80 font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased">
+                    <ClipboardCheck className="w-3 h-3" aria-hidden="true" />
+                    Plan adjustment to do
+                  </span>
+                )}
+              </div>
             </div>
-            <h2
-              ref={successHeadingRef}
-              tabIndex={-1}
-              className="text-2xl font-bold tracking-tight mb-1.5 focus:outline-none text-balance"
-            >
-              Check-in complete
-            </h2>
-            <p className="text-sm text-muted-foreground mb-7">
-              Your response is on its way to {clientName}.
-            </p>
-            <div className="space-y-2">
-              <Button onClick={handleBack} className="w-full active:scale-[0.96] transition-transform duration-150">
-                Back to {firstName}’s profile
+
+            {/* Next steps sit in a footer bar, primary on the trailing edge */}
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 px-5 py-4 sm:px-6 bg-muted/40 border-t border-border/60">
+              <Button variant="ghost" onClick={() => router.push('/coach')} className="text-muted-foreground">
+                All clients
               </Button>
-              <Button variant="ghost" onClick={() => router.push('/coach')} className="w-full text-muted-foreground">
-                Back to clients
+              <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">
+                Back to {firstName}’s profile
               </Button>
             </div>
           </SectionCard>
         </div>
-      </div>
+      </PageShell>
     );
   }
 
