@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -49,6 +49,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState<string | null>(null);
+  // Sent here from an invite link by a returning client — say why. Read after
+  // mount: the URL isn't known while prerendering.
+  const [acceptingInvite, setAcceptingInvite] = useState(false);
+  useEffect(() => {
+    setAcceptingInvite(callbackPathFromLocation()?.startsWith('/signup?invite=') ?? false);
+  }, []);
 
   const handleLogin = async (loginEmail: string, loginPassword: string, loadingKey: string) => {
     setError('');
@@ -101,7 +107,7 @@ export default function LoginPage() {
           Sign in
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground antialiased">
-          Pick up where you left off.
+          {acceptingInvite ? 'Sign in to accept your coach’s invite.' : 'Pick up where you left off.'}
         </p>
       </div>
 

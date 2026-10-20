@@ -35,8 +35,8 @@ Status: ✅ fixed on this branch · ⬜ open
 | 13 | ✅ | Silent message-send failure: input cleared before the request resolves, no maxLength (server caps 5000 → 400), no error toast. | High | S |
 | 14 | ✅ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false` — urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
 | 15 | ✅ | **Unread-message tracking neutralized** — fetching a thread marked everything read, so "N unread" never triggered, and the nav's `unreadCount` prop had no caller. Now: `GET /api/messages/unread` (per-thread counts, scoped to live relationships) drives nav badges on both apps, "N new" chips on the coach roster, and an in-app arrival toast; read-stamping stays scoped to an on-screen chat. | Medium | M |
-| 16 | ⬜ | **Churned clients can't come back.** Re-signup 409s, no re-invite-existing-account flow — a returning client loses all history. "Win-back" is a core retention journey. | High | L |
-| 17 | ⬜ | **No invite revocation/resend** ✅ (DELETE endpoint + "Revoke & new link" in the modal; regenerating replaces instead of stacking). Still open: invite email is decorative (anyone with the link can redeem under any address); existing users can't accept an invite at all. | Medium | M |
+| 16 | ✅ | **Churned clients can't come back.** Re-signup 409s, no re-invite-existing-account flow — a returning client loses all history. "Win-back" is a core retention journey. Now: a signed-in client accepts an invite into their existing account (same coach or a new one), history intact. | High | L |
+| 17 | ⬜ | **No invite revocation/resend** ✅ (DELETE endpoint + "Revoke & new link" in the modal; regenerating replaces instead of stacking). Existing users can now accept an invite ✅. Still open: invite email is decorative (anyone with the link can redeem under any address). | Medium | M |
 
 ## P2 — Scale, correctness, and polish
 

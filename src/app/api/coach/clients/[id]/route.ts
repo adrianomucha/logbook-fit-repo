@@ -125,8 +125,10 @@ export const GET = withCoach(
           },
         },
         checkIns: {
-          // Expired check-ins were never answered — noise, not history
-          where: { status: { not: "EXPIRED" } },
+          // Expired check-ins were never answered — noise, not history.
+          // This coach's only: a previous coach's check-ins (their replies
+          // included) aren't this one's to read.
+          where: { coachId: coachProfileId, status: { not: "EXPIRED" } },
           orderBy: { createdAt: "desc" },
           take: 25,
           // The client's answers and the coach's own reply are what the

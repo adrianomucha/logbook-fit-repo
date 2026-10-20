@@ -112,17 +112,23 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 - [ ] **2.8** Workout set-write 4xx: toast "couldn't save these sets" instead of
       silently reverting; keep ≤100-set batches (chunk the flush).
       (`useWorkoutExecution.ts:133-144`, `schemas.ts:255-256`) — S
-- [ ] **2.9** Signup hardening: handle Prisma `P2002` as 409, keep the submit button
+- [x] **2.9** Signup hardening: handle Prisma `P2002` as 409, keep the submit button
       disabled through navigation. (`api/auth/signup/route.ts:107-115,221-226`,
       `SignupClient.tsx:181-185`) — S
-- [ ] **2.10** Existing-account invite acceptance: authenticated accept path
+      *Done* with 2.10.
+- [x] **2.10** Existing-account invite acceptance: authenticated accept path
       (`POST /api/invites/[token]/accept` for a signed-in CLIENT with no active
       coach), which also gives churned clients a way back; fix the false
       "can rejoin with a new invite" copy meanwhile. (`api/auth/signup/route.ts:107-115`,
       `PastClientsPage.tsx:45`) — L (copy fix is S — do that immediately)
-      *Copy fix done:* "can rejoin with a new invite" is gone from Past clients,
-      the restore error, and the client's no-coach screen (web + app). The
-      accept path itself is still open.
+      *Done:* `POST /api/invites/[token]/accept` (`src/lib/invite-acceptance.ts`).
+      A signed-in client opening an invite gets Accept; signing up from an invite
+      with an existing email points to sign-in, which returns to the invite.
+      A returning client reuses their one relationship row (same coach →
+      reactivated, plan not re-applied; new coach → row moves, old coach's
+      unanswered check-ins expire). Coach-side check-in reads are now scoped to
+      the coach so a new coach never sees a previous one's. Clients with an
+      active coach, and coach accounts, are told why they can't accept.
 - [ ] **2.11** Past-client read-only view: make rows clickable to a read-only
       profile (history + conversation), per the "nothing is deleted" promise —
       or soften the promise. (`PastClientsPage.tsx:29-64`,
