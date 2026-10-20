@@ -1,10 +1,11 @@
 import { useId } from 'react';
 import { Input } from '@/components/ui/input';
-import { Check, Flag } from 'lucide-react';
+import { Check, Flag, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkoutExercise } from '@/types/api';
 import { formatExercisePrescription, formatLastCompact } from '@logbook/shared/workout-execution';
 import { weightUnitLabel } from '@logbook/shared/weight-units';
+import { EXERCISE_VIDEO_COPY, videoSourceLabel } from '@logbook/shared/exercise-video';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
   SetRow,
@@ -58,6 +59,8 @@ export function ExerciseCard({
   const flagNote = exercise.flag?.note;
   const flagNoteId = useId();
   const { weightUnit } = useCurrentUser();
+  const videoUrl = exercise.exercise.videoUrl;
+  const videoSource = videoUrl ? videoSourceLabel(videoUrl) : null;
 
   // Zero-pad the numeric part so labels line up with the dashboard's
   // exercise preview list: "4" → "04", "4B" → "04B".
@@ -196,9 +199,32 @@ export function ExerciseCard({
         )}
       </div>
 
-      {/* ── Expanded: coach tip + set table + flag ── */}
+      {/* ── Expanded: demo + coach tip + set table + flag ── */}
       {isExpanded && (
         <div className="pl-[42px] pr-1 pb-4 pt-1.5 space-y-3.5 animate-fade-in-up">
+          {/* Demo video — the coach's link opens in a new tab, so the
+              workout and any logged sets stay put in this one */}
+          {videoUrl && (
+            <a
+              href={videoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group inline-flex items-center gap-2.5 min-h-[44px] -my-1.5 rounded-sm touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <span className="w-7 h-7 rounded-full bg-brand flex items-center justify-center flex-shrink-0 transition-transform group-active:scale-95">
+                <Play className="w-3 h-3 ml-px text-brand-foreground fill-current" aria-hidden="true" />
+              </span>
+              <span className="text-sm font-semibold tracking-tight text-foreground group-hover:underline">
+                {EXERCISE_VIDEO_COPY.watch}
+              </span>
+              {videoSource && (
+                <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {videoSource}
+                </span>
+              )}
+            </a>
+          )}
+
           {/* Coach note — the volt rail alone marks the voice; no label line */}
           {exercise.coachNotes && (
             <p className="pl-3 border-l-2 border-brand text-sm leading-relaxed text-foreground/75">

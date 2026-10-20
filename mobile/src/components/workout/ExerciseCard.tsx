@@ -1,5 +1,6 @@
 import { Pressable, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import type { WorkoutExercise } from '@logbook/shared/types/api';
 import {
   formatExercisePrescription,
@@ -12,6 +13,7 @@ import {
   parseTargetWeight,
 } from '@logbook/shared/workout-execution';
 import { weightUnitLabel } from '@logbook/shared/weight-units';
+import { EXERCISE_VIDEO_COPY, videoSourceLabel } from '@logbook/shared/exercise-video';
 import { Eyebrow } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { SET_COLS, SetRow } from './SetRow';
@@ -30,7 +32,7 @@ interface ExerciseCardProps {
   isReadOnly?: boolean;
 }
 
-/** One exercise: the row that expands into coach note, flag, and the set table — the web's ExerciseCard. */
+/** One exercise: the row that expands into demo video, coach note, flag, and the set table — the web's ExerciseCard. */
 export function ExerciseCard({
   exercise,
   exerciseLabel,
@@ -49,6 +51,8 @@ export function ExerciseCard({
   const flagNote = exercise.flag?.note ?? '';
   const displayLabel = exerciseLabel.replace(/^\d+/, (n) => n.padStart(2, '0'));
   const { weightUnit } = useCurrentUser();
+  const videoUrl = exercise.exercise.videoUrl;
+  const videoSource = videoUrl ? videoSourceLabel(videoUrl) : null;
   const prescription = formatExercisePrescription(exercise, weightUnit);
   const isTime = exercise.trackingType === 'TIME';
   const setNumbers = Array.from({ length: exercise.sets }, (_, i) => i + 1);
@@ -131,6 +135,24 @@ export function ExerciseCard({
 
       {isExpanded ? (
         <View className="gap-3.5 pb-4 pl-[42px] pr-1 pt-1.5">
+          {/* Demo video — an in-app browser sheet, so closing it lands back
+              on this workout with every logged set where it was */}
+          {videoUrl ? (
+            <Pressable
+              onPress={() => void WebBrowser.openBrowserAsync(videoUrl)}
+              accessibilityRole="link"
+              accessibilityLabel={`${EXERCISE_VIDEO_COPY.watch}: ${exercise.exercise.name}${videoSource ? `, ${videoSource}` : ''}`}
+              hitSlop={8}
+              className="min-h-[44px] flex-row items-center gap-2.5 self-start active:opacity-70"
+            >
+              <View className="h-7 w-7 items-center justify-center rounded-full bg-brand">
+                <Feather name="play" size={12} color="#1e2702" style={{ marginLeft: 1 }} />
+              </View>
+              <Text className="font-sans-semibold text-sm tracking-tight text-foreground">{EXERCISE_VIDEO_COPY.watch}</Text>
+              {videoSource ? <Eyebrow>{videoSource}</Eyebrow> : null}
+            </Pressable>
+          ) : null}
+
           {exercise.coachNotes ? (
             <Text className="border-l-2 border-brand pl-3 font-sans text-sm leading-5 text-foreground/75">
               {exercise.coachNotes}

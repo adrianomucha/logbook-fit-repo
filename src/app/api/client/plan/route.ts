@@ -47,6 +47,7 @@ export const GET = withClient(
                         name: true,
                         category: true,
                         instructions: true,
+                        videoUrl: true,
                       },
                     },
                   },

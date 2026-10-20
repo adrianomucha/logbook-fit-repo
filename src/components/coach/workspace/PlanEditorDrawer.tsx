@@ -178,13 +178,22 @@ export function PlanEditorDrawer({
             supersetWithPrevious: exercise.supersetWithPrevious ?? false,
           }),
         });
+        // The demo video belongs to the library exercise, so it reaches
+        // every workout that uses it. Only touch it when the coach changed it.
+        const nextVideo = exercise.videoUrl ?? null;
+        if (existingExercise.exerciseId && nextVideo !== (existingExercise.videoUrl ?? null)) {
+          await apiFetch(`/api/exercises/${existingExercise.exerciseId}`, {
+            method: 'PUT',
+            body: JSON.stringify({ videoUrl: nextVideo }),
+          });
+        }
       } else {
         // New exercise: find-or-create in the library, then add to day
         let libraryExerciseId: string;
         try {
           const created = await apiFetch<{ id: string }>('/api/exercises', {
             method: 'POST',
-            body: JSON.stringify({ name: exercise.name, trackingType }),
+            body: JSON.stringify({ name: exercise.name, trackingType, videoUrl: exercise.videoUrl }),
           });
           libraryExerciseId = created.id;
         } catch {
@@ -197,6 +206,14 @@ export function PlanEditorDrawer({
           );
           if (!match) throw new Error('Could not find or create exercise');
           libraryExerciseId = match.id;
+          // Already in the library: a typed link replaces its video, a blank
+          // field leaves the one it has alone
+          if (exercise.videoUrl) {
+            await apiFetch(`/api/exercises/${libraryExerciseId}`, {
+              method: 'PUT',
+              body: JSON.stringify({ videoUrl: exercise.videoUrl }),
+            });
+          }
         }
 
         await apiFetch(`/api/days/${dayId}/exercises`, {

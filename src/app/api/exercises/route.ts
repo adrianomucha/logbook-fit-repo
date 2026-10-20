@@ -50,7 +50,7 @@ export const POST = withCoach(
   ) => {
     const result = await parseBody(req, createExerciseSchema);
     if (!result.success) return result.response;
-    const { name, category, trackingType, defaultSets, defaultReps, defaultWeight, defaultRest, instructions } = result.data;
+    const { name, category, trackingType, defaultSets, defaultReps, defaultWeight, defaultRest, instructions, videoUrl } = result.data;
 
     // Check for duplicate name (scoped to coach, non-deleted)
     const existing = await prisma.exercise.findFirst({
@@ -77,6 +77,7 @@ export const POST = withCoach(
         defaultWeight,
         defaultRest,
         instructions,
+        videoUrl,
       },
     });
 

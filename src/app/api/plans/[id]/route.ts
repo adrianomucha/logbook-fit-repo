@@ -38,6 +38,7 @@ export const GET = withCoach(
                         name: true,
                         category: true,
                         instructions: true,
+                        videoUrl: true,
                       },
                     },
                   },

@@ -16,6 +16,7 @@ import {
   weightUnitLabel,
   type WeightUnit,
 } from '@logbook/shared/weight-units';
+import { EXERCISE_VIDEO_COPY, parseVideoUrl } from '@logbook/shared/exercise-video';
 
 /** A stored (lb) weight as the form's text, in the coach's unit. */
 function toFormWeight(stored: string | number | undefined, unit: WeightUnit): string {
@@ -82,6 +83,8 @@ export function ExerciseEditorContent({
   const [restSeconds, setRestSeconds] = useState(exercise?.restSeconds?.toString() || '');
   const [notes, setNotes] = useState(exercise?.notes || '');
   const [supersetWithPrevious, setSupersetWithPrevious] = useState(!!exercise?.supersetWithPrevious);
+  const [videoUrl, setVideoUrl] = useState(exercise?.videoUrl || '');
+  const [videoError, setVideoError] = useState<string | null>(null);
 
   // Reset form when exercise changes
   useEffect(() => {
@@ -94,6 +97,7 @@ export function ExerciseEditorContent({
       setRestSeconds(exercise.restSeconds?.toString() || '');
       setNotes(exercise.notes || '');
       setSupersetWithPrevious(!!exercise.supersetWithPrevious);
+      setVideoUrl(exercise.videoUrl || '');
       setMode('custom');
     } else {
       setName('');
@@ -104,8 +108,10 @@ export function ExerciseEditorContent({
       setRestSeconds('');
       setNotes('');
       setSupersetWithPrevious(false);
+      setVideoUrl('');
       setMode('library');
     }
+    setVideoError(null);
     setSearchQuery('');
     setSelectedCategory(null);
     setShowDeleteConfirm(false);
@@ -158,6 +164,12 @@ export function ExerciseEditorContent({
 
   const handleSave = async () => {
     if (isSaving || !canSave) return;
+    // A link that won't open is caught here, not after the round trip
+    const video = parseVideoUrl(videoUrl);
+    if (!video.ok) {
+      setVideoError(video.error);
+      return;
+    }
     setIsSaving(true);
     // Back to stored lb; an untouched value keeps its exact stored number
     const typedWeight = parseFloat(weight);
@@ -178,6 +190,7 @@ export function ExerciseEditorContent({
       restSeconds: restSeconds ? Math.max(0, parseInt(restSeconds)) : undefined,
       notes: notes.trim() || undefined,
       supersetWithPrevious: previousExerciseName ? supersetWithPrevious : false,
+      videoUrl: video.url ?? undefined,
     };
     try {
       await onSave(savedExercise);
@@ -197,6 +210,8 @@ export function ExerciseEditorContent({
     weight: `${idPrefix}-weight`,
     rest: `${idPrefix}-rest`,
     notes: `${idPrefix}-notes`,
+    video: `${idPrefix}-video`,
+    videoHint: `${idPrefix}-video-hint`,
   };
   const removeLink = 'w-full flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive hover:text-destructive/80 transition-colors py-1.5';
 
@@ -475,6 +490,43 @@ export function ExerciseEditorContent({
                 className="min-h-[64px] resize-none border-0 bg-transparent px-4 pb-3 pt-1.5 text-base sm:text-sm leading-relaxed focus-visible:ring-0 focus-visible:ring-offset-0"
               />
             </FieldShell>
+
+            {/* Demo video — lives on the library exercise, so the hint says
+                it reaches every workout that uses it, not just this day */}
+            <div>
+              <FieldShell label={EXERCISE_VIDEO_COPY.fieldLabel} htmlFor={ids.video}>
+                <Input
+                  id={ids.video}
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={videoUrl}
+                  onChange={(e) => {
+                    setVideoUrl(e.target.value);
+                    setVideoError(null);
+                  }}
+                  onBlur={() => {
+                    const video = parseVideoUrl(videoUrl);
+                    setVideoError(video.ok ? null : video.error);
+                  }}
+                  placeholder={EXERCISE_VIDEO_COPY.placeholder}
+                  aria-invalid={!!videoError}
+                  aria-describedby={ids.videoHint}
+                  className="h-10 border-0 bg-transparent px-4 pb-2 pt-0.5 text-base sm:text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </FieldShell>
+              <p
+                id={ids.videoHint}
+                aria-live="polite"
+                className={cn(
+                  'mt-1.5 px-1 text-xs antialiased',
+                  videoError ? 'text-destructive' : 'text-muted-foreground'
+                )}
+              >
+                {videoError ?? EXERCISE_VIDEO_COPY.hint(name)}
+              </p>
+            </div>
           </div>
         )}
       </div>

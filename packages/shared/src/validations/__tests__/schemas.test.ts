@@ -293,6 +293,25 @@ describe("createExerciseSchema", () => {
     });
     expect(result.success).toBe(false);
   });
+
+  it("stores a demo video link with https:// added when pasted bare", () => {
+    const result = createExerciseSchema.safeParse({
+      name: "Test",
+      videoUrl: " youtu.be/abc123 ",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.videoUrl).toBe("https://youtu.be/abc123");
+    }
+  });
+
+  it("rejects a demo video link that isn't a web link", () => {
+    const result = createExerciseSchema.safeParse({
+      name: "Test",
+      videoUrl: "javascript:alert(1)",
+    });
+    expect(result.success).toBe(false);
+  });
 });
 
 // ──────────────────────────────────────
@@ -316,6 +335,14 @@ describe("updateExerciseSchema", () => {
       instructions: null,
     });
     expect(result.success).toBe(true);
+  });
+
+  it("clears the demo video with null or a blank string", () => {
+    for (const videoUrl of [null, "", "  "]) {
+      const result = updateExerciseSchema.safeParse({ videoUrl });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.videoUrl).toBeNull();
+    }
   });
 });
 

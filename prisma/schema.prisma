@@ -278,6 +278,7 @@ model Exercise {
   defaultWeight Float?           // lb (see WeightUnit)
   defaultRest   Int?             // seconds
   instructions  String?          // Coach's cue notes
+  videoUrl      String?          // Demo video link (http/https), shown to clients
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
   deletedAt     DateTime?

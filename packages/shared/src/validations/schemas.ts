@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { WEIGHT_UNITS } from "../weight-units";
+import { parseVideoUrl } from "../exercise-video";
 
 // Weights travel in lb (the storage unit). 2,500 lb leaves room for a kg
 // coach's 1,000 kg once converted.
@@ -152,6 +153,17 @@ const exerciseCategoryEnum = z.enum([
 
 const trackingTypeEnum = z.enum(["REPS", "TIME"]);
 
+// A demo video link: blank → null (clears it), anything else must be an
+// http(s) web link (see parseVideoUrl). Stored normalized.
+const videoUrlField = z.string().transform((value, ctx) => {
+  const parsed = parseVideoUrl(value);
+  if (!parsed.ok) {
+    ctx.addIssue({ code: "custom", message: parsed.error });
+    return z.NEVER;
+  }
+  return parsed.url;
+});
+
 export const createExerciseSchema = z.object({
   name: z.string().min(1, "Exercise name is required").max(100),
   category: exerciseCategoryEnum.optional().default("OTHER"),
@@ -162,6 +174,7 @@ export const createExerciseSchema = z.object({
   defaultWeight: z.number().min(0).max(MAX_STORED_WEIGHT).optional(),
   defaultRest: z.number().int().min(0).max(600).optional(),
   instructions: z.string().max(1000).optional(),
+  videoUrl: videoUrlField.optional(),
 });
 
 export const updateExerciseSchema = z.object({
@@ -173,6 +186,7 @@ export const updateExerciseSchema = z.object({
   defaultWeight: z.number().min(0).max(MAX_STORED_WEIGHT).nullable().optional(),
   defaultRest: z.number().int().min(0).max(600).nullable().optional(),
   instructions: z.string().max(1000).nullable().optional(),
+  videoUrl: videoUrlField.nullable().optional(),
 });
 
 // ──────────────────────────────────────

@@ -26,7 +26,7 @@ export const PUT = withCoach(
 
     const result = await parseBody(req, updateExerciseSchema);
     if (!result.success) return result.response;
-    const { name, category, trackingType, defaultSets, defaultReps, defaultWeight, defaultRest, instructions } = result.data;
+    const { name, category, trackingType, defaultSets, defaultReps, defaultWeight, defaultRest, instructions, videoUrl } = result.data;
 
     // If renaming, check for duplicate
     if (name) {
@@ -57,6 +57,7 @@ export const PUT = withCoach(
         ...(defaultWeight !== undefined ? { defaultWeight } : {}),
         ...(defaultRest !== undefined ? { defaultRest } : {}),
         ...(instructions !== undefined ? { instructions } : {}),
+        ...(videoUrl !== undefined ? { videoUrl } : {}),
       },
     });
 

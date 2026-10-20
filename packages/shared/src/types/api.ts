@@ -343,6 +343,8 @@ export interface WorkoutExercise {
     name: string;
     category: string | null;
     instructions: string | null;
+    /** Demo video link (http/https) the coach set on the library exercise. */
+    videoUrl: string | null;
   };
   setCompletions: WorkoutSetCompletion[];
   flag: WorkoutFlag | null;

@@ -55,6 +55,7 @@ describe("apiPlanToWorkoutPlan", () => {
                   name: "Bench Press",
                   category: "UPPER_BODY",
                   instructions: null,
+                  videoUrl: "https://youtu.be/abc123",
                 },
               },
             ],
@@ -86,6 +87,12 @@ describe("apiPlanToWorkoutPlan", () => {
     expect(result.weeks[0].days[0].exercises[0].reps).toBe("8-10");
     expect(result.weeks[0].days[0].exercises[0].trackingType).toBe("REPS");
     expect(result.weeks[0].days[0].exercises[0].supersetWithPrevious).toBeUndefined();
+  });
+
+  it("carries the library exercise id and its demo video", () => {
+    const result = apiPlanToWorkoutPlan(basePlan);
+    expect(result.weeks[0].days[0].exercises[0].exerciseId).toBe("ex-1");
+    expect(result.weeks[0].days[0].exercises[0].videoUrl).toBe("https://youtu.be/abc123");
   });
 
   it("formats time-based exercises as durations", () => {

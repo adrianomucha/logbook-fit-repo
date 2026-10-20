@@ -10,6 +10,10 @@ export interface Exercise {
   weight?: string;
   restSeconds?: number;
   notes?: string;
+  /** The coach's library exercise this prescribes — where its demo video lives. */
+  exerciseId?: string;
+  /** Demo video link from the library exercise, shown to clients as "Watch demo". */
+  videoUrl?: string;
   completed?: boolean;
   /** Chained to the exercise above it into a superset. */
   supersetWithPrevious?: boolean;
