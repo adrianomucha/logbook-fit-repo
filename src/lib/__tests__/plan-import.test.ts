@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectImportExercises,
+  applyImportChoices,
+  importErrorBody,
   looksLikeDuration,
   matchHeader,
   parseImportRows,
@@ -180,6 +182,30 @@ describe('parseImportRows', () => {
     expect(plan).toBeNull();
     expect(errors[0].row).toBe(2);
   });
+
+  it('names the coach’s own sheet in errors for rows read from a free-form workbook', () => {
+    const { errors } = parseImportRows([
+      row({ rowNumber: 7, sheet: 'Week 2', sets: '45' }),
+      row({ rowNumber: 8, sets: '45' }),
+    ]);
+    expect(errors[0]).toEqual({ row: 7, sheet: 'Week 2', message: expect.stringContaining('Sets') });
+    expect(errors[1]).not.toHaveProperty('sheet');
+  });
+});
+
+describe('importErrorBody', () => {
+  it('uses a file-level error as the headline and lists only row errors', () => {
+    expect(importErrorBody([{ row: 0, message: 'The file has no workout rows.' }])).toEqual({
+      error: 'The file has no workout rows.',
+      rowErrors: [],
+    });
+    const body = importErrorBody([
+      { row: 3, message: 'a' },
+      { row: 4, sheet: 'Week 1', message: 'b' },
+    ]);
+    expect(body.error).toMatch(/2 problems/);
+    expect(body.rowErrors).toHaveLength(2);
+  });
 });
 
 describe('collectImportExercises', () => {
@@ -194,5 +220,32 @@ describe('collectImportExercises', () => {
       { name: 'Bench Press', trackingType: 'REPS' },
       { name: 'Plank', trackingType: 'TIME' },
     ]);
+  });
+});
+
+describe('applyImportChoices', () => {
+  const rows = [
+    row({ rowNumber: 3, week: '1', exercise: 'Bench Press', rest: '120' }),
+    row({ rowNumber: 3, week: '2', exercise: 'bench press', rest: '120' }),
+    // Same exercise, a value the sheet stated plainly — must not be touched
+    row({ rowNumber: 3, week: '3', exercise: 'Bench Press', rest: '90' }),
+    row({ rowNumber: 4, exercise: 'Back Squat', rest: '120' }),
+  ];
+  const choice = { exercise: 'Bench Press', field: 'rest' as const, said: '2-3 min rest', options: ['120', '150', '180'] };
+
+  it('replaces the reader’s guess for that exercise only, in every week', () => {
+    const out = applyImportChoices(rows, [choice], ['150']);
+    expect(out.map((r) => r.rest)).toEqual(['150', '150', '90', '120']);
+  });
+
+  it('leaves rows untouched for the guess itself or no pick', () => {
+    expect(applyImportChoices(rows, [choice], ['120'])).toEqual(rows);
+    expect(applyImportChoices(rows, [choice], [undefined])).toEqual(rows);
+  });
+
+  it('feeds parseImportRows, which still checks the coach’s own value', () => {
+    expect(parseImportRows(applyImportChoices(rows, [choice], ['150'])).errors).toEqual([]);
+    const { errors } = parseImportRows(applyImportChoices(rows, [choice], ['9000']));
+    expect(errors[0].message).toMatch(/Rest/);
   });
 });

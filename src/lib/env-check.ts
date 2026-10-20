@@ -57,6 +57,12 @@ export function envProblems(env: NodeJS.ProcessEnv = process.env): string[] {
     );
   }
 
+  if (!env.ANTHROPIC_API_KEY) {
+    problems.push(
+      "ANTHROPIC_API_KEY is not set — plan import only reads spreadsheets laid out like the template; any other layout is rejected instead of read by the AI reader."
+    );
+  }
+
   return problems;
 }
 

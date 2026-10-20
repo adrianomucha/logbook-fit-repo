@@ -1,9 +1,11 @@
 /**
  * Excel plan import — the workbook half (server-only, pulls in exceljs).
- * Generates the downloadable template a coach fills in, and reads an uploaded
- * workbook back into the plain rows plan-import.ts knows how to parse.
+ * Generates the downloadable template a coach fills in, reads an uploaded
+ * template back into the plain rows plan-import.ts knows how to parse, and
+ * renders any other workbook as text for the AI reader (plan-import-ai.ts).
  */
 
+import { Readable } from "stream";
 import ExcelJS from "exceljs";
 import {
   IMPORT_COLUMNS,
@@ -57,6 +59,7 @@ const INSTRUCTIONS: string[] = [
   'Superset — put "Y" to chain an exercise to the row above it as a superset.',
   "",
   "When you're done, upload the file back on the Plans page (Import from Excel).",
+  "Already have your own spreadsheet? Upload it as it is — Logbook reads other layouts too, and shows you the plan to check before it’s created.",
 ];
 
 /** Build the template workbook a coach downloads, as an .xlsx buffer. */
@@ -141,23 +144,50 @@ function cellToString(cell: ExcelJS.Cell): string | null {
   return String(value);
 }
 
-export type ReadWorkoutRowsResult =
-  | { ok: true; rows: RawImportRow[] }
+export type LoadWorkbookResult =
+  | { ok: true; workbook: ExcelJS.Workbook }
   | { ok: false; error: string };
 
+/** .xlsx files are zip archives; legacy .xls files are OLE compound documents. */
+const XLSX_MAGIC = [0x50, 0x4b, 0x03, 0x04];
+const XLS_MAGIC = [0xd0, 0xcf, 0x11, 0xe0];
+const startsWith = (buffer: Buffer, magic: number[]) =>
+  magic.every((byte, i) => buffer[i] === byte);
+
 /**
- * Load an uploaded .xlsx and return its workout rows. Header matching is by
- * text, so reordered columns work; the sheet is found by name with a fallback
- * to the first sheet that carries the expected headers.
+ * Open an uploaded spreadsheet: .xlsx by its zip signature, anything else
+ * named .csv as CSV. CSV cells stay the exact text the coach typed — exceljs
+ * would otherwise turn "6-8" into a date.
  */
-export async function readWorkoutRows(buffer: Buffer): Promise<ReadWorkoutRowsResult> {
+export async function loadWorkbook(buffer: Buffer, filename: string): Promise<LoadWorkbookResult> {
   const workbook = new ExcelJS.Workbook();
-  try {
-    await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
-  } catch {
-    return { ok: false, error: "Couldn’t read that file. Upload the .xlsx template with your workouts filled in." };
+
+  if (startsWith(buffer, XLS_MAGIC)) {
+    return { ok: false, error: "That’s an old .xls file. Open it in Excel, save it as .xlsx, and upload it again." };
   }
 
+  try {
+    if (startsWith(buffer, XLSX_MAGIC)) {
+      await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
+      return { ok: true, workbook };
+    }
+    if (/\.csv$/i.test(filename)) {
+      await workbook.csv.read(Readable.from(buffer), { map: (value: string) => value });
+      return { ok: true, workbook };
+    }
+  } catch {
+    // Fall through to the generic message
+  }
+  return { ok: false, error: "Couldn’t read that file. Upload an Excel (.xlsx) or CSV file." };
+}
+
+/**
+ * The workout rows of a workbook laid out like the template, or null when
+ * no sheet carries the template's headers. Header matching is by text, so
+ * reordered columns work; the sheet is found by name with a fallback to the
+ * first sheet that carries the expected headers.
+ */
+export function findTemplateRows(workbook: ExcelJS.Workbook): RawImportRow[] | null {
   const named = workbook.worksheets.find(
     (ws) => ws.name.trim().toLowerCase() === WORKOUTS_SHEET.toLowerCase()
   );
@@ -186,13 +216,99 @@ export async function readWorkoutRows(buffer: Buffer): Promise<ReadWorkoutRowsRe
         }
         rows.push(raw);
       });
-      return { ok: true, rows };
+      return rows;
     }
   }
 
-  return {
-    ok: false,
-    error:
-      "Couldn’t find the workout columns (Week, Day, Exercise, Sets, Reps / Time). Start from the downloaded template so the headers match.",
-  };
+  return null;
+}
+
+export const TEMPLATE_HEADERS_MISSING_ERROR =
+  "Couldn’t find the workout columns (Week, Day, Exercise, Sets, Reps / Time). Start from the downloaded template so the headers match.";
+
+// ──────────────────────────────────────
+// Free-form workbooks → text for the AI reader
+// ──────────────────────────────────────
+
+/**
+ * Caps the text sent to the model. ~200k characters is roughly 50k tokens —
+ * far beyond any real plan, and under the 100k-token prompt size where the
+ * model's price per token goes up.
+ */
+export const MAX_WORKBOOK_TEXT_CHARS = 200_000;
+const MAX_CELL_CHARS = 500;
+
+/** What the coach sees in a cell, as close as the stored value allows. */
+function cellDisplayText(cell: ExcelJS.Cell): string | null {
+  const value = cell.value;
+  if (value instanceof Date) {
+    // Excel silently turns rep ranges like "6-8" into dates; show the date
+    // plainly so the reader can recognise one.
+    return value.toISOString().slice(0, 10);
+  }
+  if (typeof value === "number" && typeof cell.numFmt === "string" && cell.numFmt.includes("%")) {
+    return `${Number((value * 100).toFixed(4))}%`;
+  }
+  const result = typeof value === "object" && value !== null && "result" in value ? value.result : undefined;
+  if (result instanceof Date) return result.toISOString().slice(0, 10);
+  return cellToString(cell);
+}
+
+export type WorkbookTextResult =
+  | { ok: true; text: string }
+  | { ok: false; error: string };
+
+/**
+ * Every visible, non-empty cell of the workbook as plain text, one line per
+ * row with cell addresses — enough for a model to see the layout (which
+ * columns are weeks, which rows are days) and to cite the coach's own rows.
+ *
+ *   Sheet "Week 1"
+ *   Row 1: A1 (merged A1:D1) "Upper Body"
+ *   Row 2: A2 "Bench Press" | B2 "3x8" | C2 "60kg"
+ */
+export function workbookToText(workbook: ExcelJS.Workbook): WorkbookTextResult {
+  const lines: string[] = [];
+  let length = 0;
+
+  for (const sheet of workbook.worksheets) {
+    if (sheet.state !== "visible") continue;
+
+    const mergeRanges = new Map<string, string>();
+    for (const range of (sheet.model as { merges?: string[] }).merges ?? []) {
+      mergeRanges.set(range.split(":")[0], range);
+    }
+
+    const sheetLines: string[] = [];
+    sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+      const cells: string[] = [];
+      row.eachCell({ includeEmpty: false }, (cell) => {
+        // Merged cells repeat the top-left value; list it once, with its span
+        if (cell.isMerged && cell.master.address !== cell.address) return;
+        const text = cellDisplayText(cell)?.trim();
+        if (!text) return;
+        const range = mergeRanges.get(cell.address);
+        const label = range ? `${cell.address} (merged ${range})` : cell.address;
+        cells.push(`${label} ${JSON.stringify(text.slice(0, MAX_CELL_CHARS))}`);
+      });
+      if (cells.length > 0) sheetLines.push(`Row ${rowNumber}: ${cells.join(" | ")}`);
+    });
+    if (sheetLines.length === 0) continue;
+
+    for (const line of [`Sheet ${JSON.stringify(sheet.name)}`, ...sheetLines, ""]) {
+      length += line.length + 1;
+      if (length > MAX_WORKBOOK_TEXT_CHARS) {
+        return {
+          ok: false,
+          error: "This spreadsheet is too big to read automatically. Delete the sheets that aren’t part of the plan and upload it again.",
+        };
+      }
+      lines.push(line);
+    }
+  }
+
+  if (lines.length === 0) {
+    return { ok: false, error: "The file is empty. Add your workouts and upload it again." };
+  }
+  return { ok: true, text: lines.join("\n").trimEnd() };
 }

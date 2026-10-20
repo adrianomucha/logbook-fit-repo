@@ -84,9 +84,14 @@ export function matchHeader(text: string): ImportColumnKey | null {
 export type RawImportRow = {
   /** 1-based Excel row number, for error messages that match what the coach sees. */
   rowNumber: number;
+  /**
+   * The coach's sheet the row came from, when it isn't the template's single
+   * Workouts sheet (rows read from a free-form workbook) — errors name it.
+   */
+  sheet?: string;
 } & Partial<Record<ImportColumnKey, string | null>>;
 
-export type ImportRowError = { row: number; message: string };
+export type ImportRowError = { row: number; sheet?: string; message: string };
 
 export type ParsedImportExercise = {
   name: string;
@@ -215,7 +220,12 @@ export function parseImportRows(
   const grid = new Map<number, Map<number, { name: string | null; exercises: ParsedImportExercise[] }>>();
 
   for (const row of contentRows) {
-    const fail = (message: string) => errors.push({ row: row.rowNumber, message });
+    const fail = (message: string) =>
+      errors.push(
+        row.sheet
+          ? { row: row.rowNumber, sheet: row.sheet, message }
+          : { row: row.rowNumber, message }
+      );
 
     const week = blank(row.week) ? null : parseIndex(row.week!);
     if (week == null || week < 1 || week > IMPORT_LIMITS.maxWeeks) {
@@ -368,3 +378,83 @@ export function collectImportExercises(
   }
   return [...byKey.values()];
 }
+
+/**
+ * The 400 body for a failed parse: one headline plus the per-row list the
+ * import dialog shows ({ row, sheet?, message }).
+ */
+export function importErrorBody(errors: ImportRowError[]): {
+  error: string;
+  rowErrors: ImportRowError[];
+} {
+  return {
+    error:
+      errors.length === 1 && errors[0].row === 0
+        ? errors[0].message
+        : `The file has ${errors.length} ${errors.length === 1 ? "problem" : "problems"} — fix the rows below and upload it again`,
+    rowErrors: errors.filter((e) => e.row > 0),
+  };
+}
+
+/** The prescription fields a coach can settle on the review step. */
+export const IMPORT_CHOICE_FIELDS = ["sets", "reps", "weight", "rest"] as const;
+export type ImportChoiceField = (typeof IMPORT_CHOICE_FIELDS)[number];
+
+/**
+ * A value the AI reader had to pick because the sheet was ambiguous ("2-3
+ * min" rest, AMRAP). The coach settles it on the review step instead of
+ * hunting for it in the editor later.
+ */
+export type ImportChoice = {
+  /** The exercise, spelled as in the plan's rows */
+  exercise: string;
+  field: ImportChoiceField;
+  /** What the sheet actually said, e.g. "2-3 min rest" */
+  said: string;
+  /** Values in the row's own format (rest in seconds); [0] is the one the reader used */
+  options: string[];
+};
+
+const sameValue = (a: string | null | undefined, b: string) =>
+  (a ?? "").replace(/\s+/g, "").toLowerCase() === b.replace(/\s+/g, "").toLowerCase();
+
+/**
+ * Rows with the coach's picks applied. Each choice replaces the reader's
+ * guess (options[0]) in that exercise's rows and leaves any other value
+ * alone, so a week-by-week progression on the same exercise survives.
+ * Always applied to the rows as read, so changing a pick is idempotent.
+ */
+export function applyImportChoices(
+  rows: RawImportRow[],
+  choices: ImportChoice[],
+  picks: (string | undefined)[]
+): RawImportRow[] {
+  return rows.map((row) => {
+    let next = row;
+    choices.forEach((choice, i) => {
+      const pick = picks[i];
+      if (pick == null || pick === choice.options[0]) return;
+      if (row.exercise?.trim().toLowerCase() !== choice.exercise.toLowerCase()) return;
+      if (!sameValue(row[choice.field], choice.options[0])) return;
+      next = { ...next, [choice.field]: pick };
+    });
+    return next;
+  });
+}
+
+/** What POST /api/plans/import/preview returns for the coach to review. */
+export type PlanImportPreview = {
+  /** "template" when the sheet matched our columns, "ai" when a model read it */
+  source: "template" | "ai";
+  /** Sent back unchanged to POST /api/plans/import to create the plan */
+  rows: RawImportRow[];
+  plan: ParsedImportPlan;
+  /** Exercise names not yet in the coach's library — created on import */
+  newExercises: string[];
+  /** Ambiguous values for the coach to settle before creating the plan */
+  choices: ImportChoice[];
+  /** Anything else the AI reader skipped or couldn't place, in plain sentences */
+  notes: string[];
+  /** The coach's unit, for showing the stored-lb weights */
+  weightUnit: WeightUnit;
+};

@@ -15,6 +15,7 @@ const FULLY_CONFIGURED = {
   UPSTASH_REDIS_REST_TOKEN: "token",
   NEXTAUTH_URL: "https://logbook.fit",
   CRON_SECRET: "cron-secret",
+  ANTHROPIC_API_KEY: "sk-ant-test",
 } as const;
 
 function stubEnv(overrides: Record<string, string | undefined>) {
@@ -104,6 +105,12 @@ describe("envProblems", () => {
     expect(problems.some((p) => p.includes("CRON_SECRET"))).toBe(true);
   });
 
+  it("flags a missing ANTHROPIC_API_KEY", () => {
+    stubEnv({ ANTHROPIC_API_KEY: undefined });
+    const problems = envProblems(process.env);
+    expect(problems.some((p) => p.includes("ANTHROPIC_API_KEY"))).toBe(true);
+  });
+
   it("reports every problem at once", () => {
     stubEnv({
       RESEND_API_KEY: undefined,
@@ -112,7 +119,8 @@ describe("envProblems", () => {
       UPSTASH_REDIS_REST_TOKEN: undefined,
       NEXTAUTH_URL: undefined,
       CRON_SECRET: undefined,
+      ANTHROPIC_API_KEY: undefined,
     });
-    expect(envProblems(process.env)).toHaveLength(5);
+    expect(envProblems(process.env)).toHaveLength(6);
   });
 });

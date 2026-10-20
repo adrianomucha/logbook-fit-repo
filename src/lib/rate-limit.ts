@@ -238,6 +238,14 @@ export const feedbackLimiter = rateLimit("feedback", {
   maxRequests: 10,
 });
 
+// Reading a free-form spreadsheet costs a paid model call. Keyed by user id:
+// plenty for a coach fixing and re-uploading a sheet, a ceiling on what one
+// account can spend.
+export const planImportAiLimiter = rateLimit("plan-import-ai", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 20,
+});
+
 // Periodic cleanup of expired in-memory entries (every 5 minutes)
 if (!hasUpstash && typeof setInterval !== "undefined") {
   setInterval(() => {
