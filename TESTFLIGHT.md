@@ -126,5 +126,6 @@ Install it from the TestFlight app on a phone and check:
 ## Before the App Store submission (after TestFlight)
 
 Tracked in `IOS_APP_PLAN.md` §5: privacy nutrition labels, screenshots
-from this build (6.7" and 6.1"), subtitle, and bumping `version` in
-`app.json` from 0.1.0 to 1.0.0.
+from this build (6.7" and 6.1") and subtitle. `version` in `app.json` is
+`1.0` to match the version App Store Connect created; keep the two equal
+for every release (the build number counts up on its own).
