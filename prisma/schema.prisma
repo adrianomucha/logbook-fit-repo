@@ -251,6 +251,9 @@ model ClientInvite {
   note      String?
   status    InviteStatus @default(PENDING)
   expiresAt DateTime     // 7 days from creation
+  // When the link was last emailed to `email` (POST /api/invites/[token]/send).
+  // Null = never emailed; the coach shared the link themselves.
+  emailSentAt DateTime?
   createdAt DateTime     @default(now())
 
   coach CoachProfile @relation(fields: [coachId], references: [id], onDelete: Cascade)

@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
-import { Copy, Check, Share2, RefreshCw, Plus, Loader2 } from 'lucide-react';
+import { Copy, Check, Share2, RefreshCw, Plus, Loader2, Mail } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { Chip, FieldShell, StatusLine } from './shared/formSurfaces';
-import { apiFetch } from '@/lib/api-client';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { cn } from '@/lib/utils';
 
 interface InviteClientModalProps {
   isOpen: boolean;
@@ -20,8 +21,15 @@ interface InviteResult {
   email: string | null;
   note: string | null;
   expiresAt: string;
+  emailSentAt: string | null;
   inviteLink: string;
 }
+
+type EmailSendState =
+  | { status: 'idle' }
+  | { status: 'sending' }
+  | { status: 'sent'; to: string }
+  | { status: 'failed'; message: string };
 
 const NOTE_MAX_LENGTH = 280;
 
@@ -48,9 +56,13 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   // Replacing a link is destructive, so the warning shows at the moment of the
   // decision instead of sitting on screen permanently
   const [confirmNew, setConfirmNew] = useState(false);
+  // Emailing is a separate, explicit step: typing an address only bakes it
+  // into the link, so nothing goes out until the coach presses Email invite
+  const [emailSend, setEmailSend] = useState<EmailSendState>({ status: 'idle' });
   // Guard so React strict-mode / re-renders don't double-generate on open
   const generatedForOpen = useRef(false);
   const emailRef = useRef<HTMLInputElement>(null);
+  const sendButtonRef = useRef<HTMLButtonElement>(null);
 
   const fullLink = invite ? `${window.location.origin}${invite.inviteLink}` : '';
 
@@ -59,7 +71,11 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     : null;
 
   const generate = useCallback(
-    async (emailToBake: string, noteToBake: string, replacing?: InviteResult | null) => {
+    async (
+      emailToBake: string,
+      noteToBake: string,
+      replacing?: InviteResult | null
+    ): Promise<InviteResult | null> => {
       setIsGenerating(true);
       setError(null);
       setConfirmNew(false);
@@ -81,8 +97,12 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         setInvite(result);
         setAppliedEmail(emailToBake);
         setAppliedNote(noteToBake);
+        // A new link hasn't been emailed anywhere yet
+        setEmailSend({ status: 'idle' });
+        return result;
       } catch {
         setError('Couldn’t create a link. Try again.');
+        return null;
       } finally {
         setIsGenerating(false);
       }
@@ -105,6 +125,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     setCopied(false);
     setError(null);
     setConfirmNew(false);
+    setEmailSend({ status: 'idle' });
     if (!generatedForOpen.current) {
       generatedForOpen.current = true;
       generate('', '');
@@ -123,6 +144,41 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     const trimmed = email.trim();
     if (isGenerating || trimmed === appliedEmail) return;
     generate(trimmed, appliedNote, invite);
+  };
+
+  // Email the current link to the typed address, baking the address into a
+  // fresh link first if it changed since the last one
+  const handleSendEmail = async () => {
+    const trimmed = email.trim();
+    if (!trimmed || isGenerating || emailSend.status === 'sending') return;
+    if (emailRef.current && !emailRef.current.checkValidity()) {
+      setEmailSend({ status: 'failed', message: 'That email doesn’t look right.' });
+      return;
+    }
+    const current =
+      invite && trimmed === appliedEmail ? invite : await generate(trimmed, appliedNote, invite);
+    if (!current) return;
+
+    setEmailSend({ status: 'sending' });
+    try {
+      const res = await apiFetch<{ sent: boolean }>(`/api/invites/${current.token}/send`, {
+        method: 'POST',
+      });
+      setEmailSend(
+        res.sent
+          ? { status: 'sent', to: trimmed }
+          : {
+              status: 'failed',
+              message: 'Email isn’t available right now. Copy the link and send it yourself.',
+            }
+      );
+    } catch (err) {
+      setEmailSend({
+        status: 'failed',
+        message:
+          err instanceof ApiError ? err.message : 'Couldn’t send the email. Copy the link instead.',
+      });
+    }
   };
 
   // Same deal for the personal note
@@ -172,7 +228,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           Invite a client
         </span>
       }
-      description="Share a signup link to get your client on board."
+      description="Email your client a signup link, or share it yourself."
       maxWidth="xl"
       footer={
         // One unmissable action. Share collapses to an icon so nothing splits
@@ -276,25 +332,78 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           <div className="space-y-3">
             {/* Email pre-fill stays out of the way until it's wanted */}
             {showEmail && (
-              <FieldShell label="Client email" htmlFor="invite-email">
-                <Input
-                  id="invite-email"
-                  ref={emailRef}
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  onBlur={applyEmail}
-                  placeholder="client@example.com"
-                  className="h-10 border-0 bg-transparent px-4 pb-3 pt-1 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
+              <div>
+                <FieldShell label="Client email" htmlFor="invite-email">
+                  <Input
+                    id="invite-email"
+                    ref={emailRef}
+                    type="email"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      if (emailSend.status !== 'idle') setEmailSend({ status: 'idle' });
+                    }}
+                    // Pressing Email invite bakes the address itself — a
+                    // blur-triggered link on the way there would race it
+                    onBlur={(e) => {
+                      if (e.relatedTarget === sendButtonRef.current) return;
                       applyEmail();
-                      (e.target as HTMLInputElement).blur();
-                    }
-                  }}
-                />
-              </FieldShell>
+                    }}
+                    placeholder="client@example.com"
+                    className="h-10 border-0 bg-transparent px-4 pb-3 pt-1 text-base sm:text-[15px] focus-visible:ring-0 focus-visible:ring-offset-0"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        applyEmail();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                  />
+                </FieldShell>
+                {/* Sending is its own step, and its outcome is spelled out —
+                    a coach shouldn't wait on an email that never left */}
+                <div className="mt-2 flex items-start justify-between gap-3 px-1">
+                  <p
+                    className={cn(
+                      'text-xs antialiased text-pretty pt-1.5',
+                      emailSend.status === 'failed'
+                        ? 'text-destructive'
+                        : emailSend.status === 'sent'
+                          ? 'text-foreground'
+                          : 'text-muted-foreground/70'
+                    )}
+                    aria-live="polite"
+                  >
+                    {emailSend.status === 'sent' ? (
+                      <>
+                        <Check className="inline h-3.5 w-3.5 -mt-0.5 mr-1" strokeWidth={3} aria-hidden="true" />
+                        Emailed to {emailSend.to}.
+                      </>
+                    ) : emailSend.status === 'failed' ? (
+                      emailSend.message
+                    ) : (
+                      'We’ll email them the link. It also fills in their sign-up form.'
+                    )}
+                  </p>
+                  {emailSend.status !== 'sent' && (
+                    <Button
+                      ref={sendButtonRef}
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSendEmail}
+                      disabled={!email.trim() || isGenerating || emailSend.status === 'sending'}
+                      className="h-8 shrink-0 rounded-full px-3 text-xs gap-1.5"
+                    >
+                      {emailSend.status === 'sending' ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <Mail className="h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      {emailSend.status === 'sending' ? 'Sending' : 'Email invite'}
+                    </Button>
+                  )}
+                </div>
+              </div>
             )}
 
             {/* Both secondary paths on one line, in the quietest tier */}
@@ -302,7 +411,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               {!showEmail && (
                 <Chip onClick={() => setShowEmail(true)}>
                   <Plus className="w-3.5 h-3.5" aria-hidden="true" />
-                  Their email
+                  Email it to them
                 </Chip>
               )}
 

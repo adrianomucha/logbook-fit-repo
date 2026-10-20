@@ -36,6 +36,7 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserMinus } from 'lucide-react';
 import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
+import { NO_COACH_COPY } from '@logbook/shared/client-empty-states';
 
 // ---- Component ----
 
@@ -392,33 +393,19 @@ export function ClientDashboard() {
     );
   }
 
-  if (!client) {
-    return (
-      <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="text-center animate-enter">
-          <div className="text-5xl select-none mb-4 animate-bounce-once">🏋️</div>
-          <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">No plan yet</h1>
-          <p className="text-sm text-muted-foreground antialiased">
-            Your coach will assign a workout plan. Hang tight.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // No coach — either side ended the relationship. History stays on the
-  // account; there's nothing coached to show until a new invite is accepted.
-  if (!coach) {
+  // No coach — either side ended the relationship (or there's no client
+  // profile to hang one on, which the app treats the same way). History
+  // stays on the account; there's nothing coached to show.
+  if (!client || !coach) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="text-center animate-enter max-w-sm">
           <div className="text-5xl select-none mb-4 animate-bounce-once">🤝</div>
           <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">
-            You&apos;re not connected to a coach
+            {NO_COACH_COPY.title}
           </h1>
           <p className="text-sm text-muted-foreground antialiased">
-            Your workout history is saved on your account. Ask a coach for a new
-            invite link when you&apos;re ready to train again.
+            {NO_COACH_COPY.body}
           </p>
         </div>
       </div>

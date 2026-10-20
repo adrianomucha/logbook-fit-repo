@@ -11,6 +11,8 @@ import { inviteLimiter, getClientIp } from "@/lib/rate-limit";
  * POST /api/invites
  * Creates a client invite with a secure random token and 7-day expiry.
  * Client signup via invite link auto-creates CoachClientRelationship.
+ * Nothing is emailed here — POST /api/invites/[token]/send does that, when
+ * the coach asks.
  */
 export const POST = withCoach(
   async (
@@ -53,6 +55,7 @@ export const POST = withCoach(
         email: invite.email,
         note: invite.note,
         expiresAt: invite.expiresAt,
+        emailSentAt: invite.emailSentAt,
         inviteLink: `/signup?invite=${invite.token}`,
       },
       { status: 201 }
@@ -89,6 +92,7 @@ export const GET = withCoach(
         return {
           id: invite.id,
           email: invite.email,
+          emailSentAt: invite.emailSentAt,
           status,
           expiresAt: invite.expiresAt,
           createdAt: invite.createdAt,

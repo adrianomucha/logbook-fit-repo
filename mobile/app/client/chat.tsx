@@ -2,6 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { apiMessagesToMessages } from '@logbook/shared/adapters/api';
+import { NO_COACH_COPY } from '@logbook/shared/client-empty-states';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMessages } from '@/hooks/useMessages';
 import { useClientPlan } from '@/hooks/useClientWeek';
@@ -40,10 +41,7 @@ export default function ChatScreen() {
       <AppHeader />
       {!coach || !coachUserId ? (
         <View className="flex-1 px-5">
-          <EmptyState
-            title="You're not connected to a coach"
-            body="Your workout history is saved on your account. Ask a coach for a new invite link when you're ready to train again."
-          />
+          <EmptyState title={NO_COACH_COPY.title} body={NO_COACH_COPY.body} />
         </View>
       ) : (
         <View className="flex-1 px-4 pt-4">

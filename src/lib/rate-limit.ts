@@ -182,6 +182,13 @@ export const inviteLimiter = rateLimit("invite", {
   maxRequests: 20,
 });
 
+// Invite emails go to addresses a coach types in, so each send is capped per
+// coach — enough for a coach onboarding a batch of clients, too few for spam
+export const inviteEmailLimiter = rateLimit("invite-email", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 15,
+});
+
 export const waitlistLimiter = rateLimit("waitlist", {
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 10,

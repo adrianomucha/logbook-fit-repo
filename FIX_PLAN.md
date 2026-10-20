@@ -87,15 +87,23 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       (`ClientDashboard.tsx:388-403,457-462`, `src/lib/relationship-termination.ts`) — M
 - [ ] **2.2** Add `ClientNav`/`AccountMenu` (at minimum sign-out) to the no-coach and
       no-clientProfile screens. (`ClientDashboard.tsx:372-403`) — S
-- [ ] **2.3** Empty/mismatched week: explanatory state with a "message your coach"
+- [x] **2.3** Empty/mismatched week: explanatory state with a "message your coach"
       CTA instead of a bare greeting. (`ClientDashboard.tsx:204-210`,
       `TodayFocusView.tsx:65`) — S
-- [ ] **2.4** "Send Reminder": implement it (send a nudge message/push) or rename to
+      *Done:* "Nothing scheduled this week" on web and app, wording in
+      `packages/shared/src/client-empty-states.ts`.
+- [x] **2.4** "Send Reminder": implement it (send a nudge message/push) or rename to
       "View client". (`ClientsRequiringAction.tsx:46,73-83`) — S
-- [ ] **2.5** Invite email field: either send a real client-invite email (new
+      *Done as a rename:* the at-risk CTA is now "Reach Out" (it opens the chat).
+      Sending a real nudge is still open.
+- [x] **2.5** Invite email field: either send a real client-invite email (new
       template in `src/lib/services/email.ts`, send from `POST /api/invites`) or
       remove the field and fix "Waiting on client@x.com" copy.
       (`InviteClientModal.tsx:257-277`, `GettingStartedCard.tsx:114`) — S–M
+      *Done:* "Email invite" in the modal sends a branded invite email
+      (`sendClientInvite`, `POST /api/invites/[token]/send`) with the coach's
+      note; typing an address alone sends nothing. Per-coach hourly cap and a
+      2-minute resend guard; `emailSentAt` drives "Emailed to x" on the card.
 - [ ] **2.6** Empty-plan guard: block (or warn on) assigning a plan with zero
       exercises; return day/exercise counts from `GET /api/plans`.
       (`plans/[id]/assign/route.ts:82`, `plans/route.ts:26-29`) — S–M
@@ -105,14 +113,23 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 - [ ] **2.8** Workout set-write 4xx: toast "couldn't save these sets" instead of
       silently reverting; keep ≤100-set batches (chunk the flush).
       (`useWorkoutExecution.ts:133-144`, `schemas.ts:255-256`) — S
-- [ ] **2.9** Signup hardening: handle Prisma `P2002` as 409, keep the submit button
+- [x] **2.9** Signup hardening: handle Prisma `P2002` as 409, keep the submit button
       disabled through navigation. (`api/auth/signup/route.ts:107-115,221-226`,
       `SignupClient.tsx:181-185`) — S
-- [ ] **2.10** Existing-account invite acceptance: authenticated accept path
+      *Done* with 2.10.
+- [x] **2.10** Existing-account invite acceptance: authenticated accept path
       (`POST /api/invites/[token]/accept` for a signed-in CLIENT with no active
       coach), which also gives churned clients a way back; fix the false
       "can rejoin with a new invite" copy meanwhile. (`api/auth/signup/route.ts:107-115`,
       `PastClientsPage.tsx:45`) — L (copy fix is S — do that immediately)
+      *Done:* `POST /api/invites/[token]/accept` (`src/lib/invite-acceptance.ts`).
+      A signed-in client opening an invite gets Accept; signing up from an invite
+      with an existing email points to sign-in, which returns to the invite.
+      A returning client reuses their one relationship row (same coach →
+      reactivated, plan not re-applied; new coach → row moves, old coach's
+      unanswered check-ins expire). Coach-side check-in reads are now scoped to
+      the coach so a new coach never sees a previous one's. Clients with an
+      active coach, and coach accounts, are told why they can't accept.
 - [ ] **2.11** Past-client read-only view: make rows clickable to a read-only
       profile (history + conversation), per the "nothing is deleted" promise —
       or soften the promise. (`PastClientsPage.tsx:29-64`,

@@ -3,7 +3,7 @@
 import { Suspense, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { signIn } from 'next-auth/react';
+import { signIn, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, Loader2 } from 'lucide-react';
@@ -23,6 +23,13 @@ interface InviteInfo {
   coachBio?: string | null;
   expiresAt?: string;
   reason?: 'not_found' | 'used' | 'expired';
+  /** Who's signed in, if anyone — decides between the form and Accept */
+  viewer?: {
+    email: string | null;
+    role: string;
+    connection: 'none' | 'this_coach' | 'other_coach';
+    currentCoachName: string | null;
+  } | null;
 }
 
 interface BetaInviteInfo {
@@ -44,8 +51,75 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.Re
 }
 
 /** The app's own chrome — the split auth canvas shared with /login */
-function PageFrame({ children }: { children: React.ReactNode }) {
-  return <AuthShell mode="signup">{children}</AuthShell>;
+function PageFrame({
+  altHref,
+  children,
+}: {
+  altHref?: string | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <AuthShell mode="signup" altHref={altHref}>
+      {children}
+    </AuthShell>
+  );
+}
+
+/**
+ * Invited client: the coach is the page — their name in the headline, their
+ * words on the volt rail, in the product's own voice. Shared by the signup
+ * form and the signed-in Accept screen.
+ */
+function InviteCoachHeader({ inviteInfo }: { inviteInfo: InviteInfo | null }) {
+  const coachName = inviteInfo?.coachName ?? 'Your coach';
+  const coachFirstName = coachName.split(' ')[0];
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <div
+            className={cn(
+              'w-6 h-6 rounded-full flex items-center justify-center shrink-0 overflow-hidden',
+              inviteInfo?.coachAvatar ? 'bg-muted' : avatarColor(coachName)
+            )}
+          >
+            {inviteInfo?.coachAvatar ? (
+              // Avatar URLs can point at arbitrary remote hosts, which
+              // next/image rejects without a remotePatterns allowlist.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={inviteInfo.coachAvatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-[10px] font-bold uppercase">
+                {coachName.charAt(0)}
+              </span>
+            )}
+          </div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            Your coach
+          </p>
+        </div>
+        <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-[0.95] text-balance antialiased">
+          {coachName} is expecting you
+        </h1>
+        {inviteInfo?.coachBio && (
+          <p className="text-sm text-muted-foreground leading-relaxed mt-3 text-pretty">
+            {inviteInfo.coachBio}
+          </p>
+        )}
+      </div>
+
+      {inviteInfo?.note && (
+        <div className="pl-3.5 border-l-2 border-brand">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
+            A note from {coachFirstName}
+          </p>
+          <p className="text-sm text-foreground/80 leading-relaxed text-pretty">
+            {inviteInfo.note}
+          </p>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default function SignupClient({
@@ -84,6 +158,8 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  // 'account_exists' turns the error into a sign-in link
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validate whichever token is present on mount (client invite wins if both)
@@ -131,6 +207,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
     if (isSubmitting) return;
 
     setError('');
+    setErrorCode(null);
 
     // The server enforces the same schema but answers with a generic
     // "Validation failed" — checking here keeps the message specific.
@@ -160,6 +237,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
       if (!signupRes.ok) {
         const data = await signupRes.json();
         setError(data.error || 'Something went wrong. Please try again.');
+        setErrorCode(data.code ?? null);
         setIsSubmitting(false);
         return;
       }
@@ -171,6 +249,8 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
         redirect: false,
       });
 
+      // Either way the page is leaving, so the button stays disabled —
+      // re-enabling it here invited a second submit mid-navigation
       if (loginResult?.error) {
         // Account created but login failed — redirect to login
         router.push('/login');
@@ -181,10 +261,38 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
       router.push(isCoachSignup ? '/coach' : '/client');
     } catch {
       setError('Something went wrong. Please try again.');
-    } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Signed-in client accepting from an existing account
+  const handleAccept = async () => {
+    if (isSubmitting) return;
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/invites/${encodeURIComponent(inviteToken!)}/accept`, {
+        method: 'POST',
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || 'Something went wrong. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+      // A full load rather than router.push: anything the client app already
+      // cached in this tab still says "no coach"
+      window.location.assign('/client');
+    } catch {
+      setError('Something went wrong. Please try again.');
+      setIsSubmitting(false);
+    }
+  };
+
+  // Back here after sign-in, where the same invite can be accepted
+  const signInToAcceptHref = inviteToken
+    ? `/login?callbackUrl=${encodeURIComponent(`/signup?invite=${inviteToken}`)}`
+    : '/login';
 
   // Loading state while validating token
   if (isValidating) {
@@ -306,9 +414,108 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
   // "Train with Your" would read broken, so fall back to a neutral CTA
   const hasRealCoachName = coachName !== 'Your coach';
 
+  // Valid invite, someone signed in — accept from the existing account, or
+  // say plainly why this account can't
+  const viewer = !isCoachSignup ? inviteInfo?.viewer : null;
+  if (viewer) {
+    const signOutLink = (
+      <button
+        type="button"
+        onClick={() => signOut({ callbackUrl: window.location.href })}
+        className="font-medium underline underline-offset-2 transition-colors hover:text-foreground"
+      >
+        {viewer.role === 'CLIENT' ? 'Not you? Sign out' : 'Sign out'}
+      </button>
+    );
+    const signedInAs = viewer.email ? (
+      <span className="text-foreground font-medium">{viewer.email}</span>
+    ) : (
+      'another account'
+    );
+    const currentCoach = viewer.currentCoachName ?? 'a coach';
+
+    // A coach account, or a client who already has a coach: nothing to
+    // accept here, and the reason plus the way forward instead of a form
+    const blocked =
+      viewer.role !== 'CLIENT'
+        ? {
+            message: (
+              <>
+                You&apos;re signed in as a coach ({signedInAs}). Invites are for
+                client accounts. {signOutLink}, then open this link again to
+                sign up or sign in as a client.
+              </>
+            ),
+            action: null,
+          }
+        : viewer.connection === 'this_coach'
+          ? {
+              message: <>You&apos;re already training with {coachFirstName}.</>,
+              action: { label: 'Open Logbook', href: '/client' },
+            }
+          : viewer.connection === 'other_coach'
+            ? {
+                message: (
+                  <>
+                    You&apos;re training with {currentCoach} right now. To join{' '}
+                    {coachFirstName}, leave {currentCoach} in Settings, then open
+                    this link again.
+                  </>
+                ),
+                action: { label: 'Go to Settings', href: '/client/settings?section=account' },
+              }
+            : null;
+
+    return (
+      <PageFrame altHref={null}>
+        <InviteCoachHeader inviteInfo={inviteInfo} />
+
+        <AuthDivider />
+
+        {blocked ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground leading-relaxed text-pretty">
+              {blocked.message}
+            </p>
+            {blocked.action && (
+              <Button variant="outline" onClick={() => router.push(blocked.action!.href)}>
+                {blocked.action.label}
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {error && <FormError>{error}</FormError>}
+            <Button
+              type="button"
+              onClick={handleAccept}
+              disabled={isSubmitting}
+              className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground transition-transform duration-150 hover:bg-brand/90 active:scale-[0.98]"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Connecting...
+                </>
+              ) : (
+                <>
+                  {hasRealCoachName ? `Train with ${coachFirstName}` : 'Start training'}
+                  <ArrowRight className="w-4 h-4 ml-2" aria-hidden="true" />
+                </>
+              )}
+            </Button>
+            <p className="text-center text-xs text-muted-foreground text-pretty">
+              Signed in as {signedInAs}. {signOutLink}
+            </p>
+          </div>
+        )}
+      </PageFrame>
+    );
+  }
+
   // Coach signup or valid invite — show signup form
   return (
-    <PageFrame>
+    <PageFrame altHref={isCoachSignup ? undefined : signInToAcceptHref}>
       {isCoachSignup ? (
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
@@ -333,53 +540,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
           </p>
         </div>
       ) : (
-        // Invited client: the coach is the page — their name in the headline,
-        // their words on the volt rail, in the product's own voice
-        <div className="space-y-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <div
-                className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center shrink-0 overflow-hidden',
-                  inviteInfo?.coachAvatar ? 'bg-muted' : avatarColor(coachName)
-                )}
-              >
-                {inviteInfo?.coachAvatar ? (
-                  // Avatar URLs can point at arbitrary remote hosts, which
-                  // next/image rejects without a remotePatterns allowlist.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={inviteInfo.coachAvatar} alt="" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-[10px] font-bold uppercase">
-                    {coachName.charAt(0)}
-                  </span>
-                )}
-              </div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                Your coach
-              </p>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-[0.95] text-balance antialiased">
-              {coachName} is expecting you
-            </h1>
-            {inviteInfo?.coachBio && (
-              <p className="text-sm text-muted-foreground leading-relaxed mt-3 text-pretty">
-                {inviteInfo.coachBio}
-              </p>
-            )}
-          </div>
-
-          {inviteInfo?.note && (
-            <div className="pl-3.5 border-l-2 border-brand">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
-                A note from {coachFirstName}
-              </p>
-              <p className="text-sm text-foreground/80 leading-relaxed text-pretty">
-                {inviteInfo.note}
-              </p>
-            </div>
-          )}
-        </div>
+        <InviteCoachHeader inviteInfo={inviteInfo} />
       )}
 
       <AuthDivider />
@@ -435,14 +596,14 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
         {error && (
           <FormError>
             {error}
-            {error === 'Email already registered' && (
+            {errorCode === 'account_exists' && (
               <>
-                {' — '}
+                {inviteToken ? ' ' : ' — '}
                 <Link
-                  href="/login"
+                  href={signInToAcceptHref}
                   className="font-medium underline underline-offset-2"
                 >
-                  sign in instead
+                  {inviteToken ? 'Sign in to accept the invite' : 'sign in instead'}
                 </Link>
               </>
             )}
@@ -478,6 +639,20 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               ? 'Your workspace comes ready with a starter exercise library.'
               : `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`}
           </p>
+
+          {/* Returning clients already have an account — sign-in brings them
+              back here to accept instead */}
+          {!isCoachSignup && (
+            <p className="text-center text-xs text-muted-foreground text-pretty">
+              Already have an account?{' '}
+              <Link
+                href={signInToAcceptHref}
+                className="font-medium text-foreground underline underline-offset-2"
+              >
+                Sign in to accept
+              </Link>
+            </p>
+          )}
 
           <p className="text-center text-xs text-muted-foreground text-pretty">
             By creating an account you agree to the{' '}

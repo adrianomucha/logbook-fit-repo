@@ -1,5 +1,6 @@
 import { ActivityIndicator, Alert, Switch, Text, View } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
+import { ALERTS_COPY } from '@logbook/shared/notification-copy';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 /**
@@ -60,19 +61,19 @@ export function NotificationPreferenceTile() {
 
       <View className="min-w-0 flex-1">
         <View className="flex-row items-start justify-between gap-4">
-          <Text className="pt-0.5 font-sans-semibold text-sm leading-tight text-foreground">Message alerts</Text>
+          <Text className="pt-0.5 font-sans-semibold text-sm leading-tight text-foreground">{ALERTS_COPY.title}</Text>
           <Switch
             value={isSubscribed}
             onValueChange={(v) => void handleChange(v)}
             disabled={!canToggle}
             trackColor={{ true: '#c3f910', false: '#e5e5e5' }}
             thumbColor="#ffffff"
-            accessibilityLabel="Message alerts"
+            accessibilityLabel={ALERTS_COPY.title}
           />
         </View>
 
         <Text className="mt-1 font-sans text-xs leading-5 text-muted-foreground">
-          A push notification on this device when your coach messages you. Alerts are per device, so turn them on wherever you train from.
+          {ALERTS_COPY.body('client')}
         </Text>
 
         {/* Status line — the product's mono data voice; a volt dot marks "on" */}

@@ -672,6 +672,23 @@ export function AccountSection({ role }: { role: SettingsRole }) {
 
       {!isCoach && <CoachingRow />}
 
+      <div className="border-t border-border/60 py-3.5">
+        <FieldLabel>{SETTINGS_FIELD_COPY.legal.label}</FieldLabel>
+        <p className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
+          {SETTINGS_FIELD_COPY.legal.links.map((link) => (
+            <a
+              key={link.path}
+              href={link.path}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline underline-offset-2 transition-colors hover:text-muted-foreground"
+            >
+              {link.label}
+            </a>
+          ))}
+        </p>
+      </div>
+
       {/* The one destructive action, kept out of the account menu and behind
           its own dialog (type DELETE + password). The dark: overrides match
           FormError — dark-scope --destructive is a fill shade, unreadable

@@ -96,8 +96,10 @@ export async function ensureScheduledCheckIn(relationship: {
     return null;
   }
 
+  // This pair's latest — a previous coach's check-ins don't set the new
+  // coach's cadence
   const latest = await prisma.checkIn.findFirst({
-    where: { clientId: relationship.clientId },
+    where: { coachId: relationship.coachId, clientId: relationship.clientId },
     orderBy: { createdAt: "desc" },
     select: { status: true, createdAt: true },
   });

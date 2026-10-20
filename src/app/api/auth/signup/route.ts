@@ -7,10 +7,28 @@ import { signupSchema } from "@/lib/validations/schemas";
 import { signupLimiter, getClientIp } from "@/lib/rate-limit";
 import { isCoachSignupOpen } from "@/lib/waitlist";
 import { notifyClientJoined } from "@/lib/push";
+import { Prisma } from "@prisma/client";
 
 // Thrown inside the signup transaction when a beta invite was redeemed by a
 // concurrent signup between validation and commit; rolls the account back.
 class BetaInviteRedeemedError extends Error {}
+
+/**
+ * The email already has an account. From an invite link that's usually a
+ * returning client, so `code` lets the page point them at sign-in, where the
+ * same invite can be accepted (POST /api/invites/[token]/accept).
+ */
+function emailTaken(fromInvite: boolean) {
+  return NextResponse.json(
+    fromInvite
+      ? {
+          error: "You already have an account with this email.",
+          code: "account_exists",
+        }
+      : { error: "Email already registered", code: "account_exists" },
+    { status: 409 }
+  );
+}
 
 export async function POST(req: Request) {
   try {
@@ -109,10 +127,7 @@ export async function POST(req: Request) {
       where: { email, deletedAt: null },
     });
     if (existing) {
-      return NextResponse.json(
-        { error: "Email already registered" },
-        { status: 409 }
-      );
+      return emailTaken(Boolean(invite));
     }
 
     // Hash password
@@ -225,6 +240,14 @@ export async function POST(req: Request) {
       { status: 201 }
     );
   } catch (error) {
+    // Two signups for one email racing past the check above: the unique
+    // index catches the second, which is the same answer as the check
+    if (
+      error instanceof Prisma.PrismaClientKnownRequestError &&
+      error.code === "P2002"
+    ) {
+      return emailTaken(false);
+    }
     if (error instanceof BetaInviteRedeemedError) {
       return NextResponse.json(
         { error: "Invite link is invalid or already used" },

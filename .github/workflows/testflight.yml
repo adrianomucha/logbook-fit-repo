@@ -1,0 +1,38 @@
+name: TestFlight
+
+# Builds the iOS app on EAS and sends it to TestFlight. Run by hand from the
+# Actions tab (or `gh workflow run testflight.yml`) once the one-time setup in
+# TESTFLIGHT.md is done: the EXPO_TOKEN secret, signing credentials stored on
+# EAS, and the App Store Connect app id in eas.json's submit profile.
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+
+      # React Native 0.87 / Metro 0.87 require Node 22.13+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile/package-lock.json
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      # The build itself runs on EAS; --no-wait ends this job once it's
+      # queued, and --auto-submit has EAS upload the finished build to
+      # TestFlight. Progress and logs are on expo.dev.
+      - name: Queue the build
+        run: eas build --platform ios --profile production --non-interactive --auto-submit --no-wait

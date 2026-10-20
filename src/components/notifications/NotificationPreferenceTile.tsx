@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Switch } from '@/components/ui/switch';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { cn } from '@/lib/utils';
+import { ALERTS_COPY } from '@logbook/shared/notification-copy';
 
 interface NotificationPreferenceTileProps {
   /** Who the alerts are about — copy only, the mechanics are identical */
@@ -103,7 +104,7 @@ export function NotificationPreferenceTile({ role }: NotificationPreferenceTileP
               canToggle ? 'cursor-pointer' : 'cursor-default'
             )}
           >
-            Message alerts
+            {ALERTS_COPY.title}
           </label>
           <Switch
             id={SWITCH_ID}
@@ -115,11 +116,7 @@ export function NotificationPreferenceTile({ role }: NotificationPreferenceTileP
         </div>
 
         <p className="text-xs text-muted-foreground leading-relaxed mt-1">
-          {role === 'coach'
-            ? 'A push notification on this device when a client messages you.'
-            : 'A push notification on this device when your coach messages you.'}{' '}
-          Alerts are per device, so turn them on wherever you{' '}
-          {role === 'coach' ? 'coach' : 'train'} from.
+          {ALERTS_COPY.body(role)}
         </p>
 
         {/* Status line — the product's mono data voice; a volt dot marks "on" */}

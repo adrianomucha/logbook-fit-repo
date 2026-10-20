@@ -6,6 +6,7 @@ import { format } from 'date-fns';
 import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
+import { EMPTY_WEEK_COPY, NO_COACH_COPY } from '@logbook/shared/client-empty-states';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
@@ -127,7 +128,7 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState eyebrow="Getting started" title="Waiting for your coach" body="Once your coach connects with you, your plan shows up here." />
+        <EmptyState title={NO_COACH_COPY.title} body={NO_COACH_COPY.body} />
       </Screen>
     );
   }
@@ -313,7 +314,7 @@ export default function TodayScreen() {
           />
         )
       ) : (
-        <EmptyState title="Nothing scheduled" body="Every workout this week is done. See the week for what's next." />
+        <EmptyState title={EMPTY_WEEK_COPY.title} body={EMPTY_WEEK_COPY.body(coach.user.name)} />
       )}
 
       <CheckInDetailSheet
