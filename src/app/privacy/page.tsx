@@ -50,7 +50,11 @@ export default function PrivacyPage() {
           training plans and check-ins you create — and almost nothing else. We{' '}
           <Strong>don&rsquo;t sell your data</Strong>, we don&rsquo;t run ad
           trackers, and the only people who see your training data are you and
-          the coach or clients you&rsquo;re connected to.
+          the coach or clients you&rsquo;re connected to. A few service
+          providers process it on our behalf to run the product &mdash;
+          including Anthropic, when a coach imports a plan spreadsheet
+          that isn&rsquo;t in our template layout &mdash; and for nothing
+          else.
         </p>
       </LegalSection>
 
