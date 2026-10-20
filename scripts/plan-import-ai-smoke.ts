@@ -45,7 +45,10 @@ async function readOne(file: MessyPlanFile): Promise<void> {
     console.log(`AI read in ${((Date.now() - started) / 1000).toFixed(1)}s`);
     if (!read.ok) return console.log(`✗ ${read.error}`);
     rows = read.rows;
-    for (const warning of read.warnings) console.log(`⚠ ${warning}`);
+    for (const warning of read.warnings) {
+      const about = warning.exercises.length ? ` [${warning.exercises.join(", ")}]` : "";
+      console.log(`⚠ ${warning.message}${about}`);
+    }
   }
 
   const { plan, errors } = parseImportRows(rows, "KG");

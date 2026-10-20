@@ -396,6 +396,18 @@ export function importErrorBody(errors: ImportRowError[]): {
   };
 }
 
+/**
+ * Something the AI reader skipped or guessed. `exercises` names the plan's
+ * exercises it concerns (as they appear in the plan), or is empty when the
+ * note is about the file as a whole.
+ */
+export type ImportWarning = { message: string; exercises: string[] };
+
+/** Exercise names (lowercased) any warning points at, for marking them in lists. */
+export function flaggedExerciseKeys(warnings: ImportWarning[]): Set<string> {
+  return new Set(warnings.flatMap((w) => w.exercises.map((name) => name.toLowerCase())));
+}
+
 /** What POST /api/plans/import/preview returns for the coach to review. */
 export type PlanImportPreview = {
   /** "template" when the sheet matched our columns, "ai" when a model read it */
@@ -406,7 +418,7 @@ export type PlanImportPreview = {
   /** Exercise names not yet in the coach's library — created on import */
   newExercises: string[];
   /** Things the AI reader skipped or guessed, for the coach to double-check */
-  warnings: string[];
+  warnings: ImportWarning[];
   /** The coach's unit, for showing the stored-lb weights */
   weightUnit: WeightUnit;
 };

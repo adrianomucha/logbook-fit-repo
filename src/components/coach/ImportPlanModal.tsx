@@ -7,13 +7,17 @@ import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/api-client';
 import type { PlanSummary } from '@/types/api';
 import { formatDuration, formatPrescription } from '@/lib/reps';
-import type { ImportRowError, ParsedImportDay, PlanImportPreview } from '@/lib/plan-import';
+import { flaggedExerciseKeys, type ImportRowError, type ImportWarning, type ParsedImportDay, type PlanImportPreview } from '@/lib/plan-import';
+import { FlaggedDot, ImportWarningList } from './ImportNotes';
 
 interface ImportPlanModalProps {
   isOpen: boolean;
   onClose: () => void;
-  /** Called with the created plan after a successful import. */
-  onImported: (plan: PlanSummary) => void;
+  /**
+   * Called with the created plan after a successful import, plus the AI
+   * reader's notes so the plan editor can keep them in view.
+   */
+  onImported: (plan: PlanSummary, warnings: ImportWarning[]) => void;
 }
 
 
@@ -73,7 +77,15 @@ function rowLabel(rowError: ImportRowError): string {
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
 
 /** One workout of the reviewed plan: its name, then each exercise's prescription. */
-function PreviewDay({ day, unit }: { day: ParsedImportDay; unit: PlanImportPreview['weightUnit'] }) {
+function PreviewDay({
+  day,
+  unit,
+  flagged,
+}: {
+  day: ParsedImportDay;
+  unit: PlanImportPreview['weightUnit'];
+  flagged: Set<string>;
+}) {
   return (
     <li className="rounded-2xl border border-border px-4 py-3">
       <div className="text-sm font-semibold antialiased">{day.name}</div>
@@ -84,7 +96,10 @@ function PreviewDay({ day, unit }: { day: ParsedImportDay; unit: PlanImportPrevi
           {day.exercises.map((exercise, i) => (
             <li key={i} className={cn('text-[13px] antialiased', exercise.supersetWithPrevious && 'ps-3 border-s-2 border-foreground/20')}>
               <div className="flex items-baseline justify-between gap-3">
-                <span className="min-w-0 truncate font-medium" title={exercise.name}>{exercise.name}</span>
+                <span className="flex min-w-0 items-center gap-1.5">
+                  <span className="truncate font-medium" title={exercise.name}>{exercise.name}</span>
+                  {flagged.has(exercise.name.toLowerCase()) && <FlaggedDot />}
+                </span>
                 <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
                   {formatPrescription(exercise, unit)}
                   {exercise.restSeconds != null && ` · rest ${formatDuration(exercise.restSeconds)}`}
@@ -203,7 +218,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
         showError(body, 'Import failed. Please try again.');
         return;
       }
-      onImported(body as PlanSummary);
+      onImported(body as PlanSummary, preview.warnings);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Import failed. Please try again.');
     } finally {
@@ -414,6 +429,9 @@ function ImportReview({
     0
   );
   const week = plan.weeks[Math.min(weekIndex, plan.weeks.length - 1)];
+  const flagged = flaggedExerciseKeys(preview.warnings);
+  const weekHasFlag = (w: PlanImportPreview['plan']['weeks'][number]) =>
+    w.days.some((day) => day.exercises.some((e) => flagged.has(e.name.toLowerCase())));
   const shownNewExercises = preview.newExercises.slice(0, 8);
   const moreNewExercises = preview.newExercises.length - shownNewExercises.length;
 
@@ -441,11 +459,10 @@ function ImportReview({
             <AlertTriangle className="w-4 h-4 shrink-0" aria-hidden="true" />
             Worth a look
           </p>
-          <ul className="mt-1.5 space-y-1 ps-6 list-disc text-xs text-amber-800 dark:text-amber-300 antialiased">
-            {preview.warnings.map((warning, i) => (
-              <li key={i}>{warning}</li>
-            ))}
-          </ul>
+          <ImportWarningList warnings={preview.warnings} />
+          <p className="mt-2 ps-6 text-xs text-amber-800/80 dark:text-amber-300/80 antialiased">
+            Marked <FlaggedDot className="mx-0.5 align-middle" /> below. You can fix them in the plan editor after creating the plan.
+          </p>
         </div>
       )}
 
@@ -470,7 +487,10 @@ function ImportReview({
                 w === week ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:text-foreground'
               )}
             >
-              Week {w.weekNumber}
+              <span className="inline-flex items-center gap-1.5">
+                Week {w.weekNumber}
+                {weekHasFlag(w) && <FlaggedDot />}
+              </span>
             </button>
           ))}
         </div>
@@ -478,7 +498,7 @@ function ImportReview({
 
       <ul className="space-y-2.5">
         {week.days.map((day) => (
-          <PreviewDay key={day.orderIndex} day={day} unit={preview.weightUnit} />
+          <PreviewDay key={day.orderIndex} day={day} unit={preview.weightUnit} flagged={flagged} />
         ))}
       </ul>
 

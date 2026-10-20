@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectImportExercises,
+  flaggedExerciseKeys,
   importErrorBody,
   looksLikeDuration,
   matchHeader,
@@ -219,5 +220,15 @@ describe('collectImportExercises', () => {
       { name: 'Bench Press', trackingType: 'REPS' },
       { name: 'Plank', trackingType: 'TIME' },
     ]);
+  });
+});
+
+describe('flaggedExerciseKeys', () => {
+  it('collects every exercise a note points at, case-insensitively', () => {
+    const keys = flaggedExerciseKeys([
+      { message: 'Rest guessed.', exercises: ['Bench Press', 'Back Squat'] },
+      { message: 'Ignored the nutrition tab.', exercises: [] },
+    ]);
+    expect([...keys]).toEqual(['bench press', 'back squat']);
   });
 });

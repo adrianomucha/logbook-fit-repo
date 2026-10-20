@@ -6,6 +6,7 @@ import {
   parseWeekList,
   PLAN_IMPORT_AI_MODEL,
   readPlanWithAi,
+  tidyWarnings,
   type AiImportRow,
   type PlanImportAiClient,
 } from '../plan-import-ai';
@@ -124,17 +125,43 @@ describe('aiRowsToImportRows', () => {
   });
 });
 
+describe('tidyWarnings', () => {
+  const rows = [aiRow({ exercise: 'Bench Press' }), aiRow({ row: 6, exercise: 'Back Squat' })];
+
+  it('points notes only at exercises in the plan, in the plan’s spelling', () => {
+    expect(
+      tidyWarnings([{ message: 'Rest guessed as 120s.', exercises: ['bench press', ' Back Squat ', 'Deadlift'] }], rows)
+    ).toEqual([{ message: 'Rest guessed as 120s.', exercises: ['Bench Press', 'Back Squat'] }]);
+  });
+
+  it('drops repeated notes and caps the list', () => {
+    const repeated = [
+      { message: 'Rest guessed as 120s.', exercises: ['Bench Press'] },
+      { message: 'rest guessed as 120s. ', exercises: ['Back Squat'] },
+      { message: '  ', exercises: [] },
+    ];
+    expect(tidyWarnings(repeated, rows)).toEqual([{ message: 'Rest guessed as 120s.', exercises: ['Bench Press'] }]);
+
+    const many = Array.from({ length: 12 }, (_, i) => ({ message: `Note ${i}`, exercises: [] }));
+    expect(tidyWarnings(many, rows)).toHaveLength(8);
+  });
+});
+
 describe('readPlanWithAi', () => {
   it('asks the cheap model for structured rows and returns template rows', async () => {
     const { client, stream } = fakeClient(
-      modelReply({ isWorkoutPlan: true, rows: [aiRow({ weeks: '1-2' })], warnings: ['Skipped the warm-up notes.'] })
+      modelReply({
+        isWorkoutPlan: true,
+        rows: [aiRow({ weeks: '1-2' })],
+        warnings: [{ message: 'Skipped the warm-up notes.', exercises: [] }],
+      })
     );
     const result = await readPlanWithAi('Sheet "Program"\nRow 3: B3 "Bench Press"', client);
 
     expect(result).toEqual({
       ok: true,
       rows: [expect.objectContaining({ week: '1' }), expect.objectContaining({ week: '2' })],
-      warnings: ['Skipped the warm-up notes.'],
+      warnings: [{ message: 'Skipped the warm-up notes.', exercises: [] }],
     });
     const params = (stream.mock.calls[0] as unknown[])[0] as Anthropic.MessageStreamParams;
     expect(params.model).toBe(PLAN_IMPORT_AI_MODEL);

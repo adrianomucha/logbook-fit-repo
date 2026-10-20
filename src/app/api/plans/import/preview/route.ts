@@ -9,6 +9,7 @@ import {
   collectImportExercises,
   importErrorBody,
   parseImportRows,
+  type ImportWarning,
   type PlanImportPreview,
   type RawImportRow,
 } from "@/lib/plan-import";
@@ -86,7 +87,7 @@ export const POST = withCoach(
 
     let source: PlanImportPreview["source"] = "template";
     let rows: RawImportRow[] | null = findTemplateRows(loaded.workbook);
-    let warnings: string[] = [];
+    let warnings: ImportWarning[] = [];
 
     if (!rows) {
       if (!aiImportConfigured()) {
