@@ -1,12 +1,45 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { withCoach } from '@/lib/middleware/withAuth';
+import { getSession } from '@/lib/session';
+import { isLockedDemoAccount } from '@/lib/demo';
 import type { Session } from 'next-auth';
+
+/**
+ * Who's looking at a valid invite, so the page can offer the right next step:
+ * signed out → the signup form; a client with no coach → Accept; a client
+ * who already has one, or a coach account → say why it can't be accepted
+ * here. Null when signed out.
+ */
+async function inviteViewer(inviteCoachId: string) {
+  const session = await getSession();
+  if (!session || isLockedDemoAccount(session.user.email)) return null;
+
+  const viewer = { email: session.user.email, role: session.user.role };
+  if (session.user.role !== 'CLIENT') {
+    return { ...viewer, connection: 'none' as const, currentCoachName: null };
+  }
+
+  const relationship = await prisma.coachClientRelationship.findFirst({
+    where: { client: { userId: session.user.id }, status: 'ACTIVE' },
+    select: { coachId: true, coach: { select: { user: { select: { name: true } } } } },
+  });
+  if (!relationship) {
+    return { ...viewer, connection: 'none' as const, currentCoachName: null };
+  }
+  return {
+    ...viewer,
+    connection:
+      relationship.coachId === inviteCoachId ? ('this_coach' as const) : ('other_coach' as const),
+    currentCoachName: relationship.coach.user.name,
+  };
+}
 
 /**
  * GET /api/invites/[token]
  * Public endpoint — validates an invite token for the signup page.
- * No auth required (clients aren't logged in yet).
+ * No auth required (clients aren't logged in yet); a signed-in caller also
+ * gets `viewer` (see inviteViewer).
  */
 export async function GET(
   _req: Request,
@@ -61,6 +94,7 @@ export async function GET(
     coachAvatar: invite.coach.user.avatarUrl,
     coachBio: invite.coach.bio,
     expiresAt: invite.expiresAt.toISOString(),
+    viewer: await inviteViewer(invite.coachId),
   });
 }
 

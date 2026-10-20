@@ -40,6 +40,7 @@ export const POST = withCoach(
     // check-in on an open one (the UI only ever shows the newest)
     const openCheckIn = await prisma.checkIn.findFirst({
       where: {
+        coachId: coachProfileId,
         clientId: clientProfileId,
         status: { in: ["PENDING", "CLIENT_RESPONDED"] },
       },

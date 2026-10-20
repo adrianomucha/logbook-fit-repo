@@ -7,6 +7,11 @@ const LOOP_STEPS = ['Plan', 'Train', 'Check in', 'Adjust'];
 interface AuthShellProps {
   /** Which page this frames — flips the header's escape hatch. */
   mode: 'login' | 'signup';
+  /**
+   * Overrides where the escape hatch points (an invite's sign-in carries the
+   * invite through); null hides it — a signed-in visitor has nowhere to go.
+   */
+  altHref?: string | null;
   children: React.ReactNode;
 }
 
@@ -18,7 +23,7 @@ interface AuthShellProps {
  * volt hairline above the app's own chrome, so mobile stays a clean
  * single column.
  */
-export function AuthShell({ mode, children }: AuthShellProps) {
+export function AuthShell({ mode, altHref, children }: AuthShellProps) {
   const alt =
     mode === 'login'
       ? { question: 'New to Logbook?', href: '/signup', label: 'Create account' }
@@ -114,17 +119,19 @@ export function AuthShell({ mode, children }: AuthShellProps) {
             >
               <Logo markSize={20} />
             </Link>
-            <span className="ml-auto flex items-center gap-3">
-              <span className="hidden font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground antialiased sm:inline">
-                {alt.question}
+            {altHref !== null && (
+              <span className="ml-auto flex items-center gap-3">
+                <span className="hidden font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground antialiased sm:inline">
+                  {alt.question}
+                </span>
+                <Link
+                  href={altHref ?? alt.href}
+                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                >
+                  {alt.label}
+                </Link>
               </span>
-              <Link
-                href={alt.href}
-                className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {alt.label}
-              </Link>
-            </span>
+            )}
           </div>
         </header>
 

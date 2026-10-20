@@ -54,7 +54,7 @@ export function rosterAction(client: DashboardClient, unreadCount = 0): RosterAc
     case 'PLAN_ENDED':
       return { label: 'Assign Next Plan', target: 'profile' };
     case 'AT_RISK':
-      return { label: 'Send Reminder', target: 'chat' };
+      return { label: 'Reach Out', target: 'chat' };
     case 'AWAITING_RESPONSE':
       return { label: 'Review Check-in', target: 'check-in' };
   }

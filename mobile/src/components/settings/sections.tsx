@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { ActivityIndicator, Alert, Pressable, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import * as WebBrowser from 'expo-web-browser';
 import * as ImagePicker from 'expo-image-picker';
 import { format } from 'date-fns';
 import { useSWRConfig } from 'swr';
@@ -12,6 +13,7 @@ import { ApiError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { AVATAR_MAX_BYTES, removeAvatar, uploadAvatar } from '@/lib/avatar';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { WEB_URL } from '@/lib/config';
 import { UserAvatar } from '@/components/UserAvatar';
 import { PasswordRules } from '@/components/auth/PasswordRules';
 import { NotificationPreferenceTile } from '@/components/notifications/NotificationPreferenceTile';
@@ -522,6 +524,23 @@ export function AccountSection() {
       </View>
 
       <CoachingRow />
+
+      <View className="border-t border-border/60 py-3.5">
+        <FieldLabel>{SETTINGS_FIELD_COPY.legal.label}</FieldLabel>
+        <View className="mt-1 flex-row flex-wrap gap-x-4 gap-y-1">
+          {SETTINGS_FIELD_COPY.legal.links.map((link) => (
+            <Pressable
+              key={link.path}
+              onPress={() => void WebBrowser.openBrowserAsync(`${WEB_URL}${link.path}`)}
+              accessibilityRole="link"
+              hitSlop={8}
+              className="active:opacity-70"
+            >
+              <Text className="font-sans-medium text-sm text-foreground underline">{link.label}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
 
       {/* The one destructive action, behind its own sheet (type DELETE + password) */}
       <View className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">

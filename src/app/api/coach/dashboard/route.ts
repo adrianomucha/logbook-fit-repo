@@ -33,7 +33,12 @@ export const GET = withCoach(
               select: { completedAt: true },
             },
             checkIns: {
-              where: { status: { in: ["PENDING", "CLIENT_RESPONDED"] } },
+              // This coach's only: a client who switched coaches keeps their
+              // history, and none of it is the new coach's to review
+              where: {
+                coachId: coachProfileId,
+                status: { in: ["PENDING", "CLIENT_RESPONDED"] },
+              },
               orderBy: { createdAt: "desc" },
               take: 1,
               select: { id: true, status: true, createdAt: true },
