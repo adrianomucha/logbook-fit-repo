@@ -45,10 +45,10 @@ async function readOne(file: MessyPlanFile): Promise<void> {
     console.log(`AI read in ${((Date.now() - started) / 1000).toFixed(1)}s`);
     if (!read.ok) return console.log(`✗ ${read.error}`);
     rows = read.rows;
-    for (const warning of read.warnings) {
-      const about = warning.exercises.length ? ` [${warning.exercises.join(", ")}]` : "";
-      console.log(`⚠ ${warning.message}${about}`);
+    for (const choice of read.choices) {
+      console.log(`? ${choice.exercise} ${choice.field}: sheet said "${choice.said}" → ${choice.options.join(" | ")}`);
     }
+    for (const note of read.notes) console.log(`· ${note}`);
   }
 
   const { plan, errors } = parseImportRows(rows, "KG");

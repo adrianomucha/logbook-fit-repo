@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectImportExercises,
-  flaggedExerciseKeys,
+  applyImportChoices,
   importErrorBody,
   looksLikeDuration,
   matchHeader,
@@ -223,12 +223,29 @@ describe('collectImportExercises', () => {
   });
 });
 
-describe('flaggedExerciseKeys', () => {
-  it('collects every exercise a note points at, case-insensitively', () => {
-    const keys = flaggedExerciseKeys([
-      { message: 'Rest guessed.', exercises: ['Bench Press', 'Back Squat'] },
-      { message: 'Ignored the nutrition tab.', exercises: [] },
-    ]);
-    expect([...keys]).toEqual(['bench press', 'back squat']);
+describe('applyImportChoices', () => {
+  const rows = [
+    row({ rowNumber: 3, week: '1', exercise: 'Bench Press', rest: '120' }),
+    row({ rowNumber: 3, week: '2', exercise: 'bench press', rest: '120' }),
+    // Same exercise, a value the sheet stated plainly — must not be touched
+    row({ rowNumber: 3, week: '3', exercise: 'Bench Press', rest: '90' }),
+    row({ rowNumber: 4, exercise: 'Back Squat', rest: '120' }),
+  ];
+  const choice = { exercise: 'Bench Press', field: 'rest' as const, said: '2-3 min rest', options: ['120', '150', '180'] };
+
+  it('replaces the reader’s guess for that exercise only, in every week', () => {
+    const out = applyImportChoices(rows, [choice], ['150']);
+    expect(out.map((r) => r.rest)).toEqual(['150', '150', '90', '120']);
+  });
+
+  it('leaves rows untouched for the guess itself or no pick', () => {
+    expect(applyImportChoices(rows, [choice], ['120'])).toEqual(rows);
+    expect(applyImportChoices(rows, [choice], [undefined])).toEqual(rows);
+  });
+
+  it('feeds parseImportRows, which still checks the coach’s own value', () => {
+    expect(parseImportRows(applyImportChoices(rows, [choice], ['150'])).errors).toEqual([]);
+    const { errors } = parseImportRows(applyImportChoices(rows, [choice], ['9000']));
+    expect(errors[0].message).toMatch(/Rest/);
   });
 });

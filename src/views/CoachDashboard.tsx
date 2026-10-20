@@ -7,7 +7,6 @@ import { formatReps } from '@/lib/reps';
 import { ClientRoster } from '@/components/coach/ClientRoster';
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { ImportPlanModal } from '@/components/coach/ImportPlanModal';
-import type { ImportWarning } from '@/lib/plan-import';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { PlanTemplateList } from '@/components/coach/plans/PlanTemplateList';
 import { PlanEditorDrawer } from '@/components/coach/workspace/PlanEditorDrawer';
@@ -94,10 +93,6 @@ export function CoachDashboard() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
-  // The AI reader's notes for the plan just imported, shown in its editor
-  // until the coach dismisses them. Session-only: they're a checklist for
-  // right after the import, not part of the plan.
-  const [importNotes, setImportNotes] = useState<{ planId: string; warnings: ImportWarning[] } | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [isAddingSample, setIsAddingSample] = useState(false);
@@ -189,9 +184,8 @@ export function CoachDashboard() {
 
   // Imported plans open straight in the editor so the coach can verify the
   // sheet came through the way they meant it
-  const handlePlanImported = (plan: PlanSummary, warnings: ImportWarning[]) => {
+  const handlePlanImported = (plan: PlanSummary) => {
     setShowImportModal(false);
-    setImportNotes(warnings.length > 0 ? { planId: plan.id, warnings } : null);
     toast.success(`"${plan.name}" imported`);
     refreshPlans();
     setEditingPlanId(plan.id);
@@ -328,8 +322,6 @@ export function CoachDashboard() {
         error={editingPlanError ? 'Failed to load plan' : undefined}
         onUpdatePlan={handleUpdatePlan}
         onRefresh={() => { refreshEditingPlan(); refreshPlans(); }}
-        importNotes={importNotes && importNotes.planId === editingPlanId ? importNotes.warnings : undefined}
-        onDismissImportNotes={() => setImportNotes(null)}
       />
 
       <CoachNav activeTab={currentView} />

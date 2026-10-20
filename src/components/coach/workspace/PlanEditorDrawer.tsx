@@ -24,8 +24,6 @@ import { groupBySuperset, isSuperset } from '@/lib/superset';
 import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseEditorContent } from './ExerciseEditorDrawer';
-import { FlaggedDot, ImportNotesBanner } from '../ImportNotes';
-import { flaggedExerciseKeys, type ImportWarning } from '@/lib/plan-import';
 
 interface PlanEditorDrawerProps {
   open: boolean;
@@ -42,10 +40,6 @@ interface PlanEditorDrawerProps {
   initialWeekIndex?: number;
   /** Initial day to show (0-indexed) */
   initialDayIndex?: number;
-  /** "Worth a look" notes from a just-finished spreadsheet import */
-  importNotes?: ImportWarning[];
-  /** The coach has been through the import notes */
-  onDismissImportNotes?: () => void;
 }
 
 export function PlanEditorDrawer({
@@ -58,14 +52,7 @@ export function PlanEditorDrawer({
   error,
   initialWeekIndex = 0,
   initialDayIndex = 0,
-  importNotes,
-  onDismissImportNotes,
 }: PlanEditorDrawerProps) {
-  const flaggedExercises = flaggedExerciseKeys(importNotes ?? []);
-  const dayHasFlag = (day: { exercises?: Exercise[] }) =>
-    flaggedExercises.size > 0 &&
-    (day.exercises ?? []).some((e) => flaggedExercises.has(e.name.toLowerCase()));
-
   const [selectedWeek, setSelectedWeek] = useState(initialWeekIndex);
   const [selectedDayId, setSelectedDayId] = useState<string | null>(null);
 
@@ -466,10 +453,6 @@ export function PlanEditorDrawer({
               </SheetHeader>
             </div>
 
-            {importNotes && importNotes.length > 0 && onDismissImportNotes && (
-              <ImportNotesBanner warnings={importNotes} onDismiss={onDismissImportNotes} />
-            )}
-
             {/* Body: rail + main pane */}
             <div className="flex-1 min-h-0 flex flex-col sm:flex-row">
               {/* Week/day rail — on mobile it collapses to a stepper + pill row,
@@ -579,7 +562,6 @@ export function PlanEditorDrawer({
                             <span className="flex-1 min-w-0 text-[13px] font-bold leading-snug truncate antialiased">
                               {day.name || `Day ${idx + 1}`}
                             </span>
-                            {dayHasFlag(day) && <FlaggedDot />}
                             <span className={cn(
                               'font-mono text-[11px] tabular-nums shrink-0',
                               isActive ? 'text-background/60' : 'text-muted-foreground'
@@ -620,7 +602,6 @@ export function PlanEditorDrawer({
                           <span className="text-[12px] font-semibold truncate max-w-[160px] antialiased">
                             {day.name || `Day ${idx + 1}`}
                           </span>
-                          {dayHasFlag(day) && <FlaggedDot />}
                           {exerciseCount > 0 && (
                             <span className={cn(
                               'font-mono text-[10px] tabular-nums font-semibold',
@@ -739,7 +720,6 @@ export function PlanEditorDrawer({
                                   exercise={group[0]}
                                   exerciseIndex={baseIdx}
                                   onClick={() => handleEditExercise(baseIdx)}
-                                  flagged={flaggedExercises.has(group[0].name.toLowerCase())}
                                 />
                               </div>
                             );
@@ -764,7 +744,6 @@ export function PlanEditorDrawer({
                                     exercise={exercise}
                                     exerciseIndex={baseIdx + memberIndex}
                                     onClick={() => handleEditExercise(baseIdx + memberIndex)}
-                                    flagged={flaggedExercises.has(exercise.name.toLowerCase())}
                                   />
                                 ))}
                               </div>

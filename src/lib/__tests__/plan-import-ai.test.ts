@@ -6,7 +6,8 @@ import {
   parseWeekList,
   PLAN_IMPORT_AI_MODEL,
   readPlanWithAi,
-  tidyWarnings,
+  tidyChoices,
+  tidyNotes,
   type AiImportRow,
   type PlanImportAiClient,
 } from '../plan-import-ai';
@@ -125,25 +126,45 @@ describe('aiRowsToImportRows', () => {
   });
 });
 
-describe('tidyWarnings', () => {
-  const rows = [aiRow({ exercise: 'Bench Press' }), aiRow({ row: 6, exercise: 'Back Squat' })];
-
-  it('points notes only at exercises in the plan, in the plan’s spelling', () => {
-    expect(
-      tidyWarnings([{ message: 'Rest guessed as 120s.', exercises: ['bench press', ' Back Squat ', 'Deadlift'] }], rows)
-    ).toEqual([{ message: 'Rest guessed as 120s.', exercises: ['Bench Press', 'Back Squat'] }]);
+describe('tidyChoices', () => {
+  const rows = aiRowsToImportRows([
+    aiRow({ weeks: '1-2', exercise: 'Bench Press', restSeconds: '120' }),
+    aiRow({ row: 4, exercise: 'Pull-ups', reps: '8' }),
+  ]);
+  const choice = (overrides: Partial<Parameters<typeof tidyChoices>[0][number]>) => ({
+    exercise: 'Bench Press',
+    field: 'rest' as const,
+    said: '2-3 min rest',
+    options: ['120', '150', '180'],
+    ...overrides,
   });
 
-  it('drops repeated notes and caps the list', () => {
-    const repeated = [
-      { message: 'Rest guessed as 120s.', exercises: ['Bench Press'] },
-      { message: 'rest guessed as 120s. ', exercises: ['Back Squat'] },
-      { message: '  ', exercises: [] },
-    ];
-    expect(tidyWarnings(repeated, rows)).toEqual([{ message: 'Rest guessed as 120s.', exercises: ['Bench Press'] }]);
+  it('keeps applicable choices, in the plan’s spelling, deduped options', () => {
+    expect(tidyChoices([choice({ exercise: ' bench press ', options: ['120', '150', '150 ', '180'] })], rows)).toEqual([
+      { exercise: 'Bench Press', field: 'rest', said: '2-3 min rest', options: ['120', '150', '180'] },
+    ]);
+  });
 
-    const many = Array.from({ length: 12 }, (_, i) => ({ message: `Note ${i}`, exercises: [] }));
-    expect(tidyWarnings(many, rows)).toHaveLength(8);
+  it('drops choices it couldn’t apply', () => {
+    expect(
+      tidyChoices(
+        [
+          choice({ exercise: 'Deadlift' }), // not in the plan
+          choice({ options: ['150', '180'] }), // guess isn't what the rows hold
+          choice({ options: ['120'] }), // nothing to pick between
+          choice({ exercise: 'Pull-ups', field: 'reps', said: 'AMRAP', options: ['8', '10', '12'] }),
+          choice({ exercise: 'Pull-ups', field: 'reps', said: 'AMRAP', options: ['8', '6'] }), // repeat
+        ],
+        rows
+      ).map((c) => `${c.exercise} ${c.field}`)
+    ).toEqual(['Pull-ups reps']);
+  });
+});
+
+describe('tidyNotes', () => {
+  it('trims, drops repeats and caps at five', () => {
+    expect(tidyNotes([' Ignored the nutrition tab. ', 'ignored the nutrition tab.', ''])).toEqual(['Ignored the nutrition tab.']);
+    expect(tidyNotes(Array.from({ length: 9 }, (_, i) => `Note ${i}`))).toHaveLength(5);
   });
 });
 
@@ -152,8 +173,9 @@ describe('readPlanWithAi', () => {
     const { client, stream } = fakeClient(
       modelReply({
         isWorkoutPlan: true,
-        rows: [aiRow({ weeks: '1-2' })],
-        warnings: [{ message: 'Skipped the warm-up notes.', exercises: [] }],
+        rows: [aiRow({ weeks: '1-2', restSeconds: '120' })],
+        choices: [{ exercise: 'bench press', field: 'rest', said: '2-3 min rest', options: ['120', '150', '180'] }],
+        notes: ['Skipped the warm-up notes.'],
       })
     );
     const result = await readPlanWithAi('Sheet "Program"\nRow 3: B3 "Bench Press"', client);
@@ -161,7 +183,8 @@ describe('readPlanWithAi', () => {
     expect(result).toEqual({
       ok: true,
       rows: [expect.objectContaining({ week: '1' }), expect.objectContaining({ week: '2' })],
-      warnings: [{ message: 'Skipped the warm-up notes.', exercises: [] }],
+      choices: [{ exercise: 'Bench Press', field: 'rest', said: '2-3 min rest', options: ['120', '150', '180'] }],
+      notes: ['Skipped the warm-up notes.'],
     });
     const params = (stream.mock.calls[0] as unknown[])[0] as Anthropic.MessageStreamParams;
     expect(params.model).toBe(PLAN_IMPORT_AI_MODEL);
@@ -170,7 +193,7 @@ describe('readPlanWithAi', () => {
   });
 
   it('says so when the file isn’t a plan', async () => {
-    const { client } = fakeClient(modelReply({ isWorkoutPlan: false, rows: [], warnings: [] }));
+    const { client } = fakeClient(modelReply({ isWorkoutPlan: false, rows: [], choices: [], notes: [] }));
     const result = await readPlanWithAi('Sheet "Budget"', client);
     expect(result).toEqual({ ok: false, error: expect.stringContaining('doesn’t look like a workout plan') });
   });
@@ -186,7 +209,7 @@ describe('readPlanWithAi', () => {
     for (const reply of [
       fakeClient(modelReply({}, 'refusal')),
       fakeClient({ ...modelReply({}), content: [{ type: 'text', text: '{"rows": [', citations: null }] }),
-      fakeClient(modelReply({ isWorkoutPlan: true, rows: [{ exercise: 'Squat' }], warnings: [] })),
+      fakeClient(modelReply({ isWorkoutPlan: true, rows: [{ exercise: 'Squat' }], choices: [], notes: [] })),
       fakeClient(new Error('overloaded')),
     ]) {
       const result = await readPlanWithAi('…', reply.client);

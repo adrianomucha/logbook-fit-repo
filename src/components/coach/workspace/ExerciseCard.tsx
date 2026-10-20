@@ -2,14 +2,11 @@ import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatStoredWeight } from '@logbook/shared/weight-units';
-import { FlaggedDot } from '../ImportNotes';
 
 interface ExerciseCardProps {
   exercise: Exercise;
   exerciseIndex: number;
   onClick: () => void;
-  /** A note from the plan import points at this exercise */
-  flagged?: boolean;
 }
 
 /**
@@ -20,7 +17,6 @@ export function ExerciseCard({
   exercise,
   exerciseIndex,
   onClick,
-  flagged = false,
 }: ExerciseCardProps) {
   // Stored lb, shown in the coach's unit: "@ 60 kg"
   const { weightUnit } = useCurrentUser();
@@ -45,11 +41,8 @@ export function ExerciseCard({
 
         {/* Exercise details */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0 group-hover:translate-x-0.5 transition-transform duration-150">
-            <span className="font-bold text-sm leading-snug truncate">
-              {exercise.name || 'Untitled Exercise'}
-            </span>
-            {flagged && <FlaggedDot />}
+          <div className="font-bold text-sm leading-snug truncate group-hover:translate-x-0.5 transition-transform duration-150">
+            {exercise.name || 'Untitled Exercise'}
           </div>
         </div>
 

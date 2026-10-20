@@ -9,7 +9,7 @@ import {
   collectImportExercises,
   importErrorBody,
   parseImportRows,
-  type ImportWarning,
+  type ImportChoice,
   type PlanImportPreview,
   type RawImportRow,
 } from "@/lib/plan-import";
@@ -87,7 +87,8 @@ export const POST = withCoach(
 
     let source: PlanImportPreview["source"] = "template";
     let rows: RawImportRow[] | null = findTemplateRows(loaded.workbook);
-    let warnings: ImportWarning[] = [];
+    let choices: ImportChoice[] = [];
+    let notes: string[] = [];
 
     if (!rows) {
       if (!aiImportConfigured()) {
@@ -110,7 +111,8 @@ export const POST = withCoach(
       }
       source = "ai";
       rows = read.rows;
-      warnings = read.warnings;
+      choices = read.choices;
+      notes = read.notes;
     }
 
     // Unlabelled weight cells are in the coach's own unit (Settings)
@@ -139,7 +141,8 @@ export const POST = withCoach(
       rows,
       plan,
       newExercises: wanted.map((w) => w.name).filter((name) => !known.has(name.toLowerCase())),
-      warnings,
+      choices,
+      notes,
       weightUnit,
     };
     return NextResponse.json(preview);

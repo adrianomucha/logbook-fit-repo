@@ -396,16 +396,50 @@ export function importErrorBody(errors: ImportRowError[]): {
   };
 }
 
-/**
- * Something the AI reader skipped or guessed. `exercises` names the plan's
- * exercises it concerns (as they appear in the plan), or is empty when the
- * note is about the file as a whole.
- */
-export type ImportWarning = { message: string; exercises: string[] };
+/** The prescription fields a coach can settle on the review step. */
+export const IMPORT_CHOICE_FIELDS = ["sets", "reps", "weight", "rest"] as const;
+export type ImportChoiceField = (typeof IMPORT_CHOICE_FIELDS)[number];
 
-/** Exercise names (lowercased) any warning points at, for marking them in lists. */
-export function flaggedExerciseKeys(warnings: ImportWarning[]): Set<string> {
-  return new Set(warnings.flatMap((w) => w.exercises.map((name) => name.toLowerCase())));
+/**
+ * A value the AI reader had to pick because the sheet was ambiguous ("2-3
+ * min" rest, AMRAP). The coach settles it on the review step instead of
+ * hunting for it in the editor later.
+ */
+export type ImportChoice = {
+  /** The exercise, spelled as in the plan's rows */
+  exercise: string;
+  field: ImportChoiceField;
+  /** What the sheet actually said, e.g. "2-3 min rest" */
+  said: string;
+  /** Values in the row's own format (rest in seconds); [0] is the one the reader used */
+  options: string[];
+};
+
+const sameValue = (a: string | null | undefined, b: string) =>
+  (a ?? "").replace(/\s+/g, "").toLowerCase() === b.replace(/\s+/g, "").toLowerCase();
+
+/**
+ * Rows with the coach's picks applied. Each choice replaces the reader's
+ * guess (options[0]) in that exercise's rows and leaves any other value
+ * alone, so a week-by-week progression on the same exercise survives.
+ * Always applied to the rows as read, so changing a pick is idempotent.
+ */
+export function applyImportChoices(
+  rows: RawImportRow[],
+  choices: ImportChoice[],
+  picks: (string | undefined)[]
+): RawImportRow[] {
+  return rows.map((row) => {
+    let next = row;
+    choices.forEach((choice, i) => {
+      const pick = picks[i];
+      if (pick == null || pick === choice.options[0]) return;
+      if (row.exercise?.trim().toLowerCase() !== choice.exercise.toLowerCase()) return;
+      if (!sameValue(row[choice.field], choice.options[0])) return;
+      next = { ...next, [choice.field]: pick };
+    });
+    return next;
+  });
 }
 
 /** What POST /api/plans/import/preview returns for the coach to review. */
@@ -417,8 +451,10 @@ export type PlanImportPreview = {
   plan: ParsedImportPlan;
   /** Exercise names not yet in the coach's library — created on import */
   newExercises: string[];
-  /** Things the AI reader skipped or guessed, for the coach to double-check */
-  warnings: ImportWarning[];
+  /** Ambiguous values for the coach to settle before creating the plan */
+  choices: ImportChoice[];
+  /** Anything else the AI reader skipped or couldn't place, in plain sentences */
+  notes: string[];
   /** The coach's unit, for showing the stored-lb weights */
   weightUnit: WeightUnit;
 };
