@@ -61,6 +61,27 @@ export const POST = withCoach(
       );
     }
 
+    // Claim the send window before calling the mail provider: the check above
+    // reads a snapshot, so two requests in flight together would both pass
+    // it. Only one of them can move emailSentAt past the cooldown here.
+    const claimedAt = new Date();
+    const { count: claimed } = await prisma.clientInvite.updateMany({
+      where: {
+        id: invite.id,
+        OR: [
+          { emailSentAt: null },
+          { emailSentAt: { lt: new Date(claimedAt.getTime() - RESEND_COOLDOWN_MS) } },
+        ],
+      },
+      data: { emailSentAt: claimedAt },
+    });
+    if (claimed === 0) {
+      return NextResponse.json(
+        { error: "Just sent. Give it a minute to arrive." },
+        { status: 429 }
+      );
+    }
+
     const sent = await sendClientInvite(invite.email, {
       coachName: invite.coach.user.name?.trim() || "Your coach",
       note: invite.note,
@@ -68,15 +89,19 @@ export const POST = withCoach(
       expiresAt: invite.expiresAt,
     });
 
-    let emailSentAt: Date | null = invite.emailSentAt;
-    if (sent) {
-      emailSentAt = new Date();
-      await prisma.clientInvite.update({
-        where: { id: invite.id },
-        data: { emailSentAt },
+    // Nothing went out, so give the window back: the card mustn't say
+    // "Emailed to", and an immediate retry must be allowed
+    if (!sent) {
+      await prisma.clientInvite.updateMany({
+        where: { id: invite.id, emailSentAt: claimedAt },
+        data: { emailSentAt: invite.emailSentAt },
       });
     }
 
-    return NextResponse.json({ sent, email: invite.email, emailSentAt });
+    return NextResponse.json({
+      sent,
+      email: invite.email,
+      emailSentAt: sent ? claimedAt : invite.emailSentAt,
+    });
   }
 );

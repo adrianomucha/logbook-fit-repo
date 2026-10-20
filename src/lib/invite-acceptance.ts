@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 
 export type InviteAcceptErrorCode = "invite_invalid" | "already_connected";
@@ -30,7 +31,10 @@ export class InviteAcceptError extends Error {
  *
  * Either way the row's createdAt restarts, so the roster reads the client as
  * newly joined. The invite is redeemed in the same transaction, guarded on
- * its status so two tabs can't both spend it.
+ * its status so two tabs can't both spend it. The relationship write is
+ * guarded the same way: two accepts racing for one client (two coaches'
+ * invites in two tabs) can't both activate it — the loser's whole
+ * transaction, invite included, rolls back as already_connected.
  */
 export async function acceptInviteForClient(params: {
   token: string;
@@ -89,20 +93,40 @@ export async function acceptInviteForClient(params: {
       createdAt: new Date(),
     };
 
+    const lostRace = () =>
+      new InviteAcceptError(
+        "already_connected",
+        "You were just connected to a coach. Refresh to see who.",
+        409
+      );
+
     if (!existing) {
-      await tx.coachClientRelationship.create({
-        data: { ...active, clientId: clientProfileId },
-      });
+      try {
+        await tx.coachClientRelationship.create({
+          data: { ...active, clientId: clientProfileId },
+        });
+      } catch (error) {
+        // clientId is unique: a concurrent accept created the row first
+        if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+          throw lostRace();
+        }
+        throw error;
+      }
     } else {
       const switchingCoach = existing.coachId !== invite.coachId;
-      await tx.coachClientRelationship.update({
-        where: { id: existing.id },
+      // Only an ended relationship may be taken over. A concurrent accept
+      // that got here first has made it ACTIVE, so this matches nothing.
+      const { count: activated } = await tx.coachClientRelationship.updateMany({
+        where: { id: existing.id, status: { not: "ACTIVE" } },
         data: {
           ...active,
           // The cadence was the old coach's choice, not the new one's
           ...(switchingCoach ? { checkInIntervalDays: 7, checkInDayOfWeek: null } : {}),
         },
       });
+      if (activated === 0) {
+        throw lostRace();
+      }
       if (switchingCoach) {
         await tx.checkIn.updateMany({
           where: {

@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // Transaction client mock — hoisted so the prisma mock factory can close over it
 const tx = vi.hoisted(() => ({
   clientInvite: { findUnique: vi.fn(), updateMany: vi.fn() },
-  coachClientRelationship: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
+  coachClientRelationship: { findUnique: vi.fn(), create: vi.fn(), updateMany: vi.fn() },
   checkIn: { updateMany: vi.fn() },
   message: { create: vi.fn() },
 }));
@@ -14,6 +14,7 @@ vi.mock("@/lib/prisma", () => ({
   },
 }));
 
+import { Prisma } from "@prisma/client";
 import { acceptInviteForClient, InviteAcceptError } from "../invite-acceptance";
 
 const params = { token: "tok-1", clientProfileId: "client-1", clientUserId: "user-c1" };
@@ -42,6 +43,8 @@ describe("acceptInviteForClient", () => {
     tx.clientInvite.findUnique.mockResolvedValue(pendingInvite);
     tx.clientInvite.updateMany.mockResolvedValue({ count: 1 });
     tx.coachClientRelationship.findUnique.mockResolvedValue(null);
+    tx.coachClientRelationship.updateMany.mockResolvedValue({ count: 1 });
+    tx.coachClientRelationship.create.mockResolvedValue({});
   });
 
   it("refuses a missing, used or expired invite", async () => {
@@ -84,7 +87,7 @@ describe("acceptInviteForClient", () => {
     const err = await rejection();
     expect(err.code).toBe("invite_invalid");
     expect(tx.coachClientRelationship.create).not.toHaveBeenCalled();
-    expect(tx.coachClientRelationship.update).not.toHaveBeenCalled();
+    expect(tx.coachClientRelationship.updateMany).not.toHaveBeenCalled();
   });
 
   it("creates an active relationship for a client who never had a coach", async () => {
@@ -114,7 +117,8 @@ describe("acceptInviteForClient", () => {
 
     await acceptInviteForClient(params);
 
-    const { data } = tx.coachClientRelationship.update.mock.calls[0][0];
+    const { where, data } = tx.coachClientRelationship.updateMany.mock.calls[0][0];
+    expect(where).toEqual({ id: "rel-1", status: { not: "ACTIVE" } });
     expect(data).toMatchObject({
       coachId: "coach-new",
       status: "ACTIVE",
@@ -139,8 +143,8 @@ describe("acceptInviteForClient", () => {
 
     await acceptInviteForClient(params);
 
-    expect(tx.coachClientRelationship.update).toHaveBeenCalledWith({
-      where: { id: "rel-1" },
+    expect(tx.coachClientRelationship.updateMany).toHaveBeenCalledWith({
+      where: { id: "rel-1", status: { not: "ACTIVE" } },
       data: expect.objectContaining({
         coachId: "coach-new",
         status: "ACTIVE",
@@ -156,6 +160,34 @@ describe("acceptInviteForClient", () => {
       },
       data: { status: "EXPIRED" },
     });
+  });
+
+  it("loses cleanly when a concurrent accept activated the ended relationship first", async () => {
+    tx.coachClientRelationship.findUnique.mockResolvedValue({
+      id: "rel-1",
+      coachId: "coach-old",
+      status: "INACTIVE",
+    });
+    tx.coachClientRelationship.updateMany.mockResolvedValue({ count: 0 });
+
+    const err = await rejection();
+    expect(err.code).toBe("already_connected");
+    // Thrown inside the transaction, so the invite redemption rolls back too
+    expect(tx.checkIn.updateMany).not.toHaveBeenCalled();
+    expect(tx.message.create).not.toHaveBeenCalled();
+  });
+
+  it("loses cleanly when a concurrent accept created the first relationship first", async () => {
+    tx.coachClientRelationship.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      })
+    );
+
+    const err = await rejection();
+    expect(err).toBeInstanceOf(InviteAcceptError);
+    expect(err.code).toBe("already_connected");
   });
 
   it("delivers the coach's note as their first message", async () => {
