@@ -54,14 +54,8 @@ Apple processes the build for 5–30 minutes, then it appears under
 
 ## 4. Make later builds one click
 
-1. Put the Apple ID from step 2 into `mobile/eas.json`:
-   ```json
-   "submit": {
-     "production": {
-       "ios": { "ascAppId": "1234567890" }
-     }
-   }
-   ```
+1. The Apple ID from step 2 goes in `mobile/eas.json` →
+   `submit.production.ios.ascAppId`. Done: it's `6824789302` (Logbook Fit).
 2. Create an Expo access token at
    [expo.dev → Account settings → Access tokens](https://expo.dev/settings/access-tokens)
    and add it to the GitHub repo as the secret **EXPO_TOKEN**
