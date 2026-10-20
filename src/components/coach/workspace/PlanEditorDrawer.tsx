@@ -401,14 +401,29 @@ export function PlanEditorDrawer({
                 }}
               />
               <SheetHeader className="relative px-4 sm:px-5 pt-3 pb-3.5 space-y-0 text-left">
-                <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground tabular-nums antialiased">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-                  Plan
-                  <span className="text-border" aria-hidden="true">/</span>
-                  {plan.weeks.length} {plan.weeks.length === 1 ? 'wk' : 'wks'}
-                  <span className="text-border" aria-hidden="true">/</span>
-                  {plan.weeks[0].days.length} {plan.weeks[0].days.length === 1 ? 'day' : 'days'}/wk
-                </p>
+                {/* Eyebrow row — Close sits on it, top-right, sharing the
+                    eyebrow's mono voice and centerline instead of floating
+                    beside the larger plan name. */}
+                <div className="flex items-center justify-between gap-3">
+                  <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground tabular-nums antialiased">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                    Plan
+                    <span className="text-border" aria-hidden="true">/</span>
+                    {plan.weeks.length} {plan.weeks.length === 1 ? 'wk' : 'wks'}
+                    <span className="text-border" aria-hidden="true">/</span>
+                    {plan.weeks[0].days.length} {plan.weeks[0].days.length === 1 ? 'day' : 'days'}/wk
+                  </p>
+
+                  {/* Close drawer — negative margins keep the hover pill from
+                      growing the row or shifting the X off the right gutter */}
+                  <button
+                    onClick={() => onOpenChange(false)}
+                    className="flex items-center gap-1 font-mono text-[10px] leading-none uppercase tracking-[0.16em] font-medium text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1.5 -my-1.5 -me-2 rounded-md hover:bg-muted tap-target antialiased"
+                  >
+                    Close
+                    <X className="w-3.5 h-3.5" aria-hidden="true" />
+                  </button>
+                </div>
                 <SheetTitle asChild>
                   <div className="flex items-center gap-2 min-w-0 mt-1">
                     {/* Plan name — click to edit */}
@@ -436,15 +451,6 @@ export function PlanEditorDrawer({
                         {plan.name}
                       </button>
                     )}
-
-                    {/* Close drawer — same mono voice as the page's back link */}
-                    <button
-                      onClick={() => onOpenChange(false)}
-                      className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1 -me-2 rounded-md hover:bg-muted tap-target"
-                    >
-                      Close
-                      <X className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
                   </div>
                 </SheetTitle>
                 <SheetDescription className="sr-only">
