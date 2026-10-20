@@ -23,14 +23,14 @@ const DOCUMENTS = [
     title: 'Privacy Policy',
     description:
       'What we collect, why we collect it, who can see it, and how to reach us about your data.',
-    updated: 'August 6, 2026',
+    updated: 'October 20, 2026',
   },
   {
     href: '/terms',
     title: 'Terms of Service',
     description:
       'The rules of the private beta, in plain English — including what we are (software) and what we are not (medical advice).',
-    updated: 'August 6, 2026',
+    updated: 'October 20, 2026',
   },
 ];
 
