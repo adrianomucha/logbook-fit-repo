@@ -576,6 +576,21 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
                   Choose a .xlsx or .csv file
                 </button>
               )}
+              {/* Said before upload, while there's still time to clean the
+                  file — matches the Anthropic entry in the privacy policy */}
+              <p className="mt-2 text-xs text-muted-foreground text-pretty antialiased">
+                Layouts other than the template are read by Anthropic&rsquo;s AI, so
+                remove client names and health details first.{' '}
+                {/* New tab: following it shouldn't close the half-filled import */}
+                <a
+                  href="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+                >
+                  Privacy Policy
+                </a>
+              </p>
               {/* A plain anchor: same-origin GET rides the session cookie, and
                   the browser handles the download natively. Styled directly
                   with buttonVariants — this repo's Button doesn't implement
