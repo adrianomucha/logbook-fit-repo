@@ -400,56 +400,61 @@ export function PlanEditorDrawer({
                   backgroundSize: '16px 16px',
                 }}
               />
-              <SheetHeader className="relative px-4 sm:px-5 pt-3 pb-3.5 space-y-0 text-left">
-                <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground tabular-nums antialiased">
-                  <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-                  Plan
-                  <span className="text-border" aria-hidden="true">/</span>
-                  {plan.weeks.length} {plan.weeks.length === 1 ? 'wk' : 'wks'}
-                  <span className="text-border" aria-hidden="true">/</span>
-                  {plan.weeks[0].days.length} {plan.weeks[0].days.length === 1 ? 'day' : 'days'}/wk
-                </p>
-                <SheetTitle asChild>
-                  <div className="flex items-center gap-2 min-w-0 mt-1">
-                    {/* Plan name — click to edit */}
-                    {editingPlanName ? (
-                      <Input
-                        ref={planNameInputRef}
-                        value={localPlanName}
-                        onChange={(e) => setLocalPlanName(e.target.value)}
-                        onBlur={() => { commitPlanName(); setEditingPlanName(false); }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') { planNameInputRef.current?.blur(); }
-                          if (e.key === 'Escape') { setLocalPlanName(plan.name); setEditingPlanName(false); }
-                        }}
-                        placeholder="Plan name"
-                        maxLength={100}
-                        aria-label="Plan name"
-                        autoFocus
-                        className="font-bold text-xl sm:text-xl h-auto py-0.5 px-2 -mx-2 tracking-tight min-w-0 flex-1"
-                      />
-                    ) : (
-                      <button
-                        onClick={() => { setEditingPlanName(true); setLocalPlanName(plan.name); }}
-                        className="font-bold text-xl leading-tight tracking-tight truncate hover:text-muted-foreground transition-colors text-left min-w-0 flex-1 antialiased rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                      >
-                        {plan.name}
-                      </button>
-                    )}
+              {/* Close sits beside the whole eyebrow + name block, centered on
+                  it, rather than on either line of text. */}
+              <SheetHeader className="relative flex-row items-center gap-3 px-4 sm:px-5 pt-3 pb-3.5 space-y-0 text-left">
+                <div className="min-w-0 flex-1">
+                  <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground tabular-nums antialiased">
+                    <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                    Plan
+                    <span className="text-border" aria-hidden="true">/</span>
+                    {plan.weeks.length} {plan.weeks.length === 1 ? 'wk' : 'wks'}
+                    <span className="text-border" aria-hidden="true">/</span>
+                    {plan.weeks[0].days.length} {plan.weeks[0].days.length === 1 ? 'day' : 'days'}/wk
+                  </p>
+                  <SheetTitle asChild>
+                    <div className="flex items-center gap-2 min-w-0 mt-1">
+                      {/* Plan name — click to edit */}
+                      {editingPlanName ? (
+                        <Input
+                          ref={planNameInputRef}
+                          value={localPlanName}
+                          onChange={(e) => setLocalPlanName(e.target.value)}
+                          onBlur={() => { commitPlanName(); setEditingPlanName(false); }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { planNameInputRef.current?.blur(); }
+                            if (e.key === 'Escape') { setLocalPlanName(plan.name); setEditingPlanName(false); }
+                          }}
+                          placeholder="Plan name"
+                          maxLength={100}
+                          aria-label="Plan name"
+                          autoFocus
+                          className="font-bold text-xl sm:text-xl h-auto py-0.5 px-2 -mx-2 tracking-tight min-w-0 flex-1"
+                        />
+                      ) : (
+                        <button
+                          onClick={() => { setEditingPlanName(true); setLocalPlanName(plan.name); }}
+                          className="font-bold text-xl leading-tight tracking-tight truncate hover:text-muted-foreground transition-colors text-left min-w-0 flex-1 antialiased rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        >
+                          {plan.name}
+                        </button>
+                      )}
+                    </div>
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">
+                    Tap an exercise to edit
+                  </SheetDescription>
+                </div>
 
-                    {/* Close drawer — same mono voice as the page's back link */}
-                    <button
-                      onClick={() => onOpenChange(false)}
-                      className="flex items-center gap-1 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1 -me-2 rounded-md hover:bg-muted tap-target"
-                    >
-                      Close
-                      <X className="w-3.5 h-3.5" aria-hidden="true" />
-                    </button>
-                  </div>
-                </SheetTitle>
-                <SheetDescription className="sr-only">
-                  Tap an exercise to edit
-                </SheetDescription>
+                {/* Close drawer — same mono voice as the eyebrow; -me-2 keeps
+                    the X on the right gutter despite the hover pill's padding */}
+                <button
+                  onClick={() => onOpenChange(false)}
+                  className="flex items-center gap-1 font-mono text-[10px] leading-none uppercase tracking-[0.16em] font-medium text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] shrink-0 px-2 py-1.5 -me-2 rounded-md hover:bg-muted tap-target antialiased"
+                >
+                  Close
+                  <X className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
               </SheetHeader>
             </div>
 
