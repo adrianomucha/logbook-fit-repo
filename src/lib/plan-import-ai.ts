@@ -205,17 +205,24 @@ const MAX_CHOICES = 12;
 const MAX_NOTES = 5;
 const normalize = (value: string | null | undefined) => (value ?? "").replace(/\s+/g, "").toLowerCase();
 
+/** One of the reader's choices, cleaned up, before it's matched against the rows. */
+export type ChoiceSuggestion = Omit<ImportChoice, "current">;
+
 /**
- * Keep only choices the review step can actually apply: the exercise is in
- * the plan (renamed to the plan's spelling), the reader's guess is really
- * in that exercise's rows, and there's something left to pick between.
- * One per exercise and field.
+ * Sort the reader's choices out. `suggestions`: every choice about an
+ * exercise that's in the plan, renamed to the plan's spelling, with its
+ * options de-duplicated, one per exercise and field. `guesses`: those the
+ * review step can apply as they are, because the reader's guess
+ * (options[0]) really is in that exercise's rows and there's something left
+ * to pick between. The rest only lend their wording and options to values
+ * the reader left unreadable (see settleAiRows).
  */
 export function tidyChoices(
   choices: AiImportResult["choices"],
   rows: RawImportRow[]
-): ImportChoice[] {
-  const out: ImportChoice[] = [];
+): { guesses: ImportChoice[]; suggestions: ChoiceSuggestion[] } {
+  const guesses: ImportChoice[] = [];
+  const suggestions: ChoiceSuggestion[] = [];
   const seen = new Set<string>();
   for (const choice of choices) {
     const name = choice.exercise.trim().toLowerCase();
@@ -224,24 +231,26 @@ export function tidyChoices(
 
     const key = `${name}|${choice.field}`;
     if (seen.has(key)) continue;
+    seen.add(key);
 
     const options: string[] = [];
     for (const option of choice.options.map((o) => o.trim())) {
       if (option && !options.some((o) => normalize(o) === normalize(option))) options.push(option);
     }
-    if (options.length < 2) continue;
-    if (!exerciseRows.some((r) => normalize(r[choice.field]) === normalize(options[0]))) continue;
-
-    seen.add(key);
-    out.push({
+    const suggestion: ChoiceSuggestion = {
       exercise: exerciseRows[0].exercise!.trim(),
       field: choice.field,
       said: choice.said.trim().slice(0, 60),
       options: options.slice(0, 4),
-    });
-    if (out.length === MAX_CHOICES) break;
+    };
+    suggestions.push(suggestion);
+
+    const isGuess =
+      options.length >= 2 &&
+      exerciseRows.some((r) => normalize(r[choice.field]) === normalize(options[0]));
+    if (isGuess && guesses.length < MAX_CHOICES) guesses.push({ ...suggestion, current: options[0] });
   }
-  return out;
+  return { guesses, suggestions };
 }
 
 /** Notes trimmed, de-duplicated and capped. */
@@ -258,7 +267,15 @@ export function tidyNotes(notes: string[]): string[] {
 // ──────────────────────────────────────
 
 export type AiReadResult =
-  | { ok: true; rows: RawImportRow[]; choices: ImportChoice[]; notes: string[] }
+  | {
+      ok: true;
+      rows: RawImportRow[];
+      /** The reader's guesses, ready for the review step */
+      choices: ImportChoice[];
+      /** All its choices, for settleAiRows to draw on for values left unreadable */
+      suggestions: ChoiceSuggestion[];
+      notes: string[];
+    }
   | { ok: false; error: string };
 
 const READ_FAILED = "Couldn’t read this spreadsheet automatically. Try again, or copy your plan into the template.";
@@ -337,10 +354,12 @@ export async function readPlanWithAi(
     };
   }
   const rows = aiRowsToImportRows(result.rows);
+  const tidied = tidyChoices(result.choices, rows);
   return {
     ok: true,
     rows,
-    choices: tidyChoices(result.choices, rows),
+    choices: tidied.guesses,
+    suggestions: tidied.suggestions,
     notes: tidyNotes(result.notes),
   };
 }

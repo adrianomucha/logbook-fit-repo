@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   collectImportExercises,
   applyImportChoices,
+  defaultImportPick,
   importErrorBody,
+  settleAiRows,
   looksLikeDuration,
   matchHeader,
   parseImportRows,
@@ -188,7 +190,7 @@ describe('parseImportRows', () => {
       row({ rowNumber: 7, sheet: 'Week 2', sets: '45' }),
       row({ rowNumber: 8, sets: '45' }),
     ]);
-    expect(errors[0]).toEqual({ row: 7, sheet: 'Week 2', message: expect.stringContaining('Sets') });
+    expect(errors[0]).toEqual({ row: 7, sheet: 'Week 2', message: expect.stringContaining('Sets'), field: 'sets' });
     expect(errors[1]).not.toHaveProperty('sheet');
   });
 });
@@ -231,7 +233,13 @@ describe('applyImportChoices', () => {
     row({ rowNumber: 3, week: '3', exercise: 'Bench Press', rest: '90' }),
     row({ rowNumber: 4, exercise: 'Back Squat', rest: '120' }),
   ];
-  const choice = { exercise: 'Bench Press', field: 'rest' as const, said: '2-3 min rest', options: ['120', '150', '180'] };
+  const choice = {
+    exercise: 'Bench Press',
+    field: 'rest' as const,
+    said: '2-3 min rest',
+    current: '120',
+    options: ['120', '150', '180'],
+  };
 
   it('replaces the reader’s guess for that exercise only, in every week', () => {
     const out = applyImportChoices(rows, [choice], ['150']);
@@ -247,5 +255,48 @@ describe('applyImportChoices', () => {
     expect(parseImportRows(applyImportChoices(rows, [choice], ['150'])).errors).toEqual([]);
     const { errors } = parseImportRows(applyImportChoices(rows, [choice], ['9000']));
     expect(errors[0].message).toMatch(/Rest/);
+  });
+});
+
+describe('defaultImportPick', () => {
+  it('starts on the reader’s guess, or on nothing when it left the value out', () => {
+    const base = { exercise: 'Pull-ups', field: 'reps' as const, said: 'AMRAP', options: ['8', '10', '12'] };
+    expect(defaultImportPick({ ...base, current: '8' })).toBe('8');
+    expect(defaultImportPick({ ...base, current: '' })).toBeUndefined();
+    expect(defaultImportPick({ ...base, current: 'AMRAP' })).toBeUndefined();
+  });
+});
+
+describe('settleAiRows', () => {
+  it('turns values the reader left unreadable into required choices instead of errors', () => {
+    // fixtures/tabPerWeekPlan: Pull-ups "4 x AMRAP", read as reps "AMRAP" in both weeks
+    const rows = [
+      row({ rowNumber: 3, sheet: 'Week 1', exercise: 'Overhead Press', sets: '4', reps: '6-8' }),
+      row({ rowNumber: 4, sheet: 'Week 1', exercise: 'Pull-ups', sets: '4', reps: 'AMRAP' }),
+      row({ rowNumber: 4, sheet: 'Week 2', week: '2', exercise: 'Pull-ups', sets: '4', reps: 'AMRAP' }),
+    ];
+    const { choices, errors } = settleAiRows(rows, [
+      { exercise: 'pull-ups', field: 'reps', said: 'AMRAP', options: ['8', 'max', '12'] },
+    ]);
+    expect(errors).toEqual([]);
+    // One choice covers both weeks; the unreadable "max" option is dropped
+    expect(choices).toEqual([
+      { exercise: 'Pull-ups', field: 'reps', said: 'AMRAP', current: 'AMRAP', options: ['8', '12'] },
+    ]);
+    expect(parseImportRows(applyImportChoices(rows, choices, ['10'])).errors).toEqual([]);
+  });
+
+  it('asks for every unreadable value in a row, with nothing to offer when the reader had no idea', () => {
+    const { choices, errors } = settleAiRows([row({ rowNumber: 5, exercise: 'Sled Push', sets: '', reps: '' })], []);
+    expect(errors).toEqual([]);
+    expect(choices.map((c) => [c.field, c.current, c.options])).toEqual([
+      ['sets', '', []],
+      ['reps', '', []],
+    ]);
+  });
+
+  it('still fails on what the review can’t fix', () => {
+    const { errors } = settleAiRows([row({ rowNumber: 6, week: 'all', reps: 'AMRAP' })], []);
+    expect(errors).toEqual([{ row: 6, message: expect.stringContaining('Week') }]);
   });
 });
