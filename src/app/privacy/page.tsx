@@ -29,7 +29,7 @@ export default function PrivacyPage() {
     <LegalPage
       kicker="Legal"
       title="Privacy Policy"
-      updated="August 6, 2026"
+      updated="October 20, 2026"
       toc={[
         'The short version',
         'What we collect',
@@ -50,7 +50,11 @@ export default function PrivacyPage() {
           training plans and check-ins you create — and almost nothing else. We{' '}
           <Strong>don&rsquo;t sell your data</Strong>, we don&rsquo;t run ad
           trackers, and the only people who see your training data are you and
-          the coach or clients you&rsquo;re connected to.
+          the coach or clients you&rsquo;re connected to. A few service
+          providers process it on our behalf to run the product &mdash;
+          including Anthropic, when a coach imports a plan spreadsheet
+          that isn&rsquo;t in our template layout &mdash; and for nothing
+          else.
         </p>
       </LegalSection>
 
@@ -134,6 +138,16 @@ export default function PrivacyPage() {
               hosting, database, and analytics (including Vercel) — process
               data on our behalf to operate the service, and for no other
               purpose.
+            </>,
+            <>
+              <Strong>Anthropic</Strong> (if you&rsquo;re a coach importing a
+              plan) reads plan spreadsheets that aren&rsquo;t laid out like our
+              template. When you upload one, we send its text contents &mdash;
+              the words and numbers in its cells &mdash; to Anthropic&rsquo;s AI
+              model, which processes them on our behalf only to read the plan
+              for you to review. Files laid out like the template are read on
+              our own servers and not sent. Before uploading, we suggest
+              removing client names and health details from the file.
             </>,
             <>
               <Strong>Legal requirements</Strong> — we&rsquo;ll disclose data

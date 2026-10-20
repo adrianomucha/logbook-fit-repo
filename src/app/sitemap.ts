@@ -17,7 +17,7 @@ import { absoluteUrl } from '@/lib/seo';
 // Bump when the landing page's content changes meaningfully.
 const LANDING_UPDATED = new Date('2026-08-07');
 // Matches the "updated" date shown on the legal pages themselves.
-const LEGAL_UPDATED = new Date('2026-08-06');
+const LEGAL_UPDATED = new Date('2026-10-20');
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

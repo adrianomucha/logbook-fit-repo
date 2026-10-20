@@ -28,7 +28,7 @@ export default function TermsPage() {
     <LegalPage
       kicker="Legal"
       title="Terms of Service"
-      updated="August 6, 2026"
+      updated="October 20, 2026"
       toc={[
         'The short version',
         'Who can use it',
@@ -137,8 +137,10 @@ export default function TermsPage() {
         <p>
           The plans, notes, check-ins, and messages you create are yours. You
           give us the license we need to store, display, and transmit them to
-          the people you&rsquo;ve connected with — that&rsquo;s what makes the
-          product work — and nothing more. We don&rsquo;t use your content
+          the people you&rsquo;ve connected with, and to have our service
+          providers process them on our behalf to run the service (for
+          example, an AI model reading a spreadsheet you import) — that&rsquo;s
+          what makes the product work — and nothing more. We don&rsquo;t use your content
           for advertising or sell it. How we handle personal data is covered
           in our{' '}
           <Link
