@@ -6,18 +6,7 @@ session the first time. After step 4, every later build is one click.
 
 Time: about an hour the first time, most of it waiting on the build.
 
-## 1. One-time: App Store Connect
-
-1. Sign in at [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
-   with the Apple Developer account.
-2. **Apps → + → New App**: platform iOS, name **Logbook.fit**, language
-   English, bundle id **fit.logbook.app** (if it isn't in the list yet, EAS
-   registers it in step 2; create the app record after that), SKU
-   `logbook-fit-ios`, full access.
-3. Note the app's **Apple ID** (a number, under App Information). That's
-   the `ascAppId` in step 4.
-
-## 2. First build (from your computer)
+## 1. First build (from your computer)
 
 Any machine with Node 22 — a Mac isn't required, EAS builds in the cloud.
 
@@ -30,12 +19,25 @@ npx eas-cli@latest build --platform ios --profile production
 
 Answer the prompts:
 
-- **Log in to your Apple account?** Yes. EAS creates the distribution
-  certificate and provisioning profile and stores them on Expo.
+- **Log in to your Apple account?** Yes. EAS registers the bundle id
+  `fit.logbook.app`, creates the distribution certificate and provisioning
+  profile, and stores them on Expo.
 - **Set up Push Notifications?** Yes. EAS creates the APNs key that Expo
   push uses. Without it, alerts won't arrive on device.
 
 The build takes 15–25 minutes; the link it prints shows progress.
+
+## 2. One-time: App Store Connect
+
+1. Sign in at [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
+   with the Apple Developer account.
+2. **Apps → + → New App**: platform iOS, name **Logbook.fit**, language
+   English, bundle id **fit.logbook.app** (registered by step 1 — the list is
+   empty before that), SKU `logbook-fit-ios`, full access.
+3. Note the app's **Apple ID** (a number, under App Information). That's
+   the `ascAppId` in step 4.
+
+The build from step 1 can keep running while you do this.
 
 ## 3. First upload to TestFlight
 
@@ -43,7 +45,7 @@ The build takes 15–25 minutes; the link it prints shows progress.
 npx eas-cli@latest submit --platform ios --latest
 ```
 
-- Pick the app from step 1 when asked.
+- Pick the app from step 2 when asked.
 - When it offers to create an **App Store Connect API key**, say yes. EAS
   stores it, and that's what lets later builds upload themselves.
 
@@ -52,7 +54,7 @@ Apple processes the build for 5–30 minutes, then it appears under
 
 ## 4. Make later builds one click
 
-1. Put the Apple ID from step 1 into `mobile/eas.json`:
+1. Put the Apple ID from step 2 into `mobile/eas.json`:
    ```json
    "submit": {
      "production": {
