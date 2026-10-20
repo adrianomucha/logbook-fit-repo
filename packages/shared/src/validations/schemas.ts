@@ -193,7 +193,9 @@ export const addWorkoutExerciseSchema = z.object({
   supersetWithPrevious: z.boolean().optional(),
 });
 
-export const updateWorkoutExerciseSchema = addWorkoutExerciseSchema.omit({
+// exerciseId is optional here: set it to swap which library exercise the row
+// points at (Replace / rename in the editor), never to rename that exercise.
+export const updateWorkoutExerciseSchema = addWorkoutExerciseSchema.partial({
   exerciseId: true,
 });
 

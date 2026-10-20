@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { updateWorkoutExerciseSchema } from "@/lib/validations/schemas";
+import { verifyCoachOwnership } from "@/lib/scoping";
 
 /**
  * Helper to verify a workout exercise belongs to a plan owned by this coach.
@@ -35,7 +36,8 @@ async function verifyWorkoutExerciseOwnership(
 
 /**
  * PUT /api/workout-exercises/[id]
- * Updates a workout exercise (sets, reps, weight, rest, notes, order).
+ * Updates a workout exercise (sets, reps, weight, rest, notes, order), or
+ * points it at a different library exercise via exerciseId.
  */
 export const PUT = withCoach(
   async (
@@ -52,11 +54,16 @@ export const PUT = withCoach(
 
     const result = await parseBody(req, updateWorkoutExerciseSchema);
     if (!result.success) return result.response;
-    const { trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = result.data;
+    const { exerciseId, trackingType, sets, reps, repsMax, weight, restSeconds, coachNotes, orderIndex, supersetWithPrevious } = result.data;
+
+    if (exerciseId !== undefined && !(await verifyCoachOwnership(coachProfileId, "exercise", exerciseId))) {
+      return NextResponse.json({ error: "Exercise not found" }, { status: 404 });
+    }
 
     const updated = await prisma.workoutExercise.update({
       where: { id: weId },
       data: {
+        ...(exerciseId !== undefined ? { exerciseId } : {}),
         ...(trackingType !== undefined ? { trackingType } : {}),
         ...(sets !== undefined ? { sets } : {}),
         ...(reps !== undefined ? { reps } : {}),

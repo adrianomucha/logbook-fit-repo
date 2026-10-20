@@ -150,6 +150,30 @@ export function PlanEditorDrawer({
     setExerciseDrawerOpen(true);
   };
 
+  // Library exercise id for a name: create it, or on 409 find the existing one
+  const findOrCreateLibraryExercise = async (
+    name: string,
+    trackingType: 'REPS' | 'TIME'
+  ): Promise<string> => {
+    try {
+      const created = await apiFetch<{ id: string }>('/api/exercises', {
+        method: 'POST',
+        body: JSON.stringify({ name, trackingType }),
+      });
+      return created.id;
+    } catch {
+      // 409 = already exists — search for it
+      const results = await apiFetch<{ id: string; name: string }[]>(
+        `/api/exercises?search=${encodeURIComponent(name)}`
+      );
+      const match = results.find(
+        (e) => e.name.toLowerCase() === name.toLowerCase()
+      );
+      if (!match) throw new Error('Could not find or create exercise');
+      return match.id;
+    }
+  };
+
   // Save exercise (new or update) — persists via API
   const handleSaveExercise = async (exercise: Exercise) => {
     if (!plan || !currentDay || isSaving) return;
@@ -165,9 +189,17 @@ export function PlanEditorDrawer({
       if (editingExerciseIndex !== null) {
         // Update existing workout exercise
         const existingExercise = currentDay.exercises[editingExerciseIndex];
+        // A new name (Replace tab or typed) points the row at another library
+        // exercise. The old one is shared with other workouts and keeps its
+        // name and demo video, so it's never renamed in place.
+        const exerciseId =
+          exercise.name !== existingExercise.name
+            ? await findOrCreateLibraryExercise(exercise.name, trackingType)
+            : undefined;
         await apiFetch(`/api/workout-exercises/${existingExercise.id}`, {
           method: 'PUT',
           body: JSON.stringify({
+            exerciseId,
             trackingType,
             sets: exercise.sets,
             reps: reps ?? undefined,
@@ -180,24 +212,7 @@ export function PlanEditorDrawer({
         });
       } else {
         // New exercise: find-or-create in the library, then add to day
-        let libraryExerciseId: string;
-        try {
-          const created = await apiFetch<{ id: string }>('/api/exercises', {
-            method: 'POST',
-            body: JSON.stringify({ name: exercise.name, trackingType }),
-          });
-          libraryExerciseId = created.id;
-        } catch {
-          // 409 = already exists — search for it
-          const results = await apiFetch<{ id: string; name: string }[]>(
-            `/api/exercises?search=${encodeURIComponent(exercise.name)}`
-          );
-          const match = results.find(
-            (e) => e.name.toLowerCase() === exercise.name.toLowerCase()
-          );
-          if (!match) throw new Error('Could not find or create exercise');
-          libraryExerciseId = match.id;
-        }
+        const libraryExerciseId = await findOrCreateLibraryExercise(exercise.name, trackingType);
 
         await apiFetch(`/api/days/${dayId}/exercises`, {
           method: 'POST',
