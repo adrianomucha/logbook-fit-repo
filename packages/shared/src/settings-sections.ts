@@ -75,6 +75,15 @@ export const SETTINGS_SECTION_COPY: Record<
 export const SETTINGS_FIELD_COPY = {
   email: { label: 'Email', hint: 'The address you sign in with.' },
   memberSince: { label: 'Member since' },
+  // App Store guideline 5.1.1(i): the privacy policy must be reachable from
+  // inside the app, not only from the store listing. Paths are on the web app.
+  legal: {
+    label: 'Legal',
+    links: [
+      { label: 'Privacy Policy', path: '/privacy' },
+      { label: 'Terms of Service', path: '/terms' },
+    ],
+  },
   password: {
     label: 'Password',
     open: 'Change password',

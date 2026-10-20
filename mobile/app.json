@@ -27,7 +27,12 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       "expo-web-browser",
       [
         "expo-splash-screen",
@@ -47,7 +52,9 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Logbook uses your photos when you choose a profile picture."
+          "photosPermission": "Logbook uses your photos when you choose a profile picture.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ]
     ],

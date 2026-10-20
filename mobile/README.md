@@ -48,7 +48,9 @@ npx eas-cli@latest build --profile development --platform ios  # dev client for 
 ```
 
 The first iOS build asks to sign in to your Apple Developer account and
-generates the signing credentials for you. Both profiles point the app at
+generates the signing credentials for you. The full first-TestFlight
+walkthrough, and the one-click `TestFlight` workflow for later builds, are in
+[`TESTFLIGHT.md`](../TESTFLIGHT.md). Both profiles point the app at
 production (`EXPO_PUBLIC_API_URL`); add a `preview` profile with a staging
 URL once a staging deployment exists.
 
