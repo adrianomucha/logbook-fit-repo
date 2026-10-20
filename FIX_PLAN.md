@@ -100,9 +100,10 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       template in `src/lib/services/email.ts`, send from `POST /api/invites`) or
       remove the field and fix "Waiting on client@x.com" copy.
       (`InviteClientModal.tsx:257-277`, `GettingStartedCard.tsx:114`) — S–M
-      *Done as copy:* the field says it only fills in the sign-up form and that
-      nothing is emailed; the card reads "For client@x.com". A real invite email
-      is still open.
+      *Done:* "Email invite" in the modal sends a branded invite email
+      (`sendClientInvite`, `POST /api/invites/[token]/send`) with the coach's
+      note; typing an address alone sends nothing. Per-coach hourly cap and a
+      2-minute resend guard; `emailSentAt` drives "Emailed to x" on the card.
 - [ ] **2.6** Empty-plan guard: block (or warn on) assigning a plan with zero
       exercises; return day/exercise counts from `GET /api/plans`.
       (`plans/[id]/assign/route.ts:82`, `plans/route.ts:26-29`) — S–M

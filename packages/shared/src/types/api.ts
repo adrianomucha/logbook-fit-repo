@@ -39,6 +39,8 @@ export interface DashboardClient {
 export interface CoachInvite {
   id: string;
   email: string | null;
+  /** When Logbook last emailed the link to `email`; null if it never did */
+  emailSentAt: string | null;
   status: 'PENDING' | 'ACCEPTED' | 'EXPIRED';
   expiresAt: string;
   createdAt: string;

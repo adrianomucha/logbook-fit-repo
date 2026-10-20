@@ -159,7 +159,7 @@ export function GettingStartedCard({
         <>
           {pendingInvite?.email && (
             <>
-              For{' '}
+              {pendingInvite.emailSentAt ? 'Emailed to' : 'For'}{' '}
               <span className="font-medium text-foreground">{pendingInvite.email}</span>
               {' · '}
             </>

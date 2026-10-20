@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   emailConfigStatus,
+  sendClientInvite,
   sendWaitlistWelcome,
 } from "../email";
 
@@ -116,5 +117,58 @@ describe("sendEmail alerting", () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(sendWaitlistWelcome("a@b.co")).resolves.toBe(false);
     expect(errorSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("sendClientInvite", () => {
+  const invite = {
+    coachName: "Alex <b>Rivera</b>",
+    note: "See you Monday & bring water\n<script>alert(1)</script>",
+    inviteUrl: "https://logbook.fit/signup?invite=tok_123",
+    expiresAt: new Date("2026-10-27T12:00:00Z"),
+  };
+
+  function sentBody(fetchMock: ReturnType<typeof vi.fn>) {
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, { body: string }];
+    return JSON.parse(init.body) as { to: string; subject: string; html: string; text: string };
+  }
+
+  it("sends to the client with the coach in the subject and the link in both parts", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(sendClientInvite("sam@example.com", invite)).resolves.toBe(true);
+
+    const body = sentBody(fetchMock);
+    expect(body.to).toBe("sam@example.com");
+    expect(body.subject).toBe("Alex <b>Rivera</b> invited you to train on Logbook.fit");
+    expect(body.html).toContain('href="https://logbook.fit/signup?invite=tok_123"');
+    expect(body.text).toContain("Accept the invite: https://logbook.fit/signup?invite=tok_123");
+    expect(body.text).toContain("expires on October 27");
+  });
+
+  it("escapes the coach's name and note in the HTML", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendClientInvite("sam@example.com", invite);
+
+    const { html } = sentBody(fetchMock);
+    expect(html).not.toContain("<script>");
+    expect(html).not.toContain("<b>Rivera</b>");
+    expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
+    expect(html).toContain("Alex &lt;b&gt;Rivera&lt;/b&gt;");
+    expect(html).toContain("See you Monday &amp; bring water<br>");
+  });
+
+  it("leaves the note block out when there is no note", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendClientInvite("sam@example.com", { ...invite, note: null });
+
+    const { html, text } = sentBody(fetchMock);
+    expect(html).not.toContain("A note from");
+    expect(text).not.toContain("A note from");
   });
 });

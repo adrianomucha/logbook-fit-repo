@@ -1,5 +1,5 @@
 /**
- * Transactional emails (waitlist + auth) via Resend's REST API.
+ * Transactional emails (waitlist, auth and client invites) via Resend's REST API.
  *
  * Best-effort by design: if RESEND_API_KEY (or WAITLIST_FROM_EMAIL) is not
  * configured, or the send fails, these resolve to false without throwing so
@@ -94,12 +94,14 @@ const WAITLIST_FOOTER =
  * is the hidden preview line inbox lists show next to the subject;
  * `content` is the card body between the header and footer rows;
  * `footerNote` is the "why you got this" line (defaults to the waitlist
- * one) — the logbook.fit link is appended to whatever is passed.
+ * one) — the logbook.fit link is appended to whatever is passed. `badge` is
+ * the mono label top right.
  */
 function emailShell(
   preheader: string,
   content: string,
-  footerNote: string = WAITLIST_FOOTER
+  footerNote: string = WAITLIST_FOOTER,
+  badge: string = "Private beta"
 ): string {
   return `
   <div style="margin:0;padding:0;background:${BG};">
@@ -117,7 +119,7 @@ function emailShell(
                   <span style="color:${LIME};">&#9679;</span>&nbsp; Logbook.fit
                 </td>
                 <td align="right" style="font-family:${MONO};font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${FAINT};">
-                  Private beta
+                  ${badge}
                 </td>
               </tr>
             </table>
@@ -249,6 +251,91 @@ function inviteText(inviteUrl: string): string {
   ].join("\n");
 }
 
+/**
+ * Coach names and notes are typed by people, and the client invite email
+ * puts both in HTML — escape them so a note can't inject markup.
+ */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+export interface ClientInviteEmail {
+  coachName: string;
+  note: string | null;
+  inviteUrl: string;
+  expiresAt: Date;
+}
+
+function inviteExpiryLabel(expiresAt: Date): string {
+  return expiresAt.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+function clientInviteHtml({ coachName, note, inviteUrl, expiresAt }: ClientInviteEmail): string {
+  const coach = escapeHtml(coachName);
+  const firstName = escapeHtml(coachName.split(" ")[0]);
+  const noteBlock = note
+    ? `
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;background:${PANEL};border:1px solid ${BORDER};border-left:3px solid ${LIME};border-radius:12px;">
+              <tr><td style="padding:16px 20px;">
+                <p style="margin:0 0 6px 0;font-family:${MONO};font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:${MUTED};">A note from ${firstName}</p>
+                <p style="margin:0;font-family:${SANS};font-size:15px;line-height:1.6;color:${INK};">${escapeHtml(note).replace(/\n/g, "<br>")}</p>
+              </td></tr>
+            </table>`
+    : "";
+  return emailShell(
+    `${coach} invited you to train with them on Logbook.fit.`,
+    `${heading(`${coach} invited you`, "to train.")}
+            <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              Logbook.fit is where ${firstName} sends your plan, you log your
+              workouts, and the two of you check in on how it&rsquo;s going.
+              Setting up takes about 30 seconds.
+            </p>${noteBlock}
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+              <tr><td align="center" style="background:${LIME};border-radius:10px;">
+                <a href="${inviteUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
+                  Accept invite&nbsp;&nbsp;&#8594;
+                </a>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 32px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
+              Already on Logbook.fit? Sign in from the link to accept. It works
+              once and expires on ${inviteExpiryLabel(expiresAt)}. If the button
+              doesn&rsquo;t work, paste this into your browser:<br>
+              <a href="${inviteUrl}" style="color:${MUTED};word-break:break-all;">${inviteUrl}</a>
+            </p>`,
+    `You&rsquo;re receiving this because ${coach} invited you to train on`,
+    "Invite"
+  );
+}
+
+function clientInviteText({ coachName, note, inviteUrl, expiresAt }: ClientInviteEmail): string {
+  const firstName = coachName.split(" ")[0];
+  return [
+    "LOGBOOK.FIT — INVITE",
+    "",
+    `${coachName} invited you to train.`,
+    "",
+    `Logbook.fit is where ${firstName} sends your plan, you log your workouts, and the two of you check in on how it's going. Setting up takes about 30 seconds.`,
+    "",
+    ...(note ? [`A note from ${firstName}:`, note, ""] : []),
+    `Accept the invite: ${inviteUrl}`,
+    "",
+    `Already on Logbook.fit? Sign in from the link to accept. It works once and expires on ${inviteExpiryLabel(expiresAt)}.`,
+    "",
+    "Plan · Train · Check in",
+    `You're receiving this because ${coachName} invited you to train on https://logbook.fit`,
+  ].join("\n");
+}
+
 function passwordResetHtml(resetUrl: string): string {
   return emailShell(
     "Set a new password for your Logbook.fit account — this link works for 30 minutes.",
@@ -376,6 +463,22 @@ export function sendWaitlistInvite(
     "Your Logbook.fit invite is ready",
     inviteHtml(inviteUrl),
     inviteText(inviteUrl)
+  );
+}
+
+/**
+ * Email a coach's client invite. Like the beta invite, the caller surfaces
+ * the boolean: false means "not sent — copy the link and share it yourself".
+ */
+export function sendClientInvite(
+  to: string,
+  invite: ClientInviteEmail
+): Promise<boolean> {
+  return sendEmail(
+    to,
+    `${invite.coachName} invited you to train on Logbook.fit`,
+    clientInviteHtml(invite),
+    clientInviteText(invite)
   );
 }
 
