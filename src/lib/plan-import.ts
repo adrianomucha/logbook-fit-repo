@@ -91,7 +91,13 @@ export type RawImportRow = {
   sheet?: string;
 } & Partial<Record<ImportColumnKey, string | null>>;
 
-export type ImportRowError = { row: number; sheet?: string; message: string };
+export type ImportRowError = {
+  row: number;
+  sheet?: string;
+  message: string;
+  /** The prescription field that couldn't be read, when it's one a coach can pick on review */
+  field?: ImportChoiceField;
+};
 
 export type ParsedImportExercise = {
   name: string;
@@ -220,12 +226,13 @@ export function parseImportRows(
   const grid = new Map<number, Map<number, { name: string | null; exercises: ParsedImportExercise[] }>>();
 
   for (const row of contentRows) {
-    const fail = (message: string) =>
-      errors.push(
-        row.sheet
-          ? { row: row.rowNumber, sheet: row.sheet, message }
-          : { row: row.rowNumber, message }
-      );
+    const fail = (message: string, field?: ImportChoiceField) =>
+      errors.push({
+        row: row.rowNumber,
+        ...(row.sheet ? { sheet: row.sheet } : {}),
+        message,
+        ...(field ? { field } : {}),
+      });
 
     const week = blank(row.week) ? null : parseIndex(row.week!);
     if (week == null || week < 1 || week > IMPORT_LIMITS.maxWeeks) {
@@ -260,12 +267,12 @@ export function parseImportRows(
 
     const sets = blank(row.sets) ? null : parseIndex(row.sets!);
     if (sets == null || sets < 1 || sets > IMPORT_LIMITS.maxSets) {
-      fail(`Sets must be a number between 1 and ${IMPORT_LIMITS.maxSets}.`);
+      fail(`Sets must be a number between 1 and ${IMPORT_LIMITS.maxSets}.`, "sets");
       continue;
     }
 
     if (blank(row.reps)) {
-      fail('Reps / Time is required — e.g. "8", "6-8", "45s", or "2 min".');
+      fail('Reps / Time is required — e.g. "8", "6-8", "45s", or "2 min".', "reps");
       continue;
     }
     const repsText = row.reps!.trim();
@@ -276,7 +283,8 @@ export function parseImportRows(
       fail(
         trackingType === "TIME"
           ? 'Couldn’t read the time — use formats like "45s", "1:30", or "20-30 min" (max 1 hour).'
-          : 'Couldn’t read the reps — use formats like "8" or "6-8" (max 3600).'
+          : 'Couldn’t read the reps — use formats like "8" or "6-8" (max 3600).',
+        "reps"
       );
       continue;
     }
@@ -286,7 +294,7 @@ export function parseImportRows(
     if (!blank(row.weight)) {
       const entered = parseNumber(row.weight!);
       if (entered == null || entered < 0 || entered > IMPORT_LIMITS.maxWeight) {
-        fail(`Weight must be a number between 0 and ${IMPORT_LIMITS.maxWeight}.`);
+        fail(`Weight must be a number between 0 and ${IMPORT_LIMITS.maxWeight}.`, "weight");
         continue;
       }
       weight = fromDisplayWeight(entered, weightCellUnit(row.weight!) ?? weightUnit);
@@ -296,7 +304,7 @@ export function parseImportRows(
     if (!blank(row.rest)) {
       restSeconds = parseIndex(row.rest!);
       if (restSeconds == null || restSeconds < 0 || restSeconds > IMPORT_LIMITS.maxRestSeconds) {
-        fail(`Rest must be a number of seconds between 0 and ${IMPORT_LIMITS.maxRestSeconds}.`);
+        fail(`Rest must be a number of seconds between 0 and ${IMPORT_LIMITS.maxRestSeconds}.`, "rest");
         continue;
       }
     }
@@ -401,28 +409,49 @@ export const IMPORT_CHOICE_FIELDS = ["sets", "reps", "weight", "rest"] as const;
 export type ImportChoiceField = (typeof IMPORT_CHOICE_FIELDS)[number];
 
 /**
- * A value the AI reader had to pick because the sheet was ambiguous ("2-3
- * min" rest, AMRAP). The coach settles it on the review step instead of
- * hunting for it in the editor later.
+ * A value the coach settles on the review step instead of hunting for it in
+ * the editor later. Either the AI reader had to guess (the sheet said "2-3
+ * min" rest), and `current` is its guess among the options; or it couldn't
+ * fill the value in at all (AMRAP with no target), and the coach must pick
+ * or type one before the plan can be created.
  */
 export type ImportChoice = {
   /** The exercise, spelled as in the plan's rows */
   exercise: string;
   field: ImportChoiceField;
-  /** What the sheet actually said, e.g. "2-3 min rest" */
+  /** What the sheet actually said, e.g. "2-3 min rest"; "" when it says nothing */
   said: string;
-  /** Values in the row's own format (rest in seconds); [0] is the one the reader used */
+  /** The value in the rows now, which a pick replaces */
+  current: string;
+  /** Values to offer, in the row's own format (rest in seconds) */
   options: string[];
 };
 
-const sameValue = (a: string | null | undefined, b: string) =>
-  (a ?? "").replace(/\s+/g, "").toLowerCase() === b.replace(/\s+/g, "").toLowerCase();
+const sameValue = (a: string | null | undefined, b: string | null | undefined) =>
+  (a ?? "").replace(/\s+/g, "").toLowerCase() === (b ?? "").replace(/\s+/g, "").toLowerCase();
+
+/** The reader's guess when it's one of the options, else nothing: the coach must choose. */
+export function defaultImportPick(choice: ImportChoice): string | undefined {
+  return choice.options.find((option) => sameValue(option, choice.current));
+}
 
 /**
- * Rows with the coach's picks applied. Each choice replaces the reader's
- * guess (options[0]) in that exercise's rows and leaves any other value
- * alone, so a week-by-week progression on the same exercise survives.
- * Always applied to the rows as read, so changing a pick is idempotent.
+ * Stand-ins for values a coach hasn't supplied yet, so the review can still
+ * lay the plan out (it shows "?" in their place). Never sent to be saved:
+ * Create stays disabled until every required choice has a value.
+ */
+export const IMPORT_CHOICE_PLACEHOLDER: Record<ImportChoiceField, string> = {
+  sets: "1",
+  reps: "1",
+  weight: "",
+  rest: "",
+};
+
+/**
+ * Rows with the coach's picks applied. Each choice replaces its `current`
+ * value in that exercise's rows and leaves any other value alone, so a
+ * week-by-week progression on the same exercise survives. Always applied
+ * to the rows as read, so changing a pick is idempotent.
  */
 export function applyImportChoices(
   rows: RawImportRow[],
@@ -433,13 +462,69 @@ export function applyImportChoices(
     let next = row;
     choices.forEach((choice, i) => {
       const pick = picks[i];
-      if (pick == null || pick === choice.options[0]) return;
+      if (pick == null || sameValue(pick, choice.current)) return;
       if (row.exercise?.trim().toLowerCase() !== choice.exercise.toLowerCase()) return;
-      if (!sameValue(row[choice.field], choice.options[0])) return;
+      if (!sameValue(row[choice.field], choice.current)) return;
       next = { ...next, [choice.field]: pick };
     });
     return next;
   });
+}
+
+const isChoiceField = (field: string | undefined): field is ImportChoiceField =>
+  (IMPORT_CHOICE_FIELDS as readonly string[]).includes(field ?? "");
+
+/**
+ * Turn every sets/reps/weight/rest value the AI reader couldn't fill in
+ * into a choice for the coach, instead of failing the whole file over it.
+ * `suggestions` are the reader's own choices; one for the same exercise and
+ * field lends its wording and options (the ones that would parse). Returns
+ * the choices to show, plus the errors nothing on the review step can fix
+ * (a bad week number, say), which still fail the upload.
+ */
+export function settleAiRows(
+  rows: RawImportRow[],
+  suggestions: Omit<ImportChoice, "current">[],
+  weightUnit: WeightUnit = DEFAULT_WEIGHT_UNIT
+): { choices: ImportChoice[]; errors: ImportRowError[] } {
+  const required: ImportChoice[] = [];
+  const findRequired = (exercise: string, field: ImportChoiceField, current: string) =>
+    required.find(
+      (c) => c.exercise.toLowerCase() === exercise.toLowerCase() && c.field === field && sameValue(c.current, current)
+    );
+
+  for (const row of rows) {
+    if (!row.exercise?.trim()) continue;
+    let probe = row;
+    // A row can have more than one unreadable value; parse stops at the first
+    for (let attempt = 0; attempt < IMPORT_CHOICE_FIELDS.length; attempt++) {
+      const error = parseImportRows([probe], weightUnit).errors[0];
+      if (!error || !isChoiceField(error.field)) break;
+      const field = error.field;
+      const current = (row[field] ?? "").trim();
+      if (!findRequired(row.exercise, field, current)) {
+        const suggestion = suggestions.find(
+          (c) => c.exercise.trim().toLowerCase() === row.exercise!.trim().toLowerCase() && c.field === field
+        );
+        const options = (suggestion?.options ?? []).filter(
+          (option) => !parseImportRows([{ ...probe, [field]: option }], weightUnit).errors.some((e) => e.field === field)
+        );
+        required.push({
+          exercise: row.exercise.trim(),
+          field,
+          said: suggestion?.said ?? current,
+          current,
+          options,
+        });
+      }
+      probe = { ...probe, [field]: IMPORT_CHOICE_PLACEHOLDER[field] };
+    }
+  }
+
+  const choices = [...required];
+  const placeholders = choices.map((c) => IMPORT_CHOICE_PLACEHOLDER[c.field]);
+  const { errors } = parseImportRows(applyImportChoices(rows, choices, placeholders), weightUnit);
+  return { choices, errors };
 }
 
 /** What POST /api/plans/import/preview returns for the coach to review. */

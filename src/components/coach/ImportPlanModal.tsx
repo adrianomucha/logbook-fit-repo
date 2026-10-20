@@ -6,9 +6,12 @@ import { Input } from '../ui/input';
 import { cn } from '@/lib/utils';
 import { ApiError } from '@/lib/api-client';
 import type { PlanSummary } from '@/types/api';
-import { formatDuration, formatPrescription, parseDurationInput } from '@/lib/reps';
+import { formatDuration, formatPrescription, formatReps, parseDurationInput } from '@/lib/reps';
+import { formatWeight } from '@logbook/shared/weight-units';
 import {
   applyImportChoices,
+  defaultImportPick,
+  IMPORT_CHOICE_PLACEHOLDER,
   looksLikeDuration,
   parseImportRows,
   type ImportChoice,
@@ -128,11 +131,14 @@ function ChoicePicker({
   choice,
   pick,
   error,
+  required,
   onPick,
 }: {
   choice: ImportChoice;
   pick: ChoicePick;
   error: string | null;
+  /** The reader left this value out: the coach has to supply one */
+  required: boolean;
   onPick: (pick: ChoicePick) => void;
 }) {
   const field = CHOICE_FIELD_LABEL[choice.field];
@@ -145,8 +151,16 @@ function ChoicePicker({
   return (
     <div className="mt-2">
       <p className="text-xs text-muted-foreground text-pretty antialiased">
-        Sheet said “{choice.said}”. Pick the {field}:
+        {choice.said ? `Sheet said “${choice.said}”.` : `No ${field} in the sheet.`}{' '}
+        {required ? (
+          <span className="font-medium text-foreground">
+            {choice.options.length > 0 ? 'Pick' : 'Enter'} the {field} to create the plan:
+          </span>
+        ) : (
+          `Pick the ${field}:`
+        )}
       </p>
+      {choice.options.length > 0 && (
       <div role="radiogroup" aria-label={`${choice.exercise} ${field}`} className="mt-1.5 flex flex-wrap gap-1.5">
         {choice.options.map((option) => (
           <button
@@ -170,9 +184,10 @@ function ChoicePicker({
           Other
         </button>
       </div>
+      )}
       {pick.other && (
         <Input
-          autoFocus
+          autoFocus={choice.options.length > 0}
           value={pick.value}
           onChange={(e) => onPick({ value: e.target.value, other: true })}
           placeholder={CHOICE_PLACEHOLDER[choice.field]}
@@ -181,7 +196,7 @@ function ChoicePicker({
           className="mt-2 h-9 max-w-[220px] rounded-xl text-base sm:text-sm"
         />
       )}
-      {pick.other && error && (
+      {error && (
         <p role="alert" className="mt-1 text-xs text-destructive text-pretty antialiased">
           {error}
         </p>
@@ -190,16 +205,42 @@ function ChoicePicker({
   );
 }
 
+/**
+ * "4x 6-8 @ 60 kg · rest 2 min", with "?" for any value the coach still has
+ * to supply (the row holds a placeholder there until they do).
+ */
+function prescriptionText(
+  exercise: ParsedImportDay['exercises'][number],
+  unit: PlanImportPreview['weightUnit'],
+  pending: Set<ImportChoice['field']>
+): string {
+  if (pending.size === 0) {
+    const rest = exercise.restSeconds != null ? ` · rest ${formatDuration(exercise.restSeconds)}` : '';
+    return formatPrescription(exercise, unit) + rest;
+  }
+  const sets = pending.has('sets') ? '?' : String(exercise.sets);
+  const reps = pending.has('reps') ? '?' : formatReps(exercise.reps, exercise.repsMax, exercise.trackingType);
+  let text = `${sets}x ${reps}`;
+  if (pending.has('weight')) text += ' @ ?';
+  else if (exercise.weight != null) text += ` @ ${formatWeight(exercise.weight, unit)}`;
+  if (pending.has('rest')) text += ' · rest ?';
+  else if (exercise.restSeconds != null) text += ` · rest ${formatDuration(exercise.restSeconds)}`;
+  return text;
+}
+
 /** One workout of the reviewed plan: its name, then each exercise's prescription. */
 function PreviewDay({
   day,
   unit,
   choicesFor,
+  pendingFor,
 }: {
   day: ParsedImportDay;
   unit: PlanImportPreview['weightUnit'];
   /** The pickers to show under an exercise, if the reader had to guess any of its values */
   choicesFor: (exerciseName: string) => ReactNode;
+  /** Fields of an exercise still waiting on the coach, shown as "?" */
+  pendingFor: (exerciseName: string) => Set<ImportChoice['field']>;
 }) {
   return (
     <li className="rounded-2xl border border-border px-4 py-3">
@@ -213,8 +254,7 @@ function PreviewDay({
               <div className="flex items-baseline justify-between gap-3">
                 <span className="min-w-0 truncate font-medium" title={exercise.name}>{exercise.name}</span>
                 <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
-                  {formatPrescription(exercise, unit)}
-                  {exercise.restSeconds != null && ` · rest ${formatDuration(exercise.restSeconds)}`}
+                  {prescriptionText(exercise, unit, pendingFor(exercise.name))}
                 </span>
               </div>
               {exercise.coachNotes && (
@@ -308,7 +348,13 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
       }
       const read = body as PlanImportPreview;
       setPreview(read);
-      setPicks(read.choices.map((choice) => ({ value: choice.options[0], other: false })));
+      setPicks(
+        read.choices.map((choice) => {
+          // Start on the reader's guess; with nothing to offer, straight to typing
+          const guess = defaultImportPick(choice);
+          return { value: guess ?? '', other: guess == null && choice.options.length === 0 };
+        })
+      );
       setWeekIndex(0);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Couldn’t read the file. Please try again.');
@@ -349,18 +395,33 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
     () => (preview ? picks.map((pick, i) => normalizePick(preview.choices[i].field, pick.value)) : []),
     [preview, picks]
   );
+  // What stands in for each choice while the coach hasn't settled it: the
+  // reader's guess, or a placeholder the review shows as "?"
+  const fallbacks = useMemo(
+    () => preview?.choices.map((c) => defaultImportPick(c) ?? IMPORT_CHOICE_PLACEHOLDER[c.field]) ?? [],
+    [preview]
+  );
   const pickErrors = useMemo(
     () =>
       preview
-        ? picks.map((pick, i) => {
-            if (!pick.other || pickValues[i] == null) return null;
-            const rows = applyImportChoices(preview.rows, [preview.choices[i]], [pickValues[i]]);
-            return parseImportRows(rows, preview.weightUnit).errors[0]?.message ?? null;
+        ? preview.choices.map((choice, i) => {
+            if (pickValues[i] == null) return null;
+            const rows = applyImportChoices(
+              preview.rows,
+              preview.choices,
+              fallbacks.map((fallback, j) => (j === i ? pickValues[i] : fallback))
+            );
+            return (
+              parseImportRows(rows, preview.weightUnit).errors.find((e) => e.field === choice.field)?.message ??
+              null
+            );
           })
         : [],
-    [preview, picks, pickValues]
+    [preview, pickValues, fallbacks]
   );
-  // The rows with the coach's valid picks applied, re-parsed in place so the
+  // Settled per choice: a value that parses. Unsettled ones block Create
+  const settled = pickValues.map((value, i) => value != null && !pickErrors[i]);
+  // The rows with the coach's picks applied, re-parsed in place so the
   // review shows exactly what Create plan will send (the server re-checks)
   const reviewedRows = useMemo(
     () =>
@@ -368,17 +429,17 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
         ? applyImportChoices(
             preview.rows,
             preview.choices,
-            pickValues.map((value, i) => (pickErrors[i] ? undefined : value))
+            pickValues.map((value, i) => (value != null && !pickErrors[i] ? value : fallbacks[i]))
           )
         : [],
-    [preview, pickValues, pickErrors]
+    [preview, pickValues, pickErrors, fallbacks]
   );
   const reviewedPlan = useMemo(
     () => (preview ? parseImportRows(reviewedRows, preview.weightUnit).plan : null),
     [preview, reviewedRows]
   );
-  const picksReady = picks.every((pick, i) => !pick.other || (pickValues[i] != null && !pickErrors[i]));
-  const canCreate = !!reviewedPlan && picksReady && !isSubmitting;
+  const pendingCount = settled.filter((ok) => !ok).length;
+  const canCreate = !!reviewedPlan && pendingCount === 0 && !isSubmitting;
 
   const handleBack = () => {
     setPreview(null);
@@ -459,6 +520,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
           plan={reviewedPlan ?? preview.plan}
           picks={picks}
           pickErrors={pickErrors}
+          settled={settled}
           onPick={(index, pick) => setPicks((current) => current.map((p, i) => (i === index ? pick : p)))}
           weekIndex={weekIndex}
           onWeekChange={setWeekIndex}
@@ -580,6 +642,7 @@ function ImportReview({
   preview,
   plan,
   pickErrors,
+  settled,
   picks,
   onPick,
   weekIndex,
@@ -592,6 +655,8 @@ function ImportReview({
   picks: ChoicePick[];
   /** Per pick, why a typed-in value can't be used */
   pickErrors: (string | null)[];
+  /** Per pick, whether it has a usable value yet */
+  settled: boolean[];
   onPick: (index: number, pick: ChoicePick) => void;
   weekIndex: number;
   onWeekChange: (index: number) => void;
@@ -617,10 +682,25 @@ function ImportReview({
         choice={choice}
         pick={picks[index]}
         error={pickErrors[index]}
+        required={defaultImportPick(choice) == null}
         onPick={(pick) => onPick(index, pick)}
       />
     ));
   };
+
+  // Fields still standing in for a value the coach has to supply, shown "?"
+  const pendingFor = (exerciseName: string) =>
+    new Set(
+      choices
+        .filter(
+          (choice, index) =>
+            !settled[index] &&
+            defaultImportPick(choice) == null &&
+            choice.exercise.toLowerCase() === exerciseName.toLowerCase()
+        )
+        .map((choice) => choice.field)
+    );
+  const pendingCount = choices.filter((choice, i) => !settled[i] && defaultImportPick(choice) == null).length;
 
   return (
     <div className="space-y-4">
@@ -650,6 +730,13 @@ function ImportReview({
                   </span>
                 ))}
               </span>
+              .
+              {pendingCount > 0 && (
+                <>
+                  {' '}
+                  {pendingCount === 1 ? 'One needs' : `${pendingCount} need`} a value before you can create the plan.
+                </>
+              )}
             </p>
           )}
           {preview.notes.map((note, i) => (
@@ -687,7 +774,13 @@ function ImportReview({
 
       <ul className="space-y-2.5">
         {week.days.map((day) => (
-          <PreviewDay key={day.orderIndex} day={day} unit={preview.weightUnit} choicesFor={choicesFor} />
+          <PreviewDay
+            key={day.orderIndex}
+            day={day}
+            unit={preview.weightUnit}
+            choicesFor={choicesFor}
+            pendingFor={pendingFor}
+          />
         ))}
       </ul>
 

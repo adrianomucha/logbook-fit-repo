@@ -6,9 +6,13 @@ import { coachScope } from "@/lib/scoping";
 import { planImportAiLimiter } from "@/lib/rate-limit";
 import { createPlanSchema } from "@/lib/validations/schemas";
 import {
+  applyImportChoices,
   collectImportExercises,
+  defaultImportPick,
+  IMPORT_CHOICE_PLACEHOLDER,
   importErrorBody,
   parseImportRows,
+  settleAiRows,
   type ImportChoice,
   type PlanImportPreview,
   type RawImportRow,
@@ -85,6 +89,13 @@ export const POST = withCoach(
       return NextResponse.json({ error: loaded.error }, { status: 400 });
     }
 
+    // Unlabelled weight cells are in the coach's own unit (Settings)
+    const coachUser = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { weightUnit: true },
+    });
+    const weightUnit = normalizeWeightUnit(coachUser?.weightUnit);
+
     let source: PlanImportPreview["source"] = "template";
     let rows: RawImportRow[] | null = findTemplateRows(loaded.workbook);
     let choices: ImportChoice[] = [];
@@ -109,19 +120,27 @@ export const POST = withCoach(
       if (!read.ok) {
         return NextResponse.json({ error: read.error }, { status: 422 });
       }
+      // Values the reader couldn't fill in become choices for the coach
+      // rather than errors; only what the review can't fix fails the upload
+      const settled = settleAiRows(read.rows, read.suggestions, weightUnit);
+      if (settled.errors.length > 0) {
+        return NextResponse.json({ ...importErrorBody(settled.errors), source: "ai" }, { status: 400 });
+      }
       source = "ai";
       rows = read.rows;
-      choices = read.choices;
+      choices = [...read.choices, ...settled.choices];
       notes = read.notes;
     }
 
-    // Unlabelled weight cells are in the coach's own unit (Settings)
-    const coachUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { weightUnit: true },
-    });
-    const weightUnit = normalizeWeightUnit(coachUser?.weightUnit);
-    const { plan, errors } = parseImportRows(rows, weightUnit);
+    // Laid out with the reader's guesses, and stand-ins for values still to pick
+    const { plan, errors } = parseImportRows(
+      applyImportChoices(
+        rows,
+        choices,
+        choices.map((c) => defaultImportPick(c) ?? IMPORT_CHOICE_PLACEHOLDER[c.field])
+      ),
+      weightUnit
+    );
     if (!plan) {
       return NextResponse.json({ ...importErrorBody(errors), source }, { status: 400 });
     }

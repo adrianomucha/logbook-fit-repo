@@ -139,25 +139,28 @@ describe('tidyChoices', () => {
     ...overrides,
   });
 
-  it('keeps applicable choices, in the plan’s spelling, deduped options', () => {
-    expect(tidyChoices([choice({ exercise: ' bench press ', options: ['120', '150', '150 ', '180'] })], rows)).toEqual([
-      { exercise: 'Bench Press', field: 'rest', said: '2-3 min rest', options: ['120', '150', '180'] },
+  it('keeps applicable guesses, in the plan’s spelling, deduped options', () => {
+    const { guesses } = tidyChoices([choice({ exercise: ' bench press ', options: ['120', '150', '150 ', '180'] })], rows);
+    expect(guesses).toEqual([
+      { exercise: 'Bench Press', field: 'rest', said: '2-3 min rest', current: '120', options: ['120', '150', '180'] },
     ]);
   });
 
-  it('drops choices it couldn’t apply', () => {
-    expect(
-      tidyChoices(
-        [
-          choice({ exercise: 'Deadlift' }), // not in the plan
-          choice({ options: ['150', '180'] }), // guess isn't what the rows hold
-          choice({ options: ['120'] }), // nothing to pick between
-          choice({ exercise: 'Pull-ups', field: 'reps', said: 'AMRAP', options: ['8', '10', '12'] }),
-          choice({ exercise: 'Pull-ups', field: 'reps', said: 'AMRAP', options: ['8', '6'] }), // repeat
-        ],
-        rows
-      ).map((c) => `${c.exercise} ${c.field}`)
-    ).toEqual(['Pull-ups reps']);
+  it('keeps only usable guesses, and every in-plan choice as a suggestion', () => {
+    const { guesses, suggestions } = tidyChoices(
+      [
+        choice({ exercise: 'Deadlift' }), // not in the plan
+        choice({ options: ['150', '180'] }), // guess isn't what the rows hold
+        choice({ exercise: 'Pull-ups', field: 'reps', said: 'AMRAP', options: ['8', '10', '12'] }),
+        choice({ exercise: 'Pull-ups', field: 'reps', said: 'AMRAP', options: ['8', '6'] }), // repeat
+      ],
+      rows
+    );
+    expect(guesses.map((c) => `${c.exercise} ${c.field}`)).toEqual(['Pull-ups reps']);
+    expect(suggestions.map((c) => `${c.exercise} ${c.field} ${c.options.join('/')}`)).toEqual([
+      'Bench Press rest 150/180',
+      'Pull-ups reps 8/10/12',
+    ]);
   });
 });
 
@@ -183,7 +186,8 @@ describe('readPlanWithAi', () => {
     expect(result).toEqual({
       ok: true,
       rows: [expect.objectContaining({ week: '1' }), expect.objectContaining({ week: '2' })],
-      choices: [{ exercise: 'Bench Press', field: 'rest', said: '2-3 min rest', options: ['120', '150', '180'] }],
+      choices: [{ exercise: 'Bench Press', field: 'rest', said: '2-3 min rest', current: '120', options: ['120', '150', '180'] }],
+      suggestions: [{ exercise: 'Bench Press', field: 'rest', said: '2-3 min rest', options: ['120', '150', '180'] }],
       notes: ['Skipped the warm-up notes.'],
     });
     const params = (stream.mock.calls[0] as unknown[])[0] as Anthropic.MessageStreamParams;
