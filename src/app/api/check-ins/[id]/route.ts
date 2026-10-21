@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { isLockedDemoAccount } from "@/lib/demo";
 import prisma from "@/lib/prisma";
 import { withCoach } from "@/lib/middleware/withAuth";
+import { unsendCheckIn } from "@/lib/checkin-schedule";
 
 /**
  * GET /api/check-ins/[id]
@@ -69,7 +70,9 @@ export async function GET(
  * DELETE /api/check-ins/[id]
  * Coach unsends a check-in they sent, while it's still unanswered.
  * Once the client has responded (or it's completed), it's part of the
- * conversation and can't be deleted.
+ * conversation and can't be unsent. Unsending the check-in the schedule was
+ * owed skips it for this cycle rather than deleting it (see unsendCheckIn),
+ * so it doesn't come straight back.
  */
 export const DELETE = withCoach(
   async (
@@ -78,21 +81,15 @@ export const DELETE = withCoach(
     _session: Session,
     coachProfileId: string
   ) => {
-    const checkInId = ctx.params.id;
+    const outcome = await unsendCheckIn(coachProfileId, ctx.params.id);
 
-    const checkIn = await prisma.checkIn.findFirst({
-      where: { id: checkInId, coachId: coachProfileId, status: "PENDING" },
-      select: { id: true },
-    });
-
-    if (!checkIn) {
+    if (!outcome) {
       return NextResponse.json(
         { error: "Check-in not found or already answered" },
         { status: 404 }
       );
     }
 
-    await prisma.checkIn.delete({ where: { id: checkIn.id } });
     return NextResponse.json({ deleted: true });
   }
 );
