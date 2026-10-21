@@ -1,4 +1,4 @@
-# iOS App — Plan
+# iOS App: Plan
 
 How to get Logbook.fit onto the App Store without forking the product.
 Written 2026-09-01 from a code-level read of `main` (9307c13). Companion to
@@ -15,7 +15,7 @@ What already exists and carries over:
   role-scoped through `withCoach` / `withClient` (36 routes) or a direct
   `getServerSession` call (14 routes). Zod validation on writes. Nothing in
   the client journey needs a new data endpoint.
-- **Auth is JWT already** — NextAuth credentials provider, `session.strategy:
+- **Auth is JWT already**: NextAuth credentials provider, `session.strategy:
   "jwt"`, 30-day tokens. The only web-ism is that the token travels in a
   cookie. A native app needs the same token in an `Authorization` header.
 - **Push exists, but Web Push only.** `lib/push.ts` has six `notify*` entry
@@ -55,12 +55,12 @@ The coach workspace (plan builder, exercise drawers, Excel import, 1,031-line
 `UnifiedClientProfile`) is desktop work. The client's entire product is
 phone-in-hand at the gym plus a check-in on the couch. Push notifications are
 the retention loop's delivery mechanism, and Web Push on iOS only reaches
-people who installed the PWA — which most never do. That is the gap a native
+people who installed the PWA, which most never do. That is the gap a native
 app closes.
 
 **v1 = client app.** A coach who signs in sees a short "your workspace is on
 the web" screen with a link. A coach *triage* companion (urgency list, chat,
-check-in review — all read endpoints exist) is a later phase, not v1.
+check-in review; all read endpoints exist) is a later phase, not v1.
 
 ### 1.2 Stack: Expo (React Native) + EAS, not SwiftUI, not Capacitor
 
@@ -82,7 +82,7 @@ becomes a workspace root that is *also* the web app:
 
 ```
 /                     Next.js web app (unchanged location, unchanged Vercel config)
-├── packages/shared/  @logbook/shared — pure TS moved out of src/ (see §3.1)
+├── packages/shared/  @logbook/shared: pure TS moved out of src/ (see §3.1)
 └── mobile/           Expo app
 ```
 
@@ -92,7 +92,7 @@ old `src/` path, so the web app does not change a single import.
 
 ---
 
-## 2. Phase 1 — Backend prerequisites (no Xcode needed)
+## 2. Phase 1: Backend prerequisites (no Xcode needed)
 
 Everything here is server-side TypeScript with vitest coverage, and unblocks
 the app work. Do it first; it is also independently useful to the web app.
@@ -105,49 +105,49 @@ the app work. Do it first; it is also independently useful to the web app.
       `withAuth.ts` and the 14 direct `getServerSession` callers to it
       (mechanical). `src/middleware.ts` only matches pages, so it is untouched.
       Reject soft-deleted and demo-locked users exactly as the cookie path
-      does. — M
+      does. Effort: M
 - [x] **1.2 `POST /api/auth/mobile/login`.** `{email, password}` →
       `{token, expiresAt, user}`. Extract the credential checks from the
       NextAuth `authorize` (demo lock, `loginLimiter` by IP+email, bcrypt,
       `deletedAt: null`) into a shared `lib/credentials.ts` so web and mobile
       cannot drift. Mint with `encode()` from `next-auth/jwt`, 30 days like
-      the web. — S
+      the web. Effort: S
 - [x] **1.3 `POST /api/auth/mobile/refresh`.** Valid token in → fresh token
       out (sliding expiry), so a daily user is never logged out. Same
-      demo/deleted checks. — S
+      demo/deleted checks. Effort: S
 - [x] **1.4 APNs via Expo push.** Migration: `PushSubscription` gains
       `provider PushProvider @default(WEB)` (`WEB | EXPO`); `p256dh`/`auth`
       become nullable; `endpoint` holds the Expo push token for `EXPO` rows
       (its `@unique` still dedupes per device). `sendPushToUser` fans out per
-      provider — `web-push` as today, `expo-server-sdk` for `EXPO`, chunked,
+      provider: `web-push` as today, `expo-server-sdk` for `EXPO`, chunked,
       with `DeviceNotRegistered` receipts deleting the row like 404/410 do.
       `PushPayload.url` becomes `data.url` so the app can deep-link; `tag`
       becomes the thread id. `POST/DELETE /api/push/subscription` accept
       `{provider: "EXPO", token}`. `GET /api/push/config` reports Expo push as
       always-enabled (no VAPID needed for that path). Extend
-      `lib/__tests__/push.test.ts`. — M
+      `lib/__tests__/push.test.ts`. Effort: M
 - [x] **1.5 `DELETE /api/me` (account deletion).** Soft-delete the user
       (`deletedAt`), end the coaching relationship through
       `lib/relationship-termination.ts`, delete push subscriptions, invalidate
       the session (auth already refuses `deletedAt != null`). Password
       re-entry in the body for confirmation. Expose it in the web account menu
-      too — it is a backlog item (#30) anyway. — M
+      too; it is a backlog item (#30) anyway. Effort: M
 - [x] **1.6 Reviewer accounts.** Seed script (not the demo seeder) that
       creates a real coach + client pair with an assigned plan, a pending
       check-in and a message thread, for App Review notes. Run once against
       production; document the credentials in the App Store Connect review
-      notes only, never in the repo. — S
+      notes only, never in the repo. Effort: S
 - [x] **1.7 CI.** Add `mobile` typecheck + jest + eslint to `ci.yml`; add
-      `packages/shared` tests to the existing vitest run. — S
+      `packages/shared` tests to the existing vitest run. Effort: S
 
 Deliverable: the web app is unchanged for users, every API route accepts a
 bearer token, and the check-in loop can reach a phone through APNs.
 
 ---
 
-## 3. Phase 2 — The client app
+## 3. Phase 2: The client app
 
-### 3.1 Extract `@logbook/shared` — M ✅ done
+### 3.1 Extract `@logbook/shared` (M) ✅ done
 
 Move, with re-export shims left behind:
 
@@ -164,7 +164,7 @@ Move, with re-export shims left behind:
 Rule for what goes in: pure TS, no `window`, no `next/*`, no React DOM.
 Anything with a test file in `lib/__tests__` moves with its test.
 
-### 3.2 Scaffold — S ✅ done (`mobile/`, see its README)
+### 3.2 Scaffold (S) ✅ done (`mobile/`, see its README)
 
 `npx create-expo-app mobile` with expo-router, TypeScript, NativeWind, SWR,
 `expo-secure-store` (token), `expo-notifications`, `expo-haptics`. Three EAS
@@ -194,9 +194,9 @@ Each maps 1:1 onto endpoints that exist today.
 | 7b | Settings: profile photo + name, account facts + **delete account** (danger zone), password, alerts ✅ | `PUT/DELETE /api/account/avatar`, `PUT /api/account/profile`, `PUT /api/account/password`, `POST/DELETE /api/push/subscription`, `DELETE /api/me` | `views/ClientSettingsPage.tsx`, `components/settings/sections.tsx`, `NotificationPreferenceTile.tsx` | M |
 | 8 | Empty / edge states: no coach yet, awaiting plan, plan ended | already in the `week-overview` payload (`planEnded`) and `/api/me` | `WelcomeAwaitingPlan.tsx`, `SessionCompleteCard.tsx` | S |
 
-Port the *hook logic* nearly verbatim — `useWorkoutExecution`'s single-flight
+Port the *hook logic* nearly verbatim (`useWorkoutExecution`'s single-flight
 start, pending-set queue and serialized flush are exactly what a flaky gym
-connection needs — and rewrite only the render layer. Replace `sonner` with
+connection needs) and rewrite only the render layer. Replace `sonner` with
 a native toast, `visibilitychange` with `AppState`, `useKeyboardInset` with
 `KeyboardAvoidingView` (this is one of the things going native fixes for
 free).
@@ -204,9 +204,9 @@ free).
 Coach role: one screen, "Your coaching workspace lives at logbook.fit", with
 an open-in-browser link. No coach UI in v1. ✅
 
-**Parity rule (2026-09-02):** the web kept moving while the app was built —
+**Parity rule (2026-09-02):** the web kept moving while the app was built:
 TIME-set countdown (`SetTimer`), profile photos, the settings page, the
-check-in confirmation, the coach-note card — and the app caught up in one
+check-in confirmation, the coach-note card. The app caught up in one
 pass. From here, a change to a client-facing web screen ports to `mobile/`
 in the same PR where practical; anything that is logic rather than render
 goes into `@logbook/shared` first (`set-timer`, `no-widows`, …) so both
@@ -221,33 +221,33 @@ npm. `babel-preset-expo` and `@expo/metro-runtime` must be top-level deps.
 
 ---
 
-## 4. Phase 3 — Push, deep links, TestFlight
+## 4. Phase 3: Push, deep links, TestFlight
 
-- [x] **4.1 Permission flow.** (built; asks when the person turns alerts on — needs the EAS project id in app.json to go live) Ask on the first meaningful moment (after the
+- [x] **4.1 Permission flow.** (built; asks when the person turns alerts on; needs the EAS project id in app.json to go live) Ask on the first meaningful moment (after the
       first workout is finished or the first check-in answered), never on
       launch. Register the Expo token with `POST /api/push/subscription`;
-      unregister on sign-out and on account deletion. — S
+      unregister on sign-out and on account deletion. Effort: S
 - [x] **4.2 Deep links.** (notification taps; universal links still to do) `expo-notifications` response listener → router push
       to `data.url`. Universal links for `https://logbook.fit/client/*`
       (apple-app-site-association served by Next from `public/.well-known`),
-      so a link in an email opens the app when installed. — M
+      so a link in an email opens the app when installed. Effort: M
 - [x] **4.3 Foreground refresh.** On `AppState` → active, revalidate the
-      week overview, unread count and the open thread — the native equivalent
-      of the `visibilitychange` fix. — S
+      week overview, unread count and the open thread, the native equivalent
+      of the `visibilitychange` fix. Effort: S
 - [x] **4.4 Haptics + keyboard.** (set toggle, finish and rest timer; decimal/number pads; keyboard-avoiding workout screen) Set toggle and finish get `expo-haptics`;
-      weight/reps inputs use `KeyboardAvoidingView` with numeric pads. — S
+      weight/reps inputs use `KeyboardAvoidingView` with numeric pads. Effort: S
 - [ ] **4.5 First TestFlight.** Runbook: `TESTFLIGHT.md`; later builds via the `TestFlight` workflow. `eas build --profile preview` +
       `eas submit`. Needs (owner, on a Mac once): Apple Developer enrollment,
       bundle id `fit.logbook.app`, EAS project, credentials generated by EAS.
-      After that first setup, builds run from CI/cloud. — M
+      After that first setup, builds run from CI/cloud. Effort: M
 
 ---
 
-## 5. Phase 4 — App Store readiness
+## 5. Phase 4: App Store readiness
 
-- [x] Account deletion reachable in-app (§2 1.5) — hard requirement.
+- [x] Account deletion reachable in-app (§2 1.5): hard requirement.
 - [ ] Privacy nutrition labels: email, name, health & fitness (workout logs),
-      user content (messages). No tracking SDKs — `@vercel/analytics` is
+      user content (messages). No tracking SDKs; `@vercel/analytics` is
       web-only and does not ship in the app.
 - [x] Privacy policy and terms URLs → existing `/privacy`, `/terms`. Linked in-app
       from Settings → Account (guideline 5.1.1(i)), web and app.
@@ -279,10 +279,10 @@ npm. `babel-preset-expo` and `@expo/metro-runtime` must be top-level deps.
 
 | Work | From a Claude Code cloud session | Needs the owner's Mac |
 |------|----------------------------------|-----------------------|
-| Phase 1 (all backend), §3.1 shared package, CI | ✅ full, with vitest | — |
+| Phase 1 (all backend), §3.1 shared package, CI | ✅ full, with vitest | - |
 | Phase 2 screens | ✅ code, typecheck, jest, lint | Simulator/device run to check feel |
 | EAS builds | ✅ once the EAS project exists | First-time Apple credentials, `eas login` |
-| TestFlight, screenshots, App Store Connect | — | ✅ |
+| TestFlight, screenshots, App Store Connect | - | ✅ |
 
 ---
 
@@ -290,8 +290,8 @@ npm. `babel-preset-expo` and `@expo/metro-runtime` must be top-level deps.
 
 1. `feat(api): bearer sessions + mobile login/refresh` (1.1–1.3)
 2. `feat(push): Expo push provider` (1.4)
-3. `feat(api): account deletion` (1.5) — also ships to web
-4. `chore: npm workspaces + @logbook/shared` (3.1) — pure move, zero behavior change
+3. `feat(api): account deletion` (1.5), also ships to web
+4. `chore: npm workspaces + @logbook/shared` (3.1): pure move, zero behavior change
 5. `feat(mobile): Expo scaffold + sign-in + Today` (3.2, screens 1–2)
 6. `feat(mobile): workout execution` (screen 3)
 7. `feat(mobile): check-ins, chat, progress, account` (screens 4–7)

@@ -43,7 +43,7 @@ Open [http://localhost:3000](http://localhost:3000)
 ## Deploying
 
 Checklist for a production or staging deploy. Several subsystems degrade
-*silently* when their env is missing — the `/admin` banner and the
+*silently* when their env is missing; the `/admin` banner and the
 `_ALERT]`-tagged log lines (set a Vercel log alert on `_ALERT]`) are the
 signals that something below was skipped.
 
@@ -58,7 +58,7 @@ Required env for a correct deploy:
 | `RESEND_API_KEY` + `WAITLIST_FROM_EMAIL` | every email silently skipped |
 | `ADMIN_EMAILS` | `/admin` 404s for everyone; no beta invites |
 | `UPSTASH_REDIS_REST_URL` + `_TOKEN` | rate limiting effectively off on serverless |
-| `CRON_SECRET` | the nightly check-in sweep refuses every call — weekly check-ins never send on their own |
+| `CRON_SECRET` | the nightly check-in sweep refuses every call; weekly check-ins never send on their own |
 | `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | push notifications no-op (optional) |
 | `ANTHROPIC_API_KEY` | plan import only reads template-shaped spreadsheets; other layouts are rejected instead of read by AI (optional) |
 
@@ -66,19 +66,19 @@ Gotchas:
 
 - **`NEXT_PUBLIC_DEMO_MODE` is inlined at build time.** On any deployed build
   the seeded demo accounts are locked unless this was `"true"` when the build
-  ran — flipping it on Vercel requires a redeploy, not a restart. Locked demo
+  ran. Flipping it on Vercel requires a redeploy, not a restart. Locked demo
   sign-ins now say so on the login page instead of "invalid password".
 - **Migrations run on production deploys only** by default. A staging project
   with its own database should set `MIGRATE_ON_PREVIEW="true"`; previews
   sharing the production database must leave it unset, or they'd apply
   unreleased migrations.
 - Client-side crashes are reported to `POST /api/client-errors` and logged as
-  `[CLIENT_ERROR_ALERT]` — include that tag in your log alert too.
+  `[CLIENT_ERROR_ALERT]`; include that tag in your log alert too.
 
 ## Native app
 
 The iOS app lives in `mobile/` (Expo / React Native) and is its own npm
-project with its own lockfile — `cd mobile && npm install && npx expo start`.
+project with its own lockfile: `cd mobile && npm install && npx expo start`.
 It consumes `packages/shared` as source and talks to the API with a bearer
 token (next section). `mobile/README.md` has the layout and the no-Xcode
 checks (`npm run typecheck`, `npm run export:ios`); `IOS_APP_PLAN.md` has the
@@ -108,7 +108,7 @@ route code never learns which.
   token, after re-checking the account exists and isn't a locked demo. A 401
   here means "sign in again".
 - Tokens are encrypted with `NEXTAUTH_SECRET`, live 30 days like the cookie,
-  and are stateless — `getSession()` does one primary-key lookup per request
+  and are stateless; `getSession()` does one primary-key lookup per request
   so a deleted user (`deletedAt`) is turned away on every device at once.
 - `DELETE /api/me` `{password}` retires the signed-in account
   (`src/lib/account-deletion.ts`): ends every coaching relationship the way
@@ -131,7 +131,7 @@ curl -s localhost:3000/api/me -H "Authorization: Bearer $TOKEN"
 App Store reviewers sign in against production, where the seeded demo logins
 are locked. `prisma/seed_reviewer.ts` creates a real coach + client pair with
 an assigned plan, a pending check-in, one answered check-in and an unread
-chat thread — enough to walk every client screen. Credentials come from the
+chat thread, enough to walk every client screen. Credentials come from the
 environment and belong in App Store Connect's review notes only:
 
 ```bash
@@ -151,7 +151,7 @@ that: their password is printed in this repo, and the lock
 accounts with a private password instead. Two ways:
 
 **With data, in one command.** `prisma/seed_reviewer.ts` is not specific to
-App Review — it creates *any* real coach + client pair with a plan, a pending
+App Review: it creates *any* real coach + client pair with a plan, a pending
 and an answered check-in, and a chat thread. Point it at the database you
 test against and pick QA emails you control (plus-addressing works, so
 password-reset emails reach you):
@@ -218,7 +218,7 @@ back to UTC when one is missing or invalid.
 
 This is what makes "auto-sends on the configured cadence" true. Scheduling is also
 materialized opportunistically when either party loads check-in data, so a due
-check-in shows up immediately rather than at the next sweep — but the sweep is
+check-in shows up immediately rather than at the next sweep, but the sweep is
 the authority, because it reaches clients who aren't opening the app, which is
 exactly the fade the product exists to catch.
 
@@ -232,7 +232,7 @@ It answers `{ok, relationshipsScanned, checkInsCreated, failures}` and logs
 `[CRON_ALERT]` if any client failed. Every invocation also writes a row to
 `cron_runs` (start, finish, outcome, summary), which is what `/admin/health`
 reads: a sweep with no run in 36 hours is shown as down, so a cron that
-silently stops — rotated secret, schedule dropped — is visible without
+silently stops (rotated secret, schedule dropped) is visible without
 digging through Vercel logs.
 
 ## Admin
@@ -241,7 +241,7 @@ digging through Vercel logs.
 switched on the client and mirrored to `?tab=` (the old per-section URLs
 redirect). Every panel is server-rendered and streamed in behind its own
 fallback, so switching costs no request. **Overview** is
-aggregate usage — people, activity, funnel, weekly signups and workouts —
+aggregate usage (people, activity, funnel, weekly signups and workouts)
 with demo and sample accounts excluded and chat reported as counts only,
 never message text. **Waitlist**, **Accounts** and **Feedback** are the
 working inboxes. **Health** runs live probes on every visit (Postgres,
@@ -251,8 +251,8 @@ vars) and lists the sweep's recent runs.
 ## Project Structure
 
 ```
-mobile/               The iOS app (Expo / React Native) — own package.json
-packages/shared/      @logbook/shared — types, zod schemas, adapters and pure
+mobile/               The iOS app (Expo / React Native), own package.json
+packages/shared/      @logbook/shared: types, zod schemas, adapters and pure
                       helpers used by both the web app and the native app
                       (see packages/shared/README.md)
 src/
@@ -292,18 +292,18 @@ prisma/
 
 17 models across 5 domains:
 
-- **Auth** — User, CoachProfile, ClientProfile
-- **Relationships** — CoachClientRelationship, ClientInvite
-- **Training** — Exercise, Plan, Week, Day, WorkoutExercise
-- **Tracking** — WorkoutCompletion, SetCompletion, ExerciseFlag
-- **Communication** — CheckIn, Message, PushSubscription
+- **Auth**: User, CoachProfile, ClientProfile
+- **Relationships**: CoachClientRelationship, ClientInvite
+- **Training**: Exercise, Plan, Week, Day, WorkoutExercise
+- **Tracking**: WorkoutCompletion, SetCompletion, ExerciseFlag
+- **Communication**: CheckIn, Message, PushSubscription
 
 ## Messaging & Notifications
 
 **Delivery.** There is no socket between the server and an open page, so chat
 threads poll: `useMessages` runs at 3s while a chat is on screen and 20s when
 it isn't, and refetches on tab focus, network reconnect, and `visibilitychange`
-(the last one is what a resumed PWA fires — without it, an installed app can
+(the last one is what a resumed PWA fires; without it, an installed app can
 show a frozen thread until it's force-closed). Fetches go out `no-store` and
 `GET /api/messages/[userId]` answers `Cache-Control: no-store`, so no browser
 or proxy cache can serve a stale thread.
@@ -354,5 +354,5 @@ After seeding, log in with:
 | Client | `client@logbook.fit` | `demo1234` |
 
 These work in local dev only. On every deployed build they are locked
-server-side unless `NEXT_PUBLIC_DEMO_MODE="true"` was set at build time — see
+server-side unless `NEXT_PUBLIC_DEMO_MODE="true"` was set at build time; see
 [QA accounts](#qa-accounts) for testing against production.

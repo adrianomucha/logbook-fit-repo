@@ -62,7 +62,7 @@ jobs:
 
       # A full Metro bundle for iOS: the closest thing to "does it build"
       # without Xcode. Catches Babel/Metro config, NativeWind, and every
-      # import (including @logbook/shared) — not runtime behavior.
+      # import (including @logbook/shared), not runtime behavior.
       - name: Bundle (iOS)
         run: npm run export:ios
         env:

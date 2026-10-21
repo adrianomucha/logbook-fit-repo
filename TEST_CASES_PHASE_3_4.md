@@ -654,7 +654,7 @@
 - ✅ All workouts under each week
 - ✅ Current workout highlighted with "→"
 - ✅ Exercise counts shown: "Workout 1 (5)"
-- ✅ Rest days marked with "—"
+- ✅ Rest days marked with "-"
 
 **Pass/Fail:** ____
 
@@ -674,7 +674,7 @@
 **Expected Results:**
 - ✅ Empty: ⚠️ amber warning icon
 - ✅ Complete: ✓ green check icon
-- ✅ Rest day: — gray dash
+- ✅ Rest day: gray dash ("-")
 - ✅ Current: → arrow indicator
 
 **Pass/Fail:** ____

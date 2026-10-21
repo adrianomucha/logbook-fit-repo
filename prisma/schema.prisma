@@ -1,5 +1,5 @@
 // prisma/schema.prisma
-// LogBook.fit — Database Schema
+// LogBook.fit: Database Schema
 // Source: logbook_db_backend_v3_FINAL.md §2.1
 
 generator client {
@@ -82,15 +82,15 @@ enum TrackingType {
 }
 
 // Which transport delivers to a PushSubscription row.
-//   WEB  — browser Web Push: `endpoint` is the push-service URL, keys present
-//   EXPO — native app via Expo's push service: `endpoint` holds the Expo push
+//   WEB:   browser Web Push: `endpoint` is the push-service URL, keys present
+//   EXPO:  native app via Expo's push service: `endpoint` holds the Expo push
 //          token ("ExponentPushToken[…]"), no keys
 enum PushProvider {
   WEB
   EXPO
 }
 
-// A person's display unit for weights. Storage is always pounds — every
+// A person's display unit for weights. Storage is always pounds; every
 // weight column below holds lb, and the apps convert at the edges (see
 // packages/shared/src/weight-units.ts).
 enum WeightUnit {
@@ -129,7 +129,7 @@ model User {
   weightUnit   WeightUnit @default(LB)
   // Owner-managed pairing with this person's other account (coach ↔ client),
   // stored symmetrically on both rows. Powers the nav's one-click account
-  // switch. Written only by the owner (SQL/admin) — no user-facing API sets it.
+  // switch. Written only by the owner (SQL/admin); no user-facing API sets it.
   linkedUserId String?   @unique
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
@@ -143,7 +143,7 @@ model User {
   sentMessages     Message[] @relation("sender")
   receivedMessages Message[] @relation("recipient")
 
-  // Web Push endpoints — one row per browser/device that opted in
+  // Web Push endpoints: one row per browser/device that opted in
   pushSubscriptions PushSubscription[]
 
   // Product feedback submitted from the in-app dialog
@@ -206,7 +206,7 @@ model CoachClientRelationship {
   clientId  String       @unique // MVP: one coach per client
   status    ClientStatus @default(ACTIVE)
   // Check-in automation: when enabled, a new check-in is created once the
-  // cadence elapses since the last one — by the nightly cron sweep
+  // cadence elapses since the last one, by the nightly cron sweep
   // (/api/cron/check-ins), and opportunistically when either party loads
   // check-in data. On by default: coaches assume weekly check-ins simply
   // happen, and a default-off retention loop buried in a third-level tab is
@@ -224,7 +224,7 @@ model CoachClientRelationship {
   // client unsubscribes. status becomes INACTIVE; the row is kept as history.
   endedAt   DateTime?
   endedBy   UserRole?
-  // Plan assignment at the moment the relationship ended — lets Restore put
+  // Plan assignment at the moment the relationship ended; lets Restore put
   // the client back exactly where they left off. No FK: the plan may be
   // deleted while the relationship sits in the archive.
   endedPlanId        String?
@@ -305,7 +305,7 @@ model Plan {
   workoutsPerWeek Int       @default(4)
   // Template/instance split: null = coach-authored template (the Plans page).
   // Set = a client's own copy created at assignment, pointing at the root
-  // template it was cloned from. No FK — templates are deletable while
+  // template it was cloned from. No FK: templates are deletable while
   // clients keep training on their copies.
   sourceTemplateId String?
   createdAt       DateTime  @default(now())
@@ -364,12 +364,12 @@ model WorkoutExercise {
   id          String  @id @default(uuid())
   dayId       String
   exerciseId  String
-  orderIndex  Int     // Sort order within the day — unique per day
+  orderIndex  Int     // Sort order within the day, unique per day
   trackingType TrackingType @default(REPS) // When TIME, reps/repsMax hold seconds
   sets        Int     @default(3)
   reps        Int     @default(10) // Lower bound of the prescribed rep range (or the exact count)
   repsMax     Int?    // Upper bound when the coach prescribes a range, e.g. 6-8 → reps=6, repsMax=8
-  weight      Float?  // lb — shown in each viewer's WeightUnit
+  weight      Float?  // lb, shown in each viewer's WeightUnit
   restSeconds Int?    // Rest between sets
   coachNotes  String? // Per-workout coaching notes
   supersetWithPrevious Boolean @default(false) // Chains this exercise to the one above it into a superset
@@ -528,7 +528,7 @@ model Message {
 // endpoint is the push service's URL for that device and is globally unique,
 // so re-subscribing the same device updates the row instead of stacking.
 // Rows are deleted when the push service reports the endpoint is gone
-// (404/410) — that is the only reliable "user uninstalled the PWA" signal.
+// (404/410); that is the only reliable "user uninstalled the PWA" signal.
 model PushSubscription {
   id         String       @id @default(uuid())
   userId     String
@@ -560,12 +560,12 @@ model Feedback {
   // SetNull, not Cascade: feedback is the owner's product-research record
   // and should outlive the reporter's account.
   userId   String?
-  // Captured at submit time — linked accounts can switch roles later, and
+  // Captured at submit time: linked accounts can switch roles later, and
   // "a coach said this" vs "a client said this" is half the signal.
   role     UserRole
   category FeedbackCategory
   message  String           @db.VarChar(2000)
-  // Path the dialog was opened from, auto-captured — cheap context that
+  // Path the dialog was opened from, auto-captured: cheap context that
   // turns "the table is broken" into "the plan editor's table is broken".
   pageUrl  String?          @db.VarChar(1000)
   status   FeedbackStatus   @default(NEW)
@@ -586,7 +586,7 @@ model Feedback {
 
 // Lifecycle: PENDING (signed up on the landing page) → INVITED (owner sent a
 // beta invite from /admin/waitlist) → JOINED (invite redeemed at coach signup).
-// The invite token is single-use — JOINED blocks re-redemption — and
+// The invite token is single-use (JOINED blocks re-redemption) and
 // re-inviting rotates it, which doubles as revocation of the old link.
 model WaitlistEntry {
   id          String         @id @default(uuid())
@@ -604,7 +604,7 @@ model WaitlistEntry {
   campaign String?
   referrer String?
 
-  // Answered on the confirmation screen, after the email is already saved —
+  // Answered on the confirmation screen, after the email is already saved:
   // asking it before the submit would cost signups, asking it after costs
   // nothing and tells us whether we're attracting coaches or curious lifters.
   clientCount String?

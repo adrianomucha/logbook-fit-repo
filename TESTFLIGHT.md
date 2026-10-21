@@ -1,4 +1,4 @@
-# TestFlight — getting the iOS app to testers
+# TestFlight: getting the iOS app to testers
 
 The code side is ready (see "What's already done" at the bottom). What's
 left needs your Apple and Expo accounts, so it can't run from a cloud
@@ -8,7 +8,7 @@ Time: about an hour the first time, most of it waiting on the build.
 
 ## 1. First build (from your computer)
 
-Any machine with Node 22 — a Mac isn't required, EAS builds in the cloud.
+Any machine with Node 22. A Mac isn't required, EAS builds in the cloud.
 
 ```bash
 cd mobile
@@ -32,7 +32,7 @@ The build takes 15–25 minutes; the link it prints shows progress.
 1. Sign in at [appstoreconnect.apple.com](https://appstoreconnect.apple.com)
    with the Apple Developer account.
 2. **Apps → + → New App**: platform iOS, name **Logbook.fit**, language
-   English, bundle id **fit.logbook.app** (registered by step 1 — the list is
+   English, bundle id **fit.logbook.app** (registered by step 1; the list is
    empty before that), SKU `logbook-fit-ios`, full access.
 3. Note the app's **Apple ID** (a number, under App Information). That's
    the `ascAppId` in step 4.

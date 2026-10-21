@@ -36,8 +36,8 @@ openssl rand -base64 32
 npx prisma migrate deploy
 ```
 
-This replays the full migration history — tables, partial unique indexes,
-triggers, check constraints, and RLS — onto a fresh database. No extra SQL
+This replays the full migration history (tables, partial unique indexes,
+triggers, check constraints, and RLS) onto a fresh database. No extra SQL
 steps needed.
 
 ## 4. Seed Demo Data
@@ -87,7 +87,7 @@ The app currently has two layers:
 - Make sure the Supabase project is running (not paused)
 
 ### "prisma migrate dev fails"
-- Ensure you have the `DIRECT_URL` set (not the pooler URL) — Prisma migrations need a direct connection
+- Ensure you have the `DIRECT_URL` set (not the pooler URL); Prisma migrations need a direct connection
 
 ### "Module not found: generated/prisma"
 - Run `npx prisma generate` to regenerate the Prisma client

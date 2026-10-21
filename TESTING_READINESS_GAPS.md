@@ -1,4 +1,4 @@
-# Testing Readiness — Full-Flow Gap Audit
+# Testing Readiness: Full-Flow Gap Audit
 
 A code-level walkthrough of every journey (landing → waitlist → admin invite →
 signup → coach workspace → client app → check-in loop → messaging → termination)
@@ -10,21 +10,21 @@ The holes below are flow holes, not build breakage.
 
 Severity tiers:
 
-- **T0 — deploy/config traps**: the staging/prod deploy itself misbehaves.
-- **T1 — core loop broken**: the north-star check-in/retention loop doesn't
+- **T0: deploy/config traps**: the staging/prod deploy itself misbehaves.
+- **T1: core loop broken**: the north-star check-in/retention loop doesn't
   work end-to-end.
-- **T2 — dead ends**: states a tester can reach with no exit or a false screen.
-- **T3 — lying UI**: copy/controls that promise something the code doesn't do.
-- **T4 — silent data loss**: user input discarded with no feedback.
+- **T2: dead ends**: states a tester can reach with no exit or a false screen.
+- **T3: lying UI**: copy/controls that promise something the code doesn't do.
+- **T4: silent data loss**: user input discarded with no feedback.
 - **Defer** at the end.
 
 ---
 
-## T0 — Deploy & config traps (fix before anyone touches a URL)
+## T0: Deploy & config traps (fix before anyone touches a URL)
 
 1. **`UPSTASH_REDIS_REST_URL`/`_TOKEN` are read by code but absent from
    `.env.example`.** Without them, rate limiting falls back to a per-lambda
-   in-memory Map (`src/lib/rate-limit.ts:29-83`) — effectively no brute-force
+   in-memory Map (`src/lib/rate-limit.ts:29-83`), effectively no brute-force
    protection on login/signup/reset in any serverless deploy, with only a
    `console.warn`. Also: a Redis outage fails open (`rate-limit.ts:132-140`).
 2. **Preview/staging deploys never run migrations.** `package.json:8` gates
@@ -35,7 +35,7 @@ Severity tiers:
    `src/lib/auth.ts:29-32`). Testers handed `coach@logbook.fit / demo1234` get
    "Invalid email or password" with no explanation.
 4. **`ADMIN_EMAILS` unset/typo'd ⇒ every `/admin` surface 404s for everyone**
-   (`src/lib/admin.ts:13`, `src/app/admin/layout.tsx:27-29`) — and since coach
+   (`src/lib/admin.ts:13`, `src/app/admin/layout.tsx:27-29`), and since coach
    signup is invite-only by default (`src/app/api/auth/signup/route.ts:95-103`),
    a deploy with neither `ADMIN_EMAILS` nor `OPEN_COACH_SIGNUP` can never mint a
    coach account. Nothing logs why.
@@ -43,7 +43,7 @@ Severity tiers:
    reset) silently vanish** while the UI says "Watch your inbox"
    (`src/lib/services/email.ts:306-319`, `src/app/api/waitlist/route.ts:48-50`,
    `src/app/api/auth/password-reset/route.ts:50`). The only signal is a banner
-   on `/admin` — unreachable if #4 also applies.
+   on `/admin`, unreachable if #4 also applies.
 6. **`NEXTAUTH_URL` unset ⇒ reset/beta links carry the per-deploy
    `*.vercel.app` hostname** (`src/lib/waitlist.ts:24-31`); a prod deploy
    missing it and the Vercel vars emails `localhost:3000` links.
@@ -53,7 +53,7 @@ Severity tiers:
    `global-error.tsx` report to nobody. A tester's 500 leaves no trace. 30 of
    50 API routes have no try/catch, so Prisma failures return HTML 500s where
    clients expect `{error}` JSON.
-8. **`/admin` is not in the middleware matcher** (`src/middleware.ts:56`) — a
+8. **`/admin` is not in the middleware matcher** (`src/middleware.ts:56`): a
    signed-out admin gets a bare 404 with no login redirect.
 
 Minimum env for a correct staging deploy: `DATABASE_URL`, `DIRECT_URL`,
@@ -64,20 +64,20 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
 
 ---
 
-## T1 — The core retention loop doesn't run on its own
+## T1: The core retention loop doesn't run on its own
 
 1. **Check-ins only materialize when someone loads the right page.**
-   `ensureScheduledCheckIn` has exactly three call sites — coach client-detail,
+   `ensureScheduledCheckIn` has exactly three call sites: coach client-detail,
    schedule toggle, client check-ins tab (`src/lib/checkin-schedule.ts:27-37`).
    The coach **dashboard** never calls it, so the roster can show "all clear"
-   while check-ins are overdue; a client who stops opening the app — the exact
-   user the product exists to catch — never gets one. No cron exists
+   while check-ins are overdue; a client who stops opening the app (the exact
+   user the product exists to catch) never gets one. No cron exists
    (`vercel.json` has no `crons`). Same lazy trigger gates stale-check-in
    expiry.
 2. **Auto check-ins default OFF per client** (`prisma/schema.prisma:175`),
    the toggle is buried in a third-level tab and only rendered when a plan is
-   assigned (`CheckInHistoryPanel.tsx:72-79`), and its copy — "Auto-sends every
-   7 days" — is false per #1.
+   assigned (`CheckInHistoryPanel.tsx:72-79`), and its copy ("Auto-sends every
+   7 days") is false per #1.
 3. **Push/notifications cover exactly one event: a new chat message.**
    `notifyNewMessage` is the sole caller of the push path
    (`src/app/api/messages/route.ts:162`). No push/in-app signal for: check-in
@@ -106,7 +106,7 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
    button anywhere to start one.
 7. **The primary review path hides the flags.** The dashboard "Review Check-in"
    CTA routes to the standalone `/check-in` page (`ClientsRequiringAction.tsx:75`),
-   which — unlike the inline workspace review — has no flagged-exercises
+   which, unlike the inline workspace review, has no flagged-exercises
    section.
 8. **"I'll adjust the plan" is still write-only** (backlog #12): stored boolean,
    zero coach-side consumers, no reminder, no link to an actual edit; the one
@@ -114,13 +114,13 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
 
 ---
 
-## T2 — Dead ends and false screens
+## T2: Dead ends and false screens
 
 ### Client app
 
 1. **Terminated client sees an outright false screen.** Termination nulls the
    plan, so the client gets `WelcomeAwaitingPlan`: *"Your coach is putting your
-   training plan together… usually ready within a day or two"* — from a coach
+   training plan together… usually ready within a day or two"*, from a coach
    who just ended the relationship (`ClientDashboard.tsx:457-462`,
    `src/lib/relationship-termination.ts:44-47`). No message, no notice; chat
    history 403s for the client (`api/messages/[userId]/route.ts:69-74`) despite
@@ -131,7 +131,7 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
    plan (`ClientDashboard.tsx:407,418`).
 3. **`clientProfile` null ⇒ terminal screen with no nav/sign-out/retry**
    (`ClientDashboard.tsx:372-384`).
-4. **Empty or mismatched week renders a page with only a greeting** — no card,
+4. **Empty or mismatched week renders a page with only a greeting**: no card,
    no CTA, no explanation (`ClientDashboard.tsx:204-210` → `TodayFocusView`).
 5. **No week navigation exists**, so once Monday passes, an unfinished week is
    unreachable forever (`WeeklyOverview.tsx:32-35`; progress filters
@@ -141,12 +141,12 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
 6. **Coach feedback expires silently on Monday.** The only surface filters to
    this calendar week (`ClientDashboard.tsx:153-165`), is hidden behind the
    weekly toggle on the workout tab (`:626-631`, default is Today), and has no
-   badge/notification. Client-side check-in history doesn't exist — after
+   badge/notification. Client-side check-in history doesn't exist; after
    submitting, a check-in vanishes until the coach replies.
 
 ### Auth / acquisition
 
-7. **An existing account can never accept a coach's invite** — signup 409s
+7. **An existing account can never accept a coach's invite**: signup 409s
    before invite logic (`api/auth/signup/route.ts:107-115`); no authenticated
    accept path exists. This also means **churned clients can never return**
    (restore is blocked when `endedBy === 'CLIENT'`), and the Past-clients copy
@@ -155,10 +155,10 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
 8. **Deep links are always lost at login.** Middleware writes `callbackUrl`
    (`middleware.ts:29`); the login page never reads it
    (`login/page.tsx:42-49`).
-9. **Login errors are always "Invalid email or password"** — including
+9. **Login errors are always "Invalid email or password"**, including
    rate-limited, locked-demo, and soft-deleted accounts (`auth.ts:29-54`,
    `login/page.tsx:37-40`), so a blocked user keeps retrying and digs deeper.
-10. **Password reset doesn't invalidate sessions** — 30-day JWTs survive a
+10. **Password reset doesn't invalidate sessions**: 30-day JWTs survive a
     reset (`password-reset/confirm/route.ts:15-17`, `auth.ts:115`). Same for
     the admin reset. Accepted risk, but worth deciding consciously pre-beta.
 
@@ -166,7 +166,7 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
 
 11. **Past clients are a data black hole**: rows aren't clickable, and both
     detail APIs require an ACTIVE relationship (`coach/clients/[id]/route.ts:26-32`,
-    messages 403) — so the "nothing is deleted" promise has no read path.
+    messages 403), so the "nothing is deleted" promise has no read path.
 12. **Plan builder states with no exit**: a plan with no weeks says "try
     deleting it" with only Close (`PlanEditorDrawer.tsx:396-418`); an empty
     week offers no add-day action (`:764-770`). There are no add/delete/reorder
@@ -175,25 +175,25 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
 
 ---
 
-## T3 — UI that promises things the code doesn't do
+## T3: UI that promises things the code doesn't do
 
-1. **"Send Reminder" sends nothing** — it just navigates to the profile
+1. **"Send Reminder" sends nothing**: it just navigates to the profile
    (`ClientsRequiringAction.tsx:46,73-83`). The most important CTA on the
    dashboard.
-2. **The invite email field is decorative** — collected, stored, never sent
+2. **The invite email field is decorative**: collected, stored, never sent
    (`InviteClientModal.tsx:257-277`, `api/invites/route.ts:39-47`; no
    client-invite template exists in `email.ts`), while `GettingStartedCard.tsx:114`
    shows "Waiting on client@x.com" as if it were.
-3. **"Auto-sends every 7 days"** — see T1.
+3. **"Auto-sends every 7 days"**: see T1.
 4. **Plan card Archive/Duplicate/Restore don't exist**: menu items render only
    if callbacks are passed and they never are (`PlanTemplateList.tsx:136-143`);
    `archivedAt` isn't a DB column, so the "Archived" section can never be
    non-empty; there's no duplicate endpoint. Backlog #23 open.
-5. **The weight-unit (lbs/kg/BW) selector is decorative** — no `weightUnit`
+5. **The weight-unit (lbs/kg/BW) selector is decorative**: no `weightUnit`
    column, value never sent (`ExerciseEditorDrawer.tsx:399-408`,
    `PlanEditorDrawer.tsx:182`).
 6. **"Replace with library exercise" on an existing exercise silently does
-   nothing** — the update PUT never sends `name`/`exerciseId`
+   nothing**: the update PUT never sends `name`/`exerciseId`
    (`PlanEditorDrawer.tsx:172-187`, schema omits `exerciseId`).
 7. **The builder's "Library" tab is a hardcoded static list**, not the coach's
    real library (`ExerciseEditorDrawer.tsx:17` imports
@@ -202,14 +202,14 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
    case-sensitive, so "Bench Press"/"bench press" duplicate. Backlog #22 open.
 8. **Waitlist repeat-signup shows "Watch your inbox" but no email is ever
    (re)sent** (`api/waitlist/route.ts:41-50`); no resend path exists.
-9. **WeeklyConfidenceStrip mislabels buckets** — `NEEDS_PLAN`/`PLAN_ENDED`
+9. **WeeklyConfidenceStrip mislabels buckets**: `NEEDS_PLAN`/`PLAN_ENDED`
    count as "pending · awaiting replies" (`WeeklyConfidenceStrip.tsx:13-17,91`),
    and the sample client is included in all dashboard counts
    (`api/coach/dashboard/route.ts:22-23`).
 
 ---
 
-## T4 — Silent data loss
+## T4: Silent data loss
 
 1. **Coach check-in reply is destroyed on failure.** `InlineCheckInReview`
    fires the async complete *without await*, clears the textarea, and shows the
@@ -217,23 +217,23 @@ canonicals point at prod), `RESEND_API_KEY`, `WAITLIST_FROM_EMAIL`,
    a 409/500 loses the typed response behind a green "sent" screen. Same
    pattern for "start new check-in".
 2. **Workout set writes: any 4xx drops the whole batch with no toast**
-   (`useWorkoutExecution.ts:133-144`) — triggered by a coach editing the day
+   (`useWorkoutExecution.ts:133-144`), triggered by a coach editing the day
    mid-workout, or by the 100-set batch cap (`schemas.ts:255-256`). Checkmarks
    silently revert. The pending queue is in-memory only (killed tab = gone),
    and there's no offline indicator anywhere; `sw.js` deliberately has no fetch
    handler, so a refresh in a dead-zone gym loses the session.
-3. **Plan-builder mutations swallow errors across the board** — save/delete
+3. **Plan-builder mutations swallow errors across the board**: save/delete
    exercise, rename, emoji, day name, briefing all `console.error` and close as
    if saved (`PlanEditorDrawer.tsx:224-327`).
-4. **Effort rating for non-final workouts is unrecoverable** — the "can rate
+4. **Effort rating for non-final workouts is unrecoverable**: the "can rate
    later from dashboard" comment is only true for the last workout of the day
    list (`ClientWorkoutExecution.tsx:280-286`); and `feedbackSent` never resets
    between same-session workouts (`ClientDashboard.tsx:51,596`).
 5. **Unassign plan** nulls `planStartDate` with no confirm on one of its two
-   paths (`InlinePlanEditor.tsx:137-143` — though that component is currently
+   paths (`InlinePlanEditor.tsx:137-143`, though that component is currently
    unreachable; `UnifiedClientProfile.tsx:311-321`), making week progress
    unrecoverable. All plan PUTs are last-write-wins with no version check.
-6. **Signup race returns 500 instead of 409** — no `P2002` branch
+6. **Signup race returns 500 instead of 409**: no `P2002` branch
    (`api/auth/signup/route.ts:107-115,221-226`); double-submit is possible
    because the button re-enables during navigation (`SignupClient.tsx:181-185`).
 
@@ -259,31 +259,31 @@ workspace can't demo the auto check-in loop at all), `isSample`,
 nothing to switch), `repsMax`, `supersetWithPrevious`; and creates no
 `ClientInvite`/`WaitlistEntry` rows. Demo walkthroughs can't reach several
 shipped features. Also `prisma/sql/post_00*.sql` are dead legacy files (their
-content lives in migrations) and `post_001` has diverged — delete or mark them.
+content lives in migrations) and `post_001` has diverged; delete or mark them.
 
 ## Test harness gaps (cheap wins)
 
 - No `"test"` script in `package.json` and **no CI at all** (no `.github/`).
-  `npx vitest run` passes 309 tests today — wire it up.
+  `npx vitest run` passes 309 tests today; wire it up.
 - Coverage is 100% pure-function units: zero tests on any of the 50 API
   routes, `middleware.ts`, `auth.ts` authorize, `scoping.ts`, or
   `checkin-schedule.ts` (the scheduler, arguably the most important logic, has
   none).
 - `vitest.config.ts` aliases `@prisma` to a directory that doesn't exist.
 - `TEST_CASES_PHASE_3_4.md` still describes the pre-DB localStorage UI
-  (backlog #35) — retire it or rewrite against the shipped product.
+  (backlog #35); retire it or rewrite against the shipped product.
 
 ---
 
 ## Suggested order of attack before testing
 
-**Round 1 — config & visibility (small, do first):**
+**Round 1: config & visibility (small, do first):**
 T0 items: document Upstash vars in `.env.example`, decide the staging
 migration story, set the full env checklist on the deploy, add minimal error
 reporting (even a log-drain alert on `[EMAIL_ALERT]`/500s), fix the demo-mode
 footgun or drop demo creds from the tester script.
 
-**Round 2 — make the core loop true (the product's promise):**
+**Round 2: make the core loop true (the product's promise):**
 Cron (Vercel cron → an endpoint that runs `expireStaleCheckIns` +
 `ensureScheduledCheckIn` for all enabled clients), default the schedule ON or
 surface the toggle at assign time, extend push/in-app notifications to
@@ -291,7 +291,7 @@ check-in + plan events, re-wire the adapter so flag context and full check-in
 history render, add a "send check-in" button that's always reachable, fix the
 no-await data loss in check-in reply.
 
-**Round 3 — remove the traps testers will hit:**
+**Round 3: remove the traps testers will hit:**
 Terminated-client false screen + the three client dead-ends, "Send Reminder"
 (rename or implement), invite email field (send it or remove it), existing-
 account invite acceptance (or explicitly document the limitation for the
