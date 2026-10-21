@@ -1,13 +1,8 @@
 import { useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
-import {
-  getWeekDays,
-  getWeekProgress,
-  WeekDayInfo,
-} from '@/lib/workout-week-helpers';
+import { getWeekDays, WeekDayInfo } from '@/lib/workout-week-helpers';
 import { WeekHeader } from './WeekHeader';
-import { WeekProgressStrip } from './WeekProgressStrip';
 import { DayCardGrid } from './DayCardGrid';
 
 interface WeeklyOverviewProps {
@@ -42,13 +37,6 @@ export function WeeklyOverview({
     return getWeekDays(currentWeek, completions, client.id);
   }, [currentWeek, completions, client.id]);
 
-  // Calculate progress
-  const progress = useMemo(() => {
-    const base = getWeekProgress(weekDays);
-    const remaining = weekDays.filter((d) => d.status !== 'COMPLETED').length;
-    return { ...base, remaining };
-  }, [weekDays]);
-
   // Handle day card click
   const handleDayClick = (day: WeekDayInfo) => {
     if (day.isInteractive && day.workoutDay && currentWeek) {
@@ -77,12 +65,8 @@ export function WeeklyOverview({
     <div className="space-y-5">
       <WeekHeader plan={plan} currentWeek={currentWeekNumber} />
 
-      <WeekProgressStrip
-        completed={progress.completed}
-        total={progress.total}
-        remaining={progress.remaining}
-      />
-
+      {/* No progress bar here: the checklist shows what's done, and the
+          Progress tab's stepper is the one place the week is counted */}
       <DayCardGrid days={weekDays} onDayClick={handleDayClick} />
     </div>
   );
