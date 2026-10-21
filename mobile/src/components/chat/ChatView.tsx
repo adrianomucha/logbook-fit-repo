@@ -4,6 +4,7 @@ import { Feather } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import type { Message } from '@logbook/shared/types';
 import { stripFlagContext } from '@logbook/shared/flag-message';
+import { chatRowsNewestFirst, type ChatRow } from '@logbook/shared/chat-rows';
 import { UserAvatar } from '@/components/UserAvatar';
 
 /** Server-side cap on message content (sendMessageSchema) */
@@ -13,6 +14,7 @@ const FULL = 20;
 const FLAT = 4;
 
 interface ChatViewProps {
+  /** Oldest first, as apiMessagesToMessages returns them */
   messages: Message[];
   currentUserId: string;
   peerName: string;
@@ -25,14 +27,7 @@ interface ChatViewProps {
   conversationStarters?: string[];
 }
 
-type Row = {
-  message: Message;
-  showDateSep: boolean;
-  isFirstInGroup: boolean;
-  isLastInGroup: boolean;
-  isNewest: boolean;
-  msgDate: Date;
-};
+type Row = ChatRow;
 
 /**
  * Messenger-style bubble corners, same rule as the web: the tail side is the
@@ -75,31 +70,9 @@ export function ChatView({
   const suppressRef = useRef(false);
   const peerFirst = peerName.split(' ')[0];
 
-  // Group info is computed oldest-first (as the web does), then rendered
-  // newest-first by the inverted list.
-  const rows = useMemo<Row[]>(() => {
-    const oldestFirst = [...messages].reverse();
-    const out = oldestFirst.map((msg, idx) => {
-      const prev = idx > 0 ? oldestFirst[idx - 1] : null;
-      const next = idx < oldestFirst.length - 1 ? oldestFirst[idx + 1] : null;
-      const msgDate = new Date(msg.timestamp);
-      const prevDate = prev ? new Date(prev.timestamp) : null;
-      const nextDate = next ? new Date(next.timestamp) : null;
-      const showDateSep = !prevDate || msgDate.toDateString() !== prevDate.toDateString();
-      const nextIsNewDay = !nextDate || msgDate.toDateString() !== nextDate.toDateString();
-      const sameSenderAsPrev = prev?.senderId === msg.senderId && !showDateSep;
-      const sameSenderAsNext = next?.senderId === msg.senderId && !nextIsNewDay;
-      return {
-        message: msg,
-        showDateSep,
-        isFirstInGroup: !sameSenderAsPrev,
-        isLastInGroup: !sameSenderAsNext,
-        isNewest: idx === oldestFirst.length - 1,
-        msgDate,
-      };
-    });
-    return out.reverse();
-  }, [messages]);
+  // `messages` arrive oldest first (apiMessagesToMessages); the inverted
+  // list wants rows newest first, with grouping worked out oldest first
+  const rows = useMemo<Row[]>(() => chatRowsNewestFirst(messages), [messages]);
 
   // New messages while scrolled up → count them for the pill instead of yanking the view.
   const count = messages.length;
