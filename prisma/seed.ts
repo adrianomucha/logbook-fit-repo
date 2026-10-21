@@ -81,16 +81,25 @@ async function seed() {
     });
   }
 
+  // Seeded text is matched on letters and digits only: when its punctuation
+  // changed (em dashes removed), a database seeded with the old wording still
+  // converges onto the new text instead of getting a second copy.
+  const textKey = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, "");
+
   async function ensureMessage(
     senderId: string,
     recipientId: string,
     content: string,
     opts: { readAt: Date | null; createdAt: Date }
   ) {
-    const existing = await prisma.message.findFirst({
-      where: { senderId, recipientId, content },
-    });
-    if (existing) return existing;
+    const existing = (
+      await prisma.message.findMany({ where: { senderId, recipientId } })
+    ).find((m) => textKey(m.content) === textKey(content));
+    if (existing) {
+      return existing.content === content
+        ? existing
+        : prisma.message.update({ where: { id: existing.id }, data: { content } });
+    }
     return prisma.message.create({
       data: { senderId, recipientId, content, readAt: opts.readAt, createdAt: opts.createdAt },
     });
@@ -132,12 +141,25 @@ async function seed() {
   ) {
     // No unique key on check-ins, so match the client's feeling text (unique per
     // check-in in this seed), or any open PENDING check-in for content-less ones.
-    const existing = await prisma.checkIn.findFirst({
-      where: data.clientFeeling
-        ? { coachId: coachProfileId, clientId, clientFeeling: data.clientFeeling }
-        : { coachId: coachProfileId, clientId, status: "PENDING" },
-    });
-    if (existing) return existing;
+    const { clientFeeling } = data;
+    const existing = clientFeeling
+      ? (
+          await prisma.checkIn.findMany({
+            where: { coachId: coachProfileId, clientId, clientFeeling: { not: null } },
+          })
+        ).find((c) => textKey(c.clientFeeling!) === textKey(clientFeeling))
+      : await prisma.checkIn.findFirst({
+          where: { coachId: coachProfileId, clientId, status: "PENDING" },
+        });
+    if (existing) {
+      // Old wording: bring the text fields up to date, leave the rest alone.
+      return existing.clientFeeling === (clientFeeling ?? existing.clientFeeling)
+        ? existing
+        : prisma.checkIn.update({
+            where: { id: existing.id },
+            data: { clientFeeling, coachFeedback: data.coachFeedback },
+          });
+    }
     return prisma.checkIn.create({ data: { coachId: coachProfileId, clientId, ...data } });
   }
 

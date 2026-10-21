@@ -14,6 +14,9 @@ const prisma = new PrismaClient();
 const COACH_EMAIL = "coach@logbook.fit";
 const CLIENT_EMAIL = "adrianomucha@gmail.com";
 const PLAN_NAME = "Adrian: Hypertrophy 1.1";
+// The name this plan was created under before em dashes were dropped from the
+// repo. The duplicate guard checks it too, so a re-run still stops.
+const LEGACY_PLAN_NAME = "Adrian \u2014 Hypertrophy 1.1";
 const DURATION_WEEKS = 8;
 
 type Ex = {
@@ -105,11 +108,11 @@ async function main() {
 
   // 2. Guard against duplicate runs
   const existing = await prisma.plan.findFirst({
-    where: { coachId, name: PLAN_NAME, deletedAt: null },
+    where: { coachId, name: { in: [PLAN_NAME, LEGACY_PLAN_NAME] }, deletedAt: null },
   });
   if (existing) {
     throw new Error(
-      `A plan named "${PLAN_NAME}" already exists (id=${existing.id}). Delete it first or rename, then re-run.`
+      `A plan named "${existing.name}" already exists (id=${existing.id}). Delete it first or rename, then re-run.`
     );
   }
 
