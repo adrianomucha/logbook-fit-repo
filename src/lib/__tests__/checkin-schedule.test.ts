@@ -671,6 +671,25 @@ describe("check-in schedule over time", () => {
     expect(await ensureScheduledCheckIn(anchored)).not.toBeNull();
   });
 
+  it("replaces an ignored manual check-in on the anchor day inside its last day", async () => {
+    const anchored = { ...activeRelationship, checkInDayOfWeek: MONDAY };
+    // Coach sends one by hand on a Tuesday morning, before the 09:00 sweep
+    const tuesday8am = MONDAY_9AM + DAY_MS - 60 * 60 * 1000;
+    rows.push({
+      id: "manual",
+      coachId: "coach-1",
+      clientId: "client-1",
+      status: "PENDING",
+      createdAt: new Date(tuesday8am),
+    });
+
+    // 13 days 1 hour later is an anchor day: it expires a little early and
+    // that day's scheduled check-in takes its place
+    vi.setSystemTime(MONDAY_9AM + 14 * DAY_MS);
+    expect(await ensureScheduledCheckIn(anchored)).not.toBeNull();
+    expect(rows.find((r) => r.id === "manual")?.status).toBe("EXPIRED");
+  });
+
   it("doesn't send an unsent scheduled check-in straight back", async () => {
     vi.setSystemTime(MONDAY_9AM);
     const sent = await ensureScheduledCheckIn(activeRelationship);

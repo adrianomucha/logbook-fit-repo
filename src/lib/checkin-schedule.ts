@@ -11,7 +11,8 @@ const DEFAULT_INTERVAL_DAYS = 7;
  * cadences — late responders still get a whole extra cycle to answer; after
  * that the check-in expires so it stops blocking the schedule forever. Never
  * shorter than two weeks: a 3-day cadence shouldn't expire a check-in the
- * client would still plausibly answer.
+ * client would still plausibly answer. (Anchored cadences take a day off
+ * this; see expireStaleCheckIns.)
  */
 function stalePendingMs(intervalDays: number) {
   return Math.max(2 * intervalDays, 14) * DAY_MS;
@@ -24,12 +25,18 @@ function stalePendingMs(intervalDays: number) {
  * exactly the quiet client the product exists to surface would stop being
  * checked on. Expired check-ins are hidden from history on both sides.
  *
- * Anchored cadences get the same one-day grace as sending does: the check-in
- * went out on an anchor day, possibly later in the day than the sweep, and
- * the sweep two cadences on would otherwise find it a few hours (or seconds)
- * short of stale. It would then sit PENDING through the anchor day and the
- * next one couldn't go out until the anchor day after, turning "every two
- * weeks" into "every three".
+ * Anchored cadences get the same one-day grace as sending does: a scheduled
+ * check-in went out on an anchor day, possibly later in the day than the
+ * sweep, and the sweep two cadences on would otherwise find it a few hours
+ * (or seconds) short of stale. It would then sit PENDING through the anchor
+ * day and the next one couldn't go out until the anchor day after, turning
+ * "every two weeks" into "every three".
+ *
+ * A check-in the coach sent by hand off the anchor day can therefore expire
+ * up to a day short of the full window, on the anchor day that falls inside
+ * that last day. That's deliberate: the same sweep sends that day's scheduled
+ * check-in in its place, rather than leaving the client on a two-week-old
+ * one until the anchor day after.
  */
 export async function expireStaleCheckIns(
   clientId: string,
