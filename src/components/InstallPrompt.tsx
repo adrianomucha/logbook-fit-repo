@@ -9,6 +9,7 @@ import {
   markOffered,
   parseInstallPromptState,
   resolveInstallPrompt,
+  type InstallAudience,
   type InstallMethod,
   type InstallPromptState,
 } from '@/lib/pwa-install';
@@ -51,21 +52,55 @@ function persistOffered(): void {
   }
 }
 
-const COPY: Record<Exclude<InstallMethod, 'none'>, { title: string; body: string; cta: string }> = {
-  native: {
-    title: 'Install Logbook',
-    body: 'Keep it on your device — opens straight to your workout.',
-    cta: 'Install',
+type Copy = { title: string; body: string; cta: string };
+
+const HOME_SCREEN_TITLE = 'Add Logbook to your Home Screen';
+
+const COPY: Record<InstallAudience, Record<Exclude<InstallMethod, 'none'>, Copy>> = {
+  client: {
+    native: {
+      title: 'Install Logbook',
+      body: 'Keep it on your device — opens straight to your workout.',
+      cta: 'Install',
+    },
+    'ios-safari': {
+      title: HOME_SCREEN_TITLE,
+      body: 'Opens straight to your workout — no browser, no searching.',
+      cta: 'Show me how',
+    },
+    'ios-browser': {
+      title: HOME_SCREEN_TITLE,
+      body: 'Opens straight to your workout — no browser, no searching.',
+      cta: 'Show me how',
+    },
+    // Never resolved for clients (see InstallAudience); here for the type.
+    'macos-safari': {
+      title: 'Add Logbook to your Dock',
+      body: 'Opens straight to your workout — no browser, no searching.',
+      cta: 'Show me how',
+    },
   },
-  'ios-safari': {
-    title: 'Add Logbook to your Home Screen',
-    body: 'Opens straight to your workout — no browser, no searching.',
-    cta: 'Show me how',
-  },
-  'ios-browser': {
-    title: 'Add Logbook to your Home Screen',
-    body: 'Opens straight to your workout — no browser, no searching.',
-    cta: 'Show me how',
+  coach: {
+    native: {
+      title: 'Install Logbook',
+      body: 'Your clients in their own window, one click away — no tab to dig for.',
+      cta: 'Install',
+    },
+    'ios-safari': {
+      title: HOME_SCREEN_TITLE,
+      body: 'Check-ins and messages one tap away — no browser, no searching.',
+      cta: 'Show me how',
+    },
+    'ios-browser': {
+      title: HOME_SCREEN_TITLE,
+      body: 'Check-ins and messages one tap away — no browser, no searching.',
+      cta: 'Show me how',
+    },
+    'macos-safari': {
+      title: 'Add Logbook to your Dock',
+      body: 'Your clients in their own window, one click away — no tab to dig for.',
+      cta: 'Show me how',
+    },
   },
 };
 
@@ -88,9 +123,9 @@ function Step({ index, children }: { index: number; children: React.ReactNode })
  * Nudges people to install the PWA.
  *
  * Two very different mechanics behind one banner: Chromium hands us a real
- * install dialog via `beforeinstallprompt`, while iOS has no install API at
- * all and can only be walked through the Share sheet by hand. Which one (if
- * either) applies is decided in `@/lib/pwa-install`.
+ * install dialog via `beforeinstallprompt`, while Safari — iOS and macOS —
+ * has no install API at all and can only be walked through its menus by hand.
+ * Which one (if either) applies is decided in `@/lib/pwa-install`.
  *
  * Mounted on the coach and client dashboards only — deliberately not on the
  * workout or check-in screens, where a floating card would sit on top of the
@@ -100,7 +135,7 @@ function Step({ index, children }: { index: number; children: React.ReactNode })
  * screen, so installing, closing, or just reading it and carrying on all end
  * the same way: it never comes back.
  */
-export function InstallPrompt() {
+export function InstallPrompt({ audience }: { audience: InstallAudience }) {
   const [method, setMethod] = useState<InstallMethod>('none');
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showSteps, setShowSteps] = useState(false);
@@ -148,7 +183,8 @@ export function InstallPrompt() {
           displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
           hasNativePrompt: deferred !== null,
         },
-        readState()
+        readState(),
+        audience
       );
       if (resolved === 'none') return;
 
@@ -162,7 +198,7 @@ export function InstallPrompt() {
 
     return () => clearTimeout(timer);
     // Re-runs if Chromium's prompt lands after the first pass.
-  }, [deferred]);
+  }, [deferred, audience]);
 
   const dismiss = useCallback(() => {
     setMethod('none');
@@ -194,8 +230,9 @@ export function InstallPrompt() {
 
   if (method === 'none') return null;
 
-  const copy = COPY[method];
-  const isIOS = method !== 'native';
+  const copy = COPY[audience][method];
+  // Every path but Chromium's is walked through by hand.
+  const hasSteps = method !== 'native';
 
   return (
     <section
@@ -233,10 +270,15 @@ export function InstallPrompt() {
           </button>
         </div>
 
-        {showSteps && isIOS && (
+        {showSteps && hasSteps && (
           <ol id={STEPS_ID} className="mt-3 space-y-2 border-t border-border pt-3">
             <Step index={1}>
-              {method === 'ios-safari' ? (
+              {method === 'macos-safari' ? (
+                <>
+                  In the menu bar, open{' '}
+                  <span className="font-medium text-foreground">File</span>
+                </>
+              ) : method === 'ios-safari' ? (
                 <>
                   Tap <Share className={STEP_ICON} aria-hidden="true" /> in the
                   Safari toolbar
@@ -249,8 +291,18 @@ export function InstallPrompt() {
               )}
             </Step>
             <Step index={2}>
-              Choose <PlusSquare className={STEP_ICON} aria-hidden="true" />{' '}
-              <span className="font-medium text-foreground">Add to Home Screen</span>
+              {method === 'macos-safari' ? (
+                <>
+                  Choose{' '}
+                  <span className="font-medium text-foreground">Add to Dock</span>{' '}
+                  (macOS Sonoma or later)
+                </>
+              ) : (
+                <>
+                  Choose <PlusSquare className={STEP_ICON} aria-hidden="true" />{' '}
+                  <span className="font-medium text-foreground">Add to Home Screen</span>
+                </>
+              )}
             </Step>
           </ol>
         )}
@@ -258,12 +310,12 @@ export function InstallPrompt() {
         <button
           type="button"
           onClick={handleCta}
-          aria-expanded={isIOS ? showSteps : undefined}
+          aria-expanded={hasSteps ? showSteps : undefined}
           // Only set once the list exists, so the IDREF never dangles.
-          aria-controls={isIOS && showSteps ? STEPS_ID : undefined}
+          aria-controls={hasSteps && showSteps ? STEPS_ID : undefined}
           className="mt-3 h-9 w-full rounded-md bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
-          {showSteps && isIOS ? 'Got it' : copy.cta}
+          {showSteps && hasSteps ? 'Got it' : copy.cta}
         </button>
       </div>
     </section>

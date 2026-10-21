@@ -20,6 +20,8 @@ export type InstallMethod =
   | 'ios-safari'
   /** Chrome/Edge/Firefox/Orion on iOS 16.4+ — Share lives in their own menu. */
   | 'ios-browser'
+  /** Safari 17+ on a Mac — File ▸ Add to Dock (macOS Sonoma and later). */
+  | 'macos-safari'
   /** Already installed, no install path, or already offered. Render nothing. */
   | 'none';
 
@@ -78,6 +80,13 @@ export function isIOS(userAgent: string, maxTouchPoints: number): boolean {
   return /Macintosh/.test(userAgent) && maxTouchPoints > 1;
 }
 
+/**
+ * Who the banner is for. Coaches run their business from a laptop, so their
+ * banner also covers Safari on a Mac; a client logs workouts on their phone,
+ * and pointing them at a Dock would be an ask about the wrong device.
+ */
+export type InstallAudience = 'coach' | 'client';
+
 /** iOS browsers that ship their own Add to Home Screen entry (iOS 16.4+). */
 const IOS_BROWSER_TOKENS = /CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|Orion\//;
 
@@ -92,10 +101,30 @@ function isRealIOSSafari(userAgent: string): boolean {
   return userAgent.includes('Safari/') && /Version\/\d/.test(userAgent);
 }
 
-export function detectInstallMethod(snapshot: BrowserSnapshot): InstallMethod {
+/**
+ * Safari on a Mac, version 17 or later — the first with Add to Dock. Chrome,
+ * Edge and Firefox on macOS carry no `Version/` token, so the Safari check
+ * alone tells them apart. The UA can't say which macOS it runs on (it is frozen
+ * at 10_15_7), so Safari 17 on Ventura still lands here; the steps name
+ * Sonoma so that reader knows why the menu item is missing.
+ */
+export function isMacSafari(userAgent: string, maxTouchPoints: number): boolean {
+  if (!/Macintosh/.test(userAgent) || isIOS(userAgent, maxTouchPoints)) return false;
+  if (!isRealIOSSafari(userAgent)) return false;
+  const version = /Version\/(\d+)/.exec(userAgent);
+  return version !== null && Number(version[1]) >= 17;
+}
+
+export function detectInstallMethod(
+  snapshot: BrowserSnapshot,
+  audience: InstallAudience = 'client'
+): InstallMethod {
   if (isRunningInstalled(snapshot)) return 'none';
   // A captured native prompt beats any instructions we could write.
   if (snapshot.hasNativePrompt) return 'native';
+  if (audience === 'coach' && isMacSafari(snapshot.userAgent, snapshot.maxTouchPoints)) {
+    return 'macos-safari';
+  }
   if (!isIOS(snapshot.userAgent, snapshot.maxTouchPoints)) return 'none';
   if (IOS_BROWSER_TOKENS.test(snapshot.userAgent)) return 'ios-browser';
   return isRealIOSSafari(snapshot.userAgent) ? 'ios-safari' : 'none';
@@ -122,8 +151,9 @@ function isFiniteNumber(value: unknown): value is number {
 /** The single decision the banner needs: what to render, if anything. */
 export function resolveInstallPrompt(
   snapshot: BrowserSnapshot,
-  state: InstallPromptState
+  state: InstallPromptState,
+  audience: InstallAudience = 'client'
 ): InstallMethod {
   if (hasBeenOffered(state)) return 'none';
-  return detectInstallMethod(snapshot);
+  return detectInstallMethod(snapshot, audience);
 }
