@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildWorkoutHistory, formatHistoryDuration, historyWeekLabel, weeksTrainedStreak } from '../progress';
+import { buildProgressStory, describeThisWeek, formatMomentWhen, nextWorkoutName } from '../progress';
+import type { PersonalBest } from '../personal-bests';
 import { MAX_SESSION_SEC, finishedSessionSec, plausibleSessionSec } from '../session-duration';
 import type { WorkoutCompletion, WorkoutPlan } from '../types';
 
@@ -12,20 +13,16 @@ const done = (iso: string, extra: Partial<WorkoutCompletion> = {}): WorkoutCompl
 // Wednesday; weeks start Mon Sep 28, Sep 21, Sep 14, Sep 7
 const now = new Date('2026-09-30T12:00:00');
 
-describe('weeksTrainedStreak', () => {
-  it('counts back through weeks with any session, below target or not', () => {
-    const c = ['2026-09-29T10:00:00', '2026-09-22T10:00:00', '2026-09-15T10:00:00', '2026-09-01T10:00:00'].map((d) => done(d));
-    expect(weeksTrainedStreak(c, now)).toBe(3);
-  });
+const plan = {
+  id: 'p', name: 'Block A',
+  weeks: [
+    { id: 'w1', weekNumber: 1, days: [{ id: 'up', name: 'Upper', orderIndex: 1, exercises: [] }, { id: 'lo', name: 'Lower', orderIndex: 2, exercises: [] }] },
+    { id: 'w2', weekNumber: 2, days: [{ id: 'up2', name: 'Upper', orderIndex: 1, exercises: [] }, { id: 'lo2', name: 'Lower', orderIndex: 2, exercises: [] }] },
+  ],
+} as unknown as WorkoutPlan;
 
-  it("doesn't break on a week still in progress", () => {
-    const c = ['2026-09-22T10:00:00', '2026-09-15T10:00:00'].map((d) => done(d));
-    expect(weeksTrainedStreak(c, now)).toBe(2);
-  });
-
-  it('is zero once a whole week is missed', () => {
-    expect(weeksTrainedStreak([done('2026-09-15T10:00:00')], now)).toBe(0);
-  });
+const best = (completionId: string, completedAt: string, exerciseName: string, extra: Partial<PersonalBest> = {}): PersonalBest => ({
+  exerciseId: exerciseName, exerciseName, completionId, planId: 'p', completedAt, kind: 'weight', weight: 185, reps: 5, delta: 5, ...extra,
 });
 
 describe('session duration', () => {
@@ -33,8 +30,6 @@ describe('session duration', () => {
     expect(plausibleSessionSec(40 * 60)).toBe(2400);
     expect(plausibleSessionSec((139 * 60 + 10) * 60)).toBeUndefined();
     expect(plausibleSessionSec(0)).toBeUndefined();
-    expect(formatHistoryDuration((139 * 60 + 10) * 60)).toBe('—');
-    expect(formatHistoryDuration(65 * 60)).toBe('1h 5m');
   });
 
   it('falls back to the span of logged sets when Start → Finish is implausible', () => {
@@ -50,69 +45,141 @@ describe('session duration', () => {
   });
 });
 
-describe('historyWeekLabel', () => {
-  it('names the recent weeks and ranges the rest', () => {
-    expect(historyWeekLabel(new Date('2026-09-28T00:00:00'), now)).toBe('This week');
-    expect(historyWeekLabel(new Date('2026-09-21T00:00:00'), now)).toBe('Last week');
-    expect(historyWeekLabel(new Date('2026-09-14T00:00:00'), now)).toBe('Sep 14 – 20');
-    expect(historyWeekLabel(new Date('2026-08-31T00:00:00'), now)).toBe('Aug 31 – Sep 6');
-    expect(historyWeekLabel(new Date('2025-12-29T00:00:00'), now)).toBe('Dec 29 – Jan 4, 2026');
-    expect(historyWeekLabel(new Date('2025-12-15T00:00:00'), now)).toBe('Dec 15 – 21, 2025');
+describe('nextWorkoutName', () => {
+  it("names the week's first workout not yet done", () => {
+    expect(nextWorkoutName(plan, 1, [])).toBe('Upper');
+    expect(nextWorkoutName(plan, 1, [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' })])).toBe('Lower');
+  });
+
+  it('is null when the week is done or unknown', () => {
+    const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' }), done('2026-09-29T11:00:00', { weekId: 'w1', dayId: 'lo' })];
+    expect(nextWorkoutName(plan, 1, c)).toBeNull();
+    expect(nextWorkoutName(plan, 9, [])).toBeNull();
+    expect(nextWorkoutName(null, 1, [])).toBeNull();
   });
 });
 
-describe('buildWorkoutHistory', () => {
-  const plan = {
-    id: 'p', name: 'Block A',
-    weeks: [{ id: 'w1', weekNumber: 1, days: [{ id: 'day1', name: 'Chest + Lats', exercises: [] }] }],
-  } as unknown as WorkoutPlan;
+describe('describeThisWeek', () => {
+  it('counts this week and always points at the next workout', () => {
+    const c = [done('2026-09-29T10:00:00'), done('2026-09-24T10:00:00')];
+    expect(describeThisWeek(c, 4, 'Lower', now)).toEqual({
+      completed: 1,
+      target: 4,
+      slots: [
+        { state: 'done', label: 'Tue' },
+        { state: 'next', label: 'Next' },
+        { state: 'upcoming', label: '' },
+        { state: 'upcoming', label: '' },
+      ],
+      lead: '1 down.',
+      rest: '3 to go. Next up, Lower.',
+    });
+    expect(describeThisWeek(c, 4, null, now).rest).toBe('3 to go.');
+  });
 
-  it('groups by week, newest first, with a one-line summary', () => {
+  it('opens a week and a first week differently', () => {
+    expect(describeThisWeek([done('2026-09-24T10:00:00')], 4, 'Upper', now)).toMatchObject({ lead: 'New week.', rest: 'First up, Upper.' });
+    expect(describeThisWeek([], 4, null, now)).toMatchObject({ lead: 'Fresh start.', rest: 'Your first workout kicks things off.' });
+  });
+
+  it('calls a full week done', () => {
+    const c = ['2026-09-28T10:00:00', '2026-09-29T10:00:00', '2026-09-30T08:00:00'].map((d) => done(d));
+    expect(describeThisWeek(c, 3, null, now)).toMatchObject({ lead: 'All 3 done.', rest: 'Week complete. Rest up.' });
+    expect(describeThisWeek(c, 3, null, now).slots.map((s) => s.state)).toEqual(['done', 'done', 'done']);
+    expect(describeThisWeek(c, 2, null, now).lead).toBe('3 done.');
+  });
+});
+
+describe('formatMomentWhen', () => {
+  it('says when relative to now', () => {
+    expect(formatMomentWhen('2026-09-30T08:00:00', now)).toBe('Today');
+    expect(formatMomentWhen('2026-09-29T08:00:00', now)).toBe('Yesterday');
+    expect(formatMomentWhen('2026-09-27T08:00:00', now)).toBe('Sunday');
+    expect(formatMomentWhen('2026-09-11T08:00:00', now)).toBe('Sep 11');
+    expect(formatMomentWhen('2025-12-11T08:00:00', now)).toBe('Dec 11, 2025');
+  });
+});
+
+describe('buildProgressStory', () => {
+  const story = (completions: WorkoutCompletion[], extra: Partial<Parameters<typeof buildProgressStory>[0]> = {}) =>
+    buildProgressStory({ completions, plans: [plan], weightUnit: 'LB', now, ...extra });
+
+  it('opens with the first workout and folds ordinary ones between moments', () => {
     const c = [
-      done('2026-09-29T10:00:00', { id: 'a', planId: 'p', weekId: 'w1', dayId: 'day1', setsDone: 15, durationSec: 2400 }),
-      done('2026-09-27T10:00:00', { id: 'b', planId: 'old', dayName: 'Lower', setsDone: 15 }),
-      done('2026-09-26T10:00:00', { id: 'c', planId: 'old', dayName: 'Upper', setsDone: 12 }),
+      done('2026-09-15T10:00:00', { id: 'a', weekId: 'w1', dayId: 'up' }),
+      done('2026-09-22T10:00:00', { id: 'b', dayName: 'Arms' }),
+      done('2026-09-23T10:00:00', { id: 'c', dayName: 'Legs' }),
     ];
-    const weeks = buildWorkoutHistory(c, [plan], [{ completionId: 'a' }], now);
-    expect(weeks.map((w) => [w.label, w.summary])).toEqual([
-      ['This week', '1 session · 15 sets · 1 PB'],
-      ['Last week', '2 sessions · 27 sets'],
+    const s = story(c);
+    expect(s.map((m) => [m.kind, m.title])).toEqual([
+      ['quiet', '+ 2 workouts'],
+      ['milestone', 'First workout logged'],
     ]);
-    const [a] = weeks[0].entries;
-    expect(a).toMatchObject({ name: 'Chest + Lats', weekNumber: 1, planName: 'Block A', bests: 1, meta: 'Tue 29 · 40m · 15 sets' });
-    // Older plans aren't loaded — the server's day name stands in, and no week is claimed
-    expect(weeks[1].entries.map((e) => [e.name, e.weekNumber, e.planName])).toEqual([
-      ['Lower', null, 'Earlier plan'],
-      ['Upper', null, 'Earlier plan'],
+    expect(s[0].sessions).toEqual(['Legs · Wed 23', 'Arms · Tue 22']);
+    expect(s[1]).toMatchObject({ when: 'Sep 15', detail: 'Upper. This is where it starts.' });
+  });
+
+  it('counts milestones from the lifetime total when older history is cut off', () => {
+    // 8 workouts before the year we were given, then 3 more: the 10th is the second here
+    const c = ['2026-09-01T10:00:00', '2026-09-03T10:00:00', '2026-09-05T10:00:00'].map((d) => done(d));
+    const s = story(c, { totalWorkouts: 11 });
+    expect(s.filter((m) => m.kind === 'milestone')).toEqual([
+      expect.objectContaining({ title: '10 workouts logged', when: 'Sep 3', detail: undefined }),
     ]);
   });
 
-  it('leaves unknowns out of the row instead of guessing', () => {
-    const [week] = buildWorkoutHistory([done('2026-09-19T10:00:00', { durationSec: 139 * 3600 })], [], [], now);
-    expect(week.entries[0].meta).toBe('Sat 19');
-    expect(week.summary).toBe('1 session');
+  it('names a single best with its gain, and groups several from one session', () => {
+    const c = [done('2026-09-01T10:00:00'), done('2026-09-29T10:00:00', { id: 'x', weekId: 'w1', dayId: 'up' })];
+    const one = story(c, { personalBests: [best('x', '2026-09-29T10:00:00', 'Bench Press')] });
+    expect(one[0]).toMatchObject({ kind: 'best', when: 'Yesterday', title: 'New best on Bench Press', detail: '185 lb × 5, up 5 lb' });
+    const many = story(c, {
+      personalBests: ['Bench Press', 'Row', 'Squat', 'Dip'].map((e) => best('x', '2026-09-29T10:00:00', e)),
+    });
+    expect(many[0]).toMatchObject({ title: '4 new bests in Upper', detail: 'Bench Press, Row and 2 more' });
   });
 
-  it('marks partial sessions and only the efforts that break from the usual', () => {
+  it('marks a comeback after two weeks off', () => {
+    const s = story([done('2026-09-01T10:00:00'), done('2026-09-29T10:00:00', { dayName: 'Push' })]);
+    expect(s[0]).toMatchObject({ kind: 'comeback', title: 'Back at it', detail: 'Push, after 4 weeks off' });
+  });
+
+  it('marks streak milestones on the week that reached them', () => {
+    const c = ['2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00', '2026-09-29T10:00:00'].map((d) => done(d));
+    const streak = story(c).find((m) => m.kind === 'streak');
+    expect(streak).toMatchObject({ title: '3 weeks in a row', when: 'Monday', detail: 'Every week since Sep 14' });
+  });
+
+  it('gives no streak lines to a run that may have started before the history we have', () => {
+    const c = ['2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00'].map((d) => done(d));
+    expect(story(c, { totalWorkouts: 40 }).some((m) => m.kind === 'streak')).toBe(false);
+  });
+
+  it('says when a run beats every earlier one', () => {
+    // Two weeks in August, a break, then three in a row
+    const c = ['2026-08-03T10:00:00', '2026-08-10T10:00:00', '2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00'].map((d) => done(d));
+    expect(story(c).find((m) => m.kind === 'streak')?.detail).toBe('Your longest run yet.');
+  });
+
+  it('celebrates a finished plan week', () => {
     const c = [
-      done('2026-09-29T10:00:00', { effortRating: 'MEDIUM' }),
-      done('2026-09-27T10:00:00', { effortRating: 'HARD', exercisesDone: 2 }),
-      done('2026-09-26T10:00:00', { effortRating: 'HARD' }),
-      done('2026-09-22T10:00:00', { effortRating: 'HARD' }),
+      done('2026-09-28T10:00:00', { weekId: 'w2', dayId: 'up2' }),
+      done('2026-09-29T10:00:00', { id: 'fin', weekId: 'w2', dayId: 'lo2' }),
     ];
-    const entries = buildWorkoutHistory(c, [], [], now).flatMap((w) => w.entries);
-    expect(entries.map((e) => e.effortCallout)).toEqual(['MEDIUM', undefined, undefined, undefined]);
-    expect(entries.map((e) => e.partial)).toEqual([false, true, false, false]);
-    expect(entries.map((e) => e.effortLabel)).toEqual(['Medium effort', undefined, undefined, undefined]);
-    expect(entries.map((e) => e.partialLabel)).toEqual([undefined, '2 of 5 exercises', undefined, undefined]);
+    expect(story(c)[0]).toMatchObject({ kind: 'week', title: 'Finished Week 2', detail: 'Block A · all 2 sessions', when: 'Yesterday' });
   });
 
-  it('calls out every rating while there are too few to have a usual', () => {
-    const entries = buildWorkoutHistory([done('2026-09-29T10:00:00', { effortRating: 'HARD' })], [], [], now)[0].entries;
-    expect(entries[0].effortCallout).toBe('HARD');
+  it("brings in the coach's replies", () => {
+    const checkIns = [
+      { id: 'k1', status: 'completed' as const, coachResponse: 'Great depth on those squats.', completedAt: '2026-09-29T20:00:00' },
+      { id: 'k2', status: 'responded' as const, coachResponse: undefined, completedAt: undefined },
+    ];
+    const s = story([], { checkIns, coachName: 'Sam Rivera' });
+    expect(s).toEqual([
+      expect.objectContaining({ kind: 'coach', title: 'Sam on your check-in', detail: 'Great depth on those squats.' }),
+    ]);
   });
 
   it('skips sessions that were never finished', () => {
-    expect(buildWorkoutHistory([done('2026-09-29T10:00:00', { status: 'IN_PROGRESS' })], [], [], now)).toEqual([]);
+    expect(story([done('2026-09-29T10:00:00', { status: 'IN_PROGRESS' })])).toEqual([]);
   });
 });

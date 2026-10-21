@@ -649,16 +649,18 @@ export function ClientDashboard() {
         {currentView === 'progress' && (
           <>
             <div className="py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">History</p>
-              <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">Progress</h1>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Progress</p>
+              <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">This week</h1>
             </div>
             <ProgressHistory
               plans={plan ? [plan] : []}
-              client={client}
               plan={plan}
               workoutCompletions={allWorkoutCompletions}
-              progressStats={progress?.stats}
               personalBests={progress?.personalBests}
+              checkIns={checkIns}
+              coachName={coach?.user.name}
+              totalWorkouts={progress?.stats.totalWorkouts}
+              weekNumber={weekOverview?.weekNumber ?? null}
             />
           </>
         )}

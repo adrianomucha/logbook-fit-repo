@@ -1,47 +1,54 @@
 import { useMemo } from 'react';
 import { Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
 import type { WorkoutPlan } from '@logbook/shared/types';
-import { apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
+import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@logbook/shared/workout-helpers';
-import { formatWeekStreak, getWeekVerdict, weeksTrainedStreak } from '@logbook/shared/progress';
-import { plausibleSessionSec } from '@logbook/shared/session-duration';
-import { formatBestDelta, formatBestsNote, formatBestValue, formatBestWhen, summarizePersonalBests } from '@logbook/shared/personal-bests';
-import { formatTrainingTime } from '@logbook/shared/plan-summary';
+import { buildProgressStory, describeThisWeek, nextWorkoutName } from '@logbook/shared/progress';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useClientPlan } from '@/hooks/useClientWeek';
-import { useClientProgress } from '@/hooks/useCheckIns';
+import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
+import { useClientCheckIns, useClientProgress } from '@/hooks/useCheckIns';
 import { Screen } from '@/components/Screen';
 import { Eyebrow, LoadingScreen } from '@/components/ui';
-import { WorkoutHistory } from '@/components/progress/WorkoutHistory';
+import { ProgressStory, WeekCircles } from '@/components/progress/ProgressStory';
 
-const TONE_TEXT = { success: 'text-success-text', warning: 'text-warning-text', neutral: 'text-muted-foreground' } as const;
-
-/** The Progress tab — the web's ProgressHistory. Leaving a coach lives in Settings → Account. */
+/**
+ * The Progress tab, the web's ProgressHistory. This week as circles and a
+ * sentence that ends on the next workout, then the story: only the moments
+ * worth noticing. Leaving a coach lives in Settings → Account.
+ */
 export default function ProgressScreen() {
-  const { weightUnit, isLoading: loadingUser } = useCurrentUser();
+  const { weightUnit, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
   const { plan: planDetail, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
+  const { weekOverview, refresh: refreshWeek } = useClientWeekOverview();
   const { progress, isLoading: loadingProgress, refresh: refreshProgress } = useClientProgress();
+  const { checkIns: apiCheckIns, refresh: refreshCheckIns } = useClientCheckIns();
 
   const plan: WorkoutPlan | null = useMemo(() => (planDetail ? apiPlanToWorkoutPlan(planDetail) : null), [planDetail]);
   const completions = useMemo(() => (progress ? apiProgressToWorkoutCompletions(progress.allCompletions) : []), [progress]);
+  const checkIns = useMemo(
+    () => apiCheckIns.map((ci) => apiCheckInToCheckIn(ci, clientProfileId ?? '', coach?.user.id ?? '')),
+    [apiCheckIns, clientProfileId, coach]
+  );
+
+  // Same shared helpers as the web's ProgressHistory, so both tell the same story
   const target = plan?.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
-  const verdict = useMemo(() => getWeekVerdict(completions, target), [completions, target]);
-  // Same shared helpers as the web's ProgressHistory, so both say the same thing
-  const bests = useMemo(() => summarizePersonalBests(progress?.personalBests ?? [], plan?.id ?? null), [progress, plan]);
-  const bestsNote = formatBestsNote(bests);
-  // Weeks in a row with a session — see weeksTrainedStreak for why not "weeks on target"
-  const weekStreak = useMemo(() => weeksTrainedStreak(completions), [completions]);
-  // All-time from the server, like the Workouts tile beside it; the history sum is the older-server fallback
-  const trainedSec =
-    progress?.stats.totalDurationSec ??
-    completions.reduce((sum, c) => sum + (c.status === 'COMPLETED' ? plausibleSessionSec(c.durationSec) ?? 0 : 0), 0);
-  const [trainedValue, trainedUnit] = formatTrainingTime(trainedSec);
-  const tiles: [string, string][] = [
-    [String(progress?.stats.totalWorkouts ?? 0), 'Workouts'],
-    [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '—', 'Trained'],
-    [formatWeekStreak(weekStreak), 'Streak'],
-  ];
+  const week = useMemo(
+    () => describeThisWeek(completions, target, nextWorkoutName(plan, weekOverview?.weekNumber ?? null, completions)),
+    [completions, target, plan, weekOverview]
+  );
+  const moments = useMemo(
+    () =>
+      buildProgressStory({
+        completions,
+        plans: plan ? [plan] : [],
+        personalBests: progress?.personalBests,
+        checkIns,
+        coachName: coach?.user.name,
+        weightUnit,
+        totalWorkouts: progress?.stats.totalWorkouts,
+      }),
+    [completions, plan, progress, checkIns, coach, weightUnit]
+  );
 
   if (loadingUser || (!progress && loadingProgress) || (!planDetail && loadingPlan)) return <LoadingScreen />;
 
@@ -51,77 +58,23 @@ export default function ProgressScreen() {
       onRefresh={() => {
         void refreshProgress();
         void refreshPlan();
+        void refreshWeek();
+        void refreshCheckIns();
       }}
       refreshing={false}
     >
       <View className="py-4">
-        <Eyebrow className="mb-1">History</Eyebrow>
-        <Text className="font-sans-bold text-2xl tracking-tight text-foreground">Progress</Text>
+        <Eyebrow className="mb-1">Progress</Eyebrow>
+        <Text className="font-sans-bold text-2xl tracking-tight text-foreground">This week</Text>
       </View>
 
-      <View className="-mt-2 gap-4">
-        {/* Personal bests — a list, not a hero: the title with a quiet note, then one line per best.
-            "This week" below carries the page's big number. */}
-        <View className="rounded-2xl border border-border/70 bg-card" accessibilityLabel="Personal bests">
-          <View className="flex-row items-center justify-between gap-4 px-4 pb-3 pt-3.5">
-            <View className="flex-row items-center gap-1.5">
-              <Feather name="award" size={12} color={bests.count > 0 ? '#157f3c' : '#737373'} />
-              <Eyebrow>Personal bests this block</Eyebrow>
-            </View>
-            {bestsNote ? <Text className="font-mono text-[11px] text-muted-foreground">{bestsNote}</Text> : null}
-          </View>
-          {bests.count === 0 ? (
-            <Text className="-mt-1 px-4 pb-4 font-sans text-sm leading-5 text-muted-foreground">
-              None yet. Beat your last weight or reps on a lift and it shows up here.
-            </Text>
-          ) : null}
-          {bests.latest.length > 0 ? (
-            <View className="border-t border-border/60" accessibilityLabel="Latest bests">
-              {bests.latest.map((b, i) => (
-                <View
-                  key={`${b.completionId}-${b.exerciseId}`}
-                  className={`flex-row items-center gap-3 px-4 py-2.5 ${i > 0 ? 'border-t border-border/40' : ''}`}
-                >
-                  {/* When sits under the lift so the name isn't cut to a stub */}
-                  <View className="flex-1">
-                    <Text className="font-sans-semibold text-sm tracking-tight text-foreground" numberOfLines={2}>{b.exerciseName}</Text>
-                    <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground">{formatBestWhen(b.completedAt)}</Text>
-                  </View>
-                  <Text className="font-mono-semibold text-[13px] text-foreground">{formatBestValue(b, weightUnit)}</Text>
-                  <Text className="w-12 text-right font-mono text-xs text-success-text">{formatBestDelta(b, weightUnit)}</Text>
-                </View>
-              ))}
-            </View>
-          ) : null}
-        </View>
+      <WeekCircles week={week} />
+      <Text className="mt-4 font-sans-bold text-[22px] leading-7 tracking-tight text-foreground">
+        {week.lead} <Text className="font-sans-medium text-muted-foreground">{week.rest}</Text>
+      </Text>
 
-        <View className="rounded-xl bg-muted/40 p-4">
-          <View className="mb-3 flex-row items-center justify-between gap-3">
-            <Eyebrow>This week</Eyebrow>
-            <Text className={`shrink text-right font-sans-semibold text-[11px] ${TONE_TEXT[verdict.tone]}`}>{verdict.text}</Text>
-          </View>
-          <View className="mb-3 flex-row items-baseline gap-1.5">
-            <Text className="font-mono-bold text-2xl leading-7 text-foreground">{verdict.completed}</Text>
-            <Text className="font-mono-bold text-sm text-muted-foreground">/ {verdict.target}</Text>
-            <Eyebrow className="ml-1">sessions</Eyebrow>
-          </View>
-          <View className="flex-row gap-1.5" accessibilityRole="image" accessibilityLabel={`${verdict.completed} of ${verdict.target} sessions completed this week`}>
-            {Array.from({ length: verdict.target }).map((_, i) => (
-              <View key={i} className={`h-2.5 flex-1 rounded-full ${i < verdict.completed ? 'bg-brand' : 'bg-muted-foreground/15'}`} />
-            ))}
-          </View>
-        </View>
-
-        <View className="flex-row gap-2">
-          {tiles.map(([value, label]) => (
-            <View key={label} className="flex-1 items-center rounded-xl bg-muted/40 px-3 py-4">
-              <Text className="font-mono-bold text-xl leading-6 text-foreground">{value}</Text>
-              <Eyebrow className="mt-2">{label}</Eyebrow>
-            </View>
-          ))}
-        </View>
-
-        <WorkoutHistory completions={completions} plans={plan ? [plan] : []} personalBests={progress?.personalBests} />
+      <View className="mt-8">
+        <ProgressStory moments={moments} />
       </View>
     </Screen>
   );
