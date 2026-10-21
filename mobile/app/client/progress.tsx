@@ -45,6 +45,7 @@ export default function ProgressScreen() {
         checkIns,
         coachName: coach?.user.name,
         weightUnit,
+        totalWorkouts: progress?.stats.totalWorkouts,
       }),
     [completions, plan, progress, checkIns, coach, weightUnit]
   );

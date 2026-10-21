@@ -659,6 +659,7 @@ export function ClientDashboard() {
               personalBests={progress?.personalBests}
               checkIns={checkIns}
               coachName={coach?.user.name}
+              totalWorkouts={progress?.stats.totalWorkouts}
               weekNumber={weekOverview?.weekNumber ?? null}
             />
           </>

@@ -119,6 +119,15 @@ describe('buildProgressStory', () => {
     expect(s[1]).toMatchObject({ when: 'Sep 15', detail: 'Upper. This is where it starts.' });
   });
 
+  it('counts milestones from the lifetime total when older history is cut off', () => {
+    // 8 workouts before the year we were given, then 3 more: the 10th is the second here
+    const c = ['2026-09-01T10:00:00', '2026-09-03T10:00:00', '2026-09-05T10:00:00'].map((d) => done(d));
+    const s = story(c, { totalWorkouts: 11 });
+    expect(s.filter((m) => m.kind === 'milestone')).toEqual([
+      expect.objectContaining({ title: '10 workouts logged', when: 'Sep 3', detail: undefined }),
+    ]);
+  });
+
   it('names a single best with its gain, and groups several from one session', () => {
     const c = [done('2026-09-01T10:00:00'), done('2026-09-29T10:00:00', { id: 'x', weekId: 'w1', dayId: 'up' })];
     const one = story(c, { personalBests: [best('x', '2026-09-29T10:00:00', 'Bench Press')] });
@@ -138,6 +147,11 @@ describe('buildProgressStory', () => {
     const c = ['2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00', '2026-09-29T10:00:00'].map((d) => done(d));
     const streak = story(c).find((m) => m.kind === 'streak');
     expect(streak).toMatchObject({ title: '3 weeks in a row', when: 'Monday', detail: 'Every week since Sep 14' });
+  });
+
+  it('gives no streak lines to a run that may have started before the history we have', () => {
+    const c = ['2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00'].map((d) => done(d));
+    expect(story(c, { totalWorkouts: 40 }).some((m) => m.kind === 'streak')).toBe(false);
   });
 
   it('says when a run beats every earlier one', () => {

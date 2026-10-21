@@ -15,6 +15,8 @@ interface ProgressHistoryProps {
   /** The coach's replies become moments in the story */
   checkIns: CheckIn[];
   coachName?: string | null;
+  /** All-time finished workouts; the completions only reach back a year */
+  totalWorkouts?: number;
   /** The plan week it is now (the week overview's), for "next up" */
   weekNumber: number | null;
 }
@@ -31,6 +33,7 @@ export function ProgressHistory({
   personalBests,
   checkIns,
   coachName,
+  totalWorkouts,
   weekNumber,
 }: ProgressHistoryProps) {
   const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
@@ -40,8 +43,9 @@ export function ProgressHistory({
     [workoutCompletions, target, plan, weekNumber]
   );
   const moments = useMemo(
-    () => buildProgressStory({ completions: workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit }),
-    [workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit]
+    () =>
+      buildProgressStory({ completions: workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit, totalWorkouts }),
+    [workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit, totalWorkouts]
   );
 
   return (

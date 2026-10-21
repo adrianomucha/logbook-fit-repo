@@ -159,6 +159,7 @@ export function buildProgressStory({
   checkIns = [],
   coachName,
   weightUnit,
+  totalWorkouts,
   now = new Date(),
 }: {
   completions: WorkoutCompletion[];
@@ -167,9 +168,13 @@ export function buildProgressStory({
   checkIns?: Pick<CheckIn, 'id' | 'coachResponse' | 'completedAt' | 'status'>[];
   coachName?: string | null;
   weightUnit: WeightUnit;
+  /** All-time count of finished workouts. The completions only reach back a year, so this places them in the lifetime count. */
+  totalWorkouts?: number;
   now?: Date;
 }): Moment[] {
   const sessions = completedSessions(completions);
+  // Workouts older than the history we were given
+  const before = Math.max(0, (totalWorkouts ?? sessions.length) - sessions.length);
   const moment = (m: Omit<Moment, 'when'>): Moment => ({ ...m, when: formatMomentWhen(m.at, now) });
   const moments: Moment[] = [];
   const notable = new Set<string>();
@@ -193,12 +198,18 @@ export function buildProgressStory({
       mark({ key: `best-${c.id}`, kind: 'best', title: `${bests.length} new bests in ${name}`, detail: listNames(bests.map((b) => b.exerciseName)) });
     }
 
-    const count = i + 1;
+    const count = before + i + 1;
     if (isCountMilestone(count)) {
       mark(
         count === 1
           ? { key: `count-${c.id}`, kind: 'milestone', title: 'First workout logged', detail: `${name}. This is where it starts.` }
-          : { key: `count-${c.id}`, kind: 'milestone', title: `${count} workouts logged`, detail: `Since ${format(parseISO(sessions[0].completedAt!), 'MMM d')}` },
+          : {
+              key: `count-${c.id}`,
+              kind: 'milestone',
+              title: `${count} workouts logged`,
+              // The first workout's date is only known when the history reaches it
+              detail: before === 0 ? `Since ${format(parseISO(sessions[0].completedAt!), 'MMM d')}` : undefined,
+            },
       );
     }
 
@@ -221,6 +232,9 @@ export function buildProgressStory({
   let longestBefore = 0;
   let runStart: number | null = null;
   let lastWeek: number | null = null;
+  // With older history cut off, a run starting in the first week we have may
+  // have started earlier: its length is unknown, so it gets no lines
+  const edgeWeek = before > 0 ? firstInWeek.keys().next().value : undefined;
   for (const [week, c] of firstInWeek) {
     const continues = lastWeek != null && addWeeks(new Date(lastWeek), 1).getTime() === week;
     if (!continues) {
@@ -230,7 +244,7 @@ export function buildProgressStory({
     }
     run++;
     lastWeek = week;
-    if (isStreakMilestone(run)) {
+    if (isStreakMilestone(run) && runStart !== edgeWeek) {
       moments.push(
         moment({
           key: `streak-${week}`,
