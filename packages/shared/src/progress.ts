@@ -76,7 +76,7 @@ export function describeThisWeek({
   now = new Date(),
 }: {
   plan: WorkoutPlan | null;
-  /** The plan week it is now (the week overview's) */
+  /** The plan week it is now (the week overview's); null once the plan has ended */
   weekNumber: number | null;
   completions: WorkoutCompletion[];
   /** Workouts a week, for when there's no plan week to count */

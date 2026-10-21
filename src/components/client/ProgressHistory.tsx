@@ -17,7 +17,7 @@ interface ProgressHistoryProps {
   coachName?: string | null;
   /** All-time finished workouts; the completions only reach back a year */
   totalWorkouts?: number;
-  /** The plan week it is now (the week overview's), for "next up" */
+  /** The plan week it is now (the week overview's); null once the plan has ended */
   weekNumber: number | null;
 }
 

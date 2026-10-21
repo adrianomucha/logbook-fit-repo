@@ -32,9 +32,11 @@ export default function ProgressScreen() {
 
   // Same shared helpers as the web's ProgressHistory, so both tell the same story
   const target = plan?.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
+  // Once the plan has ended the week overview stays on its final week; that isn't this week
+  const weekNumber = weekOverview && !weekOverview.planEnded ? weekOverview.weekNumber : null;
   const week = useMemo(
-    () => describeThisWeek({ plan, weekNumber: weekOverview?.weekNumber ?? null, completions, target }),
-    [completions, target, plan, weekOverview]
+    () => describeThisWeek({ plan, weekNumber, completions, target }),
+    [completions, target, plan, weekNumber]
   );
   const moments = useMemo(
     () =>
