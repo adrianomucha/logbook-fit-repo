@@ -21,7 +21,7 @@ Also implement **per-user usage limits** in your application:
 - Track token usage per user in your database
 - Set daily/monthly caps per user or per tier
 - Return a clear error when limits are exceeded
-- Don't rely on the AI provider's caps alone — they may have lag
+- Don't rely on the AI provider's caps alone; they may have lag
 
 ## Prompt Injection
 
@@ -47,9 +47,9 @@ Even with separate messages, be aware that sophisticated prompt injection can st
 
 LLM responses should be treated as untrusted user input:
 
-- **Sanitize before rendering as HTML** — LLM output can contain script tags or event handlers
+- **Sanitize before rendering as HTML**: LLM output can contain script tags or event handlers
 - **Never execute LLM output as code** without sandboxing
-- **Validate tool/function call parameters** — if using function calling, validate all returned parameters against an allowlist and schema before executing
+- **Validate tool/function call parameters**: if using function calling, validate all returned parameters against an allowlist and schema before executing
 
 ## Tool / Function Calling
 

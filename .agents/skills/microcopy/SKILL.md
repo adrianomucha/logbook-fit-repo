@@ -60,7 +60,7 @@ Key moments: **70/30** (first-time, empty state, failures, long waits)
 - "Not sure where to begin? Tell me the outcome."
 
 **Long wait**:
-- "Running… You can switch tasks—I'll notify you when done."
+- "Running… You can switch tasks. I'll notify you when done."
 - "This may take a few minutes. To speed up: reduce Context / switch model."
 
 **Failure**:

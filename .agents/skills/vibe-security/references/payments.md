@@ -30,7 +30,7 @@ Use Stripe Price IDs (created via the Stripe dashboard or API) rather than const
 
 ## Webhook Signature Verification
 
-Stripe webhooks must have their signatures verified. This requires the **raw request body** — parsing the body as JSON first destroys the signature.
+Stripe webhooks must have their signatures verified. This requires the **raw request body**; parsing the body as JSON first destroys the signature.
 
 ```typescript
 // Express: webhook route MUST use express.raw() BEFORE express.json()

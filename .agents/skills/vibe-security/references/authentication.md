@@ -2,9 +2,9 @@
 
 ## JWT Handling
 
-- **Use `jwt.verify()`, never `jwt.decode()` alone.** `decode` reads the payload without checking the signature — an attacker can forge any payload.
+- **Use `jwt.verify()`, never `jwt.decode()` alone.** `decode` reads the payload without checking the signature. An attacker can forge any payload.
 - **Explicitly reject `"alg": "none"`.** Some JWT libraries accept unsigned tokens if the algorithm is set to `"none"`. Your verification must reject this.
-- **Validate issuer, audience, and expiration** — not just the signature.
+- **Validate issuer, audience, and expiration**, not just the signature.
 
 ```typescript
 // BAD: reads token without verifying signature
@@ -86,5 +86,5 @@ Use `import 'server-only'` at the top of data access modules to prevent them fro
 ## Session & Token Storage
 
 - Store tokens in `HttpOnly + Secure + SameSite=Lax` cookies, **not localStorage**.
-- localStorage is accessible to any JavaScript on the page — a single XSS vulnerability exposes all tokens.
+- localStorage is accessible to any JavaScript on the page; a single XSS vulnerability exposes all tokens.
 - `HttpOnly` cookies are invisible to JavaScript and sent automatically by the browser.

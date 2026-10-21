@@ -65,7 +65,7 @@ If a `profiles` table lets users UPDATE their own row, they can set `is_admin = 
 
 ### Forgotten Related Tables
 
-Junction tables, audit logs, and metadata tables often lack RLS even when the main table has it. Every table exposed via the REST API needs its own policies. If a table has RLS enabled but no policies defined, it blocks all access — which is safe but may cause subtle bugs.
+Junction tables, audit logs, and metadata tables often lack RLS even when the main table has it. Every table exposed via the REST API needs its own policies. If a table has RLS enabled but no policies defined, it blocks all access, which is safe but may cause subtle bugs.
 
 ### SECURITY DEFINER Functions
 
@@ -147,5 +147,5 @@ Must validate `contentType`, `size`, and path ownership. Without this, users can
 ## Convex
 
 - Every public `query` and `mutation` must call `ctx.auth.getUserIdentity()` and handle the unauthenticated case.
-- Mutations must verify ownership — checking auth is not enough. Verify the user owns the specific resource they're modifying.
+- Mutations must verify ownership; checking auth is not enough. Verify the user owns the specific resource they're modifying.
 - Functions only called internally must use `internalQuery` / `internalMutation` / `internalAction`, not `query` / `mutation`. Public functions are callable by anyone.

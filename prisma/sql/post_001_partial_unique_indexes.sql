@@ -14,7 +14,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS "exercises_coach_name_active_unique"
   ON "exercises" ("coachId", "name")
   WHERE "deletedAt" IS NULL;
 
--- Plans: no duplicate plan names per coach — TEMPLATES only. Client copies
+-- Plans: no duplicate plan names per coach, TEMPLATES only. Client copies
 -- (sourceTemplateId set) carry their template's name by design, one per
 -- client per cycle, so they must be outside the rule. See
 -- 20260805_plan_name_unique_templates_only.

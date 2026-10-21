@@ -31,7 +31,7 @@ Referrer-Policy: strict-origin-when-cross-origin
 Permissions-Policy: camera=(), microphone=(), geolocation=()
 ```
 
-Adjust `Content-Security-Policy` based on your app's needs (e.g., if you use inline styles or load scripts from CDNs), but start restrictive and loosen as needed — not the other way around.
+Adjust `Content-Security-Policy` based on your app's needs (e.g., if you use inline styles or load scripts from CDNs), but start restrictive and loosen as needed, not the other way around.
 
 ## Pre-Ship Checks
 
@@ -46,4 +46,4 @@ Before deploying:
 
 - Never use `Access-Control-Allow-Origin: *` on authenticated endpoints
 - Whitelist only your own domains
-- Be careful with `Access-Control-Allow-Credentials: true` — it must be paired with specific origins, not wildcards
+- Be careful with `Access-Control-Allow-Credentials: true`; it must be paired with specific origins, not wildcards

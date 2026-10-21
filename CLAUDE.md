@@ -10,6 +10,10 @@ git commit --author "Adrian Mucha <adrianomucha@gmail.com>" ...
 
 Credit Claude via a `Co-Authored-By` trailer in the commit message instead of as the commit author.
 
+## No em dashes
+
+Never use the em dash character (U+2014) anywhere: user-facing copy, code comments, commit messages, PR text, or chat replies. Use a period, comma, colon, or parentheses instead.
+
 ## Web and native parity
 
 The web app (`src/`) and the native app (`mobile/`) must always match. When you change a client- or coach-facing screen, copy, or behavior on one, make the same change on the other in the same commit. Put shared logic and user-facing wording in `packages/shared` so both apps import it, not duplicate it.

@@ -50,6 +50,13 @@ const nextConfig = {
   // build output.
   transpilePackages: ["@logbook/shared"],
   eslint: { dirs: ["src", "packages"] },
+  // Next 15 streams metadata into <body> for browsers it doesn't recognize as
+  // bots, but Chrome only reads <link rel="manifest"> from <head>, so it
+  // never saw the manifest and never offered to install the app (no address
+  // bar install icon, no beforeinstallprompt for InstallPrompt). Matching
+  // every user agent puts metadata back in <head> for everyone. Our metadata
+  // is static, so nothing was being gained by streaming it.
+  htmlLimitedBots: /.*/,
   // The Documents folder is iCloud-synced, which evicts build artifacts
   // mid-compilation. The build dir must stay inside the project (Next.js runs
   // the build's require() from distDir, so node_modules has to be reachable by
