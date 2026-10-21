@@ -6,6 +6,7 @@ import type { TrackingType } from '@logbook/shared/reps';
 import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook/shared/workout-execution';
 import { fromDisplayWeight, toDisplayWeight, type WeightUnit } from '@logbook/shared/weight-units';
 import { SetTimer } from './SetTimer';
+import { KEYPAD_DONE_BAR_ID } from './KeypadDoneBar';
 
 interface SetRowProps {
   setNumber: number;
@@ -119,7 +120,9 @@ export function SetRow({
   const timerTarget = !Number.isNaN(typedSeconds) && typedSeconds > 0 ? typedSeconds : defaultReps;
   const showCountdown = isTime && showTimer && !completed && !isReadOnly;
 
-  const inputClass = `h-11 rounded-lg text-center font-mono-bold text-base ${
+  // Font size only, no line height: on iOS a lineHeight on a one-line
+  // TextInput pushes the text below the middle of the box
+  const inputClass = `h-11 rounded-lg py-0 text-center font-mono-bold text-[16px] ${
     completed ? 'bg-transparent text-muted-foreground' : 'bg-muted/50 text-foreground'
   }`;
 
@@ -135,25 +138,27 @@ export function SetRow({
         {previous || '—'}
       </Text>
       <TextInput
-        style={{ width: SET_COLS.weight }}
+        style={{ width: SET_COLS.weight, textAlignVertical: 'center' }}
         className={inputClass}
         value={weight}
         onChangeText={commitWeight}
         placeholder={defaultWeight != null ? String(defaultWeight) : '—'}
         placeholderTextColor="#737373"
         keyboardType="decimal-pad"
+        inputAccessoryViewID={KEYPAD_DONE_BAR_ID}
         editable={!isReadOnly}
         selectTextOnFocus
         accessibilityLabel={`Set ${setNumber} weight`}
       />
       <TextInput
-        style={{ width: SET_COLS.reps }}
+        style={{ width: SET_COLS.reps, textAlignVertical: 'center' }}
         className={inputClass}
         value={reps}
         onChangeText={commitReps}
         placeholder={defaultReps != null ? String(defaultReps) : '—'}
         placeholderTextColor="#737373"
         keyboardType="number-pad"
+        inputAccessoryViewID={KEYPAD_DONE_BAR_ID}
         editable={!isReadOnly}
         selectTextOnFocus
         accessibilityLabel={`Set ${setNumber} ${isTime ? 'seconds' : 'reps'}`}

@@ -20,6 +20,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { FlagMessageSheet } from '@/components/workout/FlagMessageSheet';
+import { KeypadDoneBar } from '@/components/workout/KeypadDoneBar';
 import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 
 const FINISH_BAR_HEIGHT = 56 + 24;
@@ -377,6 +378,7 @@ export default function WorkoutScreen() {
       ) : null}
 
       <FlagMessageSheet exercise={messageExercise} onClose={() => setMessageExercise(null)} onSend={sendMessage} />
+      <KeypadDoneBar />
     </KeyboardAvoidingView>
   );
 }
