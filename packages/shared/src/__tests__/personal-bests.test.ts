@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   findPersonalBests,
-  formatBestDelta,
   formatBestValue,
-  formatBestWhen,
-  formatBestsNote,
   summarizePersonalBests,
   type LoggedSet,
 } from '../personal-bests';
@@ -83,33 +80,17 @@ describe('findPersonalBests', () => {
 });
 
 describe('formatting', () => {
-  it('formats values and deltas per kind', () => {
+  it('formats values per kind', () => {
     expect(formatBestValue({ kind: 'weight', weight: 95, reps: 5 }, 'LB')).toBe('95 lb × 5');
     expect(formatBestValue({ kind: 'weight', weight: 132.5, reps: 5 }, 'KG')).toBe('60 kg × 5');
     expect(formatBestValue({ kind: 'reps', weight: null, reps: 15 }, 'KG')).toBe('15 reps');
     expect(formatBestValue({ kind: 'time', weight: null, reps: 90 }, 'LB')).toBe('1:30');
     expect(formatBestValue({ kind: 'time', weight: null, reps: 45 }, 'LB')).toBe('45s');
-    expect(formatBestDelta({ kind: 'weight', delta: 2.5, weight: 95 }, 'LB')).toBe('+2.5');
-    // 132.5 → 138 lb is 60 → 62.5 kg
-    expect(formatBestDelta({ kind: 'weight', delta: 5.5, weight: 138 }, 'KG')).toBe('+2.5');
-    // Under half a kilo still reads as a gain, never "+0"
-    expect(formatBestDelta({ kind: 'weight', delta: 0.5, weight: 135 }, 'KG')).toBe('+0.5');
-    expect(formatBestDelta({ kind: 'reps', delta: 1, weight: 95 }, 'LB')).toBe('+1 rep');
-    expect(formatBestDelta({ kind: 'reps', delta: 3, weight: null }, 'LB')).toBe('+3 reps');
-    expect(formatBestDelta({ kind: 'time', delta: 15, weight: null }, 'LB')).toBe('+15s');
-  });
-
-  it('says when relative to now', () => {
-    const now = new Date('2026-09-28T12:00:00');
-    expect(formatBestWhen('2026-09-28T08:00:00', now)).toBe('Today');
-    expect(formatBestWhen('2026-09-27T08:00:00', now)).toBe('Yesterday');
-    expect(formatBestWhen('2026-09-24T08:00:00', now)).toBe('Thu');
-    expect(formatBestWhen('2026-09-03T08:00:00', now)).toBe('Sep 3');
   });
 });
 
 describe('summarizePersonalBests', () => {
-  it('scopes to the plan and counts this week from Monday', () => {
+  it('scopes to the plan and keeps the latest few', () => {
     const bests = findPersonalBests([
       set('squat', '2026-09-01', 80, 5),
       set('squat', '2026-09-22', 85, 5),
@@ -117,22 +98,9 @@ describe('summarizePersonalBests', () => {
       set('bench', '2026-09-01', 60, 5),
       set('bench', '2026-09-28', 65, 5, { planId: 'old' }),
     ]);
-    const s = summarizePersonalBests(bests, 'p1', { now: new Date('2026-09-28T20:00:00Z') });
-    expect(s).toMatchObject({ count: 2, exercises: 1, thisWeek: 1 });
+    const s = summarizePersonalBests(bests, 'p1');
+    expect(s.count).toBe(2);
     expect(s.latest.map((b) => b.weight)).toEqual([90, 85]);
-  });
-});
-
-describe('formatBestsNote', () => {
-  const summary = (count: number, exercises: number, thisWeek: number, shown: number) =>
-    ({ count, exercises, thisWeek, latest: Array(shown) }) as Parameters<typeof formatBestsNote>[0];
-
-  it('only mentions this week when the list shows every best', () => {
-    expect(formatBestsNote(summary(1, 1, 1, 1))).toBe('1 this week');
-    expect(formatBestsNote(summary(2, 2, 0, 2))).toBe('');
-  });
-
-  it('adds the total when the list is capped', () => {
-    expect(formatBestsNote(summary(12, 5, 2, 5))).toBe('12 across 5 lifts · 2 this week');
+    expect(summarizePersonalBests(bests, 'p1', { limit: 1 }).latest.map((b) => b.weight)).toEqual([90]);
   });
 });

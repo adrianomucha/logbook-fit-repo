@@ -1,69 +1,26 @@
 import { useMemo, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import type { EffortRating, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
-import { buildWorkoutHistory, EFFORT_LABELS, formatHistoryDuration, type HistoryEntry } from '@logbook/shared/progress';
+import type { WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
+import { buildWorkoutHistory, type HistoryEntry } from '@logbook/shared/progress';
 import { Eyebrow } from '@/components/ui';
 
-const EFFORT_COLOR: Record<EffortRating, string> = {
-  EASY: 'text-success-text',
-  MEDIUM: 'text-foreground',
-  HARD: 'text-warning-text',
-};
-
+/** The session's name and its day — a trophy for a best, a note only when it was left unfinished */
 function HistoryItem({ entry, last }: { entry: HistoryEntry; last: boolean }) {
-  const [expanded, setExpanded] = useState(false);
-  const { completion } = entry;
-  const effort = completion.effortRating;
   return (
-    <View className={last ? '' : 'border-b border-border/40'}>
-      {/* The name on top, one quiet line of detail under it */}
-      <Pressable
-        onPress={() => setExpanded((v) => !v)}
-        accessibilityRole="button"
-        accessibilityState={{ expanded }}
-        className="min-h-[44px] flex-row items-center gap-3 py-3 active:bg-muted/30"
-      >
-        <View className="flex-1">
-          <View className="flex-row items-center gap-1.5">
-            <Text className="shrink font-sans-semibold text-[15px] tracking-tight text-foreground" numberOfLines={1}>{entry.name}</Text>
-            {entry.bests > 0 ? (
-              <View accessibilityLabel={entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}>
-                <Feather name="award" size={14} color="#157f3c" />
-              </View>
-            ) : null}
-          </View>
-          <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground" numberOfLines={1}>
-            {entry.meta}
-            {entry.effortLabel ? ` · ${entry.effortLabel}` : ''}
-            {entry.partialLabel ? <Text className="text-warning-text">{` · ${entry.partialLabel}`}</Text> : null}
-          </Text>
+    <View className={`min-h-[44px] justify-center py-3 ${last ? '' : 'border-b border-border/40'}`}>
+      <View className="flex-row items-center gap-3">
+        <View className="flex-1 flex-row items-center gap-1.5">
+          <Text className="shrink font-sans-semibold text-[15px] tracking-tight text-foreground" numberOfLines={1}>{entry.name}</Text>
+          {entry.bests > 0 ? (
+            <View accessibilityLabel={entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}>
+              <Feather name="award" size={14} color="#157f3c" />
+            </View>
+          ) : null}
         </View>
-        <Feather name={expanded ? 'chevron-up' : 'chevron-down'} size={16} color="#c4c4c4" />
-      </Pressable>
-      {expanded ? (
-        <View className="gap-2.5 pb-4 pt-1">
-          <View className="flex-row justify-between">
-            <Text className="font-sans text-sm text-muted-foreground">Exercises</Text>
-            <Text className="font-mono-medium text-sm text-foreground">{completion.exercisesDone}/{completion.exercisesTotal}</Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="font-sans text-sm text-muted-foreground">Duration</Text>
-            <Text className="font-mono-medium text-sm text-foreground">{formatHistoryDuration(completion.durationSec)}</Text>
-          </View>
-          <View className="flex-row justify-between">
-            <Text className="font-sans text-sm text-muted-foreground">Effort</Text>
-            <Text className={`font-sans-medium text-sm ${effort ? EFFORT_COLOR[effort] : 'text-foreground'}`}>{effort ? EFFORT_LABELS[effort] : '—'}</Text>
-          </View>
-          <View className="flex-row justify-between gap-4">
-            <Text className="font-sans text-sm text-muted-foreground">Plan</Text>
-            <Text className="shrink font-sans-medium text-sm text-foreground" numberOfLines={1}>
-              {entry.planName}
-              {entry.weekNumber != null ? ` · Week ${entry.weekNumber}` : ''}
-            </Text>
-          </View>
-        </View>
-      ) : null}
+        <Text className="font-sans text-[13px] text-muted-foreground">{entry.date}</Text>
+      </View>
+      {entry.partialLabel ? <Text className="mt-0.5 font-sans text-xs text-warning-text">{entry.partialLabel}</Text> : null}
     </View>
   );
 }
@@ -84,18 +41,16 @@ export function WorkoutHistory({
 }) {
   const [showAll, setShowAll] = useState(false);
 
-  // Grouping, naming and the week summaries are shared with the web
+  // Grouping and naming are shared with the web
   const weeks = useMemo(() => buildWorkoutHistory(completions, plans, personalBests), [completions, plans, personalBests]);
-  const sessionCount = weeks.reduce((sum, w) => sum + w.entries.length, 0);
 
   const shown = showAll ? weeks : weeks.slice(0, initialWeeks);
   const hiddenWeeks = weeks.length - initialWeeks;
 
   return (
     <View className="overflow-hidden rounded-2xl border border-border/70 bg-card">
-      <View className="flex-row items-baseline justify-between border-b border-border/50 px-4 pb-3 pt-4">
+      <View className="border-b border-border/50 px-4 pb-3 pt-4">
         <Text className="font-mono-medium text-[11px] uppercase tracking-[1.8px] text-muted-foreground">Workout history</Text>
-        {sessionCount > 0 ? <Text className="font-mono text-[11px] text-muted-foreground">{sessionCount}</Text> : null}
       </View>
       {weeks.length === 0 ? (
         <View className="items-center gap-3 px-6 py-10">
@@ -109,14 +64,13 @@ export function WorkoutHistory({
         </View>
       ) : (
         <>
-          {/* One block per week: the week's line, then its sessions */}
+          {/* One block per week: its name, then its sessions */}
           {shown.map((week, i) => (
             <View key={week.key} className={i > 0 ? 'border-t border-border/50' : ''}>
-              <View className="flex-row items-baseline justify-between gap-3 bg-muted/30 px-4 py-2">
+              <View className="bg-muted/30 px-4 py-2">
                 <Text className="font-mono-semibold text-[10px] uppercase tracking-[1.4px] text-foreground" accessibilityRole="header">
                   {week.label}
                 </Text>
-                <Text className="shrink text-right font-sans text-xs text-muted-foreground">{week.summary}</Text>
               </View>
               <View className="px-4">
                 {week.entries.map((entry, j) => (

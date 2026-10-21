@@ -1,13 +1,8 @@
 import { memo, useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { WorkoutCompletion, WorkoutPlan, EffortRating } from '@/types';
+import { WorkoutCompletion, WorkoutPlan } from '@/types';
 import { ChevronDown, ChevronUp, Dumbbell, Trophy } from 'lucide-react';
-import {
-  buildWorkoutHistory,
-  EFFORT_LABELS,
-  formatHistoryDuration,
-  type HistoryEntry,
-} from '@logbook/shared/progress';
+import { buildWorkoutHistory, type HistoryEntry } from '@logbook/shared/progress';
 import { cn } from '@/lib/utils';
 
 interface EnrichedWorkoutHistoryProps {
@@ -19,77 +14,23 @@ interface EnrichedWorkoutHistoryProps {
   initialWeeks?: number;
 }
 
-const EFFORT_COLOR: Record<EffortRating, string> = {
-  EASY: 'text-success',
-  MEDIUM: 'text-foreground',
-  HARD: 'text-warning',
-};
-
+/** The session's name and its day — a trophy for a best, a note only when it was left unfinished */
 const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ entry }: { entry: HistoryEntry }) {
-  const [isExpanded, setIsExpanded] = useState(false);
-  const { completion } = entry;
-  const effort = completion.effortRating;
-
   return (
-    <div>
-      {/* The name on top, one quiet line of detail under it. On wider
-          screens the detail moves to the right and the row is one line. */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center gap-3 py-3 min-h-[44px] text-left hover:bg-muted/30 transition-colors touch-manipulation"
-        aria-expanded={isExpanded}
-      >
-        <span className="flex-1 min-w-0 sm:flex sm:items-center sm:gap-4">
-          <span className="flex items-center gap-1.5 min-w-0 sm:flex-1">
-            <span className="text-[15px] font-semibold tracking-tight leading-snug truncate">{entry.name}</span>
-            {entry.bests > 0 && (
-              <Trophy
-                className="w-3.5 h-3.5 shrink-0 text-success-text"
-                aria-label={entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}
-              />
-            )}
-          </span>
-          <span className="block mt-0.5 sm:mt-0 sm:shrink-0 truncate font-mono text-[11px] tabular-nums text-muted-foreground">
-            {entry.meta}
-            {entry.effortLabel && ` · ${entry.effortLabel}`}
-            {entry.partialLabel && <span className="text-warning-text"> · {entry.partialLabel}</span>}
-          </span>
+    <div className="py-3 min-h-[44px]">
+      <div className="flex items-center gap-3">
+        <span className="flex items-center gap-1.5 min-w-0 flex-1">
+          <span className="text-[15px] font-semibold tracking-tight leading-snug truncate">{entry.name}</span>
+          {entry.bests > 0 && (
+            <Trophy
+              className="w-3.5 h-3.5 shrink-0 text-success-text"
+              aria-label={entry.bests === 1 ? 'Personal best' : `${entry.bests} personal bests`}
+            />
+          )}
         </span>
-        {isExpanded ? (
-          <ChevronUp className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-        ) : (
-          <ChevronDown className="w-4 h-4 text-muted-foreground/50 shrink-0" />
-        )}
-      </button>
-
-      {/* Expanded details — same label ↔ value rows as Body Stats */}
-      {isExpanded && (
-        <div className="pb-4 pt-1 space-y-2.5 animate-fade-in-up">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Exercises</span>
-            <span className="font-mono font-medium tabular-nums">
-              {completion.exercisesDone}/{completion.exercisesTotal}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Duration</span>
-            <span className="font-mono font-medium tabular-nums">{formatHistoryDuration(completion.durationSec)}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Effort</span>
-            <span className={cn('font-medium', effort && EFFORT_COLOR[effort])}>
-              {effort ? EFFORT_LABELS[effort] : '—'}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Plan</span>
-            <span className="font-medium truncate ml-4">
-              {entry.planName}
-              {entry.weekNumber != null && ` · Week ${entry.weekNumber}`}
-            </span>
-          </div>
-        </div>
-      )}
+        <span className="shrink-0 text-[13px] text-muted-foreground">{entry.date}</span>
+      </div>
+      {entry.partialLabel && <p className="mt-0.5 text-xs text-warning-text">{entry.partialLabel}</p>}
     </div>
   );
 });
@@ -104,13 +45,12 @@ export function EnrichedWorkoutHistory({
 }: EnrichedWorkoutHistoryProps) {
   const [showAll, setShowAll] = useState(false);
 
-  // Grouping, naming and the week summaries live in @logbook/shared/progress
-  // so the app's log reads the same
+  // Grouping and naming live in @logbook/shared/progress so the app's log
+  // reads the same
   const weeks = useMemo(
     () => buildWorkoutHistory(completions, plans, personalBests),
     [completions, plans, personalBests]
   );
-  const sessionCount = weeks.reduce((sum, w) => sum + w.entries.length, 0);
 
   const displayedWeeks = showAll ? weeks : weeks.slice(0, initialWeeks);
   const hiddenWeeks = weeks.length - initialWeeks;
@@ -147,23 +87,19 @@ export function EnrichedWorkoutHistory({
       className="rounded-2xl bg-card border border-border/70 overflow-hidden"
     >
       {/* Header bar — mono voice, hairline separator */}
-      <div className="flex items-baseline justify-between px-4 pt-4 pb-3 border-b border-border/50">
+      <div className="px-4 pt-4 pb-3 border-b border-border/50">
         <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
           Workout history
         </h3>
-        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{sessionCount}</span>
       </div>
 
-      {/* One block per week: the week's line, then its sessions */}
+      {/* One block per week: its name, then its sessions */}
       {displayedWeeks.map((week, i) => (
         <div key={week.key} className={cn(i > 0 && 'border-t border-border/50')}>
-          <div className="flex items-baseline justify-between gap-3 px-4 py-2 bg-muted/30">
+          <div className="px-4 py-2 bg-muted/30">
             <h4 className="font-mono text-[10px] uppercase tracking-[0.14em] font-semibold text-foreground">
               {week.label}
             </h4>
-            <p className="text-xs tabular-nums text-muted-foreground text-right">
-              {week.summary}
-            </p>
           </div>
           <div className="divide-y divide-border/40 px-4">
             {week.entries.map((entry) => (

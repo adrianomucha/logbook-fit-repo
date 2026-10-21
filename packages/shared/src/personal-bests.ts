@@ -1,5 +1,4 @@
-import { differenceInCalendarDays, format, parseISO, startOfWeek } from "date-fns";
-import { formatWeight, toDisplayWeight, type WeightUnit } from "./weight-units";
+import { formatWeight, type WeightUnit } from "./weight-units";
 
 /**
  * Personal bests for the Progress tab, shared by web and app so both say
@@ -124,71 +123,19 @@ export function formatBestValue(
   return `${best.reps} reps`;
 }
 
-/** "+2.5" · "+1 rep" · "+10s" — weight in the viewer's unit */
-export function formatBestDelta(
-  best: Pick<PersonalBest, "kind" | "delta" | "weight">,
-  unit: WeightUnit,
-): string {
-  if (best.kind === "weight") {
-    // The gap between the two displayed weights, so the row adds up. A
-    // jump smaller than half a unit still reads as a (minimal) gain.
-    const now = best.weight ?? 0;
-    const shown = toDisplayWeight(now, unit) - toDisplayWeight(now - best.delta, unit);
-    return `+${Math.max(0.5, shown)}`;
-  }
-  if (best.kind === "time") return `+${best.delta}s`;
-  return `+${best.delta} ${best.delta === 1 ? "rep" : "reps"}`;
-}
-
-/** "Today" · "Yesterday" · "Tue" (this past week) · "Sep 3" */
-export function formatBestWhen(completedAt: string, now = new Date()): string {
-  const date = parseISO(completedAt);
-  const days = differenceInCalendarDays(now, date);
-  if (days <= 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 7) return format(date, "EEE");
-  return format(date, "MMM d");
-}
-
 export interface PersonalBestSummary {
   /** Bests set on the active plan */
   count: number;
-  /** Distinct exercises among them */
-  exercises: number;
-  /** Of those, set since Monday */
-  thisWeek: number;
-  /** Newest first, capped */
+  /** Newest first, capped — the Progress tab lists only the latest few */
   latest: PersonalBest[];
 }
 
-/** The counts and the "Latest bests" list for one plan */
+/** The count and the latest bests for one plan */
 export function summarizePersonalBests(
   bests: PersonalBest[],
   planId: string | null,
-  { limit = 5, now = new Date() }: { limit?: number; now?: Date } = {},
+  { limit = 3 }: { limit?: number } = {},
 ): PersonalBestSummary {
   const inPlan = planId ? bests.filter((b) => b.planId === planId) : bests;
-  const weekStart = startOfWeek(now, { weekStartsOn: 1 });
-  return {
-    count: inPlan.length,
-    exercises: new Set(inPlan.map((b) => b.exerciseId)).size,
-    thisWeek: inPlan.filter((b) => parseISO(b.completedAt) >= weekStart).length,
-    latest: inPlan.slice(0, limit),
-  };
-}
-
-/**
- * The quiet note beside the card's title — "1 this week", or with more
- * bests than the list shows, "12 across 5 lifts · 2 this week". The list
- * says the rest, so the card needs no headline number.
- */
-export function formatBestsNote(summary: PersonalBestSummary): string {
-  return [
-    summary.count > summary.latest.length
-      ? `${summary.count} across ${summary.exercises} ${summary.exercises === 1 ? "lift" : "lifts"}`
-      : null,
-    summary.thisWeek > 0 ? `${summary.thisWeek} this week` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  return { count: inPlan.length, latest: inPlan.slice(0, limit) };
 }

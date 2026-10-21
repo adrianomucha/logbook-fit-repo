@@ -1,6 +1,5 @@
 import { addDays, addWeeks, endOfWeek, format, getDay, isSameMonth, isWithinInterval, parseISO, startOfWeek } from 'date-fns';
-import type { EffortRating, WorkoutCompletion, WorkoutDay, WorkoutPlan } from './types';
-import { plausibleSessionSec } from './session-duration';
+import type { WorkoutCompletion, WorkoutDay, WorkoutPlan } from './types';
 
 /**
  * The Progress tab's pure logic, shared by web and app: the one-sentence
@@ -79,9 +78,9 @@ export function weeksTrainedStreak(completions: WorkoutCompletion[], now = new D
   return streak;
 }
 
-/** "3 wks" — the streak tile's value */
-export function formatWeekStreak(weeks: number): string {
-  return `${weeks} ${weeks === 1 ? 'wk' : 'wks'}`;
+/** "6 weeks in a row" — a quiet line under this week's bar. Null below two weeks, where a streak says nothing. */
+export function formatStreakLine(weeks: number): string | null {
+  return weeks >= 2 ? `${weeks} weeks in a row` : null;
 }
 
 /**
@@ -100,36 +99,18 @@ export function getWorkoutDisplayName(day: WorkoutDay | undefined, dayIndex: num
   return 'Workout';
 }
 
-/** "45m" / "1h 5m" / "—". A session left open (see plausibleSessionSec) reads as unknown. */
-export function formatHistoryDuration(seconds?: number): string {
-  const sec = plausibleSessionSec(seconds);
-  if (!sec) return '—';
-  const mins = Math.floor(sec / 60);
-  if (mins < 60) return `${mins}m`;
-  return `${Math.floor(mins / 60)}h ${mins % 60}m`;
-}
-
-export const EFFORT_LABELS: Record<EffortRating, string> = { EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard' };
-
-/** One session in the workout log */
+/** One session in the workout log: its name and day, and a mark for what's worth noticing */
 export interface HistoryEntry {
   completion: WorkoutCompletion;
   name: string;
-  /** Week of the loaded plan; null for work on a plan whose tree isn't loaded — claiming "Week 1" would be wrong */
-  weekNumber: number | null;
-  planName: string;
+  /** "Tue 29" */
+  date: string;
   /** Not every exercise finished — the one state worth marking on the row */
   partial: boolean;
   /** "2 of 5 exercises", only when partial */
   partialLabel?: string;
-  /** Effort to call out on the row: only when it breaks from the client's usual, so it means something */
-  effortCallout?: EffortRating;
-  /** "Medium effort", only with a callout */
-  effortLabel?: string;
   /** Personal bests set in this session */
   bests: number;
-  /** "Tue 29 · 40m · 15 sets" — unknown parts left out. The row's quiet second line. */
-  meta: string;
 }
 
 /** One Monday-start week of the log, newest first */
@@ -137,12 +118,8 @@ export interface HistoryWeek {
   key: string;
   /** "This week" / "Last week" / "Sep 14 – 20" */
   label: string;
-  /** "3 sessions · 45 sets · 2 PBs" */
-  summary: string;
   entries: HistoryEntry[];
 }
-
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** "This week", "Last week", else the week's date range */
 export function historyWeekLabel(weekStart: Date, now = new Date()): string {
@@ -160,8 +137,8 @@ export function historyWeekLabel(weekStart: Date, now = new Date()): string {
 }
 
 /**
- * The workout log, grouped into weeks with a one-line summary each. Shared
- * so the web and the app group, name and summarize sessions identically.
+ * The workout log, grouped into weeks. Shared so the web and the app group
+ * and name sessions identically.
  */
 export function buildWorkoutHistory(
   completions: WorkoutCompletion[],
@@ -176,14 +153,6 @@ export function buildWorkoutHistory(
   const bestsBySession = new Map<string, number>();
   for (const b of personalBests) bestsBySession.set(b.completionId, (bestsBySession.get(b.completionId) ?? 0) + 1);
 
-  // The client's usual effort. With too few ratings to have a habit, every
-  // rating is news; past that, only the exceptions are.
-  const effortCounts = new Map<EffortRating, number>();
-  for (const c of done) if (c.effortRating) effortCounts.set(c.effortRating, (effortCounts.get(c.effortRating) ?? 0) + 1);
-  const rated = [...effortCounts.values()].reduce((a, b) => a + b, 0);
-  const usualEffort =
-    rated >= 3 ? [...effortCounts.entries()].sort((a, b) => b[1] - a[1])[0][0] : undefined;
-
   const weeks: HistoryWeek[] = [];
   const byKey = new Map<string, { start: Date; entries: HistoryEntry[] }>();
   for (const completion of done) {
@@ -192,28 +161,15 @@ export function buildWorkoutHistory(
     const day = week?.days.find((d) => d.id === completion.dayId);
     const dayIndex = week?.days.findIndex((d) => d.id === completion.dayId) ?? -1;
     const completedAt = parseISO(completion.completedAt!);
-    const duration = plausibleSessionSec(completion.durationSec);
     const partial = completion.exercisesTotal > 0 && completion.exercisesDone < completion.exercisesTotal;
-    const effortCallout =
-      completion.effortRating && completion.effortRating !== usualEffort ? completion.effortRating : undefined;
 
     const entry: HistoryEntry = {
       completion,
       name: getWorkoutDisplayName(day, dayIndex, completion),
-      weekNumber: week?.weekNumber ?? null,
-      planName: plan?.name || 'Earlier plan',
+      date: format(completedAt, 'EEE d'),
       partial,
       partialLabel: partial ? `${completion.exercisesDone} of ${completion.exercisesTotal} exercises` : undefined,
-      effortCallout,
-      effortLabel: effortCallout ? `${EFFORT_LABELS[effortCallout]} effort` : undefined,
       bests: bestsBySession.get(completion.id) ?? 0,
-      meta: [
-        format(completedAt, 'EEE d'),
-        duration ? formatHistoryDuration(duration) : null,
-        completion.setsDone != null ? plural(completion.setsDone, 'set') : null,
-      ]
-        .filter(Boolean)
-        .join(' · '),
     };
 
     const start = startOfWeek(completedAt, { weekStartsOn: 1 });
@@ -224,22 +180,7 @@ export function buildWorkoutHistory(
   }
 
   for (const [key, { start, entries }] of byKey) {
-    const sets = entries.every((e) => e.completion.setsDone != null)
-      ? entries.reduce((sum, e) => sum + (e.completion.setsDone ?? 0), 0)
-      : null;
-    const bests = entries.reduce((sum, e) => sum + e.bests, 0);
-    weeks.push({
-      key,
-      label: historyWeekLabel(start, now),
-      summary: [
-        plural(entries.length, 'session'),
-        sets != null ? plural(sets, 'set') : null,
-        bests > 0 ? plural(bests, 'PB') : null,
-      ]
-        .filter(Boolean)
-        .join(' · '),
-      entries,
-    });
+    weeks.push({ key, label: historyWeekLabel(start, now), entries });
   }
   return weeks;
 }

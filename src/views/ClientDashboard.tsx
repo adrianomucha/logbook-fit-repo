@@ -657,7 +657,6 @@ export function ClientDashboard() {
               client={client}
               plan={plan}
               workoutCompletions={allWorkoutCompletions}
-              progressStats={progress?.stats}
               personalBests={progress?.personalBests}
             />
           </>
