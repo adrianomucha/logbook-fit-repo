@@ -5,7 +5,7 @@ import { STORY_EMPTY_TEXT, STORY_PAGE_SIZE, type Moment, type MomentKind, type T
 
 /**
  * This week as a stepper: a lime circle with a tick for each session done,
- * joined by a lime track, then the next one ringed in ink, then the rest.
+ * joined by a lime track, then a dashed ring for the next one, then the rest.
  */
 export function WeekCircles({ week }: { week: ThisWeek }) {
   const { slots } = week;
@@ -27,13 +27,12 @@ export function WeekCircles({ week }: { week: ThisWeek }) {
                 slot.state === 'done'
                   ? 'bg-brand'
                   : slot.state === 'next'
-                    ? 'border-2 border-foreground bg-background'
+                    ? 'border-2 border-dashed border-muted-foreground/60 bg-background'
                     : 'border-2 border-border bg-background'
               }`}
               style={{ width: size, height: size }}
             >
               {slot.state === 'done' ? <Feather name="check" size={20} color="#1e2702" /> : null}
-              {slot.state === 'next' ? <View className="h-2 w-2 rounded-full bg-foreground" /> : null}
             </View>
             <Text
               className={`h-4 text-[11px] leading-4 ${
