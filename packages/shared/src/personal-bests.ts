@@ -1,4 +1,4 @@
-import { formatWeight, type WeightUnit } from "./weight-units";
+import { formatWeight, toDisplayWeight, weightUnitLabel, type WeightUnit } from "./weight-units";
 
 /**
  * Personal bests for the Progress tab, shared by web and app so both say
@@ -123,19 +123,18 @@ export function formatBestValue(
   return `${best.reps} reps`;
 }
 
-export interface PersonalBestSummary {
-  /** Bests set on the active plan */
-  count: number;
-  /** Newest first, capped — the Progress tab lists only the latest few */
-  latest: PersonalBest[];
-}
-
-/** The count and the latest bests for one plan */
-export function summarizePersonalBests(
-  bests: PersonalBest[],
-  planId: string | null,
-  { limit = 3 }: { limit?: number } = {},
-): PersonalBestSummary {
-  const inPlan = planId ? bests.filter((b) => b.planId === planId) : bests;
-  return { count: inPlan.length, latest: inPlan.slice(0, limit) };
+/** "up 5 lb" · "one more rep" · "3 more reps" · "15s longer" — weight in the viewer's unit */
+export function formatBestGain(
+  best: Pick<PersonalBest, "kind" | "delta" | "weight">,
+  unit: WeightUnit,
+): string {
+  if (best.kind === "weight") {
+    // The gap between the two displayed weights, so it adds up on screen. A
+    // jump smaller than half a unit still reads as a (minimal) gain.
+    const now = best.weight ?? 0;
+    const shown = toDisplayWeight(now, unit) - toDisplayWeight(now - best.delta, unit);
+    return `up ${Math.max(0.5, shown)} ${weightUnitLabel(unit)}`;
+  }
+  if (best.kind === "time") return `${best.delta}s longer`;
+  return best.delta === 1 ? "one more rep" : `${best.delta} more reps`;
 }
