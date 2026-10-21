@@ -9,7 +9,7 @@ interface WelcomeAwaitingPlanProps {
   /** Whether the client can message their coach (a coach relationship exists) */
   canMessage: boolean;
   onMessageCoach: () => void;
-  /** Client has a profile photo — hides the add-photo nudge */
+  /** Client has a profile photo; hides the add-photo nudge */
   hasPhoto: boolean;
   onAddPhoto: () => void;
 }
@@ -96,7 +96,7 @@ export function WelcomeAwaitingPlan({
         ))}
       </div>
 
-      {/* Say hi — nudges the coach and starts the relationship off warm */}
+      {/* Say hi: nudges the coach and starts the relationship off warm */}
       {canMessage && (
         <div className="rounded-xl border border-border/70 bg-card px-4 py-4">
           <p className="text-[15px] font-bold tracking-tight antialiased">
@@ -115,7 +115,7 @@ export function WelcomeAwaitingPlan({
         </div>
       )}
 
-      {/* Photo nudge — the coach sees the client as a monogram on their
+      {/* Photo nudge. The coach sees the client as a monogram on their
           roster until this is set. Quieter than the say-hi card: the
           monogram they'd otherwise be, one line, and a small outline action.
           The button sits beside the text where there's room and drops

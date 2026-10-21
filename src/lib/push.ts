@@ -7,7 +7,7 @@
  * notify is a much smaller problem than a message that failed to save.
  *
  * Configuration is entirely server-side (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY).
- * With the keys unset the whole feature no-ops — local dev and preview
+ * With the keys unset the whole feature no-ops: local dev and preview
  * deployments keep working, and the UI hides the opt-in via /api/push/config.
  * Generate a pair with: npx web-push generate-vapid-keys
  */
@@ -60,7 +60,7 @@ export interface PushPayload {
 /**
  * Expo's push service needs nothing from this server to deliver: the app's
  * EAS project holds the APNs key, and the token the device registers is the
- * whole address. So unlike Web Push there is no "configured" state — an
+ * whole address. So unlike Web Push there is no "configured" state; an
  * EXPO row is always deliverable. EXPO_ACCESS_TOKEN is optional and only
  * checked by Expo once "enhanced push security" is switched on for the
  * project.
@@ -135,7 +135,7 @@ async function sendExpoPush(
         outcome.delivered += 1;
         return;
       }
-      // The app was uninstalled or its token rotated — nothing will ever be
+      // The app was uninstalled or its token rotated; nothing will ever be
       // delivered there again, so drop the row (Web Push's 404/410).
       if (ticket.details?.error === "DeviceNotRegistered") {
         outcome.stale.push(String(chunk[i].to));
@@ -191,8 +191,8 @@ async function sendWebPush(
 }
 
 /**
- * Send a notification to every device a user has registered — browsers over
- * Web Push, the native app over Expo — and return how many accepted it
+ * Send a notification to every device a user has registered (browsers over
+ * Web Push, the native app over Expo) and return how many accepted it
  * (0 when the user has no devices, Web Push is unconfigured and they only
  * have browsers, or every send failed).
  */
@@ -243,13 +243,13 @@ export function previewText(content: string, maxLength = 120): string {
 }
 
 /**
- * Notify the recipient of a new chat message. Never throws — a failed
+ * Notify the recipient of a new chat message. Never throws; a failed
  * notification must not fail the send.
  *
  * `url` is where tapping the notification lands: the two apps keep their
  * threads in different places (the coach's under the client's profile, the
- * client's on their chat tab), so the caller — which already knows both
- * profiles — supplies it.
+ * client's on their chat tab), so the caller (which already knows both
+ * profiles) supplies it.
  */
 export async function notifyNewMessage(params: {
   recipientId: string;
@@ -275,7 +275,7 @@ export async function notifyNewMessage(params: {
  * Notify a client that their coach sent a check-in.
  *
  * The check-in loop is the product's north star, but until now only chat
- * messages notified — so the one prompt the whole retention model depends on
+ * messages notified, so the one prompt the whole retention model depends on
  * arrived silently and was found only if the client happened to open the app.
  * Tagged per client so a re-sent check-in replaces the old notification.
  */

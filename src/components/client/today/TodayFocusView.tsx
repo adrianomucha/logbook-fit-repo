@@ -22,7 +22,7 @@ interface TodayFocusViewProps {
   feedbackSubmitted?: boolean;
   isSendingFeedback?: boolean;
   onStartWorkout: () => void;
-  /** The start request is in flight — the button waits so it can't fire twice */
+  /** The start request is in flight; the button waits so it can't fire twice */
   isStartingWorkout?: boolean;
   onResumeWorkout: () => void;
   onRestartWorkout?: () => void;
@@ -73,7 +73,7 @@ export function TodayFocusView({
         <StatusHeader showNewPlan={showNewPlan} clientName={client.name} />
       </div>
 
-      {/* Today / week switcher — navigation chrome, kept quiet */}
+      {/* Today / week switcher: navigation chrome, kept quiet */}
       <div className="animate-fade-in-up" style={{ animationDelay: '30ms' }}>
         <WorkoutViewToggle value="today" onChange={(m) => m === 'weekly' && onViewWeekly()} />
       </div>
@@ -92,7 +92,7 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* The week has no workouts (or none matches yet) — say so instead of
+      {/* The week has no workouts (or none matches yet); say so instead of
           leaving the page at a bare greeting */}
       {!todayWorkout?.workoutDay && !todayCompletion && (
         <div
@@ -106,7 +106,7 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Completed hero — session summary + effort feedback in one card */}
+      {/* Completed hero: session summary + effort feedback in one card */}
       {actionState === 'completed' && todayCompletion && (
         <div className="animate-fade-in-up" style={{ animationDelay: '60ms' }}>
           <SessionCompleteCard
@@ -131,7 +131,7 @@ export function TodayFocusView({
         </div>
       )}
 
-      {/* Restart — rare, deliberate action. A hairline footer row with a
+      {/* Restart: rare, deliberate action. A hairline footer row with a
           reason on the left gives the quiet ghost button a place to belong,
           instead of floating alone under the cards */}
       {actionState === 'completed' && onRestartWorkout && (

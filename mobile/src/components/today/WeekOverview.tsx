@@ -12,7 +12,7 @@ interface WeekOverviewProps {
   onOpenDay: (day: WeekDayInfo) => void;
 }
 
-/** The "This week" view: week header, progress strip, and the day checklist — the web's WeeklyOverview. */
+/** The "This week" view: week header, progress strip, and the day checklist. The web's WeeklyOverview. */
 export function WeekOverview({ planName, weekNumber, durationWeeks, days, onOpenDay }: WeekOverviewProps) {
   const { completed, total } = getWeekProgress(days);
   const remaining = days.filter((d) => d.status !== 'COMPLETED').length;

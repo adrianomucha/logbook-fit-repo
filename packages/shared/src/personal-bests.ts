@@ -17,7 +17,7 @@ import { formatWeight, toDisplayWeight, type WeightUnit } from "./weight-units";
  */
 
 export interface LoggedSet {
-  /** Library exercise id — the same lift across plans and weeks */
+  /** Library exercise id: the same lift across plans and weeks */
   exerciseId: string;
   exerciseName: string;
   trackingType: "REPS" | "TIME";
@@ -114,7 +114,7 @@ function formatSeconds(seconds: number): string {
   return s ? `${m}:${String(s).padStart(2, "0")}` : `${m} min`;
 }
 
-/** "95 lb × 5" · "15 reps" · "1:30" — weight in the viewer's unit */
+/** "95 lb × 5" · "15 reps" · "1:30", weight in the viewer's unit */
 export function formatBestValue(
   best: Pick<PersonalBest, "kind" | "weight" | "reps">,
   unit: WeightUnit,
@@ -124,7 +124,7 @@ export function formatBestValue(
   return `${best.reps} reps`;
 }
 
-/** "+2.5" · "+1 rep" · "+10s" — weight in the viewer's unit */
+/** "+2.5" · "+1 rep" · "+10s", weight in the viewer's unit */
 export function formatBestDelta(
   best: Pick<PersonalBest, "kind" | "delta" | "weight">,
   unit: WeightUnit,
@@ -178,7 +178,7 @@ export function summarizePersonalBests(
 }
 
 /**
- * The quiet note beside the card's title — "1 this week", or with more
+ * The quiet note beside the card's title: "1 this week", or with more
  * bests than the list shows, "12 across 5 lifts · 2 this week". The list
  * says the rest, so the card needs no headline number.
  */

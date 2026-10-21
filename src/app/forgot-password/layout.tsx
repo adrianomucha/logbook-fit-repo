@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 
 /**
  * The forgot-password page is a client component, so it can't export metadata
- * itself — this layout carries it. Same reasoning as /login: robots.txt asks
+ * itself, so this layout carries it. Same reasoning as /login: robots.txt asks
  * crawlers not to fetch it, but only noindex actually keeps the URL out of
  * the index if external links ever point at it.
  */

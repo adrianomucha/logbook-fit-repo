@@ -8,7 +8,7 @@ const INK = '#0a0a0a';
 
 /**
  * GET /api/og/invite?token=…
- * Branded unfurl card for invite links — rendered into message threads by
+ * Branded unfurl card for invite links, rendered into message threads by
  * iMessage/WhatsApp/Slack link previews. Exposes only what the public
  * token-validation endpoint already returns (coach name).
  */
@@ -78,7 +78,7 @@ export async function GET(req: Request) {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          {/* Rep-tally brand mark — three strokes and the volt slash */}
+          {/* Rep-tally brand mark: three strokes and the volt slash */}
           <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
             <rect width="64" height="64" rx="14.5" fill="#fafafa" />
             <path

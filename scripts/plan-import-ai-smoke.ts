@@ -36,7 +36,7 @@ async function readOne(file: MessyPlanFile): Promise<void> {
 
   let rows = findTemplateRows(loaded.workbook);
   if (rows) {
-    console.log("Matched the template — no AI call.");
+    console.log("Matched the template, no AI call.");
   } else {
     const text = workbookToText(loaded.workbook);
     if (!text.ok) return console.log(`✗ ${text.error}`);
@@ -63,7 +63,7 @@ async function readOne(file: MessyPlanFile): Promise<void> {
       console.log(`    ${day.name}`);
       for (const e of day.exercises) {
         const rest = e.restSeconds != null ? ` · rest ${e.restSeconds}s` : "";
-        const notes = e.coachNotes ? ` — ${e.coachNotes}` : "";
+        const notes = e.coachNotes ? ` (${e.coachNotes})` : "";
         console.log(`      ${e.supersetWithPrevious ? "↳ " : ""}${e.name}: ${formatPrescription(e, "KG")}${rest}${notes}`);
       }
     }

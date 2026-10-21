@@ -3,7 +3,7 @@ import { emailConfigStatus } from "@/lib/services/email";
 /**
  * Production env sanity check.
  *
- * Several subsystems degrade *silently* when their env vars are missing —
+ * Several subsystems degrade *silently* when their env vars are missing:
  * the mailer skips every send, rate limiting falls back to per-instance
  * memory, /admin 404s for everyone, and emailed links point at the wrong
  * host. Each of those failure modes is invisible from the outside, so this
@@ -16,7 +16,7 @@ const ALERT_TAG = "[ENV_ALERT]";
 
 /**
  * Every detectable misconfiguration, as human-readable sentences. Pure env
- * inspection — safe to call from a server component on every render.
+ * inspection, safe to call from a server component on every render.
  */
 export function envProblems(env: NodeJS.ProcessEnv = process.env): string[] {
   const problems: string[] = [];
@@ -31,7 +31,7 @@ export function envProblems(env: NodeJS.ProcessEnv = process.env): string[] {
     .some((entry) => entry.trim().length > 0);
   if (!hasAdmin) {
     problems.push(
-      "ADMIN_EMAILS is not set — every /admin page returns 404 for everyone and no beta invites can be sent."
+      "ADMIN_EMAILS is not set. Every /admin page returns 404 for everyone and no beta invites can be sent."
     );
   }
 
@@ -41,25 +41,25 @@ export function envProblems(env: NodeJS.ProcessEnv = process.env): string[] {
   );
   if (!hasRedis) {
     problems.push(
-      "Upstash Redis is not configured — rate limiting is per-instance in-memory, which is effectively off on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN."
+      "Upstash Redis is not configured. Rate limiting is per-instance in-memory, which is effectively off on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN."
     );
   }
 
   if (!env.NEXTAUTH_URL) {
     problems.push(
-      "NEXTAUTH_URL is not set — emailed links (password resets, beta invites) fall back to the per-deploy *.vercel.app hostname, or localhost outside Vercel."
+      "NEXTAUTH_URL is not set. Emailed links (password resets, beta invites) fall back to the per-deploy *.vercel.app hostname, or localhost outside Vercel."
     );
   }
 
   if (!env.CRON_SECRET) {
     problems.push(
-      "CRON_SECRET is not set — the nightly check-in sweep (/api/cron/check-ins) refuses every call, so weekly check-ins only appear when someone opens the right page."
+      "CRON_SECRET is not set. The nightly check-in sweep (/api/cron/check-ins) refuses every call, so weekly check-ins only appear when someone opens the right page."
     );
   }
 
   if (!env.ANTHROPIC_API_KEY) {
     problems.push(
-      "ANTHROPIC_API_KEY is not set — plan import only reads spreadsheets laid out like the template; any other layout is rejected instead of read by the AI reader."
+      "ANTHROPIC_API_KEY is not set. Plan import only reads spreadsheets laid out like the template; any other layout is rejected instead of read by the AI reader."
     );
   }
 

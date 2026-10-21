@@ -7,8 +7,8 @@ import crypto from "crypto";
  *
  * Single-use without storage: the payload carries a fingerprint of the
  * user's password hash at mint time. Completing a reset changes the hash,
- * so the fingerprint no longer matches and the token — plus any older
- * outstanding reset links — dies with it. Until then an unused link stays
+ * so the fingerprint no longer matches and the token (plus any older
+ * outstanding reset links) dies with it. Until then an unused link stays
  * valid, which the 30-minute TTL keeps acceptable.
  */
 
@@ -39,7 +39,7 @@ export function passwordFingerprint(passwordHash: string): string {
 /**
  * Mint a reset token for `userId` whose current password hash is
  * `passwordHash`. Returns null when NEXTAUTH_SECRET is unset (never the
- * case in a running deployment — next-auth requires it).
+ * case in a running deployment; next-auth requires it).
  */
 export function createResetToken(
   userId: string,
@@ -63,7 +63,7 @@ export function createResetToken(
  * Verify a reset token's signature, audience, and expiry. Returns the
  * target user id and minted-against fingerprint, or null for anything that
  * isn't a fresh, untampered token from createResetToken. The caller must
- * still compare `fingerprint` against passwordFingerprint(current hash) —
+ * still compare `fingerprint` against passwordFingerprint(current hash);
  * that comparison is what makes the token single-use.
  */
 export function verifyResetToken(

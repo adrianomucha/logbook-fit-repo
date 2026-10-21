@@ -20,7 +20,7 @@ const TICK_MS = 250;
  * Only one set timer may run at a time across the whole workout: starting a
  * plank on set 2 while set 1 is still counting is always a mistake. Each
  * running hook registers a pause callback here; the next one to start pauses
- * it. Module-level is enough — there is one workout screen at a time.
+ * it. Module-level is enough; there is one workout screen at a time.
  */
 let activeTimerPause: (() => void) | null = null;
 
@@ -38,7 +38,7 @@ export interface SetTimer {
   isCountdown: boolean;
   /** Seconds to show: remaining for a countdown, elapsed for a stopwatch. */
   displaySeconds: number;
-  /** Whole seconds worked so far — what gets logged on an early stop. */
+  /** Whole seconds worked so far: what gets logged on an early stop. */
   elapsedSeconds: number;
   start: () => void;
   pause: () => void;
@@ -46,7 +46,7 @@ export interface SetTimer {
 }
 
 /**
- * Drives the countdown for one TIME set — the web's useSetTimer on the
+ * Drives the countdown for one TIME set: the web's useSetTimer on the
  * native clock. Wall-clock based: elapsed time is always `Date.now()` minus
  * the moment the current segment started, so a phone that locks its screen
  * mid-hold comes back showing the true remaining time, and a countdown that

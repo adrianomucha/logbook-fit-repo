@@ -24,7 +24,7 @@ import {
 import { format, formatDistanceToNow, subDays } from 'date-fns';
 import { completeCheckIn, createCheckIn } from '@/lib/checkin-helpers';
 // One shared feeling map for the whole loop (client form, standalone review,
-// this panel) — same labels, same AA-contrast status colors everywhere
+// this panel): same labels, same AA-contrast status colors everywhere
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
 
 /**
@@ -49,7 +49,7 @@ interface InlineCheckInReviewProps {
   exerciseFlags: ExerciseFlag[];
   currentUserId: string;
   /**
-   * Persist the coach's response. Must reject if the write failed — this
+   * Persist the coach's response. Must reject if the write failed; this
    * panel only clears the draft and shows the success state once it resolves.
    */
   onCompleteCheckIn: (checkIn: CheckIn) => Promise<void> | void;
@@ -69,7 +69,7 @@ interface InlineCheckInReviewProps {
   /** Visual weight: 'card' (default) with border, 'flat' borderless */
   variant?: 'card' | 'flat';
   /**
-   * The page header already offers "Send check-in" as its primary action —
+   * The page header already offers "Send check-in" as its primary action,
    * skip the idle prompt row so the same button never appears twice. With
    * nothing else to show (no recent flags) the idle state renders nothing.
    */
@@ -120,7 +120,7 @@ export function InlineCheckInReview({
 
     const sevenDaysAgo = subDays(new Date(), 7);
 
-    // Workout activity from the past week — including sessions the client
+    // Workout activity from the past week, including sessions the client
     // started and never finished, since a flag raised mid-workout on an
     // abandoned session is exactly the "help me" signal to review
     const recentCompletions = workoutCompletions.filter((wc) => {
@@ -177,7 +177,7 @@ export function InlineCheckInReview({
     setIsSubmitting(true);
     try {
       const newCheckIn = createCheckIn(client.id, currentUserId);
-      // Await before claiming it was sent — the parent toasts and rethrows
+      // Await before claiming it was sent: the parent toasts and rethrows
       // on failure, so a 409/500 must not paint "Sent to <name>".
       await onCreateCheckIn(newCheckIn);
       setJustSentCheckIn(true);
@@ -191,7 +191,7 @@ export function InlineCheckInReview({
 
   // Shared by Undo (seconds after sending, no confirm) and the confirmed
   // Unsend on the waiting card. Either way the panel drops its "sent" state
-  // and lets the parent's refetch decide what to show next — if the client
+  // and lets the parent's refetch decide what to show next. If the client
   // answered in the meantime, that's the responded view, not an error.
   const handleUnsend = async () => {
     if (!onUnsendCheckIn || isSubmitting) return;
@@ -207,7 +207,7 @@ export function InlineCheckInReview({
   };
 
   // Submit stays enabled until the request starts (same pattern as the
-  // standalone review) — an empty submit explains itself inline instead of
+  // standalone review): an empty submit explains itself inline instead of
   // presenting a disabled button that silently drops from the tab order
   const handleCompleteCheckIn = async () => {
     if (!activeCheckIn || isSubmitting) return;
@@ -240,7 +240,7 @@ export function InlineCheckInReview({
     successTimerRef.current = setTimeout(() => setShowSuccess(false), 3000);
   };
 
-  // Safe first-name extraction — never returns empty string
+  // Safe first-name extraction; never returns empty string
   const firstName = client.name?.split(' ')[0] || client.name || 'Client';
 
   const isFlat = variant === 'flat';
@@ -286,7 +286,7 @@ export function InlineCheckInReview({
             <p className="text-sm text-muted-foreground antialiased">
               They’ll see it next time they open the app.
             </p>
-            {/* Undo window — unsend outright, no confirm: the coach just
+            {/* Undo window: unsend outright, no confirm: the coach just
                 pressed Send and is still looking at this exact card */}
             {onUnsendCheckIn && (
               <Button
@@ -309,7 +309,7 @@ export function InlineCheckInReview({
   // State: No active check-in
   if (!activeCheckIn) {
     // Nothing to say: the header carries the send action and there are no
-    // flags to surface — render nothing rather than a decorative card
+    // flags to surface, so render nothing rather than a decorative card
     if (hideSendPrompt && flaggedExercisesWithContext.length === 0) {
       return null;
     }
@@ -324,7 +324,7 @@ export function InlineCheckInReview({
             />
           )}
 
-          {/* Quiet one-line prompt — this is a resting state, not a call to
+          {/* Quiet one-line prompt. This is a resting state, not a call to
               arms, so it stays a slim row instead of a tall centered block */}
           {!hideSendPrompt && (
             <div className={cn(
@@ -371,7 +371,7 @@ export function InlineCheckInReview({
 
     const sentAgo = formatDistanceToNow(new Date(activeCheckIn.date), { addSuffix: true });
 
-    // One calm status line, same slim-row shape as the idle prompt — the
+    // One calm status line, same slim-row shape as the idle prompt. The
     // ball is in the client's court, so this state should ask for nothing.
     // The row's trailing actions are quiet: Unsend (two-step, so a stray
     // click can't delete anything) and a close that hides the row until
@@ -380,7 +380,7 @@ export function InlineCheckInReview({
       <Wrapper>
         <div className={cn(isFlat ? '' : 'px-4 py-5 sm:px-6 sm:py-6')}>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 py-1">
-            {/* Dot stays beside the heading on phones — alone on its own
+            {/* Dot stays beside the heading on phones; alone on its own
                 stacked row it reads as a stray mark */}
             {/* items-start + a 7px nudge: the dot sits on the heading's line
                 instead of floating mid-paragraph once the description wraps */}
@@ -401,7 +401,7 @@ export function InlineCheckInReview({
                   <>
                     <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
                     <p className="text-sm text-muted-foreground antialiased">
-                      Check-in sent <span className="tabular-nums">{sentAgo}</span> — you’ll review their answers here.
+                      Check-in sent <span className="tabular-nums">{sentAgo}</span>. You’ll review their answers here.
                     </p>
                   </>
                 )}
@@ -442,7 +442,7 @@ export function InlineCheckInReview({
                   )}
                   {onHidePending && (
                     /* A bare ✕ beside "Unsend" reads as "cancel" on a phone,
-                        where the row stacks under the text — say "Hide" there
+                        where the row stacks under the text. Say "Hide" there
                         and keep the quiet icon on the desktop row */
                     <Button
                       variant="ghost"
@@ -489,7 +489,7 @@ export function InlineCheckInReview({
   return (
     <Wrapper>
       <div className={cn('space-y-5', isFlat ? '' : 'px-3 sm:px-6 py-6')}>
-        {/* The client's answers as instrument readouts — same vitals grid as
+        {/* The client's answers as instrument readouts, same vitals grid as
             the page's stats strip, with the submitted time as one more reading */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4">
           {workoutFeeling && (
@@ -532,7 +532,7 @@ export function InlineCheckInReview({
           </div>
         </div>
 
-        {/* Client notes read as a quote — the brand's volt-edge treatment,
+        {/* Client notes read as a quote: the brand's volt-edge treatment,
             capped near 65ch so the measure stays comfortable */}
         {activeCheckIn.clientNotes && (
           <div>
@@ -553,7 +553,7 @@ export function InlineCheckInReview({
           />
         )}
 
-        {/* Coach response — space-grouped with the evidence above, no sub-panel */}
+        {/* Coach response: space-grouped with the evidence above, no sub-panel */}
         <div>
           <label
             htmlFor="inline-coach-response"
@@ -595,7 +595,7 @@ export function InlineCheckInReview({
             <span className="text-sm">I’ll adjust the plan based on this feedback</span>
           </label>
 
-          {/* Submit — the section's one volt moment */}
+          {/* Submit: the section's one volt moment */}
           <Button
             onClick={handleCompleteCheckIn}
             disabled={isSubmitting}
@@ -610,7 +610,7 @@ export function InlineCheckInReview({
   );
 }
 
-// Sub-component for flagged exercises — same amber tile language as the
+// Sub-component for flagged exercises: same amber tile language as the
 // standalone review's flag rows, with the Ask escape hatch into chat
 function FlaggedExercisesSection({
   flags,
@@ -630,7 +630,7 @@ function FlaggedExercisesSection({
             <div className="flex-1 min-w-0">
               <p className="flex items-center gap-1.5 text-xs font-bold text-warning-text">
                 <Flag className="w-3 h-3 shrink-0" aria-hidden="true" />
-                {/* The icon carries "flagged" only visually — say it */}
+                {/* The icon carries "flagged" only visually, so say it */}
                 <span className="sr-only">Flagged: </span>
                 <span className="truncate">{exerciseName}</span>
               </p>

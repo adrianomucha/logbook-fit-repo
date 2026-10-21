@@ -8,7 +8,7 @@ import { CRON_JOBS, latestCronRuns } from "@/lib/cron-runs";
  * Live health of the deployment's dependencies, for /admin/health.
  *
  * The env banner in the admin layout already catches *configuration* that is
- * missing. This module covers the other half — things that are configured
+ * missing. This module covers the other half: things that are configured
  * but not working: a database that won't answer, a Redis whose token was
  * revoked, a cron that has quietly stopped firing. Every check is bounded by
  * a timeout so one hung dependency can't take the health page down with it.
@@ -86,7 +86,7 @@ export async function checkRedis(): Promise<HealthCheck> {
         ...base,
         level: process.env.NODE_ENV === "production" ? "down" : "warn",
         detail:
-          "Not configured — limits are per-instance in-memory, which is effectively off on serverless.",
+          "Not configured. Limits are per-instance in-memory, which is effectively off on serverless.",
       };
     }
     return { ...base, level: "ok", detail: "Redis answered.", latencyMs };
@@ -163,7 +163,7 @@ export function cronHealth(
   if (ageMs > CRON_STALE_AFTER_MS) {
     return {
       level: "down",
-      detail: `Last run started ${ageHours}h ago — the nightly sweep has missed at least one night. Check CRON_SECRET and the schedule in vercel.json.`,
+      detail: `Last run started ${ageHours}h ago. The nightly sweep has missed at least one night. Check CRON_SECRET and the schedule in vercel.json.`,
     };
   }
 
@@ -173,7 +173,7 @@ export function cronHealth(
     return ageMs > 15 * 60_000
       ? {
           level: "warn",
-          detail: `Last run started ${ageHours}h ago and never finished — it likely hit the function timeout.`,
+          detail: `Last run started ${ageHours}h ago and never finished. It likely hit the function timeout.`,
         }
       : { level: "ok", detail: "A run is in progress." };
   }
@@ -183,7 +183,7 @@ export function cronHealth(
       level: "warn",
       detail: latest.error
         ? `Last run failed: ${latest.error}`
-        : "Last run finished with failures for at least one client — see the run log below.",
+        : "Last run finished with failures for at least one client. See the run log below.",
     };
   }
 

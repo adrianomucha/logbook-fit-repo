@@ -82,7 +82,7 @@ export function ExerciseCard({
 
   const handleToggleAllSets = () => {
     if (isReadOnly) return;
-    // Toggle all sets — if all complete, uncomplete them; otherwise complete remaining
+    // Toggle all sets: if all complete, uncomplete them; otherwise complete remaining
     const setNumbers = Array.from({ length: exercise.sets }, (_, i) => i + 1);
     const targetSets = isComplete
       ? setNumbers.filter((n) => isSetCompleted(exercise.setCompletions, n))
@@ -90,7 +90,7 @@ export function ExerciseCard({
     const isTime = exercise.trackingType === 'TIME';
     for (const setNumber of targetSets) {
       if (!isComplete) {
-        // Persist actuals for each set, exactly like a per-set tap does —
+        // Persist actuals for each set, exactly like a per-set tap does;
         // otherwise bulk-completed exercises log nothing, leaving next
         // session's LAST column blank and coach deviation review blind.
         const sc = exercise.setCompletions.find((s) => s.setNumber === setNumber);
@@ -125,7 +125,7 @@ export function ExerciseCard({
           aria-expanded={isExpanded}
           aria-label={`${exercise.exercise.name}, ${getPrescription()}`}
         >
-          {/* Left — mono index, same voice as the dashboard preview list */}
+          {/* Left: mono index, same voice as the dashboard preview list */}
           <span
             className={cn(
               'font-mono text-[11px] font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
@@ -135,7 +135,7 @@ export function ExerciseCard({
             {displayLabel}
           </span>
 
-          {/* Middle — name + prescription */}
+          {/* Middle: name + prescription */}
           <div className="flex-1 min-w-0 flex flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
               <p
@@ -161,7 +161,7 @@ export function ExerciseCard({
           </div>
         </button>
 
-        {/* Right — circle checkbox (toggles every set in one go) */}
+        {/* Right: circle checkbox (toggles every set in one go) */}
         {!isReadOnly ? (
           <button
             type="button"
@@ -199,7 +199,7 @@ export function ExerciseCard({
       {/* ── Expanded: coach tip + set table + flag ── */}
       {isExpanded && (
         <div className="pl-[42px] pr-1 pb-4 pt-1.5 space-y-3.5 animate-fade-in-up">
-          {/* Coach note — the volt rail alone marks the voice; no label line */}
+          {/* Coach note: the volt rail alone marks the voice; no label line */}
           {exercise.coachNotes && (
             <p className="pl-3 border-l-2 border-brand text-sm leading-relaxed text-foreground/75">
               {exercise.coachNotes}
@@ -217,7 +217,7 @@ export function ExerciseCard({
               </div>
               {!isReadOnly ? (
                 <>
-                  {/* A placeholder is never the label — it disappears on input */}
+                  {/* A placeholder is never the label; it disappears on input */}
                   <label htmlFor={flagNoteId} className="sr-only">
                     Note for your coach about {exercise.exercise.name}
                   </label>
@@ -262,7 +262,7 @@ export function ExerciseCard({
             </div>
           )}
 
-          {/* Set table — SET · LAST · WEIGHT · REPS · ✓. Labels live in this
+          {/* Set table: SET · LAST · WEIGHT · REPS · ✓. Labels live in this
               header once, so the rows below are pure numbers. */}
           <div>
             <div className={cn(SET_GRID, 'pb-1')}>
@@ -272,7 +272,7 @@ export function ExerciseCard({
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
                 Last
               </span>
-              {/* The athlete's own unit — the cells below show and take it */}
+              {/* The athlete's own unit; the cells below show and take it */}
               <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
                 {weightUnitLabel(weightUnit)}
               </span>
@@ -288,7 +288,7 @@ export function ExerciseCard({
               return (
                 <SetRow
                   // Re-seed the inputs if the unit resolves after first
-                  // paint (cold load, profile still in flight) — the cell
+                  // paint (cold load, profile still in flight); the cell
                   // text must always be in the unit logWeight reads it as
                   key={`${setNumber}-${weightUnit}`}
                   setNumber={setNumber}
@@ -329,7 +329,7 @@ export function ExerciseCard({
             })}
           </div>
 
-          {/* Flag — quiet action at the end of the exercise */}
+          {/* Flag: quiet action at the end of the exercise */}
           {!isFlagged && !isReadOnly && (
             <button
               type="button"

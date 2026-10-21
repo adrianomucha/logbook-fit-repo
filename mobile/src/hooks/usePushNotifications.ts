@@ -7,7 +7,7 @@ export interface PushNotificationsState {
   available: boolean;
   /** This device is registered. */
   isSubscribed: boolean;
-  /** Permission was denied — only the person can undo this, in Settings. */
+  /** Permission was denied; only the person can undo this, in Settings. */
   isBlocked: boolean;
   isBusy: boolean;
   isLoading: boolean;
@@ -15,7 +15,7 @@ export interface PushNotificationsState {
   disable: () => Promise<void>;
 }
 
-/** Per-device opt-in for notifications — the web's usePushNotifications, native. */
+/** Per-device opt-in for notifications: the web's usePushNotifications, native. */
 export function usePushNotifications(): PushNotificationsState {
   const available = isPushAvailable();
   const [isSubscribed, setIsSubscribed] = useState(false);

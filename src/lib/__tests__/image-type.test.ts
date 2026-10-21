@@ -16,7 +16,7 @@ describe("detectImageType", () => {
     // GIF is a real image type but not on the allowlist
     const gif = new Uint8Array([0x47, 0x49, 0x46, 0x38, 0x39, 0x61, 0x00, 0x00]);
     expect(detectImageType(gif)).toBeNull();
-    // SVG (text/xml) must never pass — stored SVGs can carry scripts
+    // SVG (text/xml) must never pass; stored SVGs can carry scripts
     const svg = new TextEncoder().encode('<svg xmlns="http://www.w3.org/2000/svg"></svg>');
     expect(detectImageType(svg)).toBeNull();
     // HTML posing as an image

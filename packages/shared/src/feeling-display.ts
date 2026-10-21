@@ -5,7 +5,7 @@
  * run down = destructive.
  */
 export const FEELING_DISPLAY: Record<string, { label: string; emoji: string; text: string }> = {
-  // The -text variants are the AA-contrast cuts of the status hues — the
+  // The -text variants are the AA-contrast cuts of the status hues; the
   // bright fill colors sit around 2:1 as small text on light surfaces
   EASY: { label: 'Too Easy', emoji: '😴', text: 'text-success-text' },
   MEDIUM: { label: 'About Right', emoji: '💪', text: 'text-foreground' },

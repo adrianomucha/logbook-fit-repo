@@ -8,7 +8,7 @@ import { AlertTriangle, Check, HelpCircle, Loader2, X, type LucideIcon } from 'l
 type ConfirmIntent = 'default' | 'destructive';
 
 /**
- * One accent runs the length of the dialog — the medallion, the consequence
+ * One accent runs the length of the dialog: the medallion, the consequence
  * rail and the confirm button all speak in the same colour, so the weight of
  * the action is legible before a word is read. Destructive takes the brand's
  * red; everything else takes volt, the same lime that fires "Start workout".
@@ -47,7 +47,7 @@ interface ConfirmationModalProps {
   cancelLabel?: string;
   confirmVariant?: ConfirmIntent;
   /** When set, the confirm button stays locked until this exact text is
-   * typed — the deliberate-friction rail for weighty actions. */
+   * typed: the deliberate-friction rail for weighty actions. */
   requireText?: string;
   /** Glyph for the medallion. Pass the verb of the action (Trash2, LogOut,
    *  RotateCcw) so the dialog is recognisable before it is read; falls back
@@ -124,12 +124,12 @@ export function ConfirmationModal({
         role="alertdialog"
         aria-modal="true"
         // The eyebrow can carry the subject ("4 week Metabolic Reset") while
-        // the title asks the question — announce both, in reading order
+        // the title asks the question; announce both, in reading order
         aria-labelledby={`${eyebrowId} ${titleId}`}
         aria-describedby={messageId}
         className="relative flex w-full max-h-[calc(100dvh-2.5rem)] flex-col overflow-hidden rounded-t-2xl bg-background text-foreground pb-[env(safe-area-inset-bottom)] shadow-2xl ring-1 ring-border focus:outline-none sm:max-h-[85vh] sm:max-w-md sm:rounded-2xl sm:pb-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-200 sm:slide-in-from-bottom-0 sm:zoom-in-95 motion-reduce:animate-none"
       >
-        {/* Positioning lives on the wrapper — .tap-target sets position:
+        {/* Positioning lives on the wrapper; .tap-target sets position:
             relative and would override `absolute` on the button itself */}
         <div className="absolute right-2.5 top-4 z-10 sm:right-3.5 sm:top-5">
           <button

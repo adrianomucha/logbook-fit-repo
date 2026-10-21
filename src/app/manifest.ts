@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'Logbook Fitness',
     short_name: 'Logbook',
-    // Same copy as the meta description — Android's install prompt and the
+    // Same copy as the meta description. Android's install prompt and the
     // "add to home screen" sheet surface this, so a third variant of the
     // product's one-liner would only dilute it.
     description: SITE_DESCRIPTION,

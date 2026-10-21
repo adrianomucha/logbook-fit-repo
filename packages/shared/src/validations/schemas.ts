@@ -54,7 +54,7 @@ export const PASSWORD_MAX_BYTES = 72;
 
 /**
  * The one rule set for every place a user picks a password (signup, reset).
- * The 72 limit is bcrypt's input size in BYTES — anything longer is silently
+ * The 72 limit is bcrypt's input size in BYTES. Anything longer is silently
  * truncated at hash time, so two "different" passwords would compare equal.
  */
 export const passwordSchema = z
@@ -66,7 +66,7 @@ export const passwordSchema = z
     message: "Password must be at most 72 characters",
   })
   .refine((password) => !isCommonPassword(password), {
-    message: "This password is too common — pick something harder to guess",
+    message: "This password is too common. Pick something harder to guess",
   });
 
 export const signupSchema = z
@@ -80,7 +80,7 @@ export const signupSchema = z
     name: z.string().min(1, "Name is required").max(100),
     role: z.enum(["COACH", "CLIENT"]).optional(),
     inviteToken: z.string().optional(),
-    // Waitlist beta invite — unlocks COACH signup while the beta is closed
+    // Waitlist beta invite: unlocks COACH signup while the beta is closed
     betaToken: z.string().optional(),
   })
   .refine((data) => data.role || data.inviteToken, {
@@ -105,7 +105,7 @@ export const mobileLoginSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
 
-// Account deletion confirmation — the current password, presence only.
+// Account deletion confirmation: the current password, presence only.
 export const deleteAccountSchema = z.object({
   password: z.string().min(1, "Password is required"),
 });
@@ -118,7 +118,7 @@ export const BIO_MAX_LENGTH = 500;
 
 export const updateProfileSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
-  // Coach-only in practice — the API ignores it for accounts without a coach
+  // Coach-only in practice; the API ignores it for accounts without a coach
   // profile. Empty string clears the bio.
   bio: z
     .string()
@@ -228,7 +228,7 @@ export const weightUnitSchema = z.object({
   weightUnit: z.enum(WEIGHT_UNITS),
 });
 
-// Interval choices mirror the coach UI exactly — the server accepts nothing
+// Interval choices mirror the coach UI exactly; the server accepts nothing
 // looser (see backlog item on server validation drifting behind the UI).
 export const checkInScheduleSchema = z
   .object({
@@ -267,7 +267,7 @@ export const assignPlanSchema = z.object({
 // ──────────────────────────────────────
 
 export const sendMessageSchema = z.object({
-  // Optional for client senders — their only possible recipient is their
+  // Optional for client senders; their only possible recipient is their
   // coach, which the server resolves. Coaches must always specify one.
   recipientId: z.string().uuid().optional(),
   content: z.string().min(1, "Message cannot be empty").max(5000),
@@ -300,7 +300,7 @@ export const expoPushTokenSchema = z
 const expoPushSubscriptionSchema = z.object({
   provider: z.literal("EXPO"),
   token: expoPushTokenSchema,
-  // "Adrian's iPhone" — the app's equivalent of a browser's user-agent
+  // "Adrian's iPhone": the app's equivalent of a browser's user-agent
   deviceName: z.string().trim().max(255).optional(),
 });
 
@@ -366,7 +366,7 @@ export const createInviteSchema = z.object({
 
 /**
  * Attribution captured alongside a signup. Every field is optional and
- * attacker-controlled, so each is trimmed and hard-capped — these are only
+ * attacker-controlled, so each is trimmed and hard-capped. These are only
  * ever read back by admins in a CSV, never rendered as HTML.
  */
 const attributionValue = z.string().trim().max(120).optional();
@@ -404,7 +404,7 @@ export const waitlistInviteSchema = z.object({
 /**
  * Crash report posted by the app's error boundaries. Unauthenticated and
  * attacker-writable by definition, so every field is hard-capped and the
- * handler only ever logs it — nothing is stored or rendered.
+ * handler only ever logs it; nothing is stored or rendered.
  */
 export const clientErrorReportSchema = z.object({
   message: z.string().trim().max(500),
@@ -423,7 +423,7 @@ export const FEEDBACK_STATUSES = ["NEW", "REVIEWED", "RESOLVED"] as const;
 /**
  * In-app feedback from the account menu's dialog. pageUrl is auto-captured
  * by the client and only ever displayed as text on the admin page, but it's
- * still user-controllable input — hence the hard cap.
+ * still user-controllable input, hence the hard cap.
  */
 export const feedbackSchema = z.object({
   category: z.enum(FEEDBACK_CATEGORIES),

@@ -38,7 +38,7 @@ describe("reset tokens", () => {
   });
 
   it("fingerprint no longer matches once the password hash changes", () => {
-    // This mismatch is the single-use mechanism — the confirm endpoint
+    // This mismatch is the single-use mechanism: the confirm endpoint
     // compares the verified fingerprint against the current hash's.
     const token = createResetToken(UID, HASH)!;
     const verified = verifyResetToken(token)!;
@@ -69,7 +69,7 @@ describe("reset tokens", () => {
   });
 
   it("rejects an account-switch token (wrong audience)", () => {
-    // Same secret signs both token families — the audience is what keeps a
+    // Same secret signs both token families; the audience is what keeps a
     // 60s switch token from doubling as a 30min reset token.
     const payload = Buffer.from(
       JSON.stringify({ aud: "account-switch", uid: UID, exp: Date.now() + 60_000 })

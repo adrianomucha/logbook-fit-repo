@@ -19,7 +19,7 @@ import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations'
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { format, formatDistanceToNow, differenceInHours, subDays, startOfWeek, addWeeks, differenceInCalendarWeeks } from 'date-fns';
 
-/* ── Brand surface helpers — same vocabulary as the client profile ── */
+/* ── Brand surface helpers (same vocabulary as the client profile) ── */
 
 // Section label: mono eyebrow outside the card; real <h2> for the outline.
 function SectionLabel({ children }: { children: ReactNode }) {
@@ -88,7 +88,7 @@ export function ClientCheckIn() {
 
   const { client, isLoading: isClientLoading, refresh: refreshClient } = useCoachClientProfile(clientId);
 
-  // Plan detail resolves flagged workoutExerciseIds to exercise names —
+  // Plan detail resolves flagged workoutExerciseIds to exercise names;
   // flags key by the client's plan copy, which is exactly activePlan
   const { plan } = usePlanDetail(client?.activePlan?.id ?? null);
   const exerciseNames = useMemo(() => {
@@ -123,7 +123,7 @@ export function ClientCheckIn() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
 
-  // The success screen replaces the whole page — move focus to its heading
+  // The success screen replaces the whole page, so move focus to its heading
   // so the confirmation is announced instead of landing on nothing
   const responseRef = useRef<HTMLTextAreaElement>(null);
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
@@ -158,7 +158,7 @@ export function ClientCheckIn() {
     }
   };
 
-  // Unsend is two-step (ask, then confirm) — it deletes the check-in outright,
+  // Unsend is two-step (ask, then confirm): it deletes the check-in outright,
   // so a single stray click must never be enough.
   const [confirmingUnsend, setConfirmingUnsend] = useState(false);
   const [isUnsending, setIsUnsending] = useState(false);
@@ -178,7 +178,7 @@ export function ClientCheckIn() {
     }
   };
 
-  // Submit stays enabled until the request starts — disabling it while the
+  // Submit stays enabled until the request starts; disabling it while the
   // form is empty hides the reason and drops it from the tab order. An empty
   // submit explains itself inline instead.
   const handleCompleteCheckIn = async () => {
@@ -232,7 +232,7 @@ export function ClientCheckIn() {
     );
   }
 
-  // Success screen — volt confirmation, same language as a finished workout
+  // Success screen: volt confirmation, same language as a finished workout
   if (showSuccess) {
     return (
       <div className="min-h-dvh bg-background pb-24 sm:pb-4">
@@ -379,7 +379,7 @@ export function ClientCheckIn() {
     );
   }
 
-  // State B: Client responded — coach needs to review
+  // State B: Client responded, coach needs to review
   const effortDisplay = activeCheckIn?.effortRating
     ? FEELING_DISPLAY[activeCheckIn.effortRating]
     : null;
@@ -403,13 +403,13 @@ export function ClientCheckIn() {
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8 lg:items-start space-y-6 sm:space-y-8 lg:space-y-0">
         {/* Evidence column */}
         <div className="space-y-6 sm:space-y-8 min-w-0">
-          {/* Client response — the page's headline data: bare mono-labelled
+          {/* Client response, the page's headline data: bare mono-labelled
               vitals, no box-in-box */}
           <section className="animate-enter" style={{ animationDelay: '100ms' }}>
             <SectionLabel>{firstName}’s response</SectionLabel>
             <SectionCard>
-              {/* Answers in the brand's instrument-readout voice — mono caps,
-                  like the profile's vitals; the emoji is the client's own pick
+              {/* Answers in the brand's instrument-readout voice (mono caps,
+                  like the profile's vitals); the emoji is the client's own pick
                   from the check-in form, carried over as content */}
               <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {effortDisplay && (
@@ -444,7 +444,7 @@ export function ClientCheckIn() {
                 )}
               </div>
 
-              {/* Client notes read as a quote — the brand's coach-note treatment.
+              {/* Client notes read as a quote: the brand's coach-note treatment.
                   max-w-prose keeps the measure at ~65ch in the wide column */}
               {activeCheckIn?.painBlockers && (
                 <div className="mt-6">
@@ -459,7 +459,7 @@ export function ClientCheckIn() {
             </SectionCard>
           </section>
 
-          {/* Recent workouts — the client-profile payload carries the review
+          {/* Recent workouts: the client-profile payload carries the review
               context the check-in payload lacks: abandoned sessions, mid-workout
               exercise flags, and prescription deviations */}
           <div className="animate-enter" style={{ animationDelay: '175ms' }}>
@@ -474,7 +474,7 @@ export function ClientCheckIn() {
           )}
         </div>
 
-        {/* Action column — composer and CTA as one unit, pinned on desktop */}
+        {/* Action column: composer and CTA as one unit, pinned on desktop */}
         <section className="lg:sticky lg:top-6 animate-enter" style={{ animationDelay: '150ms' }}>
           <SectionLabel>Your response</SectionLabel>
           <SectionCard>
@@ -513,7 +513,7 @@ export function ClientCheckIn() {
               <span className="text-sm">I’ll adjust the plan based on this feedback</span>
             </label>
 
-            {/* Submit — the page's one volt moment */}
+            {/* Submit, the page's one volt moment */}
             <Button
               onClick={handleCompleteCheckIn}
               disabled={isSubmitting}
@@ -566,14 +566,14 @@ function reviewWindow(client: ClientDetail): { since: Date; label: string } {
 function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
   client: ClientDetail;
   exerciseNames: Map<string, string>;
-  /** Plan's sessions per week — null until the plan loads, or with no plan */
+  /** Plan's sessions per week; null until the plan loads, or with no plan */
   weeklyTarget: number | null;
 }) {
   const [showAll, setShowAll] = useState(false);
   const { since, label } = reviewWindow(client);
   const firstName = (client.user.name ?? 'Client').split(' ')[0];
 
-  // Completed workouts plus started-but-never-finished ones — abandonment
+  // Completed workouts plus started-but-never-finished ones. Abandonment
   // (and a flag raised mid-session) is exactly the signal to review
   const rows = client.completions
     .filter((c) => c.completedAt || (c.status === 'IN_PROGRESS' && c.startedAt))
@@ -603,8 +603,8 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
     weeklyTarget != null
       ? { label: 'Workouts', value: String(weeks.reduce((n, w) => n + w.completed, 0)), warn: false }
       : { label: 'Workouts', value: String(completed.length), warn: false },
-    { label: 'Missed', value: weeklyTarget != null ? String(missed) : '—', warn: missed > 0 },
-    { label: 'Avg done', value: avgPct != null ? `${avgPct}%` : '—', warn: avgPct != null && avgPct < 90 },
+    { label: 'Missed', value: weeklyTarget != null ? String(missed) : '-', warn: missed > 0 },
+    { label: 'Avg done', value: avgPct != null ? `${avgPct}%` : '-', warn: avgPct != null && avgPct < 90 },
     { label: 'Flags', value: String(flagCount), warn: flagCount > 0 },
   ];
 
@@ -621,7 +621,7 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
           </p>
         ) : (
           <>
-            {/* Period readout — instrument voice, like the profile vitals.
+            {/* Period readout in instrument voice, like the profile vitals.
                 Four across once the labels fit whole; 2×2 on the narrowest
                 phones. Hairlines come from the 1px gap over a border fill,
                 so they work for either arrangement. */}
@@ -661,7 +661,7 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
               </p>
             ) : (
               <p className="px-4 sm:px-5 pb-4 text-sm text-muted-foreground antialiased text-pretty">
-                Every session finished as written — no flags from {firstName}.
+                Every session finished as written. No flags from {firstName}.
               </p>
             )}
 
@@ -711,7 +711,7 @@ interface WeekRow {
 /**
  * Bucket sessions into the app's Monday-start training weeks, from the week
  * the review window opens through this week, and compare each to the plan's
- * weekly target. Weeks are counted whole — a check-in that lands mid-week
+ * weekly target. Weeks are counted whole: a check-in that lands mid-week
  * still judges that week against its full target.
  */
 function buildWeeks(
@@ -750,7 +750,7 @@ function buildWeeks(
 }
 
 /**
- * One row per training week: a slot for every planned session — filled when
+ * One row per training week: a slot for every planned session, filled when
  * done, amber when short or abandoned, hollow when missed, dashed while the
  * week is still open. Answers "did they train as planned?" at a glance.
  */
@@ -791,7 +791,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
               className="flex items-center gap-3 sm:gap-4"
               aria-label={`Week of ${format(w.start, 'MMM d')}: ${summary}`}
             >
-              {/* Week label — plan week number when known, and its Monday */}
+              {/* Week label: plan week number when known, and its Monday */}
               <p className="w-[118px] shrink-0 font-mono text-[10px] uppercase tracking-[0.08em] tabular-nums antialiased whitespace-nowrap">
                 <span className="text-foreground font-medium">
                   {w.isCurrent ? 'This wk' : w.planWeek != null && w.planWeek > 0 ? `Wk ${w.planWeek}` : 'Wk'}
@@ -830,7 +830,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                       {flags.length > 0 && (
                         <span className="absolute top-1/2 end-1 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-foreground ring-2 ring-brand" aria-hidden="true" />
                       )}
-                      {/* Tooltip — value leads, label follows */}
+                      {/* Tooltip: value leads, label follows */}
                       {isActive && (
                         <span
                           role="tooltip"
@@ -862,7 +862,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                 ))}
               </div>
 
-              {/* Done vs. planned — the row's answer, right-aligned in ink */}
+              {/* Done vs. planned: the row's answer, right-aligned in ink */}
               <p className="w-8 shrink-0 text-end font-mono text-xs tabular-nums antialiased" aria-hidden="true">
                 <span className="font-semibold text-foreground">{w.completed}</span>
                 {w.target != null && <span className="text-muted-foreground">/{w.target}</span>}
@@ -872,7 +872,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
         })}
       </ul>
 
-      {/* Legend — identity never rides on color alone */}
+      {/* Legend: identity never rides on color alone */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-3.5 text-xs text-muted-foreground antialiased" aria-hidden="true">
         {hasFull && (
           <span className="flex items-center gap-1.5"><span className="w-3 h-2 rounded-[2px] bg-brand shadow-[inset_0_0_0_1px_rgba(0,0,0,0.06)]" />Done</span>
@@ -949,14 +949,14 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
         </p>
       )}
 
-      {/* Exercises flagged mid-workout — "help me" signals, quoted */}
+      {/* Exercises flagged mid-workout: "help me" signals, quoted */}
       {flags.map((f) => (
         <p key={f.id} className="mt-1.5 flex items-start gap-1.5 text-xs leading-relaxed">
           <Flag className="w-3 h-3 mt-[3px] shrink-0 text-warning-text" aria-hidden="true" />
           <span>
             <span className="sr-only">Flagged: </span>
             <span className="font-bold text-warning-text">{flagName(f.workoutExerciseId)}</span>
-            {f.note && <span className="text-foreground/80"> — &ldquo;{f.note}&rdquo;</span>}
+            {f.note && <span className="text-foreground/80">: &ldquo;{f.note}&rdquo;</span>}
           </span>
         </p>
       ))}

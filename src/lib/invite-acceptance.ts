@@ -15,14 +15,14 @@ export class InviteAcceptError extends Error {
 }
 
 /**
- * Connects an existing client account to the coach behind an invite — the
+ * Connects an existing client account to the coach behind an invite: the
  * signed-in counterpart of an invite signup, and the way back for a client
  * whose coaching ended (either side may have ended it).
  *
  * A client has one relationship row for life (`clientId` is unique), so an
  * ended one is reused rather than a second created:
  * - same coach: the row goes back to ACTIVE. Unlike a coach's Restore, the
- *   old plan isn't re-applied — a returning client starts from a plan the
+ *   old plan isn't re-applied; a returning client starts from a plan the
  *   coach picks now, not one they walked away from.
  * - another coach: the row moves to the new coach with that coach's defaults.
  *   Check-ins the client answered but the old coach never replied to are
@@ -33,7 +33,7 @@ export class InviteAcceptError extends Error {
  * newly joined. The invite is redeemed in the same transaction, guarded on
  * its status so two tabs can't both spend it. The relationship write is
  * guarded the same way: two accepts racing for one client (two coaches'
- * invites in two tabs) can't both activate it — the loser's whole
+ * invites in two tabs) can't both activate it. The loser's whole
  * transaction, invite included, rolls back as already_connected.
  */
 export async function acceptInviteForClient(params: {

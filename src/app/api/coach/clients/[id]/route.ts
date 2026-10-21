@@ -21,7 +21,7 @@ export const GET = withCoach(
   ) => {
     const clientProfileId = ctx.params.id;
 
-    // Verify coach-client relationship — an ended relationship closes the
+    // Verify coach-client relationship; an ended relationship closes the
     // workspace, so this behaves like the client no longer exists
     const relationship = await prisma.coachClientRelationship.findFirst({
       where: {
@@ -35,7 +35,7 @@ export const GET = withCoach(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    // Weekly schedule is enforced lazily — materialize a due check-in
+    // Weekly schedule is enforced lazily: materialize a due check-in
     // before reading, so it's included in this response
     await ensureScheduledCheckIn(relationship);
 
@@ -61,7 +61,7 @@ export const GET = withCoach(
         },
         completions: {
           // IN_PROGRESS rows are workouts the client started and never
-          // finished — abandonment is a fade signal the coach must see
+          // finished; abandonment is a fade signal the coach must see
           where: { status: { in: ["COMPLETED", "IN_PROGRESS"] } },
           orderBy: { completedAt: { sort: "desc", nulls: "first" } },
           // Enough to back the panel's "Show all" without paging: at 4
@@ -78,7 +78,7 @@ export const GET = withCoach(
             exercisesTotal: true,
             effortRating: true,
             durationSec: true,
-            // Sets where the client overrode weight or reps — the coach
+            // Sets where the client overrode weight or reps; the coach
             // reviews these as deviations from the prescription
             sets: {
               where: {
@@ -112,7 +112,7 @@ export const GET = withCoach(
                 week: { select: { id: true } },
               },
             },
-            // Exercises the client flagged mid-workout — the coach reviews
+            // Exercises the client flagged mid-workout; the coach reviews
             // these alongside check-ins
             flags: {
               select: {
@@ -125,7 +125,7 @@ export const GET = withCoach(
           },
         },
         checkIns: {
-          // Expired check-ins were never answered — noise, not history.
+          // Expired check-ins were never answered: noise, not history.
           // This coach's only: a previous coach's check-ins (their replies
           // included) aren't this one's to read.
           where: { coachId: coachProfileId, status: { not: "EXPIRED" } },
@@ -135,7 +135,7 @@ export const GET = withCoach(
           // history panel actually renders. Selecting only the status/rating
           // left every note, the "Your response" block (and with it the
           // edit-response action) and the plan-adjustment badge permanently
-          // blank — the panel showed a date and one emoji.
+          // blank (the panel showed a date and one emoji).
           select: {
             id: true,
             status: true,
@@ -156,7 +156,7 @@ export const GET = withCoach(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    // Same urgency the dashboard ranks by — computed here too so the
+    // Same urgency the dashboard ranks by, computed here too so the
     // profile can never disagree with the roster
     const lastWorkoutAt =
       client.completions.find((c) => c.status === "COMPLETED")?.completedAt ?? null;
@@ -206,7 +206,7 @@ export const GET = withCoach(
  * Coach ends the coaching relationship with this client. The relationship is
  * kept as INACTIVE history; the client keeps their account and workout
  * history but loses the assigned plan and the messaging channel.
- * Idempotent — ending an already-ended relationship returns 200.
+ * Idempotent: ending an already-ended relationship returns 200.
  */
 export const DELETE = withCoach(
   async (
@@ -229,7 +229,7 @@ export const DELETE = withCoach(
       return NextResponse.json({ error: "Client not found" }, { status: 404 });
     }
 
-    // A sample client isn't a real person — "ending" it removes the demo and
+    // A sample client isn't a real person; "ending" it removes the demo and
     // all its generated data instead of leaving an orphaned fake account
     if (relationship.client.isSample) {
       await deleteSampleClient(coachProfileId);

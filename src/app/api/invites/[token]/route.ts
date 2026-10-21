@@ -37,7 +37,7 @@ async function inviteViewer(inviteCoachId: string) {
 
 /**
  * GET /api/invites/[token]
- * Public endpoint — validates an invite token for the signup page.
+ * Public endpoint: validates an invite token for the signup page.
  * No auth required (clients aren't logged in yet); a signed-in caller also
  * gets `viewer` (see inviteViewer).
  */
@@ -100,7 +100,7 @@ export async function GET(
 
 /**
  * DELETE /api/invites/[token]
- * Coach revokes an invite they sent — e.g. it went to the wrong person.
+ * Coach revokes an invite they sent (e.g. it went to the wrong person).
  * The link stops working immediately. Accepted invites are history and
  * can't be revoked.
  */

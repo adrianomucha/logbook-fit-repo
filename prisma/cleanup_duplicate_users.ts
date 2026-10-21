@@ -2,7 +2,7 @@
 // (seed.ts uses create, and prod was missing the users_email_active_unique
 // partial index, so each run added a full new coach/client/demo generation).
 //
-// Keeps the OLDEST active row per email — verified 2026-06-12 to be the live
+// Keeps the OLDEST active row per email, verified 2026-06-12 to be the live
 // generation: auth findFirst resolves to it, and all activity since March
 // (messages, check-ins, workouts, plan edits) belongs to it. Newer duplicates
 // are self-contained seed graphs with no cross-references to the live one.

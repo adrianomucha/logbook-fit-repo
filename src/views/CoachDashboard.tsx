@@ -99,7 +99,7 @@ export function CoachDashboard() {
   const [showRemoveSampleConfirm, setShowRemoveSampleConfirm] = useState(false);
 
   // --- API hooks ---
-  // Same /api/me request the nav's account menu makes — SWR dedups it
+  // Same /api/me request the nav's account menu makes; SWR dedups it
   const { user, isLoading: isUserLoading } = useCurrentUser();
   const { clients: dashboardClients, isLoading: isDashboardLoading, error: dashboardError, refresh: refreshDashboard } = useCoachDashboard();
   const { plans: apiPlans, createPlan, deletePlan, refresh: refreshPlans, isLoading: isPlansLoading } = useCoachPlans();
@@ -135,7 +135,7 @@ export function CoachDashboard() {
     return plan?.assignedTo.length ?? 0;
   };
 
-  // Names of clients on each plan — feeds the avatar stack on live rows
+  // Names of clients on each plan; feeds the avatar stack on live rows
   const getClientsForTemplate = (planId: string) => {
     const plan = apiPlans.find((p) => p.id === planId);
     return (
@@ -242,7 +242,7 @@ export function CoachDashboard() {
     // both, and stacking a second full-viewport box inside the first pushed the
     // page ~76px past the fold on mobile no matter how little content it held.
     <div className="pb-0 sm:pb-4">
-      {/* Success Toast — checkmark draws in */}
+      {/* Success Toast: checkmark draws in */}
       {showSuccessToast && (
         <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(16,185,129,0.3)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
           <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
@@ -265,7 +265,7 @@ export function CoachDashboard() {
         isOpen={showInviteModal}
         onClose={() => {
           setShowInviteModal(false);
-          // The modal generates a link on open — reflect it in the guide
+          // The modal generates a link on open, so reflect it in the guide
           refreshInvites();
         }}
       />
@@ -355,7 +355,7 @@ export function CoachDashboard() {
               </div>
             ) : dashboardError && dashboardClients.length === 0 ? (
               // A failed fetch must never masquerade as the "no clients yet"
-              // onboarding state — a coach with a full roster would see it
+              // onboarding state; a coach with a full roster would see it
               <LoadErrorState
                 kicker="Roster · Signal lost"
                 title="Couldn't load your roster"
@@ -383,7 +383,7 @@ export function CoachDashboard() {
               </div>
             ) : (
               <>
-                {/* Sample-mode strip — persistent reminder + exit while exploring */}
+                {/* Sample-mode strip: persistent reminder + exit while exploring */}
                 {hasSampleClient && (
                   <div className="animate-enter flex flex-col sm:flex-row sm:items-center gap-2.5 sm:gap-3 rounded-xl border border-dashed border-border bg-muted/40 px-4 py-3">
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">

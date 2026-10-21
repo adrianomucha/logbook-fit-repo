@@ -58,7 +58,7 @@ export async function GET() {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  // An ended relationship means "no coach" everywhere in the client app —
+  // An ended relationship means "no coach" everywhere in the client app, so
   // don't leak the old coach into the payload
   const clientProfile = user.clientProfile
     ? {
@@ -70,7 +70,7 @@ export async function GET() {
       }
     : null;
 
-  // The paired account for the nav's one-click switch — only surfaced when
+  // The paired account for the nav's one-click switch, only surfaced when
   // it could actually be switched into (exists, live, not demo-locked).
   let linkedAccount: { role: "COACH" | "CLIENT"; name: string } | null = null;
   if (user.linkedUserId) {
@@ -87,14 +87,14 @@ export async function GET() {
     ...user,
     clientProfile,
     linkedAccount,
-    // Lets the nav show the Admin entry point. Informational only — every
+    // Lets the nav show the Admin entry point. Informational only; every
     // /admin page and API independently re-checks the allowlist server-side.
     isAdmin: isAdminEmail(session.user.email),
   });
 }
 
 /**
- * DELETE /api/me — the signed-in person retires their own account.
+ * DELETE /api/me: the signed-in person retires their own account.
  *
  * Password re-entry is the confirmation: an open laptop or a borrowed phone
  * must not be enough to delete someone. The check runs through the same
@@ -102,7 +102,7 @@ export async function GET() {
  * Demo accounts are shared fixtures and can't be deleted by anyone.
  *
  * What deletion does is in lib/account-deletion.ts. The response is the
- * caller's cue to drop its session — the cookie or token stops working
+ * caller's cue to drop its session; the cookie or token stops working
  * regardless, since getSession() refuses deleted users.
  */
 export async function DELETE(req: Request) {

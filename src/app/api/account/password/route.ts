@@ -10,7 +10,7 @@ import { changePasswordLimiter } from "@/lib/rate-limit";
 export const dynamic = "force-dynamic";
 
 /**
- * PUT /api/account/password — signed-in password change (current + new).
+ * PUT /api/account/password: signed-in password change (current + new).
  *
  * Updating passwordHash also invalidates any outstanding emailed reset
  * links: their tokens carry a fingerprint of the old hash (see
@@ -40,7 +40,7 @@ export async function PUT(req: Request) {
       where: { id: session.user.id, deletedAt: null },
       select: { id: true, email: true, passwordHash: true },
     });
-    // Demo accounts are shared logins — letting one visitor change the
+    // Demo accounts are shared logins; letting one visitor change the
     // password locks everyone else out
     if (!user || isDemoAccount(user.email)) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

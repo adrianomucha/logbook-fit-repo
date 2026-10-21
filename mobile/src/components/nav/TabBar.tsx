@@ -32,7 +32,7 @@ const TABS: { name: string; label: string; icon: (color: string, active: boolean
 /**
  * The web's MobileBottomNav, native: a hairline-topped bar with a single volt
  * pill that slides to the active tab, the icon popping as it lands, labels
- * in sentence case beneath. Hidden while the keyboard is up — a tab bar
+ * in sentence case beneath. Hidden while the keyboard is up: a tab bar
  * behind the keys is unreachable chrome, and chat apps drop theirs too.
  */
 export function TabBar({ state, navigation }: BottomTabBarProps) {
@@ -85,7 +85,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
         {routes.map((route) => {
           const tab = TABS.find((t) => t.name === route.name)!;
           const isActive = route.name === activeName;
-          // Sitting in the chat marks it read within a poll — a badge on the
+          // Sitting in the chat marks it read within a poll; a badge on the
           // tab you're already reading is noise.
           const badge = tab.name === 'chat' && !isActive ? unread : 0;
           const color = isActive ? '#1e2702' : '#737373';

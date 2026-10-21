@@ -92,7 +92,7 @@ export async function FeedbackPanel() {
                         {entry.user?.name ?? 'Deleted account'}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {entry.user?.email ?? '—'}
+                        {entry.user?.email ?? '-'}
                         <span className="font-mono text-[10px] uppercase tracking-[0.08em]">
                           {' '}
                           · {entry.role === 'COACH' ? 'Coach' : 'Client'}
@@ -102,7 +102,7 @@ export async function FeedbackPanel() {
                     <td className="px-4 py-3">
                       <CategoryChip category={entry.category} />
                     </td>
-                    {/* The one column allowed to wrap — everything else stays
+                    {/* The one column allowed to wrap; everything else stays
                         on a line so long messages get the width */}
                     <td className="min-w-[16rem] max-w-xl px-4 py-3">
                       <p className="whitespace-pre-wrap break-words leading-relaxed">

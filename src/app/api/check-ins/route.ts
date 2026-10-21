@@ -36,7 +36,7 @@ export const POST = withCoach(
       );
     }
 
-    // One at a time — a double-click or stale tab must not stack a second
+    // One at a time: a double-click or stale tab must not stack a second
     // check-in on an open one (the UI only ever shows the newest)
     const openCheckIn = await prisma.checkIn.findFirst({
       where: {
@@ -72,7 +72,7 @@ export const POST = withCoach(
       },
     });
 
-    // Awaited, not fired and forgotten — a serverless function can freeze the
+    // Awaited, not fired and forgotten: a serverless function can freeze the
     // moment it responds. notifyCheckInSent swallows its own errors, so a
     // failed push can never fail the check-in.
     await notifyCheckInSent({

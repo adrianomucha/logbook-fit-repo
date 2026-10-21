@@ -10,8 +10,8 @@ export interface ChatRow {
 }
 
 /**
- * Bubble grouping for a chat, from messages in conversation order — oldest
- * first, which is what `apiMessagesToMessages` returns. A message opens a
+ * Bubble grouping for a chat, from messages in conversation order (oldest
+ * first, which is what `apiMessagesToMessages` returns). A message opens a
  * group when the sender changes or a new day starts, and gets a date
  * separator above it when the day changes.
  *

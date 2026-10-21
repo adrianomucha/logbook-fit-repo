@@ -7,7 +7,7 @@ import { currentToken } from './session-store';
 export const AVATAR_MAX_BYTES = 4 * 1024 * 1024;
 
 /**
- * PUT /api/account/avatar with the raw image bytes — not JSON, so this one
+ * PUT /api/account/avatar with the raw image bytes, not JSON, so this one
  * request bypasses the shared client. The server sniffs the real type from
  * the bytes; the content-type header is a courtesy.
  */
@@ -32,7 +32,7 @@ export async function uploadAvatar(localUri: string): Promise<string> {
   return data.avatarUrl;
 }
 
-/** DELETE /api/account/avatar — back to the monogram. */
+/** DELETE /api/account/avatar: back to the monogram. */
 export async function removeAvatar(): Promise<void> {
   await apiFetch('/api/account/avatar', { method: 'DELETE' });
 }

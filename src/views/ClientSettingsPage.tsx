@@ -23,9 +23,9 @@ const SECTION_PANES: Record<SettingsSectionId, () => React.JSX.Element> = {
 };
 
 /**
- * The client's settings — same panes as the coach page, in the client app's
+ * The client's settings: same panes as the coach page, in the client app's
  * chrome: the single max-w-2xl column and volt-underlined section tabs, the
- * idiom of ClientNav's own tabs. No side rail — a rail plus a form doesn't
+ * idiom of ClientNav's own tabs. No side rail; a rail plus a form doesn't
  * fit a one-column app.
  */
 export function ClientSettingsPage() {
@@ -60,7 +60,7 @@ export function ClientSettingsPage() {
           </h1>
         </div>
 
-        {/* Section tabs — brand underline, matching the nav's own tabs.
+        {/* Section tabs: brand underline, matching the nav's own tabs.
             Fixed segments, never a scroller: three tabs share the row, so
             there is nothing to pan and the bar stays put under a thumb.
             Icons yield below 400px so the labels always fit. */}

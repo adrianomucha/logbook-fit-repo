@@ -18,7 +18,7 @@ type SetWrite = {
  * same guarantees: viewing never starts the workout (the first interaction
  * does), set writes are optimistic, debounced, merged per set and kept
  * queued until the server confirms them, and a flaky gym connection retries
- * instead of dropping logged sets. Backgrounding the app flushes at once —
+ * instead of dropping logged sets. Backgrounding the app flushes at once:
  * "check the last set, pocket the phone" is the commonest gesture there is.
  */
 export function useWorkoutExecution(dayId: string | null) {
@@ -105,7 +105,7 @@ export function useWorkoutExecution(dayId: string | null) {
         return pendingSetsRef.current.size === 0;
       } catch (err) {
         if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
-          // Deterministic rejection (e.g. workout already completed) —
+          // Deterministic rejection (e.g. workout already completed):
           // retrying can never succeed. Drop the batch and resync.
           for (const [key, value] of batch) {
             if (pendingSetsRef.current.get(key) === value) pendingSetsRef.current.delete(key);
@@ -113,9 +113,9 @@ export function useWorkoutExecution(dayId: string | null) {
           void mutate();
           return pendingSetsRef.current.size === 0;
         }
-        // Transient: keep everything queued and retry, without revalidating —
+        // Transient: keep everything queued and retry, without revalidating;
         // that would visually revert checkmarks the queue will still persist.
-        setSaveError("Couldn't save your sets — retrying. Check your connection.");
+        setSaveError("Couldn't save your sets, retrying. Check your connection.");
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => void flushSets(), 4000);
         return false;
@@ -321,7 +321,7 @@ export function useWorkoutExecution(dayId: string | null) {
     return result;
   }, [completionId, mutate]);
 
-  /** Finish the workout — throws on failure so callers can handle */
+  /** Finish the workout; throws on failure so callers can handle */
   const finishWorkout = useCallback(
     async (effortRating?: string) => {
       if (isReadOnly) return null;

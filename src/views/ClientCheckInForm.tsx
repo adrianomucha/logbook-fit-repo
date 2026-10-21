@@ -33,7 +33,7 @@ export function ClientCheckInForm() {
   const { coach } = useCurrentUser();
   const coachFirstName = coach?.user.name?.split(' ')[0] ?? null;
 
-  // The success screen replaces the form — move focus to its heading so the
+  // The success screen replaces the form, so move focus to its heading so the
   // confirmation is announced, without scrolling it under anything
   const successHeadingRef = useRef<HTMLHeadingElement>(null);
 
@@ -86,11 +86,11 @@ export function ClientCheckInForm() {
     );
   }
 
-  // Success screen — checked before the status gate: the post-submit
+  // Success screen, checked before the status gate: the post-submit
   // revalidation flips status to CLIENT_RESPONDED, and the user must see
   // "Sent" rather than a cold "Already sent"
   if (showSuccess) {
-    // Echo what was sent — a receipt, so the moment isn't a void
+    // Echo what was sent: a receipt, so the moment isn't a void
     const effort = EFFORT_OPTIONS.find((o) => o.value === effortRating);
     const feeling = FEELING_OPTIONS.find((o) => o.value === clientFeeling);
     const note = painBlockers.trim();
@@ -98,7 +98,7 @@ export function ClientCheckInForm() {
     return (
       <div className="min-h-dvh bg-background px-4 pt-10 sm:pt-16 pb-10">
         <div className="max-w-md mx-auto space-y-6 animate-enter">
-          {/* Volt check — the same celebration mark the coach's success screen
+          {/* Volt check: the same celebration mark the coach's success screen
               and the workout-complete state carry */}
           <div className="w-16 h-16 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
             <Check className="w-8 h-8 text-brand-foreground" strokeWidth={3} aria-hidden="true" />
@@ -116,7 +116,7 @@ export function ClientCheckInForm() {
               {coachFirstName ? `Sent to ${coachFirstName}` : 'Sent to your coach'}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-              {coachFirstName ?? 'Your coach'} will read it and get back to you — their reply
+              {coachFirstName ?? 'Your coach'} will read it and get back to you. Their reply
               shows up on your dashboard.
             </p>
           </div>
@@ -155,7 +155,7 @@ export function ClientCheckInForm() {
           )}
 
           <div className="space-y-1.5 pt-1">
-            {/* Same volt CTA the today card uses — one clear way onward */}
+            {/* Same volt CTA the today card uses, one clear way onward */}
             <button
               onClick={() => router.push('/client')}
               className="w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
@@ -175,7 +175,7 @@ export function ClientCheckInForm() {
     );
   }
 
-  // Expired — the client never responded; "Already Submitted" would be a lie
+  // Expired: the client never responded; "Already Submitted" would be a lie
   if (checkIn.status === 'EXPIRED') {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
@@ -183,7 +183,7 @@ export function ClientCheckInForm() {
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in expired</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in is no longer open — the next one will appear on your dashboard.</p>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in is no longer open. The next one will appear on your dashboard.</p>
             <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to dashboard</Button>
           </div>
         </div>
@@ -232,11 +232,11 @@ export function ClientCheckInForm() {
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
         // The check-in was answered in another tab or expired while the form
-        // sat open — "try again" can never succeed. Refetch so the right
+        // sat open, so "try again" can never succeed. Refetch so the right
         // terminal screen (submitted/expired) renders instead of a dead end.
         await refresh();
         setErrors({
-          submit: 'This check-in is no longer open — it may have been answered already or expired.',
+          submit: 'This check-in is no longer open. It may have been answered already or expired.',
         });
       } else {
         setErrors({ submit: 'Failed to submit. Please try again.' });
@@ -391,7 +391,7 @@ export function ClientCheckInForm() {
           </div>
         )}
 
-        {/* Submit Error — stable region so repeat failures re-announce */}
+        {/* Submit Error: stable region so repeat failures re-announce */}
         <div role="alert" aria-live="assertive">
           {errors.submit && (
             <p className="text-sm text-destructive text-center">{errors.submit}</p>

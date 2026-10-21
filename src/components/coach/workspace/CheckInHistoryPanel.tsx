@@ -25,7 +25,7 @@ export interface CheckInScheduleSettings {
   dayOfWeek: number | null;
 }
 
-/** Cadence choices — must stay in sync with checkInScheduleSchema.
+/** Cadence choices: must stay in sync with checkInScheduleSchema.
  *  Lowercase labels: they complete the sentence "Sends [every week] on [Mondays]". */
 const INTERVAL_OPTIONS: { value: number; label: string }[] = [
   { value: 3, label: 'every 3 days' },
@@ -104,7 +104,7 @@ export function CheckInHistoryPanel({
 
   const firstName = clientName?.split(' ')[0] || clientName || 'Client';
 
-  // The whole setting reads as one sentence — "Sends every week on Mondays" —
+  // The whole setting reads as one sentence ("Sends every week on Mondays")
   // with the variable words as compact inline selects, so nothing has to line
   // up against a grid it doesn't share.
   // Compact inline triggers: the default focus treatment (2px ring + 2px
@@ -113,7 +113,7 @@ export function CheckInHistoryPanel({
   const selectTriggerClasses =
     'h-8 w-auto gap-1 rounded-md border-border/60 bg-background/60 px-2.5 text-sm font-medium text-foreground hover:border-border transition-colors focus:ring-0 focus:ring-offset-0 focus:border-foreground/40';
   // The widget sits at the bottom edge of an overflow-hidden card, so the
-  // menus open upward — downward they'd be clipped mid-list.
+  // menus open upward; downward they'd be clipped mid-list.
   const selectContentClasses = 'top-auto bottom-full mt-0 mb-1';
 
   const scheduleToggle = hasPlan && schedule && onUpdateSchedule ? (
@@ -125,7 +125,7 @@ export function CheckInHistoryPanel({
             <span className="text-sm font-medium">Automatic check-ins</span>
             {!schedule.enabled && (
               <p className="text-xs text-muted-foreground">
-                Off — send check-ins by hand
+                Off. Send check-ins by hand
               </p>
             )}
           </div>
@@ -189,7 +189,7 @@ export function CheckInHistoryPanel({
     </div>
   ) : null;
 
-  // Empty state — the tab content fills the card on large screens, so the
+  // Empty state: the tab content fills the card on large screens, so the
   // message is centred in the available height (top-hugging reads as a
   // layout bug) and the schedule widget stays pinned to the bottom edge,
   // where it lives once there are check-ins.
@@ -288,7 +288,7 @@ export function CheckInHistoryPanel({
                 />
               </button>
 
-              {/* Inline detail — expands in place instead of opening a modal */}
+              {/* Inline detail: expands in place instead of opening a modal */}
               {isExpanded && (
                 <div className="px-2.5 pb-3 space-y-3 animate-in fade-in-0 slide-in-from-top-1 duration-150">
                   {(workoutFeeling || bodyFeeling) && (

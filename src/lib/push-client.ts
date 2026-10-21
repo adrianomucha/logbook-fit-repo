@@ -3,7 +3,7 @@
  * subscribe/unsubscribe against /api/push/subscription.
  *
  * The pure helpers (support detection, key decoding) live here rather than in
- * the hook so they can be unit-tested under the `node` test environment —
+ * the hook so they can be unit-tested under the `node` test environment,
  * same split as `pwa-install.ts`.
  */
 
@@ -47,7 +47,7 @@ export function isStandalone(): boolean {
 
 /**
  * VAPID keys travel as base64url text; PushManager wants raw bytes.
- * Exported for tests — a silently wrong decode fails at subscribe time with
+ * Exported for tests: a silently wrong decode fails at subscribe time with
  * an opaque browser error.
  */
 export function urlBase64ToUint8Array(base64String: string): Uint8Array {
@@ -97,7 +97,7 @@ export async function enablePushNotifications(publicKey: string): Promise<void> 
 
   const existing = await registration.pushManager.getSubscription();
   // A subscription made with a different (rotated) VAPID key can't receive
-  // our pushes — drop it and make a fresh one.
+  // our pushes, so drop it and make a fresh one.
   if (existing) await existing.unsubscribe().catch(() => undefined);
 
   const subscription = await registration.pushManager.subscribe({

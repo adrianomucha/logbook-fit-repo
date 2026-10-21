@@ -53,7 +53,7 @@ function HistoryItem({ entry, last }: { entry: HistoryEntry; last: boolean }) {
           </View>
           <View className="flex-row justify-between">
             <Text className="font-sans text-sm text-muted-foreground">Effort</Text>
-            <Text className={`font-sans-medium text-sm ${effort ? EFFORT_COLOR[effort] : 'text-foreground'}`}>{effort ? EFFORT_LABELS[effort] : '—'}</Text>
+            <Text className={`font-sans-medium text-sm ${effort ? EFFORT_COLOR[effort] : 'text-foreground'}`}>{effort ? EFFORT_LABELS[effort] : '-'}</Text>
           </View>
           <View className="flex-row justify-between gap-4">
             <Text className="font-sans text-sm text-muted-foreground">Plan</Text>
@@ -68,7 +68,7 @@ function HistoryItem({ entry, last }: { entry: HistoryEntry; last: boolean }) {
   );
 }
 
-/** The full workout log, grouped by week — the web's EnrichedWorkoutHistory. */
+/** The full workout log, grouped by week: the web's EnrichedWorkoutHistory. */
 export function WorkoutHistory({
   completions,
   plans,

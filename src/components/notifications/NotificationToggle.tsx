@@ -12,11 +12,11 @@ interface NotificationToggleProps {
 }
 
 /**
- * Per-device opt-in for message notifications — the quiet chat-surface pill.
+ * Per-device opt-in for message notifications: the quiet chat-surface pill.
  * The settings page has its own fuller control (NotificationPreferenceTile).
  *
  * Renders nothing when push can't work here (unsupported browser, server
- * without VAPID keys) — an offer the app can't honour is worse than silence.
+ * without VAPID keys). An offer the app can't honour is worse than silence.
  * The two cases the user *can* act on get a line of copy instead: blocked
  * permission (browser settings) and iOS-in-a-tab (install the app first).
  */

@@ -26,7 +26,7 @@ import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 const FINISH_BAR_HEIGHT = 56 + 24;
 
 /**
- * Workout execution — the web's ClientWorkoutExecution, one screen: sticky
+ * Workout execution (the web's ClientWorkoutExecution), one screen: sticky
  * header with progress, the exercise list (expand → set table), flags and
  * "message coach", a finish bar, and the celebration with an effort rating.
  * All the saving logic is in useWorkoutExecution; this file is the chrome.
@@ -202,7 +202,7 @@ export default function WorkoutScreen() {
           body: JSON.stringify({ effortRating: rating }),
         });
       } catch {
-        // Non-critical — the rating can be given from Today later
+        // Non-critical: the rating can be given from Today later
       }
     }
     router.replace('/client');
@@ -276,7 +276,7 @@ export default function WorkoutScreen() {
 
   return (
     <KeyboardAvoidingView className="flex-1 bg-background" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      {/* Header — the web's WorkoutHeader: back + count row, eyebrow, full title, volt progress bar */}
+      {/* Header: the web's WorkoutHeader: back + count row, eyebrow, full title, volt progress bar */}
       <View className="border-b border-border bg-background px-4 pb-4" style={{ paddingTop: insets.top }}>
         <View className="h-12 flex-row items-center justify-between">
           <Pressable onPress={goBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back" className="-ml-2 h-11 w-11 items-center justify-center active:opacity-70">

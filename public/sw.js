@@ -1,4 +1,4 @@
-/* Logbook service worker — notifications only.
+/* Logbook service worker: notifications only.
  *
  * Deliberately no fetch handler and no caching: the app is server-rendered
  * and session-scoped, and a stale offline cache is exactly how a chat starts
@@ -49,7 +49,7 @@ self.addEventListener('notificationclick', (event) => {
     self.clients
       .matchAll({ type: 'window', includeUncontrolled: true })
       .then((clientList) => {
-        // Reuse an open Logbook window when there is one — opening a second
+        // Reuse an open Logbook window when there is one; opening a second
         // copy of an installed PWA is disorienting.
         for (const client of clientList) {
           if (new URL(client.url).origin === self.location.origin) {

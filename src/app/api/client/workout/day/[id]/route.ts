@@ -73,7 +73,7 @@ export const GET = withClient(
     });
 
     // Prior performance: the heaviest logged set from each exercise's most recent
-    // COMPLETED session — a "last time you hit X" reference while logging today.
+    // COMPLETED session, a "last time you hit X" reference while logging today.
     const exerciseIds = day.exercises.map((we) => we.exerciseId);
     const priorSets = exerciseIds.length
       ? await prisma.setCompletion.findMany({
@@ -102,7 +102,7 @@ export const GET = withClient(
       : [];
 
     // Prior sets only count when they were logged in the unit the exercise uses
-    // today — after a reps↔time switch, a 12-rep set must not resurface as "12s".
+    // today. After a reps↔time switch, a 12-rep set must not resurface as "12s".
     const currentTypeByExercise = new Map(
       day.exercises.map((we) => [we.exerciseId, we.trackingType])
     );

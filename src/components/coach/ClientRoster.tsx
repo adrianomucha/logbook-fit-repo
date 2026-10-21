@@ -140,7 +140,7 @@ export function ClientRoster({ clients }: ClientRosterProps) {
   const [query, setQuery] = useState('');
   const [sortMode, setSortMode] = useState<'urgency' | 'name'>('urgency');
 
-  // Client-side search & sort — the roster arrives whole, so this stays
+  // Client-side search & sort; the roster arrives whole, so this stays
   // instant; the API's urgency order is the default
   const visibleClients = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -180,7 +180,7 @@ export function ClientRoster({ clients }: ClientRosterProps) {
 
   return (
     <div className="space-y-6">
-      {/* Search + sort — instant, client-side */}
+      {/* Search + sort: instant, client-side */}
       <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
         <div className="relative flex-1">
           <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
@@ -223,7 +223,7 @@ export function ClientRoster({ clients }: ClientRosterProps) {
           </button>
         </div>
       ) : sortMode === 'name' ? (
-        // Alphabetical is for finding someone — one flat list, actions intact
+        // Alphabetical is for finding someone: one flat list, actions intact
         renderRows(visibleClients)
       ) : (
         <>
@@ -252,7 +252,7 @@ export function ClientRoster({ clients }: ClientRosterProps) {
         </>
       )}
 
-      {/* The archive lives on its own page — just a quiet pointer here,
+      {/* The archive lives on its own page; just a quiet pointer here,
           so the roster stays a roster no matter how much history piles up */}
       {pastClients.length > 0 && (
         <div className="flex justify-center pt-2">

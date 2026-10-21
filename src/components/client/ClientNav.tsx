@@ -23,7 +23,7 @@ const DESKTOP_TABS: { id: ClientNavTab; label: string }[] = [
 
 export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
   const { total: unreadTotal } = useUnreadMessages();
-  // Sitting in the chat marks the thread read within a poll — showing the
+  // Sitting in the chat marks the thread read within a poll; showing the
   // badge on the tab you're already reading is just noise.
   const unreadCount = activeTab === 'chat' ? 0 : unreadTotal;
 
@@ -51,7 +51,7 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
             {/* Brand / nav divider */}
             <div className="hidden sm:block h-3.5 w-px bg-border" aria-hidden="true" />
 
-            {/* Desktop tabs — underline indicator sits on the header hairline */}
+            {/* Desktop tabs: underline indicator sits on the header hairline */}
             <nav className="hidden sm:flex items-stretch self-stretch gap-5" aria-label="Main navigation">
               {DESKTOP_TABS.map(({ id, label }) => (
                 <button

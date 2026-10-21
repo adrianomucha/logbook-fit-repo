@@ -7,7 +7,7 @@ import prisma from "@/lib/prisma";
  * GET /api/messages/unread
  * Unread message counts for the signed-in user, grouped by the person who
  * sent them. Drives the nav badges and the in-app "new message" toast, and is
- * polled app-wide — so it stays deliberately small: two grouped queries plus
+ * polled app-wide, so it stays deliberately small: two grouped queries plus
  * one name lookup, no message bodies except the newest per thread.
  *
  * Only threads with a live coaching relationship are counted. Messages
@@ -86,7 +86,7 @@ export async function GET() {
   });
   const senderById = new Map(senders.map((user) => [user.id, user]));
 
-  // Newest message per thread — the toast shows a preview, so it needs the
+  // Newest message per thread: the toast shows a preview, so it needs the
   // body of exactly one message per sender. Bounded: counts come from the
   // grouped query above and stay exact, so the only thing a huge unread
   // backlog costs here is a preview, never a wrong number.
@@ -111,7 +111,7 @@ export async function GET() {
         userId: row.senderId,
         name: sender?.name ?? null,
         avatarUrl: sender?.avatarUrl ?? null,
-        /** Present when the sender is a client — the coach app routes by it */
+        /** Present when the sender is a client; the coach app routes by it */
         clientProfileId: sender?.clientProfile?.id ?? null,
         count: row._count._all,
         lastMessageAt:

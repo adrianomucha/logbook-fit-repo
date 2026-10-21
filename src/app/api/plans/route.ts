@@ -86,7 +86,7 @@ export const POST = withCoach(
     if (!result.success) return result.response;
     const { name, description, durationWeeks, workoutsPerWeek } = result.data;
 
-    // Check for duplicate name (scoped to coach's TEMPLATES — client
+    // Check for duplicate name (scoped to coach's TEMPLATES; client
     // instances share their template's name by design)
     const existing = await prisma.plan.findFirst({
       where: {

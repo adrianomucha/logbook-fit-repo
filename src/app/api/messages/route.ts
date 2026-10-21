@@ -34,7 +34,7 @@ export async function POST(req: Request) {
     },
   });
 
-  // A client's messages can only go to their coach — resolve the recipient
+  // A client's messages can only go to their coach. Resolve the recipient
   // server-side when it's omitted, so client surfaces don't need to know
   // the coach's user id
   if (!recipientId) {
@@ -155,8 +155,8 @@ export async function POST(req: Request) {
   });
 
   // Push it to the recipient's devices. Awaited rather than fired and
-  // forgotten — a serverless function can be frozen the moment it responds,
-  // which would drop the notification — but never allowed to fail the send:
+  // forgotten (a serverless function can be frozen the moment it responds,
+  // which would drop the notification) but never allowed to fail the send:
   // notifyNewMessage swallows its own errors.
   await notifyNewMessage({
     recipientId,

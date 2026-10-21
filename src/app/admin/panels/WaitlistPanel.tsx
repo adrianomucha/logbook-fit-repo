@@ -69,7 +69,7 @@ export async function WaitlistPanel() {
     { PENDING: 0, INVITED: 0, JOINED: 0 } as Record<WaitlistStatus, number>
   );
 
-  // Signups per channel — the number that decides where the next push goes.
+  // Signups per channel: the number that decides where the next push goes.
   // Entries from before attribution existed have no source and group as
   // "unknown" rather than being dropped from the count.
   const bySource = [...
@@ -165,10 +165,10 @@ export async function WaitlistPanel() {
                   >
                     <td className="px-4 py-3 font-medium">{entry.email}</td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {entry.source || '—'}
+                      {entry.source || '-'}
                     </td>
                     <td className="px-4 py-3 font-mono tabular-nums text-muted-foreground">
-                      {entry.clientCount || '—'}
+                      {entry.clientCount || '-'}
                     </td>
                     <td className="px-4 py-3 font-mono tabular-nums text-muted-foreground">
                       {dateFmt.format(entry.createdAt)}

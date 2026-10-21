@@ -3,7 +3,7 @@
  * in lib/auth.ts so `signIn(..., { redirect: false })` surfaces them as
  * `result.error`; anything else (unknown email, wrong password) stays a
  * generic null so login can't be used to probe which emails have accounts.
- * Rate-limited and locked-demo refusals carry no account information — the
+ * Rate-limited and locked-demo refusals carry no account information; the
  * honest message stops users from retrying a "wrong password" that isn't one.
  *
  * Lives apart from lib/auth.ts so the login page (a client component) can

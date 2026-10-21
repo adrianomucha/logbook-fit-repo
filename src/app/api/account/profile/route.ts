@@ -8,7 +8,7 @@ import { updateProfileSchema } from "@/lib/validations/schemas";
 export const dynamic = "force-dynamic";
 
 /**
- * PUT /api/account/profile — display name and (for coaches) the bio shown
+ * PUT /api/account/profile: display name and (for coaches) the bio shown
  * to invited clients on the signup page.
  *
  * Role-agnostic on purpose: name applies to any account, bio is silently

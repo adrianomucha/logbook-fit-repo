@@ -8,7 +8,7 @@ import { restoreCoachClientRelationship } from "@/lib/relationship-termination";
  * POST /api/coach/clients/[id]/restore
  * Undoes an ended coaching relationship: back to ACTIVE, with the plan the
  * client was on re-assigned when it still exists. Only relationships the
- * coach ended can be restored — when the client chose to leave, rejoining is
+ * coach ended can be restored; when the client chose to leave, rejoining is
  * their call (via a fresh invite), not the coach's.
  */
 export const POST = withCoach(
@@ -32,7 +32,7 @@ export const POST = withCoach(
     }
 
     if (relationship.status === "ACTIVE") {
-      // Idempotent — double-clicking Restore isn't an error
+      // Idempotent: double-clicking Restore isn't an error
       return NextResponse.json({ restored: true, planRestored: false });
     }
 

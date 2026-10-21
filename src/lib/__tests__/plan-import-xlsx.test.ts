@@ -69,7 +69,7 @@ describe('workbookToText', () => {
     if (!text.ok) return;
     const lines = text.text.split('\n');
     expect(lines[0]).toBe('Sheet "Program"');
-    expect(lines[1]).toBe('Row 1: A1 (merged A1:F1) "Strength Block — 4 weeks"');
+    expect(lines[1]).toBe('Row 1: A1 (merged A1:F1) "Strength Block: 4 weeks"');
     expect(text.text).toContain('Row 3: A3 (merged A3:A5) "Mon - Upper" | B3 "Bench Press" | C3 "3x8 @ 60kg"');
     // The merged day label is not repeated on the rows it spans
     expect(text.text).toContain('Row 4: B4 "Barbell Row"');

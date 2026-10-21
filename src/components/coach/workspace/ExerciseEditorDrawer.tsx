@@ -36,14 +36,14 @@ interface ExerciseEditorContentProps {
   exerciseNumber?: number;
   /** Whether this is rendered inline (true) or standalone */
   open?: boolean;
-  /** Name of the exercise directly above this one, when there is one — enables the superset toggle */
+  /** Name of the exercise directly above this one, when there is one; enables the superset toggle */
   previousExerciseName?: string | null;
-  /** Name of the day this exercise belongs to — shown for context in the header */
+  /** Name of the day this exercise belongs to, shown for context in the header */
   dayName?: string | null;
 }
 
 /**
- * Exercise editor content — renders inline (no Sheet wrapper).
+ * Exercise editor content. Renders inline (no Sheet wrapper).
  * Used inside PlanEditorDrawer as a view swap.
  */
 export function ExerciseEditorContent({
@@ -138,7 +138,7 @@ export function ExerciseEditorContent({
     setName(template.name);
     const templateType = template.trackingType || 'REPS';
     if (templateType !== trackingType) {
-      // The old prescription is in the wrong unit — take the template's
+      // The old prescription is in the wrong unit, so take the template's
       setTrackingType(templateType);
       setReps(template.defaultReps || (templateType === 'TIME' ? '60s' : '10'));
     } else if (!reps) {
@@ -231,7 +231,7 @@ export function ExerciseEditorContent({
 
   return (
     <>
-      {/* Header — a mono back link to the day, the same shape as the page's
+      {/* Header: a mono back link to the day, the same shape as the page's
           "‹ Clients" link, then the exercise in display weight */}
       <div className="px-4 sm:px-5 pt-3 pb-3.5 border-b shrink-0">
         <div className="flex items-center justify-between gap-3">
@@ -244,7 +244,7 @@ export function ExerciseEditorContent({
             <span className="truncate">{dayName || 'Workout'}</span>
           </button>
 
-          {/* Mode switch — beside the back link on desktop */}
+          {/* Mode switch, beside the back link on desktop */}
           {renderModeSwitch('hidden sm:flex shrink-0', 'px-2.5 py-1 text-[10px]')}
         </div>
         <h2 className="mt-2.5 flex items-baseline gap-2.5 min-w-0 text-2xl sm:text-xl font-bold tracking-tight leading-tight antialiased">
@@ -299,7 +299,7 @@ export function ExerciseEditorContent({
               </div>
             </div>
 
-            {/* Library list — full-bleed rows, same rhythm as the day's exercise list */}
+            {/* Library list: full-bleed rows, same rhythm as the day's exercise list */}
             <div className="px-4 sm:px-5 py-2.5 border-y flex items-center justify-between">
               <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">
                 {searchQuery ? 'Results' : selectedCategory ?? 'Library'}
@@ -353,7 +353,7 @@ export function ExerciseEditorContent({
             </div>
           </>
         ) : (
-          /* Custom / Edit form — each field a filled shell holding its own
+          /* Custom / Edit form: each field a filled shell holding its own
              label, the same surfaces the coach dialogs are built from */
           <div className="px-4 sm:px-5 py-4 space-y-3">
             <FieldShell label="Exercise" htmlFor={ids.name}>
@@ -444,7 +444,7 @@ export function ExerciseEditorContent({
               </FieldShell>
             </div>
 
-            {/* Superset toggle — only when there's an exercise above to pair with */}
+            {/* Superset toggle, only when there's an exercise above to pair with */}
             {previousExerciseName && (
               <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3">
                 <div className="min-w-0">

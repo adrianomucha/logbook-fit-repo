@@ -39,7 +39,7 @@ const canNativeShare = () =>
 export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const { user } = useCurrentUser();
   // The signup page this link opens leads with the coach's photo and bio.
-  // A coach with neither is about to send a bare page — say so here, at the
+  // A coach with neither is about to send a bare page; say so here, at the
   // moment of sending, not in a settings pane they may never open.
   const profileIsBare =
     !!user && !user.avatarUrl && !user.coachProfile?.bio?.trim();
@@ -47,7 +47,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
   const [note, setNote] = useState('');
   const [showEmail, setShowEmail] = useState(false);
   const [invite, setInvite] = useState<InviteResult | null>(null);
-  // Email/note baked into the currently shown invite — lets us skip needless regen
+  // Email/note baked into the currently shown invite; lets us skip needless regen
   const [appliedEmail, setAppliedEmail] = useState('');
   const [appliedNote, setAppliedNote] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -84,7 +84,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         // regenerated invite doesn't leave a live orphan floating around
         if (replacing) {
           await apiFetch(`/api/invites/${replacing.token}`, { method: 'DELETE' }).catch(() => {
-            // Already used or gone — nothing to revoke
+            // Already used or gone; nothing to revoke
           });
         }
         const result = await apiFetch<InviteResult>('/api/invites', {
@@ -139,7 +139,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
     }
   }, [showEmail]);
 
-  // Bake the email into a fresh link — only when it actually changed
+  // Bake the email into a fresh link, only when it actually changed
   const applyEmail = () => {
     const trimmed = email.trim();
     if (isGenerating || trimmed === appliedEmail) return;
@@ -213,7 +213,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
         url: fullLink,
       });
     } catch {
-      // User dismissed the share sheet, or it failed — no-op
+      // User dismissed the share sheet, or it failed: no-op
     }
   };
 
@@ -263,7 +263,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
       }
     >
       <div className="space-y-4">
-        {/* Link state in the data voice — full text, its own line, nothing to
+        {/* Link state in the data voice: full text, its own line, nothing to
             truncate against */}
         <StatusLine tone={error ? 'idle' : 'ready'} pulse={isGenerating}>
           {isGenerating ? (
@@ -307,12 +307,12 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
             {profileIsBare && (
               <>
                 {' '}
-                Your photo and bio go there too —{' '}
+                Your photo and bio go there too.{' '}
                 <Link
                   href="/coach/settings?section=profile"
                   className="underline underline-offset-2 transition-colors hover:text-foreground"
                 >
-                  add yours
+                  Add yours
                 </Link>
                 .
               </>
@@ -343,7 +343,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                       setEmail(e.target.value);
                       if (emailSend.status !== 'idle') setEmailSend({ status: 'idle' });
                     }}
-                    // Pressing Email invite bakes the address itself — a
+                    // Pressing Email invite bakes the address itself; a
                     // blur-triggered link on the way there would race it
                     onBlur={(e) => {
                       if (e.relatedTarget === sendButtonRef.current) return;
@@ -360,7 +360,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                     }}
                   />
                 </FieldShell>
-                {/* Sending is its own step, and its outcome is spelled out —
+                {/* Sending is its own step, and its outcome is spelled out:
                     a coach shouldn't wait on an email that never left */}
                 <div className="mt-2 flex items-start justify-between gap-3 px-1">
                   <p
@@ -416,7 +416,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
               )}
 
               {/* Escape hatch for a link that reached the wrong person. The URL
-                  itself never shows — Copy link and Share are the link. */}
+                  itself never shows; Copy link and Share are the link. */}
               {invite &&
                 (confirmNew ? (
                   <div className="flex flex-wrap items-center gap-2">

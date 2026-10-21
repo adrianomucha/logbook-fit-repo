@@ -16,7 +16,7 @@ interface WorkoutHistoryPanelProps {
   initialCount?: number;
 }
 
-// Workout-effort voice ("Hard", not the check-in's "Too Hard") — same
+// Workout-effort voice ("Hard", not the check-in's "Too Hard"): same
 // vocabulary and colors as the client's own workout history.
 const EFFORT_DISPLAY: Record<string, { label: string; text: string }> = {
   EASY: { label: 'Easy', text: 'text-success' },
@@ -43,7 +43,7 @@ export function WorkoutHistoryPanel({
 
   const firstName = clientName?.split(' ')[0] || clientName || 'Client';
 
-  // Completed workouts plus started-but-never-finished ones — abandonment is
+  // Completed workouts plus started-but-never-finished ones; abandonment is
   // a fade signal, not something to hide. Guard the timestamps so a row
   // without one can't crash formatting.
   const rows = completions.filter(

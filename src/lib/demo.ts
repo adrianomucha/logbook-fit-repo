@@ -1,8 +1,8 @@
 /**
  * Demo-access gating for the seeded demo accounts (see prisma/seed.ts).
  *
- * The demo credentials are public — they're printed on the login page and
- * live in this repo — so hiding the login buttons is not a lock. The lock is
+ * The demo credentials are public (they're printed on the login page and
+ * live in this repo), so hiding the login buttons is not a lock. The lock is
  * server-side: while demo mode is off, demo accounts can't sign in and
  * already-issued demo sessions are rejected.
  *
@@ -12,7 +12,7 @@
  *   - unset   → on in local dev (`next dev`), off in any deployed build
  *
  * NEXT_PUBLIC_ so the login page can hide the demo buttons with the same
- * flag. The value is inlined at build time — changing it on Vercel takes a
+ * flag. The value is inlined at build time; changing it on Vercel takes a
  * redeploy, not just a restart.
  */
 
@@ -31,7 +31,7 @@ const DEMO_CLIENT_EMAILS = [
  *
  * Deliberately an exhaustive list and not a match on the @demo.logbook.fit
  * subdomain: a suffix match also swallows real accounts that happen to live
- * there, and locking one of those out of a deployed build is invisible —
+ * there, and locking one of those out of a deployed build is invisible:
  * the sign-in is refused before the password is even checked, so it looks
  * exactly like a wrong password. Seeding a new demo account means adding it
  * here; prisma/seed.ts asserts that every account it creates is covered.

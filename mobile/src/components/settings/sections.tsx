@@ -20,7 +20,7 @@ import { NotificationPreferenceTile } from '@/components/notifications/Notificat
 import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
 
 /**
- * The settings panes — the web's components/settings/sections.tsx for the
+ * The settings panes: the web's components/settings/sections.tsx for the
  * client role. Same three panes, same endpoints; the screen owns the chrome.
  * Which tabs exist and what they say lives in @logbook/shared/settings-sections.
  */
@@ -33,7 +33,7 @@ export {
 
 const inputClass = 'h-11 rounded-lg border border-border/60 bg-secondary/50 px-3.5 font-sans text-base text-foreground';
 
-/** Uppercase tracked mono label — the product's data voice */
+/** Uppercase tracked mono label: the product's data voice */
 function FieldLabel({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <Text className={`font-mono-medium text-[10px] uppercase tracking-[1.4px] text-muted-foreground ${className}`}>{children}</Text>
@@ -58,7 +58,7 @@ function SectionHeader({ section }: { section: SettingsSectionId }) {
   );
 }
 
-/** The primary action at the foot of a pane — the web's default Button, size sm. */
+/** The primary action at the foot of a pane: the web's default Button, size sm. */
 function SaveButton({ label, onPress, disabled, busy }: { label: string; onPress: () => void; disabled?: boolean; busy?: boolean }) {
   const off = disabled || busy;
   return (
@@ -248,7 +248,7 @@ export function ProfileSection() {
 }
 
 /**
- * kg / lb segmented switch — the web's WeightUnitField. Saves on tap and
+ * kg / lb segmented switch: the web's WeightUnitField. Saves on tap and
  * paints the new unit optimistically.
  */
 function WeightUnitField() {
@@ -345,7 +345,7 @@ export function PreferencesSection() {
 }
 
 /**
- * Signed-in password change — current password proves it's really them.
+ * Signed-in password change: current password proves it's really them.
  * Folded behind a button so the Account pane reads as facts first.
  */
 function PasswordField() {
@@ -354,7 +354,7 @@ function PasswordField() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  // Which field the error belongs to — drives focus, so the fix happens
+  // Which field the error belongs to. Drives focus, so the fix happens
   // where the mistake is. null = form-level (rate limit, 500).
   const [errorField, setErrorField] = useState<'current' | 'new' | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -497,7 +497,7 @@ function PasswordField() {
   );
 }
 
-/** How they sign in — email and password — and the one destructive action. */
+/** How they sign in (email and password) and the one destructive action. */
 export function AccountSection() {
   const { user } = useCurrentUser();
   const { signOut } = useAuth();
@@ -509,7 +509,7 @@ export function AccountSection() {
 
       <FactRow
         label={SETTINGS_FIELD_COPY.email.label}
-        value={user?.email ?? '—'}
+        value={user?.email ?? '-'}
         hint={SETTINGS_FIELD_COPY.email.hint}
         className="pt-0"
       />
@@ -519,7 +519,7 @@ export function AccountSection() {
       <View className="border-t border-border/60">
         <FactRow
           label={SETTINGS_FIELD_COPY.memberSince.label}
-          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—'}
+          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '-'}
         />
       </View>
 
@@ -575,7 +575,7 @@ export function AccountSection() {
 }
 
 /**
- * The client's coaching relationship and the way out of it — the web's
+ * The client's coaching relationship and the way out of it: the web's
  * CoachingRow. Here rather than on the Progress tab, whose job is the
  * client's training record.
  */
@@ -593,7 +593,7 @@ function CoachingRow() {
         onPress: async () => {
           try {
             await apiFetch('/api/client/coach', { method: 'DELETE' });
-            // Refetch the profile — this row disappears and the app drops to the no-coach state
+            // Refetch the profile; this row disappears and the app drops to the no-coach state
             await mutate('/api/me');
           } catch {
             Alert.alert(LEAVE_COACH_COPY.failedTitle, LEAVE_COACH_COPY.failed);

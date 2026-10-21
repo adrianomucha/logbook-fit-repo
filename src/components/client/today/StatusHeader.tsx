@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 
 interface StatusHeaderProps {
-  /** Show the "New plan" pill — on in week 1 while nothing has been started yet */
+  /** Show the "New plan" pill, on in week 1 while nothing has been started yet */
   showNewPlan?: boolean;
   clientName?: string;
 }
@@ -42,7 +42,7 @@ export function StatusHeader({ showNewPlan, clientName }: StatusHeaderProps) {
           </span>
         )}
       </div>
-      {/* Full width and truncated — the greeting must never wrap to a second line */}
+      {/* Full width and truncated; the greeting must never wrap to a second line */}
       <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight mt-1.5 truncate">
         {greeting && firstName ? `${greeting}, ${firstName}` : ' '}
       </h1>

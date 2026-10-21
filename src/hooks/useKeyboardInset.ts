@@ -22,7 +22,7 @@ const CLOSED: KeyboardInset = { bottom: 0, top: 0, isOpen: false };
 /**
  * Tracks how much of the screen the on-screen keyboard is covering.
  *
- * iOS never shrinks the *layout* viewport for the keyboard — it shrinks the
+ * iOS never shrinks the *layout* viewport for the keyboard; it shrinks the
  * visual viewport and scrolls the page so the focused field clears it. So
  * `position: fixed; bottom: 0` still means "the bottom of the full-height
  * screen", which after that scroll sits somewhere underneath the keyboard,

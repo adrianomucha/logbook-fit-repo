@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
-// Only the pure decision logic is under test — keep prisma out of the picture
+// Only the pure decision logic is under test; keep prisma out of the picture
 vi.mock('@/lib/prisma', () => ({ default: {} }));
 
 import {
@@ -26,7 +26,7 @@ describe('isPlanEnded', () => {
     vi.useRealTimers();
   });
 
-  it('is false with no start date — nothing has run yet', () => {
+  it('is false with no start date: nothing has run yet', () => {
     expect(isPlanEnded(null, 4)).toBe(false);
   });
 
@@ -34,7 +34,7 @@ describe('isPlanEnded', () => {
     expect(isPlanEnded(MONDAY, 4)).toBe(false);
   });
 
-  it('is false in the final week — a plan is not done until it is past', () => {
+  it('is false in the final week: a plan is not done until it is past', () => {
     // Started three Mondays ago → week 4 of a 4-week plan
     expect(isPlanEnded(daysBefore(MONDAY, 21), 4)).toBe(false);
   });
@@ -55,7 +55,7 @@ describe('isPlanEnded', () => {
 });
 
 describe('continuePlanStatus', () => {
-  it('409s a plan that is still running — the request is premature, not wrong', () => {
+  it('409s a plan that is still running: the request is premature, not wrong', () => {
     expect(continuePlanStatus('NOT_ENDED')).toBe(409);
   });
 

@@ -12,7 +12,7 @@ interface WorkoutOverviewProps {
   completionPct?: number;
   /** Start / resume the workout */
   onAction: () => void;
-  /** The action is in flight — the button waits so it can't fire twice */
+  /** The action is in flight; the button waits so it can't fire twice */
   isActionPending?: boolean;
 }
 
@@ -32,7 +32,7 @@ function getUniqueCategories(exercises: WorkoutDay['exercises']): string[] {
       cats.add(readable);
     }
   }
-  // "Other" is a catch-all bucket, not information — never lead with it
+  // "Other" is a catch-all bucket, not information; never lead with it
   return Array.from(cats).filter((c) => c.toLowerCase() !== 'other');
 }
 
@@ -64,7 +64,7 @@ export function WorkoutOverview({
 
   return (
     <div className="space-y-6">
-      {/* Hero session card — single focal point: what, how big, go */}
+      {/* Hero session card (single focal point: what, how big, go) */}
       <div className="rounded-2xl bg-card border border-border/70 p-5 sm:p-6">
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
           {eyebrowParts.join(' · ')}
@@ -81,7 +81,7 @@ export function WorkoutOverview({
           </p>
         )}
 
-        {/* Stat band — numbers carry the weight, units stay quiet */}
+        {/* Stat band: numbers carry the weight, units stay quiet */}
         <p className="font-mono text-[13px] tabular-nums mt-4 pt-4 border-t border-border/50">
           {stats.map(([value, unit], i) => (
             <span key={unit}>
@@ -98,7 +98,7 @@ export function WorkoutOverview({
           </p>
         )}
 
-        {/* Progress — only when there's actual progress to show */}
+        {/* Progress: only when there's actual progress to show */}
         {inProgress && completionPct > 0 && (
           <div className="mt-5">
             <div className="flex items-baseline justify-between mb-1.5">
@@ -138,7 +138,7 @@ export function WorkoutOverview({
         </button>
       </div>
 
-      {/* Exercise list — contained module: mono header bar + hairline card,
+      {/* Exercise list. Contained module: mono header bar + hairline card,
           so the section reads as one unit against the rest of the page */}
       {exercises.length > 0 && (
         <section

@@ -6,7 +6,7 @@ import { getClientUrgency } from "@/lib/urgency";
 
 /**
  * GET /api/coach/dashboard
- * Returns coach's client list sorted by urgency — see lib/urgency.ts for
+ * Returns coach's client list sorted by urgency (see lib/urgency.ts for
  * the ranking, which is shared with the client-detail endpoint.
  */
 // How long a new client counts as "just walked in" for the say-hello nudge
@@ -104,7 +104,7 @@ export const GET = withCoach(
     });
 
     // Sort by urgency, then most-silent first within a bucket (never trained
-    // leads), then by name — so equally urgent clients keep a stable order
+    // leads), then by name, so equally urgent clients keep a stable order
     clients.sort((a, b) => {
       if (a.urgencyOrder !== b.urgencyOrder) return a.urgencyOrder - b.urgencyOrder;
       const aWorkout = a.lastWorkoutAt ? a.lastWorkoutAt.getTime() : 0;

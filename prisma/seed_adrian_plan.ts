@@ -13,7 +13,7 @@ const prisma = new PrismaClient();
 
 const COACH_EMAIL = "coach@logbook.fit";
 const CLIENT_EMAIL = "adrianomucha@gmail.com";
-const PLAN_NAME = "Adrian — Hypertrophy 1.1";
+const PLAN_NAME = "Adrian: Hypertrophy 1.1";
 const DURATION_WEEKS = 8;
 
 type Ex = {
@@ -28,14 +28,14 @@ type DayDef = { name: string; description: string; exercises: Ex[] };
 
 const DAYS: DayDef[] = [
   {
-    name: "Day 1 — Chest + Lats (Posture Focus)",
+    name: "Day 1: Chest + Lats (Posture Focus)",
     description:
-      "Chest and lat work with a posture/serratus focus. Double progression on the presses — add reps to the top of the range, then add a little weight.",
+      "Chest and lat work with a posture/serratus focus. Double progression on the presses: add reps to the top of the range, then add a little weight.",
     exercises: [
-      { name: "Chest & shoulders pre-push stretch", category: "OTHER", sets: 1, reps: 1, notes: "Warm-up — mobility prep before pressing." },
+      { name: "Chest & shoulders pre-push stretch", category: "OTHER", sets: 1, reps: 1, notes: "Warm-up: mobility prep before pressing." },
       { name: "Wall flexor stretch", category: "OTHER", sets: 2, reps: 10, notes: "Wrist prep." },
-      { name: "Incline cable fly", category: "CHEST", sets: 2, reps: 12, notes: "12–15 reps — peak contraction." },
-      { name: "Incline barbell / Smith press", category: "CHEST", sets: 4, reps: 6, notes: "6–8 reps — heavy. New (was incline DB press)." },
+      { name: "Incline cable fly", category: "CHEST", sets: 2, reps: 12, notes: "12–15 reps, peak contraction." },
+      { name: "Incline barbell / Smith press", category: "CHEST", sets: 4, reps: 6, notes: "6–8 reps, heavy. New (was incline DB press)." },
       { name: "V-bar lat pulldown", category: "BACK", sets: 4, reps: 10, notes: null },
       { name: "Chest-supported rows", category: "BACK", sets: 3, reps: 12, notes: null },
       { name: "Pec deck / machine fly", category: "CHEST", sets: 3, reps: 12, notes: "New (was low cable crossover)." },
@@ -45,23 +45,23 @@ const DAYS: DayDef[] = [
     ],
   },
   {
-    name: "Day 2 — Legs + Glutes + Core (No Wrist Overload)",
+    name: "Day 2: Legs + Glutes + Core (No Wrist Overload)",
     description:
       "Lower body and core chosen to avoid wrist loading. Log time for planks and stretches.",
     exercises: [
       { name: "RDLs (dumbbell)", category: "LEGS", sets: 4, reps: 8, notes: "Palms neutral." },
-      { name: "Hack squat / leg press", category: "LEGS", sets: 4, reps: 10, notes: "10–12 reps — quad focus. New (was Bulgarian split squat)." },
+      { name: "Hack squat / leg press", category: "LEGS", sets: 4, reps: 10, notes: "10–12 reps, quad focus. New (was Bulgarian split squat)." },
       { name: "Barbell hip thrust", category: "GLUTES", sets: 4, reps: 10, notes: null },
       { name: "Lying leg curl", category: "LEGS", sets: 3, reps: 12, notes: "New (was seated hamstring curl)." },
       { name: "Calf raise on step", category: "LEGS", sets: 4, reps: 12, notes: "Peak contraction at top." },
-      { name: "Plank", category: "CORE", sets: 3, reps: 1, notes: "30–60s hold — scapular protraction. Log time." },
+      { name: "Plank", category: "CORE", sets: 3, reps: 1, notes: "30–60s hold, scapular protraction. Log time." },
       { name: "Side plank", category: "CORE", sets: 2, reps: 1, notes: "30s each side. Log time." },
       { name: "Pallof press", category: "CORE", sets: 3, reps: 12, notes: null },
       { name: "Quads stretch", category: "OTHER", sets: 1, reps: 1, notes: "1 min hold." },
     ],
   },
   {
-    name: "Day 3 — Back Width + Biceps",
+    name: "Day 3: Back Width + Biceps",
     description: "Vertical pulling for back width plus direct biceps work.",
     exercises: [
       { name: "Wide-grip lat pulldown", category: "BACK", sets: 4, reps: 8, notes: "8–10 reps. New (was Gravitron wide pull-up)." },
@@ -73,12 +73,12 @@ const DAYS: DayDef[] = [
     ],
   },
   {
-    name: "Day 4 — Chest + Shoulders Stability + Triceps",
+    name: "Day 4: Chest + Shoulders Stability + Triceps",
     description: "Shoulder-focused day with chest, side-delt volume, and triceps.",
     exercises: [
       { name: "Dumbbell press", category: "CHEST", sets: 4, reps: 8, notes: "Heavy." },
       { name: "Seated DB / machine shoulder press", category: "SHOULDERS", sets: 4, reps: 8, notes: "8–10 reps. New (was chest press machine)." },
-      { name: "Cable lateral raises", category: "SHOULDERS", sets: 4, reps: 15, notes: "Side delts — volume bumped to 4×15 (was 3×15)." },
+      { name: "Cable lateral raises", category: "SHOULDERS", sets: 4, reps: 15, notes: "Side delts: volume bumped to 4×15 (was 3×15)." },
       { name: "Reverse fly machine", category: "SHOULDERS", sets: 3, reps: 15, notes: null },
       { name: "Triceps pushdown w/ rope", category: "TRICEPS", sets: 3, reps: 12, notes: null },
       { name: "EZ-bar / DB skull crushers", category: "TRICEPS", sets: 3, reps: 10, notes: "10–12 reps. New (was cable overhead extension)." },
@@ -188,7 +188,7 @@ async function main() {
       weStmts += dayDef.exercises.length;
     }
   }
-  console.log(`Plan created: ${plan.id} — ${DURATION_WEEKS} weeks × ${DAYS.length} days, ${weStmts} workout-exercise rows.`);
+  console.log(`Plan created: ${plan.id} (${DURATION_WEEKS} weeks × ${DAYS.length} days, ${weStmts} workout-exercise rows).`);
 
   // 5. Assign as Adrian's active plan, starting today
   await prisma.clientProfile.update({

@@ -97,7 +97,7 @@ export const PUT = withCoach(
     };
 
     // If renaming a TEMPLATE, check for duplicate name among templates.
-    // Client instances share (or tailor) names freely — no uniqueness there.
+    // Client instances share (or tailor) names freely; no uniqueness there.
     if (name && name !== existing.name && existing.sourceTemplateId === null) {
       const duplicate = await prisma.plan.findFirst({
         where: {
@@ -133,7 +133,7 @@ export const PUT = withCoach(
 /**
  * DELETE /api/plans/[id]
  * Soft-deletes a plan (sets deletedAt).
- * Blocked while any client is assigned to it — plans are shared by reference,
+ * Blocked while any client is assigned to it: plans are shared by reference,
  * so deleting one would silently strand every assigned client with no plan.
  */
 export const DELETE = withCoach(

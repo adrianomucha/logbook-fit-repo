@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-// Only the pure clone builder is under test — keep prisma out of the picture
+// Only the pure clone builder is under test; keep prisma out of the picture
 vi.mock('@/lib/prisma', () => ({ default: {} }));
 
 import { buildPlanCloneData, type ClonablePlan } from '../plan-clone';

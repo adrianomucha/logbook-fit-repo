@@ -9,8 +9,8 @@ import {
 import type { WorkoutWeek, WorkoutCompletion } from '@/types';
 
 // The week math runs in the machine's local timezone, so fixtures are local
-// calendar dates. A bare 'YYYY-MM-DD' string parses as UTC midnight — the
-// previous evening west of Greenwich — which would shift the anchor Monday.
+// calendar dates. A bare 'YYYY-MM-DD' string parses as UTC midnight (the
+// previous evening west of Greenwich), which would shift the anchor Monday.
 const localDate = (ymd: string) => new Date(`${ymd}T12:00:00`);
 
 describe('week math (Monday-anchored)', () => {

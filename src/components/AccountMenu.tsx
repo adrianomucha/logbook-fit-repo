@@ -36,7 +36,7 @@ const itemClass =
 const sectionLabelClass =
   'px-2 pb-1 pt-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70';
 
-/** Two-letter monogram for the trigger — falls back to the email's first letter. */
+/** Two-letter monogram for the trigger; falls back to the email's first letter. */
 function initials(name?: string | null, email?: string | null) {
   const source = name?.trim() || email?.trim() || '';
   if (!source) return '';
@@ -49,7 +49,7 @@ function initials(name?: string | null, email?: string | null) {
  * Single entry point for everything that used to sit loose in the nav chrome:
  * the admin surfaces, the linked-account switch, and sign-out. Admin entries
  * render only for accounts on the ADMIN_EMAILS allowlist (the flag comes from
- * /api/me, so the check stays server-side) — they're purely navigational, and
+ * /api/me, so the check stays server-side); they're purely navigational, and
  * every /admin page and API re-checks the allowlist independently.
  */
 export function AccountMenu({ className }: { className?: string }) {
@@ -99,7 +99,7 @@ export function AccountMenu({ className }: { className?: string }) {
         >
           <span className="relative inline-flex h-7 w-7 items-center justify-center rounded-full border border-border bg-muted/40 font-mono text-[10px] font-semibold uppercase tracking-[0.04em] text-foreground">
             {user?.avatarUrl ? (
-              // Remote storage URL — same next/image trade-off as SignupClient
+              // Remote storage URL: same next/image trade-off as SignupClient
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={user.avatarUrl}

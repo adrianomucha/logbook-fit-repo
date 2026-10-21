@@ -23,7 +23,7 @@ interface InviteInfo {
   coachBio?: string | null;
   expiresAt?: string;
   reason?: 'not_found' | 'used' | 'expired';
-  /** Who's signed in, if anyone — decides between the form and Accept */
+  /** Who's signed in, if anyone; decides between the form and Accept */
   viewer?: {
     email: string | null;
     role: string;
@@ -38,7 +38,7 @@ interface BetaInviteInfo {
   reason?: 'not_found' | 'used';
 }
 
-/** Uppercase tracked mono label — the product's data voice */
+/** Uppercase tracked mono label, the product's data voice */
 function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.ReactNode }) {
   return (
     <label
@@ -50,7 +50,7 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: React.Re
   );
 }
 
-/** The app's own chrome — the split auth canvas shared with /login */
+/** The app's own chrome: the split auth canvas shared with /login */
 function PageFrame({
   altHref,
   children,
@@ -66,7 +66,7 @@ function PageFrame({
 }
 
 /**
- * Invited client: the coach is the page — their name in the headline, their
+ * Invited client: the coach is the page: their name in the headline, their
  * words on the volt rail, in the product's own voice. Shared by the signup
  * form and the signed-in Accept screen.
  */
@@ -142,7 +142,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const inviteToken = searchParams?.get('invite') ?? null;
-  // Waitlist beta invite — the coach-side counterpart of the client invite
+  // Waitlist beta invite, the coach-side counterpart of the client invite
   const betaToken = searchParams?.get('beta') ?? null;
 
   // No client-invite token → coach signup. With one → invited-client signup.
@@ -210,7 +210,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
     setErrorCode(null);
 
     // The server enforces the same schema but answers with a generic
-    // "Validation failed" — checking here keeps the message specific.
+    // "Validation failed"; checking here keeps the message specific.
     const passwordCheck = passwordSchema.safeParse(password);
     if (!passwordCheck.success) {
       setError(passwordCheck.error.issues[0].message);
@@ -249,10 +249,10 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
         redirect: false,
       });
 
-      // Either way the page is leaving, so the button stays disabled —
+      // Either way the page is leaving, so the button stays disabled;
       // re-enabling it here invited a second submit mid-navigation
       if (loginResult?.error) {
-        // Account created but login failed — redirect to login
+        // Account created but login failed, so redirect to login
         router.push('/login');
         return;
       }
@@ -303,7 +303,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
     );
   }
 
-  // Beta invite that doesn't check out — mirror the client-invite error card
+  // Beta invite that doesn't check out: mirror the client-invite error card
   if (isCoachSignup && betaToken && !betaInfo?.valid) {
     const errorContent =
       betaInfo?.reason === 'used'
@@ -315,7 +315,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
         : {
             title: 'Link not found',
             message:
-              'This invite link doesn’t look right. Double-check the URL from your email — a re-sent invite also replaces the old link.',
+              'This invite link doesn’t look right. Double-check the URL from your email. A re-sent invite also replaces the old link.',
           };
 
     return (
@@ -342,7 +342,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
     );
   }
 
-  // No beta invite while the beta is closed — point at the waitlist instead
+  // No beta invite while the beta is closed: point at the waitlist instead
   // of a form that would only be refused server-side
   if (isCoachSignup && !betaToken && !coachSignupOpen) {
     return (
@@ -410,11 +410,11 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
 
   const coachName = inviteInfo?.coachName ?? 'Your coach';
   const coachFirstName = coachName.split(' ')[0];
-  // 'Your coach' is the API's fallback when the coach has no display name —
+  // 'Your coach' is the API's fallback when the coach has no display name;
   // "Train with Your" would read broken, so fall back to a neutral CTA
   const hasRealCoachName = coachName !== 'Your coach';
 
-  // Valid invite, someone signed in — accept from the existing account, or
+  // Valid invite, someone signed in: accept from the existing account, or
   // say plainly why this account can't
   const viewer = !isCoachSignup ? inviteInfo?.viewer : null;
   if (viewer) {
@@ -513,7 +513,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
     );
   }
 
-  // Coach signup or valid invite — show signup form
+  // Coach signup or valid invite: show signup form
   return (
     <PageFrame altHref={isCoachSignup ? undefined : signInToAcceptHref}>
       {isCoachSignup ? (
@@ -588,7 +588,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             required
             maxLength={72}
           />
-          {/* Live checklist replaces the native minLength bubble — the
+          {/* Live checklist replaces the native minLength bubble; the
               schema check in handleSubmit still backstops it */}
           <PasswordRules password={password} />
         </div>
@@ -598,12 +598,12 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             {error}
             {errorCode === 'account_exists' && (
               <>
-                {inviteToken ? ' ' : ' — '}
+                {inviteToken ? ' ' : '. '}
                 <Link
                   href={signInToAcceptHref}
                   className="font-medium underline underline-offset-2"
                 >
-                  {inviteToken ? 'Sign in to accept the invite' : 'sign in instead'}
+                  {inviteToken ? 'Sign in to accept the invite' : 'Sign in instead'}
                 </Link>
               </>
             )}
@@ -640,7 +640,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               : `Takes 30 seconds. ${hasRealCoachName ? coachFirstName : 'your coach'} handles the rest.`}
           </p>
 
-          {/* Returning clients already have an account — sign-in brings them
+          {/* Returning clients already have an account; sign-in brings them
               back here to accept instead */}
           {!isCoachSignup && (
             <p className="text-center text-xs text-muted-foreground text-pretty">

@@ -9,7 +9,7 @@ import { CRON_JOBS, recordCronRun } from "@/lib/cron-runs";
  *
  * This endpoint is what makes the weekly check-in promise true. Scheduling
  * used to be materialized only when a coach opened a client's profile or a
- * client opened their check-ins tab — so a client who stopped opening the app
+ * client opened their check-ins tab, so a client who stopped opening the app
  * silently stopped being checked on, which is precisely the fade the product
  * exists to catch.
  *
@@ -25,7 +25,7 @@ async function handle(req: Request) {
       {
         error: process.env.CRON_SECRET
           ? "Unauthorized"
-          : "Unauthorized — CRON_SECRET is not set on this deployment, so scheduled check-ins never run.",
+          : "Unauthorized: CRON_SECRET is not set on this deployment, so scheduled check-ins never run.",
       },
       { status: 401 }
     );

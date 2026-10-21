@@ -2,7 +2,7 @@
  * Admin gating for owner-only surfaces (e.g. the waitlist dashboard).
  *
  * Access is granted to any email listed in the ADMIN_EMAILS env var
- * (comma-separated, case-insensitive). Kept deliberately simple — there's
+ * (comma-separated, case-insensitive). Kept deliberately simple; there's
  * no admin role in the schema; this is an allowlist the owner controls.
  */
 
@@ -57,7 +57,7 @@ export function isValidAdminToken(token?: string | null): boolean {
 }
 
 /**
- * True when `token` matches CRON_SECRET — the credential Vercel Cron sends as
+ * True when `token` matches CRON_SECRET, the credential Vercel Cron sends as
  * a bearer token on scheduled invocations. Separate from the admin token so a
  * leaked export script can't trigger scheduled work, and vice versa.
  *

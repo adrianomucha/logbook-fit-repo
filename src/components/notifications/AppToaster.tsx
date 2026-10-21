@@ -11,7 +11,7 @@ import { Toaster } from 'sonner';
  * page's reading column.
  *
  * On mobile sonner goes full-width at the bottom, where the fixed tab bar
- * lives — so the mobile offset clears the bar (and the home indicator) using
+ * lives, so the mobile offset clears the bar (and the home indicator) using
  * the same --tabbar-h the layouts derive their padding from.
  */
 export function AppToaster() {

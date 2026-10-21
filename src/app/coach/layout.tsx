@@ -2,7 +2,7 @@ import { AppToaster } from '@/components/notifications/AppToaster';
 import { MessageNotifications } from '@/components/notifications/MessageNotifications';
 
 /**
- * Coach layout — wraps all /coach/* pages.
+ * Coach layout: wraps all /coach/* pages.
  * Bottom padding clears exactly the fixed mobile tab bar (--tabbar-h
  * + home-indicator safe area) plus a small breathing gap.
  */

@@ -21,15 +21,15 @@ interface MessageToastProps {
  * Arrival notice for a new message, in the app's card language.
  *
  * Rendered through `toast.custom`, which skips sonner's default surface and
- * its detached corner close button — both replaced here so the notice reads
+ * its detached corner close button, both replaced here so the notice reads
  * as one deliberate card.
  *
  * The whole card is the link: opening the conversation is the only thing this
  * notice is for, so a separate action button just duplicated it. A real
  * <Link> (not an onClick handler) keeps modifier- and middle-click working,
  * and the trailing chevron is the same "this navigates" cue the client rows
- * use. Dismiss is a sibling rather than a child — a button inside a link is
- * invalid nesting — positioned over the card's top corner.
+ * use. Dismiss is a sibling rather than a child (a button inside a link is
+ * invalid nesting), positioned over the card's top corner.
  */
 export function MessageToast({ toastId, name, avatarUrl, preview, href }: MessageToastProps) {
   return (
@@ -45,7 +45,7 @@ export function MessageToast({ toastId, name, avatarUrl, preview, href }: Messag
       <Link
         href={href}
         // Deferred: dismissing synchronously unmounts this link while Next is
-        // still starting the client-side transition, which cancels it — the
+        // still starting the client-side transition, which cancels it; the
         // toast would close without ever navigating.
         onClick={() => setTimeout(() => toast.dismiss(toastId), 0)}
         className={cn(

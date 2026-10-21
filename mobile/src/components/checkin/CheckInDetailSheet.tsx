@@ -26,7 +26,7 @@ function SectionTitle({ children }: { children: string }) {
   return <Text className="mb-3 font-sans-bold text-[11px] uppercase tracking-[1.3px] text-muted-foreground">{children}</Text>;
 }
 
-/** Full detail of one check-in — the web's CheckInDetailModal. */
+/** Full detail of one check-in: the web's CheckInDetailModal. */
 export function CheckInDetailSheet({ checkIn, visible, onClose, completedWorkouts, plan }: CheckInDetailSheetProps) {
   const insets = useSafeAreaInsets();
   if (!checkIn) return null;
@@ -136,7 +136,7 @@ export function CheckInDetailSheet({ checkIn, visible, onClose, completedWorkout
                   <View className="mt-3 border-t border-border pt-3">
                     {completed >= totalExpected ? (
                       <Text className="font-sans-medium text-sm text-success-text">
-                        Target hit — {completed} workout{completed === 1 ? '' : 's'} against a target of {totalExpected}
+                        Target hit: {completed} workout{completed === 1 ? '' : 's'} against a target of {totalExpected}
                       </Text>
                     ) : (
                       <Text className="font-sans-medium text-sm text-foreground">

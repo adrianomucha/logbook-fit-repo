@@ -10,7 +10,7 @@ import { notifyPlanAssigned } from "@/lib/push";
 
 /**
  * POST /api/plans/[id]/assign
- * Gives the client their OWN COPY of the plan (clone-on-assign) — editing
+ * Gives the client their OWN COPY of the plan (clone-on-assign); editing
  * the template later never mutates a plan a client is mid-workout on.
  * Coach must own the plan and have an active relationship with the client.
  */
@@ -54,7 +54,7 @@ export const POST = withCoach(
     }
 
     // Re-assigning the plan the client is already on must not restart their
-    // progress — planStartDate drives which week they're in. "Already on it"
+    // progress; planStartDate drives which week they're in. "Already on it"
     // means either a legacy direct assignment or a copy cloned from it.
     const current = await prisma.clientProfile.findUnique({
       where: { id: clientProfileId },

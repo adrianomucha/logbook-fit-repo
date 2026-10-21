@@ -82,7 +82,7 @@ export default function TodayScreen() {
     [apiCheckIns, clientProfileId, coach]
   );
   const pendingCheckIn = useMemo(() => checkIns.find((c) => c.status === 'pending') ?? null, [checkIns]);
-  // Newest completed check-in with a reply, whenever it arrived — the one
+  // Newest completed check-in with a reply, whenever it arrived. The one
   // reply the whole loop exists to deliver must not vanish on a Monday.
   const latestFeedbackCheckIn = useMemo(
     () =>
@@ -177,7 +177,7 @@ export default function TodayScreen() {
         try {
           await sendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
         } catch {
-          Alert.alert('Feedback saved', 'Your note failed to send — try it from Chat.');
+          Alert.alert('Feedback saved', 'Your note failed to send. Try it from Chat.');
         }
       }
       setFeedbackSent(true);
@@ -224,7 +224,7 @@ export default function TodayScreen() {
   // the coach and the history all see. Opening a day from the week view is
   // still just a look and starts nothing. Idempotent on the server, so a
   // second tap (or a day started on the web) is harmless; if the request
-  // fails, open the workout anyway — the first logged set still starts it.
+  // fails, open the workout anyway; the first logged set still starts it.
   const startToday = async () => {
     if (!today?.workoutDay) return;
     if (state === 'scheduled') {
@@ -249,7 +249,7 @@ export default function TodayScreen() {
         <PendingCheckInBanner onComplete={() => router.push({ pathname: '/client/checkin/[checkinId]', params: { checkinId: pendingCheckIn.id } })} />
       ) : null}
 
-      {/* A finished plan has no week to toggle to — same as the web */}
+      {/* A finished plan has no week to toggle to, same as the web */}
       {!weekOverview?.planEnded ? <ViewToggle value={view} onChange={setView} /> : null}
 
       {weekOverview?.planEnded && plan ? (
@@ -287,7 +287,7 @@ export default function TodayScreen() {
             {todayCoachNote && coach.user.name ? (
               <CoachContextStrip coachName={coach.user.name} coachAvatar={coach.user.avatarUrl} note={todayCoachNote} />
             ) : null}
-            {/* Restart — rare, deliberate action. A hairline footer row with a
+            {/* Restart: rare, deliberate action. A hairline footer row with a
                 reason on the left gives the quiet ghost button a place to
                 belong, instead of floating alone under the cards */}
             <View className="flex-row items-center justify-between gap-4 border-t border-border/60 px-1 pt-4">

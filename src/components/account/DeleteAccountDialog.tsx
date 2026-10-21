@@ -20,7 +20,7 @@ interface DeleteAccountDialogProps {
 const CONFIRM_PHRASE = 'DELETE';
 
 /**
- * "Delete account" — reached from the danger zone in Settings → Account
+ * "Delete account", reached from the danger zone in Settings → Account
  * (both roles). Two proofs of intent: typing DELETE (can't be muscle
  * memory) and the password (can't be someone else at an open laptop). On
  * success the session is ended
@@ -59,7 +59,7 @@ export function DeleteAccountDialog({ isOpen, onClose, role }: DeleteAccountDial
       setError(
         e instanceof ApiError && (e.status === 403 || e.status === 429)
           ? e.message
-          : 'Couldn’t delete the account. Nothing was changed — try again.'
+          : 'Couldn’t delete the account. Nothing was changed. Try again.'
       );
       setIsDeleting(false);
     }

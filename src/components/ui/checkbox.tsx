@@ -24,7 +24,7 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
           {...props}
         />
         {/* Focus lands on the sr-only input, so the visible ring has to be
-            driven off it — peer-focus-visible, not focus-visible */}
+            driven off it: peer-focus-visible, not focus-visible */}
         <div
           className={cn(
             "h-4 w-4 rounded border border-input bg-background ring-offset-background transition-colors",

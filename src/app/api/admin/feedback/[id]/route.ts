@@ -10,7 +10,7 @@ import { feedbackStatusSchema } from "@/lib/validations/schemas";
 export const dynamic = "force-dynamic";
 
 /**
- * PATCH /api/admin/feedback/[id] — move a feedback entry through its
+ * PATCH /api/admin/feedback/[id]: move a feedback entry through its
  * lifecycle (NEW → REVIEWED → RESOLVED, or back). Owner-only, session
  * auth only: unlike the waitlist endpoints there's no script use case,
  * so no bearer-token path.
@@ -36,7 +36,7 @@ export async function PATCH(
         select: { id: true },
       });
     } catch (e) {
-      // P2025: no row with that id — a stale admin tab, not a server fault
+      // P2025: no row with that id (a stale admin tab, not a server fault)
       if (
         e instanceof Prisma.PrismaClientKnownRequestError &&
         e.code === "P2025"

@@ -14,7 +14,7 @@ import {
 export const dynamic = "force-dynamic";
 
 /**
- * PUT /api/account/avatar — replace the profile photo.
+ * PUT /api/account/avatar: replace the profile photo.
  *
  * The raw image bytes are the request body. The server decides the type by
  * sniffing magic bytes (headers and filenames are client-controlled), stores
@@ -93,7 +93,7 @@ export async function PUT(req: Request) {
 }
 
 /**
- * DELETE /api/account/avatar — back to the monogram.
+ * DELETE /api/account/avatar: back to the monogram.
  */
 export async function DELETE() {
   try {

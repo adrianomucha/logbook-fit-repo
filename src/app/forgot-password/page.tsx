@@ -59,7 +59,7 @@ export default function ForgotPasswordPage() {
       <AuthDivider />
 
       {sent ? (
-        // Same message whether or not the account exists — the API is
+        // Same message whether or not the account exists; the API is
         // deliberately silent about that, and so is this screen.
         <div className="space-y-5">
           <div className="flex items-start gap-3 rounded-xl border border-border p-4">
@@ -67,7 +67,7 @@ export default function ForgotPasswordPage() {
             <p className="text-sm leading-relaxed text-muted-foreground antialiased">
               If an account exists for{' '}
               <span className="font-medium text-foreground">{email}</span>, a
-              reset link is on its way. It works for 30 minutes — check spam if
+              reset link is on its way. It works for 30 minutes. Check spam if
               it doesn&rsquo;t land.
             </p>
           </div>

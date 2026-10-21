@@ -16,7 +16,7 @@ export const BACKGROUND_POLL_MS = 20_000;
 interface UseMessagesOptions {
   /**
    * Mark the other party's messages as read when fetching. Pass true only
-   * while the chat is actually on screen — the dashboard polls this thread
+   * while the chat is actually on screen. The dashboard polls this thread
    * from every tab, and marking on every poll silently "reads" messages the
    * user never saw.
    */
@@ -41,7 +41,7 @@ export function useMessages(
     {
       // No push channel to the page exists (notifications are delivered by the
       // service worker, which can't hand data to an open tab), so the thread
-      // polls — fast while it's being read, lazily when it isn't.
+      // polls: fast while it's being read, lazily when it isn't.
       refreshInterval: active ? ACTIVE_POLL_MS : BACKGROUND_POLL_MS,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
@@ -71,7 +71,7 @@ export function useMessages(
     };
   }, [otherUserId, mutate, globalMutate]);
 
-  // Reading a thread clears its unread count — refresh the badge as soon as
+  // Reading a thread clears its unread count, so refresh the badge as soon as
   // the chat opens rather than up to a poll later.
   const unreadTouchedRef = useRef<string | null>(null);
   useEffect(() => {

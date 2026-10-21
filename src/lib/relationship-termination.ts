@@ -11,7 +11,7 @@ import type { Prisma, UserRole } from "@prisma/client";
  *   the assignment snapshotted onto the relationship so Restore can undo it
  * - the weekly check-in schedule is switched off
  * - unanswered PENDING check-ins are removed; ones the client already
- *   responded to are kept — their words are theirs, and they resurface for
+ *   responded to are kept; their words are theirs, and they resurface for
  *   review if the relationship is restored
  *
  * Completed check-ins, workout history, and past messages are untouched.
@@ -29,7 +29,7 @@ export async function endCoachClientRelationship(
 
 /**
  * The transactional core of endCoachClientRelationship, for callers that
- * already hold a transaction — account deletion ends every relationship
+ * already hold a transaction: account deletion ends every relationship
  * and retires the account in one commit.
  */
 export async function endCoachClientRelationshipIn(
@@ -74,7 +74,7 @@ export async function endCoachClientRelationshipIn(
 }
 
 /**
- * Restores an ended relationship — the coach's undo for a mistaken
+ * Restores an ended relationship: the coach's undo for a mistaken
  * termination. Flips the row back to ACTIVE (which reopens messaging and all
  * coach access on its own) and re-applies the plan assignment snapshotted at
  * termination time, when that plan still exists and the client hasn't been

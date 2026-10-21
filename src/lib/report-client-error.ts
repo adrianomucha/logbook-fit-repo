@@ -1,6 +1,6 @@
 /**
  * Fire-and-forget crash report from the error boundaries to
- * POST /api/client-errors, where it becomes an alert-tagged log line —
+ * POST /api/client-errors, where it becomes an alert-tagged log line,
  * the only place a tester's client-side crash leaves any trace.
  *
  * Must never throw and never block rendering the fallback UI: reporting a
@@ -24,6 +24,6 @@ export function reportClientError(error: Error & { digest?: string }): void {
       }),
     }).catch(() => {});
   } catch {
-    // Deliberately swallowed — see above.
+    // Deliberately swallowed; see above.
   }
 }

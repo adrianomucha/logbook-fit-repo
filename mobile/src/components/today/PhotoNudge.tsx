@@ -10,7 +10,7 @@ interface PhotoNudgeProps {
 
 /**
  * The coach sees the client as a monogram on their roster until a photo is
- * set — the web's nudge in WelcomeAwaitingPlan: the monogram they'd
+ * set (the web's nudge in WelcomeAwaitingPlan): the monogram they'd
  * otherwise be, one line, and a small outline action.
  */
 export function PhotoNudge({ clientName, coachName, onAddPhoto }: PhotoNudgeProps) {

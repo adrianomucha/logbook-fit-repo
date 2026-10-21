@@ -4,8 +4,8 @@ import prisma from "@/lib/prisma";
  * Durable record of scheduled-job runs (the `cron_runs` table).
  *
  * The nightly sweep used to leave no trace beyond a per-deploy Vercel log
- * line, so a cron that silently stopped — rotated CRON_SECRET, schedule
- * dropped from vercel.json, a deploy that never picked it up — looked exactly
+ * line, so a cron that silently stopped (rotated CRON_SECRET, schedule
+ * dropped from vercel.json, a deploy that never picked it up) looked exactly
  * like a quiet night. Each run now writes a row on start and updates it on
  * finish; /admin/health reads the latest row per job and raises an outage
  * when it is older than the schedule allows (see `cronHealth`).

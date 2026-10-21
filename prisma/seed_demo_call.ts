@@ -1,7 +1,7 @@
 /**
  * Demo account for a live setup call with a coach.
  *
- * Builds one realistic coach — "Jamie Porter" — with a roster that puts a
+ * Builds one realistic coach ("Jamie Porter") with a roster that puts a
  * client in every dashboard bucket, so the person running the call can show
  * the urgency-sorted dashboard, the check-in review, the plan builder and
  * the client's own app without staging anything by hand. The story and the
@@ -13,7 +13,7 @@
  *
  *   DEMO_CALL_PASSWORD='<a long random password>' npx tsx prisma/seed_demo_call.ts
  *
- * Optional: DEMO_CALL_COACH_EMAIL (default jamie@demo.logbook.fit) — the
+ * Optional: DEMO_CALL_COACH_EMAIL (default jamie@demo.logbook.fit); the
  * client accounts share its domain.
  *
  * Re-running REBUILDS the scenario from scratch: every account it owns is
@@ -87,7 +87,7 @@ const EXTRA_EXERCISES: {
   { name: "Goblet Squat", category: "LEGS", defaultSets: 3, defaultReps: 10, instructions: "Elbows inside the knees at the bottom. Depth over load for the first two weeks." },
   { name: "Dumbbell Row", category: "BACK", defaultSets: 3, defaultReps: 10, instructions: "Pull to the hip, not the shoulder. Pause a beat at the top." },
   { name: "Walking Lunge", category: "LEGS", defaultSets: 2, defaultReps: 20, instructions: "20 steps total. Long stride, front shin vertical." },
-  { name: "Kettlebell Swing", category: "FULL_BODY", defaultSets: 3, defaultReps: 15, instructions: "Hinge, don't squat. The bell floats to chest height — no higher." },
+  { name: "Kettlebell Swing", category: "FULL_BODY", defaultSets: 3, defaultReps: 15, instructions: "Hinge, don't squat. The bell floats to chest height, no higher." },
   { name: "Dead Bug", category: "CORE", defaultSets: 3, defaultReps: 10, instructions: "Lower back stays glued to the floor. Slow." },
 ];
 
@@ -118,13 +118,13 @@ type PlanDef = {
   description: string;
   emoji: string;
   durationWeeks: number;
-  /** Added to every weighted exercise per week — linear progression */
+  /** Added to every weighted exercise per week: linear progression */
   weeklyIncrement: number;
   days: DayDef[];
 };
 
 const STRENGTH: PlanDef = {
-  name: "Strength Block — Upper/Lower",
+  name: "Strength Block: Upper/Lower",
   description:
     "Six weeks, four days. Big lifts first, +2.5 kg a week while every set hits the top of its range.",
   emoji: "🏋️",
@@ -159,7 +159,7 @@ const STRENGTH: PlanDef = {
       description: "Volume day. Control the negatives, especially on the incline press.",
       exercises: [
         { name: "Incline Dumbbell Press", sets: 4, reps: 8, repsMax: 10, weight: 22, rest: 120 },
-        { name: "Pull-Up", sets: 3, reps: 6, repsMax: 8, rest: 120, notes: "Band if you need it — full hang at the bottom." },
+        { name: "Pull-Up", sets: 3, reps: 6, repsMax: 8, rest: 120, notes: "Band if you need it. Full hang at the bottom." },
         { name: "Dumbbell Row", sets: 3, reps: 10, weight: 26, rest: 90 },
         { name: "Lateral Raise", sets: 3, reps: 15, weight: 8, rest: 60 },
         { name: "Barbell Curl", sets: 3, reps: 10, weight: 25, rest: 60 },
@@ -168,7 +168,7 @@ const STRENGTH: PlanDef = {
     },
     {
       name: "Lower B",
-      description: "Deadlift day. Three heavy sets, then accessories — nothing to failure.",
+      description: "Deadlift day. Three heavy sets, then accessories. Nothing to failure.",
       exercises: [
         { name: "Conventional Deadlift", sets: 3, reps: 5, weight: 100, rest: 180 },
         { name: "Bulgarian Split Squat", sets: 3, reps: 10, weight: 14, rest: 90, notes: "Per leg. Dumbbells at your sides." },
@@ -181,7 +181,7 @@ const STRENGTH: PlanDef = {
 };
 
 const FOUNDATIONS: PlanDef = {
-  name: "Foundations — 3 days",
+  name: "Foundations: 3 days",
   description:
     "The first month for someone new to the barbell. Three full-body days, a rest day between each, small jumps every week.",
   emoji: "🌱",
@@ -223,7 +223,7 @@ const FOUNDATIONS: PlanDef = {
 };
 
 const HYPERTROPHY: PlanDef = {
-  name: "Hypertrophy Block — 4 days",
+  name: "Hypertrophy Block: 4 days",
   description:
     "Eight weeks of volume. Push, pull, legs, upper. Chase reps first, then weight.",
   emoji: "🔥",
@@ -309,7 +309,7 @@ async function main() {
     throw new Error("DEMO_CALL_PASSWORD must be at least 12 characters and not a common password.");
   }
   if (SCENARIO_EMAILS.some(isDemoAccount)) {
-    throw new Error("The demo-call coach must not reuse a seeded demo email — those are locked on deployed builds.");
+    throw new Error("The demo-call coach must not reuse a seeded demo email. Those are locked on deployed builds.");
   }
 
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
@@ -336,7 +336,7 @@ async function main() {
       createdAt: daysAgo(120),
       coachProfile: {
         create: {
-          bio: "Online strength coach. Ten years on the gym floor, three online. Small roster on purpose — every client gets a plan I actually wrote and a check-in I actually read.",
+          bio: "Online strength coach. Ten years on the gym floor, three online. Small roster on purpose: every client gets a plan I actually wrote and a check-in I actually read.",
         },
       },
     },
@@ -593,7 +593,7 @@ async function main() {
     }
   }
 
-  // 1. Priya — signed up from an invite yesterday, no plan, hasn't heard from Jamie yet.
+  // 1. Priya: signed up from an invite yesterday, no plan, hasn't heard from Jamie yet.
   //    Dashboard: NEEDS_PLAN with the "Say hello" nudge.
   const priya = await createClient("priya", hoursAgo(20));
   await prisma.clientInvite.create({
@@ -608,7 +608,7 @@ async function main() {
   });
   console.log(`✓ ${priya.name}: joined yesterday, waiting on a first plan`);
 
-  // 2. Tom — finished the 8-week hypertrophy block on Saturday. Dashboard: PLAN_ENDED.
+  // 2. Tom: finished the 8-week hypertrophy block on Saturday. Dashboard: PLAN_ENDED.
   const tom = await createClient("tom", daysAgo(66, 14));
   const tomPlan = await assignPlan(tom, HYPERTROPHY, templates.hypertrophy.id, 9);
   const tomWorkouts = await train(tom, tomPlan, HYPERTROPHY, 9, { fromWeek: 5, toWeek: 8, hardDays: [2] });
@@ -616,7 +616,7 @@ async function main() {
     status: "COMPLETED",
     createdAt: daysAgo(11, 9),
     effort: "HARD",
-    feeling: "Week 6 was the hardest of the block so far — legs day especially. Still hit every rep.",
+    feeling: "Week 6 was the hardest of the block so far, legs day especially. Still hit every rep.",
     respondedAt: daysAgo(10, 20),
     feedback: "That's exactly where week 6 should sit. Two more, then we change things up.",
     repliedAt: daysAgo(10, 21),
@@ -625,7 +625,7 @@ async function main() {
     status: "COMPLETED",
     createdAt: daysAgo(4, 9),
     effort: "MEDIUM",
-    feeling: "Final week done. Bench ended at 80 for 8 — started the block at 62.5. What's next?",
+    feeling: "Final week done. Bench ended at 80 for 8. Started the block at 62.5. What's next?",
     respondedAt: daysAgo(4, 19),
     feedback: "Brilliant block, Tom. Next one lands this weekend: a bit more upper volume, squat keeps climbing.",
     adjust: true,
@@ -635,13 +635,13 @@ async function main() {
     { from: "client", text: "Week 6 done. Legs day is brutal in the best way.", at: daysAgo(10, 20) },
     { from: "coach", text: "That's the point of week 6 😄 Two more, then we deload and switch things up.", at: daysAgo(10, 21) },
     { from: "client", text: "Final week done! What's next?", at: daysAgo(4, 19) },
-    { from: "coach", text: "Great block. I'll build the next one this weekend — more upper volume, keep the squat progression going.", at: daysAgo(4, 21) },
+    { from: "coach", text: "Great block. I'll build the next one this weekend: more upper volume, keep the squat progression going.", at: daysAgo(4, 21) },
     { from: "client", text: "Any news on the new block? Gym's booked for Monday 💪", at: daysAgo(1, 8, 40), unread: true },
   ]);
   console.log(`✓ ${tom.name}: plan ended, ${tomWorkouts} workouts logged, asking for the next block`);
 
-  // 3. Marcus — week 4 of the strength block, nothing logged since week 2, ignoring a check-in.
-  //    Dashboard: AT_RISK — the client the product exists to catch.
+  // 3. Marcus: week 4 of the strength block, nothing logged since week 2, ignoring a check-in.
+  //    Dashboard: AT_RISK, the client the product exists to catch.
   const marcus = await createClient("marcus", daysAgo(24, 10));
   const marcusPlan = await assignPlan(marcus, STRENGTH, templates.strength.id, 4);
   const marcusWorkouts = await train(marcus, marcusPlan, STRENGTH, 4, { toWeek: 2, hardDays: [1, 3] });
@@ -652,25 +652,25 @@ async function main() {
     feeling: "Tough week, honestly. Every session felt heavy and I'm not sleeping great.",
     pain: "Nothing hurting, just flat.",
     respondedAt: daysAgo(13, 22),
-    feedback: "Heavy is fine, flat isn't. Drop the accessories this week and just do the main lifts — 30 minutes in and out.",
+    feedback: "Heavy is fine, flat isn't. Drop the accessories this week and just do the main lifts. 30 minutes in and out.",
     adjust: true,
     repliedAt: daysAgo(13, 22, 30),
   });
   await checkIn(marcus, { status: "PENDING", createdAt: daysAgo(6, 9) });
   await thread(marcus, [
-    { from: "coach", text: "Hey Marcus — nothing logged since last week. All good?", at: daysAgo(5, 12) },
+    { from: "coach", text: "Hey Marcus, nothing logged since last week. All good?", at: daysAgo(5, 12) },
     { from: "client", text: "Sorry, work trip and then a cold. Back on it Monday, promise.", at: daysAgo(4, 8) },
-    { from: "coach", text: "No stress. When you're back, just do Lower A and skip the rest of the week — we pick up from there.", at: daysAgo(4, 8, 30), unread: true },
+    { from: "coach", text: "No stress. When you're back, just do Lower A and skip the rest of the week. We pick up from there.", at: daysAgo(4, 8, 30), unread: true },
   ]);
   console.log(`✓ ${marcus.name}: at risk, ${marcusWorkouts} workouts then silence`);
 
-  // 4. Sofia — week 3, training consistently, answered her check-in 2 hours ago with a knee
+  // 4. Sofia: week 3, training consistently, answered her check-in 2 hours ago with a knee
   //    complaint that matches an exercise she flagged. Dashboard: AWAITING_RESPONSE (Review Check-in).
   const sofia = await createClient("sofia", daysAgo(17, 16));
   const sofiaPlan = await assignPlan(sofia, STRENGTH, templates.strength.id, 3);
   const sofiaWorkouts = await train(sofia, sofiaPlan, STRENGTH, 3, { toWeek: 2, includeCurrentWeek: true, hardDays: [3] });
   {
-    // Week 2 Lower B: split squats cut short — the flag and the set data tell the same story
+    // Week 2 Lower B: split squats cut short; the flag and the set data tell the same story
     const lowerB = sofiaPlan.weeks[1].days[3];
     const splitSquat = lowerB.exercises[1];
     const wc = await prisma.workoutCompletion.findUniqueOrThrow({
@@ -680,7 +680,7 @@ async function main() {
       data: {
         workoutCompletionId: wc.id,
         workoutExerciseId: splitSquat.id,
-        note: "Right knee felt off at the bottom on the last set — stopped at 6 reps.",
+        note: "Right knee felt off at the bottom on the last set. Stopped at 6 reps.",
         createdAt: wc.completedAt!,
       },
     });
@@ -699,7 +699,7 @@ async function main() {
     status: "COMPLETED",
     createdAt: daysAgo(9, 9),
     effort: "MEDIUM",
-    feeling: "Good first week. Bench felt easy, squats felt heavy — probably the right way round.",
+    feeling: "Good first week. Bench felt easy, squats felt heavy. Probably the right way round.",
     respondedAt: daysAgo(8, 19),
     feedback: "That's the right way round. Add 2.5 on bench next session, keep squat where it is one more week.",
     repliedAt: daysAgo(8, 20),
@@ -708,19 +708,19 @@ async function main() {
     status: "CLIENT_RESPONDED",
     createdAt: daysAgo(2, 9),
     effort: "HARD",
-    feeling: "Solid week — bench moved up and I hit every session. Split squats are the one thing I'm wary of.",
+    feeling: "Solid week. Bench moved up and I hit every session. Split squats are the one thing I'm wary of.",
     pain: "Right knee twinges at the bottom of split squats, second week in a row. No pain walking or squatting.",
     respondedAt: hoursAgo(2),
   });
   await thread(sofia, [
-    { from: "client", text: "Bench felt easy this week — should I add weight?", at: daysAgo(6, 20) },
+    { from: "client", text: "Bench felt easy this week. Should I add weight?", at: daysAgo(6, 20) },
     { from: "coach", text: "Yes, +2.5 next session. If the last set still hits 8, add again.", at: daysAgo(6, 20, 30) },
     { from: "client", text: "Sent my check-in. The knee thing isn't bad, I just want your call on whether to keep split squats in.", at: hoursAgo(2), unread: true },
   ]);
   console.log(`✓ ${sofia.name}: check-in waiting for review, ${sofiaWorkouts} workouts, 1 flagged exercise`);
 
-  // 5. Daniel — week 2 of Foundations, check-in sent this morning and not yet answered.
-  //    Dashboard: CHECKIN_DUE. Linked to the coach account for the one-click switch — this
+  // 5. Daniel: week 2 of Foundations, check-in sent this morning and not yet answered.
+  //    Dashboard: CHECKIN_DUE. Linked to the coach account for the one-click switch; this
   //    is the client whose app you show on the call.
   const daniel = await createClient("daniel", daysAgo(10, 11));
   const danielPlan = await assignPlan(daniel, FOUNDATIONS, templates.foundations.id, 2);
@@ -736,35 +736,35 @@ async function main() {
   });
   await checkIn(daniel, { status: "PENDING", createdAt: hoursAgo(5) });
   await thread(daniel, [
-    { from: "coach", text: "Welcome, Daniel! Your first block is up — three days a week, nothing fancy. Start whenever you're ready.", at: daysAgo(10, 11, 30) },
+    { from: "coach", text: "Welcome, Daniel! Your first block is up: three days a week, nothing fancy. Start whenever you're ready.", at: daysAgo(10, 11, 30) },
     { from: "client", text: "Thanks! Starting tomorrow.", at: daysAgo(10, 13) },
     { from: "client", text: "Goblet squats are humbling 😅", at: daysAgo(3, 19) },
-    { from: "coach", text: "They are. Depth over weight for the first two weeks — the weight comes.", at: daysAgo(3, 19, 30) },
+    { from: "coach", text: "They are. Depth over weight for the first two weeks. The weight comes.", at: daysAgo(3, 19, 30) },
   ]);
   await prisma.user.update({ where: { id: coachUser.id }, data: { linkedUserId: daniel.userId } });
   await prisma.user.update({ where: { id: daniel.userId }, data: { linkedUserId: coachUser.id } });
   console.log(`✓ ${daniel.name}: check-in due, ${danielWorkouts} workouts, linked to the coach for account switching`);
 
-  // 6. Hannah — week 5 of 6, four weeks of clean history and a bench PR. Dashboard: ON_TRACK.
+  // 6. Hannah: week 5 of 6, four weeks of clean history and a bench PR. Dashboard: ON_TRACK.
   const hannah = await createClient("hannah", daysAgo(31, 9));
   const hannahPlan = await assignPlan(hannah, STRENGTH, templates.strength.id, 5);
   const hannahWorkouts = await train(hannah, hannahPlan, STRENGTH, 5, { toWeek: 4, includeCurrentWeek: true, hardDays: [3] });
   const hannahCheckIns: Parameters<typeof checkIn>[1][] = [
-    { status: "COMPLETED", createdAt: daysAgo(24, 9), effort: "MEDIUM", feeling: "Good start. Deadlift form felt shaky on the last set.", respondedAt: daysAgo(23, 20), feedback: "Film the next one and send it over — probably just the bar drifting forward.", repliedAt: daysAgo(23, 21) },
-    { status: "COMPLETED", createdAt: daysAgo(17, 9), effort: "MEDIUM", feeling: "Deadlift felt much better with the cue. Everything else on track.", respondedAt: daysAgo(16, 19), feedback: "Saw the video — night and day. Keep going.", repliedAt: daysAgo(16, 20) },
-    { status: "COMPLETED", createdAt: daysAgo(10, 9), effort: "HARD", feeling: "Bench PR: 45 for 8! Lower B was rough though, legs still tired from Thursday.", respondedAt: daysAgo(9, 20), feedback: "Huge PR. Move Lower B to Saturday if Thursday runs late — an extra day between the two makes a difference.", adjust: false, repliedAt: daysAgo(9, 21) },
-    { status: "COMPLETED", createdAt: daysAgo(3, 9), effort: "MEDIUM", feeling: "Best week yet. Can we add a bit of arm work?", respondedAt: daysAgo(2, 18), feedback: "Yes — a curl/pushdown pairing goes into Upper B from next week.", adjust: true, repliedAt: daysAgo(2, 19) },
+    { status: "COMPLETED", createdAt: daysAgo(24, 9), effort: "MEDIUM", feeling: "Good start. Deadlift form felt shaky on the last set.", respondedAt: daysAgo(23, 20), feedback: "Film the next one and send it over. Probably just the bar drifting forward.", repliedAt: daysAgo(23, 21) },
+    { status: "COMPLETED", createdAt: daysAgo(17, 9), effort: "MEDIUM", feeling: "Deadlift felt much better with the cue. Everything else on track.", respondedAt: daysAgo(16, 19), feedback: "Saw the video. Night and day. Keep going.", repliedAt: daysAgo(16, 20) },
+    { status: "COMPLETED", createdAt: daysAgo(10, 9), effort: "HARD", feeling: "Bench PR: 45 for 8! Lower B was rough though, legs still tired from Thursday.", respondedAt: daysAgo(9, 20), feedback: "Huge PR. Move Lower B to Saturday if Thursday runs late. An extra day between the two makes a difference.", adjust: false, repliedAt: daysAgo(9, 21) },
+    { status: "COMPLETED", createdAt: daysAgo(3, 9), effort: "MEDIUM", feeling: "Best week yet. Can we add a bit of arm work?", respondedAt: daysAgo(2, 18), feedback: "Yes, a curl/pushdown pairing goes into Upper B from next week.", adjust: true, repliedAt: daysAgo(2, 19) },
   ];
   for (const c of hannahCheckIns) await checkIn(hannah, c);
   await thread(hannah, [
-    { from: "client", text: "Hit 45 on bench for 8 — that's a PR!", at: daysAgo(12, 19) },
+    { from: "client", text: "Hit 45 on bench for 8. That's a PR!", at: daysAgo(12, 19) },
     { from: "coach", text: "Huge. Told you the pause reps would pay off.", at: daysAgo(12, 19, 30) },
     { from: "client", text: "Any chance of adding a bit of arm work on upper days?", at: daysAgo(2, 18, 15) },
-    { from: "coach", text: "Sure — I'll add a curl/pushdown pairing to Upper B from next week.", at: daysAgo(2, 19) },
+    { from: "coach", text: "Sure, I'll add a curl/pushdown pairing to Upper B from next week.", at: daysAgo(2, 19) },
   ]);
   console.log(`✓ ${hannah.name}: on track, ${hannahWorkouts} workouts, 4 check-ins`);
 
-  // 7. Leo — week 3 of Foundations, quietly consistent. Dashboard: ON_TRACK.
+  // 7. Leo: week 3 of Foundations, quietly consistent. Dashboard: ON_TRACK.
   const leo = await createClient("leo", daysAgo(17, 15));
   const leoPlan = await assignPlan(leo, FOUNDATIONS, templates.foundations.id, 3);
   const leoWorkouts = await train(leo, leoPlan, FOUNDATIONS, 3, { toWeek: 2, includeCurrentWeek: true });
@@ -788,12 +788,12 @@ async function main() {
     repliedAt: daysAgo(3, 21),
   });
   await thread(leo, [
-    { from: "coach", text: "Welcome, Leo! Foundations is up — three days, a rest day between each.", at: daysAgo(17, 15, 30) },
+    { from: "coach", text: "Welcome, Leo! Foundations is up: three days, a rest day between each.", at: daysAgo(17, 15, 30) },
     { from: "client", text: "Cheers. Monday it is.", at: daysAgo(17, 17) },
   ]);
   console.log(`✓ ${leo.name}: on track, ${leoWorkouts} workouts`);
 
-  // 8. Emily — ended the relationship three weeks ago. Appears under Past clients only.
+  // 8. Emily: ended the relationship three weeks ago. Appears under Past clients only.
   const emily = await createClient("emily", daysAgo(70, 12), "INACTIVE");
   const emilyPlan = await createPlan(FOUNDATIONS, templates.foundations.id, daysAgo(70, 12));
   await prisma.coachClientRelationship.update({
@@ -813,7 +813,7 @@ async function main() {
       coachId: coach.id,
       token: `demo-${coach.id.slice(0, 8)}-chris`,
       email: INVITE_EMAIL,
-      note: "Hey Chris — here's your link. First week is easy on purpose.",
+      note: "Hey Chris, here's your link. First week is easy on purpose.",
       status: "PENDING",
       createdAt: daysAgo(2, 10),
       expiresAt: daysAgo(-5, 10),
@@ -824,7 +824,7 @@ async function main() {
   console.log("\nDemo-call account ready.");
   console.log("─────────────────────────────────────────────");
   console.log(`  Coach:   ${COACH_EMAIL}  (Jamie Porter)`);
-  console.log(`  Client:  ${email("daniel")}  (Daniel Kim — also reachable via "Switch to client")`);
+  console.log(`  Client:  ${email("daniel")}  (Daniel Kim, also reachable via "Switch to client")`);
   console.log("  Password: the DEMO_CALL_PASSWORD you set. It is not stored anywhere in the repo.");
   console.log("─────────────────────────────────────────────");
   console.log("Run of show: DEMO_CALL.md");

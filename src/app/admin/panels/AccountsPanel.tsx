@@ -21,7 +21,7 @@ function FlagChip({ label, title }: { label: string; title?: string }) {
 
 /** Accounts tab. Access is checked once by the /admin page that renders it. */
 export async function AccountsPanel() {
-  // Every account ever created, deleted ones included — this page is the
+  // Every account ever created, deleted ones included; this page is the
   // owner's registry of the legacy era as much as the current one.
   const users = await prisma.user.findMany({
     orderBy: { createdAt: 'asc' },
@@ -138,7 +138,7 @@ export async function AccountsPanel() {
                       {resettable ? (
                         <ResetPasswordButton userId={user.id} />
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground">-</span>
                       )}
                     </td>
                   </tr>
@@ -149,7 +149,7 @@ export async function AccountsPanel() {
         </div>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Reset shows a one-time temporary password — hand it over yourself,
+          Reset shows a one-time temporary password. Hand it over yourself;
           it&rsquo;s never shown again. Demo accounts stay locked regardless of
           password while demo mode is off.
         </p>

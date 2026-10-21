@@ -14,7 +14,7 @@ import type { WorkoutPlan } from '@/types';
 interface PlanTemplateCardProps {
   plan: WorkoutPlan;
   clientCount: number;
-  /** Names of clients on this plan — rendered as a mini-avatar stack when provided */
+  /** Names of clients on this plan, rendered as a mini-avatar stack when provided */
   clients?: { name: string; avatarUrl: string | null }[];
   onEdit: () => void;
   onDuplicate?: () => void;
@@ -26,7 +26,7 @@ interface PlanTemplateCardProps {
 const MAX_AVATARS = 3;
 
 /**
- * Plan template row — one line in the grouped Plans list.
+ * Plan template row: one line in the grouped Plans list.
  * Black name on the left, aligned mono stat columns on the right;
  * live templates show the clients on them as a mini-avatar stack.
  */
@@ -71,19 +71,19 @@ export function PlanTemplateCard({
           {plan.name}
         </h3>
         <p className="sm:hidden font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums mt-0.5 truncate antialiased">
-          {[weeksLabel, perWeekLabel].filter(Boolean).join(' · ') || '—'}
+          {[weeksLabel, perWeekLabel].filter(Boolean).join(' · ') || '-'}
         </p>
       </div>
 
-      {/* Stat columns — fixed widths so they align down the list */}
+      {/* Stat columns: fixed widths so they align down the list */}
       <span className="hidden sm:block w-[72px] text-right font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased shrink-0">
-        {weeksLabel || '—'}
+        {weeksLabel || '-'}
       </span>
       <span className="hidden sm:block w-[72px] text-right font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased shrink-0">
-        {perWeekLabel || '—'}
+        {perWeekLabel || '-'}
       </span>
 
-      {/* Usage — clients on the plan as a mini-avatar stack, volt dot marks it live */}
+      {/* Usage: clients on the plan as a mini-avatar stack, volt dot marks it live */}
       <span className="w-auto sm:w-[84px] flex items-center justify-end shrink-0">
         {clientCount > 0 ? (
           clients && clients.length > 0 ? (
@@ -120,7 +120,7 @@ export function PlanTemplateCard({
             </span>
           )
         ) : (
-          <span className="hidden sm:inline font-mono text-[10px] font-medium text-muted-foreground/50 antialiased">{'—'}</span>
+          <span className="hidden sm:inline font-mono text-[10px] font-medium text-muted-foreground/50 antialiased">{'-'}</span>
         )}
       </span>
 

@@ -15,7 +15,7 @@ import {
 
 /**
  * POST /api/client/workout/[id]/flag
- * Flags an exercise within a workout — creates or updates an ExerciseFlag record.
+ * Flags an exercise within a workout: creates or updates an ExerciseFlag record.
  * Accepts: { workoutExerciseId, note?: string }
  */
 export const POST = withClient(

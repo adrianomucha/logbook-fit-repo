@@ -12,7 +12,7 @@ interface UserAvatarProps {
 }
 
 /**
- * One avatar for every surface — the web's UserAvatar: the uploaded photo
+ * One avatar for every surface (the web's UserAvatar): the uploaded photo
  * when there is one, else the same deterministic-colour monogram both apps
  * have always drawn. Status dots go on a wrapper around this, not inside it.
  */

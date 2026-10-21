@@ -55,7 +55,7 @@ export function FlagMessageSheet({
       await onSend(message);
       setMessage('');
     } catch {
-      // Parent surfaced the error — keep the draft so nothing is lost
+      // Parent surfaced the error; keep the draft so nothing is lost
     } finally {
       setIsSending(false);
     }

@@ -1,6 +1,6 @@
 /**
- * Weight units. Every weight in the database — prescribed (WorkoutExercise.
- * weight, Exercise.defaultWeight) and logged (SetCompletion.actualWeight) —
+ * Weight units. Every weight in the database (prescribed (WorkoutExercise.
+ * weight, Exercise.defaultWeight) and logged (SetCompletion.actualWeight))
  * is stored in pounds. Each person picks kg or lb in Settings
  * (User.weightUnit), and the apps convert at the edges: stored → their unit
  * for display, their unit → stored on input. So a coach who programs in kg
@@ -14,7 +14,7 @@ export const WEIGHT_UNITS = ['KG', 'LB'] as const;
 
 export type WeightUnit = (typeof WEIGHT_UNITS)[number];
 
-/** The unit for anyone who hasn't picked one — and the storage unit. */
+/** The unit for anyone who hasn't picked one, and the storage unit. */
 export const DEFAULT_WEIGHT_UNIT: WeightUnit = 'LB';
 
 const KG_PER_LB = 0.45359237;
@@ -31,7 +31,7 @@ export function normalizeWeightUnit(value: unknown): WeightUnit {
 
 /**
  * Round to the nearest half: 44.09 → 44, 35.3 → 35.5. Weights only ever
- * read as whole or .5 numbers — the way plates load — in either unit.
+ * read as whole or .5 numbers (the way plates load) in either unit.
  */
 function roundWeight(value: number): number {
   return Math.round(value * 2) / 2;
@@ -49,7 +49,7 @@ export function toDisplayWeight(stored: number, unit: WeightUnit): number {
  *
  * `references` are stored weights the input was seeded from (the logged or
  * prescribed value). When the typed number is exactly what one of them
- * displays as, that stored value comes back untouched — a kg lifter who
+ * displays as, that stored value comes back untouched: a kg lifter who
  * leaves the prescribed 61 kg alone logs the coach's 135 lb, not 134.5,
  * and nobody sees a phantom deviation.
  */
@@ -87,7 +87,7 @@ export function formatStoredWeight(
   return Number.isNaN(n) ? null : formatWeight(n, unit);
 }
 
-/** Settings copy for the kg/lb switch — one wording for both apps. */
+/** Settings copy for the kg/lb switch: one wording for both apps. */
 export const WEIGHT_UNIT_SETTING = {
   label: 'Weight unit',
   hint: {

@@ -8,7 +8,7 @@ import { createSwitchToken } from "@/lib/switch-token";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/account/switch — mint a switch token for the linked account.
+ * POST /api/account/switch: mint a switch token for the linked account.
  *
  * The link (users.linkedUserId) is owner-managed and symmetric, so holding a
  * live session for either half of the pair is the sole credential needed to

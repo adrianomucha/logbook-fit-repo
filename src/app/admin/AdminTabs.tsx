@@ -26,7 +26,7 @@ import {
  * Every panel is server-rendered into the page (streamed in behind its own
  * Suspense fallback); switching tabs only toggles which one is visible, so
  * it is instant and never re-runs the panels' queries. The active tab is
- * mirrored to `?tab=` with history.replaceState — Next syncs that into
+ * mirrored to `?tab=` with history.replaceState; Next syncs that into
  * useSearchParams, so refresh, back-to-app and copied links all land on the
  * right tab, and router.refresh() after an action (invite, reset, resolve)
  * keeps the tab in place.
@@ -116,7 +116,7 @@ export function TabLink({
   );
 }
 
-/** The header's tab strip — underline indicator sits on the header hairline. */
+/** The header's tab strip: underline indicator sits on the header hairline. */
 export function AdminTabBar() {
   const { active } = useAdminTabs();
   return (

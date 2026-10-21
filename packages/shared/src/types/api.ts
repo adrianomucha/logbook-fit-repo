@@ -27,7 +27,7 @@ export interface DashboardClient {
   isSample: boolean;
   /** When the coaching relationship was created */
   joinedAt: string;
-  /** Joined recently and hasn't heard from the coach yet — worth a hello */
+  /** Joined recently and hasn't heard from the coach yet, worth a hello */
   awaitingHello: boolean;
   /** Where the client is relative to their plan's end */
   planStatus: 'NONE' | 'ACTIVE' | 'FINAL_WEEK' | 'ENDED';
@@ -128,7 +128,7 @@ export interface ClientDetail {
   urgency: DashboardClient['urgency'];
   planStatus: DashboardClient['planStatus'];
   /**
-   * Every COMPLETED workout on the active plan, uncapped — `completions`
+   * Every COMPLETED workout on the active plan, uncapped; `completions`
    * below is a recent window. Optional so older fixtures still type-check.
    */
   activePlanCompletions?: { dayId: string; durationSec: number | null }[];
@@ -201,7 +201,7 @@ export interface WeekOverview {
   weekNumber: number;
   weekId: string;
   planStartDate: string;
-  /** Past the plan's last week — the response clamps to the final week */
+  /** Past the plan's last week; the response clamps to the final week */
   planEnded: boolean;
   days: WeekOverviewDay[];
 }
@@ -278,7 +278,7 @@ export interface UnreadThread {
   userId: string;
   name: string | null;
   avatarUrl: string | null;
-  /** Set when the sender is a client — the coach app routes by this id */
+  /** Set when the sender is a client; the coach app routes by this id */
   clientProfileId: string | null;
   count: number;
   lastMessageAt: string | null;
@@ -331,7 +331,7 @@ export interface WorkoutExercise {
   trackingType: 'REPS' | 'TIME';
   sets: number;
   reps: string | null;
-  /** Prescribed weight as stored (Prisma Float), always in lb — convert
+  /** Prescribed weight as stored (Prisma Float), always in lb. Convert
    *  with toDisplayWeight() for the viewer's unit (see weight-units.ts). */
   weight: number | null;
   restSeconds: number | null;

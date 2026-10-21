@@ -14,7 +14,7 @@ export function useCoachClients() {
   };
 }
 
-/** Ended relationships — the coach's archive of past clients. */
+/** Ended relationships: the coach's archive of past clients. */
 export function usePastClients() {
   const { data, error, isLoading, mutate } = useSWR<PastClient[]>(
     '/api/coach/clients?status=ended'

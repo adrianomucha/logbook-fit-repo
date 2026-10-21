@@ -36,7 +36,7 @@ describe('findPersonalBests', () => {
       set('squat', '2026-09-01', 82.5, 3), // top set of the session
       set('squat', '2026-09-03', 82.5, 5), // same weight, more reps
       set('squat', '2026-09-05', 85, 5), // heavier
-      set('squat', '2026-09-07', 80, 8), // lighter — not a best
+      set('squat', '2026-09-07', 80, 8), // lighter, not a best
     ]);
     expect(bests.map((b) => [b.completedAt.slice(0, 10), b.kind, b.delta])).toEqual([
       ['2026-09-05', 'weight', 2.5],

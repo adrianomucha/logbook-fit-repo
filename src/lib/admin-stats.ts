@@ -2,7 +2,7 @@ import prisma from "@/lib/prisma";
 import { isDemoAccount } from "@/lib/demo";
 
 /**
- * Aggregates for /admin — the owner's overview of how the product is being
+ * Aggregates for /admin: the owner's overview of how the product is being
  * used. Counts only; no message contents or per-person activity. Chat is a
  * private channel between a coach and their client, so the admin surface
  * reports its volume and never its text.

@@ -1,5 +1,5 @@
 /**
- * Excel plan import — the pure half. Turns raw spreadsheet rows (one row per
+ * Excel plan import: the pure half. Turns raw spreadsheet rows (one row per
  * prescribed exercise) into the Plan → Week → Day → WorkoutExercise tree the
  * API persists, collecting per-row errors a coach can act on ("Row 7: Sets
  * must be between 1 and 20") instead of a single opaque failure.
@@ -86,7 +86,7 @@ export type RawImportRow = {
   rowNumber: number;
   /**
    * The coach's sheet the row came from, when it isn't the template's single
-   * Workouts sheet (rows read from a free-form workbook) — errors name it.
+   * Workouts sheet (rows read from a free-form workbook); errors name it.
    */
   sheet?: string;
 } & Partial<Record<ImportColumnKey, string | null>>;
@@ -129,7 +129,7 @@ export type ParsedImportPlan = {
 };
 
 // Bounds mirror the Zod schemas the manual editor goes through
-// (addWorkoutExerciseSchema / createPlanSchema) — an imported plan must never
+// (addWorkoutExerciseSchema / createPlanSchema): an imported plan must never
 // contain values the editing UI would reject.
 export const IMPORT_LIMITS = {
   maxWeeks: 12,
@@ -148,7 +148,7 @@ export const IMPORT_LIMITS = {
 const blank = (value: string | null | undefined): boolean =>
   value == null || value.trim() === "";
 
-/** First integer in the cell — tolerates "1", "Week 1", "1.0". */
+/** First integer in the cell; tolerates "1", "Week 1", "1.0". */
 function parseIndex(value: string): number | null {
   const match = value.match(/\d+/);
   if (!match) return null;
@@ -172,7 +172,7 @@ function weightCellUnit(value: string): WeightUnit | null {
 }
 
 /**
- * A prescription cell counts as a duration when it carries a time marker —
+ * A prescription cell counts as a duration when it carries a time marker:
  * "45s", "2 min", "1:30". Bare numbers and ranges ("8", "6-8", even "8 reps")
  * stay reps.
  */
@@ -186,14 +186,14 @@ export function looksLikeDuration(value: string): boolean {
 const SUPERSET_TOKENS = new Set(["y", "yes", "x", "true", "1", "✓", "✔"]);
 
 /**
- * Parse validated spreadsheet rows into a plan tree. Never throws — anything
+ * Parse validated spreadsheet rows into a plan tree. Never throws; anything
  * wrong with a row lands in `errors` with its Excel row number. The tree is a
  * uniform grid (every week gets the same day slots, like the manual plan
  * scaffold), so days a coach left empty still show up in the editor.
  */
 export function parseImportRows(
   rows: RawImportRow[],
-  /** The importing coach's unit — read for weight cells that don't name one */
+  /** The importing coach's unit, read for weight cells that don't name one */
   weightUnit: WeightUnit = DEFAULT_WEIGHT_UNIT
 ): {
   plan: ParsedImportPlan | null;
@@ -218,7 +218,7 @@ export function parseImportRows(
   if (contentRows.length > IMPORT_LIMITS.maxRows) {
     return {
       plan: null,
-      errors: [{ row: 0, message: `Too many rows — the limit is ${IMPORT_LIMITS.maxRows} exercises per plan.` }],
+      errors: [{ row: 0, message: `Too many rows. The limit is ${IMPORT_LIMITS.maxRows} exercises per plan.` }],
     };
   }
 
@@ -272,7 +272,7 @@ export function parseImportRows(
     }
 
     if (blank(row.reps)) {
-      fail('Reps / Time is required — e.g. "8", "6-8", "45s", or "2 min".', "reps");
+      fail('Reps / Time is required, e.g. "8", "6-8", "45s", or "2 min".', "reps");
       continue;
     }
     const repsText = row.reps!.trim();
@@ -282,8 +282,8 @@ export function parseImportRows(
     if (reps == null || reps < 1 || reps > IMPORT_LIMITS.maxReps || (repsMax != null && repsMax > IMPORT_LIMITS.maxReps)) {
       fail(
         trackingType === "TIME"
-          ? 'Couldn’t read the time — use formats like "45s", "1:30", or "20-30 min" (max 1 hour).'
-          : 'Couldn’t read the reps — use formats like "8" or "6-8" (max 3600).',
+          ? 'Couldn’t read the time. Use formats like "45s", "1:30", or "20-30 min" (max 1 hour).'
+          : 'Couldn’t read the reps. Use formats like "8" or "6-8" (max 3600).',
         "reps"
       );
       continue;
@@ -350,7 +350,7 @@ export function parseImportRows(
   );
 
   // Uniform grid: weeks 1..durationWeeks each get days 1..workoutsPerWeek,
-  // matching what POST /api/plans scaffolds — slots without rows stay empty.
+  // matching what POST /api/plans scaffolds; slots without rows stay empty.
   const weeks: ParsedImportWeek[] = [];
   for (let w = 1; w <= durationWeeks; w++) {
     const weekDays = grid.get(w);
@@ -399,7 +399,7 @@ export function importErrorBody(errors: ImportRowError[]): {
     error:
       errors.length === 1 && errors[0].row === 0
         ? errors[0].message
-        : `The file has ${errors.length} ${errors.length === 1 ? "problem" : "problems"} — fix the rows below and upload it again`,
+        : `The file has ${errors.length} ${errors.length === 1 ? "problem" : "problems"}. Fix the rows below and upload it again`,
     rowErrors: errors.filter((e) => e.row > 0),
   };
 }
@@ -534,7 +534,7 @@ export type PlanImportPreview = {
   /** Sent back unchanged to POST /api/plans/import to create the plan */
   rows: RawImportRow[];
   plan: ParsedImportPlan;
-  /** Exercise names not yet in the coach's library — created on import */
+  /** Exercise names not yet in the coach's library, created on import */
   newExercises: string[];
   /** Ambiguous values for the coach to settle before creating the plan */
   choices: ImportChoice[];

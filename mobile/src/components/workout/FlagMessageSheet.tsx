@@ -13,7 +13,7 @@ interface FlagMessageSheetProps {
   onSend: (message: string) => Promise<void>;
 }
 
-/** "Message coach" about a flagged exercise — the exercise context rides along automatically. */
+/** "Message coach" about a flagged exercise; the exercise context rides along automatically. */
 export function FlagMessageSheet({ exercise, onClose, onSend }: FlagMessageSheetProps) {
   const insets = useSafeAreaInsets();
   const { weightUnit } = useCurrentUser();

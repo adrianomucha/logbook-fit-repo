@@ -37,7 +37,7 @@ interface LoginResponse {
 
 /**
  * Owns the session: restores it from the keychain on launch, refreshes it
- * on every cold start (sliding 30-day expiry — a client who opens the app
+ * on every cold start (sliding 30-day expiry: a client who opens the app
  * even monthly is never signed out), signs in and out, and turns any 401
  * from the API into a sign-out so a dead token can't leave a frozen screen.
  *
@@ -69,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setStatus('signed-in');
 
       // Refresh in the background. A 401 means the account is gone or the
-      // token expired — sign out. Anything else (offline) keeps the stored
+      // token expired, so sign out. Anything else (offline) keeps the stored
       // session; the API will say 401 later if it really is dead.
       try {
         const fresh = await apiFetch<LoginResponse>('/api/auth/mobile/refresh', { method: 'POST' });
@@ -134,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         value={{
           fetcher,
           // SWR's default focus/visibility providers read `document`, which
-          // React Native doesn't have — drive revalidation from AppState
+          // React Native doesn't have, so drive revalidation from AppState
           // instead (the native equivalent of the web's visibilitychange fix).
           isVisible: () => true,
           initFocus(callback) {

@@ -9,8 +9,8 @@ import { deleteAvatarByUrl } from "@/lib/avatar-storage";
  * makes this mandatory for the iOS app; it was a backlog item for the web
  * regardless).
  *
- * The row is kept — every message, check-in and workout row points at it,
- * and the other party's history must not develop holes — but it stops being
+ * The row is kept (every message, check-in and workout row points at it,
+ * and the other party's history must not develop holes), but it stops being
  * a person: `deletedAt` is set (which refuses every sign-in and, through
  * getSession(), every existing session) and the personal fields are
  * scrubbed so nothing identifying remains on it. The other side of each
@@ -124,7 +124,7 @@ export async function deleteAccountIn(
       avatarUrl: null,
       timezone: "UTC",
       linkedUserId: null,
-      // Not a bcrypt hash, so no password can ever compare equal to it —
+      // Not a bcrypt hash, so no password can ever compare equal to it:
       // belt and braces on top of deletedAt.
       passwordHash: `deleted:${crypto.randomBytes(32).toString("hex")}`,
     },

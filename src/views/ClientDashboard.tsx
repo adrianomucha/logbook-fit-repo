@@ -56,7 +56,7 @@ export function ClientDashboard() {
 
   // On mobile the chat is a fixed full-screen column. Left anchored to the
   // layout viewport it would keep reserving the full screen height once the
-  // keyboard is up — iOS doesn't shrink that viewport — and the composer
+  // keyboard is up (iOS doesn't shrink that viewport) and the composer
   // would float above the keys with a band of blank page between them. Pin
   // the column to the area that's actually visible instead, and drop the
   // tab-bar clearance for as long as the bar is hiding itself.
@@ -83,7 +83,7 @@ export function ClientDashboard() {
     hasMore: hasEarlierMessages,
     loadOlder: loadEarlierMessages,
   } = useMessages(coachUserId, {
-    // Only the chat tab counts as "read" — the poll runs from every tab
+    // Only the chat tab counts as "read"; the poll runs from every tab
     markRead: currentView === 'chat',
     // …and only the chat tab polls at conversation speed
     active: currentView === 'chat',
@@ -92,7 +92,7 @@ export function ClientDashboard() {
   // Fetch full plan detail for sub-components that need the full plan structure
   const { plan: planDetail, error: planError, isLoading: isLoadingPlan } = useClientPlan();
 
-  // A 404 from the plan endpoints means "no plan assigned yet" — an expected
+  // A 404 from the plan endpoints means "no plan assigned yet", an expected
   // state, not a failure. Anything else is a real error.
   const isNotFound = (e: unknown): boolean =>
     e instanceof ApiError && e.status === 404;
@@ -153,7 +153,7 @@ export function ClientDashboard() {
   // The client's check-in is with their coach, not with the calendar: this
   // used to be filtered to the current Monday-anchored week, so feedback the
   // coach sent on Sunday night vanished when the client opened the app on
-  // Monday — the one reply the whole loop exists to deliver, gone unread.
+  // Monday: the one reply the whole loop exists to deliver, gone unread.
   // Newest completed check-in with a reply, whenever it arrived.
   const latestFeedbackCheckIn = useMemo(
     () =>
@@ -196,7 +196,7 @@ export function ClientDashboard() {
   }, [progress, clientWorkoutCompletions]);
 
   // Today's workout data for TodayFocusView. The server's week-overview is
-  // the single source of truth for which week the client is in — recomputing
+  // the single source of truth for which week the client is in; recomputing
   // it here with the browser clock can disagree with the server (timezones),
   // which would break the completion join below for the whole plan.
   const { todayWorkout, todayCompletion, todayCoachNote, currentWeek } = useMemo(() => {
@@ -232,7 +232,7 @@ export function ClientDashboard() {
     };
   }, [client, plan, weekOverview, clientWorkoutCompletions]);
 
-  // "New plan" pill — on while the client is in week 1 and hasn't started
+  // "New plan" pill: on while the client is in week 1 and hasn't started
   // anything yet; off the moment they begin (so it can't claim "updated"
   // week-round on a plan nobody touched changed)
   const showNewPlan = useMemo(() => {
@@ -247,7 +247,7 @@ export function ClientDashboard() {
     [apiMessages, client]
   );
 
-  // Plan has run its course — celebrate instead of replaying the last week.
+  // Plan has run its course; celebrate instead of replaying the last week.
   // Server-computed only: deriving it locally can disagree across timezones.
   const planEnded = weekOverview?.planEnded ?? false;
 
@@ -264,7 +264,7 @@ export function ClientDashboard() {
   // the coach and the history all see. Opening a day from the week view is
   // still just a look and starts nothing. Idempotent on the server, so a
   // second click (or a day started on the phone) is harmless; if the request
-  // fails, open the workout anyway — the first logged set still starts it.
+  // fails, open the workout anyway; the first logged set still starts it.
   const [isStartingWorkout, setIsStartingWorkout] = useState(false);
   const handleStartWorkout = async () => {
     if (!todayWorkout?.workoutDay || !currentWeek) return;
@@ -301,7 +301,7 @@ export function ClientDashboard() {
         try {
           await sendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
         } catch {
-          // The rating itself saved — only the note failed
+          // The rating itself saved; only the note failed
           toast.error('Feedback saved, but your note failed to send.');
         }
       }
@@ -340,7 +340,7 @@ export function ClientDashboard() {
       await apiFetch('/api/client/coach', { method: 'DELETE' });
       setShowLeaveConfirm(false);
       toast.success(LEAVE_COACH_COPY.done);
-      // Refetch the profile — the dashboard re-renders into the no-coach state
+      // Refetch the profile; the dashboard re-renders into the no-coach state
       await mutate('/api/me');
     } catch {
       toast.error(`${LEAVE_COACH_COPY.failedTitle}. ${LEAVE_COACH_COPY.failed}`);
@@ -364,7 +364,7 @@ export function ClientDashboard() {
   );
 
   // ---- Loading/Empty States ----
-  // Wait for the plan too — otherwise a client with a plan briefly sees the
+  // Wait for the plan too, otherwise a client with a plan briefly sees the
   // "awaiting plan" welcome screen on every cold load while the plan loads
   if (isLoadingUser || isLoadingWeek || isLoadingPlan) {
     return (
@@ -393,7 +393,7 @@ export function ClientDashboard() {
     );
   }
 
-  // No coach — either side ended the relationship (or there's no client
+  // No coach: either side ended the relationship (or there's no client
   // profile to hang one on, which the app treats the same way). History
   // stays on the account; there's nothing coached to show.
   if (!client || !coach) {
@@ -412,7 +412,7 @@ export function ClientDashboard() {
     );
   }
 
-  // Signed up, no plan assigned yet — welcome them and keep chat open so the
+  // Signed up, no plan assigned yet: welcome them and keep chat open so the
   // wait isn't a dead end (and the coach gets nudged)
   if (!plan) {
     const isChat = currentView === 'chat' && !!coachUserId;
@@ -424,7 +424,7 @@ export function ClientDashboard() {
         <ClientNav
           activeTab={isChat ? 'chat' : 'workout'}
           onTabChange={(tab) => {
-            // Progress has nothing to show before the first plan — land on the welcome
+            // Progress has nothing to show before the first plan, so land on the welcome
             handleTabChange(tab === 'progress' ? 'workout' : tab);
           }}
         />
@@ -468,7 +468,7 @@ export function ClientDashboard() {
                 hasPhoto={!!user?.avatarUrl}
                 onAddPhoto={() => router.push('/client/settings?section=profile')}
               />
-              {/* Quiet exit — wrong coach or changed your mind before day one */}
+              {/* Quiet exit: wrong coach or changed your mind before day one */}
               <div className="flex justify-center">
                 <Button
                   variant="ghost"
@@ -530,7 +530,7 @@ export function ClientDashboard() {
             arrives as CoachFeedbackCard. A card that only says "waiting" sat
             at the top of the dashboard for days with nothing to act on. */}
 
-        {/* Plan complete — the last week must not replay as if un-started */}
+        {/* Plan complete: the last week must not replay as if un-started */}
         {currentView === 'workout' && planEnded && (
           <PlanCompleteCard
             plan={plan}
@@ -541,7 +541,7 @@ export function ClientDashboard() {
           />
         )}
 
-        {/* This week couldn't be loaded — say so instead of rendering a blank
+        {/* This week couldn't be loaded. Say so instead of rendering a blank
             Today tab or a mislabeled week (chat and progress still work) */}
         {currentView === 'workout' && !planEnded && !weekOverview && (
           <section
@@ -556,7 +556,7 @@ export function ClientDashboard() {
             </h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">
               {isNotFound(weekError)
-                ? `${coach?.user.name?.split(' ')[0] ?? 'Your coach'} hasn't built this week of your plan yet — send them a message.`
+                ? `${coach?.user.name?.split(' ')[0] ?? 'Your coach'} hasn't built this week of your plan yet. Send them a message.`
                 : 'Check your connection and try again.'}
             </p>
             {isNotFound(weekError) ? (
@@ -622,7 +622,7 @@ export function ClientDashboard() {
         {currentView === 'chat' && coachUserId && (
           <>
             <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} coachAvatar={coach?.user.avatarUrl} />
-            {/* Contained module — hairline card, matching the rest of the client pages */}
+            {/* Contained module: hairline card, matching the rest of the client pages */}
             <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
               <ChatView
                 client={client}

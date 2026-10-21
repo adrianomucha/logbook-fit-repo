@@ -46,13 +46,13 @@ export function useCurrentUser() {
     clientProfileId: user?.clientProfile?.id ?? null,
     /** The client's coach (only available for CLIENT role) */
     coach: user?.clientProfile?.coachRelationship?.coach ?? null,
-    /** On the ADMIN_EMAILS allowlist — shows the nav's Admin entry point */
+    /** On the ADMIN_EMAILS allowlist; shows the nav's Admin entry point */
     isAdmin: user?.isAdmin ?? false,
-    /** kg or lb — how this person reads and types weights (stored as lb) */
+    /** kg or lb: how this person reads and types weights (stored as lb) */
     weightUnit: normalizeWeightUnit(user?.weightUnit),
     /** This person's paired account, if one is linked and switchable */
     linkedAccount: user?.linkedAccount ?? null,
-    /** Revalidate /api/me — call after mutating profile data */
+    /** Revalidate /api/me; call after mutating profile data */
     refresh: mutate,
     error,
   };

@@ -36,7 +36,7 @@ interface ChatViewProps {
    * Visual voice. 'default' is the quiet monochrome chat the coach dashboard
    * uses. 'brand' is the client-facing treatment: ink outgoing bubbles, the
    * peer's avatar beside incoming groups, a warmer empty state, and a "Seen"
-   * receipt — the conversation reads as the product's own, not a generic
+   * receipt. The conversation reads as the product's own, not a generic
    * messenger.
    */
   variant?: 'default' | 'brand';
@@ -45,7 +45,7 @@ interface ChatViewProps {
 /**
  * Compute Messenger-style bubble rounding.
  * Full rounding = 1.25rem (20px). Flattened corner = 0.25rem (4px).
- * The "tail" side is the trailing edge for outgoing, leading for incoming —
+ * The "tail" side is the trailing edge for outgoing, leading for incoming;
  * logical corner properties keep the tails on the correct side under RTL.
  * First-in-group gets full top, last-in-group gets full bottom on the tail side.
  */
@@ -147,7 +147,7 @@ export function ChatView({
     isNearBottomRef.current = true;
   }, []);
 
-  // Initial load — pin to bottom before paint
+  // Initial load: pin to bottom before paint
   useLayoutEffect(() => {
     if (initialLoadRef.current && clientMessages.length > 0) {
       initialLoadRef.current = false;
@@ -159,7 +159,7 @@ export function ChatView({
     }
   }, [clientMessages.length]);
 
-  // Subsequent messages — smart auto-scroll
+  // Subsequent messages: smart auto-scroll
   useEffect(() => {
     const count = clientMessages.length;
     const prevCount = prevCountRef.current;
@@ -198,7 +198,7 @@ export function ChatView({
     suppressAutoScrollRef.current = true;
     try {
       await onLoadEarlier();
-      // Keep the same messages in view — prepended content grows scrollHeight
+      // Keep the same messages in view; prepended content grows scrollHeight
       requestAnimationFrame(() => {
         if (viewport) {
           viewport.scrollTop = viewport.scrollHeight - prevHeight + prevTop;
@@ -303,7 +303,7 @@ export function ChatView({
                 )}>
                   <div className="space-y-2">
                     {isBrand ? (
-                      /* The person, not a pictogram — this thread is the
+                      /* The person, not a pictogram: this thread is the
                          coaching relationship, so lead with the coach */
                       <div className="relative w-14 h-14 mx-auto mb-3" aria-hidden="true">
                         <UserAvatar
@@ -311,7 +311,7 @@ export function ChatView({
                           avatarUrl={peerAvatarUrl}
                           className="w-14 h-14 text-lg"
                         />
-                        {/* Volt presence dot — same accent the avatars in the
+                        {/* Volt presence dot: same accent the avatars in the
                             coach empty states carry */}
                         <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-brand ring-2 ring-card animate-bounce-once" />
                       </div>
@@ -328,7 +328,7 @@ export function ChatView({
                     </p>
                     <p className={cn('text-muted-foreground antialiased', isBrand ? 'text-sm max-w-[280px] mx-auto leading-relaxed' : 'text-xs')}>
                       {isBrand
-                        ? `Questions, wins, sore spots — it all helps ${peerFirst} coach you better.`
+                        ? `Questions, wins, sore spots: it all helps ${peerFirst} coach you better.`
                         : <>Drop {peerFirst} a note. They&apos;ll see it next time they open the app.</>}
                     </p>
                   </div>
@@ -379,7 +379,7 @@ export function ChatView({
                         isFirstInGroup ? 'mt-4' : 'mt-[5px]'
                       )}
                     >
-                      {/* Peer avatar — anchors incoming groups to the coach.
+                      {/* Peer avatar: anchors incoming groups to the coach.
                           The gutter stays on every incoming row so grouped
                           bubbles keep a straight left edge. */}
                       {isBrand && !isCurrentUser && (
@@ -418,8 +418,8 @@ export function ChatView({
                             {/* Label opacities are contrast-bound (WCAG AA 4.5:1):
                                 incoming needs 70 (50 was 3.7:1 on light); the
                                 default outgoing keeps 50 (5.0:1 on near-black).
-                                The brand eyebrow is volt on ink — the logo's
-                                pairing — and on the light incoming card, where
+                                The brand eyebrow is volt on ink (the logo's
+                                pairing), and on the light incoming card, where
                                 volt text would fail contrast, a volt dot. */}
                             {isBrand ? (
                               <p className={cn(
@@ -454,14 +454,14 @@ export function ChatView({
                         )}
 
                         {/* The card above already carries the flag context the
-                            text repeats at its top — show only the question */}
+                            text repeats at its top; show only the question */}
                         <p className="font-prose text-[15px] leading-[1.55] whitespace-pre-wrap">
                           {message.exerciseContext ? stripFlagContext(message.content) : message.content}
                         </p>
                       </div>
                     </div>
 
-                    {/* Timestamp — only after last message in a group */}
+                    {/* Timestamp: only after last message in a group */}
                     {isLastInGroup && (
                       <p className={cn(
                         'font-mono text-[10px] text-muted-foreground mt-1.5',
@@ -472,7 +472,7 @@ export function ChatView({
                             : 'px-0.5 text-start'
                       )}>
                         {format(msgDate, 'h:mm a')}
-                        {/* Read receipt — only on the newest message, and only
+                        {/* Read receipt: only on the newest message, and only
                             when the other side has actually opened it */}
                         {isBrand &&
                           isCurrentUser &&
@@ -507,13 +507,13 @@ export function ChatView({
           </div>
         )}
 
-        {/* Input bar — hairline separator anchors the composer, like card footers elsewhere */}
+        {/* Input bar: hairline separator anchors the composer, like card footers elsewhere */}
         <div className="px-3 sm:px-4 py-2.5 border-t border-border/50">
           <div className="flex gap-2 items-center">
             <label htmlFor="chat-message-input" className="sr-only">
               Message to {client.name}
             </label>
-            {/* The bg-muted/40 → /60 tint measures 1.02:1 — invisible as a focus
+            {/* The bg-muted/40 → /60 tint measures 1.02:1, invisible as a focus
                 indicator on its own, so the ring carries it. */}
             <div className="flex-1 flex items-center bg-muted/40 rounded-full px-4 min-h-[44px] transition-colors duration-150 focus-within:bg-muted/60 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 focus-within:ring-offset-background">
               <input

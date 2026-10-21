@@ -13,7 +13,7 @@ interface UserAvatarProps {
  * One avatar for every surface: the uploaded photo when there is one, else
  * the same deterministic-color monogram the app has always drawn. Callers
  * own the size (and any ring) via className; status dots go on a `relative`
- * wrapper around this, not inside it — the circle clips to its edge so a
+ * wrapper around this, not inside it. The circle clips to its edge so a
  * photo never bleeds out of the round.
  */
 export function UserAvatar({ name, avatarUrl, className }: UserAvatarProps) {

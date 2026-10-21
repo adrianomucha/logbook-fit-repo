@@ -8,7 +8,7 @@ import { Button, Card, Eyebrow } from '@/components/ui';
 
 interface PlanCompleteCardProps {
   plan: WorkoutPlan;
-  /** Every completion on the client's account — filtered to this plan in the summary */
+  /** Every completion on the client's account, filtered to this plan in the summary */
   completions: WorkoutCompletion[];
   coachName?: string | null;
   onMessageCoach: () => void;
@@ -16,7 +16,7 @@ interface PlanCompleteCardProps {
 }
 
 /**
- * Shown in place of Today once the plan has run its course — the web's
+ * Shown in place of Today once the plan has run its course: the web's
  * PlanCompleteCard. No chart on purpose: the completion rate leads, one
  * meter shows it, and a sentence names the misses. The numbers and wording
  * come from @logbook/shared so both apps say the same thing.
@@ -41,7 +41,7 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
 
   return (
     <Card>
-      {/* Header — eyebrow + plan name, volt flag as the celebration mark */}
+      {/* Header: eyebrow + plan name, volt flag as the celebration mark */}
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
           <Eyebrow>
@@ -56,7 +56,7 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
 
       {planned > 0 ? (
         <>
-          {/* Headline — the one number the block comes down to */}
+          {/* Headline: the one number the block comes down to */}
           <View className="mt-6 flex-row items-baseline gap-3">
             <Text className="font-sans-bold text-[44px] leading-[48px] tracking-tight text-foreground">{pct}%</Text>
             <Text className="flex-1 font-sans text-sm text-muted-foreground">
@@ -70,7 +70,7 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
         </>
       ) : null}
 
-      {/* Stat band — numbers carry the weight, units stay quiet */}
+      {/* Stat band: numbers carry the weight, units stay quiet */}
       {stats.length > 0 ? (
         <View className="mt-5 flex-row flex-wrap items-baseline border-t border-border/50 pt-4">
           {stats.map(([value, unit], i) => (
@@ -83,7 +83,7 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
         </View>
       ) : null}
 
-      {/* What's next — the coach builds the next block */}
+      {/* What's next: the coach builds the next block */}
       <View className="mt-5 border-t border-border/50 pt-5">
         <Text className="mb-1.5 font-mono text-[11px] uppercase tracking-[1.8px] text-muted-foreground">What’s next</Text>
         <Text className="font-sans text-sm leading-5 text-muted-foreground">

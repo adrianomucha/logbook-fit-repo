@@ -63,7 +63,7 @@ export const POST = withCoach(
     }
     if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: "File is too large — a plan spreadsheet stays well under 2 MB" },
+        { error: "File is too large. A plan spreadsheet stays well under 2 MB" },
         { status: 413 }
       );
     }

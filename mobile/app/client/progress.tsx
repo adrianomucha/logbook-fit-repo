@@ -17,7 +17,7 @@ import { WorkoutHistory } from '@/components/progress/WorkoutHistory';
 
 const TONE_TEXT = { success: 'text-success-text', warning: 'text-warning-text', neutral: 'text-muted-foreground' } as const;
 
-/** The Progress tab — the web's ProgressHistory. Leaving a coach lives in Settings → Account. */
+/** The Progress tab: the web's ProgressHistory. Leaving a coach lives in Settings → Account. */
 export default function ProgressScreen() {
   const { weightUnit, isLoading: loadingUser } = useCurrentUser();
   const { plan: planDetail, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
@@ -30,7 +30,7 @@ export default function ProgressScreen() {
   // Same shared helpers as the web's ProgressHistory, so both say the same thing
   const bests = useMemo(() => summarizePersonalBests(progress?.personalBests ?? [], plan?.id ?? null), [progress, plan]);
   const bestsNote = formatBestsNote(bests);
-  // Weeks in a row with a session — see weeksTrainedStreak for why not "weeks on target"
+  // Weeks in a row with a session (see weeksTrainedStreak for why not "weeks on target"
   const weekStreak = useMemo(() => weeksTrainedStreak(completions), [completions]);
   // All-time from the server, like the Workouts tile beside it; the history sum is the older-server fallback
   const trainedSec =
@@ -39,7 +39,7 @@ export default function ProgressScreen() {
   const [trainedValue, trainedUnit] = formatTrainingTime(trainedSec);
   const tiles: [string, string][] = [
     [String(progress?.stats.totalWorkouts ?? 0), 'Workouts'],
-    [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '—', 'Trained'],
+    [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '-', 'Trained'],
     [formatWeekStreak(weekStreak), 'Streak'],
   ];
 
@@ -60,7 +60,7 @@ export default function ProgressScreen() {
       </View>
 
       <View className="-mt-2 gap-4">
-        {/* Personal bests — a list, not a hero: the title with a quiet note, then one line per best.
+        {/* Personal bests: a list, not a hero: the title with a quiet note, then one line per best.
             "This week" below carries the page's big number. */}
         <View className="rounded-2xl border border-border/70 bg-card" accessibilityLabel="Personal bests">
           <View className="flex-row items-center justify-between gap-4 px-4 pb-3 pt-3.5">

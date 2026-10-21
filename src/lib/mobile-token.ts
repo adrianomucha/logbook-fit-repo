@@ -9,7 +9,7 @@ import { encode, decode } from "next-auth/jwt";
  * `NEXTAUTH_SECRET`, carrying the same claims the `jwt` callback in
  * lib/auth.ts writes (`userId`, `role`, `email`, `name`), with the same
  * 30-day lifetime. One token format means one set of claims to keep in sync
- * and nothing new to rotate — and `getSession()` in lib/session.ts can hand
+ * and nothing new to rotate, and `getSession()` in lib/session.ts can hand
  * either kind of caller an identical `Session`.
  *
  * Minted only by POST /api/auth/mobile/login (after the shared credential
@@ -39,7 +39,7 @@ function secret(): string | null {
 
 /**
  * Mint a token for `user`. Returns null when NEXTAUTH_SECRET is unset
- * (never the case in a running deployment — next-auth requires it).
+ * (never the case in a running deployment; next-auth requires it).
  */
 export async function createMobileToken(
   user: MobileTokenUser,
@@ -65,7 +65,7 @@ export async function createMobileToken(
 /**
  * Verify a token and return its claims, or null for anything that isn't an
  * unexpired token encrypted with the current secret. Missing claims (a
- * token minted by something else) also fail — every consumer relies on
+ * token minted by something else) also fail; every consumer relies on
  * `id` and `role` being present.
  */
 export async function readMobileToken(

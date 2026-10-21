@@ -1,5 +1,5 @@
 /**
- * Plan spreadsheets laid out the way coaches actually write them — none of
+ * Plan spreadsheets laid out the way coaches actually write them, none of
  * them in the template's shape. Used by the plan-import tests, and by
  * scripts/plan-import-ai-smoke.ts to try the AI reader against a real model.
  */
@@ -12,7 +12,7 @@ export type MessyPlanFile = { filename: string; buffer: Buffer };
 export async function columnPerWeekPlan(): Promise<MessyPlanFile> {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Program");
-  sheet.addRow(["Strength Block — 4 weeks"]);
+  sheet.addRow(["Strength Block: 4 weeks"]);
   sheet.mergeCells("A1:F1");
   sheet.addRow(["Day", "Exercise", "Week 1", "Week 2", "Week 3", "Week 4"]);
   sheet.addRow(["Mon - Upper", "Bench Press", "3x8 @ 60kg", "3x8 @ 62.5kg", "4x6 @ 65kg", "3x5 @ 67.5kg"]);
@@ -32,7 +32,7 @@ export async function tabPerWeekPlan(): Promise<MessyPlanFile> {
   const workbook = new ExcelJS.Workbook();
   for (const [week, percent] of [[1, 0.7], [2, 0.75]] as const) {
     const sheet = workbook.addWorksheet(`Week ${week}`);
-    sheet.addRow(["MONDAY — PUSH"]);
+    sheet.addRow(["MONDAY: PUSH"]);
     sheet.mergeCells("A1:E1");
     sheet.addRow(["", "Exercise", "Sets x Reps", "Intensity", "Rest"]);
     sheet.addRow(["A1", "Overhead Press", "4 x 6-8", percent, "2 min"]);
@@ -40,7 +40,7 @@ export async function tabPerWeekPlan(): Promise<MessyPlanFile> {
     sheet.addRow(["A2", "Pull-ups", "4 x AMRAP", "BW", "2 min"]);
     sheet.addRow(["B", "Incline DB Press", "3 x 10-12", "RPE 8", "90s"]);
     sheet.addRow([]);
-    sheet.addRow(["FRIDAY — LEGS"]);
+    sheet.addRow(["FRIDAY: LEGS"]);
     sheet.mergeCells("A7:E7");
     sheet.addRow(["", "Exercise", "Sets x Reps", "Intensity", "Rest"]);
     sheet.addRow(["A", "Front Squat", "5 x 5", percent, "3 min"]);

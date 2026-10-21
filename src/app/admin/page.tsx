@@ -18,8 +18,8 @@ export const metadata = { title: 'Admin', robots: { index: false } };
  * The whole admin area is this one page. Each tab is an async server
  * component streamed in behind its own fallback, so the shell and the first
  * finished panel paint without waiting for the slowest query (the health
- * probes, bounded at 4s each). Switching tabs is client-side — see
- * AdminTabs.tsx — and costs no request.
+ * probes, bounded at 4s each). Switching tabs is client-side (see
+ * AdminTabs.tsx) and costs no request.
  */
 export default async function AdminPage() {
   const session = await getServerSession(authOptions);

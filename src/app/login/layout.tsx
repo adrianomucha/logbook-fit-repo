@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 /**
- * The login page is a client component, so it can't export metadata itself —
+ * The login page is a client component, so it can't export metadata itself, so
  * this layout carries it. robots.txt already asks crawlers not to fetch
  * /login, but a Disallow only stops the *crawl*: Google will still index a
  * URL it has never fetched if enough external links point at it, showing a

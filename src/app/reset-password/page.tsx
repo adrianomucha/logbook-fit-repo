@@ -27,7 +27,7 @@ function ResetPasswordForm() {
     setError('');
 
     // The server enforces the same schema but answers with a generic
-    // "Validation failed" — checking here keeps the message specific.
+    // "Validation failed"; checking here keeps the message specific.
     const passwordCheck = passwordSchema.safeParse(password);
     if (!passwordCheck.success) {
       setError(passwordCheck.error.issues[0].message);
@@ -65,7 +65,7 @@ function ResetPasswordForm() {
         <div className="flex items-start gap-3 rounded-xl border border-border p-4">
           <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <p className="text-sm leading-relaxed text-muted-foreground antialiased">
-            This reset link is missing its token — it may have been cut short
+            This reset link is missing its token. It may have been cut short
             by your email client. Request a fresh one and try again.
           </p>
         </div>
@@ -118,7 +118,7 @@ function ResetPasswordForm() {
           required
           maxLength={72}
         />
-        {/* Live checklist replaces the native minLength bubble — the
+        {/* Live checklist replaces the native minLength bubble; the
             schema check in handleSubmit still backstops it */}
         <PasswordRules password={password} />
       </div>

@@ -223,7 +223,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
       }
     >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Live tally in the data voice — its own row, so it never truncates
+        {/* Live tally in the data voice: its own row, so it never truncates
             against the buttons the way it did in the footer */}
         <StatusLine>
           <span className="font-medium text-foreground">{totalWorkouts}</span>
@@ -231,7 +231,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           {' '}{formData.durationWeeks === 1 ? 'week' : 'weeks'}
         </StatusLine>
 
-        {/* Name — the hero field */}
+        {/* Name: the hero field */}
         <div>
           <FieldShell
             label="Plan name"
@@ -314,9 +314,9 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
           )}
         </div>
 
-        {/* The two numbers sit side by side — that's what the extra width buys */}
+        {/* The two numbers sit side by side; that's what the extra width buys */}
         <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:gap-5">
-          {/* Duration — stepper instead of a 12-item dropdown */}
+          {/* Duration: stepper instead of a 12-item dropdown */}
           <div role="group" aria-labelledby={ids.durationLabel}>
             <FieldLabel id={ids.durationLabel} className="mb-2">
               Duration
@@ -364,7 +364,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             </div>
           </div>
 
-          {/* Weekly schedule — all seven options visible, one tap to pick */}
+          {/* Weekly schedule: all seven options visible, one tap to pick */}
           <div className="min-w-0">
             <FieldLabel id={ids.scheduleLabel} className="mb-2">
               Workouts per week

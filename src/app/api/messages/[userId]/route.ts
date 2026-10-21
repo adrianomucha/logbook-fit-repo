@@ -28,7 +28,7 @@ export async function GET(
     );
   }
 
-  // Verify relationship exists. Both users in one query — this endpoint is
+  // Verify relationship exists. Both users in one query; this endpoint is
   // polled every few seconds while a chat is open, so every saved round trip
   // to the database counts.
   const users = await prisma.user.findMany({
@@ -126,7 +126,7 @@ export async function GET(
   const nextCursor = hasMore ? result[result.length - 1].id : null;
 
   // Flatten the exercise join into the card's shape here rather than shipping
-  // raw relations. Sets and flags are scoped to this message's own workout —
+  // raw relations. Sets and flags are scoped to this message's own workout:
   // the same exercise recurs every week, so unscoped counts would describe the
   // wrong session.
   const shaped = result.map((message) => {
@@ -150,7 +150,7 @@ export async function GET(
       exerciseContext: {
         exerciseId: ref.id,
         exerciseName: ref.exercise.name,
-        // In the viewer's unit — coach and client each read their own
+        // In the viewer's unit: coach and client each read their own
         prescription: formatPrescription(
           {
             sets: ref.sets,
@@ -168,7 +168,7 @@ export async function GET(
     };
   });
 
-  // Mark messages from the other user as read — but only when the caller
+  // Mark messages from the other user as read, but only when the caller
   // says the chat is actually on screen (?markRead=1). Both dashboards poll
   // this thread in the background; stamping readAt on every poll would mark
   // messages read that were never seen.
@@ -189,7 +189,7 @@ export async function GET(
       nextCursor,
       hasMore,
     },
-    // Chat threads must never be answered from a browser or proxy cache — a
+    // Chat threads must never be answered from a browser or proxy cache: a
     // stale hit here is exactly the "messages only arrive after restarting the
     // app" symptom.
     { headers: { "Cache-Control": "no-store" } }

@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/auth';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Logo } from '@/components/brand/Logo';
 
-/** Two-letter monogram for the account trigger — falls back to the email's first letter. */
+/** Two-letter monogram for the account trigger; falls back to the email's first letter. */
 function initials(name?: string | null, email?: string | null) {
   const source = name?.trim() || email?.trim() || '';
   if (!source) return '';
@@ -15,9 +15,9 @@ function initials(name?: string | null, email?: string | null) {
 }
 
 /**
- * The client app's top bar — the web's ClientNav header on a phone: the
- * logotype on the left, the account trigger on the right — the profile
- * photo when there is one, else the monogram. It opens the account menu.
+ * The client app's top bar (the web's ClientNav header on a phone): the
+ * logotype on the left, the account trigger on the right (the profile
+ * photo when there is one, else the monogram). It opens the account menu.
  */
 export function AppHeader() {
   const insets = useSafeAreaInsets();

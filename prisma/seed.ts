@@ -1,7 +1,7 @@
-// Idempotent demo seed — safe to re-run; converges instead of duplicating.
+// Idempotent demo seed: safe to re-run; converges instead of duplicating.
 //
 // Uniqueness for User.email, Exercise (coachId, name), and Plan (coachId, name)
-// lives in partial unique indexes (WHERE "deletedAt" IS NULL — see migrations
+// lives in partial unique indexes (WHERE "deletedAt" IS NULL; see migrations
 // 20260227_db_hardening / 20260612_reassert_db_hardening), not in the Prisma
 // schema, so prisma.upsert can't key on them. Those models use find-then-create.
 // Everything else (weeks, days, workout exercises, completions, sets, flags,
@@ -41,14 +41,14 @@ async function seed() {
     role: "COACH" | "CLIENT";
   }) {
     // Every account seeded here shares one public password, so the demo lock
-    // must recognise it — otherwise it stays signable-in on a deployed build
+    // must recognise it, otherwise it stays signable-in on a deployed build
     // with credentials that are printed on the login page and sit in this
     // repo. isDemoAccount names its accounts exactly, so a new one added
     // here has to be added there too; fail loudly rather than ship a hole.
     if (!isDemoAccount(opts.email)) {
       throw new Error(
-        `Seeded demo account ${opts.email} is not covered by isDemoAccount() — ` +
-          `add it to DEMO_CLIENT_EMAILS/DEMO_LOGIN_EMAILS in src/lib/demo.ts, ` +
+        `Seeded demo account ${opts.email} is not covered by isDemoAccount(). ` +
+          `Add it to DEMO_CLIENT_EMAILS/DEMO_LOGIN_EMAILS in src/lib/demo.ts, ` +
           `or NEXT_PUBLIC_DEMO_MODE will not gate it.`
       );
     }
@@ -130,7 +130,7 @@ async function seed() {
       createdAt: Date;
     }
   ) {
-    // No unique key on check-ins — match the client's feeling text (unique per
+    // No unique key on check-ins, so match the client's feeling text (unique per
     // check-in in this seed), or any open PENDING check-in for content-less ones.
     const existing = await prisma.checkIn.findFirst({
       where: data.clientFeeling
@@ -188,7 +188,7 @@ async function seed() {
   const alex = await ensureClient("alex@demo.logbook.fit", "Alex Rodriguez");
   const jordan = await ensureClient("jordan@demo.logbook.fit", "Jordan Lee");
 
-  // Coach-client relationships — converge to ACTIVE so re-seeding revives a
+  // Coach-client relationships: converge to ACTIVE so re-seeding revives a
   // demo roster where relationships were ended via terminate/unsubscribe
   for (const client of [mike, emma, alex, jordan]) {
     await prisma.coachClientRelationship.upsert({
@@ -390,13 +390,13 @@ async function seed() {
     });
   }
 
-  // Mike — on week 4 (started 3 weeks ago)
+  // Mike: on week 4 (started 3 weeks ago)
   await ensureActivePlan(mike.profile.id, strengthPlan.id, 21);
-  // Emma — on week 2 (started ~1 week ago)
+  // Emma: on week 2 (started ~1 week ago)
   await ensureActivePlan(emma.profile.id, hiitPlan.id, 10);
-  // Alex — on week 3 (started 2 weeks ago)
+  // Alex: on week 3 (started 2 weeks ago)
   await ensureActivePlan(alex.profile.id, strengthPlan.id, 14);
-  // Jordan — started ~2 weeks ago but dropped off (at-risk — hasn't worked out in 9 days)
+  // Jordan: started ~2 weeks ago but dropped off (at-risk, hasn't worked out in 9 days)
   await ensureActivePlan(jordan.profile.id, strengthPlan.id, 14);
 
   console.log(`✓ Plans assigned to all clients`);
@@ -470,11 +470,11 @@ async function seed() {
     return wc;
   }
 
-  // Mike's completions — Weeks 1-3 done, Week 4 Day 1 done yesterday
+  // Mike's completions: Weeks 1-3 done, Week 4 Day 1 done yesterday
   const mikeId = mike.profile.id;
   const [sw1, sw2, sw3, sw4] = strengthWeeks;
 
-  // Week 1 — all 4 workout days
+  // Week 1: all 4 workout days
   for (let i = 0; i < sw1.days.length; i++) {
     await ensureCompletion(mikeId, strengthPlan.id, sw1.days[i], {
       completedDaysAgo: 21 - STRENGTH_OFFSETS[i] + 1,
@@ -484,7 +484,7 @@ async function seed() {
     });
   }
 
-  // Week 2 — all 4 workout days
+  // Week 2: all 4 workout days
   for (let i = 0; i < sw2.days.length; i++) {
     await ensureCompletion(mikeId, strengthPlan.id, sw2.days[i], {
       completedDaysAgo: 14 - STRENGTH_OFFSETS[i] + 1,
@@ -494,7 +494,7 @@ async function seed() {
     });
   }
 
-  // Week 3 — all 4 workout days
+  // Week 3: all 4 workout days
   for (let i = 0; i < sw3.days.length; i++) {
     await ensureCompletion(mikeId, strengthPlan.id, sw3.days[i], {
       completedDaysAgo: 7 - STRENGTH_OFFSETS[i] + 1,
@@ -504,7 +504,7 @@ async function seed() {
     });
   }
 
-  // Week 4 — first workout day done yesterday
+  // Week 4: first workout day done yesterday
   await ensureCompletion(mikeId, strengthPlan.id, sw4.days[0], {
     completedDaysAgo: 1,
     durationMin: 42,
@@ -514,7 +514,7 @@ async function seed() {
 
   console.log(`✓ Mike: 13 workout completions (wk1-3 full + wk4 day 1)`);
 
-  // Emma's completions — Week 1 full, Week 2 partial
+  // Emma's completions: Week 1 full, Week 2 partial
   const emmaId = emma.profile.id;
   const [hw1, hw2] = hiitWeeks;
 
@@ -527,7 +527,7 @@ async function seed() {
     });
   }
 
-  // Week 2 — days 1 and 2 done
+  // Week 2: days 1 and 2 done
   for (let i = 0; i < 2; i++) {
     await ensureCompletion(emmaId, hiitPlan.id, hw2.days[i], {
       completedDaysAgo: 3 - HIIT_OFFSETS[i] + 1,
@@ -539,7 +539,7 @@ async function seed() {
 
   console.log(`✓ Emma: 6 workout completions`);
 
-  // Alex's completions — Week 1 full, Week 2 only 3 days (missed one)
+  // Alex's completions: Week 1 full, Week 2 only 3 days (missed one)
   const alexId = alex.profile.id;
 
   for (let i = 0; i < sw1.days.length; i++) {
@@ -551,7 +551,7 @@ async function seed() {
     });
   }
 
-  // Week 2 — missed last workout day
+  // Week 2: missed last workout day
   for (let i = 0; i < 3; i++) {
     await ensureCompletion(alexId, strengthPlan.id, sw2.days[i], {
       completedDaysAgo: 7 - STRENGTH_OFFSETS[i] + 1,
@@ -561,7 +561,7 @@ async function seed() {
     });
   }
 
-  // Most recent — yesterday
+  // Most recent: yesterday
   await ensureCompletion(alexId, strengthPlan.id, sw3.days[0], {
     completedDaysAgo: 1,
     durationMin: 55,
@@ -571,7 +571,7 @@ async function seed() {
 
   console.log(`✓ Alex: 8 workout completions`);
 
-  // Jordan — only 2 completions, last one 9 days ago (at-risk — triggers >7 day threshold)
+  // Jordan: only 2 completions, last one 9 days ago (at-risk, triggers >7 day threshold)
   const jordanId = jordan.profile.id;
 
   await ensureCompletion(jordanId, strengthPlan.id, sw1.days[0], {
@@ -588,17 +588,17 @@ async function seed() {
     setsPerExercise: 3,
   });
 
-  console.log(`✓ Jordan: 2 workout completions (last 9 days ago — at risk)`);
+  console.log(`✓ Jordan: 2 workout completions (last 9 days ago, at risk)`);
 
   // ─────────────────────────────────────────────
   // 7. CHECK-INS
   // ─────────────────────────────────────────────
 
-  // Mike — 4 completed
+  // Mike: 4 completed
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "EASY",
-    clientFeeling: "Felt great this week. The weights are manageable — maybe time to bump up?",
+    clientFeeling: "Felt great this week. The weights are manageable. Maybe time to bump up?",
     painBlockers: null,
     clientRespondedAt: daysAgo(18),
     coachFeedback: "Great to hear! I've bumped your bench by 10 lbs starting next week. Keep the form tight.",
@@ -614,7 +614,7 @@ async function seed() {
     clientFeeling: "Good week overall. Hit a bench PR at 145 lbs! Squat felt solid too.",
     painBlockers: null,
     clientRespondedAt: daysAgo(11),
-    coachFeedback: "That's a 10 lb PR on bench — awesome progress! Keep the squat form dialed in at this weight before we move up.",
+    coachFeedback: "That's a 10 lb PR on bench. Awesome progress! Keep the squat form dialed in at this weight before we move up.",
     planAdjustment: false,
     coachRespondedAt: daysAgo(10),
     completedAt: daysAgo(10),
@@ -634,14 +634,14 @@ async function seed() {
     createdAt: daysAgo(5),
   });
 
-  // Most recent check-in — fully completed
+  // Most recent check-in: fully completed
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "This week went great! Bench is at 155 — that's another PR. The back stretches you recommended are helping a lot.",
+    clientFeeling: "This week went great! Bench is at 155. That's another PR. The back stretches you recommended are helping a lot.",
     painBlockers: null,
     clientRespondedAt: daysAgo(2),
-    coachFeedback: "155 on bench — incredible! You're making amazing progress. Let's keep the current weights one more week to lock in form before we push further.",
+    coachFeedback: "155 on bench. Incredible! You're making amazing progress. Let's keep the current weights one more week to lock in form before we push further.",
     planAdjustment: false,
     coachRespondedAt: daysAgo(1),
     completedAt: daysAgo(1),
@@ -650,14 +650,14 @@ async function seed() {
 
   console.log(`✓ Mike: 4 check-ins (all completed)`);
 
-  // Emma — 1 completed
+  // Emma: 1 completed
   await ensureCheckIn(emmaId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
     clientFeeling: "Really enjoying the HIIT circuits! Could I add an extra session on Saturdays?",
     painBlockers: null,
     clientRespondedAt: daysAgo(5),
-    coachFeedback: "I love the enthusiasm! Let's hold off on adding a 5th day for now — your body needs time to adapt. We'll reassess after week 4.",
+    coachFeedback: "I love the enthusiasm! Let's hold off on adding a 5th day for now. Your body needs time to adapt. We'll reassess after week 4.",
     planAdjustment: false,
     coachRespondedAt: daysAgo(4),
     completedAt: daysAgo(4),
@@ -666,14 +666,14 @@ async function seed() {
 
   console.log(`✓ Emma: 1 check-in (completed)`);
 
-  // Alex — 2 completed
+  // Alex: 2 completed
   await ensureCheckIn(alexId, {
     status: "COMPLETED",
     effortRating: "HARD",
     clientFeeling: "Struggled this week. Work has been stressful and I missed a session.",
     painBlockers: "General fatigue from work stress",
     clientRespondedAt: daysAgo(8),
-    coachFeedback: "No worries about the missed session — life happens. Focus on the sessions you do make and keep the quality high. Consider a 5-min walk before training to reset.",
+    coachFeedback: "No worries about the missed session. Life happens. Focus on the sessions you do make and keep the quality high. Consider a 5-min walk before training to reset.",
     planAdjustment: false,
     coachRespondedAt: daysAgo(7),
     completedAt: daysAgo(7),
@@ -693,7 +693,7 @@ async function seed() {
     createdAt: daysAgo(3),
   });
 
-  // Current check-in — client responded, awaiting coach review
+  // Current check-in: client responded, awaiting coach review
   await ensureCheckIn(alexId, {
     status: "CLIENT_RESPONDED",
     effortRating: "MEDIUM",
@@ -705,39 +705,39 @@ async function seed() {
 
   console.log(`✓ Alex: 3 check-ins (2 completed, 1 awaiting coach review)`);
 
-  // Jordan — 1 pending (no response yet — sent 5 days ago)
+  // Jordan: 1 pending (no response yet, sent 5 days ago)
   await ensureCheckIn(jordanId, {
     status: "PENDING",
     createdAt: daysAgo(5),
   });
 
-  console.log(`✓ Jordan: 1 check-in (pending — no response)`);
+  console.log(`✓ Jordan: 1 check-in (pending, no response)`);
 
   // ─────────────────────────────────────────────
   // 8. MESSAGES
   // ─────────────────────────────────────────────
 
-  // Mike <-> Coach — rich conversation
+  // Mike <-> Coach: rich conversation
   const mikeMessages = [
     { from: "client", content: "Hey Sarah! Just wanted to let you know I set up a small home gym in my garage. Got a rack, barbell, and adjustable dumbbells.", daysAgo: 20 },
     { from: "coach", content: "That's awesome Mike! Having your own setup will make it so much easier to stay consistent. How's the space?", daysAgo: 20 },
     { from: "client", content: "It's perfect. Enough room for everything. Also picked up some bumper plates so I can deadlift without worrying about noise.", daysAgo: 19 },
-    { from: "coach", content: "Love it! Quick tip — make sure you have enough clearance overhead for the press. Some garage ceilings are tight.", daysAgo: 19 },
-    { from: "client", content: "Good call, I have about 8 feet. Should be fine for OHP. Quick question about squats — should I be going below parallel?", daysAgo: 17 },
-    { from: "coach", content: "Great question! Yes, aim for just below parallel — hip crease below knee cap. If mobility is limiting you, we can add some ankle mobility drills to your warm-up.", daysAgo: 17 },
+    { from: "coach", content: "Love it! Quick tip: make sure you have enough clearance overhead for the press. Some garage ceilings are tight.", daysAgo: 19 },
+    { from: "client", content: "Good call, I have about 8 feet. Should be fine for OHP. Quick question about squats: should I be going below parallel?", daysAgo: 17 },
+    { from: "coach", content: "Great question! Yes, aim for just below parallel (hip crease below knee cap). If mobility is limiting you, we can add some ankle mobility drills to your warm-up.", daysAgo: 17 },
     { from: "client", content: "Got it. I've been watching my form on video and I think my knees cave in a bit at the bottom.", daysAgo: 15 },
-    { from: "coach", content: "That's common and usually a cue issue. Try 'screwing your feet into the floor' — externally rotate as you descend. Also, try a slightly wider stance.", daysAgo: 15 },
+    { from: "coach", content: "That's common and usually a cue issue. Try 'screwing your feet into the floor'. Externally rotate as you descend. Also, try a slightly wider stance.", daysAgo: 15 },
     { from: "client", content: "Tried the wider stance today and it felt SO much better. Knees tracked over toes perfectly. Thanks!", daysAgo: 13 },
-    { from: "coach", content: "Excellent! That's the kind of feedback I love. Keep filming your sets when you can — it's the best way to self-check.", daysAgo: 13 },
+    { from: "coach", content: "Excellent! That's the kind of feedback I love. Keep filming your sets when you can. It's the best way to self-check.", daysAgo: 13 },
     { from: "client", content: "Had a rough session today. Missed my last rep on bench at 145. Felt like my right arm gave out first.", daysAgo: 10 },
     { from: "coach", content: "That happens. If one arm is lagging, try adding a set of single-arm dumbbell press at the end of push day. It'll even things out over time.", daysAgo: 10 },
     { from: "client", content: "Will do! Also, any tips on pre-workout nutrition? I've been training fasted in the morning and running out of steam.", daysAgo: 8 },
-    { from: "coach", content: "Try a small meal 60-90 min before — something like oatmeal with banana, or toast with peanut butter. Even a protein shake 30 min before can make a big difference.", daysAgo: 8 },
+    { from: "coach", content: "Try a small meal 60-90 min before, something like oatmeal with banana, or toast with peanut butter. Even a protein shake 30 min before can make a big difference.", daysAgo: 8 },
     { from: "client", content: "Tried the oatmeal + banana before today's session. Night and day difference. Had way more energy through the whole workout.", daysAgo: 6 },
     { from: "coach", content: "Nutrition is the easiest performance hack! Glad it helped. How's the shoulder feeling with the overhead press?", daysAgo: 6 },
     { from: "client", content: "Actually, I noticed a slight pinch in my left shoulder at the top of OHP. Not painful, just uncomfortable.", daysAgo: 5 },
-    { from: "coach", content: "Let's swap OHP for seated dumbbell press for the next 2 weeks. DBs let your shoulders find their natural groove. Also add band pull-aparts to warm up — 2x15.", daysAgo: 5 },
-    { from: "client", content: "Did DB press today — felt much better on the shoulders. Also hit a bench PR at 155! That's a 10 lb jump since we started!", daysAgo: 2 },
+    { from: "coach", content: "Let's swap OHP for seated dumbbell press for the next 2 weeks. DBs let your shoulders find their natural groove. Also add band pull-aparts to warm up (2x15).", daysAgo: 5 },
+    { from: "client", content: "Did DB press today. Felt much better on the shoulders. Also hit a bench PR at 155! That's a 10 lb jump since we started!", daysAgo: 2 },
     { from: "coach", content: "155! That's incredible progress in 3 weeks. Your consistency is paying off big time. Let's keep the DB press for now and reassess the shoulder next week.", daysAgo: 2 },
     { from: "client", content: "Thanks Sarah! Honestly this is the most structured I've ever been with training. Having a coach makes a huge difference.", daysAgo: 1, unread: true },
   ];
@@ -756,11 +756,11 @@ async function seed() {
 
   // Emma <-> Coach
   const emmaMessages = [
-    { from: "client", content: "Hi Sarah! Just finished my first HIIT circuit — those burpees are no joke!", daysAgo: 9 },
+    { from: "client", content: "Hi Sarah! Just finished my first HIIT circuit. Those burpees are no joke!", daysAgo: 9 },
     { from: "coach", content: "Ha! They never get easier, you just get faster at them. How did you feel overall? Any exercises that felt too intense?", daysAgo: 9 },
     { from: "client", content: "The mountain climbers were tough but manageable. I modified the jump squats to regular squats for the last set.", daysAgo: 8 },
-    { from: "coach", content: "Smart move on the modification. That's exactly what you should do — maintain form over intensity. The jump squats will come!", daysAgo: 8 },
-    { from: "client", content: "Quick question — is it normal for my heart rate to stay elevated for like 20 min after the workout?", daysAgo: 4 },
+    { from: "coach", content: "Smart move on the modification. That's exactly what you should do: maintain form over intensity. The jump squats will come!", daysAgo: 8 },
+    { from: "client", content: "Quick question: is it normal for my heart rate to stay elevated for like 20 min after the workout?", daysAgo: 4 },
     { from: "coach", content: "Totally normal for HIIT! That's called EPOC (excess post-exercise oxygen consumption). Your body is burning extra calories while recovering. It's a sign the workout was effective.", daysAgo: 4 },
   ];
 
@@ -796,12 +796,12 @@ async function seed() {
 
   console.log(`✓ Alex: ${alexMessages.length} messages`);
 
-  // Jordan <-> Coach — concern messages (coach reaching out about inactivity)
+  // Jordan <-> Coach: concern messages (coach reaching out about inactivity)
   const jordanMessages = [
     { from: "coach", content: "Hey Jordan! I noticed you haven't logged a workout in a few days. Everything okay?", daysAgo: 6 },
     { from: "client", content: "Yeah, I've been dealing with some personal stuff. I'll try to get back in this week.", daysAgo: 5 },
     { from: "coach", content: "No pressure at all. Take the time you need. When you're ready, even a lighter session can help. I'm here if you want to talk or adjust the program.", daysAgo: 5 },
-    { from: "coach", content: "Just checking in again — no rush, but wanted you to know I'm here whenever you're ready to jump back in. We can scale things back if that helps.", daysAgo: 2, unread: true },
+    { from: "coach", content: "Just checking in again. No rush, but wanted you to know I'm here whenever you're ready to jump back in. We can scale things back if that helps.", daysAgo: 2, unread: true },
   ];
 
   for (const msg of jordanMessages) {

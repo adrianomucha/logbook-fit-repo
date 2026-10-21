@@ -4,7 +4,7 @@
  *  - POST /api/auth/signup  (when a coach signs up)
  *  - prisma/seed.ts         (demo data)
  *
- * Single source of truth — edit this list to change the default library.
+ * Single source of truth: edit this list to change the default library.
  */
 
 export type QuickStartExercise = {

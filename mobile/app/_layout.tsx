@@ -17,7 +17,7 @@ import { IBMPlexMono_700Bold } from '@expo-google-fonts/ibm-plex-mono/700Bold';
 import { AuthProvider } from '@/lib/auth';
 import { resolveNotificationUrl } from '@/lib/push';
 
-// Keep the splash up until the fonts are in — a flash of system font on the
+// Keep the splash up until the fonts are in: a flash of system font on the
 // greeting is the first thing anyone would notice.
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 

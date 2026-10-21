@@ -1,5 +1,5 @@
 /**
- * Deterministic avatar color from a display name — avoids bland gray avatars.
+ * Deterministic avatar color from a display name; avoids bland gray avatars.
  * Shared across coach and client surfaces so the same person renders the same
  * color everywhere (coach roster, stats-card faces, client's coach strip).
  */

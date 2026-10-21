@@ -112,7 +112,7 @@ export function WaitlistForm() {
 
   // Shared header for both confirmation states: the card keeps one identity
   // while its body swaps from the question to the sign-off. The volt fill is
-  // deliberate — this is the page's accent color spent on its best moment.
+  // deliberate: this is the page's accent color spent on its best moment.
   const confirmationHeader = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -234,7 +234,7 @@ export function WaitlistForm() {
         <FormError>
           {error === 'registered' ? (
             <>
-              Good news — you already have an account.{' '}
+              Good news: you already have an account.{' '}
               <Link
                 href="/login"
                 className="font-medium underline underline-offset-2"

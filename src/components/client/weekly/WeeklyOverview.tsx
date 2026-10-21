@@ -13,7 +13,7 @@ import { DayCardGrid } from './DayCardGrid';
 interface WeeklyOverviewProps {
   client: Client;
   plan: WorkoutPlan;
-  /** Server-computed current week number (from week-overview) — the single
+  /** Server-computed current week number (from week-overview), the single
    *  source of truth. Recomputing it client-side can disagree across timezones. */
   currentWeekNumber: number;
   completions: WorkoutCompletion[];
@@ -27,7 +27,7 @@ export function WeeklyOverview({
 }: WeeklyOverviewProps) {
   const router = useRouter();
 
-  // Get the current week data. No fallback to week 1 — showing a different
+  // Get the current week data. No fallback to week 1; showing a different
   // week than the header claims is worse than an honest empty state.
   const currentWeek = useMemo(
     () => plan.weeks.find((w) => w.weekNumber === currentWeekNumber) ?? null,
@@ -56,7 +56,7 @@ export function WeeklyOverview({
     }
   };
 
-  // Empty state — the plan has no week built for the current week number
+  // Empty state: the plan has no week built for the current week number
   if (!currentWeek) {
     return (
       <div className="text-center py-12">

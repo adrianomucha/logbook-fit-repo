@@ -11,7 +11,7 @@ import { pageMetadata } from '@/lib/seo';
 export const metadata = pageMetadata({
   title: 'Terms of Service',
   description:
-    'The terms for using Logbook.fit during the private beta — including what we are (software) and what we are not (medical advice).',
+    'The terms for using Logbook.fit during the private beta, including what we are (software) and what we are not (medical advice).',
   path: '/terms',
 });
 
@@ -19,7 +19,7 @@ const CONTACT_EMAIL = 'hello@logbook.fit';
 
 /**
  * Beta terms of service. The load-bearing sections for a fitness product are
- * "Not medical advice" and "Assumption of risk" — everything else is the
+ * "Not medical advice" and "Assumption of risk"; everything else is the
  * standard frame around them. Kept in plain English on purpose: terms nobody
  * can read protect nobody.
  */
@@ -49,8 +49,8 @@ export default function TermsPage() {
           Logbook.fit is software that helps coaches and their clients plan,
           track, and check in on training. It&rsquo;s in{' '}
           <Strong>private beta</Strong>: it&rsquo;s free for now, things will
-          change, and occasionally things will break. It is a tool for coaches
-          — <Strong>not medical advice</Strong>, and not a substitute for your
+          change, and occasionally things will break. It is a tool for coaches,
+          <Strong>not medical advice</Strong>, and not a substitute for your
           own judgment about your body. By creating an account or joining the
           waitlist, you agree to these terms.
         </p>
@@ -59,7 +59,7 @@ export default function TermsPage() {
       <LegalSection title="Who can use it">
         <p>
           You must be at least 18 years old and able to enter into a contract
-          to create an account. Keep your password to yourself — you&rsquo;re
+          to create an account. Keep your password to yourself. You&rsquo;re
           responsible for what happens under your account, and you&rsquo;ll
           tell us if you think someone else has gotten into it.
         </p>
@@ -80,7 +80,7 @@ export default function TermsPage() {
             </>,
             <>
               We work hard not to lose data, but during a beta{' '}
-              <Strong>we can&rsquo;t guarantee it</Strong> — keep your own
+              <Strong>we can&rsquo;t guarantee it</Strong>. Keep your own
               copies of anything you can&rsquo;t afford to lose.
             </>,
             <>
@@ -97,8 +97,8 @@ export default function TermsPage() {
             Logbook.fit does not provide medical advice, diagnosis, or
             treatment.
           </Strong>{' '}
-          Nothing in the app — plans, exercises, prescriptions, notes, or
-          check-in feedback — is medical guidance from us. Training plans are
+          Nothing in the app (plans, exercises, prescriptions, notes, or
+          check-in feedback) is medical guidance from us. Training plans are
           written by your coach, not by Logbook.fit; we provide the software
           they use, and we don&rsquo;t review, endorse, or supervise their
           programming.
@@ -106,8 +106,8 @@ export default function TermsPage() {
         <p>
           Consult a physician before starting any exercise program,
           especially if you have a medical condition, an injury, or
-          haven&rsquo;t trained in a while. If something hurts — beyond the
-          normal way exercise hurts — stop and talk to a professional, not an
+          haven&rsquo;t trained in a while. If something hurts (beyond the
+          normal way exercise hurts), stop and talk to a professional, not an
           app.
         </p>
       </LegalSection>
@@ -125,8 +125,8 @@ export default function TermsPage() {
 
       <LegalSection title="Coaches and clients">
         <p>
-          Logbook.fit is a platform. The coaching relationship — its quality,
-          its results, its payment, its professional standards — is between
+          Logbook.fit is a platform. The coaching relationship (its quality,
+          its results, its payment, its professional standards) is between
           coach and client, and we are not a party to it. Coaches are
           responsible for being qualified to give the guidance they give and
           for complying with any laws that apply to their practice.
@@ -139,8 +139,8 @@ export default function TermsPage() {
           give us the license we need to store, display, and transmit them to
           the people you&rsquo;ve connected with, and to have our service
           providers process them on our behalf to run the service (for
-          example, an AI model reading a spreadsheet you import) — that&rsquo;s
-          what makes the product work — and nothing more. We don&rsquo;t use your content
+          example, an AI model reading a spreadsheet you import), which is
+          what makes the product work, and nothing more. We don&rsquo;t use your content
           for advertising or sell it. How we handle personal data is covered
           in our{' '}
           <Link
@@ -170,7 +170,7 @@ export default function TermsPage() {
         <p>
           The service is provided <Strong>&ldquo;as is&rdquo;</Strong> and{' '}
           <Strong>&ldquo;as available,&rdquo;</Strong> without warranties of
-          any kind, express or implied — including fitness for a particular
+          any kind, express or implied, including fitness for a particular
           purpose, accuracy, and uninterrupted availability.
         </p>
         <p>
@@ -179,7 +179,7 @@ export default function TermsPage() {
           consequential, or punitive damages, or for lost profits, data, or
           goodwill. Our total liability for any claim relating to the
           service is limited to the greater of $100 or the amount you paid
-          us in the twelve months before the claim — which, during the free
+          us in the twelve months before the claim, which, during the free
           beta, is $100.
         </p>
         <p>

@@ -9,7 +9,7 @@ interface SessionCardProps {
   coachName?: string | null;
   state: 'scheduled' | 'in-progress' | 'completed';
   completionPct?: number;
-  /** The start request is in flight — the button waits so it can't fire twice */
+  /** The start request is in flight; the button waits so it can't fire twice */
   isStarting?: boolean;
   onAction: () => void;
 }
@@ -27,7 +27,7 @@ function readableCategories(exercises: WorkoutDay['exercises']): string[] {
   return Array.from(cats).filter((c) => c.toLowerCase() !== 'other');
 }
 
-/** Today's hero: what the session is, how big, and the one button — the web's WorkoutOverview. */
+/** Today's hero: what the session is, how big, and the one button. The web's WorkoutOverview. */
 export function SessionCard({ workoutDay, coachName, state, completionPct = 0, isStarting = false, onAction }: SessionCardProps) {
   const exercises = workoutDay.exercises;
   const totalSets = exercises.reduce((sum, e) => sum + e.sets, 0);

@@ -22,7 +22,7 @@ interface ProgressStats {
   avgCompletionPct: number;
   currentStreak: number;
   workoutsLast7Days: number;
-  /** All-time seconds trained — pairs with totalWorkouts */
+  /** All-time seconds trained; pairs with totalWorkouts */
   totalDurationSec?: number;
 }
 
@@ -61,7 +61,7 @@ export function ProgressHistory({
     [target, workoutCompletions]
   );
 
-  // Bests set on this plan — the block's story. The shared helpers keep the
+  // Bests set on this plan: the block's story. The shared helpers keep the
   // numbers and wording identical to the app.
   const bests = useMemo(
     () => summarizePersonalBests(personalBests ?? [], plan.id),
@@ -69,7 +69,7 @@ export function ProgressHistory({
   );
   const bestsNote = formatBestsNote(bests);
 
-  // Weeks in a row with a session — consistency the client can keep, where
+  // Weeks in a row with a session: consistency the client can keep, where
   // "weeks on target" read 0 all block for anyone training under the plan's count
   const weekStreak = useMemo(() => weeksTrainedStreak(workoutCompletions), [workoutCompletions]);
   // All-time from the server, like the Workouts tile beside it; summing the
@@ -84,13 +84,13 @@ export function ProgressHistory({
 
   const tiles: [string, string][] = [
     [String(progressStats?.totalWorkouts ?? workoutCompletions.filter((c) => c.status === 'COMPLETED').length), 'Workouts'],
-    [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '—', 'Trained'],
+    [trainedSec >= 60 ? `${trainedValue}${trainedUnit === 'h' ? 'h' : 'm'}` : '-', 'Trained'],
     [formatWeekStreak(weekStreak), 'Streak'],
   ];
 
   return (
     <div className="space-y-4 sm:space-y-6">
-        {/* Personal bests — a list, not a hero: the title with a quiet note,
+        {/* Personal bests. A list, not a hero: the title with a quiet note,
             then one line per best. "This week" below carries the page's big number. */}
         <section
           aria-label="Personal bests"
@@ -136,7 +136,7 @@ export function ProgressHistory({
           )}
         </section>
 
-        {/* Week progress tracker — same vocabulary as the dashboard's weekly strip */}
+        {/* Week progress tracker: same vocabulary as the dashboard's weekly strip */}
         {weekProgress && (
           <div className="animate-fade-in-up rounded-xl bg-muted/40 p-4">
             <div className="flex items-center justify-between gap-3 mb-3">
@@ -185,7 +185,7 @@ export function ProgressHistory({
           ))}
         </div>
 
-      {/* Workout History — the full log */}
+      {/* Workout History: the full log */}
       <div className="animate-fade-in-up" style={{ animationDelay: '75ms' }}>
         <EnrichedWorkoutHistory
           completions={workoutCompletions}

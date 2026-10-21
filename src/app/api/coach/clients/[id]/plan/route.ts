@@ -5,7 +5,7 @@ import { Session } from "next-auth";
 
 /**
  * DELETE /api/coach/clients/[id]/plan
- * Unassigns the client's active plan. The plan itself is untouched —
+ * Unassigns the client's active plan. The plan itself is untouched;
  * only the assignment (and its start date) is cleared.
  */
 export const DELETE = withCoach(

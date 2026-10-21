@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 
 /**
  * GET /api/waitlist/invites/[token]
- * Public endpoint — validates a private-beta invite token for the signup
+ * Public endpoint: validates a private-beta invite token for the signup
  * page, mirroring /api/invites/[token] for client invites. No auth (the
  * invitee isn't logged in yet); the token itself is the credential.
  */

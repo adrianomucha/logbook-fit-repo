@@ -12,7 +12,7 @@ const dateTimeFmt = new Intl.DateTimeFormat('en-US', {
 });
 
 function summarize(summary: unknown): string {
-  if (!summary || typeof summary !== 'object') return '—';
+  if (!summary || typeof summary !== 'object') return '-';
   return Object.entries(summary as Record<string, unknown>)
     .map(([k, v]) => `${k} ${String(v)}`)
     .join(' · ');
@@ -129,7 +129,7 @@ export async function HealthPanel({ checks: pending }: { checks: Promise<HealthC
         </section>
 
         <p className="mt-4 text-xs text-muted-foreground">
-          Email can only be checked for configuration — Resend has no probe
+          Email can only be checked for configuration. Resend has no probe
           that doesn&rsquo;t send. Send failures log{' '}
           <span className="font-mono">[EMAIL_ALERT]</span> in Vercel.
         </p>

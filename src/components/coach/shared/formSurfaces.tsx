@@ -3,11 +3,11 @@
  *
  * A dialog reads as busy when every element argues for attention: a label, a
  * bordered box, a hint, and a link all at their own weight. These keep it to
- * two tiers — one filled surface per field, and one quiet pill for everything
- * optional — so the primary action is the only loud thing on screen.
+ * two tiers (one filled surface per field, and one quiet pill for everything
+ * optional) so the primary action is the only loud thing on screen.
  */
 
-/** Uppercase tracked mono — the same "data voice" used across list headers and stats */
+/** Uppercase tracked mono: the same "data voice" used across list headers and stats */
 export function FieldLabel({
   htmlFor,
   id,
@@ -36,7 +36,7 @@ export function FieldLabel({
 /**
  * A filled card holding its own label, so the field reads as one object instead
  * of a stack of label + box. Controls inside should be borderless and
- * transparent — the shell is the only boundary.
+ * transparent; the shell is the only boundary.
  */
 export function FieldShell({
   label,
@@ -60,7 +60,7 @@ export function FieldShell({
   );
 }
 
-/** Small pill action — the quiet tier, so nothing competes with the primary button */
+/** Small pill action: the quiet tier, so nothing competes with the primary button */
 export function Chip({
   onClick,
   disabled,
@@ -82,7 +82,7 @@ export function Chip({
   );
 }
 
-/** Live stat line in the data voice — a dialog's state, given its own row so it never truncates */
+/** Live stat line in the data voice: a dialog's state, given its own row so it never truncates */
 export function StatusLine({
   tone = 'ready',
   pulse,

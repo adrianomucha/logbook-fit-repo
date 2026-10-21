@@ -30,11 +30,11 @@ const RULES = [
 /**
  * Live checklist under the password field: each rule ticks green as the user
  * satisfies it, so nobody meets the requirements for the first time via a
- * rejected submit. Renders the same rules passwordSchema enforces — if the
+ * rejected submit. Renders the same rules passwordSchema enforces; if the
  * schema changes, change this with it.
  */
 export function PasswordRules({ password }: { password: string }) {
-  // Edge cases stay hidden until they actually happen — the happy path is
+  // Edge cases stay hidden until they actually happen; the happy path is
   // three checkmarks, not a wall of warnings.
   const tooCommon =
     password.length >= PASSWORD_MIN_LENGTH && isCommonPassword(password);
@@ -77,7 +77,7 @@ export function PasswordRules({ password }: { password: string }) {
             aria-hidden="true"
           />
           {tooCommon
-            ? 'This one tops the most-hacked lists — pick something harder to guess'
+            ? 'This one tops the most-hacked lists. Pick something harder to guess'
             : 'Passwords max out at 72 characters'}
         </p>
       )}

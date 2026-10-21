@@ -20,18 +20,18 @@ export interface PushNotificationsState {
   /** Push is available in this browser AND configured on the server */
   available: boolean;
   /**
-   * The browser itself has the push APIs — distinguishes "this browser
+   * The browser itself has the push APIs. Distinguishes "this browser
    * can't" from "the server has no VAPID keys" when available is false.
    */
   browserSupported: boolean;
   /** This device is registered for notifications */
   isSubscribed: boolean;
-  /** Browser permission was denied — only the user can undo this, in settings */
+  /** Browser permission was denied; only the user can undo this, in settings */
   isBlocked: boolean;
   /** iOS in a normal tab: notifications need the app installed first */
   needsInstall: boolean;
   isBusy: boolean;
-  /** Still working out support/subscription state — render nothing yet */
+  /** Still working out support/subscription state; render nothing yet */
   isLoading: boolean;
   enable: () => Promise<void>;
   disable: () => Promise<void>;
@@ -64,7 +64,7 @@ export function usePushNotifications(): PushNotificationsState {
     const ok = isPushSupported();
     setSupported(ok);
     if (!ok) {
-      // iOS Safari in a tab has no PushManager at all — the fix is installing
+      // iOS Safari in a tab has no PushManager at all. The fix is installing
       // the app, not switching browsers, so say which case this is.
       setNeedsInstall(isIosBrowser() && !isStandalone());
       return;

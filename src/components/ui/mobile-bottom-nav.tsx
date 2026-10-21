@@ -16,7 +16,7 @@ interface MobileBottomNavProps {
   activeId: string;
   onSelect: (id: string) => void;
   /**
-   * Tint of the active-tab pill. 'brand' is the client app's volt accent —
+   * Tint of the active-tab pill. 'brand' is the client app's volt accent,
    * the same accent its desktop tabs underline with; 'neutral' is the coach
    * app's quieter grey.
    */
@@ -41,7 +41,7 @@ export function MobileBottomNav({
   const isBrand = accent === 'brand';
   // A tab bar stranded behind the keyboard is unreachable chrome, and its
   // bottom-0 anchor is measured against a viewport the keyboard doesn't
-  // shrink — so it strands a band of blank page above the keys. Native chat
+  // shrink, so it strands a band of blank page above the keys. Native chat
   // apps drop the bar while you type; so do we.
   const { isOpen: isKeyboardOpen } = useKeyboardInset();
 
@@ -56,7 +56,7 @@ export function MobileBottomNav({
       )}
     >
       <div className="relative flex h-[var(--tabbar-h)]">
-        {/* The travelling pill. One element for all tabs — it slides a whole
+        {/* The travelling pill. One element for all tabs; it slides a whole
             column per tab, so the indicator reads as continuous motion rather
             than a cross-fade between three static backgrounds. top-[5px]
             centres the 46px of content (32 icon + 4 gap + 10 label) in the
@@ -130,7 +130,7 @@ export function MobileBottomNav({
               >
                 {item.label}
                 {item.badge !== undefined && item.badge > 0 && (
-                  <span className="sr-only"> — {item.badge} unread</span>
+                  <span className="sr-only">, {item.badge} unread</span>
                 )}
               </span>
             </button>

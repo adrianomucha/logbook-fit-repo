@@ -5,12 +5,12 @@ import { absoluteUrl } from '@/lib/seo';
  * Serves /sitemap.xml.
  *
  * Only public, indexable URLs belong here. Add marketing/content routes as
- * they ship — a sitemap that lists auth-walled routes is worse than no
+ * they ship; a sitemap that lists auth-walled routes is worse than no
  * sitemap at all.
  *
  * lastModified is set by hand when a page's content actually changes.
  * `new Date()` here would stamp every entry with the build time, claiming
- * everything changed on every deploy — crawlers learn to distrust the field
+ * everything changed on every deploy, so crawlers learn to distrust the field
  * and then ignore it when a page really does change.
  */
 

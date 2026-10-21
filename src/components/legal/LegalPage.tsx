@@ -30,7 +30,7 @@ export function LegalPage({
   title: string;
   /** Human-readable "Last updated" date, e.g. "August 6, 2026". */
   updated: string;
-  /** Section titles, in order — must match the LegalSection titles below. */
+  /** Section titles, in order; must match the LegalSection titles below. */
   toc?: string[];
   children: React.ReactNode;
 }) {
@@ -69,7 +69,7 @@ export function LegalPage({
         </p>
 
         <div className="mt-10 lg:grid lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-12">
-          {/* On-this-page nav — the Google/Stripe convention. Mobile gets a
+          {/* On-this-page nav: the Google/Stripe convention. Mobile gets a
               jump list before the prose; desktop moves it into a sticky rail
               (first in source order, so `order-2` puts the prose back on the
               left without reordering for screen readers). */}
@@ -144,7 +144,7 @@ export function LegalSection({
   );
 }
 
-/** Bulleted list matching the body rhythm — volt tick instead of a browser disc. */
+/** Bulleted list matching the body rhythm, volt tick instead of a browser disc. */
 export function LegalList({ items }: { items: React.ReactNode[] }) {
   return (
     <ul className="space-y-2">

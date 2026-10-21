@@ -54,7 +54,7 @@ describe("passwordSchema", () => {
   });
 
   it("counts the limit in bytes, not characters", () => {
-    // 25 emoji = 100 bytes but only 50 UTF-16 code units — chars alone
+    // 25 emoji = 100 bytes but only 50 UTF-16 code units; chars alone
     // would pass, bytes must not
     expect(passwordSchema.safeParse("a1" + "💪".repeat(25)).success).toBe(
       false
