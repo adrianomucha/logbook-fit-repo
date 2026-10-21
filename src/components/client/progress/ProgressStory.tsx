@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * This week as a stepper: a lime circle with a tick for each session done,
- * joined by a lime track, then the next one ringed in ink, then the rest.
+ * joined by a lime track, then a dashed ring for the next one, then the rest.
  */
 export function WeekCircles({ week }: { week: ThisWeek }) {
   const { slots } = week;
@@ -26,13 +26,12 @@ export function WeekCircles({ week }: { week: ThisWeek }) {
               className={cn(
                 'rounded-full flex items-center justify-center',
                 slot.state === 'done' && 'bg-brand',
-                slot.state === 'next' && 'bg-background border-2 border-foreground',
+                slot.state === 'next' && 'bg-background border-2 border-dashed border-muted-foreground/60',
                 slot.state === 'upcoming' && 'bg-background border-2 border-border'
               )}
               style={{ width: size, height: size }}
             >
               {slot.state === 'done' && <Check className="w-5 h-5 text-brand-foreground" strokeWidth={3} />}
-              {slot.state === 'next' && <span className="w-2 h-2 rounded-full bg-foreground" />}
             </div>
             <span
               className={cn(
