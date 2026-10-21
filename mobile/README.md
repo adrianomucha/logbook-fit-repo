@@ -1,4 +1,4 @@
-# Logbook — iOS app
+# Logbook: iOS app
 
 The client's Logbook: today's session, the week around it, check-ins and
 chat with their coach. Expo (React Native) with expo-router and NativeWind;
@@ -17,7 +17,7 @@ npx expo start            # then press i for the iOS simulator, or scan with Exp
 ```
 
 Expo Go can't load `expo-secure-store`/`expo-notifications` native code in
-every case — a development build (`npx expo run:ios`, or an EAS development
+every case; a development build (`npx expo run:ios`, or an EAS development
 build) is the reliable path once notifications land.
 
 ## Check it without a device
@@ -57,7 +57,7 @@ URL once a staging deployment exists.
 ## Layout
 
 ```
-app/                 expo-router routes — mirrors the web's /client/* paths so
+app/                 expo-router routes; mirrors the web's /client/* paths so
                      push deep links resolve in both apps
   _layout.tsx        fonts, auth provider, root stack
   index.tsx          front door: login / coach / client

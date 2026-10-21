@@ -8,7 +8,7 @@ plan-week math, timezone checks, check-in display labels).
 Rules for what goes in:
 
 - Pure TypeScript. No `window`, no `next/*`, no React, no Prisma.
-- Anything here is consumed as source — there is no build step. Metro and
+- Anything here is consumed as source; there is no build step. Metro and
   Next both compile it in place.
 - Tests live next to the code (`__tests__/`) and run with the root
   `npm test`.

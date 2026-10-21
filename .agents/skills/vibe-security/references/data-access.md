@@ -52,7 +52,7 @@ Validate all external input at system boundaries using a runtime schema validato
 - Form submissions
 - URL parameters and query strings
 
-Don't rely on TypeScript types alone — they're compile-time only and don't exist at runtime. An attacker sending a malformed request bypasses all TypeScript checks.
+Don't rely on TypeScript types alone; they're compile-time only and don't exist at runtime. An attacker sending a malformed request bypasses all TypeScript checks.
 
 ```typescript
 // TypeScript type provides NO runtime protection

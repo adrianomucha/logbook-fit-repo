@@ -1,44 +1,44 @@
-# Coach Experience — UX Edge-Case Backlog
+# Coach Experience: UX Edge-Case Backlog
 
 Findings from a full walkthrough of the coach journey (dashboard → check-in loop →
 plan builder → messaging → client lifecycle), prioritized by impact on the product's
-core promise: *"your quietest client is your next cancellation — we surface them first."*
+core promise: *"your quietest client is your next cancellation. We surface them first."*
 
 Effort: S (&lt; half day) · M (1–2 days) · L (multi-day / needs design)
 Status: ✅ fixed on this branch · ⬜ open
 
 ---
 
-## P0 — The retention loop is broken in places
+## P0: The retention loop is broken in places
 
 | # | Status | Item | Impact | Effort |
 |---|--------|------|--------|--------|
 | 1 | ✅ | **Exercise flags never reach the coach.** The client "flag + message coach" send is rejected by the API (missing `recipientId`, unknown `exerciseContext`), and the coach review UI is fed a hardcoded empty `exerciseFlags={[]}`. The README's north-star loop (review response *alongside flagged exercises*) doesn't work end-to-end. | Critical | M |
 | 2 | ✅ | **An unanswered check-in freezes the loop forever.** No expiry/reminder; a stale `PENDING` check-in permanently blocks the auto-scheduler (`checkin-schedule.ts`). The exact client you're worried about stops being checked on. | Critical | M |
-| 3 | ✅ | **UI promises notifications that don't exist.** "They'll get a notification…" — there was no notification system of any kind. Copy was softened first; there is now a real one for messages (Web Push via `lib/push.ts` + `public/sw.js`, plus in-app badges and toasts). Check-in and plan events still only notify in-app. | High (trust) | S |
+| 3 | ✅ | **UI promises notifications that don't exist.** "They'll get a notification…"; there was no notification system of any kind. Copy was softened first; there is now a real one for messages (Web Push via `lib/push.ts` + `public/sw.js`, plus in-app badges and toasts). Check-in and plan events still only notify in-app. | High (trust) | S |
 | 4 | ✅ | **API failures render as empty states.** Dashboard fetch error → "Getting Started" onboarding screen; client-profile fetch error → "Can't find this client". Most mutations swallow errors silently (`catch {}` + misleading "handled by apiFetch" comments). | High | S–M |
 | 5 | ✅ | **Plans are assigned by reference, not cloned.** Now clone-on-assign: each assignment creates the client's own copy (`sourceTemplateId` links it to the template). Editing a template affects future assignments only; editing from a client's profile tailors only that client. Pre-existing assignments keep legacy shared behavior until their next (re)assignment. | Critical | L |
-| 5a | ✅ | *Stopgap for #5:* block deleting a plan while it's assigned, and fix the false confirm copy. (Superseded by clone-on-assign — the 409 now only guards legacy direct assignments.) | High | S |
-| 5b | ✅ | *Follow-on defect in #5, found by end-to-end testing:* the `plans_coach_name_active_unique` index predates clone-on-assign and covers every live plan, so the **second** copy of any plan name collided — assigning one template to a second client (or re-running a finished block) died on a unique-constraint 500. The API layer already scoped the rule to templates; the index now agrees (`20260805_plan_name_unique_templates_only`). | Critical | S |
+| 5a | ✅ | *Stopgap for #5:* block deleting a plan while it's assigned, and fix the false confirm copy. (Superseded by clone-on-assign; the 409 now only guards legacy direct assignments.) | High | S |
+| 5b | ✅ | *Follow-on defect in #5, found by end-to-end testing:* the `plans_coach_name_active_unique` index predates clone-on-assign and covers every live plan, so the **second** copy of any plan name collided: assigning one template to a second client (or re-running a finished block) died on a unique-constraint 500. The API layer already scoped the rule to templates; the index now agrees (`20260805_plan_name_unique_templates_only`). | Critical | S |
 
-## P1 — High-impact gaps in daily coaching
+## P1: High-impact gaps in daily coaching
 
 | # | Status | Item | Impact | Effort |
 |---|--------|------|--------|--------|
 | 6 | ✅ | **Two divergent urgency systems.** Now one server-side definition (`lib/urgency.ts`) computed by both the dashboard and client-detail endpoints; the profile header consumes it. `client-status.ts` and its four orphaned consumers deleted. | High | M |
-| 7 | ✅ | "Check-in ready to review" ranks *below* "check-in due" on the dashboard — a client waiting on the coach sorts lower than one who hasn't answered. Also: at-risk masks a waiting response (only 1 check-in fetched per client). | High | S |
+| 7 | ✅ | "Check-in ready to review" ranks *below* "check-in due" on the dashboard: a client waiting on the coach sorts lower than one who hasn't answered. Also: at-risk masks a waiting response (only 1 check-in fetched per client). | High | S |
 | 8 | ✅ | **No "plan ended" state.** Client UI repeats the last week forever; week-overview API 404s and is swallowed; coach gets no "plan ends soon" warning. Highest-churn moment, unhandled. Now: `PLAN_ENDED` urgency + "Assign Next Plan" CTA, "final week" signal, client plan-complete celebration, unified week math. | High | M |
 | 9 | ✅ | **Coach can't see what actually happened.** Now: started-but-unfinished workouts appear in history ("Not finished"), and weight/rep deviations from the prescription show per workout ("Adjusted: Deadlift 185→155"). Flags on abandoned sessions surface in check-in review too. | High | M |
 | 10 | ✅ | **Double-send creates stacked check-ins.** `POST /api/check-ins` never checks for an open check-in; duplicates become invisible (UI shows only newest). Add a server-side guard. | High | S |
-| 11 | ✅ | **No edit/delete/cancel on check-ins.** Now: a still-unanswered check-in can be unsent — an Undo window right after sending, a two-step Unsend on the waiting card (workspace + standalone page), and the waiting card can be hidden until the client responds — and sent feedback is editable from check-in history (plan-adjustment flag and completion date preserved). | Medium | M |
+| 11 | ✅ | **No edit/delete/cancel on check-ins.** Now: a still-unanswered check-in can be unsent: an Undo window right after sending, a two-step Unsend on the waiting card (workspace + standalone page), and the waiting card can be hidden until the client responds. Sent feedback is editable from check-in history (plan-adjustment flag and completion date preserved). | Medium | M |
 | 12 | ⬜ | **"I'll adjust the plan" is untracked.** Client copy softened to "is adjusting" ✅; tracking actual follow-through (link the flag to a real plan edit, remind the coach) still open. | Medium | S–M |
 | 13 | ✅ | Silent message-send failure: input cleared before the request resolves, no maxLength (server caps 5000 → 400), no error toast. | High | S |
-| 14 | ✅ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false` — urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
-| 15 | ✅ | **Unread-message tracking neutralized** — fetching a thread marked everything read, so "N unread" never triggered, and the nav's `unreadCount` prop had no caller. Now: `GET /api/messages/unread` (per-thread counts, scoped to live relationships) drives nav badges on both apps, "N new" chips on the coach roster, and an in-app arrival toast; read-stamping stays scoped to an on-screen chat. | Medium | M |
-| 16 | ✅ | **Churned clients can't come back.** Re-signup 409s, no re-invite-existing-account flow — a returning client loses all history. "Win-back" is a core retention journey. Now: a signed-in client accepts an invite into their existing account (same coach or a new one), history intact. | High | L |
-| 17 | ⬜ | **No invite revocation/resend** ✅ (DELETE endpoint + "Revoke & new link" in the modal; regenerating replaces instead of stacking). Existing users can now accept an invite ✅. The invite can now be emailed from the modal ✅. Still by design: the link, not the address, is the credential — anyone holding it can redeem it. | Medium | M |
+| 14 | ✅ | **Coach app never refreshes.** No polling, `revalidateOnFocus: false`; urgency and new messages go stale in an open tab. (Client app polls every 30s.) | High | S |
+| 15 | ✅ | **Unread-message tracking neutralized**: fetching a thread marked everything read, so "N unread" never triggered, and the nav's `unreadCount` prop had no caller. Now: `GET /api/messages/unread` (per-thread counts, scoped to live relationships) drives nav badges on both apps, "N new" chips on the coach roster, and an in-app arrival toast; read-stamping stays scoped to an on-screen chat. | Medium | M |
+| 16 | ✅ | **Churned clients can't come back.** Re-signup 409s, no re-invite-existing-account flow; a returning client loses all history. "Win-back" is a core retention journey. Now: a signed-in client accepts an invite into their existing account (same coach or a new one), history intact. | High | L |
+| 17 | ⬜ | **No invite revocation/resend** ✅ (DELETE endpoint + "Revoke & new link" in the modal; regenerating replaces instead of stacking). Existing users can now accept an invite ✅. The invite can now be emailed from the modal ✅. Still by design: the link, not the address, is the credential; anyone holding it can redeem it. | Medium | M |
 
-## P2 — Scale, correctness, and polish
+## P2: Scale, correctness, and polish
 
 | # | Status | Item | Effort |
 |---|--------|------|--------|
@@ -50,13 +50,13 @@ Status: ✅ fixed on this branch · ⬜ open
 | 23 | ⬜ | Plan card Duplicate/Archive/Restore menu items exist but are never wired; `isTemplate`/`archivedAt` aren't DB fields; no way to copy a plan. | M |
 | 24 | ⬜ | No UI to add/remove weeks or reorder/delete days (`POST /plans/[id]/weeks` has no caller); can assign a fully empty plan with no warning. ("Rest days auto-calculated" copy fixed ✅.) | M |
 | 25 | ⬜ | Server validation looser than UI on check-ins (empty responses accepted, arbitrary body-feeling strings, mismatched length caps); several PUTs (`plans/[id]`, `days/[id]`, `workout-exercises/[id]`) skip zod entirely. | M |
-| 26 | ⬜ | Auto check-ins default OFF per client with no cron (lazy materialization only) — coaches likely assume weekly check-ins just happen. | S–M |
+| 26 | ⬜ | Auto check-ins default OFF per client with no cron (lazy materialization only); coaches likely assume weekly check-ins just happen. | S–M |
 | 27 | ⬜ | Concurrent plan edits are last-write-wins (no version check); sample client pollutes roster counts server-side; invite list capped at 20 with no pagination; "expired" invites never persisted (dead enum value). | M |
 | 28 | ⬜ | Termination is silent for the client (plan/chat vanish, no explanation); no read-only view of past-client conversation history despite "nothing is deleted" copy. | M |
 | 29 | ⬜ | Loading states are bare spinners (no skeletons); success/error feedback inconsistent across mutations. | M |
 | 30 | ⬜ | ~~No account deletion~~ ✅ (`DELETE /api/me` + account-menu dialog; ends relationships, revokes invites, scrubs the row); still open: one account can't be both coach and client; in-memory per-IP rate limiting resets per deploy. | M–L |
 
-## P3 — Dead code & drift (cleanup)
+## P3: Dead code & drift (cleanup)
 
 | # | Status | Item |
 |---|--------|------|
@@ -64,7 +64,7 @@ Status: ✅ fixed on this branch · ⬜ open
 | 32 | ⬜ | Three exercise datasets (`quick-start-exercises.ts`, `common-exercises.ts`, `exercise-library.ts`) with no single source of truth; the in-editor "Library" tab shows the static list, not the coach's real library. |
 | 33 | ⬜ | Two parallel coach check-in review UIs (standalone page vs inline workspace) with divergent status vocabularies and 4 copies of the feeling-label maps; two parallel status systems (`client-status.ts` vs dashboard route). Consolidate. |
 | 34 | ⬜ | Dead code: `EmptyStateNoneNeedAttention`/`EmptyStateAllNeedAttention`, `RecentMessagesSection` (superseded by ChatView), `plan-generator.ts` deep-copy util, `Plan.editedAt` written but never read, `ChatView` exercise-context card never populated. |
-| 35 | ⬜ | `TEST_CASES_PHASE_3_4.md` largely describes the orphaned localStorage-era UI — retire or rewrite against the shipped product. |
+| 35 | ⬜ | `TEST_CASES_PHASE_3_4.md` largely describes the orphaned localStorage-era UI; retire or rewrite against the shipped product. |
 
 ---
 

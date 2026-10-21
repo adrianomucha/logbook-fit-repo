@@ -60,7 +60,7 @@ LEAKED_FILE="$(git -C "$MIRROR" show "$LEAK_COMMIT:.mcp.json")"
 
 COUNT="$(grep -c . "$REPLACEMENTS" || true)"
 if [[ "$COUNT" -eq 0 ]]; then
-  echo "no secrets found in $LEAK_COMMIT:.mcp.json — nothing to scrub (already rewritten?)" >&2
+  echo "no secrets found in $LEAK_COMMIT:.mcp.json; nothing to scrub (already rewritten?)" >&2
   exit 1
 fi
 echo "redacting $COUNT secret value(s) across all history"

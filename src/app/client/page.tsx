@@ -11,7 +11,7 @@ export default function ClientPage() {
         <ClientDashboard />
       </Suspense>
       {/* Home surface only — never over a live workout or a check-in form. */}
-      <InstallPrompt />
+      <InstallPrompt audience="client" />
     </>
   );
 }

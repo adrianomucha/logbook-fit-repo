@@ -2,7 +2,7 @@
 
 A ready-made coach account to open on a setup or sales call with a coach, so
 the product can be shown with a real roster instead of an empty dashboard.
-Everything in it is ordinary data going through the ordinary UI — nothing is
+Everything in it is ordinary data going through the ordinary UI; nothing is
 mocked, and anything done live on the call (replying to a check-in, assigning
 a plan, sending a message) behaves exactly as it would for a paying coach.
 
@@ -10,11 +10,11 @@ a plan, sending a message) behaves exactly as it would for a paying coach.
 
 | | |
 |---|---|
-| Coach | **Jamie Porter** — `jamie@demo.logbook.fit` |
-| Client to show | **Daniel Kim** — `daniel@demo.logbook.fit`, also one click away via the account menu's *Switch to client* |
+| Coach | **Jamie Porter** (`jamie@demo.logbook.fit`) |
+| Client to show | **Daniel Kim** (`daniel@demo.logbook.fit`), also one click away via the account menu's *Switch to client* |
 | Password | Set when the seed is run (`DEMO_CALL_PASSWORD`). It is never stored in this repo. Both accounts share it. |
 
-These accounts are real, unlocked accounts — they are *not* the seeded
+These accounts are real, unlocked accounts; they are *not* the seeded
 `coach@logbook.fit` demo, which is locked on every deployed build. They work
 on production.
 
@@ -46,18 +46,18 @@ the dashboard, top to bottom:
 |---|---|---|---|
 | **Priya Nair** | Signed up from an invite yesterday. No plan, no message from Jamie yet. | Needs plan · *Say hello* | Invite-based onboarding and the first-plan moment |
 | **Tom Becker** | Finished the 8-week Hypertrophy Block on Saturday. Asked for the next one; unread message this morning. | Plan ended · *Assign Next Plan* | Catching the highest-churn moment after a block ends |
-| **Marcus Reid** | Week 4 of the Strength Block. Nothing logged since week 2, a check-in he has ignored for 6 days, Jamie's last message unread. | At risk · *Send Reminder* | The quiet client — the whole reason the product exists |
+| **Marcus Reid** | Week 4 of the Strength Block. Nothing logged since week 2, a check-in he has ignored for 6 days, Jamie's last message unread. | At risk · *Send Reminder* | The quiet client: the whole reason the product exists |
 | **Sofia Alvarez** | Week 3, trains every session. Answered her check-in 2 hours ago with a knee complaint; she also flagged Bulgarian split squats last week and cut the last set to 6 reps. Unread message. | Awaiting response · *Review Check-in* | The check-in loop, with the flag and the set data lined up next to her words |
-| **Daniel Kim** | Week 2 of Foundations. Check-in sent this morning, not yet answered. | Check-in due | The client's side — this is the account to switch into |
+| **Daniel Kim** | Week 2 of Foundations. Check-in sent this morning, not yet answered. | Check-in due | The client's side; this is the account to switch into |
 | **Hannah Brooks** | Week 5 of 6, four clean weeks, a bench PR, four completed check-ins. | On track | Progress and history for a client who is doing well |
 | **Leo Fischer** | Week 3 of Foundations, quietly consistent. | On track | A second on-track client so the list looks like a real roster |
 | **Emily Sato** | Ended the relationship three weeks ago. | *Past clients* only | The archive |
 | *Chris Doyle* | Invited two days ago, has not signed up. | Pending invite | The invite list |
 
 Jamie's library is the 25 Quick Start exercises plus five of her own, several
-with coaching cues. There are three plan templates — *Strength Block —
-Upper/Lower* (6 weeks × 4 days), *Foundations — 3 days* (4 weeks) and
-*Hypertrophy Block — 4 days* (8 weeks). Every client is on their own copy
+with coaching cues. There are three plan templates: *Strength Block:
+Upper/Lower* (6 weeks × 4 days), *Foundations: 3 days* (4 weeks) and
+*Hypertrophy Block: 4 days* (8 weeks). Every client is on their own copy
 (clone-on-assign), so editing a template on the call never touches anyone's
 current plan.
 
@@ -65,13 +65,13 @@ current plan.
 
 Log in as Jamie before the call. Keep the browser on the dashboard.
 
-1. **Dashboard — "who needs you today"** (2 min). Read the list top to
+1. **Dashboard: "who needs you today"** (2 min). Read the list top to
    bottom without clicking: new client, ended plan, at-risk, check-in to
    review, check-in due, then everyone on track. Point at the unread chat
    badge (Tom and Sofia). The pitch: the app has already done the triage.
 
 2. **Review a check-in** (4 min). Open Sofia → *Review Check-in*. Her effort
-   rating, her words about the knee, and — right next to them — the flagged
+   rating, her words about the knee, and, right next to them, the flagged
    split squat and the set she cut short. Reply live ("swap split squats for
    leg press for two weeks, keep everything else"), tick *I'll adjust the
    plan*, send. Back on the dashboard she has dropped to on track.

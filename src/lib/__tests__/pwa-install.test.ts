@@ -3,6 +3,7 @@ import {
   detectInstallMethod,
   hasBeenOffered,
   isIOS,
+  isMacSafari,
   isRunningInstalled,
   markOffered,
   parseInstallPromptState,
@@ -35,6 +36,13 @@ const UA = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   macSafari:
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+  // Safari 16: no Add to Dock.
+  macSafari16:
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15",
+  macChrome:
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  macFirefox:
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:120.0) Gecko/20100101 Firefox/120.0",
   androidChrome:
     "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Mobile Safari/537.36",
 };
@@ -65,6 +73,25 @@ describe("isIOS", () => {
 
   it("does not match Android", () => {
     expect(isIOS(UA.androidChrome, 5)).toBe(false);
+  });
+});
+
+describe("isMacSafari", () => {
+  it("matches Safari 17+ on a Mac", () => {
+    expect(isMacSafari(UA.macSafari, 0)).toBe(true);
+  });
+
+  it("skips Safari 16, which has no Add to Dock", () => {
+    expect(isMacSafari(UA.macSafari16, 0)).toBe(false);
+  });
+
+  it("does not match Chrome or Firefox on a Mac", () => {
+    expect(isMacSafari(UA.macChrome, 0)).toBe(false);
+    expect(isMacSafari(UA.macFirefox, 0)).toBe(false);
+  });
+
+  it("does not match an iPad in desktop mode", () => {
+    expect(isMacSafari(UA.ipadDesktopMode, 5)).toBe(false);
   });
 });
 
@@ -122,9 +149,39 @@ describe("detectInstallMethod", () => {
     ).toBe("none");
   });
 
-  it("stays silent on desktop Safari, which has no install path here", () => {
+  it("keeps Mac Safari out of the client banner, since clients install on their phone", () => {
     expect(
       detectInstallMethod(snapshot({ userAgent: UA.macSafari, maxTouchPoints: 0 }))
+    ).toBe("none");
+  });
+
+  it("walks a coach on Mac Safari through Add to Dock", () => {
+    expect(
+      detectInstallMethod(snapshot({ userAgent: UA.macSafari, maxTouchPoints: 0 }), "coach")
+    ).toBe("macos-safari");
+  });
+
+  it("still treats an iPad in desktop mode as iOS for coaches", () => {
+    expect(
+      detectInstallMethod(snapshot({ userAgent: UA.ipadDesktopMode, maxTouchPoints: 5 }), "coach")
+    ).toBe("ios-safari");
+  });
+
+  it("prefers Chrome's own install dialog on a Mac", () => {
+    expect(
+      detectInstallMethod(
+        snapshot({ userAgent: UA.macChrome, maxTouchPoints: 0, hasNativePrompt: true }),
+        "coach"
+      )
+    ).toBe("native");
+  });
+
+  it("never prompts a coach already running the Dock app", () => {
+    expect(
+      detectInstallMethod(
+        snapshot({ userAgent: UA.macSafari, maxTouchPoints: 0, displayModeStandalone: true }),
+        "coach"
+      )
     ).toBe("none");
   });
 

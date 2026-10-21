@@ -7,7 +7,7 @@ Never hardcode API keys, tokens, passwords, or credentials in source code. This 
 - Connection strings with embedded passwords
 - Private keys or certificates in the repo
 
-If a secret was ever committed to Git history, consider it compromised — deleting the file doesn't remove it from history. The key must be rotated immediately. Run `gitleaks detect` to scan for leaked secrets.
+If a secret was ever committed to Git history, consider it compromised; deleting the file doesn't remove it from history. The key must be rotated immediately. Run `gitleaks detect` to scan for leaked secrets.
 
 ## Client-Side Environment Variable Prefixes
 

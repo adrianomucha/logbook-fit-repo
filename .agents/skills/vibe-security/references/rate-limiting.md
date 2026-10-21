@@ -4,20 +4,20 @@
 
 Every one of these endpoints needs rate limiting. AI assistants almost never add it:
 
-- **Auth endpoints** — login, register, password reset, OTP verification, magic link. Without limits, attackers can brute-force passwords or enumerate accounts.
-- **AI API calls** — Any endpoint that calls OpenAI, Anthropic, or similar. A single user can drain your entire monthly budget in minutes.
-- **Email / SMS sending** — Attackers can use your app as a spam relay.
-- **File processing** — Upload, resize, convert. CPU-intensive operations without limits enable denial-of-service.
-- **Webhook-like endpoints** — Anything accepting external input at scale.
+- **Auth endpoints**: login, register, password reset, OTP verification, magic link. Without limits, attackers can brute-force passwords or enumerate accounts.
+- **AI API calls**: Any endpoint that calls OpenAI, Anthropic, or similar. A single user can drain your entire monthly budget in minutes.
+- **Email / SMS sending**: Attackers can use your app as a spam relay.
+- **File processing**: Upload, resize, convert. CPU-intensive operations without limits enable denial-of-service.
+- **Webhook-like endpoints**: Anything accepting external input at scale.
 
 ## Don't Store Rate Limits in Public Tables
 
 If rate limit counters live in a Supabase public table, users can reset their own counters via the REST API. Use:
 
-- **Upstash Redis** — Serverless Redis with built-in rate limiting primitives
-- **Private schema table** — Not exposed via PostgREST
-- **Middleware-level limiting** — At the edge or API gateway
-- **In-memory stores** — For single-server deployments (Redis for multi-server)
+- **Upstash Redis**: Serverless Redis with built-in rate limiting primitives
+- **Private schema table**: Not exposed via PostgREST
+- **Middleware-level limiting**: At the edge or API gateway
+- **In-memory stores**: For single-server deployments (Redis for multi-server)
 
 ## Combine Per-IP and Per-User Limiting
 

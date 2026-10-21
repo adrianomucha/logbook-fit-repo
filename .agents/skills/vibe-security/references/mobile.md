@@ -2,7 +2,7 @@
 
 ## No Secrets in the JavaScript Bundle
 
-All API keys and secrets in the JavaScript bundle are extractable — even with Hermes bytecode compilation. The bundle is a file on the device that can be read, decompiled, and searched for strings.
+All API keys and secrets in the JavaScript bundle are extractable, even with Hermes bytecode compilation. The bundle is a file on the device that can be read, decompiled, and searched for strings.
 
 - `react-native-config` values are baked into the bundle at build time. They are not secret.
 - `EXPO_PUBLIC_` values are baked into the bundle at build time. They are not secret.
@@ -26,7 +26,7 @@ const response = await fetch('https://your-api.com/ai/chat', {
 ## Secure Token Storage
 
 - **Use `expo-secure-store`** (Expo) or **`react-native-keychain`** (bare React Native) for auth tokens.
-- **Never use `AsyncStorage`** — it's unencrypted plaintext on disk. On a rooted/jailbroken device, tokens are trivially readable.
+- **Never use `AsyncStorage`**: it's unencrypted plaintext on disk. On a rooted/jailbroken device, tokens are trivially readable.
 
 ```typescript
 // BAD: plaintext on disk
