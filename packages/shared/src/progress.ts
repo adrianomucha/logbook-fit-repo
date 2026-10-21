@@ -6,8 +6,8 @@ import type { WeightUnit } from './weight-units';
 /**
  * The Progress tab's pure logic, shared by web and app: this week as a
  * sentence, and the story of the client's training told as the moments
- * worth noticing — bests, streaks, finished weeks, milestones, notes from
- * the coach — with ordinary workouts folded in between.
+ * worth noticing (bests, streaks, finished weeks, milestones, notes from
+ * the coach) with ordinary workouts folded in between.
  *
  * Built for adherence, not reporting: there's always a next step, every
  * win gets its own line, and a missed week leaves no scar on the page.
@@ -42,7 +42,7 @@ function sessionName(completion: WorkoutCompletion, plans: WorkoutPlan[]): strin
   return getWorkoutDisplayName(week?.days[dayIndex], dayIndex, completion);
 }
 
-/** The first workout of the plan's week not yet done — "next up". Null when the week is done or unknown. */
+/** The first workout of the plan's week not yet done: "next up". Null when the week is done or unknown. */
 export function nextWorkoutName(plan: WorkoutPlan | null, weekNumber: number | null, completions: WorkoutCompletion[]): string | null {
   const week = plan?.weeks.find((w) => w.weekNumber === weekNumber);
   if (!week) return null;
@@ -67,7 +67,7 @@ export interface ThisWeek {
   slots: WeekSlot[];
   /** The bold half of the sentence: "1 down." */
   lead: string;
-  /** The quiet half: "3 to go — next up, Lower A." */
+  /** The quiet half: "3 to go. Next up, Lower A." */
   rest: string;
 }
 
@@ -96,7 +96,7 @@ export function describeThisWeek(
   }
   if (completed > 0) {
     const left = target - completed;
-    return { ...base, lead: `${completed} down.`, rest: `${left} to go${nextUp ? ` — next up, ${nextUp}.` : '.'}` };
+    return { ...base, lead: `${completed} down.`, rest: `${left} to go${nextUp ? `. Next up, ${nextUp}.` : '.'}` };
   }
   if (sessions.length === 0) {
     return { ...base, lead: 'Fresh start.', rest: nextUp ? `First up, ${nextUp}.` : 'Your first workout kicks things off.' };
@@ -110,7 +110,7 @@ export type MomentKind = 'best' | 'streak' | 'week' | 'milestone' | 'comeback' |
 export interface Moment {
   key: string;
   kind: MomentKind;
-  /** ISO time it happened — the feed is newest first */
+  /** ISO time it happened; the feed is newest first */
   at: string;
   /** "Today" · "Yesterday" · "Sunday" · "Oct 11"; empty for folded workouts */
   when: string;
@@ -188,7 +188,7 @@ export function buildProgressStory({
     const bests = bestsBySession.get(c.id) ?? [];
     if (bests.length === 1) {
       const [b] = bests;
-      mark({ key: `best-${c.id}`, kind: 'best', title: `New best on ${b.exerciseName}`, detail: `${formatBestValue(b, weightUnit)} — ${formatBestGain(b, weightUnit)}` });
+      mark({ key: `best-${c.id}`, kind: 'best', title: `New best on ${b.exerciseName}`, detail: `${formatBestValue(b, weightUnit)}, ${formatBestGain(b, weightUnit)}` });
     } else if (bests.length > 1) {
       mark({ key: `best-${c.id}`, kind: 'best', title: `${bests.length} new bests in ${name}`, detail: listNames(bests.map((b) => b.exerciseName)) });
     }
@@ -210,7 +210,7 @@ export function buildProgressStory({
     }
   });
 
-  // Weeks in a row — a line when a run reaches a milestone, on that week's first session
+  // Weeks in a row: a line when a run reaches a milestone, on that week's first session
   const firstInWeek = new Map<number, WorkoutCompletion>();
   for (const c of sessions) {
     const week = weekStartOf(c.completedAt!).getTime();
@@ -244,7 +244,7 @@ export function buildProgressStory({
     }
   }
 
-  // Every session of a plan week done — on the one that finished it
+  // Every session of a plan week done, marked on the one that finished it
   for (const plan of plans) {
     for (const week of plan.weeks) {
       if (week.days.length === 0) continue;
@@ -264,7 +264,7 @@ export function buildProgressStory({
     }
   }
 
-  // The coach's replies — progress the client can tie to their coach
+  // The coach's replies: progress the client can tie to their coach
   for (const ci of checkIns) {
     if (ci.status !== 'completed' || !ci.coachResponse?.trim() || !ci.completedAt) continue;
     moments.push(moment({ key: `coach-${ci.id}`, kind: 'coach', at: ci.completedAt, title: `${firstName(coachName)} on your check-in`, detail: ci.coachResponse.trim() }));

@@ -60,7 +60,7 @@ const DOT: Record<MomentKind, string> = {
   quiet: 'border-muted-foreground/40 bg-background',
 };
 
-/** "+ 2 workouts" — opens to list them, so nothing logged is out of reach */
+/** "+ 2 workouts": opens to list them, so nothing logged is out of reach */
 function QuietRow({ moment }: { moment: Moment }) {
   const [open, setOpen] = useState(false);
   const Chevron = open ? ChevronUp : ChevronDown;
@@ -85,7 +85,7 @@ function QuietRow({ moment }: { moment: Moment }) {
   );
 }
 
-/** The story of the client's training — only the moments worth noticing, newest first. The app's ProgressStory. */
+/** The story of the client's training: only the moments worth noticing, newest first. The app's ProgressStory. */
 export function ProgressStory({ moments }: { moments: Moment[] }) {
   const [showAll, setShowAll] = useState(false);
   if (moments.length === 0) {

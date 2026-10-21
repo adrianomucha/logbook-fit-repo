@@ -72,7 +72,7 @@ describe('describeThisWeek', () => {
         { state: 'upcoming', label: '' },
       ],
       lead: '1 down.',
-      rest: '3 to go — next up, Lower.',
+      rest: '3 to go. Next up, Lower.',
     });
     expect(describeThisWeek(c, 4, null, now).rest).toBe('3 to go.');
   });
@@ -122,7 +122,7 @@ describe('buildProgressStory', () => {
   it('names a single best with its gain, and groups several from one session', () => {
     const c = [done('2026-09-01T10:00:00'), done('2026-09-29T10:00:00', { id: 'x', weekId: 'w1', dayId: 'up' })];
     const one = story(c, { personalBests: [best('x', '2026-09-29T10:00:00', 'Bench Press')] });
-    expect(one[0]).toMatchObject({ kind: 'best', when: 'Yesterday', title: 'New best on Bench Press', detail: '185 lb × 5 — up 5 lb' });
+    expect(one[0]).toMatchObject({ kind: 'best', when: 'Yesterday', title: 'New best on Bench Press', detail: '185 lb × 5, up 5 lb' });
     const many = story(c, {
       personalBests: ['Bench Press', 'Row', 'Squat', 'Dip'].map((e) => best('x', '2026-09-29T10:00:00', e)),
     });

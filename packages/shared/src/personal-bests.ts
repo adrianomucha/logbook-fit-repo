@@ -123,7 +123,7 @@ export function formatBestValue(
   return `${best.reps} reps`;
 }
 
-/** "up 5 lb" · "one more rep" · "3 more reps" · "15s longer" — weight in the viewer's unit */
+/** "up 5 lb" · "one more rep" · "3 more reps" · "15s longer", weight in the viewer's unit */
 export function formatBestGain(
   best: Pick<PersonalBest, "kind" | "delta" | "weight">,
   unit: WeightUnit,

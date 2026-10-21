@@ -21,7 +21,7 @@ interface ProgressHistoryProps {
 
 /**
  * The Progress tab: this week as circles and a sentence that ends on the
- * next workout, then the story — only the moments worth noticing. The
+ * next workout, then the story: only the moments worth noticing. The
  * shared helpers keep the wording identical to the app.
  */
 export function ProgressHistory({

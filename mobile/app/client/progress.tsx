@@ -12,7 +12,7 @@ import { Eyebrow, LoadingScreen } from '@/components/ui';
 import { ProgressStory, WeekCircles } from '@/components/progress/ProgressStory';
 
 /**
- * The Progress tab — the web's ProgressHistory. This week as circles and a
+ * The Progress tab, the web's ProgressHistory. This week as circles and a
  * sentence that ends on the next workout, then the story: only the moments
  * worth noticing. Leaving a coach lives in Settings → Account.
  */
