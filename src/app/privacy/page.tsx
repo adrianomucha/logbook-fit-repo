@@ -199,8 +199,9 @@ export default function PrivacyPage() {
       <LegalSection title="How long we keep it">
         <p>
           We keep your data while your account is active. You can delete your
-          account yourself from the account menu: your name, email, and
-          profile photo are removed and your notification tokens are deleted.
+          account yourself from the account menu: your name, email, profile
+          photo, and coach bio are removed and your notification tokens are
+          deleted.
           Workouts, check-ins, and messages you shared with a coach or client
           stay on record under &ldquo;Deleted account&rdquo;, so their history
           doesn&rsquo;t develop holes, and

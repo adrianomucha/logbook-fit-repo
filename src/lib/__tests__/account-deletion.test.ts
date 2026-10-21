@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const tx = vi.hoisted(() => ({
   user: { findFirst: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
   clientInvite: { updateMany: vi.fn() },
+  coachProfile: { update: vi.fn() },
   pushSubscription: { deleteMany: vi.fn() },
   // Used by endCoachClientRelationshipIn
   coachClientRelationship: { update: vi.fn() },
@@ -97,6 +98,10 @@ describe("deleteAccount", () => {
     expect(tx.clientInvite.updateMany).toHaveBeenCalledWith({
       where: { coachId: "coach-1", status: "PENDING" },
       data: { status: "EXPIRED" },
+    });
+    expect(tx.coachProfile.update).toHaveBeenCalledWith({
+      where: { id: "coach-1" },
+      data: { bio: null },
     });
   });
 
