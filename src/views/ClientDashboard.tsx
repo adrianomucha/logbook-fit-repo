@@ -660,7 +660,8 @@ export function ClientDashboard() {
               checkIns={checkIns}
               coachName={coach?.user.name}
               totalWorkouts={progress?.stats.totalWorkouts}
-              weekNumber={weekOverview?.weekNumber ?? null}
+              // Once the plan has ended the week overview stays on its final week; that isn't this week
+              weekNumber={weekOverview && !weekOverview.planEnded ? weekOverview.weekNumber : null}
             />
           </>
         )}

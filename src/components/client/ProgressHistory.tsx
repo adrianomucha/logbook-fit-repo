@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { WorkoutPlan, WorkoutCompletion, CheckIn } from '@/types';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { ProgressStory, WeekCircles } from './progress/ProgressStory';
-import { buildProgressStory, describeThisWeek, nextWorkoutName } from '@logbook/shared/progress';
+import { buildProgressStory, describeThisWeek } from '@logbook/shared/progress';
 import type { PersonalBest } from '@logbook/shared/personal-bests';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -17,7 +17,7 @@ interface ProgressHistoryProps {
   coachName?: string | null;
   /** All-time finished workouts; the completions only reach back a year */
   totalWorkouts?: number;
-  /** The plan week it is now (the week overview's), for "next up" */
+  /** The plan week it is now (the week overview's); null once the plan has ended */
   weekNumber: number | null;
 }
 
@@ -39,7 +39,7 @@ export function ProgressHistory({
   const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
   const { weightUnit } = useCurrentUser();
   const week = useMemo(
-    () => describeThisWeek(workoutCompletions, target, nextWorkoutName(plan, weekNumber, workoutCompletions)),
+    () => describeThisWeek({ plan, weekNumber, completions: workoutCompletions, target }),
     [workoutCompletions, target, plan, weekNumber]
   );
   const moments = useMemo(

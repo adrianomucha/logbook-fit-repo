@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildProgressStory, describeThisWeek, formatMomentWhen, nextWorkoutName } from '../progress';
+import { buildProgressStory, describeThisWeek, formatMomentWhen } from '../progress';
 import type { PersonalBest } from '../personal-bests';
 import { MAX_SESSION_SEC, finishedSessionSec, plausibleSessionSec } from '../session-duration';
 import type { WorkoutCompletion, WorkoutPlan } from '../types';
@@ -45,48 +45,55 @@ describe('session duration', () => {
   });
 });
 
-describe('nextWorkoutName', () => {
-  it("names the week's first workout not yet done", () => {
-    expect(nextWorkoutName(plan, 1, [])).toBe('Upper');
-    expect(nextWorkoutName(plan, 1, [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' })])).toBe('Lower');
-  });
-
-  it('is null when the week is done or unknown', () => {
-    const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' }), done('2026-09-29T11:00:00', { weekId: 'w1', dayId: 'lo' })];
-    expect(nextWorkoutName(plan, 1, c)).toBeNull();
-    expect(nextWorkoutName(plan, 9, [])).toBeNull();
-    expect(nextWorkoutName(null, 1, [])).toBeNull();
-  });
-});
-
 describe('describeThisWeek', () => {
-  it('counts this week and always points at the next workout', () => {
-    const c = [done('2026-09-29T10:00:00'), done('2026-09-24T10:00:00')];
-    expect(describeThisWeek(c, 4, 'Lower', now)).toEqual({
+  const week = (completions: WorkoutCompletion[], weekNumber: number | null = 1, target = 4) =>
+    describeThisWeek({ plan, weekNumber, completions, target, now });
+
+  it("counts the plan week's workouts, like the Today tab, and points at the next one", () => {
+    const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' })];
+    expect(week(c)).toEqual({
       completed: 1,
-      target: 4,
+      target: 2,
       slots: [
         { state: 'done', label: 'Tue' },
         { state: 'next', label: 'Next' },
-        { state: 'upcoming', label: '' },
-        { state: 'upcoming', label: '' },
       ],
       lead: '1 down.',
-      rest: '3 to go. Next up, Lower.',
+      rest: '1 to go. Next up, Lower.',
     });
-    expect(describeThisWeek(c, 4, null, now).rest).toBe('3 to go.');
+  });
+
+  it('counts a plan-week workout done before Monday, which a calendar count would miss', () => {
+    // Upper finished last Sunday, still the plan's week 1
+    const c = [done('2026-09-27T10:00:00', { weekId: 'w1', dayId: 'up' })];
+    expect(week(c)).toMatchObject({ completed: 1, lead: '1 down.', rest: '1 to go. Next up, Lower.' });
+  });
+
+  it('fills circles in the order workouts were done, and names the first one left', () => {
+    const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'lo' })];
+    expect(week(c)).toMatchObject({ lead: '1 down.', rest: '1 to go. Next up, Upper.' });
+  });
+
+  it('calls a finished plan week done', () => {
+    const c = [done('2026-09-28T10:00:00', { weekId: 'w1', dayId: 'up' }), done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'lo' })];
+    expect(week(c)).toMatchObject({ lead: 'All 2 done.', rest: 'Week complete. Rest up.' });
+    expect(week(c).slots.map((s) => s.state)).toEqual(['done', 'done']);
   });
 
   it('opens a week and a first week differently', () => {
-    expect(describeThisWeek([done('2026-09-24T10:00:00')], 4, 'Upper', now)).toMatchObject({ lead: 'New week.', rest: 'First up, Upper.' });
-    expect(describeThisWeek([], 4, null, now)).toMatchObject({ lead: 'Fresh start.', rest: 'Your first workout kicks things off.' });
+    expect(week([done('2026-09-24T10:00:00')])).toMatchObject({ lead: 'New week.', rest: 'First up, Upper.' });
+    expect(week([])).toMatchObject({ lead: 'Fresh start.', rest: 'First up, Upper.' });
   });
 
-  it('calls a full week done', () => {
-    const c = ['2026-09-28T10:00:00', '2026-09-29T10:00:00', '2026-09-30T08:00:00'].map((d) => done(d));
-    expect(describeThisWeek(c, 3, null, now)).toMatchObject({ lead: 'All 3 done.', rest: 'Week complete. Rest up.' });
-    expect(describeThisWeek(c, 3, null, now).slots.map((s) => s.state)).toEqual(['done', 'done', 'done']);
-    expect(describeThisWeek(c, 2, null, now).lead).toBe('3 done.');
+  it('without a plan week, counts sessions since Monday against the target', () => {
+    const c = [done('2026-09-29T10:00:00'), done('2026-09-24T10:00:00')];
+    expect(week(c, 9)).toMatchObject({ completed: 1, target: 4, lead: '1 down.', rest: '3 to go.' });
+    expect(describeThisWeek({ plan: null, weekNumber: null, completions: [], target: 4, now })).toMatchObject({
+      lead: 'Fresh start.',
+      rest: 'Your first workout kicks things off.',
+    });
+    const three = ['2026-09-28T10:00:00', '2026-09-29T10:00:00', '2026-09-30T08:00:00'].map((d) => done(d));
+    expect(week(three, 9, 2).lead).toBe('3 done.');
   });
 });
 

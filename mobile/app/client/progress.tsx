@@ -3,7 +3,7 @@ import { Text, View } from 'react-native';
 import type { WorkoutPlan } from '@logbook/shared/types';
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@logbook/shared/workout-helpers';
-import { buildProgressStory, describeThisWeek, nextWorkoutName } from '@logbook/shared/progress';
+import { buildProgressStory, describeThisWeek } from '@logbook/shared/progress';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
 import { useClientCheckIns, useClientProgress } from '@/hooks/useCheckIns';
@@ -32,9 +32,11 @@ export default function ProgressScreen() {
 
   // Same shared helpers as the web's ProgressHistory, so both tell the same story
   const target = plan?.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
+  // Once the plan has ended the week overview stays on its final week; that isn't this week
+  const weekNumber = weekOverview && !weekOverview.planEnded ? weekOverview.weekNumber : null;
   const week = useMemo(
-    () => describeThisWeek(completions, target, nextWorkoutName(plan, weekOverview?.weekNumber ?? null, completions)),
-    [completions, target, plan, weekOverview]
+    () => describeThisWeek({ plan, weekNumber, completions, target }),
+    [completions, target, plan, weekNumber]
   );
   const moments = useMemo(
     () =>

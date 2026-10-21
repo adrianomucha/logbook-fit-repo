@@ -1,6 +1,5 @@
 import { Text, View } from 'react-native';
 import type { WeekDayInfo } from '@logbook/shared/workout-week-helpers';
-import { getWeekProgress } from '@logbook/shared/workout-week-helpers';
 import { Eyebrow } from '@/components/ui';
 import { WeekList } from './WeekList';
 
@@ -12,11 +11,8 @@ interface WeekOverviewProps {
   onOpenDay: (day: WeekDayInfo) => void;
 }
 
-/** The "This week" view: week header, progress strip, and the day checklist — the web's WeeklyOverview. */
+/** The "This week" view: week header and the day checklist, the web's WeeklyOverview. */
 export function WeekOverview({ planName, weekNumber, durationWeeks, days, onOpenDay }: WeekOverviewProps) {
-  const { completed, total } = getWeekProgress(days);
-  const remaining = days.filter((d) => d.status !== 'COMPLETED').length;
-
   if (days.length === 0) {
     return (
       <View className="items-center py-12">
@@ -38,22 +34,8 @@ export function WeekOverview({ planName, weekNumber, durationWeeks, days, onOpen
         </Text>
       </View>
 
-      <View className="rounded-xl bg-muted/40 p-4">
-        <View className="mb-3 flex-row items-baseline justify-between">
-          <View className="flex-row items-baseline gap-1.5">
-            <Text className="font-mono-bold text-2xl leading-7 text-foreground">{completed}</Text>
-            <Text className="font-mono-bold text-sm text-muted-foreground">/ {total}</Text>
-            <Eyebrow className="ml-1">done</Eyebrow>
-          </View>
-          <Eyebrow>{remaining} to go</Eyebrow>
-        </View>
-        <View className="flex-row gap-1.5" accessibilityRole="image" accessibilityLabel={`${completed} of ${total} workouts completed`}>
-          {Array.from({ length: total }).map((_, i) => (
-            <View key={i} className={`h-2.5 flex-1 rounded-full ${i < completed ? 'bg-brand' : 'bg-muted-foreground/15'}`} />
-          ))}
-        </View>
-      </View>
-
+      {/* No progress bar here: the checklist shows what's done, and the
+          Progress tab's stepper is the one place the week is counted */}
       <WeekList days={days} onOpenDay={onOpenDay} />
     </View>
   );
