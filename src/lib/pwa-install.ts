@@ -20,7 +20,7 @@ export type InstallMethod =
   | 'ios-safari'
   /** Chrome/Edge/Firefox/Orion on iOS 16.4+ — Share lives in their own menu. */
   | 'ios-browser'
-  /** Safari 17+ on a Mac — File ▸ Add to Dock (macOS Sonoma and later). */
+  /** Safari 17+ on a Mac: File ▸ Add to Dock (macOS Sonoma and later). */
   | 'macos-safari'
   /** Already installed, no install path, or already offered. Render nothing. */
   | 'none';
@@ -102,7 +102,7 @@ function isRealIOSSafari(userAgent: string): boolean {
 }
 
 /**
- * Safari on a Mac, version 17 or later — the first with Add to Dock. Chrome,
+ * Safari on a Mac, version 17 or later, the first with Add to Dock. Chrome,
  * Edge and Firefox on macOS carry no `Version/` token, so the Safari check
  * alone tells them apart. The UA can't say which macOS it runs on (it is frozen
  * at 10_15_7), so Safari 17 on Ventura still lands here; the steps name

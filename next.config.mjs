@@ -51,7 +51,7 @@ const nextConfig = {
   transpilePackages: ["@logbook/shared"],
   eslint: { dirs: ["src", "packages"] },
   // Next 15 streams metadata into <body> for browsers it doesn't recognize as
-  // bots, but Chrome only reads <link rel="manifest"> from <head> — so it
+  // bots, but Chrome only reads <link rel="manifest"> from <head>, so it
   // never saw the manifest and never offered to install the app (no address
   // bar install icon, no beforeinstallprompt for InstallPrompt). Matching
   // every user agent puts metadata back in <head> for everyone. Our metadata

@@ -36,7 +36,7 @@ const UA = {
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   macSafari:
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
-  // Safari 16 — no Add to Dock.
+  // Safari 16: no Add to Dock.
   macSafari16:
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15",
   macChrome:
@@ -149,7 +149,7 @@ describe("detectInstallMethod", () => {
     ).toBe("none");
   });
 
-  it("keeps Mac Safari out of the client banner — clients install on their phone", () => {
+  it("keeps Mac Safari out of the client banner, since clients install on their phone", () => {
     expect(
       detectInstallMethod(snapshot({ userAgent: UA.macSafari, maxTouchPoints: 0 }))
     ).toBe("none");

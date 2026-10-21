@@ -60,45 +60,45 @@ const COPY: Record<InstallAudience, Record<Exclude<InstallMethod, 'none'>, Copy>
   client: {
     native: {
       title: 'Install Logbook',
-      body: 'Keep it on your device — opens straight to your workout.',
+      body: 'Keep it on your device. Opens straight to your workout.',
       cta: 'Install',
     },
     'ios-safari': {
       title: HOME_SCREEN_TITLE,
-      body: 'Opens straight to your workout — no browser, no searching.',
+      body: 'Opens straight to your workout. No browser, no searching.',
       cta: 'Show me how',
     },
     'ios-browser': {
       title: HOME_SCREEN_TITLE,
-      body: 'Opens straight to your workout — no browser, no searching.',
+      body: 'Opens straight to your workout. No browser, no searching.',
       cta: 'Show me how',
     },
     // Never resolved for clients (see InstallAudience); here for the type.
     'macos-safari': {
       title: 'Add Logbook to your Dock',
-      body: 'Opens straight to your workout — no browser, no searching.',
+      body: 'Opens straight to your workout. No browser, no searching.',
       cta: 'Show me how',
     },
   },
   coach: {
     native: {
       title: 'Install Logbook',
-      body: 'Your clients in their own window, one click away — no tab to dig for.',
+      body: 'Your clients in their own window, one click away. No tab to dig for.',
       cta: 'Install',
     },
     'ios-safari': {
       title: HOME_SCREEN_TITLE,
-      body: 'Check-ins and messages one tap away — no browser, no searching.',
+      body: 'Check-ins and messages one tap away. No browser, no searching.',
       cta: 'Show me how',
     },
     'ios-browser': {
       title: HOME_SCREEN_TITLE,
-      body: 'Check-ins and messages one tap away — no browser, no searching.',
+      body: 'Check-ins and messages one tap away. No browser, no searching.',
       cta: 'Show me how',
     },
     'macos-safari': {
       title: 'Add Logbook to your Dock',
-      body: 'Your clients in their own window, one click away — no tab to dig for.',
+      body: 'Your clients in their own window, one click away. No tab to dig for.',
       cta: 'Show me how',
     },
   },
@@ -123,7 +123,7 @@ function Step({ index, children }: { index: number; children: React.ReactNode })
  * Nudges people to install the PWA.
  *
  * Two very different mechanics behind one banner: Chromium hands us a real
- * install dialog via `beforeinstallprompt`, while Safari — iOS and macOS —
+ * install dialog via `beforeinstallprompt`, while Safari (iOS and macOS)
  * has no install API at all and can only be walked through its menus by hand.
  * Which one (if either) applies is decided in `@/lib/pwa-install`.
  *
