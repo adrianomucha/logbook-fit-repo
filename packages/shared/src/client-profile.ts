@@ -3,7 +3,7 @@
  * apps greet a new client the same way.
  */
 
-/** Tappable first messages for an empty thread — a hello, then the two
+/** Tappable first messages for an empty thread: a hello, then the two
  *  things a coach needs to know before writing the first plan. */
 export function coachOpeners(firstName: string): string[] {
   return [

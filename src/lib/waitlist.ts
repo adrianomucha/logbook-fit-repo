@@ -4,7 +4,7 @@
  * While the product is in private beta, coach signup is invite-only: the
  * owner sends beta invites from /admin/waitlist, and /signup only creates
  * COACH accounts for a valid, unredeemed waitlist invite token. Client
- * signups are unaffected — they're already gated by coach invites.
+ * signups are unaffected; they're already gated by coach invites.
  */
 
 /**

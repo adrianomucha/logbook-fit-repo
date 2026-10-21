@@ -11,7 +11,7 @@ import { apiFetch } from '@/lib/api-client';
  * check-in scheduler reads it to anchor weekday cadences to the client's
  * local day.
  *
- * Fire-and-forget: a failed sync must never surface to the user — the
+ * Fire-and-forget: a failed sync must never surface to the user; the
  * scheduler falls back to UTC when the stored zone is stale or missing.
  */
 export function TimezoneSync() {
@@ -28,12 +28,12 @@ export function TimezoneSync() {
     }
     if (!timezone) return;
 
-    // Once per browser session per zone — page loads shouldn't each cost a write
+    // Once per browser session per zone; page loads shouldn't each cost a write
     const guardKey = 'timezone-synced';
     try {
       if (sessionStorage.getItem(guardKey) === timezone) return;
     } catch {
-      // Storage unavailable (private mode) — sync anyway
+      // Storage unavailable (private mode): sync anyway
     }
 
     apiFetch('/api/account/timezone', {
@@ -48,7 +48,7 @@ export function TimezoneSync() {
         }
       })
       .catch(() => {
-        // Silent — next page load retries
+        // Silent; next page load retries
       });
   }, [status]);
 

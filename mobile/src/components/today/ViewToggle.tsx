@@ -8,7 +8,7 @@ const SEGMENTS: { id: WorkoutViewMode; label: string }[] = [
 ];
 
 /**
- * Quiet segmented control between the today focus and the full week — the
+ * Quiet segmented control between the today focus and the full week: the
  * web's WorkoutViewToggle. Gray chrome on purpose: the volt CTA below stays
  * the loudest thing on the screen.
  */

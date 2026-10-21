@@ -97,7 +97,7 @@ export default function LoginScreen() {
         </View>
 
         <Text className="mt-10 text-center font-sans text-xs leading-5 text-muted-foreground">
-          New to Logbook? Ask your coach for their invite link — that's how accounts are created.
+          New to Logbook? Ask your coach for their invite link. That's how accounts are created.
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

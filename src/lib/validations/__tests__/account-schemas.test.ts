@@ -6,7 +6,7 @@ import {
 } from "../schemas";
 
 describe("updateProfileSchema", () => {
-  it("accepts a name alone — bio is optional", () => {
+  it("accepts a name alone: bio is optional", () => {
     const result = updateProfileSchema.safeParse({ name: "Adrian Mucha" });
     expect(result.success).toBe(true);
   });
@@ -24,7 +24,7 @@ describe("updateProfileSchema", () => {
     expect(updateProfileSchema.safeParse({ name: "   " }).success).toBe(false);
   });
 
-  it("accepts an empty bio — that's how it gets cleared", () => {
+  it("accepts an empty bio: that's how it gets cleared", () => {
     const result = updateProfileSchema.parse({ name: "Adrian", bio: "" });
     expect(result.bio).toBe("");
   });

@@ -100,7 +100,7 @@ export function FirstPlanPicker({
         </ul>
       )}
 
-      {/* The other ways in, as tiles pinned to the card's bottom edge — level
+      {/* The other ways in, as tiles pinned to the card's bottom edge, level
           with the chat's composer beside it, so spare height sits above them
           instead of trailing off below two small links */}
       <div className={cn('grid gap-2 pt-4 lg:mt-auto', hasMore && 'sm:grid-cols-2')}>

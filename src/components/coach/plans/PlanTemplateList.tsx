@@ -8,7 +8,7 @@ import type { WorkoutPlan } from '@/types';
 interface PlanTemplateListProps {
   templates: WorkoutPlan[];
   getClientCount: (planId: string) => number;
-  /** Clients on a plan — rendered as a mini-avatar stack on live rows */
+  /** Clients on a plan, rendered as a mini-avatar stack on live rows */
   getClients?: (planId: string) => { name: string; avatarUrl: string | null }[];
   onEdit: (planId: string) => void;
   onDelete: (planId: string) => void;
@@ -24,7 +24,7 @@ const byUpdatedDesc = (a: WorkoutPlan, b: WorkoutPlan) =>
   new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
 
 /**
- * Grouped Plans list — live templates first, then unassigned drafts,
+ * Grouped Plans list: live templates first, then unassigned drafts,
  * archived collapsed at the bottom. Rows over cards: aligned mono stat
  * columns scan straight down, matching the app's logbook voice.
  */

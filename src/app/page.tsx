@@ -17,7 +17,7 @@ import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 
-// Title/description/OG for this route come from the root layout — the landing
+// Title/description/OG for this route come from the root layout; the landing
 // page *is* the site root, so duplicating them here would only create two
 // places to keep in sync. The canonical, though, lives here rather than in the
 // layout: layout metadata is inherited by every child route, and a canonical
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
 /**
  * Structured data for the waitlist page. Tells Google what Logbook.fit is
  * (a product, not a blog), which entity owns the domain, and what to show in
- * the knowledge panel / sitelinks — none of which is inferable from a hero
+ * the knowledge panel / sitelinks, none of which is inferable from a hero
  * that leads with a point of view rather than a product category.
  */
 const JSON_LD = {
@@ -95,7 +95,7 @@ const MARQUEE_ITEMS = [
   'Private beta · onboarding in small batches',
 ];
 
-// The filter, as two lists. Every line is short enough to scan in one pass —
+// The filter, as two lists. Every line is short enough to scan in one pass;
 // the point lands from the shape of the section before any of it is read.
 const AUDIENCE = [
   {
@@ -213,7 +213,7 @@ function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
 export default function HomePage() {
   // The "signed-in visitors go straight to /coach" bounce lives in middleware
   // (see src/middleware.ts). Reading cookies() here opted the page into dynamic
-  // rendering, so every crawler hit — and every real visitor — paid a server
+  // rendering, so every crawler hit (and every real visitor) paid a server
   // round trip for markup that never changes. Statically prerendered, it now
   // ships from the CDN edge, which is the single biggest TTFB/LCP win available
   // to this page.
@@ -226,14 +226,14 @@ export default function HomePage() {
     <div className="bg-background">
       <script
         type="application/ld+json"
-        // Serialised from a literal defined in this file — no user input reaches it.
+        // Serialised from a literal defined in this file; no user input reaches it.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
       />
       {/* One <main> around every content section, so the h1 and the primary
           waitlist CTA sit inside the document's main landmark rather than
           floating outside it. */}
       <main>
-      {/* Hero — dark brand canvas, centered display type */}
+      {/* Hero: dark brand canvas, centered display type */}
       <section className="dark flex min-h-dvh flex-col bg-background text-foreground">
         <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
           <Logo markSize={24} />
@@ -314,7 +314,7 @@ export default function HomePage() {
         </div>
       </div>
 
-        {/* Who it's for — the filter. Naming who this isn't for is what makes
+        {/* Who it's for: the filter. Naming who this isn't for is what makes
             the right coach feel it was built for them specifically. Two columns
             rather than prose: the section is *about* a line between two groups,
             so it should be shaped like one instead of describing it. */}
@@ -453,7 +453,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* For clients — mirrored */}
+        {/* For clients (mirrored) */}
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
@@ -487,7 +487,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Final CTA — dark */}
+        {/* Final CTA (dark) */}
         <section className="dark border-t border-border/70 bg-background text-foreground">
           <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
             <div className="mx-auto max-w-2xl text-center">

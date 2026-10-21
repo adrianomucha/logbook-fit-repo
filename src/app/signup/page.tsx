@@ -9,7 +9,7 @@ interface SignupPageProps {
 
 /**
  * The invite link's first impression happens in the message thread, before
- * the click — a shared link unfurls as "{Coach} invited you to train on
+ * the click: a shared link unfurls as "{Coach} invited you to train on
  * Logbook" with the coach's note as the description and a branded card
  * image, instead of a bare URL.
  */
@@ -30,7 +30,7 @@ export async function generateMetadata({ searchParams }: SignupPageProps): Promi
     })
     .catch(() => null);
 
-  // Invalid/expired/used links unfurl generically — no coach data leaks
+  // Invalid/expired/used links unfurl generically; no coach data leaks
   // beyond what the public token endpoint would already return
   if (!found || found.status !== 'PENDING' || found.expiresAt < new Date()) {
     return { title: 'Join Logbook', description: 'Train with your coach on Logbook.' };

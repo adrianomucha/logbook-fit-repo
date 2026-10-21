@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         );
       }
 
-      // The token is the credential (single-use, expiring) — a coach-typed
+      // The token is the credential (single-use, expiring); a coach-typed
       // email is a convenience pre-fill, not an identity check. Enforcing an
       // exact match would strand clients behind a coach's typo.
       invite = {
@@ -95,7 +95,7 @@ export async function POST(req: Request) {
     // Coach signups are invite-only during the private beta: a valid waitlist
     // invite unlocks account creation (and is redeemed in the transaction
     // below). OPEN_COACH_SIGNUP=true lifts the gate for local dev or launch.
-    // A presented token is always validated — even with the gate open — so a
+    // A presented token is always validated, even with the gate open, so a
     // stale link fails loudly instead of quietly minting an ungated account.
     let waitlistEntryId: string | null = null;
     if (effectiveRole === "COACH") {
@@ -167,7 +167,7 @@ export async function POST(req: Request) {
       }
 
       // Redeem the beta invite atomically with the account: the status guard
-      // makes the token single-use even under concurrent signups — the loser
+      // makes the token single-use even under concurrent signups: the loser
       // hits count 0 and their whole signup rolls back.
       if (waitlistEntryId) {
         const { count } = await tx.waitlistEntry.updateMany({
@@ -212,7 +212,7 @@ export async function POST(req: Request) {
 
     // Tell the coach their invited client is here. Outside the transaction:
     // a push failure must never roll back a created account. The coach
-    // otherwise had no signal at all — the new client just appeared on the
+    // otherwise had no signal at all; the new client just appeared on the
     // roster whenever they next reloaded.
     if (invite && "clientProfile" in user && user.clientProfile) {
       await notifyClientJoined({

@@ -34,7 +34,7 @@ export function ExerciseCard({
       )}
     >
       <div className="flex items-center gap-3">
-        {/* Exercise number — mono counter, the brand's data voice */}
+        {/* Exercise number: mono counter, the brand's data voice */}
         <span className="font-mono text-[11px] font-semibold text-muted-foreground w-5 shrink-0 tabular-nums select-none">
           {String(exerciseIndex + 1).padStart(2, '0')}
         </span>
@@ -46,12 +46,12 @@ export function ExerciseCard({
           </div>
         </div>
 
-        {/* Prescription — sets × reps as mono data, like the profile vitals */}
+        {/* Prescription: sets × reps as mono data, like the profile vitals */}
         <div className="flex items-center gap-2 shrink-0">
           <span className="font-mono text-xs tabular-nums text-muted-foreground antialiased">
             <span className="font-semibold text-foreground">{exercise.sets}</span>
             <span className="mx-1">×</span>
-            {exercise.reps || '—'}
+            {exercise.reps || '-'}
           </span>
           {weightDisplay && (
             <span className="font-mono text-[11px] tabular-nums font-semibold bg-foreground text-background px-1.5 py-0.5 rounded-md">

@@ -1,7 +1,7 @@
 /**
  * Avatar storage on Supabase Storage (same project as the database).
  *
- * Plain REST against the Storage API — the app talks to Supabase only from
+ * Plain REST against the Storage API: the app talks to Supabase only from
  * the server with the service-role key, so no client SDK, no storage RLS
  * policies, and NextAuth stays the only auth system. The `avatars` bucket
  * is public-read with a 4MB limit and an image-only MIME allowlist enforced
@@ -39,7 +39,7 @@ export async function uploadAvatar(
   const cfg = config();
   if (!cfg) throw new Error("Avatar storage is not configured");
 
-  // Both headers, same value — how supabase-js authenticates. Legacy JWT
+  // Both headers, same value: how supabase-js authenticates. Legacy JWT
   // service_role keys pass either way; new sb_secret_ keys are only valid
   // as Bearer when they exactly equal the apikey header (per the API keys
   // guide), so sending both supports both key formats.
@@ -83,7 +83,7 @@ export async function deleteAvatarByUrl(publicUrl: string | null | undefined): P
       headers: { apikey: cfg.key, Authorization: `Bearer ${cfg.key}` },
     });
   } catch {
-    // Cleanup only — an orphaned file costs kilobytes, a failed upload flow
+    // Cleanup only. An orphaned file costs kilobytes, a failed upload flow
     // costs the user their photo. Never let the delete break the request.
   }
 }

@@ -2,8 +2,8 @@
  * Timezone helpers.
  *
  * Timezones are stored as IANA identifiers ("Europe/Warsaw",
- * "America/New_York") on User.timezone — the standard representation that
- * keeps wall-clock semantics correct across DST transitions — and captured
+ * "America/New_York") on User.timezone (the standard representation that
+ * keeps wall-clock semantics correct across DST transitions) and captured
  * from the browser via Intl.DateTimeFormat().resolvedOptions().timeZone
  * (see components/TimezoneSync.tsx).
  */
@@ -22,7 +22,7 @@ const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 /**
  * Day of week (0 = Sunday … 6 = Saturday) at `date` in `timeZone`.
- * Falls back to UTC when the zone is missing or unresolvable — a corrupt
+ * Falls back to UTC when the zone is missing or unresolvable; a corrupt
  * stored timezone must never break scheduling.
  */
 export function weekdayInTimeZone(date: Date, timeZone: string | null | undefined): number {

@@ -3,7 +3,7 @@ import { envProblems } from "@/lib/env-check";
 
 /**
  * envProblems() folds in emailConfigStatus(), which reads process.env
- * directly — so every case stubs the full set of relevant vars rather than
+ * directly, so every case stubs the full set of relevant vars rather than
  * passing a partial env object.
  */
 

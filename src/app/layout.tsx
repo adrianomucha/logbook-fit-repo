@@ -16,7 +16,7 @@ const ibmPlexMono = IBM_Plex_Mono({
   display: 'swap',
 });
 
-// Proportional sibling of Plex Mono — used for conversational/long-form text
+// Proportional sibling of Plex Mono, used for conversational/long-form text
 // (chat, check-in prose) so the human parts read warmer than the mono UI chrome.
 const ibmPlexSans = IBM_Plex_Sans({
   subsets: ['latin'],
@@ -35,7 +35,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   // Resolves every relative URL below (and in child routes) to an absolute one.
-  // Without it Next.js can't emit og:image/canonical URLs at all — crawlers and
+  // Without it Next.js can't emit og:image/canonical URLs at all; crawlers and
   // unfurlers require absolute URLs and silently drop relative ones.
   metadataBase: new URL(SITE_URL),
   title: {
@@ -48,7 +48,7 @@ export const metadata: Metadata = {
   applicationName: SITE_NAME,
   // No `alternates` here on purpose: metadata inherits per top-level key, so
   // a canonical declared in the root layout leaks onto every child route that
-  // doesn't override it — /privacy et al. were claiming to be duplicates of
+  // doesn't override it; /privacy et al. were claiming to be duplicates of
   // the homepage. Each indexable page declares its own canonical (the home
   // page in page.tsx, the rest via pageMetadata()).
   openGraph: {
@@ -70,7 +70,7 @@ export const metadata: Metadata = {
     googleBot: {
       index: true,
       follow: true,
-      // Lets Google use full-size image previews and untruncated snippets —
+      // Lets Google use full-size image previews and untruncated snippets;
       // both default to conservative limits when unspecified.
       'max-image-preview': 'large',
       'max-snippet': -1,
@@ -90,7 +90,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${ibmPlexMono.variable} ${ibmPlexSans.variable}`}>
-      {/* Font smoothing once at the root — macOS renders text heavier than
+      {/* Font smoothing once at the root: macOS renders text heavier than
           intended without it; per-element antialiased classes remain no-ops */}
       <body className="antialiased">
         <SessionProvider>

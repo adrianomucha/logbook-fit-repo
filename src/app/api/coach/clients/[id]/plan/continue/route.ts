@@ -10,7 +10,7 @@ import {
 
 /**
  * POST /api/coach/clients/[id]/plan/continue
- * Runs the client's finished plan again for another cycle — the one-tap
+ * Runs the client's finished plan again for another cycle, the one-tap
  * alternative to building a new block for a client who is doing fine on
  * this one.
  */

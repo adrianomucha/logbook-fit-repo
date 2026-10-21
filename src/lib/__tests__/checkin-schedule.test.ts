@@ -35,7 +35,7 @@ function createdCheckIn(id: string) {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const SEVEN_DAYS_MS = 7 * DAY_MS;
-// A Friday — getUTCDay() === 5
+// A Friday: getUTCDay() === 5
 const NOW = new Date("2026-08-07T09:00:00Z").getTime();
 const FRIDAY = 5;
 const MONDAY = 1;
@@ -357,7 +357,7 @@ describe("ensureScheduledCheckIn", () => {
     });
 
     it("counts from a new plan that started after the last check-in", async () => {
-      // Last check-in is well past due, but the coach just switched plans —
+      // Last check-in is well past due, but the coach just switched plans,
       // give the client a cadence on the new plan before asking about it.
       db.checkIn.findFirst.mockResolvedValue({
         status: "COMPLETED",
@@ -407,7 +407,7 @@ describe("ensureScheduledCheckIn", () => {
       createdAt: new Date(NOW - 4 * DAY_MS),
     });
 
-    // Today is Friday, anchor says Monday — a 3-day cadence sends anyway
+    // Today is Friday, anchor says Monday; a 3-day cadence sends anyway
     expect(
       await ensureScheduledCheckIn({
         ...activeRelationship,

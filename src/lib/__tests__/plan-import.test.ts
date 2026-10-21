@@ -90,7 +90,7 @@ describe('parseImportRows', () => {
       coachNotes: 'Pause on the chest',
     });
 
-    // Week 2 only listed day 1 — the grid still scaffolds day 2 empty,
+    // Week 2 only listed day 1; the grid still scaffolds day 2 empty,
     // matching the shape POST /api/plans creates
     expect(plan!.weeks[1].days).toHaveLength(2);
     expect(plan!.weeks[1].days[1].exercises).toEqual([]);
@@ -229,7 +229,7 @@ describe('applyImportChoices', () => {
   const rows = [
     row({ rowNumber: 3, week: '1', exercise: 'Bench Press', rest: '120' }),
     row({ rowNumber: 3, week: '2', exercise: 'bench press', rest: '120' }),
-    // Same exercise, a value the sheet stated plainly — must not be touched
+    // Same exercise, a value the sheet stated plainly; must not be touched
     row({ rowNumber: 3, week: '3', exercise: 'Bench Press', rest: '90' }),
     row({ rowNumber: 4, exercise: 'Back Squat', rest: '120' }),
   ];

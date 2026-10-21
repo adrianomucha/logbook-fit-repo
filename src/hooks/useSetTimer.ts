@@ -23,7 +23,7 @@ const TICK_MS = 250;
  * Only one set timer may run at a time across the whole workout: starting a
  * plank on set 2 while set 1 is still counting is always a mistake. Each
  * running hook registers a pause callback here; the next one to start pauses
- * it. A module-level slot is enough — there is one workout screen per tab.
+ * it. A module-level slot is enough: there is one workout screen per tab.
  */
 let activeTimerPause: (() => void) | null = null;
 
@@ -40,7 +40,7 @@ export interface SetTimer {
   isCountdown: boolean;
   /** Seconds to show: remaining for a countdown, elapsed for a stopwatch. */
   displaySeconds: number;
-  /** Whole seconds worked so far — what gets logged on an early stop. */
+  /** Whole seconds worked so far: what gets logged on an early stop. */
   elapsedSeconds: number;
   start: () => void;
   pause: () => void;
@@ -124,7 +124,7 @@ export function useSetTimer({ targetSeconds, onFinish }: UseSetTimerOptions): Se
         if (cancelled) await lock.release();
         else sentinel = lock;
       } catch {
-        // Denied or unsupported — the timer still works, the screen may dim.
+        // Denied or unsupported: the timer still works, the screen may dim.
       }
     };
     // The lock is dropped automatically when the tab is hidden; re-acquire on return.

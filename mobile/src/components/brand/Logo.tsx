@@ -2,7 +2,7 @@ import { Text, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
 /**
- * Brand mark — a rep tally: three strokes and the volt slash that completes
+ * Brand mark, a rep tally: three strokes and the volt slash that completes
  * the count. Same geometry as the web's LogoMark.
  */
 export function LogoMark({ size = 24 }: { size?: number }) {
@@ -15,7 +15,7 @@ export function LogoMark({ size = 24 }: { size?: number }) {
   );
 }
 
-/** Horizontal lockup — mark plus the mono wordmark. */
+/** Horizontal lockup: mark plus the mono wordmark. */
 export function Logo({ markSize = 20 }: { markSize?: number }) {
   return (
     <View className="flex-row items-center gap-2">

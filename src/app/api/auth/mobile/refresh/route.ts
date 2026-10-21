@@ -6,12 +6,12 @@ import { bearerFromAuthorization, createMobileToken, readMobileToken } from "@/l
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/auth/mobile/refresh — trade a still-valid bearer token for a
+ * POST /api/auth/mobile/refresh: trade a still-valid bearer token for a
  * fresh 30-day one, so a client who opens the app even occasionally is
  * never signed out. Re-checks the account on every refresh: a token issued
  * before the account was deleted (or the demo lock engaged) stops here.
  *
- * Same response shape as /login. An expired or bad token is a 401 — the
+ * Same response shape as /login. An expired or bad token is a 401; the
  * app treats that as "sign in again", never as an error to retry.
  */
 export async function POST(req: Request) {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   const minted = await createMobileToken(user);
   if (!minted) {
-    console.error("[AUTH_ALERT] NEXTAUTH_SECRET unset — cannot mint mobile token");
+    console.error("[AUTH_ALERT] NEXTAUTH_SECRET unset, cannot mint mobile token");
     return NextResponse.json({ error: "Refresh unavailable" }, { status: 500 });
   }
 

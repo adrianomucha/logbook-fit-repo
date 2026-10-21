@@ -9,7 +9,7 @@ import {
 /**
  * POST /api/coach/sample-client
  * Creates a demo client with generated history so the coach can explore the
- * dashboard and check-in loop before a real client joins. Idempotent — if a
+ * dashboard and check-in loop before a real client joins. Idempotent: if a
  * sample client already exists, returns it instead of creating another.
  */
 export const POST = withCoach(

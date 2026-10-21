@@ -9,7 +9,7 @@ import { isValidTimeZone } from "@/lib/timezone";
 export const dynamic = "force-dynamic";
 
 /**
- * PUT /api/account/timezone — record the browser's IANA timezone.
+ * PUT /api/account/timezone: record the browser's IANA timezone.
  *
  * Called fire-and-forget by TimezoneSync on app load, so User.timezone
  * follows the person as they travel or change devices. The check-in
@@ -25,7 +25,7 @@ export async function PUT(req: Request) {
   if (!result.success) return result.response;
   const { timezone } = result.data;
 
-  // Zod only bounds the string — whether it names a real zone is a runtime
+  // Zod only bounds the string; whether it names a real zone is a runtime
   // question for the Intl database
   if (!isValidTimeZone(timezone)) {
     return NextResponse.json({ error: "Unknown timezone" }, { status: 400 });

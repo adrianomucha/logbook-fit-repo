@@ -7,7 +7,7 @@ import { sendClientInvite } from "@/lib/services/email";
 import { appBaseUrl } from "@/lib/waitlist";
 
 // A second send this soon is a double-click or an impatient retry, not a
-// reminder — the first one is still on its way
+// reminder; the first one is still on its way
 const RESEND_COOLDOWN_MS = 2 * 60 * 1000;
 
 /**

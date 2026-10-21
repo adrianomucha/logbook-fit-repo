@@ -52,7 +52,7 @@ export function CoachSettingsPage() {
 
         <div className="flex flex-col lg:flex-row gap-4 sm:gap-5 lg:gap-8 animate-enter">
           {/* Section rail: underline tabs on mobile (the nav's idiom), a
-              side-rail list on desktop. Fixed segments below lg — three tabs
+              side-rail list on desktop. Fixed segments below lg: three tabs
               share the row, so nothing scrolls or pans under a thumb; icons
               yield below 400px so the labels always fit. */}
           <nav aria-label="Settings sections" className="lg:w-44 shrink-0">
@@ -98,7 +98,7 @@ export function CoachSettingsPage() {
               </div>
             ) : (
               // The page wrapper already animates in once; section switches
-              // swap instantly — repeated interactions get instant feedback
+              // swap instantly, so repeated interactions get instant feedback
               <div className={settingsCardClass}>
                 <Pane />
               </div>

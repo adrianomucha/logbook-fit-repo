@@ -184,7 +184,7 @@ interface SelectItemProps extends React.HTMLAttributes<HTMLDivElement> {
   value: string
 }
 
-// Helper to extract text from children — module-scope so it's referentially
+// Helper to extract text from children; module-scope so it's referentially
 // stable and doesn't need to be an effect dependency
 const getTextFromChildren = (node: React.ReactNode): string => {
   if (typeof node === 'string') return node

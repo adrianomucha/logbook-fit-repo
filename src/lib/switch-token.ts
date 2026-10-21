@@ -5,7 +5,7 @@ import crypto from "crypto";
  *
  * A token is minted by POST /api/account/switch only for the account linked
  * to a live session, then immediately redeemed through the "account-switch"
- * credentials provider — so possession of a valid session for one half of
+ * credentials provider, so possession of a valid session for one half of
  * the pair is the only way to obtain a session for the other half. Stateless
  * by design: HMAC-SHA256 over the payload with NEXTAUTH_SECRET (the same
  * secret that already guards session JWTs), bound to a dedicated audience so
@@ -26,7 +26,7 @@ function sign(payload: string, key: string): string {
 
 /**
  * Mint a switch token for `userId`. Returns null when NEXTAUTH_SECRET is
- * unset (never the case in a running deployment — next-auth requires it).
+ * unset (never the case in a running deployment; next-auth requires it).
  */
 export function createSwitchToken(userId: string, now = Date.now()): string | null {
   const key = secret();

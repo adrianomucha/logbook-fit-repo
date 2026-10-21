@@ -47,7 +47,7 @@ export function urgencyStyle(urgency: Urgency): UrgencyStyle {
 // Wording lives in @logbook/shared so the native app says the same thing
 export { clientSignal as getSignal, type ClientSignal } from '@logbook/shared/roster';
 
-// Deterministic color from name initial — shared with client surfaces so the
+// Deterministic color from name initial, shared with client surfaces so the
 // same person renders the same color everywhere.
 export { avatarColor } from '@/lib/avatar-colors';
 
@@ -67,7 +67,7 @@ export function SignalLine({ signal }: { signal: ClientSignal }) {
 }
 
 /**
- * Unanswered messages from this client — the most literal "act on me" a
+ * Unanswered messages from this client: the most literal "act on me" a
  * roster row can carry, so it reads as a solid chip rather than a status tint.
  * Renders nothing at zero so callers can pass a count straight through.
  */

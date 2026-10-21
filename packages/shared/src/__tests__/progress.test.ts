@@ -33,7 +33,7 @@ describe('session duration', () => {
     expect(plausibleSessionSec(40 * 60)).toBe(2400);
     expect(plausibleSessionSec((139 * 60 + 10) * 60)).toBeUndefined();
     expect(plausibleSessionSec(0)).toBeUndefined();
-    expect(formatHistoryDuration((139 * 60 + 10) * 60)).toBe('—');
+    expect(formatHistoryDuration((139 * 60 + 10) * 60)).toBe('-');
     expect(formatHistoryDuration(65 * 60)).toBe('1h 5m');
   });
 
@@ -80,7 +80,7 @@ describe('buildWorkoutHistory', () => {
     ]);
     const [a] = weeks[0].entries;
     expect(a).toMatchObject({ name: 'Chest + Lats', weekNumber: 1, planName: 'Block A', bests: 1, meta: 'Tue 29 · 40m · 15 sets' });
-    // Older plans aren't loaded — the server's day name stands in, and no week is claimed
+    // Older plans aren't loaded; the server's day name stands in, and no week is claimed
     expect(weeks[1].entries.map((e) => [e.name, e.weekNumber, e.planName])).toEqual([
       ['Lower', null, 'Earlier plan'],
       ['Upper', null, 'Earlier plan'],

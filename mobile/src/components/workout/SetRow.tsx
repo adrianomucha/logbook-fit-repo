@@ -14,7 +14,7 @@ interface SetRowProps {
   repsTarget?: string | number;
   /** Coach-prescribed weight, stored lb */
   weightTarget?: string | number;
-  /** The athlete's unit — the weight cell shows and takes this */
+  /** The athlete's unit: the weight cell shows and takes this */
   weightUnit: WeightUnit;
   actualReps?: number | null;
   /** Logged weight, stored lb */
@@ -114,8 +114,8 @@ export function SetRow({
     onToggle();
   };
 
-  // Countdown from whatever is in the seconds cell — the athlete can retype
-  // it to hold longer or shorter than prescribed — else the prescription.
+  // Countdown from whatever is in the seconds cell (the athlete can retype
+  // it to hold longer or shorter than prescribed), else the prescription.
   const typedSeconds = parseInt(reps, 10);
   const timerTarget = !Number.isNaN(typedSeconds) && typedSeconds > 0 ? typedSeconds : defaultReps;
   const showCountdown = isTime && showTimer && !completed && !isReadOnly;
@@ -135,14 +135,14 @@ export function SetRow({
         {setNumber}
       </Text>
       <Text className="flex-1 font-mono text-xs text-muted-foreground" numberOfLines={1}>
-        {previous || '—'}
+        {previous || '-'}
       </Text>
       <TextInput
         style={{ width: SET_COLS.weight, textAlignVertical: 'center' }}
         className={inputClass}
         value={weight}
         onChangeText={commitWeight}
-        placeholder={defaultWeight != null ? String(defaultWeight) : '—'}
+        placeholder={defaultWeight != null ? String(defaultWeight) : '-'}
         placeholderTextColor="#737373"
         keyboardType="decimal-pad"
         inputAccessoryViewID={KEYPAD_DONE_BAR_ID}
@@ -155,7 +155,7 @@ export function SetRow({
         className={inputClass}
         value={reps}
         onChangeText={commitReps}
-        placeholder={defaultReps != null ? String(defaultReps) : '—'}
+        placeholder={defaultReps != null ? String(defaultReps) : '-'}
         placeholderTextColor="#737373"
         keyboardType="number-pad"
         inputAccessoryViewID={KEYPAD_DONE_BAR_ID}

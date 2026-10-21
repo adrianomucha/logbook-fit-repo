@@ -3,20 +3,20 @@ import { buildPlanCloneData } from "@/lib/plan-clone";
 import { getRawWeekNumber } from "@/lib/workout-week-helpers";
 
 /**
- * "Run it again" — restart the plan a client just finished for another cycle.
+ * "Run it again": restart the plan a client just finished for another cycle.
  * Coach-only: what a client trains on next is the coach's call, so this is
  * reached solely through POST /api/coach/clients/[id]/plan/continue.
  *
  * The client gets a FRESH COPY rather than a reset date on the same rows.
  * WorkoutCompletion is unique per (client, plan, day), so reusing the plan
- * would have week 1 open already ticked off from the first cycle — and
+ * would have week 1 open already ticked off from the first cycle, and
  * wiping those rows would erase the history the Progress tab is built on.
  * A new copy starts empty and leaves every finished workout where it is.
  */
 
 export type ContinuePlanFailure =
   | "NO_PLAN" // Nothing assigned to continue
-  | "NOT_ENDED" // Still mid-plan — continuing would silently restart it
+  | "NOT_ENDED" // Still mid-plan; continuing would silently restart it
   | "PLAN_MISSING"; // Assigned plan row is gone (deleted template edge case)
 
 export type ContinuePlanResult =

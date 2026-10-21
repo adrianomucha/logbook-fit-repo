@@ -12,14 +12,14 @@ import {
 } from './types';
 
 // Info for a single workout in the week's sequential checklist.
-// Workouts are no longer mapped to calendar weekdays — they're an ordered
+// Workouts are no longer mapped to calendar weekdays; they're an ordered
 // list the client completes in sequence, whenever they train.
 export interface WeekDayInfo {
-  workoutDay: WorkoutDay;   // The workout (every entry is a workout — no rest slots)
+  workoutDay: WorkoutDay;   // The workout (every entry is a workout, no rest slots)
   orderIndex: number;       // 1-based position within the week
   status: DayStatus;        // 'COMPLETED' | 'CURRENT' | 'UPCOMING'
   completion?: WorkoutCompletion;
-  isInteractive: boolean;   // Always true — any workout can be opened
+  isInteractive: boolean;   // Always true; any workout can be opened
 }
 
 /**
@@ -29,7 +29,7 @@ export interface WeekDayInfo {
  * NOTE: this is evaluated in the local timezone of whatever machine runs it,
  * so the server and a client's browser can disagree near week boundaries.
  * The API's week-overview response is the source of truth for "which week is
- * it" — client views must consume `weekOverview.weekNumber` rather than
+ * it"; client views must consume `weekOverview.weekNumber` rather than
  * calling this directly.
  */
 export function getRawWeekNumber(planStartDate: string | Date): number {
@@ -39,7 +39,7 @@ export function getRawWeekNumber(planStartDate: string | Date): number {
 }
 
 /**
- * Where the client is relative to the plan's end — drives the coach's
+ * Where the client is relative to the plan's end. Drives the coach's
  * "assign the next block" nudge and the client's plan-complete state.
  */
 export type PlanProgressStatus = 'ACTIVE' | 'FINAL_WEEK' | 'ENDED';
@@ -129,10 +129,10 @@ export function getWeekProgress(
 /**
  * Get the workout the client should focus on: a workout they're mid-way
  * through takes priority (they can start any workout from the weekly view,
- * not just the first), then a workout they finished today — so the Today
+ * not just the first), then a workout they finished today (so the Today
  * card stays on "Done" and the feedback prompt for the rest of the day
- * instead of immediately advancing to the next workout in the sequence —
- * then the next uncompleted one, or — if the whole week is done — the last
+ * instead of immediately advancing to the next workout in the sequence),
+ * then the next uncompleted one, or, if the whole week is done, the last
  * workout (so the completed state and feedback prompt still render).
  */
 export function getActiveWorkout(weekDays: WeekDayInfo[]): WeekDayInfo | null {

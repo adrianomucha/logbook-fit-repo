@@ -13,8 +13,8 @@ interface UseDialogBehaviorOptions {
  * body scroll lock, Escape to dismiss, a Tab trap that cycles inside the
  * panel, and focus handed back to whatever opened it.
  *
- * Lives apart from any one layout so dialogs can look however they need to
- * — the generic `Modal` shell and the bespoke confirmation dialog share
+ * Lives apart from any one layout so dialogs can look however they need to:
+ * the generic `Modal` shell and the bespoke confirmation dialog share
  * this, rather than a second copy of the trap drifting out of sync.
  *
  * Attach the returned ref to the panel, which must be focusable

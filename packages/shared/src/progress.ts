@@ -56,7 +56,7 @@ export function getWeekVerdict(completions: WorkoutCompletion[], targetPerWeek: 
 /**
  * Consecutive weeks (Monday-start) with at least one workout, counting back
  * from now. The week in progress counts once there's a session in it and
- * never breaks the run while it's still open — Tuesday shouldn't read as a
+ * never breaks the run while it's still open. Tuesday shouldn't read as a
  * lost streak. Deliberately not "weeks that hit the target": a client
  * training three times a week on a five-a-week plan is still consistent,
  * and a tile reading "0 wks" at them all block says the opposite.
@@ -70,7 +70,7 @@ export function weeksTrainedStreak(completions: WorkoutCompletion[], now = new D
 
   let week = startOfWeek(now, { weekStartsOn: 1 });
   let streak = trained.has(week.getTime()) ? 1 : 0;
-  // 104 weeks back is plenty — history is fetched a year at a time
+  // 104 weeks back is plenty; history is fetched a year at a time
   for (let i = 0; i < 104; i++) {
     week = addWeeks(week, -1);
     if (!trained.has(week.getTime())) break;
@@ -79,7 +79,7 @@ export function weeksTrainedStreak(completions: WorkoutCompletion[], now = new D
   return streak;
 }
 
-/** "3 wks" — the streak tile's value */
+/** "3 wks": the streak tile's value */
 export function formatWeekStreak(weeks: number): string {
   return `${weeks} ${weeks === 1 ? 'wk' : 'wks'}`;
 }
@@ -100,10 +100,10 @@ export function getWorkoutDisplayName(day: WorkoutDay | undefined, dayIndex: num
   return 'Workout';
 }
 
-/** "45m" / "1h 5m" / "—". A session left open (see plausibleSessionSec) reads as unknown. */
+/** "45m" / "1h 5m" / "-". A session left open (see plausibleSessionSec) reads as unknown. */
 export function formatHistoryDuration(seconds?: number): string {
   const sec = plausibleSessionSec(seconds);
-  if (!sec) return '—';
+  if (!sec) return '-';
   const mins = Math.floor(sec / 60);
   if (mins < 60) return `${mins}m`;
   return `${Math.floor(mins / 60)}h ${mins % 60}m`;
@@ -115,10 +115,10 @@ export const EFFORT_LABELS: Record<EffortRating, string> = { EASY: 'Easy', MEDIU
 export interface HistoryEntry {
   completion: WorkoutCompletion;
   name: string;
-  /** Week of the loaded plan; null for work on a plan whose tree isn't loaded — claiming "Week 1" would be wrong */
+  /** Week of the loaded plan; null for work on a plan whose tree isn't loaded (claiming "Week 1" would be wrong) */
   weekNumber: number | null;
   planName: string;
-  /** Not every exercise finished — the one state worth marking on the row */
+  /** Not every exercise finished: the one state worth marking on the row */
   partial: boolean;
   /** "2 of 5 exercises", only when partial */
   partialLabel?: string;
@@ -128,7 +128,7 @@ export interface HistoryEntry {
   effortLabel?: string;
   /** Personal bests set in this session */
   bests: number;
-  /** "Tue 29 · 40m · 15 sets" — unknown parts left out. The row's quiet second line. */
+  /** "Tue 29 · 40m · 15 sets", unknown parts left out. The row's quiet second line. */
   meta: string;
 }
 

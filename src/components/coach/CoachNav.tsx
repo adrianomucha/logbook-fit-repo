@@ -7,8 +7,8 @@ import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { Users, Dumbbell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// 'settings' has no tab of its own — the settings page reaches through the
-// AccountMenu — but the nav accepts it so nothing else highlights there.
+// 'settings' has no tab of its own (the settings page reaches through the
+// AccountMenu), but the nav accepts it so nothing else highlights there.
 export type CoachNavTab = 'clients' | 'plans' | 'settings';
 
 interface CoachNavProps {
@@ -22,7 +22,7 @@ interface CoachNavProps {
   unreadCount?: number;
 }
 
-// The roster is home — there's no separate dashboard to keep in step with it
+// The roster is home; there's no separate dashboard to keep in step with it
 const DESKTOP_TABS: { id: CoachNavTab; label: string }[] = [
   { id: 'clients', label: 'Clients' },
   { id: 'plans', label: 'Plans' },
@@ -73,7 +73,7 @@ export function CoachNav({
             {/* Brand / nav divider */}
             <div className="hidden sm:block h-3.5 w-px bg-border" aria-hidden="true" />
 
-            {/* Desktop tabs — underline indicator sits on the header hairline */}
+            {/* Desktop tabs: underline indicator sits on the header hairline */}
             <nav className="hidden sm:flex items-stretch self-stretch gap-5" aria-label="Main navigation">
               {DESKTOP_TABS.map(({ id, label }) => (
                 <button

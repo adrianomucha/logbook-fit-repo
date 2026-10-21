@@ -10,7 +10,7 @@ import { generateSecureToken } from "@/lib/tokens";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/admin/users/[id]/password — owner-only password reset.
+ * POST /api/admin/users/[id]/password: owner-only password reset.
  *
  * There is no self-serve reset flow yet, so this is how the owner regains
  * access to legacy accounts. Generates a strong temporary password and
@@ -18,7 +18,7 @@ export const dynamic = "force-dynamic";
  * only the bcrypt hash is stored. Authorized like the other admin
  * endpoints: admin session or the WAITLIST_ADMIN_TOKEN bearer token.
  *
- * Note: existing JWT sessions stay valid — this changes the credential,
+ * Note: existing JWT sessions stay valid; this changes the credential,
  * it doesn't evict sessions.
  */
 export async function POST(
@@ -53,7 +53,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Demo accounts are locked in this deployment — a new password couldn't be used to sign in anyway",
+            "Demo accounts are locked in this deployment. A new password couldn't be used to sign in anyway",
         },
         { status: 409 }
       );

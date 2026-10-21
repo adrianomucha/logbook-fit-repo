@@ -1,12 +1,12 @@
 import { ArrowLeft, RotateCcw } from 'lucide-react';
 
 /**
- * Drop a leading "Day N" prefix from the title — the day number already lives in
- * the eyebrow, so "Day 2 — Legs + Glutes + Core" becomes "Legs + Glutes + Core".
+ * Drop a leading "Day N" prefix from the title; the day number already lives in
+ * the eyebrow, so "Day 2: Legs + Glutes + Core" becomes "Legs + Glutes + Core".
  * Falls back to the original if stripping would leave nothing.
  */
 function stripDayPrefix(name: string): string {
-  const stripped = name.replace(/^\s*day\s*\d+\s*(?:[—–\-:.]+\s*)?/i, '').trim();
+  const stripped = name.replace(/^\s*day\s*\d+\s*(?:[\u2014–\-:.]+\s*)?/i, '').trim();
   return stripped.length > 0 ? stripped : name;
 }
 
@@ -43,7 +43,7 @@ export function WorkoutHeader({
   return (
     <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-sm border-b border-border pt-[env(safe-area-inset-top)]">
       <div className="max-w-2xl mx-auto px-4 pb-4">
-        {/* Top row — back + progress count (+ restart when viewing a finished workout) */}
+        {/* Top row: back + progress count (+ restart when viewing a finished workout) */}
         <div className="flex items-center justify-between h-12">
           <button
             type="button"
@@ -72,19 +72,19 @@ export function WorkoutHeader({
           </div>
         </div>
 
-        {/* Eyebrow — mono data voice, same as the dashboard */}
+        {/* Eyebrow: mono data voice, same as the dashboard */}
         {eyebrow && (
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
             {eyebrow}
           </p>
         )}
 
-        {/* Title — full width, never truncated */}
+        {/* Title: full width, never truncated */}
         <h1 className="font-bold text-2xl sm:text-3xl tracking-tight leading-[1.1] antialiased mt-1">
           {stripDayPrefix(workoutName)}
         </h1>
 
-        {/* Progress bar — volt fill on muted track, matching the hero session card */}
+        {/* Progress bar: volt fill on muted track, matching the hero session card */}
         <div
           role="progressbar"
           aria-label="Workout progress"

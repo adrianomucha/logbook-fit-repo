@@ -7,7 +7,7 @@ const DEFAULT_INTERVAL_DAYS = 7;
 
 /**
  * A PENDING check-in the client never answered goes stale after two full
- * cadences — late responders still get a whole extra cycle to answer; after
+ * cadences. Late responders still get a whole extra cycle to answer; after
  * that the check-in expires so it stops blocking the schedule forever. Never
  * shorter than two weeks: a 3-day cadence shouldn't expire a check-in the
  * client would still plausibly answer.
@@ -19,7 +19,7 @@ function stalePendingMs(intervalDays: number) {
 /**
  * Close out PENDING check-ins the client never answered.
  *
- * Without this, one ignored check-in blocks the scheduler indefinitely —
+ * Without this, one ignored check-in blocks the scheduler indefinitely,
  * exactly the quiet client the product exists to surface would stop being
  * checked on. Expired check-ins are hidden from history on both sides.
  */
@@ -46,11 +46,11 @@ export async function expireStaleCheckIns(
  * A client with neither a plan nor a past check-in gets nothing. The cadence is per
  * relationship: every `checkInIntervalDays` days, optionally anchored to a
  * weekday (`checkInDayOfWeek`, 0 = Sunday … 6 = Saturday, evaluated in the
- * client's timezone — the check-in is for them, so "Monday" means their
+ * client's timezone; the check-in is for them, so "Monday" means their
  * Monday; UTC when their timezone is unknown).
  *
  * Called from two places: the nightly sweep (runScheduledCheckIns, the
- * authority — it reaches every client whether or not anyone opens the app),
+ * authority: it reaches every client whether or not anyone opens the app),
  * and opportunistically when either party loads check-in data, so a due
  * check-in appears immediately rather than at the next sweep.
  *
@@ -73,7 +73,7 @@ export async function ensureScheduledCheckIn(relationship: {
   const dayOfWeek =
     intervalDays >= 7 ? relationship.checkInDayOfWeek ?? null : null;
 
-  // Runs even when the schedule is off — a manually sent check-in the client
+  // Runs even when the schedule is off; a manually sent check-in the client
   // ignored should also stop pinning the workspace to "waiting" forever
   await expireStaleCheckIns(relationship.clientId, intervalDays);
 
@@ -96,7 +96,7 @@ export async function ensureScheduledCheckIn(relationship: {
     return null;
   }
 
-  // This pair's latest — a previous coach's check-ins don't set the new
+  // This pair's latest: a previous coach's check-ins don't set the new
   // coach's cadence
   const latest = await prisma.checkIn.findFirst({
     where: { coachId: relationship.coachId, clientId: relationship.clientId },
@@ -104,14 +104,14 @@ export async function ensureScheduledCheckIn(relationship: {
     select: { status: true, createdAt: true },
   });
 
-  // One at a time — never stack a scheduled check-in on an open one
+  // One at a time: never stack a scheduled check-in on an open one
   if (latest && (latest.status === "PENDING" || latest.status === "CLIENT_RESPONDED")) {
     return null;
   }
 
   // The cadence runs from whichever came later: the last check-in or the
   // start of the current plan. Asking how training is going before the
-  // client has had a cycle on the plan is premature — a fresh plan would
+  // client has had a cycle on the plan is premature; a fresh plan would
   // otherwise get a check-in seconds after it was assigned. A client with
   // neither has nothing to check in on yet.
   const anchorMs = Math.max(
@@ -123,7 +123,7 @@ export async function ensureScheduledCheckIn(relationship: {
   }
   // Anchored cadences get a one-day grace: the sweep fires at a fixed hour,
   // so demanding a full interval to the millisecond would skip the anchor
-  // day whenever the last check-in (or plan start) was later in the day —
+  // day whenever the last check-in (or plan start) was later in the day,
   // turning "every Monday" into "every other Monday".
   const requiredMs =
     dayOfWeek !== null ? (intervalDays - 1) * DAY_MS : intervalDays * DAY_MS;
@@ -165,7 +165,7 @@ export type ScheduleSweepResult = {
  * true.
  *
  * Before this existed, scheduling was materialized only when someone loaded
- * check-in data — so the quiet client the product exists to catch, who by
+ * check-in data, so the quiet client the product exists to catch, who by
  * definition isn't opening the app, was never checked on, and their coach's
  * dashboard showed "all clear". Run from the nightly cron
  * (POST /api/cron/check-ins).

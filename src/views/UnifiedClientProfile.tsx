@@ -54,7 +54,7 @@ import { coachOpeners } from '@logbook/shared/client-profile';
 import { newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 
-// Compact relative-day label for the vitals strip — "Today", "1d ago", …
+// Compact relative-day label for the vitals strip: "Today", "1d ago", …
 function daysAgoLabel(iso?: string | Date | null): string | null {
   if (!iso) return null;
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
@@ -62,9 +62,9 @@ function daysAgoLabel(iso?: string | Date | null): string | null {
   return `${days}d ago`;
 }
 
-// Section label — consistent uppercase tracking with antialiased rendering.
+// Section label: consistent uppercase tracking with antialiased rendering.
 // Real <h2> so the page has a navigable heading outline, styled down to a label.
-// Module-level (not declared in render) so a re-render — the chat polls —
+// Module-level (not declared in render) so a re-render (the chat polls)
 // doesn't remount everything inside and snap open menus shut.
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
@@ -76,7 +76,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Card surface — shadows over borders, concentric radii (outer 12px, inner content inherits)
+// Card surface: shadows over borders, concentric radii (outer 12px, inner content inherits)
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn(
@@ -131,7 +131,7 @@ export function UnifiedClientProfile() {
   const { client: apiClient, isLoading: isLoadingClient, error: clientError, refresh: refreshClient } = useCoachClientProfile(clientId);
   const { plan: apiPlan, error: planError, refresh: refreshPlan } = usePlanDetail(apiClient?.activePlan?.id ?? null);
   // markRead: the coach is on this client's profile, where the message panel
-  // lives — reading the thread here is genuinely "reading" it. active: the
+  // lives, so reading the thread here is genuinely "reading" it. active: the
   // panel is always on screen here, so the thread polls at chat speed.
   const {
     messages: apiMessages,
@@ -182,7 +182,7 @@ export function UnifiedClientProfile() {
   const chatRef = useRef<HTMLDivElement>(null);
   const secondaryRef = useRef<HTMLDivElement>(null);
 
-  // ?chat=1 deep link (e.g. the dashboard's "Say hello" nudge) — bring the
+  // ?chat=1 deep link (e.g. the dashboard's "Say hello" nudge): bring the
   // chat into view once the profile has actually rendered
   const wantsChat = searchParams?.get('chat') != null;
   useEffect(() => {
@@ -241,7 +241,7 @@ export function UnifiedClientProfile() {
   );
 
   // Same seven-day window the check-in panel uses for its "Flagged this week"
-  // section — lets the page skip the whole check-in card when the panel would
+  // section; it lets the page skip the whole check-in card when the panel would
   // have nothing to show (idle, send action already in the header, no flags)
   const hasRecentFlags = useMemo(() => {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
@@ -333,7 +333,7 @@ export function UnifiedClientProfile() {
       handleScrollToCheckIn();
     } catch (err) {
       toast.error(err instanceof ApiError && err.status === 409 ? err.message : 'Failed to send check-in. Please try again.');
-      refreshClient(); // a 409 means one already exists — pull it into view
+      refreshClient(); // a 409 means one already exists; pull it into view
     } finally {
       setIsSendingCheckIn(false);
     }
@@ -431,7 +431,7 @@ export function UnifiedClientProfile() {
   };
 
   const handleUpdatePlan = async () => {
-    // Drawer edits persist themselves — just re-fetch so this page reflects them
+    // Drawer edits persist themselves; just re-fetch so this page reflects them
     refreshPlan();
   };
 
@@ -458,7 +458,7 @@ export function UnifiedClientProfile() {
     }
   };
 
-  // The finished plan is working — run it again rather than build a new block.
+  // The finished plan is working; run it again rather than build a new block.
   // The server clones it, so the new cycle starts empty and the completed one
   // stays in the client's history.
   const handleContinuePlan = async () => {
@@ -471,7 +471,7 @@ export function UnifiedClientProfile() {
       setShowContinueConfirm(false);
       await Promise.all([refreshClient(), refreshPlan()]);
       const name = client?.name?.split(' ')[0] ?? 'Your client';
-      toast.success(`${plan?.name ?? 'Plan'} restarted — ${name} is on week 1`);
+      toast.success(`${plan?.name ?? 'Plan'} restarted. ${name} is on week 1`);
     } catch (e) {
       toast.error(
         e instanceof ApiError && e.status === 409
@@ -538,7 +538,7 @@ export function UnifiedClientProfile() {
         method: 'PUT',
         body: JSON.stringify(update),
       });
-      // Enabling or shortening the cadence may auto-create a due check-in —
+      // Enabling or shortening the cadence may auto-create a due check-in, so
       // refetch to show it
       await refreshClient();
     } catch {
@@ -561,7 +561,7 @@ export function UnifiedClientProfile() {
     );
   }
 
-  // Fetch failure — distinct from "not found" so a network/server error never
+  // Fetch failure, distinct from "not found" so a network/server error never
   // reads as the client having been removed
   if (clientError && !apiClient && !(clientError instanceof ApiError && clientError.status === 404)) {
     return (
@@ -605,10 +605,10 @@ export function UnifiedClientProfile() {
     );
   }
 
-  // Safe first-name extraction — never returns empty string
+  // Safe first-name extraction; never returns empty string
   const firstName = client.name?.split(' ')[0] || client.name || 'Client';
 
-  // ---- At-a-glance vitals (plain derivations — we're past all hooks/early returns) ----
+  // ---- At-a-glance vitals (plain derivations: we're past all hooks/early returns) ----
   const planTotalWeeks = plan ? (plan.durationWeeks || plan.weeks.length) : 0;
   const currentWeekNum = plan && client.planStartDate
     ? getCurrentWeekNumber(client.planStartDate, planTotalWeeks)
@@ -629,10 +629,10 @@ export function UnifiedClientProfile() {
   const lastCompletedCheckIn = checkIns
     .filter((c) => c.status === 'completed')
     .sort((a, b) => new Date(b.completedAt || b.date).getTime() - new Date(a.completedAt || a.date).getTime())[0] ?? null;
-  // lastCheckInDate isn't always populated on the client record — fall back to history
+  // lastCheckInDate isn't always populated on the client record, so fall back to history
   const lastCheckInAt = client.lastCheckInDate ?? lastCompletedCheckIn?.completedAt ?? lastCompletedCheckIn?.date;
 
-  // Final week — the block ends Sunday, and the client's app is about to
+  // Final week: the block ends Sunday, and the client's app is about to
   // tell them their coach is lining up the next one
   const isFinalWeek = !!plan && !!client.planStartDate
     && getPlanProgressStatus(client.planStartDate, planTotalWeeks) === 'FINAL_WEEK';
@@ -640,7 +640,7 @@ export function UnifiedClientProfile() {
     ? addDays(startOfWeek(new Date(client.planStartDate), { weekStartsOn: 1 }), planTotalWeeks * 7 - 1)
     : null;
 
-  // Adherence — same shared summary the client's plan-complete card uses.
+  // Adherence: same shared summary the client's plan-complete card uses.
   // Mid-plan it covers elapsed weeks only, so the week in progress never
   // counts as missed. Prefers the uncapped plan-scoped list; the recent
   // window is the fallback for an older server.
@@ -659,22 +659,22 @@ export function UnifiedClientProfile() {
       )
     : null;
 
-  // Which workout "Last workout" was — "Today" alone said nothing new
+  // Which workout "Last workout" was; "Today" alone said nothing new
   const lastWorkoutDay = apiClient.completions.find((c) => c.status === 'COMPLETED')?.day;
   const lastWorkoutName = lastWorkoutDay?.name ? parseSessionName(lastWorkoutDay.name) : null;
   // A plan they haven't trained on yet, still inside the at-risk grace
-  // window — the same "started Nd ago" hint the roster row shows
+  // window: the same "started Nd ago" hint the roster row shows
   const newPlanStarted = plan ? newPlanHint(client.planStartDate, lastWorkoutAt) : null;
 
   // Derive inline status info from the same server-computed urgency the
   // dashboard ranks by, so this page can never disagree with the roster.
-  // Suppress the urgent banner while a check-in is in flight — the
+  // Suppress the urgent banner while a check-in is in flight; the
   // "Waiting for X" section is the real status then.
   const hasActiveCheckIn = !!activeCheckIn;
   const statusIsUrgent = apiClient.urgency === 'AT_RISK' && !hasActiveCheckIn;
   const statusLabel = statusIsUrgent ? 'At Risk' : null;
 
-  // Days-silent detail folded into the subtitle — the same signal ("Nd
+  // Days-silent detail folded into the subtitle: the same signal ("Nd
   // silent" since the last workout) the roster row shows.
   const urgentDetail: string | null = statusIsUrgent
     ? lastWorkoutAt
@@ -682,7 +682,7 @@ export function UnifiedClientProfile() {
       : 'no workouts logged yet'
     : null;
 
-  // Primary action — one obvious next move chosen by the client's state, or
+  // Primary action: one obvious next move chosen by the client's state, or
   // none: when the only thing left to do is reply, the chat card is already on
   // the page, so a header button that merely scrolls to it would be redundant.
   // Same for a client with no plan: the plan picker leads the page.
@@ -747,7 +747,7 @@ export function UnifiedClientProfile() {
 
       <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
         <main className="space-y-6 sm:space-y-8">
-        {/* Page header — path-style title; "Clients /" crumb is the way back */}
+        {/* Page header: path-style title; "Clients /" crumb is the way back */}
         <div className="animate-enter" style={{ animationDelay: '0ms' }}>
           <PageHeader
             title={client.name}
@@ -774,7 +774,7 @@ export function UnifiedClientProfile() {
                   </Button>
                 )}
                 {/* Rare/destructive actions live behind the header overflow,
-                    not on the page — the typed-name confirm is the real gate.
+                    not on the page; the typed-name confirm is the real gate.
                     Quiet ghost beside a primary button; a bordered button when
                     it stands alone, so it reads as a control, not a stray glyph */}
                 <DropdownMenu>
@@ -805,7 +805,7 @@ export function UnifiedClientProfile() {
 
         {/* ── Sections ── */}
 
-        {/* Final week / plan complete — the block's end is the coach's
+        {/* Final week / plan complete: the block's end is the coach's
             next real decision, so it gets said before anything else */}
         {plan && planSummary && planEndsOn && (isFinalWeek || planEnded) && (
         <div className="animate-enter" style={{ animationDelay: '60ms' }}>
@@ -884,13 +884,13 @@ export function UnifiedClientProfile() {
         </div>
         )}
 
-        {/* At-a-glance vitals — where the client is, how consistent they've
+        {/* At-a-glance vitals: where the client is, how consistent they've
             been, what they last did, and where the check-in stands */}
         {plan && weekProgress && (
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
           <SectionCard>
             {/* Once the plan has ended, the banner above carries the plan,
-                the adherence and the final week — the strip keeps only what
+                the adherence and the final week, so the strip keeps only what
                 still moves */}
             <div className={cn(
               'grid grid-cols-2 gap-x-6 gap-y-5',
@@ -937,7 +937,7 @@ export function UnifiedClientProfile() {
                         : 'None due yet'
                     }
                   >
-                    {planSummary && planSummary.planned > 0 ? `${planSummary.pct}%` : '—'}
+                    {planSummary && planSummary.planned > 0 ? `${planSummary.pct}%` : '-'}
                   </Vital>
                 </>
               )}
@@ -953,7 +953,7 @@ export function UnifiedClientProfile() {
                       : undefined
                 }
               >
-                {daysAgoLabel(lastWorkoutAt) ?? '—'}
+                {daysAgoLabel(lastWorkoutAt) ?? '-'}
               </Vital>
               {activeCheckIn?.status === 'pending' ? (
                 <Vital
@@ -1011,12 +1011,12 @@ export function UnifiedClientProfile() {
         </div>
         )}
 
-        {/* Check-in section — only when it has something to show: a reply to
+        {/* Check-in section, only when it has something to show: a reply to
             review, recent flags, the "Sent" confirmation, or the send prompt
             when the header's primary action is something other than "Send
             check-in" (the coach must always have some way to start one).
             A check-in that's just waiting lives in the strip's Check-in cell
-            — a full-width card for a state with nothing to do was noise — so
+            (a full-width card for a state with nothing to do was noise), so
             here it only shows the week's flags. Past check-ins live in the
             History tab. */}
         {plan && (
@@ -1051,7 +1051,7 @@ export function UnifiedClientProfile() {
         </section>
         )}
 
-        {/* Chat + tabbed Plan/History. The plan side gets the wider column —
+        {/* Chat + tabbed Plan/History. The plan side gets the wider column:
             its rows carry names and results, while a chat thread reads fine
             narrow and sat half empty at equal widths. Matched heights keep
             the pairing tidy on desktop; one column through tablet widths,
@@ -1091,10 +1091,10 @@ export function UnifiedClientProfile() {
           {/* Secondary: Tabbed Plan + History.
               Matches the chat card's height on desktop; footers pin to the bottom
               edge (like the chat input) so spare space sits inside the card. */}
-          {/* With no plan, picking one is the page's job — first on phones */}
+          {/* With no plan, picking one is the page's job, first on phones */}
           <section ref={secondaryRef} className={cn('lg:col-span-3', hasNoPlan && 'order-first lg:order-none')}>
             <SectionCard className="lg:h-[480px] lg:flex lg:flex-col">
-              {/* Tab bar — labels never wrap; "Training Plan" shortens to
+              {/* Tab bar: labels never wrap; "Training Plan" shortens to
                   "Plan" on phones where three full labels don't fit */}
               {secondaryTabs.length > 1 && (
               <div className="flex gap-1 border-b border-border mb-3 -mt-1">
@@ -1138,7 +1138,7 @@ export function UnifiedClientProfile() {
                 <div ref={planEditorRef} className="lg:flex-1 lg:min-h-0 lg:flex lg:flex-col">
                   {plan ? (
                     <>
-                      {/* Plan actions row — stacked on phones so the plan
+                      {/* Plan actions row: stacked on phones so the plan
                           name keeps the full width instead of truncating
                           against three action buttons */}
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-3 lg:shrink-0">
@@ -1163,7 +1163,7 @@ export function UnifiedClientProfile() {
                           </Button>
                         </div>
                       </div>
-                      {/* Full weekly view — scrolls internally if it outgrows the card */}
+                      {/* Full weekly view; scrolls internally if it outgrows the card */}
                       <div className="lg:flex-1 lg:min-h-0 lg:overflow-y-auto">
                         <InteractiveWeeklyStrip
                           client={client}
@@ -1175,7 +1175,7 @@ export function UnifiedClientProfile() {
                           flagCounts={flagCountsByCompletion}
                         />
                       </div>
-                      {/* Plan meta footer — pinned to the card's bottom edge on desktop */}
+                      {/* Plan meta footer, pinned to the card's bottom edge on desktop */}
                       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40 lg:shrink-0 text-pretty leading-relaxed">
                         {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'}
                         {plan.workoutsPerWeek ? ` · ${plan.workoutsPerWeek}×/week` : ''}
@@ -1258,7 +1258,7 @@ export function UnifiedClientProfile() {
         onAssign={handleAssignPlan}
         onUnassign={handleUnassignPlan}
         plans={plansList}
-        /* The client trains on their own copy — match against its template */
+        /* The client trains on their own copy, so match against its template */
         currentPlanId={plan?.sourceTemplateId ?? plan?.id}
         clientName={client.name}
       />
@@ -1308,7 +1308,7 @@ export function UnifiedClientProfile() {
         confirmVariant="destructive"
         icon={UserMinus}
         /* Typing the name makes ending a real coaching relationship a
-           deliberate act — the sample client stays one-tap disposable */
+           deliberate act; the sample client stays one-tap disposable */
         requireText={apiClient.isSample ? undefined : client.name}
       />
     </div>

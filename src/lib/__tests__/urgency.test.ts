@@ -8,7 +8,7 @@ function daysAgo(n: number): Date {
 describe('getClientUrgency', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // Wednesday, July 15 2026, noon local — the plan-week math runs in local
+    // Wednesday, July 15 2026, noon local. The plan-week math runs in local
     // time, so "now" and plan start dates are pinned as local wall-clock times
     vi.setSystemTime(new Date('2026-07-15T12:00:00'));
   });

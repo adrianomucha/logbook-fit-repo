@@ -53,7 +53,7 @@ describe("rateLimit", () => {
 
     expect((await limiter("user1")).allowed).toBe(true);
     expect((await limiter("user1")).allowed).toBe(false);
-    // Different key — gets its own bucket
+    // Different key gets its own bucket
     expect((await limiter("user2")).allowed).toBe(true);
   });
 
@@ -110,7 +110,7 @@ describe("rateLimit", () => {
 
     expect((await limiterA("user1")).allowed).toBe(true);
     expect((await limiterA("user1")).allowed).toBe(false);
-    // Different limiter name — independent store
+    // Different limiter name, independent store
     expect((await limiterB("user1")).allowed).toBe(true);
   });
 });

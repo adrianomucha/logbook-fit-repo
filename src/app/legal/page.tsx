@@ -12,7 +12,7 @@ export const metadata = pageMetadata({
 });
 
 /**
- * Legal hub — the stripe.com/legal pattern: one index every legal document
+ * Legal hub, the stripe.com/legal pattern: one index every legal document
  * hangs off, so a link to "Legal" is always enough and new documents (DPA,
  * cookie policy) get a home without touching every footer. Add new documents
  * here and to the sitemap together.
@@ -29,7 +29,7 @@ const DOCUMENTS = [
     href: '/terms',
     title: 'Terms of Service',
     description:
-      'The rules of the private beta, in plain English — including what we are (software) and what we are not (medical advice).',
+      'The rules of the private beta, in plain English, including what we are (software) and what we are not (medical advice).',
     updated: 'October 20, 2026',
   },
 ];

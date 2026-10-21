@@ -30,7 +30,7 @@ interface ExerciseCardProps {
   isReadOnly?: boolean;
 }
 
-/** One exercise: the row that expands into coach note, flag, and the set table — the web's ExerciseCard. */
+/** One exercise: the row that expands into coach note, flag, and the set table. The web's ExerciseCard. */
 export function ExerciseCard({
   exercise,
   exerciseLabel,
@@ -58,7 +58,7 @@ export function ExerciseCard({
   // timer moves down on its own as each set completes.
   const nextSetNumber = isTime ? setNumbers.find((n) => !isSetCompleted(exercise.setCompletions, n)) : undefined;
 
-  // Toggle every set in one go — completing also persists actuals per set,
+  // Toggle every set in one go; completing also persists actuals per set,
   // exactly like a per-set tap, so bulk-completed exercises still log data.
   const toggleAll = () => {
     if (isReadOnly) return;
@@ -178,7 +178,7 @@ export function ExerciseCard({
                 Set
               </Text>
               <Text className="flex-1 font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">Last</Text>
-              {/* The athlete's own unit — the cells below show and take it */}
+              {/* The athlete's own unit: the cells below show and take it */}
               <Text style={{ width: SET_COLS.weight }} className="text-center font-mono text-[10px] uppercase tracking-[1.4px] text-muted-foreground">
                 {weightUnitLabel(weightUnit)}
               </Text>
@@ -192,7 +192,7 @@ export function ExerciseCard({
               return (
                 <SetRow
                   // weightUnit re-seeds the inputs if the unit resolves after
-                  // first paint — the cell text must match how it's read back
+                  // first paint; the cell text must match how it's read back
                   key={`${setNumber}-${exercise.setCompletions.length === 0 ? 'fresh' : 'logged'}-${weightUnit}`}
                   setNumber={setNumber}
                   trackingType={exercise.trackingType}

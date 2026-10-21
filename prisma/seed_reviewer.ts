@@ -9,7 +9,7 @@
  * chat thread with an unread message from the coach.
  *
  * Credentials come from the environment and are never written anywhere in
- * the repo — put them in App Store Connect's review notes only:
+ * the repo. Put them in App Store Connect's review notes only:
  *
  *   REVIEWER_COACH_EMAIL=review-coach@example.com \
  *   REVIEWER_CLIENT_EMAIL=review-client@example.com \
@@ -32,7 +32,11 @@ const COACH_EMAIL = process.env.REVIEWER_COACH_EMAIL?.trim().toLowerCase();
 const CLIENT_EMAIL = process.env.REVIEWER_CLIENT_EMAIL?.trim().toLowerCase();
 const PASSWORD = process.env.REVIEWER_PASSWORD;
 
-const PLAN_NAME = "Foundations — 3 days";
+const PLAN_NAME = "Foundations: 3 days";
+// What the plan was called before em dashes were dropped from the repo. The
+// lookup below still finds it, so re-running this on an already-seeded
+// reviewer account renames that plan instead of creating a second one.
+const LEGACY_PLAN_NAME = "Foundations \u2014 3 days";
 const DURATION_WEEKS = 4;
 
 type Ex = { name: string; category: ExerciseCategory; sets: number; reps: number; repsMax?: number; notes?: string };
@@ -40,7 +44,7 @@ type DayDef = { name: string; description: string; exercises: Ex[] };
 
 const DAYS: DayDef[] = [
   {
-    name: "Day 1 — Push",
+    name: "Day 1: Push",
     description: "Presses first while you're fresh. Leave two reps in the tank on every set.",
     exercises: [
       { name: "Barbell Bench Press", category: "CHEST", sets: 4, reps: 6, repsMax: 8 },
@@ -51,8 +55,8 @@ const DAYS: DayDef[] = [
     ],
   },
   {
-    name: "Day 2 — Pull",
-    description: "Squeeze at the top of every row. Grip gives out before your back does — use straps if you need them.",
+    name: "Day 2: Pull",
+    description: "Squeeze at the top of every row. Grip gives out before your back does. Use straps if you need them.",
     exercises: [
       { name: "Deadlift", category: "BACK", sets: 3, reps: 5, notes: "Reset each rep. No touch-and-go." },
       { name: "Lat Pulldown", category: "BACK", sets: 3, reps: 8, repsMax: 10 },
@@ -62,7 +66,7 @@ const DAYS: DayDef[] = [
     ],
   },
   {
-    name: "Day 3 — Legs",
+    name: "Day 3: Legs",
     description: "The hard one. Warm up properly and take the full rest between squat sets.",
     exercises: [
       { name: "Back Squat", category: "LEGS", sets: 4, reps: 6, repsMax: 8 },
@@ -100,7 +104,7 @@ async function main() {
     );
   }
   if (isDemoAccount(COACH_EMAIL) || isDemoAccount(CLIENT_EMAIL)) {
-    throw new Error("Reviewer accounts must not reuse the seeded demo emails — those are locked on deployed builds.");
+    throw new Error("Reviewer accounts must not reuse the seeded demo emails. Those are locked on deployed builds.");
   }
   if (PASSWORD.length < 12 || isCommonPassword(PASSWORD)) {
     throw new Error("REVIEWER_PASSWORD must be at least 12 characters and not a common password.");
@@ -127,7 +131,7 @@ async function main() {
     update: {},
   });
 
-  // 3. Relationship (one coach per client — reuse whatever exists)
+  // 3. Relationship (one coach per client; reuse whatever exists)
   const relationship = await prisma.coachClientRelationship.upsert({
     where: { clientId: clientProfile.id },
     create: { coachId: coachProfile.id, clientId: clientProfile.id, status: "ACTIVE" },
@@ -159,8 +163,16 @@ async function main() {
   }
 
   let plan = await prisma.plan.findFirst({
-    where: { coachId: coachProfile.id, name: PLAN_NAME, deletedAt: null, sourceTemplateId: null },
+    where: {
+      coachId: coachProfile.id,
+      name: { in: [PLAN_NAME, LEGACY_PLAN_NAME] },
+      deletedAt: null,
+      sourceTemplateId: null,
+    },
   });
+  if (plan && plan.name !== PLAN_NAME) {
+    plan = await prisma.plan.update({ where: { id: plan.id }, data: { name: PLAN_NAME } });
+  }
   if (!plan) {
     plan = await prisma.plan.create({
       data: {
@@ -195,7 +207,7 @@ async function main() {
     console.log(`✓ Plan exists: ${PLAN_NAME}`);
   }
 
-  // 5. Assign — week 1 starts today, so the reviewer sees a fresh week
+  // 5. Assign: week 1 starts today, so the reviewer sees a fresh week
   if (clientProfile.activePlanId !== plan.id) {
     await prisma.clientProfile.update({
       where: { id: clientProfile.id },
@@ -251,7 +263,7 @@ async function main() {
         {
           senderId: coachUser.id,
           recipientId: clientUser.id,
-          content: "Welcome aboard! Your first block is up — three days a week, nothing fancy. Start whenever you're ready.",
+          content: "Welcome aboard! Your first block is up: three days a week, nothing fancy. Start whenever you're ready.",
           readAt: daysAgo(2),
           createdAt: daysAgo(3),
         },

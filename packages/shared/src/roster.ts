@@ -41,7 +41,7 @@ export interface RosterAction {
  */
 export function rosterAction(client: DashboardClient, unreadCount = 0): RosterAction | null {
   // A submitted response always deserves a review, even when the client is
-  // also at risk — their answer is the coach's opening to re-engage them
+  // also at risk; their answer is the coach's opening to re-engage them
   if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
     return { label: 'Review Check-in', target: 'check-in' };
   }
@@ -108,7 +108,7 @@ export type ClientSignal = { lead?: string; rest: string[] };
 
 // The "signal": names *why* a client is flagged. An emphasized lead token
 // carries the reason to act; the rest is quiet context. Built only from data
-// that actually exists on DashboardClient — never invented. It never repeats
+// that actually exists on DashboardClient, never invented. It never repeats
 // the status chip beside it.
 export function clientSignal(client: DashboardClient, now: number = Date.now()): ClientSignal {
   const rest: string[] = [];
@@ -117,7 +117,7 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
 
   switch (client.urgency) {
     case 'NEEDS_PLAN': {
-      // The first message matters more than the first plan — greet them
+      // The first message matters more than the first plan. Greet them
       // while joining is still news, then get them training
       if (client.awaitingHello) {
         return { lead: 'Say hello while it’s warm', rest: ['waiting on their first plan'] };
@@ -125,7 +125,7 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
       return { lead: 'Waiting on their first plan', rest };
     }
     case 'PLAN_ENDED': {
-      // The chip already says the plan ended — name which one
+      // The chip already says the plan ended; name which one
       return plan ? { lead: `${plan} finished`, rest } : { lead: 'Ready for their next block', rest };
     }
     case 'AT_RISK': {
@@ -153,7 +153,7 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
     case 'ON_TRACK': {
       if (plan) rest.push(plan);
       if (finalWeek) rest.push('final week, line up the next block');
-      // Inside the grace window of a plan they haven't trained on yet —
+      // Inside the grace window of a plan they haven't trained on yet:
       // say so, or a client with no recent workouts reads as a mistake
       const justStarted = newPlanHint(client.planStartDate, client.lastWorkoutAt, now);
       if (justStarted) {

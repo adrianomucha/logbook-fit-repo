@@ -14,7 +14,7 @@ interface AssignPlanModalProps {
   onUnassign?: () => void | Promise<void>;
   plans: WorkoutPlan[];
   currentPlanId?: string;
-  /** Client receiving the plan — named in the header and the confirm button */
+  /** Client receiving the plan, named in the header and the confirm button */
   clientName?: string;
 }
 
@@ -33,7 +33,7 @@ const perWeekLabel = (plan: WorkoutPlan) => `${plan.workoutsPerWeek}×/week`;
 
 /**
  * Assign / switch a client's plan.
- * One grouped list in the Plans page's voice — rows, not cards: the current
+ * One grouped list in the Plans page's voice. Rows, not cards: the current
  * plan pinned on top and tagged, templates below with aligned stat columns.
  * Tap a row to pick it; the footer names what will happen.
  */
@@ -124,7 +124,7 @@ export function AssignPlanModal({
     }
   };
 
-  // Nothing assigned and nothing to assign — a single quiet empty state
+  // Nothing assigned and nothing to assign: a single quiet empty state
   if (selectablePlans.length === 0 && !currentPlan) {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title={title} maxWidth="md">
@@ -210,7 +210,7 @@ export function AssignPlanModal({
         )}
 
         <div className={cn('bg-card rounded-xl divide-y divide-border overflow-hidden', cardShadow)}>
-          {/* Current plan — pinned first, tagged rather than selectable */}
+          {/* Current plan: pinned first, tagged rather than selectable */}
           {currentPlan && !q && (
             <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 bg-muted/40">
               <div className="flex-1 min-w-0">

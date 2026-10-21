@@ -16,17 +16,17 @@ interface SetRowProps {
   setNumber: number;
   /** REPS (default) logs a rep count; TIME logs seconds held/worked. */
   trackingType?: TrackingType;
-  /** Coach-prescribed reps ("6-8") — or a duration ("60s", "30-60s") when TIME. */
+  /** Coach-prescribed reps ("6-8"), or a duration ("60s", "30-60s") when TIME. */
   repsTarget?: string | number;
   /** Coach-prescribed weight, stored lb. Usually a number, but tolerate a string like "50 lbs". */
   weightTarget?: string | number;
-  /** The athlete's unit — the weight cell shows and takes this */
+  /** The athlete's unit; the weight cell shows and takes this */
   weightUnit: WeightUnit;
   /** Logged reps for this set (null if not logged yet) */
   actualReps?: number | null;
   /** Logged weight for this set, stored lb (null if not logged yet) */
   actualWeight?: number | null;
-  /** Last session's result, compact ("52.5×8") — rendered as the LAST column */
+  /** Last session's result, compact ("52.5×8"), rendered as the LAST column */
   previous?: string;
   completed: boolean;
   onToggle: () => void;
@@ -100,7 +100,7 @@ export function SetRow({
   const handleToggle = () => {
     if (isReadOnly) return;
     // When marking complete, persist whatever is shown so the logged values match
-    // what the athlete did — even if they kept the prescribed default untouched.
+    // what the athlete did, even if they kept the prescribed default untouched.
     if (!completed) {
       const r = parseInt(reps, 10);
       if (!Number.isNaN(r) && r >= 0) onChangeReps?.(r);
@@ -122,8 +122,8 @@ export function SetRow({
     onToggle();
   };
 
-  // Countdown from whatever is in the seconds cell — the athlete can retype
-  // it to hold longer or shorter than prescribed — else the prescription.
+  // Countdown from whatever is in the seconds cell (the athlete can retype
+  // it to hold longer or shorter than prescribed), else the prescription.
   const typedSeconds = parseInt(reps, 10);
   const timerTarget =
     !Number.isNaN(typedSeconds) && typedSeconds > 0 ? typedSeconds : defaultReps;
@@ -139,7 +139,7 @@ export function SetRow({
       type="text"
       inputMode={opts.inputMode}
       value={opts.value}
-      placeholder={opts.placeholder ?? '—'}
+      placeholder={opts.placeholder ?? '-'}
       disabled={isReadOnly}
       aria-label={`Set ${setNumber} ${opts.label}`}
       onChange={(e) => opts.onChange(e.target.value)}
@@ -151,7 +151,7 @@ export function SetRow({
         'placeholder:font-semibold placeholder:text-muted-foreground disabled:opacity-100',
         completed
           ? 'bg-transparent text-muted-foreground'
-          // ring-foreground/20 measured 1.6:1 against the card — too faint to
+          // ring-foreground/20 measured 1.6:1 against the card, too faint to
           // read as a focus indicator on the screen's main data-entry control.
           : 'bg-muted/50 text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
       )}
@@ -180,7 +180,7 @@ export function SetRow({
       </span>
 
       <span className="font-mono text-xs tabular-nums text-muted-foreground truncate">
-        {previous || '—'}
+        {previous || '-'}
       </span>
 
       {cellInput({

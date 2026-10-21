@@ -315,7 +315,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
     setRowErrors(Array.isArray(body.rowErrors) ? (body.rowErrors as ImportRowError[]) : []);
   };
 
-  // Step one: read the file into a plan to review — nothing is saved yet
+  // Step one: read the file into a plan to review; nothing is saved yet
   const handleRead = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -363,7 +363,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
     }
   };
 
-  // Step two: the coach has checked the plan — create it from the same rows
+  // Step two: the coach has checked the plan; create it from the same rows
   const handleCreate = async () => {
     if (isSubmitting || !preview) return;
     setIsSubmitting(true);
@@ -529,12 +529,12 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
       ) : (
         <form onSubmit={handleRead} className="space-y-5">
           {/* Upload, then name the result. Only the real dropzone keeps a
-              dashed border — dashed means "drop here", nothing else. */}
+              dashed border; dashed means "drop here", nothing else. */}
           <ol>
             <ImportStep
               number="1"
               title="Upload your spreadsheet"
-              description="Any layout works — one row per exercise, a column per week, a tab per week. Excel or CSV."
+              description="Any layout works: one row per exercise, a column per week, a tab per week. Excel or CSV."
             >
               <input
                 ref={fileInputRef}
@@ -548,7 +548,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
               {file ? (
                 <div className="mt-2.5 flex items-center gap-3 rounded-2xl border border-border bg-muted/40 px-4 py-3 animate-in fade-in-0 slide-in-from-top-1 duration-150">
                   <FileSpreadsheet className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0" aria-hidden="true" />
-                  {/* Truncation hides the middle of long filenames — keep the
+                  {/* Truncation hides the middle of long filenames; keep the
                       full name reachable */}
                   <span className="flex-1 min-w-0 truncate text-sm font-medium antialiased" title={file.name}>{file.name}</span>
                   <Button
@@ -577,7 +577,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
                 </button>
               )}
               {/* Said before upload, while there's still time to clean the
-                  file — matches the Anthropic entry in the privacy policy */}
+                  file. Matches the Anthropic entry in the privacy policy */}
               <p className="mt-2 text-xs text-muted-foreground text-pretty antialiased">
                 Layouts other than the template are read by Anthropic&rsquo;s AI, so
                 remove client names and health details first.{' '}
@@ -593,7 +593,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
               </p>
               {/* A plain anchor: same-origin GET rides the session cookie, and
                   the browser handles the download natively. Styled directly
-                  with buttonVariants — this repo's Button doesn't implement
+                  with buttonVariants; this repo's Button doesn't implement
                   asChild, so wrapping the anchor left it unstyled. */}
               <a
                 href="/api/plans/import/template"

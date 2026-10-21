@@ -15,7 +15,7 @@ interface SetTimerProps {
   onStop: (seconds: number) => void;
 }
 
-/** The buzzer — a firm double tap, the native stand-in for the web's vibrate pattern. */
+/** The buzzer: a firm double tap, the native stand-in for the web's vibrate pattern. */
 function buzz() {
   void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
 }
@@ -50,7 +50,7 @@ function Control({
 }
 
 /**
- * Countdown for a single TIME set — the web's SetTimer. Idle it is one slim
+ * Countdown for a single TIME set: the web's SetTimer. Idle it is one slim
  * "Start" line so a 3-set plank doesn't turn into three stopwatches; once
  * started it grows into a large clock with pause/stop so it can be read
  * from plank height.

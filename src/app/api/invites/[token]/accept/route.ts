@@ -6,7 +6,7 @@ import { notifyClientJoined } from "@/lib/push";
 
 /**
  * POST /api/invites/[token]/accept
- * A signed-in client accepts a coach's invite — the path for anyone who
+ * A signed-in client accepts a coach's invite: the path for anyone who
  * already has an account, including clients coming back after their
  * coaching ended. New accounts redeem invites through signup instead.
  */

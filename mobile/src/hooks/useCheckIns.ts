@@ -3,7 +3,7 @@ import type { CheckInDetail, ClientCheckIn, ClientProgress } from '@logbook/shar
 import { apiFetch } from '@/lib/api';
 
 /**
- * GET /api/client/check-ins — polled like the rest of Today: this GET is
+ * GET /api/client/check-ins, polled like the rest of Today: this GET is
  * also what lazily creates the weekly scheduled check-in, so without it a
  * client who keeps the app open never sees (or even triggers) a new one.
  */
@@ -32,7 +32,7 @@ export function useCheckIn(checkInId: string | null) {
   return { checkIn: data ?? null, error, isLoading, submitClientResponse, refresh: mutate };
 }
 
-/** GET /api/client/progress — every completion plus totals. */
+/** GET /api/client/progress: every completion plus totals. */
 export function useClientProgress() {
   const { data, error, isLoading, mutate } = useSWR<ClientProgress>('/api/client/progress', {
     refreshInterval: 30_000,

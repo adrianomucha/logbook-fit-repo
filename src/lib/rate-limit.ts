@@ -3,7 +3,7 @@
  *
  * Uses Upstash Redis (distributed, survives cold starts and scales across
  * lambda instances) when UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN
- * are set. Falls back to a per-instance in-memory limiter otherwise — fine
+ * are set. Falls back to a per-instance in-memory limiter otherwise: fine
  * for local dev, but on serverless every instance gets its own budget, so
  * production should always run with Upstash configured.
  */
@@ -36,7 +36,7 @@ const hasUpstash = Boolean(redisUrl && redisToken);
 // log alert on "_ALERT]" catches every silently-degraded subsystem.
 if (!hasUpstash && process.env.NODE_ENV === "production") {
   console.error(
-    "[RATE-LIMIT_ALERT] Upstash env vars not set — using per-instance in-memory limits, which are ineffective on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the KV_REST_API_* equivalents)."
+    "[RATE-LIMIT_ALERT] Upstash env vars not set, using per-instance in-memory limits, which are ineffective on serverless. Set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or the KV_REST_API_* equivalents)."
   );
 }
 
@@ -87,7 +87,7 @@ function memoryCheck(name: string, config: RateLimitConfig, key: string): RateLi
 /**
  * Rate-limit keys carry PII (login keys contain the attempted email, others
  * the client IP). Hash every key before use so raw identifiers are never
- * persisted — in particular not in Upstash, an external service. HMAC-keyed
+ * persisted, in particular not in Upstash, an external service. HMAC-keyed
  * with NEXTAUTH_SECRET so a leaked Redis snapshot can't be dictionary-attacked
  * back to emails. Same input still maps to the same bucket, so limiting
  * behavior is unchanged.
@@ -150,7 +150,7 @@ export function rateLimit(name: string, config: RateLimitConfig) {
 /**
  * Live probe of the distributed store, for /admin/health. Resolves
  * "unconfigured" when Upstash env vars are absent (the in-memory fallback is
- * in use), "ok" when Redis answers, and rejects when it doesn't — the same
+ * in use), "ok" when Redis answers, and rejects when it doesn't, the same
  * condition under which every limiter above is silently failing open.
  */
 export async function pingRateLimitStore(): Promise<"ok" | "unconfigured"> {
@@ -183,7 +183,7 @@ export const inviteLimiter = rateLimit("invite", {
 });
 
 // Invite emails go to addresses a coach types in, so each send is capped per
-// coach — enough for a coach onboarding a batch of clients, too few for spam
+// coach: enough for a coach onboarding a batch of clients, too few for spam
 export const inviteEmailLimiter = rateLimit("invite-email", {
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 15,
@@ -196,8 +196,8 @@ export const waitlistLimiter = rateLimit("waitlist", {
 
 // Reset requests are keyed by IP + email: tight enough that one address
 // can't be flooded with reset mail, without one shared office IP starving
-// everyone. The confirm side is keyed by IP alone — its failure mode is
-// token guessing, not mail volume — and sized like login.
+// everyone. The confirm side is keyed by IP alone (its failure mode is
+// token guessing, not mail volume) and sized like login.
 export const passwordResetRequestLimiter = rateLimit("pw-reset-request", {
   windowMs: 60 * 60 * 1000, // 1 hour
   maxRequests: 5,

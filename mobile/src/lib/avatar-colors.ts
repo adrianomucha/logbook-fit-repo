@@ -1,5 +1,5 @@
 /**
- * Deterministic avatar colour from a display name — the web's avatarColor
+ * Deterministic avatar colour from a display name: the web's avatarColor
  * with its Tailwind pairs (rose/sky/amber/… 100 + 700) as literal colours,
  * so the same person is the same colour in both apps.
  */

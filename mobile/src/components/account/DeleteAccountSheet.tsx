@@ -9,7 +9,7 @@ import { Button, Eyebrow } from '@/components/ui';
 const CONFIRM_PHRASE = 'DELETE';
 
 /**
- * "Delete account" — the web's DeleteAccountDialog, reached from the danger
+ * "Delete account": the web's DeleteAccountDialog, reached from the danger
  * zone in Settings → Account. Two proofs of intent: typing DELETE (can't be
  * muscle memory) and the password (can't be someone else holding the
  * phone). On success the caller ends the session.
@@ -39,7 +39,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
       await apiFetch('/api/me', { method: 'DELETE', body: JSON.stringify({ password }) });
       await onDeleted();
     } catch (e) {
-      setError(e instanceof ApiError && (e.status === 403 || e.status === 429) ? e.message : 'Couldn’t delete the account. Nothing was changed — try again.');
+      setError(e instanceof ApiError && (e.status === 403 || e.status === 429) ? e.message : 'Couldn’t delete the account. Nothing was changed. Try again.');
       setIsDeleting(false);
     }
   };

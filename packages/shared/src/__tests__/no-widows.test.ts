@@ -17,7 +17,7 @@ describe('noWidows', () => {
   });
 
   it('leaves a pair alone when gluing it could overflow a narrow column', () => {
-    // "Coaching Relationship" is 21 chars — bound, it would not fit the
+    // "Coaching Relationship" is 21 chars; bound, it would not fit the
     // title column on a 320px screen
     const title = 'End Coaching Relationship';
     expect(noWidows(title)).toBe(title);
@@ -36,7 +36,7 @@ describe('noWidows', () => {
     expect(noWidows('stay untouched. ')).toBe(`stay${NBSP}untouched.`);
   });
 
-  it('is idempotent — a bound pair is not re-bound', () => {
+  it('is idempotent: a bound pair is not re-bound', () => {
     const once = noWidows('Remove Riley Chen and all their generated data?');
     expect(noWidows(once)).toBe(once);
   });

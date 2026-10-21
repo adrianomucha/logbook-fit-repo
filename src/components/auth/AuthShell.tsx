@@ -1,22 +1,22 @@
 import Link from 'next/link';
 import { Logo } from '@/components/brand/LogoMark';
 
-/** The check-in loop, reduced to its four beats — the brand panel's footer. */
+/** The check-in loop, reduced to its four beats: the brand panel's footer. */
 const LOOP_STEPS = ['Plan', 'Train', 'Check in', 'Adjust'];
 
 interface AuthShellProps {
-  /** Which page this frames — flips the header's escape hatch. */
+  /** Which page this frames; flips the header's escape hatch. */
   mode: 'login' | 'signup';
   /**
    * Overrides where the escape hatch points (an invite's sign-in carries the
-   * invite through); null hides it — a signed-in visitor has nowhere to go.
+   * invite through); null hides it; a signed-in visitor has nowhere to go.
    */
   altHref?: string | null;
   children: React.ReactNode;
 }
 
 /**
- * Shared frame for the auth pages — a split canvas. The left half is the
+ * Shared frame for the auth pages: a split canvas. The left half is the
  * brand's dark world from the landing hero (logbook grid paper, display
  * type, the rep-tally watermark); the right half is the light form column
  * that hands off into the app. Below `lg` the brand panel collapses to a
@@ -31,7 +31,7 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
 
   return (
     <div className="min-h-dvh bg-background lg:grid lg:grid-cols-2">
-      {/* Brand panel — desktop only; sticky so long forms scroll beside it */}
+      {/* Brand panel, desktop only; sticky so long forms scroll beside it */}
       <aside className="dark relative hidden overflow-hidden border-r border-border bg-background p-10 text-foreground lg:sticky lg:top-0 lg:flex lg:h-dvh lg:flex-col lg:justify-between xl:p-14">
         {/* Logbook grid paper, fading out toward the bottom-right */}
         <div
@@ -48,7 +48,7 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
           aria-hidden="true"
           className="pointer-events-none absolute -left-24 top-1/3 h-[28rem] w-[28rem] rounded-full bg-brand/[0.07] blur-3xl"
         />
-        {/* Rep-tally watermark — the mark's geometry without its tile, blown up */}
+        {/* Rep-tally watermark: the mark's geometry without its tile, blown up */}
         <svg
           aria-hidden="true"
           viewBox="0 0 64 64"
@@ -104,12 +104,12 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
         </div>
       </aside>
 
-      {/* Form column — the app's own light chrome */}
+      {/* Form column: the app's own light chrome */}
       <div className="flex min-h-dvh flex-col">
         <div className="h-1 shrink-0 bg-brand lg:hidden" aria-hidden="true" />
         {/* Mobile: hairline app bar. Desktop: borderless, with the 24px row
-            (lg:h-6) centered on the brand panel's logo line — pt + h/2 equals
-            the panel's p-10/xl:p-14 + half the 24px mark — so the button
+            (lg:h-6) centered on the brand panel's logo line (pt + h/2 equals
+            the panel's p-10/xl:p-14 + half the 24px mark), so the button
             mirrors the logo across the seam. */}
         <header className="border-b border-border lg:border-0 lg:pt-10 xl:pt-14">
           <div className="flex h-14 items-center px-5 sm:px-8 lg:h-6 lg:px-10 xl:px-14">
@@ -163,7 +163,7 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
   );
 }
 
-/** Uppercase tracked mono field label — the product's data voice. */
+/** Uppercase tracked mono field label: the product's data voice. */
 export function AuthFieldLabel({
   htmlFor,
   children,

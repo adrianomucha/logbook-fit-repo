@@ -9,7 +9,7 @@ import { apiFetch } from './api';
  * DEVELOPMENT.md → "Push (native app)"). Expo's push service needs the
  * app's EAS project id to mint a token; without one (no `eas init` yet,
  * or Expo Go without a project) the whole feature reports unavailable
- * and the opt-in never appears — an offer the app can't honour is worse
+ * and the opt-in never appears. An offer the app can't honour is worse
  * than silence.
  */
 

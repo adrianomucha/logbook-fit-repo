@@ -26,7 +26,7 @@ function Row({ exercise, label, last }: { exercise: Exercise; label: string; las
   );
 }
 
-/** The day's exercises, supersets bracketed together — mirrors the web's ExercisePreviewList. */
+/** The day's exercises, supersets bracketed together. Mirrors the web's ExercisePreviewList. */
 export function ExercisePreview({ exercises }: { exercises: Exercise[] }) {
   const groups = groupBySuperset(exercises);
   return (

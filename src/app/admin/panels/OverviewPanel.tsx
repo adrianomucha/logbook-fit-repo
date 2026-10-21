@@ -32,7 +32,7 @@ function StatCard({ stat }: { stat: Stat }) {
 }
 
 /**
- * Eight weekly bars, server-rendered as plain divs — the page has no client
+ * Eight weekly bars, server-rendered as plain divs; the page has no client
  * JavaScript and this reads fine at a glance without a charting library.
  */
 function WeekBars({ title, buckets }: { title: string; buckets: WeekBucket[] }) {
@@ -111,7 +111,7 @@ export async function OverviewPanel({ checks: pending }: { checks: Promise<Healt
             </p>
             <h1 className="mt-1 text-2xl font-bold tracking-tight">Overview</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Counts only — demo and sample accounts are excluded, and chat is
+              Counts only. Demo and sample accounts are excluded, and chat is
               reported as volume, never content.
             </p>
           </div>

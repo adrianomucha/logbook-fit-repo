@@ -10,7 +10,7 @@ import {
  *
  * Ranking (0 = most urgent):
  * NEEDS_PLAN > PLAN_ENDED > AT_RISK > AWAITING_RESPONSE > CHECKIN_DUE > ON_TRACK
- * A client who already responded to a check-in outranks one who hasn't —
+ * A client who already responded to a check-in outranks one who hasn't:
  * they're actively waiting on the coach.
  */
 
@@ -63,13 +63,13 @@ export function getClientUrgency(input: ClientUrgencyInput): ClientUrgencyResult
       : 'ACTIVE';
 
   if (!input.hasPlan) {
-    // Fresh signup waiting on their first plan — the coach's next move,
+    // Fresh signup waiting on their first plan: the coach's next move,
     // and the window where new clients churn if nothing happens
     return { urgency: 'NEEDS_PLAN', urgencyOrder: 0, planStatus };
   }
 
   if (planStatus === 'ENDED') {
-    // Plan finished with nothing lined up — the highest-churn moment
+    // Plan finished with nothing lined up: the highest-churn moment
     // after signup; the remedy is assigning the next block
     return { urgency: 'PLAN_ENDED', urgencyOrder: 1, planStatus };
   }
@@ -104,7 +104,7 @@ export function getClientUrgency(input: ClientUrgencyInput): ClientUrgencyResult
 
 /**
  * "started 2d ago" for a client still inside the at-risk grace window of a
- * plan they haven't trained on yet — explains why someone with no recent
+ * plan they haven't trained on yet, which explains why someone with no recent
  * workouts reads as on track. Null once they've trained since the plan
  * started, or once the window has run out (they're at risk then).
  */

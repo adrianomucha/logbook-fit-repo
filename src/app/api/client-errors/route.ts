@@ -8,8 +8,8 @@ import { clientErrorLimiter, getClientIp } from "@/lib/rate-limit";
  * global-error.tsx). There is no error-tracking service wired up, so without
  * this a tester's crash renders them a "Something went wrong" screen and
  * leaves no trace anywhere an operator will look. The report is only logged
- * — alert-tagged so one Vercel log alert on "_ALERT]" catches crashes along
- * with dead email and inert rate limiting.
+ * (alert-tagged so one Vercel log alert on "_ALERT]" catches crashes along
+ * with dead email and inert rate limiting).
  *
  * Unauthenticated on purpose: the marketing page and auth screens crash too.
  * The schema hard-caps every field and the limiter bounds the volume.

@@ -24,9 +24,9 @@ interface InteractiveWeeklyStripProps {
   onEditPlan?: () => void;
   /** Render as compact single-row strip (~60-72px height) */
   compact?: boolean;
-  /** Skip Card wrapper — for embedding inside another container */
+  /** Skip Card wrapper, for embedding inside another container */
   variant?: 'card' | 'flat';
-  /** Exercises flagged per workout completion id — shown on finished rows */
+  /** Exercises flagged per workout completion id, shown on finished rows */
   flagCounts?: Record<string, number>;
 }
 
@@ -132,7 +132,7 @@ export function InteractiveWeeklyStrip({
           </p>
         </div>
 
-        {/* Pill progress bar — staggered grow-in */}
+        {/* Pill progress bar: staggered grow-in */}
         <div className="flex gap-1.5">
           {workoutDays.map((day, i) => (
             <div
@@ -182,7 +182,7 @@ export function InteractiveWeeklyStrip({
         </div>
       )}
 
-      {/* 7-day interactive list — exercises expand inline under each day */}
+      {/* 7-day interactive list: exercises expand inline under each day */}
       <div className="divide-y divide-border/40">
         {weekDays.map((day) => {
           const isExpanded = expandedOrderIndex === day.orderIndex;
@@ -215,7 +215,7 @@ export function InteractiveWeeklyStrip({
                         >
                           <span className="flex-1 truncate antialiased">{exercise.name}</span>
                           <span className="font-mono text-xs text-muted-foreground shrink-0 tabular-nums antialiased ms-3">
-                            {exercise.sets}×{exercise.reps || '—'}
+                            {exercise.sets}×{exercise.reps || '-'}
                             {exercise.weight && ` · ${formatStoredWeight(exercise.weight, weightUnit)}`}
                           </span>
                         </div>
@@ -285,7 +285,7 @@ export function InteractiveWeeklyStrip({
 }
 
 // The app's effort colour semantics (check-in form, session card, history):
-// easy = success, medium = neutral, hard = warning — AA text cuts
+// easy = success, medium = neutral, hard = warning; AA text cuts
 const EFFORT_TEXT: Record<string, string> = {
   EASY: 'text-success-text',
   MEDIUM: 'text-foreground/70',
@@ -330,7 +330,7 @@ function InteractiveDayRow({ day, flagCount, isExpanded, onClick }: InteractiveD
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
       </svg>
 
-      {/* Position number — min-w keeps the rows' columns aligned while
+      {/* Position number: min-w keeps the rows' columns aligned while
           letting a longer translated "Day" label grow instead of clipping */}
       <div className="min-w-10 shrink-0">
         {/* The current row's tint drops plain muted-foreground below 4.5:1 */}
@@ -358,8 +358,8 @@ function InteractiveDayRow({ day, flagCount, isExpanded, onClick }: InteractiveD
         )}>
           {day.workoutDay?.name || 'Workout'}
         </p>
-        {/* A finished row says how it went — when, how hard, how long, and
-            any flags — instead of repeating the exercise count */}
+        {/* A finished row says how it went (when, how hard, how long, and
+            any flags) instead of repeating the exercise count */}
         {completion ? (
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased text-muted-foreground flex items-center gap-1.5 flex-wrap">
             {completion.completedAt && <span>Done {format(new Date(completion.completedAt), 'EEE')}</span>}

@@ -6,10 +6,10 @@
  * Shared so the server's totals and both apps' history rows agree.
  */
 
-/** Longer than any real gym session — beyond this a duration is an open-session artefact */
+/** Longer than any real gym session; beyond this a duration is an open-session artefact */
 export const MAX_SESSION_SEC = 4 * 60 * 60;
 
-/** The duration if it's believable, else undefined (shown as "—", left out of totals) */
+/** The duration if it's believable, else undefined (shown as "-", left out of totals) */
 export function plausibleSessionSec(seconds: number | null | undefined): number | undefined {
   if (seconds == null || seconds <= 0 || seconds > MAX_SESSION_SEC) return undefined;
   return seconds;

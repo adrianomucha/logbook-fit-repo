@@ -58,10 +58,10 @@ export function ClientWorkoutExecution() {
     durationMin: number;
   } | null>(null);
 
-  // Auto-expand first incomplete exercise on load — once. Re-running whenever
+  // Auto-expand first incomplete exercise on load, once. Re-running whenever
   // expandedExerciseId goes null would make collapsing a card impossible (it
   // snaps back open) and pop the first card open after the last one completes.
-  // Viewing the page does NOT start the workout — the completion is created
+  // Viewing the page does NOT start the workout; the completion is created
   // on the first interaction.
   const didAutoExpandRef = useRef(false);
   useEffect(() => {
@@ -155,7 +155,7 @@ export function ClientWorkoutExecution() {
       // Build prescription text
       const parts: string[] = [`${messageSheetExercise.sets}x`];
       if (messageSheetExercise.reps) parts.push(messageSheetExercise.reps);
-      // In the sender's unit, labelled — the text is frozen once sent
+      // In the sender's unit, labelled; the text is frozen once sent
       if (messageSheetExercise.weight) {
         parts.push(`@ ${formatWeight(messageSheetExercise.weight, weightUnit)}`);
       }
@@ -172,7 +172,7 @@ export function ClientWorkoutExecution() {
         question: content,
       });
 
-      // Send via messages API — recipient (the coach) is resolved server-side
+      // Send via messages API; recipient (the coach) is resolved server-side
       try {
         await apiFetch('/api/messages', {
           method: 'POST',
@@ -210,7 +210,7 @@ export function ClientWorkoutExecution() {
 
   // Complete the workout (starts it first if the user hasn't logged anything).
   // Ref guard: isFinishing state is stale within the same tick, so a fast
-  // double-tap would finish twice — the second call 400s after the first
+  // double-tap would finish twice: the second call 400s after the first
   // succeeds and used to toast an error over a successful finish.
   const finishingRef = useRef(false);
   const completeWorkout = async () => {
@@ -301,7 +301,7 @@ export function ClientWorkoutExecution() {
           body: JSON.stringify({ effortRating: rating }),
         });
       } catch {
-        // Non-critical — effort rating can be given from dashboard later
+        // Non-critical; effort rating can be given from dashboard later
       }
     }
 
@@ -356,7 +356,7 @@ export function ClientWorkoutExecution() {
       <div
         className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]"
       >
-        {/* Celebration Header — volt burst, mono eyebrow */}
+        {/* Celebration Header: volt burst, mono eyebrow */}
         <div className="text-center mb-8">
           <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-in zoom-in duration-300">
             <Check className="w-10 h-10 text-brand-foreground" strokeWidth={3} />
@@ -369,7 +369,7 @@ export function ClientWorkoutExecution() {
           </h1>
         </div>
 
-        {/* Workout Summary — flat stat blocks, mono data voice */}
+        {/* Workout Summary: flat stat blocks, mono data voice */}
         <div className="flex gap-2 sm:gap-3 mb-8 sm:mb-10 w-full max-w-xs">
           <div className="flex-1 bg-muted/60 rounded-xl px-3 py-5 sm:py-6 text-center">
             <p className="font-mono text-2xl font-bold tabular-nums leading-none">
@@ -438,7 +438,7 @@ export function ClientWorkoutExecution() {
         }
       />
 
-      {/* Exercise list — open and full-width: bigger tap targets mid-workout */}
+      {/* Exercise list: open and full-width: bigger tap targets mid-workout */}
       <div
         className={cn(
           'px-4 pt-4 max-w-2xl mx-auto w-full flex-1',

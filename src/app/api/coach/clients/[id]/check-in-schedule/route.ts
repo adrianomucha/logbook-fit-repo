@@ -9,7 +9,7 @@ import { ensureScheduledCheckIn } from "@/lib/checkin-schedule";
 /**
  * PUT /api/coach/clients/[id]/check-in-schedule
  * Updates the auto check-in schedule for one of the coach's clients: on/off,
- * cadence in days, and an optional anchor weekday. Partial — only the fields
+ * cadence in days, and an optional anchor weekday. Partial: only the fields
  * sent are changed. Enabling or shortening the cadence immediately
  * materializes a check-in if one is already due.
  */
@@ -41,7 +41,7 @@ export const PUT = withCoach(
     }
 
     const nextIntervalDays = intervalDays ?? relationship.checkInIntervalDays;
-    // An anchor day only makes sense for cadences of a week or longer —
+    // An anchor day only makes sense for cadences of a week or longer;
     // dropping to a shorter interval clears it rather than leaving a stale
     // setting that would silently reactivate on the next cadence change
     const nextDayOfWeek =

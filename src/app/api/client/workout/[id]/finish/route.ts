@@ -11,7 +11,7 @@ import { finishWorkoutSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/client/workout/[id]/finish
- * Completes a workout — calculates completionPct and marks status as COMPLETED.
+ * Completes a workout: calculates completionPct and marks status as COMPLETED.
  * Accepts optional: { effortRating: "EASY" | "MEDIUM" | "HARD" }
  */
 export const POST = withClient(

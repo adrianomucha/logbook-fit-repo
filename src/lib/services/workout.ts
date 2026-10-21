@@ -145,7 +145,7 @@ class WorkoutServiceImpl {
       throw new ValidationError("Day not found");
     }
 
-    // Idempotent — return existing if already started
+    // Idempotent: return existing if already started
     const existing = await this.db.workoutCompletion.findFirst({
       where: { clientId, planId: client.activePlanId, dayId: params.dayId },
     });
@@ -297,7 +297,7 @@ class WorkoutServiceImpl {
     // exercise: orphaned rows (a coach lowering set counts mid-workout leaves
     // completed rows beyond the new count) must not push stats past 100%.
     //
-    // An exercise counts as done only when ALL its sets are completed —
+    // An exercise counts as done only when ALL its sets are completed,
     // the same definition the execution UI uses, so what the client saw
     // ("2 of 5 exercises") is what gets stored and shown to the coach.
     const completedSets = completion.day.exercises.reduce(
@@ -350,7 +350,7 @@ class WorkoutServiceImpl {
       params.completionId,
     );
 
-    // A completed workout's stats are frozen — accepting late writes (e.g. a
+    // A completed workout's stats are frozen; accepting late writes (e.g. a
     // stray debounced save racing the finish) would contradict them
     if (completion.status === "COMPLETED") {
       throw new InvalidStateError("Workout already completed");
@@ -489,7 +489,7 @@ class WorkoutServiceImpl {
       _count: { _all: true },
       _avg: { completionPct: true },
     });
-    // All-time, like totalWorkouts beside it on the Progress tab — the
+    // All-time, like totalWorkouts beside it on the Progress tab. The
     // one-year window below would undercount a long-time client. Sessions
     // left open for days (a stored "139h") are left out rather than let
     // one of them outweigh a month of training.
@@ -506,7 +506,7 @@ class WorkoutServiceImpl {
     const totalDurationSec = timed._sum.durationSec ?? 0;
 
     // One bounded read (index: [clientId, completedAt]) feeds the history list,
-    // the last-7-days slice, and the streak — no second full-table scan.
+    // the last-7-days slice, and the streak; no second full-table scan.
     const windowRaw = await this.db.workoutCompletion.findMany({
       where: {
         clientId,
@@ -552,7 +552,7 @@ class WorkoutServiceImpl {
     // Personal bests: every completed set the client has ever logged, with
     // what was actually lifted (the client's override, else the prescription).
     // Deliberately not bounded to the one-year window: a best has to beat
-    // everything before it, and a record older than a year still counts —
+    // everything before it, and a record older than a year still counts;
     // otherwise 80 → 85 after an old 100 would read as a new best. Only the
     // bests themselves are trimmed to the window below. Rows are four small
     // columns (~4k a year for a 5×/week client).
@@ -595,7 +595,7 @@ class WorkoutServiceImpl {
       ),
     ).filter((b) => new Date(b.completedAt) >= oneYearAgo);
 
-    // Sets actually logged per session, from the same rows — the history
+    // Sets actually logged per session, from the same rows, so the history
     // shows the real count instead of guessing three per exercise
     const setsBySession = new Map<string, number>();
     for (const r of setRows) {

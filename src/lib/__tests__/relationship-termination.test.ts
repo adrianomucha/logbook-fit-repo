@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Transaction client mock — hoisted so the prisma mock factory can close over it
+// Transaction client mock, hoisted so the prisma mock factory can close over it
 const tx = vi.hoisted(() => ({
   coachClientRelationship: { update: vi.fn() },
   clientProfile: { update: vi.fn(), findUnique: vi.fn() },

@@ -48,7 +48,7 @@ import { cn } from '@/lib/utils';
  * the client page (/client/settings). Each pane takes the role as a variant:
  * the API endpoints underneath are role-agnostic, so the differences are
  * copy and which fields exist (bio and the invite preview are coach-only).
- * The page shells own the chrome — nav, rail and card surface. Which tabs
+ * The page shells own the chrome: nav, rail and card surface. Which tabs
  * exist and what they say lives in @logbook/shared/settings-sections, so the
  * native screen matches.
  */
@@ -72,7 +72,7 @@ export const settingsCardClass =
 const inputClass =
   'h-11 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background';
 
-/** Uppercase tracked mono label — the product's data voice */
+/** Uppercase tracked mono label: the product's data voice */
 function FieldLabel({ htmlFor, children }: { htmlFor?: string; children: React.ReactNode }) {
   return (
     <label
@@ -104,7 +104,7 @@ function SectionHeader({ section, role }: { section: SettingsSectionId; role: Se
 
 /**
  * Profile pane: photo + name for everyone; coaches also edit the bio and see
- * a live preview of the invite signup hero — the one place a prospective
+ * a live preview of the invite signup hero, the one place a prospective
  * client reads it before they commit.
  */
 export function ProfileSection({ role }: { role: SettingsRole }) {
@@ -142,7 +142,7 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
     }
     setIsPhotoBusy(true);
     try {
-      // Raw bytes, not JSON — the server sniffs the real type from them
+      // Raw bytes, not JSON; the server sniffs the real type from them
       const res = await fetch('/api/account/avatar', {
         method: 'PUT',
         body: file,
@@ -360,8 +360,8 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
 }
 
 /**
- * kg / lb segmented switch. Saves on tap — there's nothing to review before
- * committing a two-way choice — and paints the new unit optimistically.
+ * kg / lb segmented switch. Saves on tap (there's nothing to review before
+ * committing a two-way choice) and paints the new unit optimistically.
  */
 function WeightUnitField({ role }: { role: SettingsRole }) {
   const { user, weightUnit, refresh } = useCurrentUser();
@@ -475,7 +475,7 @@ export function PreferencesSection({ role }: { role: SettingsRole }) {
 }
 
 /**
- * Signed-in password change — current password proves it's really them.
+ * Signed-in password change: current password proves it's really them.
  * Folded behind a button so the Account pane reads as facts first; opening
  * it drops the cursor straight into the current password.
  */
@@ -485,7 +485,7 @@ function PasswordField() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  // Which field the error belongs to — drives aria-invalid and focus, so the
+  // Which field the error belongs to; drives aria-invalid and focus, so the
   // fix happens where the mistake is. null = form-level (rate limit, 500).
   const [errorField, setErrorField] = useState<'current' | 'new' | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -642,7 +642,7 @@ function PasswordField() {
   );
 }
 
-/** How they sign in — email and password — and the one destructive action. */
+/** How they sign in (email and password) and the one destructive action. */
 export function AccountSection({ role }: { role: SettingsRole }) {
   const { user } = useCurrentUser();
   const isCoach = role === 'coach';
@@ -655,7 +655,7 @@ export function AccountSection({ role }: { role: SettingsRole }) {
       <dl>
         <FactRow
           label={SETTINGS_FIELD_COPY.email.label}
-          value={user?.email ?? '—'}
+          value={user?.email ?? '-'}
           hint={SETTINGS_FIELD_COPY.email.hint}
           className="pt-0"
         />
@@ -666,7 +666,7 @@ export function AccountSection({ role }: { role: SettingsRole }) {
       <dl className="border-t border-border/60">
         <FactRow
           label={SETTINGS_FIELD_COPY.memberSince.label}
-          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—'}
+          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '-'}
         />
       </dl>
 
@@ -691,7 +691,7 @@ export function AccountSection({ role }: { role: SettingsRole }) {
 
       {/* The one destructive action, kept out of the account menu and behind
           its own dialog (type DELETE + password). The dark: overrides match
-          FormError — dark-scope --destructive is a fill shade, unreadable
+          FormError: dark-scope --destructive is a fill shade, unreadable
           as text on black. */}
       <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 dark:border-red-400/30 dark:bg-red-500/10">
         <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive antialiased dark:text-red-300">
@@ -738,7 +738,7 @@ function CoachingRow() {
       await apiFetch('/api/client/coach', { method: 'DELETE' });
       setIsConfirmOpen(false);
       toast.success(LEAVE_COACH_COPY.done);
-      // Refetch the profile — this row disappears and the app drops to the no-coach state
+      // Refetch the profile; this row disappears and the app drops to the no-coach state
       await mutate('/api/me');
     } catch {
       toast.error(`${LEAVE_COACH_COPY.failedTitle}. ${LEAVE_COACH_COPY.failed}`);

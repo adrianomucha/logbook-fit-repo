@@ -20,7 +20,7 @@ export class ApiError extends Error {
 export interface ApiClientOptions {
   /** Origin prefixed onto every relative URL, e.g. "https://logbook.fit". */
   baseUrl?: string;
-  /** Extra headers for every request — the app's Authorization header. */
+  /** Extra headers for every request: the app's Authorization header. */
   getHeaders?: () => Promise<Record<string, string>> | Record<string, string>;
 }
 
@@ -40,7 +40,7 @@ export function createApiClient(options: ApiClientOptions = {}) {
     ...(extra as Record<string, string> | undefined),
   });
 
-  /** GET as JSON — the SWR fetcher. */
+  /** GET as JSON: the SWR fetcher. */
   const fetcher = async <T = unknown>(url: string): Promise<T> => {
     // `no-store` is load-bearing, not hygiene: iOS Safari (and installed PWAs
     // in particular) will happily answer a repeat GET from its heuristic

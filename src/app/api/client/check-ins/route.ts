@@ -16,7 +16,7 @@ export const GET = withClient(
     _session: Session,
     clientProfileId: string
   ) => {
-    // Weekly schedule is enforced lazily on both sides — the client opening
+    // Weekly schedule is enforced lazily on both sides; the client opening
     // their check-ins is enough to materialize a due one
     const relationship = await prisma.coachClientRelationship.findUnique({
       where: { clientId: clientProfileId },
@@ -26,7 +26,7 @@ export const GET = withClient(
     }
 
     const checkIns = await prisma.checkIn.findMany({
-      // Expired check-ins were never answered — noise, not history
+      // Expired check-ins were never answered: noise, not history
       where: { clientId: clientProfileId, status: { not: "EXPIRED" } },
       orderBy: { createdAt: "desc" },
       select: {

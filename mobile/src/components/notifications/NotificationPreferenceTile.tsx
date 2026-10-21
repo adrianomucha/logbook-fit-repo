@@ -4,10 +4,10 @@ import { ALERTS_COPY } from '@logbook/shared/notification-copy';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 /**
- * The settings-page control for per-device message alerts — the web's
+ * The settings-page control for per-device message alerts, the web's
  * NotificationPreferenceTile: icon well (volt once alerts are on), title +
  * description, a real switch, and a mono status line that either names the
- * device state or says why the switch is disabled — an unavailable control
+ * device state or says why the switch is disabled. An unavailable control
  * should explain itself rather than vanish.
  */
 export function NotificationPreferenceTile() {
@@ -43,7 +43,7 @@ export function NotificationPreferenceTile() {
         isSubscribed ? 'border-brand/40 bg-brand/[0.06]' : 'border-border/60 bg-secondary/40'
       }`}
     >
-      {/* Icon well — lights up volt once alerts are on so the state reads
+      {/* Icon well: lights up volt once alerts are on so the state reads
           from across the room, not only from the switch */}
       <View
         className={`h-10 w-10 items-center justify-center rounded-lg ${
@@ -76,7 +76,7 @@ export function NotificationPreferenceTile() {
           {ALERTS_COPY.body('client')}
         </Text>
 
-        {/* Status line — the product's mono data voice; a volt dot marks "on" */}
+        {/* Status line: the product's mono data voice; a volt dot marks "on" */}
         <View className="mt-3 flex-row items-center gap-1.5" accessibilityLiveRegion="polite">
           <View className={`h-1.5 w-1.5 rounded-full ${isSubscribed ? 'bg-brand' : 'bg-muted-foreground/40'}`} />
           <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-muted-foreground">{status}</Text>

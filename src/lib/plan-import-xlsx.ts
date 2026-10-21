@@ -1,5 +1,5 @@
 /**
- * Excel plan import — the workbook half (server-only, pulls in exceljs).
+ * Excel plan import: the workbook half (server-only, pulls in exceljs).
  * Generates the downloadable template a coach fills in, reads an uploaded
  * template back into the plain rows plan-import.ts knows how to parse, and
  * renders any other workbook as text for the AI reader (plan-import-ai.ts).
@@ -18,7 +18,7 @@ import {
 export const TEMPLATE_FILENAME = "workout-plan-template.xlsx";
 export const WORKOUTS_SHEET = "Workouts";
 
-/** Rows covered by dropdowns/validation in the template — not a parse limit. */
+/** Rows covered by dropdowns/validation in the template, not a parse limit. */
 const VALIDATED_ROWS = 500;
 
 const HEADER_FILL: ExcelJS.Fill = {
@@ -27,7 +27,7 @@ const HEADER_FILL: ExcelJS.Fill = {
   fgColor: { argb: "FF111827" }, // matches the app's near-black foreground
 };
 
-// Example rows the coach overwrites — one filled week showing every feature:
+// Example rows the coach overwrites. One filled week showing every feature:
 // rep ranges, a time-based exercise, a superset pair, notes.
 const EXAMPLE_ROWS: (string | number)[][] = [
   [1, 1, "Upper Body", "Barbell Bench Press", 4, "6-8", 60, 120, "Pause on the chest", ""],
@@ -45,21 +45,21 @@ const INSTRUCTIONS: string[] = [
   "How to fill in this template",
   "",
   "Each row on the Workouts sheet is one exercise in one workout.",
-  "The example rows show one filled week — replace them with your own plan.",
+  "The example rows show one filled week. Replace them with your own plan.",
   "",
-  `Week — which week of the plan (1-${IMPORT_LIMITS.maxWeeks}).`,
-  `Day — which workout of that week (1-${IMPORT_LIMITS.maxDaysPerWeek}). Rest days are simply not listed.`,
-  'Day Name — optional workout title like "Upper Body Push". Only needed on the day’s first row.',
-  "Exercise — the exercise name. New names are added to your exercise library automatically.",
-  `Sets — number of sets (1-${IMPORT_LIMITS.maxSets}).`,
-  'Reps / Time — a count like "8", a range like "6-8", or a duration like "45s", "1:30", "20-30 min".',
-  'Weight — optional prescribed load, in the unit set in your Settings (kg or lb). Write "60 kg" or "135 lb" to use the other one.',
-  `Rest (sec) — optional rest between sets, in seconds (0-${IMPORT_LIMITS.maxRestSeconds}).`,
-  "Notes — optional coaching cues shown to the client with the exercise.",
-  'Superset — put "Y" to chain an exercise to the row above it as a superset.',
+  `Week: which week of the plan (1-${IMPORT_LIMITS.maxWeeks}).`,
+  `Day: which workout of that week (1-${IMPORT_LIMITS.maxDaysPerWeek}). Rest days are simply not listed.`,
+  'Day Name: optional workout title like "Upper Body Push". Only needed on the day’s first row.',
+  "Exercise: the exercise name. New names are added to your exercise library automatically.",
+  `Sets: number of sets (1-${IMPORT_LIMITS.maxSets}).`,
+  'Reps / Time: a count like "8", a range like "6-8", or a duration like "45s", "1:30", "20-30 min".',
+  'Weight: optional prescribed load, in the unit set in your Settings (kg or lb). Write "60 kg" or "135 lb" to use the other one.',
+  `Rest (sec): optional rest between sets, in seconds (0-${IMPORT_LIMITS.maxRestSeconds}).`,
+  "Notes: optional coaching cues shown to the client with the exercise.",
+  'Superset: put "Y" to chain an exercise to the row above it as a superset.',
   "",
   "When you're done, upload the file back on the Plans page (Import from Excel).",
-  "Already have your own spreadsheet? Upload it as it is — Logbook reads other layouts too, and shows you the plan to check before it’s created.",
+  "Already have your own spreadsheet? Upload it as it is. Logbook reads other layouts too, and shows you the plan to check before it’s created.",
 ];
 
 /** Build the template workbook a coach downloads, as an .xlsx buffer. */
@@ -156,7 +156,7 @@ const startsWith = (buffer: Buffer, magic: number[]) =>
 
 /**
  * Open an uploaded spreadsheet: .xlsx by its zip signature, anything else
- * named .csv as CSV. CSV cells stay the exact text the coach typed — exceljs
+ * named .csv as CSV. CSV cells stay the exact text the coach typed; exceljs
  * would otherwise turn "6-8" into a date.
  */
 export async function loadWorkbook(buffer: Buffer, filename: string): Promise<LoadWorkbookResult> {
@@ -231,7 +231,7 @@ export const TEMPLATE_HEADERS_MISSING_ERROR =
 // ──────────────────────────────────────
 
 /**
- * Caps the text sent to the model. ~200k characters is roughly 50k tokens —
+ * Caps the text sent to the model. ~200k characters is roughly 50k tokens,
  * far beyond any real plan, and under the 100k-token prompt size where the
  * model's price per token goes up.
  */
@@ -260,7 +260,7 @@ export type WorkbookTextResult =
 
 /**
  * Every visible, non-empty cell of the workbook as plain text, one line per
- * row with cell addresses — enough for a model to see the layout (which
+ * row with cell addresses, enough for a model to see the layout (which
  * columns are weeks, which rows are days) and to cite the coach's own rows.
  *
  *   Sheet "Week 1"

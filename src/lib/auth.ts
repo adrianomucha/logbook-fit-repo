@@ -11,7 +11,7 @@ import {
 } from "@/lib/auth-errors";
 
 // Nearly every server route imports this module, so a cold start is the
-// closest thing to "boot" a serverless deploy has — log missing env here.
+// closest thing to "boot" a serverless deploy has, so log missing env here.
 reportEnvProblemsOnce();
 
 export const authOptions: NextAuthOptions = {
@@ -43,8 +43,8 @@ export const authOptions: NextAuthOptions = {
       },
     }),
     // Linked-account switch: redeems the short-lived token minted by
-    // POST /api/account/switch. The token — obtainable only from a live
-    // session of the paired account — is the whole credential; no password
+    // POST /api/account/switch. The token (obtainable only from a live
+    // session of the paired account) is the whole credential; no password
     // crosses the wire and the demo lock still applies to the target.
     CredentialsProvider({
       id: "account-switch",

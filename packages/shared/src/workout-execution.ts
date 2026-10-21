@@ -71,7 +71,7 @@ export function upsertLocalSet(
   ];
 }
 
-/** Highest number in the target ("6-8" → 8, 10 → 10) — the top of the prescribed range. */
+/** Highest number in the target ("6-8" → 8, 10 → 10): the top of the prescribed range. */
 export function parseTargetReps(target?: string | number): number | undefined {
   if (target == null) return undefined;
   const nums = String(target).match(/\d+/g);
@@ -94,7 +94,7 @@ export function parseTargetWeight(target?: string | number): number | undefined 
 }
 
 /**
- * Compact last-session cell for the set table: "52.5×8" / "12" / "60s" —
+ * Compact last-session cell for the set table: "52.5×8" / "12" / "60s";
  * empty if nothing logged. The weight is in the viewer's unit; the column
  * header carries the unit label.
  */
@@ -118,10 +118,10 @@ export function formatExercisePrescription(
 }
 
 /**
- * Drop a leading "Day N" prefix from the title — the day number already lives
+ * Drop a leading "Day N" prefix from the title; the day number already lives
  * in the eyebrow. Falls back to the original if stripping would leave nothing.
  */
 export function stripDayPrefix(name: string): string {
-  const stripped = name.replace(/^\s*day\s*\d+\s*(?:[—–\-:.]+\s*)?/i, '').trim();
+  const stripped = name.replace(/^\s*day\s*\d+\s*(?:[\u2014–\-:.]+\s*)?/i, '').trim();
   return stripped.length > 0 ? stripped : name;
 }

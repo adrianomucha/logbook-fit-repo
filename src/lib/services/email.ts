@@ -3,14 +3,14 @@
  *
  * Best-effort by design: if RESEND_API_KEY (or WAITLIST_FROM_EMAIL) is not
  * configured, or the send fails, these resolve to false without throwing so
- * they can never block a signup or an admin action. Uses a plain fetch — no
+ * they can never block a signup or an admin action. Uses a plain fetch, no
  * SDK dependency. Callers that need to know (the invite endpoint) get the
  * boolean; the signup endpoint ignores it.
  *
  * The templates speak the brand's light voice (the auth pages' form column):
  * mono eyebrow with a lime dot, uppercase display heading with the closing
  * words on a lime highlight, dark ink on a white card. Light-first is a
- * deliberate constraint, not a style choice — Gmail's dark mode force-inverts
+ * deliberate constraint, not a style choice: Gmail's dark mode force-inverts
  * email colors with no reliable opt-out, and dark-designed emails come out
  * worst (flipped to a washed-out light theme). A light design survives both
  * modes predictably. Email clients don't honour <style>/external CSS or
@@ -18,8 +18,8 @@
  * IBM Plex.
  *
  * Required env to actually send:
- *   RESEND_API_KEY      — your Resend API key
- *   WAITLIST_FROM_EMAIL — verified sender, e.g. "Logbook.fit <hello@logbook.fit>"
+ *   RESEND_API_KEY:      your Resend API key
+ *   WAITLIST_FROM_EMAIL: verified sender, e.g. "Logbook.fit <hello@logbook.fit>"
  */
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
@@ -27,7 +27,7 @@ const RESEND_ENDPOINT = "https://api.resend.com/emails";
 /**
  * Every alert-worthy mailer problem logs with this tag so one Vercel log
  * alert ("message contains [EMAIL_ALERT]") catches all of them. Without an
- * alert the failures are still one log search away — which is the whole
+ * alert the failures are still one log search away, which is the whole
  * point: sends fail best-effort (silently, by design) and once burned us
  * with a week of dead email that nothing surfaced.
  */
@@ -36,7 +36,7 @@ const ALERT_TAG = "[EMAIL_ALERT]";
 /**
  * True when `from` is a sender Resend will accept: `email@example.com` or
  * `Name <email@example.com>`, exactly one address. Catches the config bug
- * that broke production — two comma-separated addresses inside one <...>.
+ * that broke production: two comma-separated addresses inside one <...>.
  */
 function isValidFromField(from: string): boolean {
   const m = from.trim().match(/^(?:[^<>]*<([^<>]+)>|(\S+))$/);
@@ -46,7 +46,7 @@ function isValidFromField(from: string): boolean {
 
 /**
  * Health check for the mailer config, shared by the send path and the admin
- * UI banner. Pure env inspection — never sends anything.
+ * UI banner. Pure env inspection; never sends anything.
  */
 export function emailConfigStatus():
   | { ok: true }
@@ -55,7 +55,7 @@ export function emailConfigStatus():
     return {
       ok: false,
       reason:
-        "RESEND_API_KEY is not set — every email (waitlist, invites, password resets) is silently skipped.",
+        "RESEND_API_KEY is not set. Every email (waitlist, invites, password resets) is silently skipped.",
     };
   }
   const from = process.env.WAITLIST_FROM_EMAIL;
@@ -63,13 +63,13 @@ export function emailConfigStatus():
     return {
       ok: false,
       reason:
-        "WAITLIST_FROM_EMAIL is not set — every email (waitlist, invites, password resets) is silently skipped.",
+        "WAITLIST_FROM_EMAIL is not set. Every email (waitlist, invites, password resets) is silently skipped.",
     };
   }
   if (!isValidFromField(from)) {
     return {
       ok: false,
-      reason: `WAITLIST_FROM_EMAIL (currently "${from}") is not a valid sender. Use "email@example.com" or "Name <email@example.com>" with exactly one address — Resend rejects every send otherwise.`,
+      reason: `WAITLIST_FROM_EMAIL (currently "${from}") is not a valid sender. Use "email@example.com" or "Name <email@example.com>" with exactly one address. Resend rejects every send otherwise.`,
     };
   }
   return { ok: true };
@@ -94,7 +94,7 @@ const WAITLIST_FOOTER =
  * is the hidden preview line inbox lists show next to the subject;
  * `content` is the card body between the header and footer rows;
  * `footerNote` is the "why you got this" line (defaults to the waitlist
- * one) — the logbook.fit link is appended to whatever is passed. `badge` is
+ * one); the logbook.fit link is appended to whatever is passed. `badge` is
  * the mono label top right.
  */
 function emailShell(
@@ -146,7 +146,7 @@ function emailShell(
 /**
  * Display heading in the landing-hero voice: uppercase, tight, with the
  * closing words picked out by a lime highlight. Highlight (dark ink on lime)
- * rather than lime text — lime on white fails contrast, and a saturated
+ * rather than lime text: lime on white fails contrast, and a saturated
  * background block survives Gmail's dark-mode color transform far better
  * than colored text does.
  */
@@ -170,7 +170,7 @@ function stepRow(num: string, text: string, last = false): string {
 
 function welcomeHtml(): string {
   return emailShell(
-    "We onboard coaches in small batches — your invite will land right here.",
+    "We onboard coaches in small batches. Your invite will land right here.",
     `${heading("You&rsquo;re on", "the list.")}
             <p style="margin:0 0 24px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
               Thanks for signing up for the Logbook.fit private beta. Here&rsquo;s
@@ -179,7 +179,7 @@ function welcomeHtml(): string {
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${PANEL};border:1px solid ${BORDER};border-radius:12px;">
               <tr><td style="padding:8px 20px 20px 20px;">
                 <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-                  ${stepRow("01", "You&rsquo;re in the queue &mdash; no forms, nothing else to fill in.")}
+                  ${stepRow("01", "You&rsquo;re in the queue. No forms, nothing else to fill in.")}
                   ${stepRow("02", "We onboard coaches in batches of 10 to keep the beta sharp.")}
                   ${stepRow("03", "Your invite lands in this inbox the moment your spot opens.", true)}
                 </table>
@@ -193,13 +193,13 @@ function welcomeHtml(): string {
 
 function welcomeText(): string {
   return [
-    "LOGBOOK.FIT — PRIVATE BETA",
+    "LOGBOOK.FIT · PRIVATE BETA",
     "",
     "You're on the list.",
     "",
     "Thanks for signing up for the Logbook.fit private beta. Here's how it goes from here:",
     "",
-    "  01  You're in the queue — no forms, nothing else to fill in.",
+    "  01  You're in the queue. No forms, nothing else to fill in.",
     "  02  We onboard coaches in batches of 10 to keep the beta sharp.",
     "  03  Your invite lands in this inbox the moment your spot opens.",
     "",
@@ -212,7 +212,7 @@ function welcomeText(): string {
 
 function inviteHtml(inviteUrl: string): string {
   return emailShell(
-    "Your spot in the private beta just opened up — create your coach account.",
+    "Your spot in the private beta just opened up. Create your coach account.",
     `${heading("Your invite", "is ready.")}
             <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
               Your spot in the Logbook.fit private beta just opened up. Create
@@ -236,7 +236,7 @@ function inviteHtml(inviteUrl: string): string {
 
 function inviteText(inviteUrl: string): string {
   return [
-    "LOGBOOK.FIT — PRIVATE BETA",
+    "LOGBOOK.FIT · PRIVATE BETA",
     "",
     "Your invite is ready.",
     "",
@@ -253,7 +253,7 @@ function inviteText(inviteUrl: string): string {
 
 /**
  * Coach names and notes are typed by people, and the client invite email
- * puts both in HTML — escape them so a note can't inject markup.
+ * puts both in HTML, so escape them so a note can't inject markup.
  */
 function escapeHtml(value: string): string {
   return value
@@ -320,7 +320,7 @@ function clientInviteHtml({ coachName, note, inviteUrl, expiresAt }: ClientInvit
 function clientInviteText({ coachName, note, inviteUrl, expiresAt }: ClientInviteEmail): string {
   const firstName = coachName.split(" ")[0];
   return [
-    "LOGBOOK.FIT — INVITE",
+    "LOGBOOK.FIT · INVITE",
     "",
     `${coachName} invited you to train.`,
     "",
@@ -338,11 +338,11 @@ function clientInviteText({ coachName, note, inviteUrl, expiresAt }: ClientInvit
 
 function passwordResetHtml(resetUrl: string): string {
   return emailShell(
-    "Set a new password for your Logbook.fit account — this link works for 30 minutes.",
+    "Set a new password for your Logbook.fit account. This link works for 30 minutes.",
     `${heading("Reset your", "password.")}
             <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
               Someone asked to reset the password for your Logbook.fit account.
-              If that was you, set a new one below &mdash; the link works for
+              If that was you, set a new one below. The link works for
               30 minutes.
             </p>
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
@@ -353,7 +353,7 @@ function passwordResetHtml(resetUrl: string): string {
               </td></tr>
             </table>
             <p style="margin:0 0 32px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
-              Didn&rsquo;t ask for this? Ignore this email &mdash; your password
+              Didn&rsquo;t ask for this? Ignore this email. Your password
               is unchanged. If the button doesn&rsquo;t work, paste this into
               your browser:<br>
               <a href="${resetUrl}" style="color:${MUTED};word-break:break-all;">${resetUrl}</a>
@@ -364,15 +364,15 @@ function passwordResetHtml(resetUrl: string): string {
 
 function passwordResetText(resetUrl: string): string {
   return [
-    "LOGBOOK.FIT — PRIVATE BETA",
+    "LOGBOOK.FIT · PRIVATE BETA",
     "",
     "Reset your password.",
     "",
-    "Someone asked to reset the password for your Logbook.fit account. If that was you, set a new one here — the link works for 30 minutes:",
+    "Someone asked to reset the password for your Logbook.fit account. If that was you, set a new one here (the link works for 30 minutes):",
     "",
     resetUrl,
     "",
-    "Didn't ask for this? Ignore this email — your password is unchanged.",
+    "Didn't ask for this? Ignore this email. Your password is unchanged.",
     "",
     "Plan · Train · Check in",
     "You're receiving this because a password reset was requested for your account at https://logbook.fit",
@@ -394,22 +394,22 @@ async function sendEmail(
   const from = process.env.WAITLIST_FROM_EMAIL;
 
   if (!apiKey || !from) {
-    // Not configured — the calling flow still succeeds, just without email.
+    // Not configured: the calling flow still succeeds, just without email.
     // Normal in dev; in production it means every email is dying quietly,
     // which is exactly what the alert tag exists to make loud.
     if (process.env.NODE_ENV === "production") {
       console.error(
-        `${ALERT_TAG} Email "${subject}" skipped — mailer not configured (RESEND_API_KEY / WAITLIST_FROM_EMAIL missing).`
+        `${ALERT_TAG} Email "${subject}" skipped: mailer not configured (RESEND_API_KEY / WAITLIST_FROM_EMAIL missing).`
       );
     }
     return false;
   }
 
   // Fail fast on a malformed sender instead of collecting a Resend 422 per
-  // send — the log then names the env var to fix, not just the symptom.
+  // send; the log then names the env var to fix, not just the symptom.
   if (!isValidFromField(from)) {
     console.error(
-      `${ALERT_TAG} Email "${subject}" not sent — WAITLIST_FROM_EMAIL ("${from}") is not a valid sender. Use "email@example.com" or "Name <email@example.com>" with exactly one address.`
+      `${ALERT_TAG} Email "${subject}" not sent: WAITLIST_FROM_EMAIL ("${from}") is not a valid sender. Use "email@example.com" or "Name <email@example.com>" with exactly one address.`
     );
     return false;
   }
@@ -468,7 +468,7 @@ export function sendWaitlistInvite(
 
 /**
  * Email a coach's client invite. Like the beta invite, the caller surfaces
- * the boolean: false means "not sent — copy the link and share it yourself".
+ * the boolean: false means "not sent; copy the link and share it yourself".
  */
 export function sendClientInvite(
   to: string,
@@ -484,7 +484,7 @@ export function sendClientInvite(
 
 /**
  * Send the password-reset link. Fire-and-forget from the caller's point of
- * view — the request endpoint answers identically whether or not an account
+ * view: the request endpoint answers identically whether or not an account
  * (or a configured mailer) exists, so nothing can be probed from timing the
  * boolean.
  */

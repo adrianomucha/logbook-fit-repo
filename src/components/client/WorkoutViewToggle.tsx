@@ -14,7 +14,7 @@ const SEGMENTS: { id: WorkoutViewMode; label: string }[] = [
 
 /**
  * Quiet segmented control for switching between the today focus view and
- * the full-week overview. Deliberately gray chrome — the volt CTA below
+ * the full-week overview. Deliberately gray chrome; the volt CTA below
  * stays the loudest element on the screen.
  *
  * Plain buttons with aria-pressed, not role="tab": these segments swap the

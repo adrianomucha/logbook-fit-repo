@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 // The web app's tokens (src/app/globals.css + tailwind.config.js) resolved to
-// literal colors — React Native has no CSS variables. Keep the two in step.
+// literal colors: React Native has no CSS variables. Keep the two in step.
 module.exports = {
   content: ['./app/**/*.{ts,tsx}', './src/**/*.{ts,tsx}'],
   presets: [require('nativewind/preset')],

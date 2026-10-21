@@ -2,7 +2,7 @@ import useSWR from 'swr';
 import { normalizeWeightUnit, type WeightUnit } from '@logbook/shared/weight-units';
 import { useAuth } from '@/lib/auth';
 
-/** GET /api/me — same payload the web's useCurrentUser reads. */
+/** GET /api/me: same payload the web's useCurrentUser reads. */
 export interface UserProfile {
   id: string;
   email: string;
@@ -34,7 +34,7 @@ export function useCurrentUser() {
     user: data ?? null,
     coach: data?.clientProfile?.coachRelationship?.coach ?? null,
     clientProfileId: data?.clientProfile?.id ?? null,
-    /** kg or lb — how this person reads and types weights (stored as lb) */
+    /** kg or lb: how this person reads and types weights (stored as lb) */
     weightUnit: normalizeWeightUnit(data?.weightUnit),
     error,
     isLoading,

@@ -2,11 +2,11 @@ export interface Exercise {
   id: string;
   name: string;
   category?: string;
-  /** How the exercise is measured — reps holds a duration string ("60s", "2 min") when TIME */
+  /** How the exercise is measured; reps holds a duration string ("60s", "2 min") when TIME */
   trackingType?: 'REPS' | 'TIME';
   sets: number;
   reps?: string;
-  /** Prescribed weight as stored, in lb — format with weight-units for display */
+  /** Prescribed weight as stored, in lb. Format with weight-units for display */
   weight?: string;
   restSeconds?: number;
   notes?: string;
@@ -145,7 +145,7 @@ export interface WorkoutCompletion {
   exercisesTotal: number;
   durationSec?: number;
   effortRating?: EffortRating;  // Optional post-workout feedback
-  /** The day's name as the server knows it — history spans plans whose tree isn't loaded */
+  /** The day's name as the server knows it; history spans plans whose tree isn't loaded */
   dayName?: string;
   /** Sets actually logged, when the server counted them */
   setsDone?: number;

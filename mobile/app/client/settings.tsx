@@ -14,7 +14,7 @@ import {
 } from '@/components/settings/sections';
 
 /**
- * The client's settings — the web's /client/settings: one column under the
+ * The client's settings (the web's /client/settings): one column under the
  * app header, volt-underlined section tabs, the pane in a card. Deep-links
  * as /client/settings?section=… so the photo nudge can land on Profile.
  */
@@ -53,7 +53,7 @@ export default function SettingsScreen() {
               <Text className="font-sans-bold text-2xl tracking-tight text-foreground">Settings</Text>
             </View>
 
-            {/* Section tabs — brand underline, matching the nav's own tabs.
+            {/* Section tabs: brand underline, matching the nav's own tabs.
                 Fixed segments, never a scroller: three tabs share the row. */}
             <View className="flex-row border-b border-border" accessibilityRole="tablist">
               {SETTINGS_SECTIONS.map(({ id, label }) => {

@@ -12,7 +12,7 @@ import { updateSetsSchema } from "@/lib/validations/schemas";
 
 /**
  * PUT /api/client/workout/[id]/sets
- * Batch upsert set completions. Hot path — called on every set toggle (debounced 500ms).
+ * Batch upsert set completions. Hot path: called on every set toggle (debounced 500ms).
  * Accepts: { sets: [{ workoutExerciseId, setNumber, completed, actualWeight?, actualReps? }] }
  */
 export const PUT = withClient(

@@ -13,14 +13,14 @@ import { LOGIN_ERROR_DEMO_LOCKED, LOGIN_ERROR_RATE_LIMITED } from '@/lib/auth-er
 
 const LOGIN_ERROR_MESSAGES: Record<string, string> = {
   [LOGIN_ERROR_RATE_LIMITED]:
-    'Too many sign-in attempts. Wait 15 minutes and try again — or reset your password below.',
+    'Too many sign-in attempts. Wait 15 minutes and try again, or reset your password below.',
   [LOGIN_ERROR_DEMO_LOCKED]: 'Demo access is switched off on this deployment.',
 };
 
 /**
  * The deep link to return to after sign-in, from ?callbackUrl (written by the
  * middleware when it bounces an unauthenticated visitor). Only same-origin
- * paths survive — anything else (absolute URLs to other hosts, protocol-
+ * paths survive; anything else (absolute URLs to other hosts, protocol-
  * relative //evil.com) is discarded so login can't be an open redirect.
  */
 function callbackPathFromLocation(): string | null {
@@ -29,7 +29,7 @@ function callbackPathFromLocation(): string | null {
   try {
     const url = new URL(raw, window.location.origin);
     if (url.origin !== window.location.origin) return null;
-    // "/" just re-enters the role bounce in the middleware — let the
+    // "/" just re-enters the role bounce in the middleware, so let the
     // role-based redirect below pick the right home instead.
     if (url.pathname === '/') return null;
     return url.pathname + url.search;
@@ -49,7 +49,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState<string | null>(null);
-  // Sent here from an invite link by a returning client — say why. Read after
+  // Sent here from an invite link by a returning client, so say why. Read after
   // mount: the URL isn't known while prerendering.
   const [acceptingInvite, setAcceptingInvite] = useState(false);
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function LoginPage() {
     }
 
     // Return to the page that bounced us here, if any. A wrong-role deep
-    // link is harmless — the middleware bounces it to the right app home.
+    // link is harmless; the middleware bounces it to the right app home.
     const callbackPath = callbackPathFromLocation();
     if (callbackPath) {
       router.push(callbackPath);
@@ -166,7 +166,7 @@ export default function LoginPage() {
         </Button>
       </form>
 
-      {/* Quick demo login — locked server-side too (see src/lib/demo.ts) */}
+      {/* Quick demo login, locked server-side too (see src/lib/demo.ts) */}
       {isDemoModeEnabled() && (
         <div className="mt-9 rounded-xl border border-dashed border-border p-4">
           <p className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">

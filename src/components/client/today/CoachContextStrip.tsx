@@ -23,14 +23,14 @@ export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContext
         <div
           className={cn(
             'w-7 h-7 rounded-full flex items-center justify-center shrink-0 overflow-hidden',
-            // Same deterministic avatar color the coach surfaces use — the client
+            // Same deterministic avatar color the coach surfaces use; the client
             // sees their coach in the identical visual language.
             coachAvatar ? 'bg-muted' : avatarColor(coachName)
           )}
         >
           {coachAvatar ? (
             // Avatar URLs can point at arbitrary remote hosts, which next/image
-            // rejects without a remotePatterns allowlist — and its optimization
+            // rejects without a remotePatterns allowlist, and its optimization
             // buys nothing for a 28px avatar. Plain <img> is the right tool.
             // eslint-disable-next-line @next/next/no-img-element
             <img src={coachAvatar} alt="" className="w-full h-full object-cover" />

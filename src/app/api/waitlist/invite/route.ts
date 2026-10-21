@@ -12,14 +12,14 @@ import { sendWaitlistInvite } from "@/lib/services/email";
 export const dynamic = "force-dynamic";
 
 /**
- * POST /api/waitlist/invite — send (or re-send) a private-beta invite.
+ * POST /api/waitlist/invite: send (or re-send) a private-beta invite.
  *
  * Authorized like the CSV export: an admin session or
  * `Authorization: Bearer <WAITLIST_ADMIN_TOKEN>` for scripts.
  *
  * Generates a fresh single-use token, marks the entry INVITED, and emails
  * the signup link. Re-sending rotates the token, so the previously emailed
- * link stops working — rotation doubles as revocation. The invite URL is
+ * link stops working; rotation doubles as revocation. The invite URL is
  * returned either way so the admin can deliver it by hand when email isn't
  * configured or the send fails.
  */
@@ -54,7 +54,7 @@ export async function POST(req: Request) {
     }
 
     // The JOINED guard in the WHERE closes the race against a concurrent
-    // redemption — a signup between the read above and this write makes
+    // redemption: a signup between the read above and this write makes
     // count 0 instead of silently un-joining the entry.
     const inviteToken = generateSecureToken();
     const { count } = await prisma.waitlistEntry.updateMany({

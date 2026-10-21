@@ -14,7 +14,7 @@ import {
   type InstallPromptState,
 } from '@/lib/pwa-install';
 
-/** Chromium-only event — not in lib.dom.d.ts. */
+/** Chromium-only event, not in lib.dom.d.ts. */
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
@@ -33,7 +33,7 @@ function readState(): InstallPromptState {
       window.localStorage.getItem(INSTALL_PROMPT_STORAGE_KEY)
     );
   } catch {
-    // Storage throws in private/locked-down modes. Treat as a first visit —
+    // Storage throws in private/locked-down modes. Treat as a first visit:
     // the cost is a banner that can't be retired, not a broken page.
     return {};
   }
@@ -127,7 +127,7 @@ function Step({ index, children }: { index: number; children: React.ReactNode })
  * has no install API at all and can only be walked through its menus by hand.
  * Which one (if either) applies is decided in `@/lib/pwa-install`.
  *
- * Mounted on the coach and client dashboards only — deliberately not on the
+ * Mounted on the coach and client dashboards only, deliberately not on the
  * workout or check-in screens, where a floating card would sit on top of the
  * flow people came to complete.
  *

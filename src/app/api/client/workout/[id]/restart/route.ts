@@ -9,7 +9,7 @@ import {
 
 /**
  * POST /api/client/workout/[id]/restart
- * Resets a workout completion — deletes all sets/flags, resets status to IN_PROGRESS,
+ * Resets a workout completion: deletes all sets/flags, resets status to IN_PROGRESS,
  * and re-creates SetCompletion rows for a fresh start.
  */
 export const POST = withClient(

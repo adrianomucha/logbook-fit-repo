@@ -7,7 +7,7 @@ import { QUICK_START_EXERCISES } from '@/lib/quick-start-exercises';
 import type { CoachInvite } from '@/types/api';
 
 interface GettingStartedCardProps {
-  /** Time-of-day greeting — doubles as the brand kicker on this screen */
+  /** Time-of-day greeting; doubles as the brand kicker on this screen */
   greeting: string;
   /** Coach has uploaded a profile photo */
   hasPhoto: boolean;
@@ -35,7 +35,7 @@ function daysUntil(iso: string): number {
 /**
  * First-session guide shown on the coach dashboard while the roster is empty.
  * Walks the coach from a stocked library, past the profile their invite
- * leads with, to a sent invite — the activation moment when Logbook starts
+ * leads with, to a sent invite: the activation moment when Logbook starts
  * working for them.
  *
  * Laid out as two rails rather than one tall card: the brand statement on the
@@ -107,11 +107,11 @@ export function GettingStartedCard({
             ? 'Photo added'
             : 'Bio added'
         : 'Add your photo and bio',
-      // The invite page leads with the coach — a face and a line about how
+      // The invite page leads with the coach: a face and a line about how
       // they coach is what a prospective client reads before they commit
       body: profileSet
         ? 'Invited clients see it before they sign up, and in chat after.'
-        : 'Your invite page opens with them. A face and one line about how you coach — under a minute.',
+        : 'Your invite page opens with them. A face and one line about how you coach. Under a minute.',
       action: !profileSet && (
         <Button
           variant="outline"
@@ -153,7 +153,7 @@ export function GettingStartedCard({
       key: 'invite',
       done: inviteSent,
       title: inviteSent ? 'Invite link ready' : 'Invite your first client',
-      // No "share the link with your client" here — the Copy link button
+      // No "share the link with your client" here; the Copy link button
       // directly below already says it, and the line cost the card a whole row
       body: inviteSent ? (
         <>
@@ -208,18 +208,18 @@ export function GettingStartedCard({
   ];
 
   const doneCount = steps.filter((s) => s.done).length;
-  // The one move that matters right now — filled dark while the rest stay outlined
+  // The one move that matters right now: filled dark while the rest stay outlined
   const nextIndex = steps.findIndex((s) => !s.done);
 
   // The subtracted height is the nav (3rem + its 1px hairline) plus this page's
   // own top and bottom padding, so the composition centres in exactly the space
-  // left under the header — and the page never gains a scrollbar for one pixel.
+  // left under the header, and the page never gains a scrollbar for one pixel.
   return (
     <section className="lg:flex lg:min-h-[calc(100dvh-6.5rem-1px)] lg:items-center">
       {/* Capped and centred above lg: left to fill a 7xl container the two
           rails drift apart until they read as two unrelated blocks */}
       <div className="grid w-full gap-5 sm:gap-7 lg:mx-auto lg:max-w-[68rem] lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:items-center lg:gap-x-12 lg:gap-y-8 xl:gap-x-16">
-        {/* Brand rail — the reason the checklist is worth finishing */}
+        {/* Brand rail: the reason the checklist is worth finishing */}
         <div className="max-w-md lg:col-start-1 lg:row-start-1">
           <p className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased sm:mb-4">
             <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
@@ -227,7 +227,7 @@ export function GettingStartedCard({
           </p>
           {/* Display type from the marketing site, brought in-app for the one
               screen that is pure first impression. Volt sits behind the payoff
-              word as a fill — dark-on-volt, never volt text on white. */}
+              word as a fill: dark-on-volt, never volt text on white. */}
           <h1 className="text-[clamp(1.7rem,3.4vw,2.75rem)] font-bold uppercase leading-[0.95] tracking-tight antialiased">
             Get your first
             <br />
@@ -264,7 +264,7 @@ export function GettingStartedCard({
           <ol>
             {steps.map((step, i) => (
               <li key={step.key} className="relative flex gap-3.5 pb-4 last:pb-0 sm:pb-5">
-                {/* Spine between markers — volt once the step above is cleared */}
+                {/* Spine between markers: volt once the step above is cleared */}
                 {i < steps.length - 1 && (
                   <span
                     className={`absolute left-[13.5px] top-8 bottom-1 w-px ${
@@ -310,7 +310,7 @@ export function GettingStartedCard({
           </ol>
         </div>
 
-        {/* Sample-client escape hatch — feel the product before anyone joins */}
+        {/* Sample-client escape hatch: feel the product before anyone joins */}
         <div className="max-w-md rounded-xl border border-dashed border-border bg-muted/30 p-3.5 sm:p-4 lg:col-start-1 lg:row-start-2">
           <p className="text-[13px] leading-[1.5] text-muted-foreground antialiased sm:leading-relaxed">
             Want to see it working first? Add a demo client with a week of

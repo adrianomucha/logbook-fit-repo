@@ -37,7 +37,7 @@ export async function clearSession(): Promise<void> {
   await SecureStore.deleteItemAsync(KEY).catch(() => undefined);
 }
 
-/** Synchronous read for request headers — null until loadSession() has run. */
+/** Synchronous read for request headers; null until loadSession() has run. */
 export function currentToken(): string | null {
   return cached?.token ?? null;
 }

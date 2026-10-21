@@ -20,7 +20,7 @@ const CONTACT_EMAIL = 'hello@logbook.fit';
 /**
  * Plain-English privacy policy for the private beta. Written to satisfy
  * CalOPPA (conspicuous policy, categories collected, Do Not Track disclosure)
- * without GDPR apparatus — the beta is US-only. Keep this page in sync with
+ * without GDPR apparatus; the beta is US-only. Keep this page in sync with
  * what the app actually collects; it deliberately names specifics (check-in
  * ratings, waitlist attribution) rather than boilerplate categories.
  */
@@ -46,15 +46,14 @@ export default function PrivacyPage() {
       <LegalSection title="The short version">
         <p>
           Logbook.fit is a workspace shared by a coach and their clients. We
-          collect what the product needs to work — your account details, the
-          training plans and check-ins you create — and almost nothing else. We{' '}
+          collect what the product needs to work (your account details, the
+          training plans and check-ins you create) and almost nothing else. We{' '}
           <Strong>don&rsquo;t sell your data</Strong>, we don&rsquo;t run ad
           trackers, and the only people who see your training data are you and
           the coach or clients you&rsquo;re connected to. A few service
-          providers process it on our behalf to run the product &mdash;
-          including Anthropic, when a coach imports a plan spreadsheet
-          that isn&rsquo;t in our template layout &mdash; and for nothing
-          else.
+          providers process it on our behalf to run the product (including
+          Anthropic, when a coach imports a plan spreadsheet that
+          isn&rsquo;t in our template layout) and for nothing else.
         </p>
       </LegalSection>
 
@@ -63,17 +62,17 @@ export default function PrivacyPage() {
         <LegalList
           items={[
             <>
-              <Strong>Account information</Strong> — your name, email address,
+              <Strong>Account information</Strong>: your name, email address,
               and password. Passwords are stored only as a salted hash; we
               never see or store the password itself.
             </>,
             <>
-              <Strong>Coaching and training data</Strong> — workout plans,
+              <Strong>Coaching and training data</Strong>: workout plans,
               exercises, completed sets (weight, reps, notes), and exercises
               you flag to your coach.
             </>,
             <>
-              <Strong>Check-in responses</Strong> — effort ratings, how your
+              <Strong>Check-in responses</Strong>: effort ratings, how your
               body feels, and any notes you write. This is wellness
               information, and we treat it as the most sensitive data in the
               product: it is visible only to you and your connected coach.
@@ -83,14 +82,14 @@ export default function PrivacyPage() {
               inside the app.
             </>,
             <>
-              <Strong>Waitlist details</Strong> — if you join the waitlist, we
+              <Strong>Waitlist details</Strong>: if you join the waitlist, we
               store your email, your answer to the client-count question if
               you give one, and basic &ldquo;how you found us&rdquo; context
               (campaign tags from the link you clicked, or the referring
               site).
             </>,
             <>
-              <Strong>Push notification tokens</Strong> — if you turn on
+              <Strong>Push notification tokens</Strong>: if you turn on
               notifications, your browser gives us a delivery address for
               them. It contains no personal information and is deleted when
               you turn notifications off.
@@ -125,8 +124,8 @@ export default function PrivacyPage() {
           items={[
             <>
               <Strong>Your coach</Strong> (if you&rsquo;re a client) can see
-              your training data, check-in responses, flags, and messages —
-              that&rsquo;s the point of the product.
+              your training data, check-in responses, flags, and messages.
+              That&rsquo;s the point of the product.
             </>,
             <>
               <Strong>Your clients</Strong> (if you&rsquo;re a coach) can see
@@ -134,23 +133,23 @@ export default function PrivacyPage() {
               profile details on their invite.
             </>,
             <>
-              <Strong>Service providers</Strong> that run our infrastructure —
-              hosting, database, and analytics (including Vercel) — process
+              <Strong>Service providers</Strong> that run our infrastructure
+              (hosting, database, and analytics, including Vercel) process
               data on our behalf to operate the service, and for no other
               purpose.
             </>,
             <>
               <Strong>Anthropic</Strong> (if you&rsquo;re a coach importing a
               plan) reads plan spreadsheets that aren&rsquo;t laid out like our
-              template. When you upload one, we send its text contents &mdash;
-              the words and numbers in its cells &mdash; to Anthropic&rsquo;s AI
+              template. When you upload one, we send its text contents
+              (the words and numbers in its cells) to Anthropic&rsquo;s AI
               model, which processes them on our behalf only to read the plan
               for you to review. Files laid out like the template are read on
               our own servers and not sent. Before uploading, we suggest
               removing client names and health details from the file.
             </>,
             <>
-              <Strong>Legal requirements</Strong> — we&rsquo;ll disclose data
+              <Strong>Legal requirements</Strong>: we&rsquo;ll disclose data
               if a law, court order, or government request genuinely requires
               it.
             </>,
@@ -190,7 +189,7 @@ export default function PrivacyPage() {
           All traffic is encrypted in transit over HTTPS, passwords are
           hashed, and access to production data is limited to what operating
           the service requires. No system is perfectly secure, and during a
-          beta the honest promise is care, not perfection — if we ever learn
+          beta the honest promise is care, not perfection. If we ever learn
           of a breach affecting your data, we&rsquo;ll tell you promptly.
         </p>
       </LegalSection>
@@ -207,8 +206,8 @@ export default function PrivacyPage() {
       <LegalSection title="California residents">
         <p>
           You can ask us what personal information we hold about you, ask us
-          to delete it, or ask questions about this policy — same email as
-          below, and we don&rsquo;t treat you differently for asking. We
+          to delete it, or ask questions about this policy (same email as
+          below), and we don&rsquo;t treat you differently for asking. We
           don&rsquo;t sell personal information, so there is nothing to opt
           out of.
         </p>

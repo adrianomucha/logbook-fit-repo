@@ -27,7 +27,7 @@ interface FeedbackDialogProps {
 }
 
 /**
- * "Send feedback" dialog, opened from the account menu — the one channel any
+ * "Send feedback" dialog, opened from the account menu: the one channel any
  * signed-in coach or client has straight to the owner. Deliberately three
  * fields short (category, message, and a path captured silently): a feedback
  * form that feels like a form doesn't get filled in.
@@ -40,7 +40,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
   const [isSent, setIsSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fresh form on every open — a sent message must never linger into the
+  // Fresh form on every open; a sent message must never linger into the
   // next open looking unsent
   useEffect(() => {
     if (!isOpen) return;
@@ -84,7 +84,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
 
   // Portal to <body>: this dialog is triggered from the account menu inside
   // the sticky app header, whose backdrop-blur makes the header the
-  // containing block for fixed descendants — rendered in place, the overlay
+  // containing block for fixed descendants. Rendered in place, the overlay
   // would pin to the header instead of the viewport.
   return createPortal(
     <Modal
@@ -118,7 +118,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
         <div className="flex flex-col items-center gap-3 py-6 text-center">
           <CheckCircle2 className="h-8 w-8 text-brand" aria-hidden="true" />
           <div>
-            <p className="font-medium text-foreground">Thanks — got it.</p>
+            <p className="font-medium text-foreground">Thanks, got it.</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Every note gets read. It genuinely shapes what gets built next.
             </p>
@@ -180,7 +180,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
               placeholder={
                 category === 'BUG'
                   ? 'What did you do, and what went wrong?'
-                  : 'The rough shape is plenty — no need to polish it.'
+                  : 'The rough shape is plenty. No need to polish it.'
               }
             />
             {message.length >= MESSAGE_MAX_LENGTH - 200 && (

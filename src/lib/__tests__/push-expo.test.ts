@@ -165,7 +165,7 @@ describe("sendPushToUser over Expo", () => {
       endpoint: "https://push.example/1",
       keys: { p256dh: "p", auth: "a" },
     });
-    // The browser payload is unchanged — the service worker reads url/tag
+    // The browser payload is unchanged; the service worker reads url/tag
     expect(JSON.parse(sendWeb.mock.calls[0][1])).toEqual(PAYLOAD);
   });
 

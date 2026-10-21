@@ -22,7 +22,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
   const isCurrent = status === 'CURRENT';
 
   // Status reaches sighted users through a badge or an icon-only check, so it
-  // has to travel in the accessible name too — aria-label replaces the content.
+  // has to travel in the accessible name too; aria-label replaces the content.
   const statusText = isCompleted
     ? 'completed'
     : isInProgress
@@ -33,7 +33,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
 
   const content = (
     <>
-      {/* Position number — fixed width */}
+      {/* Position number: fixed width */}
       <div className="w-9 shrink-0 text-left">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
           Day
@@ -43,7 +43,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
         </p>
       </div>
 
-      {/* Middle — workout info */}
+      {/* Middle: workout info */}
       <div className="flex-1 min-w-0 text-left">
         <p className="text-[15px] font-semibold truncate tracking-tight">
           {workoutDay?.name || 'Workout'}
@@ -53,7 +53,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
         </p>
       </div>
 
-      {/* Right — status indicator. A started workout must never look
+      {/* Right: status indicator. A started workout must never look
           identical to an untouched one, wherever it sits in the week. */}
       <div className="shrink-0">
         {isCompleted ? (

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 /* Empty and error states as ghost previews: a faded mock of the list this
    screen will become, fading out into the page, with the brand kicker + volt
    CTA beneath. Empty states teach the layout before there's data to show it;
-   load errors render the same ghost with its live-dot gone amber — the data
+   load errors render the same ghost with its live-dot gone amber: the data
    is out there, the signal dropped. */
 
 const cardShadow =
@@ -46,7 +46,7 @@ function EmptyStateShell({
 
 /** Ghost of the roster list: avatar, name + signal line, urgency chip.
     `tone="lost"` is the load-error variant: the volt live-dot goes amber
-    and pulses — the roster's still out there, the signal dropped. */
+    and pulses: the roster's still out there, the signal dropped. */
 function GhostRoster({ tone = 'live' }: { tone?: 'live' | 'lost' }) {
   const rows = [
     { name: 'w-28', signal: 'w-40', opacity: 'opacity-100' },
@@ -67,7 +67,7 @@ function GhostRoster({ tone = 'live' }: { tone?: 'live' | 'lost' }) {
             style={{ animationDelay: `${120 + i * 110}ms` }}
           >
             <div className="relative w-10 h-10 rounded-full bg-muted shrink-0">
-              {/* volt live-dot on the top row — the roster ranks who needs you */}
+              {/* volt live-dot on the top row; the roster ranks who needs you */}
               {i === 0 &&
                 (tone === 'lost' ? (
                   <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-warning ring-2 ring-card motion-safe:animate-pulse" />
@@ -159,7 +159,7 @@ function GhostProfile() {
 
 /** Branded load-failure state: the ghost of the screen that failed to load,
     amber signal-lost accents, and a volt retry CTA. Must never masquerade as
-    an empty state — the kicker and dot colour carry the distinction. */
+    an empty state; the kicker and dot colour carry the distinction. */
 export function LoadErrorState({
   kicker,
   title,
@@ -199,7 +199,7 @@ export function EmptyStateNoClients({ onInvite }: { onInvite?: () => void }) {
       preview={<GhostRoster />}
       kicker="Roster · 0 clients"
       title="No clients yet"
-      body="Send an invite link — the moment your client signs up, they land here, ranked by who needs your attention."
+      body="Send an invite link. The moment your client signs up, they land here, ranked by who needs your attention."
       cta={
         <Button
           onClick={onInvite}

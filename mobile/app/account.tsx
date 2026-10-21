@@ -24,7 +24,7 @@ function Row({ icon, label, detail, onPress }: { icon: keyof typeof Feather.glyp
 }
 
 /**
- * The account menu, as a sheet — the web's AccountMenu dropdown: identity,
+ * The account menu, as a sheet (the web's AccountMenu dropdown): identity,
  * Settings, Send feedback, Sign out. Everything editable (photo, name,
  * password, alerts, deleting the account) lives in Settings, as on the web.
  */

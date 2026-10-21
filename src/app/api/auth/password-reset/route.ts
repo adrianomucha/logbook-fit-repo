@@ -13,7 +13,7 @@ import { isDemoAccount } from "@/lib/demo";
  *
  * Anti-enumeration: every well-formed request gets the same `{ ok: true }`,
  * whether the account exists, is soft-deleted, is a demo account, or the
- * mailer isn't configured — an attacker learns nothing about which emails
+ * mailer isn't configured; an attacker learns nothing about which emails
  * have accounts. Only the rate limit (429) and validation (400) differ, and
  * neither depends on account existence.
  */
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // Demo accounts share public credentials by design — letting anyone
+    // Demo accounts share public credentials by design; letting anyone
     // rotate their password would brick the demo for everyone else.
     if (!isDemoAccount(email)) {
       const user = await prisma.user.findFirst({
@@ -45,17 +45,17 @@ export async function POST(req: Request) {
         const token = createResetToken(user.id, user.passwordHash);
         if (token) {
           const resetUrl = `${appBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
-          // Log user ids rather than emails — same PII rule as login.
+          // Log user ids rather than emails, same PII rule as login.
           console.log("[AUTH] Password reset requested for user:", user.id);
           await sendPasswordReset(email, resetUrl);
         } else {
-          // NEXTAUTH_SECRET is unset — the user still sees "check your
+          // NEXTAUTH_SECRET is unset. The user still sees "check your
           // inbox" (anti-enumeration), so this log line is the ONLY signal
           // that every password reset is silently dying.
           console.error(
             "[EMAIL_ALERT] Password reset for user",
             user.id,
-            "skipped — NEXTAUTH_SECRET is unset, reset tokens cannot be minted."
+            "skipped: NEXTAUTH_SECRET is unset, reset tokens cannot be minted."
           );
         }
       }

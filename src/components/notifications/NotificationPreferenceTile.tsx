@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { ALERTS_COPY } from '@logbook/shared/notification-copy';
 
 interface NotificationPreferenceTileProps {
-  /** Who the alerts are about — copy only, the mechanics are identical */
+  /** Who the alerts are about. Copy only, the mechanics are identical */
   role: 'coach' | 'client';
 }
 
@@ -19,7 +19,7 @@ const SWITCH_ID = 'message-alerts-switch';
  *
  * One contained tile instead of a floating pill: icon well (volt once alerts
  * are on), title + description, a real switch, and a mono status line that
- * either names the device state or says why the switch is disabled — an
+ * either names the device state or says why the switch is disabled; an
  * unavailable control should explain itself rather than vanish.
  */
 export function NotificationPreferenceTile({ role }: NotificationPreferenceTileProps) {
@@ -75,7 +75,7 @@ export function NotificationPreferenceTile({ role }: NotificationPreferenceTileP
         isSubscribed ? 'bg-brand/[0.06] border-brand/40' : 'bg-secondary/40'
       )}
     >
-      {/* Icon well — lights up volt once alerts are on so the state reads
+      {/* Icon well: lights up volt once alerts are on so the state reads
           from across the room, not only from the switch */}
       <div
         className={cn(
@@ -119,7 +119,7 @@ export function NotificationPreferenceTile({ role }: NotificationPreferenceTileP
           {ALERTS_COPY.body(role)}
         </p>
 
-        {/* Status line — the product's mono data voice; a volt dot marks "on" */}
+        {/* Status line: the product's mono data voice; a volt dot marks "on" */}
         <p
           className="mt-3 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-muted-foreground antialiased"
           aria-live="polite"

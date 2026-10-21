@@ -5,7 +5,7 @@ import { Flag, MessageCircle } from 'lucide-react';
 
 interface PlanCompleteCardProps {
   plan: WorkoutPlan;
-  /** Every completion on the client's account — filtered to this plan here */
+  /** Every completion on the client's account, filtered to this plan here */
   completions: WorkoutCompletion[];
   coachName?: string;
   onMessageCoach: () => void;
@@ -20,7 +20,7 @@ interface PlanCompleteCardProps {
  * No chart on purpose: a finished block is mostly "you did it", and every
  * per-week or per-session chart tried here read as a wall of volt. The
  * completion rate leads, one meter shows it, and a sentence names the
- * misses — which is the only detail a chart was adding. The numbers and
+ * misses, which is the only detail a chart was adding. The numbers and
  * wording come from @logbook/shared so the native card says the same.
  */
 export function PlanCompleteCard({
@@ -46,7 +46,7 @@ export function PlanCompleteCard({
       aria-label="Plan complete"
       className="rounded-2xl bg-card border border-border/70 p-5 sm:p-6 animate-enter"
     >
-      {/* Header — eyebrow + plan name, volt flag as the celebration mark */}
+      {/* Header: eyebrow + plan name, volt flag as the celebration mark */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -66,7 +66,7 @@ export function PlanCompleteCard({
 
       {planned > 0 && (
         <>
-          {/* Headline — the one number the block comes down to */}
+          {/* Headline: the one number the block comes down to */}
           <div className="mt-6 flex items-baseline gap-3">
             <p className="text-[44px] font-bold tracking-tight leading-none antialiased">
               {pct}%
@@ -85,7 +85,7 @@ export function PlanCompleteCard({
         </>
       )}
 
-      {/* Stat band — numbers carry the weight, units stay quiet */}
+      {/* Stat band: numbers carry the weight, units stay quiet */}
       {stats.length > 0 && (
         <p className="font-mono text-[13px] tabular-nums mt-5 pt-4 border-t border-border/50">
           {stats.map(([value, unit], i) => (
@@ -98,7 +98,7 @@ export function PlanCompleteCard({
         </p>
       )}
 
-      {/* What's next — the coach builds the next block */}
+      {/* What's next: the coach builds the next block */}
       <div className="mt-5 pt-5 border-t border-border/50">
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
           What&apos;s next

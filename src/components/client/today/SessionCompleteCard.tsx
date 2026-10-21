@@ -17,18 +17,18 @@ const EFFORT_OPTIONS: { value: EffortRating; label: string; selectedClass: strin
 ];
 
 interface SessionCompleteCardProps {
-  /** Raw coach-authored session name, e.g. "Day 5 — Lower B + Core (Backup)" */
+  /** Raw coach-authored session name, e.g. "Day 5: Lower B + Core (Backup)" */
   workoutName?: string;
   completion: WorkoutCompletion;
   coachName?: string;
-  /** Effort rating already sent — show the quiet confirmation instead of the prompt */
+  /** Effort rating already sent; show the quiet confirmation instead of the prompt */
   feedbackSubmitted?: boolean;
   isSubmittingFeedback?: boolean;
   onSubmitFeedback: (rating: EffortRating, notes?: string) => void;
 }
 
 /**
- * Hero card for a finished session — the completed-state sibling of
+ * Hero card for a finished session: the completed-state sibling of
  * WorkoutOverview's scheduled hero. Same anatomy (mono eyebrow, big title,
  * stat band), plus the one thing left to do after training: tell the coach
  * how it felt. Everything lives in this single card so the state reads as
@@ -72,7 +72,7 @@ export function SessionCompleteCard({
 
   return (
     <div className="rounded-2xl bg-card border border-border/70 p-5 sm:p-6">
-      {/* Header — eyebrow + parsed title, volt check as the celebration mark */}
+      {/* Header: eyebrow + parsed title, volt check as the celebration mark */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
@@ -93,7 +93,7 @@ export function SessionCompleteCard({
         </div>
       </div>
 
-      {/* Stat band — numbers carry the weight, units stay quiet */}
+      {/* Stat band: numbers carry the weight, units stay quiet */}
       <p className="font-mono text-[13px] tabular-nums mt-4 pt-4 border-t border-border/50">
         {stats.map(([value, unit], i) => (
           <span key={unit}>
@@ -104,7 +104,7 @@ export function SessionCompleteCard({
         ))}
       </p>
 
-      {/* The in-progress bar, landed — same element the client watched fill up */}
+      {/* The in-progress bar, landed: same element the client watched fill up */}
       <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
         <div
           className="h-full rounded-full bg-brand"

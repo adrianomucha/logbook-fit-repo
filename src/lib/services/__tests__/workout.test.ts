@@ -5,14 +5,14 @@ vi.mock("@/lib/prisma", () => ({
   default: {},
 }));
 
-// Now we can import the service module — the singleton won't try to connect
+// Now we can import the service module; the singleton won't try to connect
 // We test calculateStreak directly since it's a pure function on the class
 import { workoutService } from "../workout";
 
 describe("calculateStreak", () => {
   beforeEach(() => {
     // Fix "today" to 2025-03-15, noon local. calculateStreak buckets by the
-    // local calendar day, so fixtures are local wall-clock times — UTC
+    // local calendar day, so fixtures are local wall-clock times. UTC
     // instants would land on a different day east or west of Greenwich.
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2025-03-15T12:00:00"));

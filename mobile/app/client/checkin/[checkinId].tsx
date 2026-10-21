@@ -23,7 +23,7 @@ const FEELING_OPTIONS: Choice[] = [
   { value: 'RUN_DOWN', label: 'Run Down', emoji: '🥴', tone: 'destructive' },
 ];
 
-/** A centred card with an icon, title, body and the way back — the form's terminal states. */
+/** A centred card with an icon, title, body and the way back. The form's terminal states. */
 function Terminal({ icon, tone, title, body, onBack }: { icon: 'alert-triangle' | 'check-circle'; tone: 'muted' | 'success'; title: string; body: string; onBack: () => void }) {
   return (
     <View className="flex-1 items-center justify-center bg-background px-4">
@@ -40,7 +40,7 @@ function Terminal({ icon, tone, title, body, onBack }: { icon: 'alert-triangle' 
 }
 
 /**
- * The success screen replaces the form — the web's redesigned confirmation:
+ * The success screen replaces the form (the web's redesigned confirmation):
  * volt check, "Sent to <coach>", and a receipt of what was sent so the
  * moment isn't a void. Two ways onward: back to today, or the chat.
  */
@@ -71,7 +71,7 @@ function SentScreen({
       contentContainerStyle={{ paddingTop: insets.top + 40, paddingBottom: insets.bottom + 40, paddingHorizontal: 16 }}
     >
       <View className="gap-6">
-        {/* Volt check — the same celebration mark the workout-complete state carries */}
+        {/* Volt check: the same celebration mark the workout-complete state carries */}
         <View className="h-16 w-16 items-center justify-center rounded-full bg-brand">
           <Feather name="check" size={32} color="#1e2702" />
         </View>
@@ -82,7 +82,7 @@ function SentScreen({
             {coachFirstName ? `Sent to ${coachFirstName}` : 'Sent to your coach'}
           </Text>
           <Text className="mt-3 font-sans text-sm leading-5 text-muted-foreground">
-            {coachFirstName ?? 'Your coach'} will read it and get back to you — their reply shows up on your dashboard.
+            {coachFirstName ?? 'Your coach'} will read it and get back to you. Their reply shows up on your dashboard.
           </Text>
         </View>
 
@@ -104,7 +104,7 @@ function SentScreen({
         ) : null}
 
         <View className="gap-1.5 pt-1">
-          {/* Same volt CTA the today card uses — one clear way onward */}
+          {/* Same volt CTA the today card uses: one clear way onward */}
           <Button variant="brand" onPress={onHome}>
             Back to today
           </Button>
@@ -117,7 +117,7 @@ function SentScreen({
   );
 }
 
-/** The client's check-in form — the web's ClientCheckInForm, one to one. */
+/** The client's check-in form: the web's ClientCheckInForm, one to one. */
 export default function CheckInScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -154,7 +154,7 @@ export default function CheckInScreen() {
     );
   }
   if (checkIn.status === 'EXPIRED') {
-    return <Terminal icon="alert-triangle" tone="muted" title="Check-in expired" body="This check-in is no longer open — the next one will appear on your dashboard." onBack={goHome} />;
+    return <Terminal icon="alert-triangle" tone="muted" title="Check-in expired" body="This check-in is no longer open. The next one will appear on your dashboard." onBack={goHome} />;
   }
   if (checkIn.status !== 'PENDING') {
     return <Terminal icon="check-circle" tone="success" title="Already sent" body="You already sent this one to your coach." onBack={goHome} />;
@@ -178,10 +178,10 @@ export default function CheckInScreen() {
       setShowSuccess(true);
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        // Answered elsewhere or expired while the form sat open — refetch so
+        // Answered elsewhere or expired while the form sat open. Refetch so
         // the right terminal screen renders instead of a dead end.
         await refresh();
-        setErrors({ submit: 'This check-in is no longer open — it may have been answered already or expired.' });
+        setErrors({ submit: 'This check-in is no longer open. It may have been answered already or expired.' });
       } else {
         setErrors({ submit: 'Failed to submit. Please try again.' });
       }

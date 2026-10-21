@@ -11,7 +11,7 @@ export const UNREAD_MESSAGES_KEY = '/api/messages/unread';
  * Unread message counts for the signed-in user.
  *
  * Polled app-wide from the navs, so the interval is the "how stale can a
- * badge be" dial — not the chat's freshness, which `useMessages` owns with a
+ * badge be" dial, not the chat's freshness, which `useMessages` owns with a
  * much faster poll while a thread is open.
  */
 export function useUnreadMessages(pollMs = 15_000) {

@@ -5,12 +5,12 @@ import prisma from "@/lib/prisma";
 /**
  * Sample-client mode: creates a realistic demo client for a coach so they can
  * feel the urgency-sorted dashboard and the check-in loop before a real
- * client joins. Everything is real data flowing through the real UI — the
+ * client joins. Everything is real data flowing through the real UI; the
  * client is just flagged (ClientProfile.isSample) and removable in one action.
  *
  * The generated story: Riley is 9 days into a 2-week plan, trained 4 times,
  * flagged deadlifts for back tightness, and responded to a check-in a few
- * hours ago — so the coach lands on AWAITING_RESPONSE and gets to review and
+ * hours ago, so the coach lands on AWAITING_RESPONSE and gets to review and
  * reply, which is the product's north-star moment.
  */
 
@@ -90,7 +90,7 @@ export async function createSampleClient(
   const existing = await findSampleClient(coachProfileId);
   if (existing) return { clientProfileId: existing.id, created: false };
 
-  // Random password — the sample account is never meant to be logged into
+  // Random password; the sample account is never meant to be logged into
   const passwordHash = await bcrypt.hash(randomBytes(32).toString("hex"), 10);
 
   // ── Client account ──────────────────────────────────────────────
@@ -231,7 +231,7 @@ export async function createSampleClient(
   const w1d3 = await complete(week1[2], 2, { completedDaysAgo: 4, durationMin: 49, effort: "HARD" });
   await complete(week2[0], 0, { completedDaysAgo: 1, durationMin: 43, effort: "MEDIUM" });
 
-  // Riley flagged deadlifts on week 1 day 3 — surfaces in check-in review
+  // Riley flagged deadlifts on week 1 day 3; surfaces in check-in review
   await prisma.exerciseFlag.create({
     data: {
       workoutCompletionId: w1d3.id,
@@ -242,7 +242,7 @@ export async function createSampleClient(
   });
 
   // The flag's story in the set data: the final deadlift set was taken
-  // lighter — shows up as a deviation in the coach's workout history
+  // lighter, which shows up as a deviation in the coach's workout history
   const deadlift = SAMPLE_DAYS[2].exercises[0];
   await prisma.setCompletion.updateMany({
     where: {

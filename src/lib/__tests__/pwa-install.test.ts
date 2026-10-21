@@ -13,7 +13,7 @@ import {
 
 const NOW = 1_700_000_000_000;
 
-// Real UA strings — the whole module is pattern matching against these, so
+// Real UA strings. The whole module is pattern matching against these, so
 // paraphrased ones would test nothing.
 const UA = {
   iphoneSafari:
@@ -31,7 +31,7 @@ const UA = {
     "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBDV/iPhone14,2;FBMD/iPhone]",
   whatsapp:
     "Mozilla/5.0 (iPhone; CPU iPhone OS 16_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148",
-  // iPadOS 13+ default "desktop" mode — byte-identical to macOS Safari.
+  // iPadOS 13+ default "desktop" mode, byte-identical to macOS Safari.
   ipadDesktopMode:
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
   macSafari:
@@ -244,7 +244,7 @@ describe("resolveInstallPrompt", () => {
   });
 
   it("never asks a second time, whichever way the first ask ended", () => {
-    // Install, close, or ignore — all three leave the same record behind.
+    // Install, close, or ignore: all three leave the same record behind.
     const spent = parseInstallPromptState(JSON.stringify(markOffered(NOW)));
     expect(resolveInstallPrompt(snapshot(), spent)).toBe("none");
   });

@@ -6,12 +6,12 @@ const WIDOW_PAIR_LIMIT = 18;
  * text never ends on a lone word.
  *
  * `text-wrap: pretty` does this natively on the web, but only on browsers
- * that have it and only as a hint — our copy is interpolated (client names,
+ * that have it and only as a hint. Our copy is interpolated (client names,
  * plan names), so the line breaks are not knowable at design time. This is
  * the deterministic floor under the CSS, and the only option in the app.
  *
  * Left alone when the pair is long enough that gluing it could push a narrow
- * column into an overflow — and a long trailing word does not read as a
+ * column into an overflow, and a long trailing word does not read as a
  * widow in the first place.
  */
 export function noWidows(text: string, pairLimit = WIDOW_PAIR_LIMIT): string {

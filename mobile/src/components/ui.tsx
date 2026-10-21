@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View, type PressableProps } from 'react-native';
 
-/** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
+/** Mono, uppercase, tracked: the brand's eyebrow/label voice. */
 export function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <Text className={`font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground ${className}`}>

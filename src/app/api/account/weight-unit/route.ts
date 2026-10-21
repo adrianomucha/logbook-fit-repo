@@ -8,7 +8,7 @@ import { weightUnitSchema } from "@/lib/validations/schemas";
 export const dynamic = "force-dynamic";
 
 /**
- * PUT /api/account/weight-unit — the kg/lb switch in Settings.
+ * PUT /api/account/weight-unit: the kg/lb switch in Settings.
  *
  * Display only: stored weights are always lb, and each app converts to this
  * unit when it shows or reads a weight (packages/shared/src/weight-units.ts).

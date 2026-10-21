@@ -170,7 +170,7 @@ export function CheckInDetailModal({
                 <p className="text-sm font-medium">
                   {completed >= totalExpected ? (
                     <span className="text-success">
-                      Target hit — {completed} workout{completed === 1 ? '' : 's'} against a target of {totalExpected}
+                      Target hit: {completed} workout{completed === 1 ? '' : 's'} against a target of {totalExpected}
                     </span>
                   ) : (
                     <span className="text-foreground">

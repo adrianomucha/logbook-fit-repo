@@ -20,7 +20,7 @@ function apiMessage(id: string, senderId: string, createdAt: string): ApiMessage
 }
 
 // The thread endpoint answers newest first; the adapter turns that into
-// conversation order — the path the native chat screen takes
+// conversation order, the path the native chat screen takes
 const thread = apiMessagesToMessages(
   [
     apiMessage('m4', 'client', at(21, 9)),

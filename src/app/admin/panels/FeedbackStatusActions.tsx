@@ -9,7 +9,7 @@ type Status = 'NEW' | 'REVIEWED' | 'RESOLVED';
 
 /**
  * Status cell for a feedback row: the current state plus the one or two
- * transitions that make sense from it. Server state is the truth — after a
+ * transitions that make sense from it. Server state is the truth: after a
  * successful PATCH the row re-renders via router.refresh(), so there's no
  * local status copy to drift.
  */
@@ -65,7 +65,7 @@ export function FeedbackStatusActions({
   return (
     <span className="inline-flex items-center gap-1">
       {failed && (
-        <span className="text-xs text-destructive">Failed — retry</span>
+        <span className="text-xs text-destructive">Failed, retry</span>
       )}
       {status === 'NEW' && (
         <>

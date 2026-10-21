@@ -7,7 +7,7 @@ interface LogoMarkProps {
 }
 
 /**
- * Brand mark — a rep tally. Three strokes and the volt slash that
+ * Brand mark: a rep tally. Three strokes and the volt slash that
  * completes the count: the act of logging a set, reduced to a glyph.
  * Tile and strokes follow the theme (dark tile on light, light tile
  * on dark); the slash is always volt.
@@ -40,7 +40,7 @@ export function LogoMark({ size = 24, className }: LogoMarkProps) {
 }
 
 /**
- * The mark's geometry without its tile — for illustrations and empty
+ * The mark's geometry without its tile, for illustrations and empty
  * states, where a filled tile would read as a logo placement. Strokes
  * inherit currentColor; the slash stays volt.
  */
@@ -76,7 +76,7 @@ interface LogoProps {
   className?: string;
 }
 
-/** Horizontal lockup — mark plus the mono wordmark. */
+/** Horizontal lockup: mark plus the mono wordmark. */
 export function Logo({ markSize = 20, className }: LogoProps) {
   return (
     <span className={cn('inline-flex items-center gap-2', className)}>
@@ -86,7 +86,7 @@ export function Logo({ markSize = 20, className }: LogoProps) {
           Logbook
         </span>
         {/* Full-strength muted-foreground: the /60-faded version failed WCAG AA
-            contrast for small text — size and weight already set the hierarchy */}
+            contrast for small text; size and weight already set the hierarchy */}
         <span className="font-mono text-[10px] sm:text-[11px] font-normal uppercase tracking-[0.15em] text-muted-foreground">
           Fitness
         </span>

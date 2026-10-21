@@ -62,7 +62,7 @@ const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ entry }: { entry: 
         )}
       </button>
 
-      {/* Expanded details — same label ↔ value rows as Body Stats */}
+      {/* Expanded details: same label ↔ value rows as Body Stats */}
       {isExpanded && (
         <div className="pb-4 pt-1 space-y-2.5 animate-fade-in-up">
           <div className="flex justify-between text-sm">
@@ -78,7 +78,7 @@ const WorkoutHistoryItem = memo(function WorkoutHistoryItem({ entry }: { entry: 
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Effort</span>
             <span className={cn('font-medium', effort && EFFORT_COLOR[effort])}>
-              {effort ? EFFORT_LABELS[effort] : '—'}
+              {effort ? EFFORT_LABELS[effort] : '-'}
             </span>
           </div>
           <div className="flex justify-between text-sm">
@@ -146,7 +146,7 @@ export function EnrichedWorkoutHistory({
       aria-label="Workout history"
       className="rounded-2xl bg-card border border-border/70 overflow-hidden"
     >
-      {/* Header bar — mono voice, hairline separator */}
+      {/* Header bar: mono voice, hairline separator */}
       <div className="flex items-baseline justify-between px-4 pt-4 pb-3 border-b border-border/50">
         <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
           Workout history

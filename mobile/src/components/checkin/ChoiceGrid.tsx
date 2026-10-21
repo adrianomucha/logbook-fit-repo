@@ -4,7 +4,7 @@ export interface Choice {
   value: string;
   label: string;
   emoji: string;
-  /** Selected look — the app's effort colour semantics (success / neutral / warning / destructive). */
+  /** Selected look: the app's effort colour semantics (success / neutral / warning / destructive). */
   tone: 'success' | 'neutral' | 'warning' | 'destructive';
 }
 
@@ -23,7 +23,7 @@ interface ChoiceGridProps {
   accessibilityLabel: string;
 }
 
-/** Emoji + label tiles, one selected — the check-in form's answer grids. */
+/** Emoji + label tiles, one selected: the check-in form's answer grids. */
 export function ChoiceGrid({ choices, value, onChange, columns, accessibilityLabel }: ChoiceGridProps) {
   return (
     <View accessibilityRole="radiogroup" accessibilityLabel={accessibilityLabel} className="flex-row flex-wrap gap-2">

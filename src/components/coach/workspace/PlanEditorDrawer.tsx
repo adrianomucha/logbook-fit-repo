@@ -82,7 +82,7 @@ export function PlanEditorDrawer({
     }
   }, [currentWeek, currentDayIndex]);
 
-  // Local state for plan name input — same pattern as day name below.
+  // Local state for plan name input: same pattern as day name below.
   const [localPlanName, setLocalPlanName] = useState(plan?.name || '');
   const planNameInputRef = useRef<HTMLInputElement>(null);
 
@@ -109,8 +109,8 @@ export function PlanEditorDrawer({
   }, [currentDayId, currentDayName, currentDayDesc]);
 
   // Reset selection when a different plan opens (or the initial position
-  // changes). Guarded by a key so data refreshes of the same plan — which
-  // produce a new `plan` object — don't yank the coach back to the first day.
+  // changes). Guarded by a key so data refreshes of the same plan (which
+  // produce a new `plan` object) don't yank the coach back to the first day.
   const resetKey = `${plan?.id ?? ''}:${initialWeekIndex}:${initialDayIndex}`;
   const lastResetKey = useRef<string | null>(null);
   useEffect(() => {
@@ -123,7 +123,7 @@ export function PlanEditorDrawer({
     setSelectedDayId(day?.id ?? null);
   }, [resetKey, plan, initialWeekIndex, initialDayIndex]);
 
-  // Navigate weeks — abandon any in-flight exercise edit, it belongs to the old day
+  // Navigate weeks. Abandon any in-flight exercise edit, it belongs to the old day
   const goToWeek = (weekIndex: number) => {
     if (!plan || weekIndex === selectedWeek || weekIndex < 0 || weekIndex > plan.weeks.length - 1) return;
     closeExerciseEditor();
@@ -150,13 +150,13 @@ export function PlanEditorDrawer({
     setExerciseDrawerOpen(true);
   };
 
-  // Save exercise (new or update) — persists via API
+  // Save exercise (new or update); persists via API
   const handleSaveExercise = async (exercise: Exercise) => {
     if (!plan || !currentDay || isSaving) return;
     const dayId = currentDay.id;
     setIsSaving(true);
 
-    // Parse the prescription string into a stored min + optional max —
+    // Parse the prescription string into a stored min + optional max:
     // "6-8" reps, or "30-60s" seconds for time-based exercises.
     const trackingType = exercise.trackingType ?? 'REPS';
     const { reps, repsMax } = parsePrescriptionInput(exercise.reps, trackingType);
@@ -188,7 +188,7 @@ export function PlanEditorDrawer({
           });
           libraryExerciseId = created.id;
         } catch {
-          // 409 = already exists — search for it
+          // 409 = already exists, so search for it
           const results = await apiFetch<{ id: string; name: string }[]>(
             `/api/exercises?search=${encodeURIComponent(exercise.name)}`
           );
@@ -224,7 +224,7 @@ export function PlanEditorDrawer({
     onRefresh?.();
   };
 
-  // Delete exercise — persists via API
+  // Delete exercise; persists via API
   const handleDeleteExercise = async () => {
     if (!plan || editingExerciseIndex === null || !currentDay || isSaving) return;
     const exerciseToDelete = currentDay.exercises[editingExerciseIndex];
@@ -313,7 +313,7 @@ export function PlanEditorDrawer({
       onOpenChange(o);
     }}>
       <SheetContent side="right" className="w-full sm:max-w-[880px] p-0 gap-0 flex flex-col pb-[env(safe-area-inset-bottom)] overflow-visible [&>button[data-radix-collection-item]]:hidden [&>.absolute]:hidden">
-        {/* Loading state — skeleton */}
+        {/* Loading state: skeleton */}
         {isLoading && !plan && (
           <>
             <div className="p-4 border-b space-y-3">
@@ -383,10 +383,10 @@ export function PlanEditorDrawer({
 
         {/* Normal state: plan loaded with weeks and days.
             Two panes on desktop: week/day rail on the left, day content on the
-            right — no pill scroller, no stacked chrome eating vertical space. */}
+            right. No pill scroller, no stacked chrome eating vertical space. */}
         {plan && hasWeeks && (
           <>
-            {/* Plan header — always visible. Reads like the app's own pages:
+            {/* Plan header, always visible. Reads like the app's own pages:
                 a volt hairline on top, a mono eyebrow with the plan's shape,
                 then the name in display weight over faint logbook grid paper. */}
             <div className="relative z-10 shrink-0 overflow-hidden border-b">
@@ -414,7 +414,7 @@ export function PlanEditorDrawer({
                   </p>
                   <SheetTitle asChild>
                     <div className="flex items-center gap-2 min-w-0 mt-1">
-                      {/* Plan name — click to edit */}
+                      {/* Plan name: click to edit */}
                       {editingPlanName ? (
                         <Input
                           ref={planNameInputRef}
@@ -446,7 +446,7 @@ export function PlanEditorDrawer({
                   </SheetDescription>
                 </div>
 
-                {/* Close drawer — same mono voice as the eyebrow; -me-2 keeps
+                {/* Close drawer: same mono voice as the eyebrow; -me-2 keeps
                     the X on the right gutter despite the hover pill's padding */}
                 <button
                   onClick={() => onOpenChange(false)}
@@ -460,13 +460,13 @@ export function PlanEditorDrawer({
 
             {/* Body: rail + main pane */}
             <div className="flex-1 min-h-0 flex flex-col sm:flex-row">
-              {/* Week/day rail — on mobile it collapses to a stepper + pill row,
+              {/* Week/day rail: on mobile it collapses to a stepper + pill row,
                   and hides entirely while the exercise editor is open */}
               <div className={cn(
                 'shrink-0 border-b sm:border-b-0 sm:border-r sm:w-[264px] sm:bg-muted/30 flex flex-col',
                 exerciseDrawerOpen && 'hidden sm:flex'
               )}>
-                {/* Week — stated like the profile's "Wk 1 of 8" vital, with a
+                {/* Week, stated like the profile's "Wk 1 of 8" vital, with a
                     tick per week underneath that doubles as a jump control */}
                 <div className="px-4 pt-3 sm:pt-4 pb-1 shrink-0">
                   <div className="flex items-end justify-between gap-2">
@@ -531,7 +531,7 @@ export function PlanEditorDrawer({
                   )}
                 </div>
 
-                {/* Days — vertical list on desktop */}
+                {/* Days: vertical list on desktop */}
                 {hasDays && (
                   <div className="hidden sm:block flex-1 overflow-y-auto px-2 pb-3">
                     <div className="flex items-baseline justify-between gap-2 px-2.5 pt-2 pb-1.5">
@@ -571,7 +571,7 @@ export function PlanEditorDrawer({
                               'font-mono text-[11px] tabular-nums shrink-0',
                               isActive ? 'text-background/60' : 'text-muted-foreground'
                             )}>
-                              {exerciseCount || '—'}
+                              {exerciseCount || '-'}
                             </span>
                           </button>
                         );
@@ -580,7 +580,7 @@ export function PlanEditorDrawer({
                   </div>
                 )}
 
-                {/* Days — pill row on mobile */}
+                {/* Days: pill row on mobile */}
                 {hasDays && (
                   /* No scroll-snap: snapping pulled the first pill flush to the
                       screen edge, ignoring the row's padding. Same 16px start
@@ -641,7 +641,7 @@ export function PlanEditorDrawer({
                 />
               ) : currentDay ? (
               <div className="flex-1 min-h-0 overflow-y-auto">
-                {/* Day name & briefing — seamless inline fields, no boxed inputs */}
+                {/* Day name & briefing: seamless inline fields, no boxed inputs */}
                 <div className="px-4 sm:px-5 pt-4 pb-3 border-b">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium tabular-nums antialiased mb-1.5">
                     Wk {String(clampedWeek + 1).padStart(2, '0')}

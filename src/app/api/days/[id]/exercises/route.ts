@@ -49,7 +49,7 @@ export const POST = withCoach(
       );
     }
 
-    // Determine orderIndex — append to end if not specified
+    // Determine orderIndex: append to end if not specified
     let idx = orderIndex;
     if (idx === undefined) {
       const lastExercise = await prisma.workoutExercise.findFirst({

@@ -7,7 +7,7 @@ interface ImageSlotProps {
   label: string;
   /** Aspect ratio / sizing classes, e.g. "aspect-[4/5]" */
   className?: string;
-  /** Real photo — drop a file in /public and pass its path to replace the placeholder */
+  /** Real photo: drop a file in /public and pass its path to replace the placeholder */
   src?: string;
   alt?: string;
   /** object-position for the photo crop, e.g. "center 30%" (default: center) */
@@ -20,7 +20,7 @@ interface ImageSlotProps {
 
 /**
  * Media slot for the landing page. Renders a real photo when `src` is
- * provided; otherwise a labeled placeholder that reserves the space —
+ * provided; otherwise a labeled placeholder that reserves the space;
  * the label describes the shot it's holding room for. The volt slash
  * echoes the logo mark.
  */
@@ -67,7 +67,7 @@ export function ImageSlot({
         className="absolute inset-0 bg-[repeating-linear-gradient(-60deg,transparent,transparent_46px,hsl(var(--border)/0.55)_46px,hsl(var(--border)/0.55)_47px)]"
         aria-hidden="true"
       />
-      {/* Volt slash — same angle as the logo mark */}
+      {/* Volt slash: same angle as the logo mark */}
       <div
         className="absolute -top-[20%] right-[12%] h-[140%] w-2.5 rotate-[28deg] rounded-full bg-brand"
         aria-hidden="true"

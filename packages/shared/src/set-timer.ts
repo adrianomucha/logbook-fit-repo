@@ -2,7 +2,7 @@
  * Pure state machine for the per-set countdown on TIME exercises (planks,
  * carries, holds). Kept free of React and timers so it can be unit-tested and
  * so the hook that drives it can compute elapsed time from wall-clock
- * timestamps — a tab that iOS suspends mid-plank must come back showing the
+ * timestamps: a tab that iOS suspends mid-plank must come back showing the
  * right number, not however many ticks happened to fire.
  */
 

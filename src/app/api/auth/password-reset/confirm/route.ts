@@ -13,7 +13,7 @@ import { isDemoAccount } from "@/lib/demo";
  * The fingerprint comparison is what makes the emailed link single-use:
  * updating passwordHash changes the fingerprint, so the just-redeemed token
  * (and any earlier unredeemed ones) stops verifying. Sessions are JWTs, so
- * existing logins survive a reset — acceptable for now, since whoever holds
+ * existing logins survive a reset. Acceptable for now, since whoever holds
  * the inbox controls the account either way.
  */
 export async function POST(req: Request) {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     });
 
     // A fingerprint mismatch means the password already changed since the
-    // link was minted — the token is spent. Same error as a bad token: the
+    // link was minted, so the token is spent. Same error as a bad token: the
     // distinction helps no legitimate user and would aid probing.
     if (
       !user ||

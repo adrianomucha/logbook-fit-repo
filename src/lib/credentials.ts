@@ -7,8 +7,8 @@ import { isLockedDemoAccount } from "@/lib/demo";
  * The one email + password check, shared by the NextAuth credentials
  * provider (web, cookie session) and POST /api/auth/mobile/login (native
  * app, bearer token). Both sign-in paths must refuse exactly the same
- * things — demo lock, rate limit, unknown email, wrong password, soft-deleted
- * account — and they can only stay in agreement by running the same code.
+ * things (demo lock, rate limit, unknown email, wrong password, soft-deleted
+ * account), and they can only stay in agreement by running the same code.
  *
  * "invalid" is deliberately one reason for both unknown-email and
  * wrong-password so neither sign-in path can be used to probe which
@@ -36,7 +36,7 @@ export async function verifyCredentials(params: {
   const email = params.email.trim().toLowerCase();
 
   // Demo credentials are public (login page, repo), so hiding the buttons
-  // isn't enough — refuse the sign-in outright when demo mode is off, and
+  // isn't enough. Refuse the sign-in outright when demo mode is off, and
   // say so: to a tester with the seeded credentials this otherwise looks
   // exactly like a wrong password.
   if (isLockedDemoAccount(email)) {
@@ -45,7 +45,7 @@ export async function verifyCredentials(params: {
   }
 
   // Rate limit by IP + email to prevent brute-force. Logs carry user ids,
-  // never emails — attempts (including attacker probes) are PII.
+  // never emails; attempts (including attacker probes) are PII.
   const { allowed } = await loginLimiter(`${params.ip}:${email}`);
   if (!allowed) {
     console.error("[AUTH] Rate limited login attempt");

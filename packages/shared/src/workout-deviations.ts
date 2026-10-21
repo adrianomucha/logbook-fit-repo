@@ -3,7 +3,7 @@ import { formatWeightNumber, toDisplayWeight, weightUnitLabel, type WeightUnit }
 
 /**
  * What the client actually did vs. what was prescribed. A client quietly
- * taking weight off the bar or cutting reps is an early fade signal — the
+ * taking weight off the bar or cutting reps is an early fade signal; the
  * coach should see it without opening set-by-set logs.
  */
 export interface ExerciseDeviation {
@@ -26,7 +26,7 @@ export function getWorkoutDeviations(sets: CompletionSet[], unit: WeightUnit): E
   for (const set of sets) {
     const we = set.workoutExercise;
     const name = we.exercise.name;
-    // Key by the prescription, not the exercise name — the same exercise can
+    // Key by the prescription, not the exercise name: the same exercise can
     // be programmed twice in one day (heavy top set + back-off) with
     // different targets, and merging them mixes prescribed values.
     const key = set.workoutExerciseId ?? name;
@@ -61,7 +61,7 @@ export function getWorkoutDeviations(sets: CompletionSet[], unit: WeightUnit): E
   return [...byExercise.values()];
 }
 
-/** "Deadlift 84→70.3 kg, 5 reps (target 8–10)" — weights in the viewer's unit. */
+/** "Deadlift 84→70.3 kg, 5 reps (target 8–10)", weights in the viewer's unit. */
 export function formatDeviation(dev: ExerciseDeviation, unit: WeightUnit): string {
   const parts: string[] = [];
   if (dev.weight) {

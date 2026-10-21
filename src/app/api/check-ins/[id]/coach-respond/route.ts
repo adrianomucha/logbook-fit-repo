@@ -10,7 +10,7 @@ import { notifyCheckInFeedback } from "@/lib/push";
  * PUT /api/check-ins/[id]/coach-respond
  * Coach responds to a client-responded check-in
  * (CLIENT_RESPONDED → COMPLETED), or edits their feedback on an
- * already-completed one — typos shouldn't be permanent.
+ * already-completed one, since typos shouldn't be permanent.
  */
 export const PUT = withCoach(
   async (

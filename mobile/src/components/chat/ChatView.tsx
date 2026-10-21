@@ -41,7 +41,7 @@ function bubbleRadius(isCurrentUser: boolean, first: boolean, last: boolean) {
 }
 
 /**
- * The client's chat with their coach — the web's ChatView in its 'brand'
+ * The client's chat with their coach: the web's ChatView in its 'brand'
  * voice: ink outgoing bubbles, the coach's avatar beside incoming groups,
  * date separators, a Seen receipt, the "N new" pill, and the volt send.
  * The list is inverted (newest at the bottom, pinned) so the keyboard and
@@ -148,7 +148,7 @@ export function ChatView({
               // A raised panel with a hairline edge all round, so the card
               // lifts off the bubble without a side rail
               <View className={`-mx-0.5 mb-2 rounded-lg border px-3 py-2.5 ${mine ? 'border-white/10 bg-white/15' : 'border-border bg-background'}`}>
-                {/* Volt eyebrow on ink — the logo's pairing; on the light
+                {/* Volt eyebrow on ink, the logo's pairing; on the light
                     incoming card volt text would fail contrast, so a volt dot */}
                 <View className="mb-1 flex-row items-center gap-1.5">
                   {!mine ? <View className="h-1.5 w-1.5 rounded-full bg-brand" /> : null}
@@ -187,7 +187,7 @@ export function ChatView({
           <Text className="mb-2 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Direct line</Text>
           <Text className="font-sans-bold text-lg tracking-tight text-foreground">Talk to {peerFirst}</Text>
           <Text className="mt-2 max-w-[280px] text-center font-sans text-sm leading-5 text-muted-foreground">
-            Questions, wins, sore spots — it all helps {peerFirst} coach you better.
+            Questions, wins, sore spots: it all helps {peerFirst} coach you better.
           </Text>
           {conversationStarters?.length ? (
             <View className="mt-4 flex-row flex-wrap justify-center gap-2 pt-2">

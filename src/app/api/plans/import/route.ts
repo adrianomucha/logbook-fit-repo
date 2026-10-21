@@ -22,7 +22,7 @@ const importRowSchema = z.object({
   ...Object.fromEntries(IMPORT_COLUMNS.map((c) => [c.key, cellSchema])),
 });
 
-// Plan metadata comes from the dialog, not the sheet — same rules as a
+// Plan metadata comes from the dialog, not the sheet, same rules as a
 // manually created plan. Duration and schedule are derived from the rows.
 const importPlanSchema = createPlanSchema
   .pick({ name: true, description: true })
@@ -36,7 +36,7 @@ const importPlanSchema = createPlanSchema
  * Creates a plan template from the rows POST /api/plans/import/preview read
  * out of the coach's spreadsheet, once they've reviewed them (JSON body:
  * `name`, `description`, `rows`). The rows are parsed and bounds-checked
- * again here — the client is not trusted to send back what the preview
+ * again here; the client is not trusted to send back what the preview
  * returned. All-or-nothing: any bad row fails the import with per-row
  * errors (`rowErrors: [{ row, sheet?, message }]`).
  */
@@ -52,7 +52,7 @@ export const POST = withCoach(
     if (!input.success) {
       const issue = input.error.issues[0];
       return NextResponse.json(
-        { error: issue?.path[0] === "name" ? issue.message : "Invalid import — upload the file again" },
+        { error: issue?.path[0] === "name" ? issue.message : "Invalid import. Upload the file again" },
         { status: 400 }
       );
     }

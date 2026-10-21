@@ -28,7 +28,7 @@ export function Modal({
 }: ModalProps) {
   const titleId = useId();
   const descriptionId = useId();
-  // Scroll lock, Escape, focus trap and focus restore — see the hook
+  // Scroll lock, Escape, focus trap and focus restore: see the hook
   const modalRef = useDialogBehavior({ isOpen, onClose });
 
   // Exit animation: keep rendering briefly after isOpen flips false so the
@@ -81,7 +81,7 @@ export function Modal({
       {/* Flex-column dialog: header and footer stay put, only the body scrolls.
           More reliable than sticky-inside-scroller (Safari) and keeps the
           scrollbar inside the rounded corners.
-          On mobile this is a bottom sheet that hugs its content — never a
+          On mobile this is a bottom sheet that hugs its content, never a
           full-height panel, so short dialogs don't strand their footer at the
           bottom of an empty screen. */}
       <div
@@ -114,7 +114,7 @@ export function Modal({
           </Button>
         </div>
 
-        {/* Body — the only scroll container; overscroll-contain stops the
+        {/* Body: the only scroll container; overscroll-contain stops the
             page behind from scrolling when the list hits its end */}
         <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-8 py-4 sm:py-5">
           {description && (

@@ -25,7 +25,7 @@ interface SessionCompleteCardProps {
 }
 
 /**
- * Hero card for a finished session — the web's SessionCompleteCard. Same
+ * Hero card for a finished session: the web's SessionCompleteCard. Same
  * anatomy as the scheduled hero (eyebrow, big title, stat band), plus the
  * one thing left to do after training: tell the coach how it felt.
  */

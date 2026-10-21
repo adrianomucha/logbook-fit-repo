@@ -15,12 +15,12 @@ import {
  *
  * Two shapes: a browser sends its `PushSubscription.toJSON()` (a WEB row,
  * needs VAPID on the server); the native app sends
- * `{provider: "EXPO", token, deviceName?}` (an EXPO row, needs nothing —
+ * `{provider: "EXPO", token, deviceName?}` (an EXPO row, needs nothing:
  * Expo's service delivers with the app's own APNs credentials).
  *
  * Endpoints and tokens are globally unique per device, so the same device
  * re-subscribing (or a different account signing in on it) updates the
- * existing row rather than stacking duplicates — which would deliver every
+ * existing row rather than stacking duplicates, which would deliver every
  * notification twice.
  */
 export async function POST(req: Request) {
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
 
 /**
  * DELETE /api/push/subscription
- * Removes this device's registration — `{endpoint}` from a browser,
+ * Removes this device's registration: `{endpoint}` from a browser,
  * `{provider: "EXPO", token}` from the app. Scoped to the caller so one
  * account can't unsubscribe another's devices.
  */

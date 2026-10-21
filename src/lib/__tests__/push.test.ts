@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-// Pure helpers only — no prisma, no push transport
+// Pure helpers only: no prisma, no push transport
 vi.mock('@/lib/prisma', () => ({ default: {} }));
 
 import { previewText } from '../push';
@@ -11,7 +11,7 @@ describe('previewText', () => {
     expect(previewText('Nice session today')).toBe('Nice session today');
   });
 
-  it('collapses newlines and runs of whitespace — lock screens are one line', () => {
+  it('collapses newlines and runs of whitespace (lock screens are one line)', () => {
     expect(previewText('Hey\n\n  how did   squats go?')).toBe(
       'Hey how did squats go?'
     );

@@ -8,7 +8,7 @@ interface WeekListProps {
   onOpenDay: (day: WeekDayInfo) => void;
 }
 
-/** This week's workouts as an ordered checklist — the web's DayCardGrid. */
+/** This week's workouts as an ordered checklist: the web's DayCardGrid. */
 export function WeekList({ days, onOpenDay }: WeekListProps) {
   return (
     <View className="overflow-hidden rounded-2xl border border-border bg-card p-2">

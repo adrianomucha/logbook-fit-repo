@@ -2,7 +2,7 @@ import { AppToaster } from '@/components/notifications/AppToaster';
 import { MessageNotifications } from '@/components/notifications/MessageNotifications';
 
 /**
- * Client layout — wraps all /client/* pages.
+ * Client layout: wraps all /client/* pages.
  * No bottom padding here: each view provides its own clearance for the
  * bars it actually renders (dashboard → tab bar, workout → finish bar).
  * A blanket layout pad would put dead space under every page.

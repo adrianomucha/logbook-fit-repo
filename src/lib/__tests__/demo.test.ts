@@ -61,7 +61,7 @@ describe("isDemoAccount", () => {
   });
 
   // A real test account was created at piyumika@demo.logbook.fit; matching the
-  // subdomain rather than the account made it undeployable — sign-in was
+  // subdomain rather than the account made it undeployable: sign-in was
   // refused before the password check, which reads as "wrong password".
   it("does not claim real accounts that merely share the demo subdomain", () => {
     expect(isDemoAccount("piyumika@demo.logbook.fit")).toBe(false);

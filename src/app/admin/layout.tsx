@@ -46,7 +46,7 @@ export default async function AdminLayout({
   return (
     // The tab provider wraps header and page together so the header's tab
     // strip and the page's panels share one notion of "active".
-    // h-dvh + overflow-hidden: admin never scrolls the window — long tables
+    // h-dvh + overflow-hidden: admin never scrolls the window; long tables
     // scroll inside their own container instead.
     <AdminTabProvider>
     <div className="flex h-dvh flex-col overflow-hidden bg-background">

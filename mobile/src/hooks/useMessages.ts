@@ -11,13 +11,13 @@ export const ACTIVE_POLL_MS = 3_000;
 export const BACKGROUND_POLL_MS = 20_000;
 
 interface UseMessagesOptions {
-  /** Mark the other party's messages read on fetch — only while the chat is on screen. */
+  /** Mark the other party's messages read on fetch, only while the chat is on screen. */
   markRead?: boolean;
   /** The chat is on screen: conversation-speed polling. */
   active?: boolean;
 }
 
-/** The thread with one person — the web's useMessages, polling instead of a socket. */
+/** The thread with one person: the web's useMessages, polling instead of a socket. */
 export function useMessages(otherUserId: string | null, { markRead = false, active = false }: UseMessagesOptions = {}) {
   const { mutate: globalMutate } = useSWRConfig();
   const { data, error, isLoading, mutate } = useSWR<MessageThread>(
@@ -31,7 +31,7 @@ export function useMessages(otherUserId: string | null, { markRead = false, acti
   );
 
   // Coming back to the foreground refetches at once instead of waiting out
-  // the interval — the native equivalent of the web's visibilitychange fix.
+  // the interval (the native equivalent of the web's visibilitychange fix).
   useEffect(() => {
     if (!otherUserId) return;
     const sub = AppState.addEventListener('change', (state) => {
@@ -43,7 +43,7 @@ export function useMessages(otherUserId: string | null, { markRead = false, acti
     return () => sub.remove();
   }, [otherUserId, mutate, globalMutate]);
 
-  // Reading a thread clears its unread count — refresh the badge right away.
+  // Reading a thread clears its unread count, so refresh the badge right away.
   const unreadTouchedRef = useRef<string | null>(null);
   useEffect(() => {
     if (!markRead || !otherUserId || !data) return;

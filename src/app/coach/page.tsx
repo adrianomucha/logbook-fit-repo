@@ -10,7 +10,7 @@ export default function CoachPage() {
       <Suspense>
         <CoachDashboard />
       </Suspense>
-      {/* Home surface only — never over the plan editor or a check-in review. */}
+      {/* Home surface only, never over the plan editor or a check-in review. */}
       <InstallPrompt audience="coach" />
     </>
   );

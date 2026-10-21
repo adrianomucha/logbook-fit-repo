@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 
 /**
  * Two-step password reset for an account row. On success the temporary
- * password is shown exactly once (it's never retrievable again — only the
+ * password is shown exactly once (it's never retrievable again; only the
  * hash is stored), with a copy affordance.
  */
 export function ResetPasswordButton({ userId }: { userId: string }) {
@@ -44,7 +44,7 @@ export function ResetPasswordButton({ userId }: { userId: string }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard blocked — the password is still visible to select manually
+      // Clipboard blocked; the password is still visible to select manually
     }
   };
 

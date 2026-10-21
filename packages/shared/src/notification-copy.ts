@@ -1,6 +1,6 @@
 /**
  * The alerts switch in Settings, worded once for web and app. The bodies list
- * every event `src/lib/push.ts` actually sends to that role — keep them in
+ * every event `src/lib/push.ts` actually sends to that role. Keep them in
  * step when a notify* entry point is added or removed.
  */
 export const ALERTS_COPY = {

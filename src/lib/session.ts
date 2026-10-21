@@ -11,7 +11,7 @@ import { bearerFromAuthorization, readMobileToken } from "@/lib/mobile-token";
  * arrives with the NextAuth cookie and gets the usual session; the native
  * app arrives with `Authorization: Bearer <token>` (lib/mobile-token.ts)
  * and gets a `Session` of exactly the same shape. Route code never learns
- * which — the role guards, demo lock and scoping all read `session.user`.
+ * which: the role guards, demo lock and scoping all read `session.user`.
  *
  * A bearer header that fails to decode is a refusal, not a fall-through to
  * the cookie: the caller told us how they're authenticating, and a stale

@@ -12,7 +12,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { EmptyState, LoadingScreen } from '@/components/ui';
 import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 
-/** The Chat tab — the web's ClientChatHeader plus ChatView in the brand voice. */
+/** The Chat tab: the web's ClientChatHeader plus ChatView in the brand voice. */
 export default function ChatScreen() {
   const { user, coach, clientProfileId, isLoading } = useCurrentUser();
   const { plan } = useClientPlan();
@@ -48,7 +48,7 @@ export default function ChatScreen() {
           <View className="flex-row items-center gap-3 pb-4">
             <View className="relative">
               <UserAvatar name={coachName} avatarUrl={coach.user.avatarUrl} size={40} textSize={14} />
-              {/* Volt dot — the same brand accent the coach-side avatars carry */}
+              {/* Volt dot: the same brand accent the coach-side avatars carry */}
               <View className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-background bg-brand" />
             </View>
             <View className="flex-1">

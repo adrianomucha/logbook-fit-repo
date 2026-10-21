@@ -22,7 +22,7 @@ afterEach(() => {
 });
 
 describe("isCoachSignupOpen", () => {
-  it("is closed by default — the beta is invite-only", () => {
+  it("is closed by default: the beta is invite-only", () => {
     expect(isCoachSignupOpen()).toBe(false);
   });
 

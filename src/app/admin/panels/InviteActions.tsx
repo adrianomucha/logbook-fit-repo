@@ -42,7 +42,7 @@ export function InviteActions({ id, status, invitePath }: InviteActionsProps) {
         return;
       }
       // Invite recorded but the email didn't go out (Resend unconfigured or
-      // down) — tell the admin so they copy the link and deliver it by hand.
+      // down), so tell the admin so they copy the link and deliver it by hand.
       if (!data?.emailSent) {
         setNotice('email_failed');
       }
@@ -63,7 +63,7 @@ export function InviteActions({ id, status, invitePath }: InviteActionsProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard blocked — the link is still in the invite email
+      // Clipboard blocked; the link is still in the invite email
     }
   };
 
@@ -107,7 +107,7 @@ export function InviteActions({ id, status, invitePath }: InviteActionsProps) {
       </div>
       {notice === 'email_failed' && (
         <p className="text-[11px] text-muted-foreground">
-          Email not sent — copy the link and send it yourself.
+          Email not sent. Copy the link and send it yourself.
         </p>
       )}
       {notice === 'error' && (

@@ -3,7 +3,7 @@
  *
  * iOS has no install API: Safari never fires `beforeinstallprompt`, and there
  * is no way to open the Share sheet programmatically. All a web app can do is
- * *tell* the user where the button is — which makes platform detection the
+ * *tell* the user where the button is, which makes platform detection the
  * whole game, because instructions pointing at a Share menu the browser
  * doesn't have are worse than showing nothing at all.
  *
@@ -12,13 +12,13 @@
  * out. The React side of this lives in `@/components/InstallPrompt`.
  */
 
-/** How — and whether — the current browser can install the app. */
+/** How (and whether) the current browser can install the app. */
 export type InstallMethod =
   /** Chromium handed us a `beforeinstallprompt`; we can open the real dialog. */
   | 'native'
-  /** iOS Safari — Share button in the browser toolbar. */
+  /** iOS Safari: Share button in the browser toolbar. */
   | 'ios-safari'
-  /** Chrome/Edge/Firefox/Orion on iOS 16.4+ — Share lives in their own menu. */
+  /** Chrome/Edge/Firefox/Orion on iOS 16.4+; Share lives in their own menu. */
   | 'ios-browser'
   /** Safari 17+ on a Mac: File ▸ Add to Dock (macOS Sonoma and later). */
   | 'macos-safari'
@@ -32,7 +32,7 @@ export interface BrowserSnapshot {
    * so touch points are the only reliable way to tell an iPad from a Mac.
    */
   maxTouchPoints: number;
-  /** `navigator.standalone` — iOS-only, true when launched from the home screen. */
+  /** `navigator.standalone`: iOS-only, true when launched from the home screen. */
   navigatorStandalone: boolean;
   /** `matchMedia('(display-mode: standalone)').matches`. */
   displayModeStandalone: boolean;
@@ -92,8 +92,8 @@ const IOS_BROWSER_TOKENS = /CriOS|FxiOS|EdgiOS|OPiOS|OPT\/|Orion\//;
 
 /**
  * Real Safari is the only iOS browser reporting both a `Version/` token and a
- * `Safari/` token. Embedded WKWebViews — Instagram, WhatsApp, Facebook,
- * Messenger, LinkedIn, Gmail — report neither, and none of them offer Add to
+ * `Safari/` token. Embedded WKWebViews (Instagram, WhatsApp, Facebook,
+ * Messenger, LinkedIn, Gmail) report neither, and none of them offer Add to
  * Home Screen. Coaches invite clients over exactly those apps, so this branch
  * is load-bearing rather than theoretical.
  */

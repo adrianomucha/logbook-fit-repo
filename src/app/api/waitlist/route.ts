@@ -21,11 +21,11 @@ export async function POST(req: Request) {
 
     const { email, source, medium, campaign, referrer } = result.data;
 
-    // An email with a live account has nothing to wait for — send its owner
+    // An email with a live account has nothing to wait for, so send its owner
     // to the sign-in instead of parking them on the list. This does disclose
     // that the email is registered, but signup's "Email already registered"
     // response discloses the same thing, so it opens no new enumeration
-    // channel. (Repeat WAITLIST signups below stay a quiet no-op — being on
+    // channel. (Repeat WAITLIST signups below stay a quiet no-op; being on
     // the list is not an account and stays undisclosed.)
     const registered = await prisma.user.findFirst({
       where: { email, deletedAt: null },
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     });
 
     // Send the confirmation only on a genuinely new signup, and only as a
-    // best-effort side effect — a mail failure must not fail the request.
+    // best-effort side effect: a mail failure must not fail the request.
     if (count > 0) {
       await sendWaitlistWelcome(email);
     }
@@ -62,7 +62,7 @@ export async function POST(req: Request) {
 /**
  * Records the qualifying answer from the confirmation screen ("how many
  * clients are you coaching right now?"). Split from POST because it happens
- * after the signup is already saved — a coach who ignores the question is
+ * after the signup is already saved; a coach who ignores the question is
  * still on the list.
  *
  * Always answers 204, whether or not a row matched, so the endpoint can't be

@@ -20,7 +20,7 @@ export default function Error({
         <h2 className="text-xl font-bold">Something went wrong</h2>
         {/* No error.message here: server errors arrive scrubbed, but a
             client-side throw would surface raw internals to the user. The
-            digest is the safe breadcrumb — it matches the server log line. */}
+            digest is the safe breadcrumb; it matches the server log line. */}
         <p className="text-muted-foreground text-sm">
           The error has been reported.
           {error.digest ? ` Reference: ${error.digest}` : ''}

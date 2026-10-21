@@ -6,7 +6,7 @@ import { isLockedDemoAccount } from "@/lib/demo";
 export async function middleware(request: NextRequest) {
   // Public landing page. Signed-in visitors go straight to the app (the PWA's
   // start_url is "/"), but everyone else must get the marketing page. Only the
-  // session cookie's *presence* is checked — no secret, no database — so this
+  // session cookie's *presence* is checked (no secret, no database), so this
   // stays cheap and works in any environment. Doing it here instead of in the
   // page keeps src/app/page.tsx free of cookies(), which is what lets Next.js
   // statically prerender it and serve it from the CDN to crawlers.
@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Demo sessions are 30-day JWTs, so ones issued while demo mode was on
-  // outlive turning it off — reject them here (no callbackUrl: there's
+  // outlive turning it off, so reject them here (no callbackUrl: there's
   // nothing for a locked demo account to come back to).
   if (isLockedDemoAccount(token.email)) {
     return NextResponse.redirect(new URL("/login", request.url));
@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
   // Role-based route protection. Roles are stored uppercase (UserRole enum:
-  // COACH/CLIENT) everywhere — see prisma schema, seed.ts, and withAuth.ts.
+  // COACH/CLIENT) everywhere; see prisma schema, seed.ts, and withAuth.ts.
   if (path.startsWith("/coach") && token.role !== "COACH") {
     return NextResponse.redirect(new URL("/client", request.url));
   }
