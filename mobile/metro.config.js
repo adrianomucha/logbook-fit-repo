@@ -19,4 +19,8 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, 'node_modules'),
 ];
 
-module.exports = withNativeWind(config, { input: './global.css' });
+// inlineRem 16 = the browser's rem. NativeWind's default is 14, which drew
+// every rem-based class (text-sm, p-4, h-11…) about 12% smaller than the
+// same class on the web: smaller type than the web app, and 38.5pt tap
+// targets where the web has 44.
+module.exports = withNativeWind(config, { input: './global.css', inlineRem: 16 });
