@@ -5,6 +5,7 @@ import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { createCheckInSchema } from "@/lib/validations/schemas";
 import { notifyCheckInSent } from "@/lib/push";
+import { isDuplicatePendingCheckIn } from "@/lib/checkin-schedule";
 
 /**
  * POST /api/check-ins
@@ -53,24 +54,37 @@ export const POST = withCoach(
       );
     }
 
-    const checkIn = await prisma.checkIn.create({
-      data: {
-        coachId: coachProfileId,
-        clientId: clientProfileId,
-        status: "PENDING",
-      },
-      include: {
-        client: {
-          select: {
-            userId: true,
-            user: { select: { name: true } },
+    let checkIn;
+    try {
+      checkIn = await prisma.checkIn.create({
+        data: {
+          coachId: coachProfileId,
+          clientId: clientProfileId,
+          status: "PENDING",
+        },
+        include: {
+          client: {
+            select: {
+              userId: true,
+              user: { select: { name: true } },
+            },
+          },
+          coach: {
+            select: { user: { select: { name: true } } },
           },
         },
-        coach: {
-          select: { user: { select: { name: true } } },
-        },
-      },
-    });
+      });
+    } catch (error) {
+      // The check above and this create aren't atomic; the database refuses
+      // a second PENDING one when the schedule (or another tab) got there first
+      if (isDuplicatePendingCheckIn(error)) {
+        return NextResponse.json(
+          { error: "A check-in is already in progress for this client" },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
 
     // Awaited, not fired and forgotten — a serverless function can freeze the
     // moment it responds. notifyCheckInSent swallows its own errors, so a

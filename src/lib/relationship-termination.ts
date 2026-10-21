@@ -9,7 +9,8 @@ import type { Prisma, UserRole } from "@prisma/client";
  * rather than deleted, but the working surface is dismantled:
  * - the client's assigned plan is cleared (plans belong to the coach), with
  *   the assignment snapshotted onto the relationship so Restore can undo it
- * - the weekly check-in schedule is switched off
+ * - check-ins stop (the schedule only runs for ACTIVE relationships); the
+ *   coach's schedule setting is kept, so Restore brings it back too
  * - unanswered PENDING check-ins are removed; ones the client already
  *   responded to are kept — their words are theirs, and they resurface for
  *   review if the relationship is restored
@@ -49,7 +50,9 @@ export async function endCoachClientRelationshipIn(
         status: "INACTIVE",
         endedAt: new Date(),
         endedBy,
-        checkInScheduleEnabled: false,
+        // checkInScheduleEnabled is left as the coach set it: the sweep and
+        // every lazy path already skip relationships that aren't ACTIVE, and
+        // Restore must bring back the schedule along with everything else
         endedPlanId: client?.activePlanId ?? null,
         endedPlanStartDate: client?.planStartDate ?? null,
       },
@@ -75,10 +78,10 @@ export async function endCoachClientRelationshipIn(
 
 /**
  * Restores an ended relationship — the coach's undo for a mistaken
- * termination. Flips the row back to ACTIVE (which reopens messaging and all
- * coach access on its own) and re-applies the plan assignment snapshotted at
- * termination time, when that plan still exists and the client hasn't been
- * assigned anything else since.
+ * termination. Flips the row back to ACTIVE (which reopens messaging, all
+ * coach access and the check-in schedule on its own) and re-applies the plan
+ * assignment snapshotted at termination time, when that plan still exists
+ * and the client hasn't been assigned anything else since.
  *
  * Callers decide *whether* a restore is allowed (a relationship the client
  * chose to end should not be coach-restorable); this only performs it.

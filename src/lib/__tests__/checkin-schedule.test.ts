@@ -1,13 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { Prisma } from "@prisma/client";
 
 const db = vi.hoisted(() => ({
   checkIn: {
     updateMany: vi.fn(),
+    deleteMany: vi.fn(),
     findFirst: vi.fn(),
     create: vi.fn(),
   },
   coachClientRelationship: {
     findMany: vi.fn(),
+    findUnique: vi.fn(),
   },
   clientProfile: {
     findUnique: vi.fn(),
@@ -22,6 +25,7 @@ vi.mock("@/lib/push", () => push);
 import {
   ensureScheduledCheckIn,
   runScheduledCheckIns,
+  unsendCheckIn,
 } from "../checkin-schedule";
 
 /** What checkIn.create resolves to, including the relations the notify needs. */
@@ -441,6 +445,270 @@ describe("ensureScheduledCheckIn", () => {
         }),
       })
     );
+  });
+
+  it("gives anchored cadences a one-day grace on expiry too", async () => {
+    await ensureScheduledCheckIn({
+      ...activeRelationship,
+      checkInDayOfWeek: MONDAY,
+    });
+    expect(db.checkIn.updateMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          createdAt: { lt: new Date(NOW - 13 * DAY_MS) },
+        }),
+      })
+    );
+
+    // Too short a cadence to be anchored: no grace
+    await ensureScheduledCheckIn({
+      ...activeRelationship,
+      checkInIntervalDays: 3,
+      checkInDayOfWeek: MONDAY,
+    });
+    expect(db.checkIn.updateMany).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          createdAt: { lt: new Date(NOW - 14 * DAY_MS) },
+        }),
+      })
+    );
+  });
+
+  it("treats a check-in another request just created as nothing to do", async () => {
+    db.checkIn.create.mockRejectedValue(
+      new Prisma.PrismaClientKnownRequestError("Unique constraint failed", {
+        code: "P2002",
+        clientVersion: "test",
+      })
+    );
+
+    expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+    // The request that won the race sent the push
+    expect(push.notifyCheckInSent).not.toHaveBeenCalled();
+  });
+
+  it("still surfaces any other failure to create", async () => {
+    db.checkIn.create.mockRejectedValue(new Error("db down"));
+
+    await expect(ensureScheduledCheckIn(activeRelationship)).rejects.toThrow(
+      "db down"
+    );
+  });
+});
+
+describe("unsendCheckIn", () => {
+  const pending = { id: "checkin-pending", clientId: "client-1" };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+    db.coachClientRelationship.findUnique.mockResolvedValue(activeRelationship);
+    db.clientProfile.findUnique.mockResolvedValue(
+      clientProfile(LONG_RUNNING_PLAN_START)
+    );
+    db.checkIn.updateMany.mockResolvedValue({ count: 1 });
+    db.checkIn.deleteMany.mockResolvedValue({ count: 1 });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("finds nothing to unsend once the check-in is answered or gone", async () => {
+    db.checkIn.findFirst.mockResolvedValueOnce(null);
+
+    expect(await unsendCheckIn("coach-1", "checkin-pending")).toBeNull();
+    expect(db.checkIn.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "checkin-pending", coachId: "coach-1", status: "PENDING" },
+      })
+    );
+    expect(db.checkIn.updateMany).not.toHaveBeenCalled();
+    expect(db.checkIn.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("skips the check-in the schedule was owed instead of deleting it", async () => {
+    // Without it, the last check-in is two weeks old: the schedule is due
+    db.checkIn.findFirst
+      .mockResolvedValueOnce(pending)
+      .mockResolvedValueOnce({
+        status: "COMPLETED",
+        createdAt: new Date(NOW - 14 * DAY_MS),
+      });
+
+    expect(await unsendCheckIn("coach-1", "checkin-pending")).toBe("skipped");
+    expect(db.checkIn.findFirst).toHaveBeenLastCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: { not: "checkin-pending" } }),
+      })
+    );
+    expect(db.checkIn.updateMany).toHaveBeenCalledWith({
+      where: { id: "checkin-pending", status: "PENDING" },
+      data: { status: "EXPIRED" },
+    });
+    expect(db.checkIn.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("deletes an extra check-in sent ahead of schedule", async () => {
+    db.checkIn.findFirst
+      .mockResolvedValueOnce(pending)
+      .mockResolvedValueOnce({
+        status: "COMPLETED",
+        createdAt: new Date(NOW - 3 * DAY_MS),
+      });
+
+    expect(await unsendCheckIn("coach-1", "checkin-pending")).toBe("deleted");
+    expect(db.checkIn.deleteMany).toHaveBeenCalledWith({
+      where: { id: "checkin-pending", status: "PENDING" },
+    });
+    expect(db.checkIn.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("deletes outright when the schedule is off", async () => {
+    db.coachClientRelationship.findUnique.mockResolvedValue({
+      ...activeRelationship,
+      checkInScheduleEnabled: false,
+    });
+    db.checkIn.findFirst.mockResolvedValueOnce(pending);
+
+    expect(await unsendCheckIn("coach-1", "checkin-pending")).toBe("deleted");
+    expect(db.checkIn.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("reports nothing unsent when the client answered in the meantime", async () => {
+    db.checkIn.findFirst
+      .mockResolvedValueOnce(pending)
+      .mockResolvedValueOnce(null);
+    db.checkIn.updateMany.mockResolvedValue({ count: 0 });
+
+    expect(await unsendCheckIn("coach-1", "checkin-pending")).toBeNull();
+  });
+});
+
+/**
+ * Week-by-week runs of the real scheduler against an in-memory check-in
+ * table, for the behaviors that only show up across several calls.
+ */
+describe("check-in schedule over time", () => {
+  type Row = { id: string; coachId: string; clientId: string; status: string; createdAt: Date };
+  let rows: Row[];
+
+  // Monday 09:00 UTC, the hour the nightly sweep runs
+  const MONDAY_9AM = new Date("2026-08-03T09:00:00Z").getTime();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+    rows = [];
+    let next = 0;
+    db.clientProfile.findUnique.mockResolvedValue(
+      clientProfile(new Date(MONDAY_9AM - 60 * DAY_MS))
+    );
+    db.coachClientRelationship.findUnique.mockImplementation(async () => activeRelationship);
+    db.checkIn.findFirst.mockImplementation(async ({ where }) => {
+      const match = rows
+        .filter(
+          (r) =>
+            (where.coachId === undefined || r.coachId === where.coachId) &&
+            (where.clientId === undefined || r.clientId === where.clientId) &&
+            (typeof where.id !== "string" || r.id === where.id) &&
+            (where.id?.not === undefined || r.id !== where.id.not) &&
+            (where.status === undefined || r.status === where.status)
+        )
+        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+      return match[0] ?? null;
+    });
+    db.checkIn.updateMany.mockImplementation(async ({ where, data }) => {
+      const hit = rows.filter(
+        (r) =>
+          (where.clientId === undefined || r.clientId === where.clientId) &&
+          (where.id === undefined || r.id === where.id) &&
+          r.status === where.status &&
+          (where.createdAt === undefined || r.createdAt < where.createdAt.lt)
+      );
+      hit.forEach((r) => (r.status = data.status));
+      return { count: hit.length };
+    });
+    db.checkIn.deleteMany.mockImplementation(async ({ where }) => {
+      const before = rows.length;
+      rows = rows.filter((r) => !(r.id === where.id && r.status === where.status));
+      return { count: before - rows.length };
+    });
+    db.checkIn.create.mockImplementation(async ({ data }) => {
+      const row = { id: `checkin-${++next}`, status: "PENDING", createdAt: new Date(), ...data };
+      rows.push(row);
+      return { ...row, ...createdCheckIn(row.id) };
+    });
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("re-asks a client who never answers every two weeks on an anchored cadence", async () => {
+    const anchored = { ...activeRelationship, checkInDayOfWeek: MONDAY };
+    const sentOnDays: number[] = [];
+
+    for (let day = 0; day < 10 * 7; day++) {
+      // The sweep never starts at exactly the same second two nights running
+      vi.setSystemTime(MONDAY_9AM + day * DAY_MS - ((day * 7919) % 30) * 1000);
+      if (await ensureScheduledCheckIn(anchored)) sentOnDays.push(day);
+    }
+
+    expect(sentOnDays).toEqual([0, 14, 28, 42, 56]);
+  });
+
+  it("re-asks on the anchor day when the last one went out late in the day", async () => {
+    const anchored = { ...activeRelationship, checkInDayOfWeek: MONDAY };
+    // The coach opened the workspace Monday evening and it went out then
+    vi.setSystemTime(MONDAY_9AM + 9 * 60 * 60 * 1000);
+    expect(await ensureScheduledCheckIn(anchored)).not.toBeNull();
+
+    // Two weeks on, the morning sweep is 13 days 15 hours later
+    vi.setSystemTime(MONDAY_9AM + 14 * DAY_MS);
+    expect(await ensureScheduledCheckIn(anchored)).not.toBeNull();
+  });
+
+  it("doesn't send an unsent scheduled check-in straight back", async () => {
+    vi.setSystemTime(MONDAY_9AM);
+    const sent = await ensureScheduledCheckIn(activeRelationship);
+    expect(sent).not.toBeNull();
+
+    // Coach unsends it; the workspace reloads a moment later
+    vi.setSystemTime(MONDAY_9AM + 60_000);
+    expect(await unsendCheckIn("coach-1", sent!.id)).toBe("skipped");
+    expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+    expect(push.notifyCheckInSent).toHaveBeenCalledTimes(1);
+
+    // This cycle is skipped, not the schedule: the next one is a week on
+    vi.setSystemTime(MONDAY_9AM + 6 * DAY_MS);
+    expect(await ensureScheduledCheckIn(activeRelationship)).toBeNull();
+    vi.setSystemTime(MONDAY_9AM + 7 * DAY_MS);
+    expect(await ensureScheduledCheckIn(activeRelationship)).not.toBeNull();
+  });
+
+  it("leaves the cadence untouched when an early extra check-in is undone", async () => {
+    vi.setSystemTime(MONDAY_9AM);
+    await ensureScheduledCheckIn(activeRelationship);
+    rows[0].status = "COMPLETED";
+
+    // Coach sends one by hand on Thursday, then hits Undo
+    vi.setSystemTime(MONDAY_9AM + 3 * DAY_MS);
+    rows.push({
+      id: "manual",
+      coachId: "coach-1",
+      clientId: "client-1",
+      status: "PENDING",
+      createdAt: new Date(),
+    });
+    expect(await unsendCheckIn("coach-1", "manual")).toBe("deleted");
+    expect(rows.map((r) => r.id)).toEqual(["checkin-1"]);
+
+    // The scheduled one still goes out on the original day
+    vi.setSystemTime(MONDAY_9AM + 7 * DAY_MS);
+    expect(await ensureScheduledCheckIn(activeRelationship)).not.toBeNull();
   });
 });
 
