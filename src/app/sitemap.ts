@@ -15,7 +15,9 @@ import { absoluteUrl } from '@/lib/seo';
  */
 
 // Bump when the landing page's content changes meaningfully.
-const LANDING_UPDATED = new Date('2026-08-07');
+const LANDING_UPDATED = new Date('2026-10-23');
+// Bump when /spreadsheet-migration's content changes meaningfully.
+const MIGRATION_UPDATED = new Date('2026-10-23');
 // Matches the "updated" date shown on the legal pages themselves.
 const LEGAL_UPDATED = new Date('2026-10-20');
 
@@ -26,6 +28,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: LANDING_UPDATED,
       changeFrequency: 'weekly',
       priority: 1,
+    },
+    {
+      url: absoluteUrl('/spreadsheet-migration'),
+      lastModified: MIGRATION_UPDATED,
+      changeFrequency: 'monthly',
+      priority: 0.8,
     },
     {
       url: absoluteUrl('/legal'),

@@ -875,6 +875,27 @@ describe("waitlistQualifySchema", () => {
     const result = waitlistQualifySchema.safeParse({ clientCount: "1-5" });
     expect(result.success).toBe(false);
   });
+
+  it("accepts the current tool on its own", () => {
+    const result = waitlistQualifySchema.safeParse({
+      email: "coach@example.com",
+      currentTool: "spreadsheets",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects an unknown tool", () => {
+    const result = waitlistQualifySchema.safeParse({
+      email: "coach@example.com",
+      currentTool: "abacus",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects a body with no answer in it", () => {
+    const result = waitlistQualifySchema.safeParse({ email: "coach@example.com" });
+    expect(result.success).toBe(false);
+  });
 });
 
 describe("waitlistInviteSchema", () => {

@@ -4,9 +4,10 @@ import { useId, useState } from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { cn } from '@/lib/utils';
+import { WAITLIST_NEXT_STEPS } from '@/lib/landing-copy';
 
 /** Buckets for the confirmation-screen question. Values match `waitlistQualifySchema`. */
 const CLIENT_COUNTS = [
@@ -17,12 +18,23 @@ const CLIENT_COUNTS = [
   { value: 'not-coaching', label: 'Not coaching yet' },
 ] as const;
 
+/** Values match `WAITLIST_CURRENT_TOOLS`. */
+const CURRENT_TOOLS = [
+  { value: 'spreadsheets', label: 'Sheets or Excel' },
+  { value: 'notes-and-messages', label: 'Notes and messages' },
+  { value: 'trainerize', label: 'Trainerize' },
+  { value: 'truecoach', label: 'TrueCoach' },
+  { value: 'everfit', label: 'Everfit' },
+  { value: 'other-app', label: 'Another app' },
+] as const;
+
 /**
  * Reads campaign attribution from the current URL, falling back to the
  * referring host so an untagged link from a forum or newsletter still lands
- * in a bucket instead of "unknown".
+ * in a bucket instead of "unknown". `pageCampaign` names the page the form
+ * sits on, for signups whose link carried no utm_campaign of its own.
  */
-function readAttribution() {
+function readAttribution(pageCampaign?: string) {
   if (typeof window === 'undefined') return {};
 
   const params = new URLSearchParams(window.location.search);
@@ -42,23 +54,31 @@ function readAttribution() {
   return {
     source: params.get('utm_source') ?? referrerHost ?? 'direct',
     medium: params.get('utm_medium') ?? undefined,
-    campaign: params.get('utm_campaign') ?? undefined,
+    campaign: params.get('utm_campaign') ?? pageCampaign,
     referrer,
   };
 }
 
 /**
- * Email capture for the public landing page. Posts to /api/waitlist, then
- * spends the confirmation, the highest-intent moment in the funnel, on one
- * optional qualifying question rather than on a receipt. The question sits
- * after the submit deliberately: extra fields before it would cost signups.
+ * Email capture for the public landing pages. Posts to /api/waitlist, then
+ * spends the confirmation, the highest-intent moment in the funnel, on two
+ * optional one-tap questions rather than on a receipt: how many clients, and
+ * what they coach on today. They sit after the submit deliberately: extra
+ * fields before it would cost signups.
  */
-export function WaitlistForm() {
+export function WaitlistForm({
+  campaign,
+  promises,
+}: {
+  campaign?: string;
+  /** Short reassurances shown under the button, above the consent line */
+  promises?: readonly string[];
+} = {}) {
   const inputId = useId();
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'loading' | 'qualify' | 'done'>(
-    'idle'
-  );
+  const [status, setStatus] = useState<
+    'idle' | 'loading' | 'qualify' | 'tool' | 'done'
+  >('idle');
   const [error, setError] = useState<'registered' | string>('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -70,7 +90,7 @@ export function WaitlistForm() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, ...readAttribution() }),
+        body: JSON.stringify({ email, ...readAttribution(campaign) }),
       });
 
       if (!res.ok) {
@@ -95,15 +115,14 @@ export function WaitlistForm() {
     }
   };
 
-  // The signup is already saved, so this is best-effort: a failure here is
-  // silent and simply moves the coach along to the confirmation.
-  const handleQualify = async (clientCount: string) => {
-    setStatus('done');
+  // The signup is already saved, so each answer is best-effort: a failure is
+  // silent and simply moves the coach along to the next step.
+  const saveAnswer = async (answer: { clientCount: string } | { currentTool: string }) => {
     try {
       await fetch('/api/waitlist', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, clientCount }),
+        body: JSON.stringify({ email, ...answer }),
       });
     } catch {
       // Ignored on purpose.
@@ -112,7 +131,7 @@ export function WaitlistForm() {
 
   // Shared header for both confirmation states: the card keeps one identity
   // while its body swaps from the question to the sign-off. The volt fill is
-  // deliberate — this is the page's accent color spent on its best moment.
+  // deliberate: this is the page's accent color spent on its best moment.
   const confirmationHeader = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -142,7 +161,30 @@ export function WaitlistForm() {
     </>
   );
 
-  if (status === 'qualify') {
+  if (status === 'qualify' || status === 'tool') {
+    const question =
+      status === 'qualify'
+        ? {
+            lead: 'Two quick taps so we can put you in the right batch:',
+            prompt: 'How many clients are you coaching right now?',
+            options: CLIENT_COUNTS,
+            pick: (value: string) => {
+              setStatus('tool');
+              saveAnswer({ clientCount: value });
+            },
+            skip: () => setStatus('tool'),
+          }
+        : {
+            lead: 'And one more:',
+            prompt: 'What do you run your coaching on today?',
+            options: CURRENT_TOOLS,
+            pick: (value: string) => {
+              setStatus('done');
+              saveAnswer({ currentTool: value });
+            },
+            skip: () => setStatus('done'),
+          };
+
     return (
       <div
         role="status"
@@ -150,17 +192,16 @@ export function WaitlistForm() {
       >
         {confirmationHeader}
         <p className="mt-5 text-sm font-medium text-brand-foreground/75 antialiased">
-          One question so we can put you in the right batch:
+          {question.lead}
         </p>
-        <p className="mt-1 text-base font-semibold antialiased">
-          How many clients are you coaching right now?
-        </p>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {CLIENT_COUNTS.map((option, i) => (
+        <p className="mt-1 text-base font-semibold antialiased">{question.prompt}</p>
+        {/* Keyed by step so the options replay their entrance on the swap */}
+        <div key={status} className="mt-4 flex flex-wrap gap-2">
+          {question.options.map((option, i) => (
             <button
               key={option.value}
               type="button"
-              onClick={() => handleQualify(option.value)}
+              onClick={() => question.pick(option.value)}
               style={{ animationDelay: `${150 + i * 50}ms` }}
               className="animate-fade-in-up rounded-lg border-2 border-brand-foreground/30 px-3.5 py-2 font-mono text-xs font-medium uppercase tracking-[0.08em] antialiased transition-colors hover:border-brand-foreground hover:bg-brand-foreground hover:text-brand active:scale-[0.97]"
             >
@@ -170,7 +211,7 @@ export function WaitlistForm() {
         </div>
         <button
           type="button"
-          onClick={() => setStatus('done')}
+          onClick={question.skip}
           className="mt-4 text-sm text-brand-foreground/60 antialiased underline-offset-4 transition-colors hover:text-brand-foreground hover:underline"
         >
           Skip
@@ -188,9 +229,7 @@ export function WaitlistForm() {
         <div className="p-6 sm:p-7">
           {confirmationHeader}
           <p className="mt-4 text-sm leading-relaxed text-brand-foreground/80 antialiased">
-            Your invite lands by email. In the meantime, hit reply on it and tell
-            us what you’re using to keep track of clients today. We read every
-            one, and it shapes what we build next.
+            {WAITLIST_NEXT_STEPS}
           </p>
         </div>
         {/* Echoes the page's black-on-volt marquee, inverted: a ticket-stub
@@ -234,7 +273,7 @@ export function WaitlistForm() {
         <FormError>
           {error === 'registered' ? (
             <>
-              Good news — you already have an account.{' '}
+              Good news: you already have an account.{' '}
               <Link
                 href="/login"
                 className="font-medium underline underline-offset-2"
@@ -248,7 +287,19 @@ export function WaitlistForm() {
           )}
         </FormError>
       )}
-      <p className="text-xs text-muted-foreground antialiased">
+      {/* A check per item rather than dot separators: a wrapped line on a
+          phone then starts with a check, never with a stray dot. */}
+      {promises && (
+        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-2 text-sm text-muted-foreground antialiased">
+          {promises.map((promise) => (
+            <li key={promise} className="flex items-center gap-1.5 whitespace-nowrap">
+              <Check className="h-3.5 w-3.5 shrink-0 text-brand" strokeWidth={3} aria-hidden="true" />
+              {promise}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="text-xs text-muted-foreground/80 antialiased">
         By requesting an invite you agree to our{' '}
         <Link
           href="/privacy"

@@ -43,15 +43,16 @@ export async function GET(req: Request) {
       campaign: true,
       referrer: true,
       clientCount: true,
+      currentTool: true,
     },
   });
 
   // "joined" (the signup date) keeps its original position for existing
   // scripts; the invite-flow and attribution columns are appended after it.
-  // Tokens are deliberately excluded — the CSV is a mailing list, not a
+  // Tokens are deliberately excluded: the CSV is a mailing list, not a
   // credential dump.
   const rows = [
-    "email,joined,status,invited_at,joined_at,source,medium,campaign,referrer,clients",
+    "email,joined,status,invited_at,joined_at,source,medium,campaign,referrer,clients,current_tool",
     ...entries.map((e) =>
       [
         e.email,
@@ -64,6 +65,7 @@ export async function GET(req: Request) {
         e.campaign ?? "",
         e.referrer ?? "",
         e.clientCount ?? "",
+        e.currentTool ?? "",
       ]
         .map(csvCell)
         .join(",")
