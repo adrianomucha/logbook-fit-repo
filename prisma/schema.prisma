@@ -610,6 +610,9 @@ model WaitlistEntry {
   // asking it before the submit would cost signups, asking it after costs
   // nothing and tells us whether we're attracting coaches or curious lifters.
   clientCount String?
+  // The second confirmation-screen question: what they coach on today
+  // (WAITLIST_CURRENT_TOOLS). Spreadsheet coaches are who the importer is for.
+  currentTool String?
 
   createdAt DateTime @default(now())
 

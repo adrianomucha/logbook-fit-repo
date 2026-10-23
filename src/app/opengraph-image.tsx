@@ -3,7 +3,7 @@ import { ImageResponse } from 'next/og';
 export const runtime = 'nodejs';
 
 export const alt =
-  'Logbook.fit — your quietest client is your next cancellation. Retention-first coaching software for independent coaches.';
+  'Logbook.fit: your quietest client is your next cancellation. Retention-first coaching software for independent coaches.';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -11,7 +11,7 @@ const VOLT = '#c3f910';
 const INK = '#0a0a0a';
 
 /**
- * Unfurl card for the landing page — what Twitter/X, LinkedIn, Slack, iMessage
+ * Unfurl card for the landing page: what Twitter/X, LinkedIn, Slack, iMessage
  * and WhatsApp render when someone shares the waitlist link. Mirrors the hero's
  * dark canvas and display type so the preview and the page read as one thing.
  *
@@ -91,7 +91,7 @@ export default function OpengraphImage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          {/* Rep-tally brand mark — three strokes and the volt slash */}
+          {/* Rep-tally brand mark: three strokes and the volt slash */}
           <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
             <rect width="64" height="64" rx="14.5" fill="#fafafa" />
             <path

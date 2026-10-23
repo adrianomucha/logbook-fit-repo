@@ -388,10 +388,30 @@ export const WAITLIST_CLIENT_COUNTS = [
   'not-coaching',
 ] as const;
 
-export const waitlistQualifySchema = z.object({
-  email: z.string().trim().toLowerCase().email().max(255),
-  clientCount: z.enum(WAITLIST_CLIENT_COUNTS),
-});
+/**
+ * The confirmation screen's second question: what the coach runs their
+ * coaching on today. Spreadsheet coaches are who the importer is for, and the
+ * named apps are the ones a comparison page would have to answer.
+ */
+export const WAITLIST_CURRENT_TOOLS = [
+  'spreadsheets',
+  'notes-and-messages',
+  'trainerize',
+  'truecoach',
+  'everfit',
+  'other-app',
+] as const;
+
+/** Each answer is saved as soon as it's picked, so either can come alone. */
+export const waitlistQualifySchema = z
+  .object({
+    email: z.string().trim().toLowerCase().email().max(255),
+    clientCount: z.enum(WAITLIST_CLIENT_COUNTS).optional(),
+    currentTool: z.enum(WAITLIST_CURRENT_TOOLS).optional(),
+  })
+  .refine((v) => v.clientCount !== undefined || v.currentTool !== undefined, {
+    message: 'Nothing to save',
+  });
 
 export const waitlistInviteSchema = z.object({
   id: z.string().uuid(),

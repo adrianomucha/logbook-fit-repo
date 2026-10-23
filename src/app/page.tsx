@@ -17,6 +17,8 @@ import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
+import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
+import { FOUNDING_PRICE, FOUNDING_PRICE_SHORT } from '@/lib/landing-copy';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 
 // Title/description/OG for this route come from the root layout: the landing
@@ -27,6 +29,45 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
 };
+
+/**
+ * The objections a coach has before handing over their email: who it's for,
+ * why not the big platforms, switching, the client side, price, timing and
+ * data. Plain-text answers, so the FAQPage JSON-LD below carries the same
+ * words and an answer engine can quote them.
+ */
+const FAQ: FaqItem[] = [
+  {
+    q: 'Who is Logbook.fit for?',
+    a: 'Independent coaches who write their own programs and run their own check-ins, whether that’s five clients or thirty. It isn’t a workout log for people training on their own.',
+  },
+  {
+    q: 'How is it different from Trainerize or TrueCoach?',
+    a: 'It’s built around one question: which client needs you today? Your roster is ranked by who’s at risk, whose check-in is due and who’s waiting on your reply, so a quiet client shows up before they cancel. It doesn’t track nutrition or take payments, so if you need those, a bigger platform is the better fit.',
+  },
+  {
+    q: 'Can I bring my programs from a spreadsheet?',
+    a: 'Yes. Upload the Excel or CSV file you coach from. Logbook.fit reads your layout and shows you every week before anything is saved, so you don’t retype a thing.',
+    link: { href: '/spreadsheet-migration', label: 'How importing works' },
+  },
+  {
+    q: 'What do my clients need?',
+    a: 'Just their phone. They join from the invite link you send, train from Logbook.fit in their browser, and can add it to their home screen like an app.',
+  },
+  {
+    q: 'What does it cost?',
+    a: FOUNDING_PRICE,
+  },
+  {
+    q: 'When will I get my invite?',
+    a: 'When your spot opens, the invite comes to the email you signed up with. We let coaches in a small batch at a time so each one gets a setup call, where we bring your programs across with you.',
+  },
+  {
+    q: 'Who can see my clients’ data?',
+    a: 'You and the clients you coach, and nobody else. We don’t sell data or run ad trackers.',
+    link: { href: '/privacy', label: 'Privacy Policy' },
+  },
+];
 
 /**
  * Structured data for the waitlist page. Tells Google what Logbook.fit is
@@ -75,7 +116,8 @@ const JSON_LD = {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
-        description: 'Free during the private beta.',
+        description:
+          'Free during the private beta. Beta coaches keep a founding price once paid plans start.',
         availability: 'https://schema.org/PreOrder',
       },
       featureList: [
@@ -88,6 +130,7 @@ const JSON_LD = {
         'Progress and completion tracking',
       ],
     },
+    faqJsonLd(FAQ, `${SITE_URL}/#faq`),
   ],
 };
 
@@ -276,7 +319,7 @@ export default function HomePage() {
             <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
               <WaitlistForm />
               <div className="mt-4 flex flex-col items-center gap-1.5 text-sm text-muted-foreground antialiased">
-                <p>Free during the beta. No spam, just your invite.</p>
+                <p>{FOUNDING_PRICE_SHORT}</p>
                 <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
                   <span className="font-medium text-foreground">
                     We onboard in batches of 10
@@ -517,6 +560,8 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <FaqSection eyebrow="Questions" title="Before you join." items={FAQ} />
 
         <JoinListSection>
           Ten coaches at a time. Every one gets a setup call where we import

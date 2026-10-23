@@ -3,6 +3,8 @@ import { Check, NotebookPen } from 'lucide-react';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
+import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
+import { FOUNDING_PRICE, FOUNDING_PRICE_SHORT } from '@/lib/landing-copy';
 import { SITE_URL, absoluteUrl, pageMetadata } from '@/lib/seo';
 
 const PATH = '/spreadsheet-migration';
@@ -54,7 +56,7 @@ const STAYS_A_NOTE = ['RPE and RIR', 'Percentages of 1RM', 'Tempo', 'Cues and pe
 // Mirrors IMPORT_LIMITS in src/lib/plan-import.ts.
 const LIMITS = '12 weeks, 7 training days a week and 20 exercises a day';
 
-const FAQ = [
+const FAQ: FaqItem[] = [
   {
     q: 'Can I import a workout program from Google Sheets?',
     a: 'Yes. In Google Sheets choose File, then Download, then Microsoft Excel (.xlsx) or CSV, and upload that file. Logbook.fit reads Excel and CSV files.',
@@ -77,7 +79,8 @@ const FAQ = [
   },
   {
     q: 'Who sees my spreadsheet?',
-    a: 'Files in the template layout are read on our servers. Any other layout is read by Anthropic’s AI to work out the plan, so remove client names and health details before you upload. The privacy policy has the details.',
+    a: 'Files in the template layout are read on our servers. Any other layout is read by Anthropic’s AI to work out the plan, so remove client names and health details before you upload.',
+    link: { href: '/privacy', label: 'Privacy Policy' },
   },
   {
     q: 'What if my file doesn’t come across cleanly?',
@@ -85,7 +88,7 @@ const FAQ = [
   },
   {
     q: 'What does it cost?',
-    a: 'Logbook.fit is free during the private beta. Coaches are let in from the waitlist in small batches.',
+    a: FOUNDING_PRICE,
   },
 ];
 
@@ -107,15 +110,7 @@ const JSON_LD = {
       about: { '@id': `${SITE_URL}/#software` },
       inLanguage: 'en-US',
     },
-    {
-      '@type': 'FAQPage',
-      '@id': `${absoluteUrl(PATH)}#faq`,
-      mainEntity: FAQ.map(({ q, a }) => ({
-        '@type': 'Question',
-        name: q,
-        acceptedAnswer: { '@type': 'Answer', text: a },
-      })),
-    },
+    faqJsonLd(FAQ, `${absoluteUrl(PATH)}#faq`),
   ],
 };
 
@@ -150,8 +145,8 @@ export default function SpreadsheetMigrationPage() {
               <div className="mt-10 w-full max-w-md">
                 <WaitlistForm campaign={CAMPAIGN} />
                 <p className="mt-4 text-sm text-muted-foreground antialiased">
-                  Free during the beta. Every coach gets a setup call, and we bring
-                  your first program in with you.
+                  {FOUNDING_PRICE_SHORT} Every coach gets a setup call, and we
+                  bring your first program in with you.
                 </p>
               </div>
             </div>
@@ -282,43 +277,7 @@ export default function SpreadsheetMigrationPage() {
           </div>
         </section>
 
-        {/* FAQ: native disclosure, so every answer is in the HTML for crawlers */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
-            <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-              Questions
-            </p>
-            <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
-              Before you switch.
-            </h2>
-            <div className="mt-10 divide-y divide-border/70 border-y border-border/70">
-              {FAQ.map(({ q, a }) => (
-                <details key={q} className="group py-5">
-                  <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-base font-semibold antialiased marker:hidden [&::-webkit-details-marker]:hidden sm:text-lg">
-                    <h3>{q}</h3>
-                    <span
-                      className="mt-1 font-mono text-lg leading-none text-muted-foreground transition-transform group-open:rotate-45"
-                      aria-hidden="true"
-                    >
-                      +
-                    </span>
-                  </summary>
-                  <p className="mt-3 max-w-2xl text-pretty text-muted-foreground antialiased">
-                    {a}
-                    {q === 'Who sees my spreadsheet?' && (
-                      <>
-                        {' '}
-                        <Link href="/privacy" className="font-medium text-foreground underline underline-offset-4 hover:text-brand">
-                          Privacy Policy
-                        </Link>
-                      </>
-                    )}
-                  </p>
-                </details>
-              ))}
-            </div>
-          </div>
-        </section>
+        <FaqSection title="Before you switch." items={FAQ} />
 
         <JoinListSection campaign={CAMPAIGN}>
           Ten coaches at a time. Every one gets a setup call where we bring your

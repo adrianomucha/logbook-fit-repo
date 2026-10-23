@@ -21,11 +21,11 @@ export async function POST(req: Request) {
 
     const { email, source, medium, campaign, referrer } = result.data;
 
-    // An email with a live account has nothing to wait for — send its owner
+    // An email with a live account has nothing to wait for: send its owner
     // to the sign-in instead of parking them on the list. This does disclose
     // that the email is registered, but signup's "Email already registered"
     // response discloses the same thing, so it opens no new enumeration
-    // channel. (Repeat WAITLIST signups below stay a quiet no-op — being on
+    // channel. (Repeat WAITLIST signups below stay a quiet no-op, since being on
     // the list is not an account and stays undisclosed.)
     const registered = await prisma.user.findFirst({
       where: { email, deletedAt: null },
@@ -44,7 +44,7 @@ export async function POST(req: Request) {
     });
 
     // Send the confirmation only on a genuinely new signup, and only as a
-    // best-effort side effect — a mail failure must not fail the request.
+    // best-effort side effect: a mail failure must not fail the request.
     if (count > 0) {
       await sendWaitlistWelcome(email);
     }
@@ -60,15 +60,16 @@ export async function POST(req: Request) {
 }
 
 /**
- * Records the qualifying answer from the confirmation screen ("how many
- * clients are you coaching right now?"). Split from POST because it happens
- * after the signup is already saved — a coach who ignores the question is
+ * Records the qualifying answers from the confirmation screen ("how many
+ * clients are you coaching right now?" and "what do you run your coaching on
+ * today?"), one per request as each is picked. Split from POST because it happens
+ * after the signup is already saved, so a coach who ignores the question is
  * still on the list.
  *
  * Always answers 204, whether or not a row matched, so the endpoint can't be
  * used to test which emails are on the list. The trade-off is that someone
- * who guesses a signup's email could overwrite that entry's bucket; the field
- * is coarse segmentation for ordering invite batches, never access control,
+ * who guesses a signup's email could overwrite that entry's answers; the fields
+ * are coarse segmentation for ordering invite batches, never access control,
  * so a wrong value costs an ordering hint and nothing more.
  */
 export async function PATCH(req: Request) {
@@ -85,11 +86,12 @@ export async function PATCH(req: Request) {
     const result = await parseBody(req, waitlistQualifySchema);
     if (!result.success) return result.response;
 
-    const { email, clientCount } = result.data;
+    const { email, clientCount, currentTool } = result.data;
 
+    // Each answer arrives on its own request; an omitted field stays as is.
     await prisma.waitlistEntry.updateMany({
       where: { email },
-      data: { clientCount },
+      data: { clientCount, currentTool },
     });
 
     return new NextResponse(null, { status: 204 });
