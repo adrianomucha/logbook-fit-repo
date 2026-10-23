@@ -155,7 +155,7 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
       if (finalWeek) rest.push('final week, line up the next block');
       // Inside the grace window of a plan they haven't trained on yet —
       // say so, or a client with no recent workouts reads as a mistake
-      const justStarted = newPlanHint(client.planStartDate, client.lastWorkoutAt, now);
+      const justStarted = newPlanHint(client.planStartDate, client.lastWorkoutAt, now, client.planStatus);
       if (justStarted) {
         rest.push(justStarted);
       } else if (client.lastWorkoutAt) {

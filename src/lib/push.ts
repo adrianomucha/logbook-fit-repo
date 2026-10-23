@@ -344,14 +344,18 @@ export async function notifyPlanAssigned(params: {
   clientUserId: string;
   coachName: string | null;
   planName: string;
+  /** The coach set it to begin next Monday rather than today */
+  startsMonday?: boolean;
 }): Promise<void> {
-  const { clientUserId, coachName, planName } = params;
+  const { clientUserId, coachName, planName, startsMonday } = params;
   try {
     await sendPushToUser(clientUserId, {
       title: coachName?.trim()
         ? `${coachName.trim()} assigned your plan`
         : "Your plan is ready",
-      body: previewText(planName),
+      body: startsMonday
+        ? `${previewText(planName)}. Starts Monday.`
+        : previewText(planName),
       url: "/client",
       tag: `plan:${clientUserId}`,
     });

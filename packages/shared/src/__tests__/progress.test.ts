@@ -13,11 +13,14 @@ const done = (iso: string, extra: Partial<WorkoutCompletion> = {}): WorkoutCompl
 // Wednesday; weeks start Mon Sep 28, Sep 21, Sep 14, Sep 7
 const now = new Date('2026-09-30T12:00:00');
 
+// Every day has an exercise: an empty day isn't a workout
+const ex = [{ id: 'sq', name: 'Squat', sets: 3 }];
+
 const plan = {
   id: 'p', name: 'Block A',
   weeks: [
-    { id: 'w1', weekNumber: 1, days: [{ id: 'up', name: 'Upper', orderIndex: 1, exercises: [] }, { id: 'lo', name: 'Lower', orderIndex: 2, exercises: [] }] },
-    { id: 'w2', weekNumber: 2, days: [{ id: 'up2', name: 'Upper', orderIndex: 1, exercises: [] }, { id: 'lo2', name: 'Lower', orderIndex: 2, exercises: [] }] },
+    { id: 'w1', weekNumber: 1, days: [{ id: 'up', name: 'Upper', orderIndex: 1, exercises: ex }, { id: 'lo', name: 'Lower', orderIndex: 2, exercises: ex }] },
+    { id: 'w2', weekNumber: 2, days: [{ id: 'up2', name: 'Upper', orderIndex: 1, exercises: ex }, { id: 'lo2', name: 'Lower', orderIndex: 2, exercises: ex }] },
   ],
 } as unknown as WorkoutPlan;
 
@@ -48,6 +51,21 @@ describe('session duration', () => {
 describe('describeThisWeek', () => {
   const week = (completions: WorkoutCompletion[], weekNumber: number | null = 1, target = 4) =>
     describeThisWeek({ plan, weekNumber, completions, target, now });
+
+  it("leaves out a day the coach hasn't filled in, like the Today tab", () => {
+    const withEmptyDay = {
+      ...plan,
+      weeks: [{ ...plan.weeks[0], days: [...plan.weeks[0].days, { id: 'empty', name: 'Day 3', orderIndex: 3, exercises: [] }] }],
+    } as WorkoutPlan;
+    const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' }), done('2026-09-30T10:00:00', { weekId: 'w1', dayId: 'lo' })];
+    const result = describeThisWeek({ plan: withEmptyDay, weekNumber: 1, completions: c, target: 4, now });
+    expect(result.target).toBe(2);
+    expect(result.rest).toBe('Week complete. Rest up.');
+    expect(
+      buildProgressStory({ completions: c.map((x) => ({ ...x, planId: 'p' })), plans: [withEmptyDay], weightUnit: 'LB', now })
+        .some((m) => m.title === 'Finished Week 1')
+    ).toBe(true);
+  });
 
   it("counts the plan week's workouts, like the Today tab, and points at the next one", () => {
     const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' })];

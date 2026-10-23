@@ -3,64 +3,146 @@ import {
   getRawWeekNumber,
   getCurrentWeekNumber,
   getPlanProgressStatus,
+  getPlanStartsOn,
+  getPlanEndsOn,
   getWeekDays,
   getActiveWorkout,
+  isWorkoutDay,
 } from '../workout-week-helpers';
 import type { WorkoutWeek, WorkoutCompletion } from '@/types';
 
-// The week math runs in the machine's local timezone, so fixtures are local
-// calendar dates. A bare 'YYYY-MM-DD' string parses as UTC midnight — the
-// previous evening west of Greenwich — which would shift the anchor Monday.
-const localDate = (ymd: string) => new Date(`${ymd}T12:00:00`);
+const EXERCISE = { id: 'ex-1', name: 'Squat', sets: 3 };
 
-describe('week math (Monday-anchored)', () => {
-  beforeEach(() => {
-    vi.useFakeTimers();
-    // Wednesday, July 15 2026, noon local
-    vi.setSystemTime(localDate('2026-07-15'));
-  });
+// Instants are UTC; the timezone argument decides whose calendar they land on
+const at = (iso: string) => new Date(iso);
+// Wednesday, July 15 2026, noon UTC
+const NOW = at('2026-07-15T12:00:00Z');
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
+describe('week math (Monday-anchored, on the client\'s calendar)', () => {
   describe('getRawWeekNumber', () => {
     it('is week 1 during the week the plan starts', () => {
-      expect(getRawWeekNumber(localDate('2026-07-13'))).toBe(1); // started Monday
+      expect(getRawWeekNumber(at('2026-07-13T09:00:00Z'), 'UTC', NOW)).toBe(1); // started Monday
     });
 
     it('anchors to the Monday of the start week for mid-week starts', () => {
       // Started Wednesday July 1 → anchor Monday June 29 → 16 days → week 3
-      expect(getRawWeekNumber(localDate('2026-07-01'))).toBe(3);
-      expect(getRawWeekNumber(localDate('2026-06-29'))).toBe(3);
+      expect(getRawWeekNumber(at('2026-07-01T12:00:00Z'), 'UTC', NOW)).toBe(3);
+      expect(getRawWeekNumber(at('2026-06-29T12:00:00Z'), 'UTC', NOW)).toBe(3);
     });
 
     it('keeps counting past the plan duration (unclamped)', () => {
-      expect(getRawWeekNumber(localDate('2026-05-04'))).toBe(11);
+      expect(getRawWeekNumber(at('2026-05-04T12:00:00Z'), 'UTC', NOW)).toBe(11);
+    });
+
+    it("keeps a Sunday-evening workout in Los Angeles in Sunday's week", () => {
+      const start = at('2026-10-05T17:00:00Z'); // Monday 10:00 in LA
+      const sundayEvening = at('2026-10-12T01:00:00Z'); // Sunday 18:00 in LA, Monday in UTC
+      expect(getRawWeekNumber(start, 'America/Los_Angeles', sundayEvening)).toBe(1);
+      // The same instant on a UTC calendar is already week 2
+      expect(getRawWeekNumber(start, 'UTC', sundayEvening)).toBe(2);
+    });
+
+    it('turns the week on Monday morning in Sydney, not at 10am', () => {
+      const start = at('2026-10-04T23:00:00Z'); // Monday 10:00 in Sydney
+      const mondayMorning = at('2026-10-11T22:00:00Z'); // next Monday 09:00 in Sydney
+      expect(getRawWeekNumber(start, 'Australia/Sydney', mondayMorning)).toBe(2);
+    });
+
+    it('places the start on the client\'s calendar too', () => {
+      // Assigned Sunday 20:00 in LA (Monday 03:00 UTC): their week 1 began
+      // the Monday before, so by their Monday it is week 2
+      const start = at('2026-10-12T03:00:00Z');
+      expect(getRawWeekNumber(start, 'America/Los_Angeles', at('2026-10-12T16:00:00Z'))).toBe(2);
+    });
+
+    it('falls back to UTC for an unknown or invalid timezone', () => {
+      expect(getRawWeekNumber(at('2026-07-13T09:00:00Z'), null, NOW)).toBe(1);
+      expect(getRawWeekNumber(at('2026-07-13T09:00:00Z'), 'Not/AZone', NOW)).toBe(1);
+    });
+
+    it('is 0 before a plan set to start next Monday', () => {
+      expect(getRawWeekNumber(at('2026-07-20T00:00:00Z'), 'UTC', NOW)).toBe(0);
     });
   });
 
   describe('getCurrentWeekNumber', () => {
     it('clamps to the plan duration', () => {
-      expect(getCurrentWeekNumber(localDate('2026-06-29').toISOString(), 2)).toBe(2);
-      expect(getCurrentWeekNumber(localDate('2026-06-29').toISOString(), 4)).toBe(3);
+      expect(getCurrentWeekNumber('2026-06-29T12:00:00Z', 2, 'UTC', NOW)).toBe(2);
+      expect(getCurrentWeekNumber('2026-06-29T12:00:00Z', 4, 'UTC', NOW)).toBe(3);
+    });
+
+    it('shows week 1 before the plan starts', () => {
+      expect(getCurrentWeekNumber('2026-07-20T00:00:00Z', 4, 'UTC', NOW)).toBe(1);
     });
   });
 
   describe('getPlanProgressStatus', () => {
+    it('is UPCOMING before the start Monday', () => {
+      expect(getPlanProgressStatus(at('2026-07-20T00:00:00Z'), 4, 'UTC', NOW)).toBe('UPCOMING');
+    });
+
     it('is ACTIVE before the final week', () => {
-      expect(getPlanProgressStatus(localDate('2026-06-29'), 4)).toBe('ACTIVE');
+      expect(getPlanProgressStatus(at('2026-06-29T12:00:00Z'), 4, 'UTC', NOW)).toBe('ACTIVE');
     });
 
     it('is FINAL_WEEK during the last week', () => {
-      expect(getPlanProgressStatus(localDate('2026-06-29'), 3)).toBe('FINAL_WEEK');
-      expect(getPlanProgressStatus(localDate('2026-07-13'), 1)).toBe('FINAL_WEEK');
+      expect(getPlanProgressStatus(at('2026-06-29T12:00:00Z'), 3, 'UTC', NOW)).toBe('FINAL_WEEK');
+      expect(getPlanProgressStatus(at('2026-07-13T12:00:00Z'), 1, 'UTC', NOW)).toBe('FINAL_WEEK');
     });
 
     it('is ENDED once the raw week passes the duration', () => {
-      expect(getPlanProgressStatus(localDate('2026-06-29'), 2)).toBe('ENDED');
-      expect(getPlanProgressStatus(localDate('2026-05-04'), 4)).toBe('ENDED');
+      expect(getPlanProgressStatus(at('2026-06-29T12:00:00Z'), 2, 'UTC', NOW)).toBe('ENDED');
+      expect(getPlanProgressStatus(at('2026-05-04T12:00:00Z'), 4, 'UTC', NOW)).toBe('ENDED');
     });
+  });
+
+  describe('getPlanStartsOn / getPlanEndsOn', () => {
+    it('names the start day only while it is ahead', () => {
+      // Local midnight of Monday July 20 in Warsaw is 22:00 UTC the day before
+      const monday = at('2026-07-19T22:00:00Z');
+      expect(getPlanStartsOn(monday, 'Europe/Warsaw', NOW)).toBe('2026-07-20');
+      expect(getPlanStartsOn(monday, 'Europe/Warsaw', at('2026-07-20T06:00:00Z'))).toBeNull();
+    });
+
+    it('ends on the Sunday closing the final week', () => {
+      expect(getPlanEndsOn(at('2026-07-15T12:00:00Z'), 4, 'UTC')).toBe('2026-08-09');
+      expect(getPlanEndsOn(at('2026-07-19T22:00:00Z'), 1, 'Europe/Warsaw')).toBe('2026-07-26');
+    });
+  });
+});
+
+describe('days with no exercises', () => {
+  const week: WorkoutWeek = {
+    id: 'week-1',
+    weekNumber: 1,
+    days: [
+      { id: 'day-1', orderIndex: 1, name: 'Push', exercises: [EXERCISE] },
+      { id: 'day-2', orderIndex: 2, name: 'Day 2', exercises: [] },
+      { id: 'day-3', orderIndex: 3, name: 'Legs', exercises: [EXERCISE] },
+    ],
+  };
+
+  it("aren't workouts", () => {
+    expect(isWorkoutDay(week.days[0])).toBe(true);
+    expect(isWorkoutDay(week.days[1])).toBe(false);
+  });
+
+  it("are left out of the week, so they're never next up or counted", () => {
+    const days = getWeekDays(week, [], 'client-1');
+    expect(days.map((d) => d.workoutDay.id)).toEqual(['day-1', 'day-3']);
+    // The plan's own numbering survives
+    expect(days.map((d) => d.orderIndex)).toEqual([1, 3]);
+
+    const afterPush = getWeekDays(
+      week,
+      [{
+        id: 'wc-1', clientId: 'client-1', planId: 'plan-1', weekId: 'week-1', dayId: 'day-1',
+        status: 'COMPLETED', completedAt: '2026-07-14T12:00:00Z', completionPct: 100,
+        exercisesDone: 1, exercisesTotal: 1,
+      }],
+      'client-1'
+    );
+    expect(afterPush.find((d) => d.status === 'CURRENT')?.workoutDay.id).toBe('day-3');
   });
 });
 
@@ -81,9 +163,9 @@ describe('getActiveWorkout', () => {
     id: 'week-1',
     weekNumber: 1,
     days: [
-      { id: 'day-1', orderIndex: 1, name: 'Push', exercises: [] },
-      { id: 'day-2', orderIndex: 2, name: 'Pull', exercises: [] },
-      { id: 'day-3', orderIndex: 3, name: 'Legs', exercises: [] },
+      { id: 'day-1', orderIndex: 1, name: 'Push', exercises: [EXERCISE] },
+      { id: 'day-2', orderIndex: 2, name: 'Pull', exercises: [EXERCISE] },
+      { id: 'day-3', orderIndex: 3, name: 'Legs', exercises: [EXERCISE] },
     ],
   };
 

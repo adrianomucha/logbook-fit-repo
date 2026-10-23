@@ -24,7 +24,7 @@ export const GET = withCoach(
       include: {
         client: {
           include: {
-            user: { select: { id: true, name: true, email: true, avatarUrl: true } },
+            user: { select: { id: true, name: true, email: true, avatarUrl: true, timezone: true } },
             activePlan: { select: { id: true, name: true, durationWeeks: true } },
             completions: {
               where: { status: "COMPLETED" },
@@ -78,6 +78,7 @@ export const GET = withCoach(
         hasPlan: !!client.activePlan,
         planStartDate: client.planStartDate,
         planDurationWeeks: client.activePlan?.durationWeeks,
+        timeZone: client.user.timezone,
         lastWorkoutAt: lastWorkout,
         openCheckInStatus: pendingCheckIn?.status ?? null,
       });

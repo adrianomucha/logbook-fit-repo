@@ -32,6 +32,7 @@ import { ClientChatHeader } from '@/components/client/ClientChatHeader';
 import { WelcomeAwaitingPlan } from '@/components/client/WelcomeAwaitingPlan';
 import { PlanCompleteCard } from '@/components/client/PlanCompleteCard';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
+import { PlanStartsCard } from '@/components/client/today/PlanStartsCard';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserMinus } from 'lucide-react';
@@ -572,7 +573,18 @@ export function ClientDashboard() {
         )}
 
         {/* Workout Views */}
-        {currentView === 'workout' && !planEnded && !!weekOverview && workoutViewMode === 'today' && (
+        {/* Set to start next Monday: say when, and let them look ahead */}
+        {currentView === 'workout' && !planEnded && !!weekOverview?.startsOn && workoutViewMode === 'today' && (
+          <PlanStartsCard
+            clientName={client.name}
+            startsOn={weekOverview.startsOn}
+            coachName={coach?.user.name ?? undefined}
+            workoutCount={weekOverview.days.length}
+            onPreviewWeek={() => setWorkoutViewMode('weekly')}
+          />
+        )}
+
+        {currentView === 'workout' && !planEnded && !!weekOverview && !weekOverview.startsOn && workoutViewMode === 'today' && (
           <TodayFocusView
             client={client}
             todayWorkout={todayWorkout}

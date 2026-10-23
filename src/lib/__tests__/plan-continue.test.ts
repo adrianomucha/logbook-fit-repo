@@ -27,30 +27,40 @@ describe('isPlanEnded', () => {
   });
 
   it('is false with no start date — nothing has run yet', () => {
-    expect(isPlanEnded(null, 4)).toBe(false);
+    expect(isPlanEnded(null, 4, 'UTC')).toBe(false);
   });
 
   it('is false in the first week', () => {
-    expect(isPlanEnded(MONDAY, 4)).toBe(false);
+    expect(isPlanEnded(MONDAY, 4, 'UTC')).toBe(false);
   });
 
   it('is false in the final week — a plan is not done until it is past', () => {
     // Started three Mondays ago → week 4 of a 4-week plan
-    expect(isPlanEnded(daysBefore(MONDAY, 21), 4)).toBe(false);
+    expect(isPlanEnded(daysBefore(MONDAY, 21), 4, 'UTC')).toBe(false);
   });
 
   it('is true the day the plan runs past its last week', () => {
     // Started four Mondays ago → week 5 of a 4-week plan
-    expect(isPlanEnded(daysBefore(MONDAY, 28), 4)).toBe(true);
+    expect(isPlanEnded(daysBefore(MONDAY, 28), 4, 'UTC')).toBe(true);
   });
 
   it('accepts an ISO string as well as a Date', () => {
-    expect(isPlanEnded(daysBefore(MONDAY, 28).toISOString(), 4)).toBe(true);
+    expect(isPlanEnded(daysBefore(MONDAY, 28).toISOString(), 4, 'UTC')).toBe(true);
+  });
+
+  it("ends on the client's calendar, not the server's", () => {
+    // A 1-week plan from Monday Feb 23: Sunday Mar 1 at 17:00 in LA is
+    // already Monday on a UTC calendar
+    const sundayEveningLA = new Date('2026-03-02T01:00:00Z');
+    vi.setSystemTime(sundayEveningLA);
+    const start = new Date('2026-02-23T17:00:00Z');
+    expect(isPlanEnded(start, 1, 'America/Los_Angeles')).toBe(false);
+    expect(isPlanEnded(start, 1, 'UTC')).toBe(true);
   });
 
   it('handles a single-week plan', () => {
-    expect(isPlanEnded(daysBefore(MONDAY, 7), 1)).toBe(true);
-    expect(isPlanEnded(MONDAY, 1)).toBe(false);
+    expect(isPlanEnded(daysBefore(MONDAY, 7), 1, 'UTC')).toBe(true);
+    expect(isPlanEnded(MONDAY, 1, 'UTC')).toBe(false);
   });
 });
 
