@@ -10,7 +10,6 @@ import { formatStoredWeight } from '@logbook/shared/weight-units';
 import {
   getWeekDays,
   getWeekProgress,
-  getCurrentWeekNumber,
   WeekDayInfo,
   WORKOUT_MARK_LABEL,
   workoutMark,
@@ -21,7 +20,11 @@ import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 interface InteractiveWeeklyStripProps {
   client: Client;
   plan?: WorkoutPlan;
-  planStartDate?: string;
+  /**
+   * The plan week it is now, counted on the client's calendar by the parent
+   * (getCurrentWeekNumber with their timezone). Undefined: no plan start yet.
+   */
+  currentWeekNumber?: number;
   workoutCompletions: WorkoutCompletion[];
   onScrollToPlanEditor?: (dayId: string) => void;
   /** Open the plan editor drawer */
@@ -37,7 +40,7 @@ interface InteractiveWeeklyStripProps {
 export function InteractiveWeeklyStrip({
   client,
   plan,
-  planStartDate,
+  currentWeekNumber,
   workoutCompletions,
   onScrollToPlanEditor,
   onEditPlan,
@@ -56,12 +59,7 @@ export function InteractiveWeeklyStrip({
     return () => cancelAnimationFrame(id);
   }, [compact]);
 
-  // Calculate current week data - use durationWeeks for consistency with client view
-  const currentWeekNum = useMemo(() => {
-    if (!planStartDate || !plan?.weeks?.length) return 1;
-    const durationWeeks = plan.durationWeeks || plan.weeks.length;
-    return getCurrentWeekNumber(planStartDate, durationWeeks);
-  }, [planStartDate, plan]);
+  const currentWeekNum = currentWeekNumber ?? 1;
 
   const currentWeek = useMemo(() => {
     if (!plan) return null;
@@ -69,11 +67,11 @@ export function InteractiveWeeklyStrip({
   }, [plan, currentWeekNum]);
 
   const weekDays = useMemo(() => {
-    if (!planStartDate || !plan?.weeks?.length || !currentWeek) {
+    if (currentWeekNumber === undefined || !plan?.weeks?.length || !currentWeek) {
       return [];
     }
     return getWeekDays(currentWeek, workoutCompletions, client.id);
-  }, [plan, planStartDate, currentWeek, workoutCompletions, client.id]);
+  }, [plan, currentWeekNumber, currentWeek, workoutCompletions, client.id]);
 
   const progress = useMemo(() => getWeekProgress(weekDays), [weekDays]);
 

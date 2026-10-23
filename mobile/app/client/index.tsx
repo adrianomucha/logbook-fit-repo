@@ -7,6 +7,7 @@ import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/ty
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
 import { EMPTY_WEEK_COPY, LOAD_ERROR_COPY, NO_COACH_COPY, WEEK_NOT_BUILT_COPY } from '@logbook/shared/client-empty-states';
+import { PLAN_STARTS_COPY } from '@logbook/shared/plan-start';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
@@ -289,6 +290,18 @@ export default function TodayScreen() {
             />
           ) : null}
         </>
+      ) : weekOverview?.startsOn ? (
+        // Set to start next Monday: say when, and let them look ahead
+        <View className="items-center py-12">
+          <Eyebrow className="mb-2">{PLAN_STARTS_COPY.eyebrow}</Eyebrow>
+          <Text className="text-center font-sans-bold text-lg text-foreground">{PLAN_STARTS_COPY.title(weekOverview.startsOn)}</Text>
+          <Text className="mb-5 mt-1 text-center font-sans text-sm text-muted-foreground">
+            {PLAN_STARTS_COPY.body(coach.user.name, weekDays.length)}
+          </Text>
+          <Button variant="primary" onPress={() => setView('weekly')}>
+            {PLAN_STARTS_COPY.action}
+          </Button>
+        </View>
       ) : today?.workoutDay ? (
         state === 'completed' && today.completion ? (
           <>

@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { buildPlanCloneData } from "@/lib/plan-clone";
 import { getRawWeekNumber } from "@/lib/workout-week-helpers";
+import { planStartDateFor, type PlanStartChoice } from "@logbook/shared/plan-start";
 
 /**
  * "Run it again" — restart the plan a client just finished for another cycle.
@@ -47,10 +48,11 @@ export function continuePlanStatus(
  */
 export function isPlanEnded(
   planStartDate: Date | string | null,
-  durationWeeks: number
+  durationWeeks: number,
+  timeZone: string | null | undefined
 ): boolean {
   if (!planStartDate) return false;
-  return getRawWeekNumber(planStartDate) > durationWeeks;
+  return getRawWeekNumber(planStartDate, timeZone) > durationWeeks;
 }
 
 /**
@@ -59,11 +61,16 @@ export function isPlanEnded(
  * each failure onto its own status code.
  */
 export async function continueClientPlan(
-  clientProfileId: string
+  clientProfileId: string,
+  startOn: PlanStartChoice = "today"
 ): Promise<ContinuePlanResult> {
   const client = await prisma.clientProfile.findUnique({
     where: { id: clientProfileId },
-    select: { activePlanId: true, planStartDate: true },
+    select: {
+      activePlanId: true,
+      planStartDate: true,
+      user: { select: { timezone: true } },
+    },
   });
 
   if (!client?.activePlanId || !client.planStartDate) {
@@ -87,7 +94,8 @@ export async function continueClientPlan(
 
   if (!current) return { ok: false, reason: "PLAN_MISSING" };
 
-  if (!isPlanEnded(client.planStartDate, current.durationWeeks)) {
+  const timeZone = client.user.timezone;
+  if (!isPlanEnded(client.planStartDate, current.durationWeeks, timeZone)) {
     return { ok: false, reason: "NOT_ENDED" };
   }
 
@@ -100,7 +108,8 @@ export async function continueClientPlan(
     select: { id: true, name: true, durationWeeks: true },
   });
 
-  const planStartDate = new Date();
+  // The coach chose: today, or a clean start next Monday
+  const planStartDate = planStartDateFor(startOn, timeZone);
   await prisma.clientProfile.update({
     where: { id: clientProfileId },
     data: { activePlanId: nextCycle.id, planStartDate },

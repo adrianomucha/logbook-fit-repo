@@ -30,7 +30,7 @@ export interface DashboardClient {
   /** Joined recently and hasn't heard from the coach yet — worth a hello */
   awaitingHello: boolean;
   /** Where the client is relative to their plan's end */
-  planStatus: 'NONE' | 'ACTIVE' | 'FINAL_WEEK' | 'ENDED';
+  planStatus: 'NONE' | 'UPCOMING' | 'ACTIVE' | 'FINAL_WEEK' | 'ENDED';
   urgency: 'NEEDS_PLAN' | 'PLAN_ENDED' | 'AT_RISK' | 'AWAITING_RESPONSE' | 'CHECKIN_DUE' | 'ON_TRACK';
   urgencyOrder: number;
 }
@@ -106,6 +106,8 @@ export interface ClientDetail {
     email: string;
     avatarUrl: string | null;
     createdAt: string;
+    /** The client's IANA timezone: plan weeks run on their calendar. Optional for older servers. */
+    timezone?: string;
   };
   activePlan: {
     id: string;
@@ -203,6 +205,12 @@ export interface WeekOverview {
   planStartDate: string;
   /** Past the plan's last week — the response clamps to the final week */
   planEnded: boolean;
+  /**
+   * The plan's first day ("2026-10-26") while it hasn't started yet (the
+   * coach chose next Monday); week 1 is returned as a preview. Null once it
+   * has started. Optional for older servers.
+   */
+  startsOn?: string | null;
   days: WeekOverviewDay[];
 }
 

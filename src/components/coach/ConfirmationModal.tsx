@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useId } from 'react';
+import { useState, useCallback, useEffect, useId, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useDialogBehavior } from '@/hooks/useDialogBehavior';
@@ -55,6 +55,8 @@ interface ConfirmationModalProps {
   icon?: LucideIcon;
   /** Mono kicker above the title. Defaults to the house "Just checking". */
   eyebrow?: string;
+  /** Extra controls under the message, for a confirm that carries a choice */
+  children?: ReactNode;
 }
 
 export function ConfirmationModal({
@@ -70,6 +72,7 @@ export function ConfirmationModal({
   requireText,
   icon,
   eyebrow = 'Just checking',
+  children,
 }: ConfirmationModalProps) {
   const [isPending, setIsPending] = useState(false);
   const [typed, setTyped] = useState('');
@@ -177,6 +180,8 @@ export function ConfirmationModal({
           >
             {noWidows(message)}
           </p>
+
+          {children}
 
           {warningMessage && (
             <div className="mt-4 flex overflow-hidden rounded-xl bg-muted/70">

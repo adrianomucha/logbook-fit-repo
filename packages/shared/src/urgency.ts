@@ -37,6 +37,8 @@ export interface ClientUrgencyInput {
   hasPlan: boolean;
   planStartDate?: Date | string | null;
   planDurationWeeks?: number | null;
+  /** The client's timezone: plan weeks run on their calendar */
+  timeZone?: string | null;
   /** Most recent COMPLETED workout, if any */
   lastWorkoutAt?: Date | string | null;
   /** Status of the newest open check-in: PENDING | CLIENT_RESPONDED */
@@ -59,7 +61,7 @@ export function getClientUrgency(input: ClientUrgencyInput): ClientUrgencyResult
   const planStatus: PlanStatus = !input.hasPlan
     ? 'NONE'
     : input.planStartDate && input.planDurationWeeks
-      ? getPlanProgressStatus(input.planStartDate, input.planDurationWeeks)
+      ? getPlanProgressStatus(input.planStartDate, input.planDurationWeeks, input.timeZone)
       : 'ACTIVE';
 
   if (!input.hasPlan) {
@@ -103,16 +105,21 @@ export function getClientUrgency(input: ClientUrgencyInput): ClientUrgencyResult
 }
 
 /**
- * "started 2d ago" for a client still inside the at-risk grace window of a
- * plan they haven't trained on yet — explains why someone with no recent
- * workouts reads as on track. Null once they've trained since the plan
+ * "starts Monday" for a plan that hasn't begun, and "started 2d ago" for a
+ * client still inside the at-risk grace window of a plan they haven't
+ * trained on yet: explains why someone with no recent workouts reads as on
+ * track. Null once they've trained since the plan
  * started, or once the window has run out (they're at risk then).
  */
 export function newPlanHint(
   planStartDate: Date | string | null | undefined,
   lastWorkoutAt: Date | string | null | undefined,
-  now: number = Date.now()
+  now: number = Date.now(),
+  /** The plan's status on the client's calendar; UPCOMING means it starts on a coming Monday */
+  planStatus?: PlanStatus
 ): string | null {
+  // Set to start on a coming Monday: nothing to train on yet
+  if (planStatus === 'UPCOMING') return 'starts Monday';
   const planStartMs = toMs(planStartDate);
   if (planStartMs === null) return null;
   const lastWorkoutMs = toMs(lastWorkoutAt);
