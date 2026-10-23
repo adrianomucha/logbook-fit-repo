@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils';
 import { WeekDayInfo, WORKOUT_MARK_LABEL, workoutMark } from '@/lib/workout-week-helpers';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
-import { WorkoutMarkIcon } from '../WorkoutMarkIcon';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 interface DayCardProps {
   day: WeekDayInfo;

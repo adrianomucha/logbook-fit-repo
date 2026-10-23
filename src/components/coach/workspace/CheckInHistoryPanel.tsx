@@ -125,7 +125,7 @@ export function CheckInHistoryPanel({
             <span className="text-sm font-medium">Automatic check-ins</span>
             {!schedule.enabled && (
               <p className="text-xs text-muted-foreground">
-                Off — send check-ins by hand
+                Off. Send check-ins by hand.
               </p>
             )}
           </div>
@@ -199,7 +199,6 @@ export function CheckInHistoryPanel({
         {/* Same shape as the Workouts tab's empty state so the tabs read
             as one family */}
         <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-          <div className="text-4xl select-none mb-4 animate-bounce-once">💬</div>
           <p className="font-semibold antialiased">No check-ins yet</p>
           <p className="text-sm text-muted-foreground antialiased">
             Completed check-ins with {firstName} will show up here.
@@ -386,24 +385,15 @@ export function CheckInHistoryPanel({
 
         {/* Show more/less toggle */}
         {hasMore && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full"
+          // The quiet text action the client's Progress feed uses
+          <button
+            type="button"
             onClick={() => setShowAll(!showAll)}
+            className="w-full h-11 flex items-center justify-center gap-1 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors"
           >
-            {showAll ? (
-              <>
-                <ChevronUp className="w-4 h-4 me-1" />
-                Show less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4 me-1" />
-                Show all ({completedCheckIns.length - initialCount} more)
-              </>
-            )}
-          </Button>
+            {showAll ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {showAll ? 'Show less' : 'Show earlier'}
+          </button>
         )}
       </div>
       {scheduleToggle && (

@@ -1,4 +1,5 @@
-import { FileSpreadsheet, Plus, RefreshCw, UserPlus } from 'lucide-react';
+import { FileSpreadsheet, Plus, RefreshCw } from 'lucide-react';
+import { CREATE_PLAN } from '@logbook/shared/coach-copy';
 import { Button } from '@/components/ui/button';
 
 /* Empty and error states as ghost previews: a faded mock of the list this
@@ -7,8 +8,8 @@ import { Button } from '@/components/ui/button';
    load errors render the same ghost with its live-dot gone amber — the data
    is out there, the signal dropped. */
 
-const cardShadow =
-  'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]';
+const cardEdge =
+  'border border-border/70';
 
 const fadeMask = {
   maskImage: 'linear-gradient(to bottom, black 25%, transparent 88%)',
@@ -59,7 +60,7 @@ function GhostRoster({ tone = 'live' }: { tone?: 'live' | 'lost' }) {
       className="w-full max-w-sm mb-3 sm:mb-4 select-none pointer-events-none"
       style={fadeMask}
     >
-      <div className={`bg-card rounded-xl divide-y divide-border overflow-hidden ${cardShadow}`}>
+      <div className={`bg-card rounded-2xl divide-y divide-border/50 overflow-hidden ${cardEdge}`}>
         {rows.map((row, i) => (
           <div
             key={i}
@@ -103,7 +104,7 @@ function GhostPlanList() {
       className="w-full max-w-sm mb-3 sm:mb-4 select-none pointer-events-none"
       style={fadeMask}
     >
-      <div className={`bg-card rounded-xl divide-y divide-border overflow-hidden ${cardShadow}`}>
+      <div className={`bg-card rounded-2xl divide-y divide-border/50 overflow-hidden ${cardEdge}`}>
         {rows.map((row, i) => (
           <div
             key={i}
@@ -131,7 +132,7 @@ function GhostProfile() {
       className="w-full max-w-sm mb-3 sm:mb-4 select-none pointer-events-none"
       style={fadeMask}
     >
-      <div className={`bg-card rounded-xl overflow-hidden ${cardShadow}`}>
+      <div className={`bg-card rounded-2xl overflow-hidden ${cardEdge}`}>
         <div className="animate-ghost-row flex items-center gap-3 px-4 py-4" style={{ animationDelay: '120ms' }}>
           <div className="relative w-12 h-12 rounded-full bg-muted shrink-0">
             <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-warning ring-2 ring-card motion-safe:animate-pulse" />
@@ -193,26 +194,6 @@ export function LoadErrorState({
   );
 }
 
-export function EmptyStateNoClients({ onInvite }: { onInvite?: () => void }) {
-  return (
-    <EmptyStateShell
-      preview={<GhostRoster />}
-      kicker="Roster · 0 clients"
-      title="No clients yet"
-      body="Send an invite link — the moment your client signs up, they land here, ranked by who needs your attention."
-      cta={
-        <Button
-          onClick={onInvite}
-          className="h-11 px-6 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-[background-color,transform] duration-150"
-        >
-          <UserPlus className="w-4 h-4" />
-          Invite Client
-        </Button>
-      }
-    />
-  );
-}
-
 export function EmptyStateNoPlans({
   onCreate,
   onImport,
@@ -223,9 +204,9 @@ export function EmptyStateNoPlans({
   return (
     <EmptyStateShell
       preview={<GhostPlanList />}
-      kicker="Plan library · 0 templates"
+      kicker="Plan library · 0 plans"
       title="Your blank canvas"
-      body="Design a workout template, then assign it to any client. One plan, many athletes."
+      body="Design a plan once, then assign it to any client. One plan, many athletes."
       cta={
         <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
           <Button
@@ -233,7 +214,7 @@ export function EmptyStateNoPlans({
             className="h-11 px-6 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-[background-color,transform] duration-150"
           >
             <Plus className="w-4 h-4" />
-            Create Template
+            {CREATE_PLAN}
           </Button>
           {onImport && (
             <Button

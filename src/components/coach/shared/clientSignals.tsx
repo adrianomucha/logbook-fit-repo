@@ -13,31 +13,18 @@ export type UrgencyStyle = {
   dot: string;
 };
 
+// Colour says whose move it is, in the app's own tokens: lime is the
+// coach's move (as lime is the client's next step), amber needs attention
+// soon, red is a client slipping, grey is nothing to do.
+const COACHS_MOVE = { chip: 'bg-brand/25 text-brand-foreground dark:bg-brand/15 dark:text-brand', dot: 'bg-brand' };
+const NOTHING_TO_DO = { chip: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground/50' };
 const URGENCY_TINT: Record<Urgency, { chip: string; dot: string }> = {
-  NEEDS_PLAN: {
-    chip: 'bg-brand/25 text-brand-foreground dark:bg-brand/15 dark:text-brand',
-    dot: 'bg-brand',
-  },
-  PLAN_ENDED: {
-    chip: 'bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
-    dot: 'bg-violet-500',
-  },
-  AT_RISK: {
-    chip: 'bg-red-50 text-red-700 dark:bg-red-950/50 dark:text-red-300',
-    dot: 'bg-red-500',
-  },
-  AWAITING_RESPONSE: {
-    chip: 'bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300',
-    dot: 'bg-blue-500',
-  },
-  CHECKIN_DUE: {
-    chip: 'bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
-    dot: 'bg-amber-500',
-  },
-  ON_TRACK: {
-    chip: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
-    dot: 'bg-emerald-500',
-  },
+  NEEDS_PLAN: COACHS_MOVE,
+  AWAITING_RESPONSE: COACHS_MOVE,
+  PLAN_ENDED: { chip: 'bg-warning/10 text-warning-text', dot: 'bg-warning' },
+  AT_RISK: { chip: 'bg-destructive/10 text-destructive', dot: 'bg-destructive' },
+  CHECKIN_DUE: NOTHING_TO_DO,
+  ON_TRACK: NOTHING_TO_DO,
 };
 
 export function urgencyStyle(urgency: Urgency): UrgencyStyle {

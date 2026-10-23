@@ -1,6 +1,7 @@
 import { startOfWeek } from 'date-fns';
 import type { DashboardClient } from './types/api';
 import { newPlanHint } from './urgency';
+import { CHECKIN_ACTION, CHECKIN_STATUS } from './coach-copy';
 
 /**
  * The coach's roster: one list that is both the home page and the client
@@ -11,13 +12,14 @@ import { newPlanHint } from './urgency';
 
 export type Urgency = DashboardClient['urgency'];
 
+// Sentence case, and the check-in words the profile and check-in pages use
 export const URGENCY_LABEL: Record<Urgency, string> = {
-  NEEDS_PLAN: 'Just Joined',
-  PLAN_ENDED: 'Plan Ended',
-  AT_RISK: 'At Risk',
-  AWAITING_RESPONSE: 'Check-in Ready',
-  CHECKIN_DUE: 'Check-in Due',
-  ON_TRACK: 'On Track',
+  NEEDS_PLAN: 'Just joined',
+  PLAN_ENDED: 'Plan ended',
+  AT_RISK: 'At risk',
+  AWAITING_RESPONSE: CHECKIN_STATUS.ready,
+  CHECKIN_DUE: CHECKIN_STATUS.waiting,
+  ON_TRACK: 'On track',
 };
 
 export const ROSTER_COPY = {
@@ -43,20 +45,20 @@ export function rosterAction(client: DashboardClient, unreadCount = 0): RosterAc
   // A submitted response always deserves a review, even when the client is
   // also at risk — their answer is the coach's opening to re-engage them
   if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
-    return { label: 'Review Check-in', target: 'check-in' };
+    return { label: CHECKIN_ACTION.review, target: 'check-in' };
   }
   // A brand-new client who hasn't heard from the coach yet: the relationship
   // opens with a hello, not a plan assignment
-  if (client.awaitingHello) return { label: 'Say Hello', target: 'chat' };
+  if (client.awaitingHello) return { label: 'Say hello', target: 'chat' };
   switch (client.urgency) {
     case 'NEEDS_PLAN':
-      return { label: 'Assign Plan', target: 'profile' };
+      return { label: 'Assign plan', target: 'profile' };
     case 'PLAN_ENDED':
-      return { label: 'Assign Next Plan', target: 'profile' };
+      return { label: 'Assign next plan', target: 'profile' };
     case 'AT_RISK':
-      return { label: 'Reach Out', target: 'chat' };
+      return { label: 'Reach out', target: 'chat' };
     case 'AWAITING_RESPONSE':
-      return { label: 'Review Check-in', target: 'check-in' };
+      return { label: CHECKIN_ACTION.review, target: 'check-in' };
   }
   // CHECKIN_DUE means the check-in went out and the client hasn't replied:
   // the ball is in their court, so like ON_TRACK it isn't the coach's move
@@ -143,7 +145,7 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
     case 'AWAITING_RESPONSE': {
       if (plan) rest.push(plan);
       if (finalWeek) rest.push('final week');
-      return { lead: 'Ready to review', rest };
+      return { lead: CHECKIN_STATUS.ready, rest };
     }
     case 'CHECKIN_DUE': {
       if (plan) rest.push(plan);

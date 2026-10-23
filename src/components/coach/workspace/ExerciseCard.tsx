@@ -51,7 +51,7 @@ export function ExerciseCard({
           <span className="font-mono text-xs tabular-nums text-muted-foreground antialiased">
             <span className="font-semibold text-foreground">{exercise.sets}</span>
             <span className="mx-1">×</span>
-            {exercise.reps || '—'}
+            {exercise.reps || '–'}
           </span>
           {weightDisplay && (
             <span className="font-mono text-[11px] tabular-nums font-semibold bg-foreground text-background px-1.5 py-0.5 rounded-md">

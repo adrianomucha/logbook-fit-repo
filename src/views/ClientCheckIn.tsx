@@ -18,6 +18,10 @@ import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { format, formatDistanceToNow, differenceInHours, subDays, startOfWeek, addWeeks, differenceInCalendarWeeks } from 'date-fns';
+import { CHECKIN_ACTION, CHECKIN_STATUS } from '@logbook/shared/coach-copy';
+import { workoutTitle } from '@logbook/shared/progress';
+import { WORKOUT_MARK_LABEL } from '@logbook/shared/workout-week-helpers';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 /* ── Brand surface helpers — same vocabulary as the client profile ── */
 
@@ -36,8 +40,8 @@ function SectionLabel({ children }: { children: ReactNode }) {
 function SectionCard({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div className={cn(
-      'bg-card rounded-xl overflow-hidden p-4 sm:p-5',
-      'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]',
+      'bg-card rounded-2xl overflow-hidden p-4 sm:p-5',
+      'border border-border/70',
       className
     )}>
       {children}
@@ -222,10 +226,9 @@ export function ClientCheckIn() {
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
           <SectionCard className="max-w-md mx-auto text-center py-12 animate-enter">
-            <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
             <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can’t find this client</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">They may have been removed, or the link might be outdated.</p>
-            <Button onClick={() => router.push('/coach')} className="active:scale-[0.96] transition-transform duration-150">Back to Clients</Button>
+            <Button onClick={() => router.push('/coach')} className="active:scale-[0.96] transition-transform duration-150">Back to clients</Button>
           </SectionCard>
         </div>
       </div>
@@ -284,13 +287,9 @@ export function ClientCheckIn() {
             <p className="text-sm text-muted-foreground mb-6 text-pretty">
               Start a new check-in to hear how {firstName} is doing.
             </p>
-            <Button
-              onClick={handleStartNewCheckIn}
-              disabled={isCreating}
-              className="h-11 px-6 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
-            >
+            <Button onClick={handleStartNewCheckIn} disabled={isCreating} variant="brand" className="h-11 px-6">
               {isCreating && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-              Send check-in
+              {CHECKIN_ACTION.send}
             </Button>
           </SectionCard>
         </div>
@@ -318,7 +317,7 @@ export function ClientCheckIn() {
           <SectionCard className="max-w-2xl text-center py-10">
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-warning/10 text-warning-text font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased">
               <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
-              Awaiting response
+              {CHECKIN_STATUS.waiting}
             </span>
             {confirmingUnsend ? (
               <>
@@ -349,7 +348,7 @@ export function ClientCheckIn() {
               </>
             ) : (
               <>
-                <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">Waiting for {firstName}</h2>
+                <h2 className="text-xl font-bold tracking-tight mt-4 mb-1.5 text-balance">{CHECKIN_STATUS.waitingOn(firstName)}</h2>
                 <p className="text-sm text-muted-foreground text-pretty">
                   Check-in sent {sentAgo}. {firstName} hasn’t responded yet.
                 </p>
@@ -394,7 +393,7 @@ export function ClientCheckIn() {
   return (
     <PageShell
       clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null}
-      subtitle={`Submitted ${submittedAgo}`}
+      subtitle={CHECKIN_STATUS.replied(submittedAgo)}
       onBack={handleBack}
     >
       {/* Review desk: a reading column of evidence beside a sticky composer,
@@ -430,7 +429,7 @@ export function ClientCheckIn() {
                 {feelingDisplay && (
                   <div>
                     <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-2">
-                      Body feels
+                      Body felt
                     </p>
                     <p className={cn(
                       'font-mono text-sm font-bold uppercase tracking-[0.08em] antialiased',
@@ -514,14 +513,9 @@ export function ClientCheckIn() {
             </label>
 
             {/* Submit — the page's one volt moment */}
-            <Button
-              onClick={handleCompleteCheckIn}
-              disabled={isSubmitting}
-              className="w-full h-12 mt-5 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
-              size="lg"
-            >
+            <Button onClick={handleCompleteCheckIn} disabled={isSubmitting} variant="brand" className="w-full h-11 mt-5">
               {isSubmitting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-              Complete check-in
+              {CHECKIN_ACTION.complete}
             </Button>
             <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground text-center text-balance mt-2.5 antialiased">
               Closes this check-in · saved to {firstName}’s history
@@ -603,8 +597,8 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
     weeklyTarget != null
       ? { label: 'Workouts', value: String(weeks.reduce((n, w) => n + w.completed, 0)), warn: false }
       : { label: 'Workouts', value: String(completed.length), warn: false },
-    { label: 'Missed', value: weeklyTarget != null ? String(missed) : '—', warn: missed > 0 },
-    { label: 'Avg done', value: avgPct != null ? `${avgPct}%` : '—', warn: avgPct != null && avgPct < 90 },
+    { label: 'Missed', value: weeklyTarget != null ? String(missed) : '–', warn: missed > 0 },
+    { label: 'Avg done', value: avgPct != null ? `${avgPct}%` : '–', warn: avgPct != null && avgPct < 90 },
     { label: 'Flags', value: String(flagCount), warn: flagCount > 0 },
   ];
 
@@ -612,8 +606,8 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
     <section>
       <SectionLabel>{label}</SectionLabel>
       <div className={cn(
-        'bg-card rounded-xl overflow-hidden',
-        'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]'
+        'bg-card rounded-2xl overflow-hidden',
+        'border border-border/70'
       )}>
         {rows.length === 0 && weeklyTarget == null ? (
           <p className="px-4 sm:px-5 py-6 text-sm text-warning-text antialiased">
@@ -633,7 +627,7 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
                     {s.label}
                     {s.warn && <span className="sr-only"> (needs attention)</span>}
                   </p>
-                  <p className="text-xl sm:text-2xl font-black tracking-tight mt-0.5">
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight mt-0.5">
                     {s.value}
                   </p>
                 </div>
@@ -661,7 +655,7 @@ function CheckInWorkouts({ client, exerciseNames, weeklyTarget }: {
               </p>
             ) : (
               <p className="px-4 sm:px-5 pb-4 text-sm text-muted-foreground antialiased text-pretty">
-                Every session finished as written — no flags from {firstName}.
+                Every workout finished as written, with no flags from {firstName}.
               </p>
             )}
 
@@ -783,8 +777,8 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
       <ul className="space-y-3" onPointerLeave={() => setActiveId(null)}>
         {weeks.map((w) => {
           const summary = w.target != null
-            ? `${w.completed} of ${w.target} sessions${w.missed ? `, ${w.missed} missed` : ''}${w.isCurrent ? ', week in progress' : ''}`
-            : `${w.completed} ${w.completed === 1 ? 'session' : 'sessions'}`;
+            ? `${w.completed} of ${w.target} workouts${w.missed ? `, ${w.missed} missed` : ''}${w.isCurrent ? ', week in progress' : ''}`
+            : `${w.completed} ${w.completed === 1 ? 'workout' : 'workouts'}`;
           return (
             <li
               key={w.start.toISOString()}
@@ -841,7 +835,7 @@ function WeeklyAdherence({ weeks, isAbandoned }: {
                           )}
                         >
                           <span className="block text-sm font-bold">{value}</span>
-                          <span className="block text-xs leading-snug text-muted-foreground text-pretty">{c.day?.name ?? 'Workout'}</span>
+                          <span className="block text-xs leading-snug text-muted-foreground text-pretty">{workoutTitle(c.day?.name ?? 'Workout')}</span>
                           <span className="block font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground mt-0.5">{date}</span>
                           {flags.length > 0 && (
                             <span className="flex items-center gap-1 text-xs font-semibold mt-1">
@@ -923,23 +917,29 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
         <div className="flex-1 min-w-0">
           <p className="text-sm font-bold tracking-tight break-words text-pretty">
             {!isUnfinished && <span className="sr-only">Completed: </span>}
-            {c.day?.name ?? 'Workout'}
+            {workoutTitle(c.day?.name ?? 'Workout')}
           </p>
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums">
             {isUnfinished && 'Started '}
             {format(timestamp, 'EEE, MMM d')}
           </p>
         </div>
-        <p className={cn(
-          'font-mono text-xs font-semibold tabular-nums shrink-0 pt-0.5',
-          isUnfinished
-            ? cn('text-[10px] uppercase tracking-[0.12em]', abandoned ? 'text-warning-text' : 'text-info')
-            : c.completionPct != null && c.completionPct < 100 && 'text-warning-text'
-        )}>
-          {isUnfinished
-            ? abandoned ? 'Not finished' : 'In progress'
-            : c.completionPct != null ? `${Math.round(c.completionPct)}%` : ''}
-        </p>
+        {isUnfinished && !abandoned ? (
+          // The client's own "Started" mark
+          <p className="inline-flex items-center gap-1.5 text-xs font-semibold shrink-0 pt-0.5 text-foreground">
+            <WorkoutMarkIcon mark="started" size={16} />
+            {WORKOUT_MARK_LABEL.started}
+          </p>
+        ) : (
+          <p className={cn(
+            'font-mono text-xs font-semibold tabular-nums shrink-0 pt-0.5',
+            isUnfinished
+              ? 'text-[10px] uppercase tracking-[0.12em] text-warning-text'
+              : c.completionPct != null && c.completionPct < 100 && 'text-warning-text'
+          )}>
+            {isUnfinished ? 'Not finished' : c.completionPct != null ? `${Math.round(c.completionPct)}%` : ''}
+          </p>
+        )}
       </div>
 
       {/* What the client changed vs. the prescription */}
@@ -956,7 +956,7 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
           <span>
             <span className="sr-only">Flagged: </span>
             <span className="font-bold text-warning-text">{flagName(f.workoutExerciseId)}</span>
-            {f.note && <span className="text-foreground/80"> — &ldquo;{f.note}&rdquo;</span>}
+            {f.note && <span className="text-foreground/80">: &ldquo;{f.note}&rdquo;</span>}
           </span>
         </p>
       ))}
@@ -977,8 +977,8 @@ function PreviousCheckInsList({ checkIns }: {
     <section>
       <SectionLabel>Previous check-ins · {checkIns.length}</SectionLabel>
       <div className={cn(
-        'bg-card rounded-xl divide-y divide-border overflow-hidden',
-        'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]'
+        'bg-card rounded-2xl divide-y divide-border/50 overflow-hidden',
+        'border border-border/70'
       )}>
         {checkIns.map((checkIn) => {
           const effort = checkIn.effortRating

@@ -290,7 +290,7 @@ export function ChatView({
                     disabled={isLoadingEarlier}
                     className="font-mono text-[10px] uppercase tracking-[0.15em] font-bold px-3.5 py-2 rounded-full bg-muted/60 text-muted-foreground hover:text-foreground transition-colors touch-manipulation disabled:opacity-50"
                   >
-                    {isLoadingEarlier ? 'Loading…' : 'Load earlier messages'}
+                    {isLoadingEarlier ? 'Loading…' : 'Show earlier'}
                   </button>
                 </div>
               )}

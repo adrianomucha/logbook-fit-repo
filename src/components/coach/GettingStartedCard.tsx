@@ -5,6 +5,8 @@ import { Check, Copy, FlaskConical, Loader2, Plus, UserPlus, UserRound } from 'l
 import { Button } from '@/components/ui/button';
 import { QUICK_START_EXERCISES } from '@/lib/quick-start-exercises';
 import type { CoachInvite } from '@/types/api';
+import { CREATE_PLAN, INVITE_CLIENT } from '@logbook/shared/coach-copy';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 interface GettingStartedCardProps {
   /** Time-of-day greeting — doubles as the brand kicker on this screen */
@@ -13,7 +15,7 @@ interface GettingStartedCardProps {
   hasPhoto: boolean;
   /** Coach has written a bio */
   hasBio: boolean;
-  /** Coach has at least one plan template */
+  /** Coach has at least one plan */
   hasPlan: boolean;
   /** Name of the first plan, shown in the done state */
   planName?: string;
@@ -111,7 +113,7 @@ export function GettingStartedCard({
       // they coach is what a prospective client reads before they commit
       body: profileSet
         ? 'Invited clients see it before they sign up, and in chat after.'
-        : 'Your invite page opens with them. A face and one line about how you coach — under a minute.',
+        : 'Your invite page opens with them. A face and one line about how you coach takes under a minute.',
       action: !profileSet && (
         <Button
           variant="outline"
@@ -136,7 +138,7 @@ export function GettingStartedCard({
       ),
       body: hasPlan
         ? 'Ready to assign the moment a client joins.'
-        : 'Design the template once, then assign it to everyone who needs it.',
+        : 'Design the plan once, then assign it to everyone who needs it.',
       action: !hasPlan && (
         <Button
           variant="outline"
@@ -145,7 +147,7 @@ export function GettingStartedCard({
           className="active:scale-[0.96] transition-transform duration-150"
         >
           <Plus className="w-4 h-4 mr-1.5" />
-          Create a plan
+          {CREATE_PLAN}
         </Button>
       ),
     },
@@ -201,7 +203,7 @@ export function GettingStartedCard({
           className="active:scale-[0.96] transition-transform duration-150"
         >
           <UserPlus className="w-4 h-4 mr-1.5" />
-          Invite client
+          {INVITE_CLIENT}
         </Button>
       ),
     },
@@ -273,21 +275,10 @@ export function GettingStartedCard({
                     aria-hidden="true"
                   />
                 )}
-                <span
-                  className={
-                    step.done
-                      ? 'z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-brand'
-                      : i === nextIndex
-                        ? 'z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground font-mono text-[11px] font-bold tabular-nums text-background'
-                        : 'z-10 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border-2 border-border bg-card font-mono text-[11px] font-bold tabular-nums text-muted-foreground'
-                  }
-                  aria-hidden="true"
-                >
-                  {step.done ? (
-                    <Check className="h-4 w-4 text-brand-foreground" strokeWidth={3} />
-                  ) : (
-                    i + 1
-                  )}
+                {/* The same marks as the client's week and welcome steps:
+                    lime tick done, dashed ring next, plain ring after */}
+                <span className="z-10 shrink-0 bg-card rounded-full" aria-hidden="true">
+                  <WorkoutMarkIcon mark={step.done ? 'done' : i === nextIndex ? 'next' : 'upcoming'} size={28} />
                 </span>
                 <div className="min-w-0 pt-0.5">
                   <p
@@ -295,8 +286,8 @@ export function GettingStartedCard({
                       step.done ? 'text-muted-foreground' : 'text-foreground'
                     }`}
                   >
-                    {/* The tick and the numeral are decorative, so the state
-                        they carry has to reach a screen reader some other way */}
+                    {/* The mark is decorative, so the state it carries has to
+                        reach a screen reader some other way */}
                     <span className="sr-only">{step.done ? 'Done: ' : 'To do: '}</span>
                     {step.title}
                   </p>

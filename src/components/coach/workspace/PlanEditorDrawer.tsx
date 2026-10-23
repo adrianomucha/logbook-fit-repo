@@ -344,12 +344,11 @@ export function PlanEditorDrawer({
           <>
             <div className="p-4 border-b pr-4">
               <SheetHeader>
-                <SheetTitle className="font-black tracking-tight">Error</SheetTitle>
+                <SheetTitle className="font-bold tracking-tight">Error</SheetTitle>
                 <SheetDescription>Something went wrong</SheetDescription>
               </SheetHeader>
             </div>
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
-              <div className="text-4xl select-none mb-1">😵</div>
               <p className="text-sm text-muted-foreground antialiased">{error}</p>
               <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="active:scale-[0.96] transition-transform duration-150">
                 Close
@@ -364,7 +363,7 @@ export function PlanEditorDrawer({
             <div className="p-4 border-b pr-4">
               <SheetHeader>
                 <SheetTitle className="flex items-center gap-2">
-                  <span className="truncate font-black tracking-tight">{plan.name}</span>
+                  <span className="truncate font-bold tracking-tight">{plan.name}</span>
                 </SheetTitle>
                 <SheetDescription className="sr-only">Plan editor</SheetDescription>
               </SheetHeader>
@@ -571,7 +570,7 @@ export function PlanEditorDrawer({
                               'font-mono text-[11px] tabular-nums shrink-0',
                               isActive ? 'text-background/60' : 'text-muted-foreground'
                             )}>
-                              {exerciseCount || '—'}
+                              {exerciseCount || '–'}
                             </span>
                           </button>
                         );

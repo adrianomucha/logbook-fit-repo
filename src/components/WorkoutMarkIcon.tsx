@@ -3,9 +3,10 @@ import type { WorkoutMark } from '@/lib/workout-week-helpers';
 import { cn } from '@/lib/utils';
 
 /**
- * One workout's state, drawn the same wherever this week appears (the week
- * list and the Progress stepper): lime with a tick once done, a lime ring
- * once started, a dashed ring for the next one, a plain ring for the rest.
+ * One workout's state, drawn the same wherever a week appears: the client's
+ * week list and Progress stepper, and the coach's view of that week. Lime
+ * with a tick once done, a lime ring once started, a dashed ring for the
+ * next one, a plain ring for the rest.
  */
 export function WorkoutMarkIcon({ mark, size }: { mark: WorkoutMark; size: number }) {
   const small = size < 40;

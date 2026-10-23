@@ -5,7 +5,7 @@ import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { Modal } from '@/components/ui/Modal';
 import { CheckSquare } from 'lucide-react';
 import { COACH_REPLY_PENDING, formatWeekTally } from '@logbook/shared/client-copy';
-import { WorkoutMarkIcon } from './WorkoutMarkIcon';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 
 interface CheckInDetailModalProps {

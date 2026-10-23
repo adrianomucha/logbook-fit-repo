@@ -507,7 +507,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
       isOpen={isOpen}
       onClose={isSubmitting ? () => {} : onClose}
       title={
-        <span className="block text-2xl sm:text-[28px] font-black tracking-tight leading-none antialiased">
+        <span className="block text-2xl sm:text-[28px] font-bold tracking-tight leading-none antialiased">
           {preview ? 'Check your plan' : 'Import from Excel'}
         </span>
       }
@@ -534,7 +534,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
             <ImportStep
               number="1"
               title="Upload your spreadsheet"
-              description="Any layout works — one row per exercise, a column per week, a tab per week. Excel or CSV."
+              description="Any layout works: one row per exercise, a column per week, a tab per week. Excel or CSV."
             >
               <input
                 ref={fileInputRef}

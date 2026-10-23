@@ -92,9 +92,10 @@ export function PastClientsPage() {
     <div className="min-h-dvh bg-background pb-24 sm:pb-4">
       <CoachNav activeTab="clients" />
 
-      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
-        <div className="animate-enter mb-1.5 sm:mb-3">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
+        <div className="animate-enter">
           <PageHeader
+            eyebrow="Your coaching"
             title="Past clients"
             subtitle={
               pastClients.length > 0
@@ -110,9 +111,8 @@ export function PastClientsPage() {
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : pastClients.length === 0 ? (
-          <div className="bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
             <div className="text-center py-12 px-6">
-              <div className="text-4xl select-none mb-4">📁</div>
               <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">No past clients</h2>
               <p className="text-sm text-muted-foreground antialiased">
                 When a coaching relationship ends, it lands here, with its
@@ -121,7 +121,7 @@ export function PastClientsPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+          <div className="bg-card rounded-2xl divide-y divide-border/50 overflow-hidden border border-border/70 animate-enter">
             {pastClients.map((client) => (
               <PastClientRow
                 key={client.clientProfileId}

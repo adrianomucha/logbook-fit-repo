@@ -1,6 +1,5 @@
 import { useState } from 'react';
 
-import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ClientDetail } from '@/types/api';
@@ -8,6 +7,9 @@ import { getWorkoutDeviations, formatDeviation } from '@/lib/workout-deviations'
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
 import { plausibleSessionSec } from '@logbook/shared/session-duration';
+import { workoutTitle } from '@logbook/shared/progress';
+import { WORKOUT_MARK_LABEL } from '@logbook/shared/workout-week-helpers';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 interface WorkoutHistoryPanelProps {
   completions: ClientDetail['completions'];
@@ -55,7 +57,6 @@ export function WorkoutHistoryPanel({
   if (rows.length === 0) {
     return (
       <div className="h-full lg:flex-1 lg:min-h-0 flex flex-col items-center justify-center text-center py-8">
-        <div className="text-4xl select-none mb-4 animate-bounce-once">🏋️</div>
         <p className="font-semibold antialiased">No workouts yet</p>
         <p className="text-sm text-muted-foreground antialiased">
           Workouts {firstName} completes will show up here.
@@ -75,13 +76,17 @@ export function WorkoutHistoryPanel({
           const timestamp = new Date(
             (completion.completedAt ?? completion.startedAt) as string
           );
-          // A session started in the last few hours may still be live;
+          // A workout started in the last few hours may still be live;
           // older ones were walked away from
           const abandoned =
             isUnfinished && differenceInHours(new Date(), timestamp) >= 6;
-          const dayName =
-            completion.day?.name ||
-            (completion.day ? `Day ${completion.day.orderIndex + 1}` : 'Workout');
+          // The name the client sees ("Lower B", not "Day 4: Lower B"); an
+          // unnamed day is its place in the week (orderIndex starts at 1)
+          const dayName = completion.day?.name
+            ? workoutTitle(completion.day.name)
+            : completion.day
+              ? `Day ${completion.day.orderIndex}`
+              : 'Workout';
           const effort = completion.effortRating
             ? EFFORT_DISPLAY[completion.effortRating]
             : null;
@@ -100,9 +105,15 @@ export function WorkoutHistoryPanel({
               <div className="flex items-center justify-between gap-2">
                 <span className="text-sm font-medium truncate min-w-0">{dayName}</span>
                 {isUnfinished ? (
-                  <span className={cn('text-xs font-semibold shrink-0', abandoned ? 'text-warning' : 'text-info')}>
-                    {abandoned ? 'Not finished' : 'In progress'}
-                  </span>
+                  abandoned ? (
+                    <span className="text-xs font-semibold shrink-0 text-warning-text">Not finished</span>
+                  ) : (
+                    // The client's own "Started" mark
+                    <span className="inline-flex items-center gap-1.5 text-xs font-semibold shrink-0 text-foreground">
+                      <WorkoutMarkIcon mark="started" size={16} />
+                      {WORKOUT_MARK_LABEL.started}
+                    </span>
+                  )
                 ) : effort ? (
                   <span className={cn('text-xs font-semibold shrink-0', effort.text)}>
                     {effort.label}
@@ -140,24 +151,15 @@ export function WorkoutHistoryPanel({
         })}
 
         {hasMore && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full"
+          // The quiet text action the client's Progress feed uses
+          <button
+            type="button"
             onClick={() => setShowAll(!showAll)}
+            className="w-full h-11 flex items-center justify-center gap-1 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors"
           >
-            {showAll ? (
-              <>
-                <ChevronUp className="w-4 h-4 me-1" />
-                Show less
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4 me-1" />
-                Show all ({rows.length - initialCount} more)
-              </>
-            )}
-          </Button>
+            {showAll ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {showAll ? 'Show less' : 'Show earlier'}
+          </button>
         )}
       </div>
     </div>

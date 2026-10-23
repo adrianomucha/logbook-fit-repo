@@ -22,7 +22,7 @@ export default function CoachScreen() {
         <Eyebrow>Hi {session.user.name.split(' ')[0]}</Eyebrow>
         <Text className="mt-2 font-sans-bold text-3xl leading-9 text-foreground">Your workspace lives on the web</Text>
         <Text className="mt-3 font-sans text-[15px] leading-6 text-muted-foreground">
-          The Logbook app is for your clients — their workouts, check-ins and chat. Plan building and the
+          The Logbook app is for your clients: their workouts, check-ins and chat. Plan building and the
           client dashboard are at logbook.fit, where there's room for them.
         </Text>
       </View>

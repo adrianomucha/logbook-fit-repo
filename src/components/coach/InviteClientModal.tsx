@@ -224,7 +224,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
       isOpen={isOpen}
       onClose={onClose}
       title={
-        <span className="block text-2xl sm:text-[28px] font-black tracking-tight leading-none antialiased">
+        <span className="block text-2xl sm:text-[28px] font-bold tracking-tight leading-none antialiased">
           Invite a client
         </span>
       }
@@ -307,7 +307,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
             {profileIsBare && (
               <>
                 {' '}
-                Your photo and bio go there too —{' '}
+                Your photo and bio go there too:{' '}
                 <Link
                   href="/coach/settings?section=profile"
                   className="underline underline-offset-2 transition-colors hover:text-foreground"
