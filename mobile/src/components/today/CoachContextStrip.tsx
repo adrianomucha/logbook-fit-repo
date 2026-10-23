@@ -17,6 +17,11 @@ interface CoachContextStripProps {
   meta?: string;
   /** Makes the whole card the way into the full note */
   onPress?: () => void;
+  /** Accessible name for the whole-card action */
+  openLabel?: string;
+  /** Puts the card away; shows a close button in place of the chevron */
+  onDismiss?: () => void;
+  dismissLabel?: string;
 }
 
 /**
@@ -28,7 +33,18 @@ interface CoachContextStripProps {
  * With onPress the whole card opens the full note, so there's no loose link
  * line hanging under the text.
  */
-export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach note', maxLines, meta, onPress }: CoachContextStripProps) {
+export function CoachContextStrip({
+  coachName,
+  coachAvatar,
+  note,
+  label = 'Coach note',
+  maxLines,
+  meta,
+  onPress,
+  openLabel,
+  onDismiss,
+  dismissLabel = 'Dismiss',
+}: CoachContextStripProps) {
   const coachFirst = coachName.split(' ')[0];
   const body = (
     <>
@@ -40,7 +56,21 @@ export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach
           {coachFirst}
         </Text>
         {meta ? <Eyebrow>{meta}</Eyebrow> : null}
-        {onPress ? <Feather name="chevron-right" size={16} color="#a3a3a3" style={{ marginRight: -4 }} /> : null}
+        {onDismiss ? (
+          // Nested pressable takes the touch before the card does; hitSlop
+          // gives it a 40pt target without growing the header row
+          <Pressable
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel={dismissLabel}
+            hitSlop={12}
+            className="-mr-1 active:opacity-50"
+          >
+            <Feather name="x" size={16} color="#a3a3a3" />
+          </Pressable>
+        ) : onPress ? (
+          <Feather name="chevron-right" size={16} color="#a3a3a3" style={{ marginRight: -4 }} />
+        ) : null}
       </View>
       {/* Coach-written copy of unknowable length: glue the last pair so the
           note never ends on a lone word, whatever the phone width */}
@@ -51,7 +81,7 @@ export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach
   );
   const cardClass = 'rounded-2xl border border-border/70 bg-card p-5';
   return onPress ? (
-    <Pressable onPress={onPress} accessibilityRole="button" className={`${cardClass} active:opacity-70`}>
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={openLabel} className={`${cardClass} active:opacity-70`}>
       {body}
     </Pressable>
   ) : (

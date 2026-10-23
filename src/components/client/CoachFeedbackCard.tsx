@@ -8,14 +8,16 @@ interface CoachFeedbackCardProps {
   coachName: string;
   coachAvatar?: string;
   onViewDetails: () => void;
+  onDismiss: () => void;
 }
 
 /**
  * The coach's reply to the latest check-in, on Today while it's fresh. The
- * same card as the coach's note; tapping it opens the full check-in.
+ * same card as the coach's note; tapping it opens the full check-in, and
+ * the close button puts it away.
  * Renders only for a check-in with a reply.
  */
-export function CoachFeedbackCard({ checkIn, coachName, coachAvatar, onViewDetails }: CoachFeedbackCardProps) {
+export function CoachFeedbackCard({ checkIn, coachName, coachAvatar, onViewDetails, onDismiss }: CoachFeedbackCardProps) {
   if (!checkIn || checkIn.status !== 'completed' || !checkIn.coachResponse) {
     return null;
   }
@@ -29,6 +31,9 @@ export function CoachFeedbackCard({ checkIn, coachName, coachAvatar, onViewDetai
       note={checkIn.coachResponse}
       maxLines={3}
       onClick={onViewDetails}
+      openLabel={CHECK_IN_REPLY_COPY.open}
+      onDismiss={onDismiss}
+      dismissLabel={CHECK_IN_REPLY_COPY.dismiss}
     />
   );
 }

@@ -5,7 +5,8 @@ import { CoachContextStrip } from '@/components/today/CoachContextStrip';
 
 /**
  * The coach's reply to the latest check-in, on Today while it's fresh. The
- * same card as the coach's note; tapping it opens the full check-in.
+ * same card as the coach's note; tapping it opens the full check-in, and
+ * the close button puts it away.
  * Renders only for a check-in with a reply.
  * The web's CoachFeedbackCard.
  */
@@ -14,11 +15,13 @@ export function CoachFeedbackCard({
   coachName,
   coachAvatar,
   onViewDetails,
+  onDismiss,
 }: {
   checkIn: CheckIn | null;
   coachName: string;
   coachAvatar?: string | null;
   onViewDetails: () => void;
+  onDismiss: () => void;
 }) {
   if (!checkIn || checkIn.status !== 'completed' || !checkIn.coachResponse) return null;
   return (
@@ -30,6 +33,9 @@ export function CoachFeedbackCard({
       note={checkIn.coachResponse}
       maxLines={3}
       onPress={onViewDetails}
+      openLabel={CHECK_IN_REPLY_COPY.open}
+      onDismiss={onDismiss}
+      dismissLabel={CHECK_IN_REPLY_COPY.dismiss}
     />
   );
 }

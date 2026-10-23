@@ -24,6 +24,7 @@ import { WeekOverview } from '@/components/today/WeekOverview';
 import { PendingCheckInBanner } from '@/components/checkin/PendingCheckInBanner';
 import { CoachFeedbackCard } from '@/components/checkin/CoachFeedbackCard';
 import { freshCheckInReply } from '@logbook/shared/checkin-reply';
+import { useDismissedCheckInReply } from '@/hooks/useDismissedCheckInReply';
 import { CheckInDetailSheet } from '@/components/checkin/CheckInDetailSheet';
 
 function greeting(): string {
@@ -87,6 +88,11 @@ export default function TodayScreen() {
   // "replied to your check-in" push lands), then steps aside; the full
   // history lives in Progress. Same rule as the web.
   const freshReplyCheckIn = useMemo(() => freshCheckInReply(checkIns), [checkIns]);
+  // The client can put it away sooner: the close button, or reading it in
+  // full. Remembered per device by check-in id, so the next reply shows.
+  const dismissedReply = useDismissedCheckInReply();
+  const showReply =
+    !!freshReplyCheckIn && dismissedReply.ready && dismissedReply.dismissedId !== freshReplyCheckIn.id;
   const allCompletions: WorkoutCompletion[] = useMemo(
     () => (progress?.allCompletions ? apiProgressToWorkoutCompletions(progress.allCompletions) : completions),
     [progress, completions]
@@ -249,12 +255,13 @@ export default function TodayScreen() {
   };
 
   // The coach's fresh check-in reply, on Today under the day's cards
-  const checkInReply = freshReplyCheckIn ? (
+  const checkInReply = showReply && freshReplyCheckIn ? (
     <CoachFeedbackCard
       checkIn={freshReplyCheckIn}
       coachName={coach.user.name ?? 'Your coach'}
       coachAvatar={coach.user.avatarUrl}
       onViewDetails={() => setShowCheckInDetail(true)}
+      onDismiss={() => dismissedReply.dismiss(freshReplyCheckIn.id)}
     />
   ) : null;
 
@@ -341,7 +348,11 @@ export default function TodayScreen() {
       <CheckInDetailSheet
         checkIn={freshReplyCheckIn}
         visible={showCheckInDetail}
-        onClose={() => setShowCheckInDetail(false)}
+        onClose={() => {
+          setShowCheckInDetail(false);
+          // Read in full: it's done its job on Today
+          if (freshReplyCheckIn) dismissedReply.dismiss(freshReplyCheckIn.id);
+        }}
         completedWorkouts={allCompletions}
         plan={plan}
       />

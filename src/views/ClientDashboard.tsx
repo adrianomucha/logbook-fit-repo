@@ -28,6 +28,7 @@ import { ChatView } from '@/components/chat/ChatView';
 import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
 import { freshCheckInReply } from '@logbook/shared/checkin-reply';
+import { useDismissedCheckInReply } from '@/hooks/useDismissedCheckInReply';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
 import { ClientChatHeader } from '@/components/client/ClientChatHeader';
@@ -163,6 +164,11 @@ export function ClientDashboard() {
   // history lives in Progress. Not tied to the calendar week, so a reply
   // sent on Sunday night is still there on Monday.
   const freshReplyCheckIn = useMemo(() => freshCheckInReply(checkIns), [checkIns]);
+  // The client can put it away sooner: the close button, or reading it in
+  // full. Remembered per device by check-in id, so the next reply shows.
+  const dismissedReply = useDismissedCheckInReply();
+  const showReply =
+    !!freshReplyCheckIn && dismissedReply.ready && dismissedReply.dismissedId !== freshReplyCheckIn.id;
 
   // Build adapted workout completions from week overview
   const clientWorkoutCompletions: WorkoutCompletion[] = useMemo(() => {
@@ -607,12 +613,13 @@ export function ClientDashboard() {
             onSendFeedback={handleSendFeedback}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
             checkInReply={
-              freshReplyCheckIn && (
+              showReply && freshReplyCheckIn && (
                 <CoachFeedbackCard
                   checkIn={freshReplyCheckIn}
                   coachName={coach?.user.name ?? 'Your coach'}
                   coachAvatar={coach?.user.avatarUrl ?? undefined}
                   onViewDetails={() => setShowCheckInModal(true)}
+                  onDismiss={() => dismissedReply.dismiss(freshReplyCheckIn.id)}
                 />
               )
             }
@@ -695,7 +702,11 @@ export function ClientDashboard() {
       {/* Check-in detail modal */}
       <CheckInDetailModal
         isOpen={showCheckInModal}
-        onClose={() => setShowCheckInModal(false)}
+        onClose={() => {
+          setShowCheckInModal(false);
+          // Read in full: it's done its job on Today
+          if (freshReplyCheckIn) dismissedReply.dismiss(freshReplyCheckIn.id);
+        }}
         checkIn={freshReplyCheckIn}
         completedWorkouts={allWorkoutCompletions}
         plan={plan}

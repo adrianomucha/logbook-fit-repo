@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, X } from 'lucide-react';
 import { cn, noWidows } from '@/lib/utils';
 import { avatarColor } from '@/lib/avatar-colors';
 
@@ -15,6 +15,11 @@ interface CoachContextStripProps {
   meta?: string;
   /** Makes the whole card the way into the full note */
   onClick?: () => void;
+  /** Accessible name for the whole-card action */
+  openLabel?: string;
+  /** Puts the card away; shows a close button in place of the chevron */
+  onDismiss?: () => void;
+  dismissLabel?: string;
 }
 
 /**
@@ -24,22 +29,39 @@ interface CoachContextStripProps {
  * the completed state reads as a stack of matched cards rather than a card
  * with loose fragments underneath; the avatar and eyebrow carry the voice.
  * With onClick the whole card opens the full note, so there's no loose link
- * line hanging under the text.
+ * line hanging under the text. It's a stretched button under the content
+ * rather than a button wrapper, so a dismiss button can sit inside the card.
  */
-export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach note', maxLines, meta, onClick }: CoachContextStripProps) {
+export function CoachContextStrip({
+  coachName,
+  coachAvatar,
+  note,
+  label = 'Coach note',
+  maxLines,
+  meta,
+  onClick,
+  openLabel,
+  onDismiss,
+  dismissLabel = 'Dismiss',
+}: CoachContextStripProps) {
   const coachFirst = coachName.split(' ')[0];
-  // A button can only hold phrasing content, so the parts are spans
-  const Root = onClick ? 'button' : 'div';
 
   return (
-    <Root
-      {...(onClick ? { type: 'button' as const, onClick } : {})}
+    <div
       className={cn(
-        'block w-full text-left rounded-2xl bg-card border border-border/70 p-5 sm:p-6',
+        'relative rounded-2xl bg-card border border-border/70 p-5 sm:p-6',
         onClick &&
-          'group hover:border-border active:scale-[0.99] transition-[transform,border-color] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+          'group hover:border-border has-[>button:first-child:active]:scale-[0.99] transition-[transform,border-color] duration-150'
       )}
     >
+      {onClick && (
+        <button
+          type="button"
+          onClick={onClick}
+          aria-label={openLabel}
+          className="absolute inset-0 rounded-2xl touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        />
+      )}
       <span className="flex items-center gap-2.5">
         <span
           className={cn(
@@ -71,7 +93,19 @@ export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach
             {meta}
           </span>
         )}
-        {onClick && (
+        {onDismiss ? (
+          // Positioned above the stretched button (which paints over the
+          // static content); the padding gives it a 40px target without
+          // growing the header row
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label={dismissLabel}
+            className="relative z-10 -my-3 -mr-3 p-3 shrink-0 rounded-full text-muted-foreground/60 hover:text-foreground transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="w-4 h-4" aria-hidden="true" />
+          </button>
+        ) : onClick && (
           <ChevronRight
             className="-mr-1 w-4 h-4 shrink-0 text-muted-foreground/60 group-hover:text-foreground transition-colors"
             aria-hidden="true"
@@ -90,6 +124,6 @@ export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach
       >
         {noWidows(note)}
       </span>
-    </Root>
+    </div>
   );
 }
