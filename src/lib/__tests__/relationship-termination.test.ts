@@ -36,7 +36,7 @@ describe("endCoachClientRelationship", () => {
     });
   });
 
-  it("marks the relationship INACTIVE with audit fields and disables the schedule", async () => {
+  it("marks the relationship INACTIVE with audit fields", async () => {
     await endCoachClientRelationship(relationship, "COACH");
 
     expect(tx.coachClientRelationship.update).toHaveBeenCalledWith(
@@ -46,10 +46,18 @@ describe("endCoachClientRelationship", () => {
           status: "INACTIVE",
           endedBy: "COACH",
           endedAt: expect.any(Date),
-          checkInScheduleEnabled: false,
         }),
       })
     );
+  });
+
+  it("keeps the coach's check-in schedule setting so Restore brings it back", async () => {
+    // INACTIVE alone stops check-ins; switching the schedule off as well
+    // left every restored client without them
+    await endCoachClientRelationship(relationship, "COACH");
+
+    const { data } = tx.coachClientRelationship.update.mock.calls[0][0];
+    expect(data).not.toHaveProperty("checkInScheduleEnabled");
   });
 
   it("records the client as the ending party on unsubscribe", async () => {

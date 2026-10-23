@@ -491,6 +491,8 @@ model CheckIn {
   @@index([clientId, status])      // Find pending check-ins for client
   @@index([coachId, status])       // Coach dashboard: pending reviews
   @@index([clientId, completedAt]) // Check-in history
+  // At most one PENDING per coach-client pair: partial unique index (see
+  // migrations, check_ins_one_pending_per_pair)
   @@map("check_ins")
 }
 

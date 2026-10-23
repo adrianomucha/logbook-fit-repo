@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { notifyCheckInSent } from "@/lib/push";
 import { weekdayInTimeZone } from "@/lib/timezone";
@@ -10,7 +11,8 @@ const DEFAULT_INTERVAL_DAYS = 7;
  * cadences — late responders still get a whole extra cycle to answer; after
  * that the check-in expires so it stops blocking the schedule forever. Never
  * shorter than two weeks: a 3-day cadence shouldn't expire a check-in the
- * client would still plausibly answer.
+ * client would still plausibly answer. (Anchored cadences take a day off
+ * this; see expireStaleCheckIns.)
  */
 function stalePendingMs(intervalDays: number) {
   return Math.max(2 * intervalDays, 14) * DAY_MS;
@@ -22,64 +24,81 @@ function stalePendingMs(intervalDays: number) {
  * Without this, one ignored check-in blocks the scheduler indefinitely —
  * exactly the quiet client the product exists to surface would stop being
  * checked on. Expired check-ins are hidden from history on both sides.
+ *
+ * Anchored cadences get the same one-day grace as sending does: a scheduled
+ * check-in went out on an anchor day, possibly later in the day than the
+ * sweep, and the sweep two cadences on would otherwise find it a few hours
+ * (or seconds) short of stale. It would then sit PENDING through the anchor
+ * day and the next one couldn't go out until the anchor day after, turning
+ * "every two weeks" into "every three".
+ *
+ * A check-in the coach sent by hand off the anchor day can therefore expire
+ * up to a day short of the full window, on the anchor day that falls inside
+ * that last day. That's deliberate: the same sweep sends that day's scheduled
+ * check-in in its place, rather than leaving the client on a two-week-old
+ * one until the anchor day after.
  */
 export async function expireStaleCheckIns(
   clientId: string,
-  intervalDays: number = DEFAULT_INTERVAL_DAYS
+  intervalDays: number = DEFAULT_INTERVAL_DAYS,
+  anchored = false
 ) {
+  const staleMs = stalePendingMs(intervalDays) - (anchored ? DAY_MS : 0);
   await prisma.checkIn.updateMany({
     where: {
       clientId,
       status: "PENDING",
-      createdAt: { lt: new Date(Date.now() - stalePendingMs(intervalDays)) },
+      createdAt: { lt: new Date(Date.now() - staleMs) },
     },
     data: { status: "EXPIRED" },
   });
 }
 
 /**
- * Materialize the check-in schedule for one coach-client pair.
- *
- * If the relationship has the schedule enabled, there's no check-in currently
- * in flight, and a full cadence has passed since the later of the most recent
- * check-in and the current plan's start, a fresh PENDING check-in is created.
- * A client with neither a plan nor a past check-in gets nothing. The cadence is per
- * relationship: every `checkInIntervalDays` days, optionally anchored to a
- * weekday (`checkInDayOfWeek`, 0 = Sunday … 6 = Saturday, evaluated in the
- * client's timezone — the check-in is for them, so "Monday" means their
- * Monday; UTC when their timezone is unknown).
- *
- * Called from two places: the nightly sweep (runScheduledCheckIns, the
- * authority — it reaches every client whether or not anyone opens the app),
- * and opportunistically when either party loads check-in data, so a due
- * check-in appears immediately rather than at the next sweep.
- *
- * Returns the created check-in, or null when nothing was due.
+ * True when a create failed because the pair already has a PENDING check-in.
+ * The database enforces one at a time (check_ins_one_pending_per_pair, a
+ * partial unique index), so two requests that both saw nothing open (the
+ * nightly sweep, the coach's workspace and the client's app can all
+ * materialize the same due check-in) can't both create one.
  */
-export async function ensureScheduledCheckIn(relationship: {
+export function isDuplicatePendingCheckIn(error: unknown) {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError &&
+    error.code === "P2002"
+  );
+}
+
+type ScheduleRelationship = {
   coachId: string;
   clientId: string;
   status: string;
   checkInScheduleEnabled: boolean;
   checkInIntervalDays?: number;
   checkInDayOfWeek?: number | null;
-}) {
-  if (relationship.status !== "ACTIVE") {
-    return null;
+};
+
+/** The anchor weekday, when the cadence is long enough to have one. */
+function anchorDayOfWeek(relationship: ScheduleRelationship, intervalDays: number) {
+  // An anchor day only makes sense for cadences of a week or longer
+  return intervalDays >= 7 ? relationship.checkInDayOfWeek ?? null : null;
+}
+
+/**
+ * Whether the schedule would send this pair a check-in right now. Pure read:
+ * expiry is the caller's job. `ignoreCheckInId` asks the question as if that
+ * check-in didn't exist, which is how unsend tells "this was the one the
+ * schedule was owed" from "an extra one the coach sent early".
+ */
+async function scheduledCheckInDue(
+  relationship: ScheduleRelationship,
+  { ignoreCheckInId }: { ignoreCheckInId?: string } = {}
+) {
+  if (relationship.status !== "ACTIVE" || !relationship.checkInScheduleEnabled) {
+    return false;
   }
 
   const intervalDays = relationship.checkInIntervalDays ?? DEFAULT_INTERVAL_DAYS;
-  // An anchor day only makes sense for cadences of a week or longer
-  const dayOfWeek =
-    intervalDays >= 7 ? relationship.checkInDayOfWeek ?? null : null;
-
-  // Runs even when the schedule is off — a manually sent check-in the client
-  // ignored should also stop pinning the workspace to "waiting" forever
-  await expireStaleCheckIns(relationship.clientId, intervalDays);
-
-  if (!relationship.checkInScheduleEnabled) {
-    return null;
-  }
+  const dayOfWeek = anchorDayOfWeek(relationship, intervalDays);
 
   const client = await prisma.clientProfile.findUnique({
     where: { id: relationship.clientId },
@@ -93,20 +112,24 @@ export async function ensureScheduledCheckIn(relationship: {
     dayOfWeek !== null &&
     weekdayInTimeZone(new Date(), client?.user.timezone) !== dayOfWeek
   ) {
-    return null;
+    return false;
   }
 
   // This pair's latest — a previous coach's check-ins don't set the new
   // coach's cadence
   const latest = await prisma.checkIn.findFirst({
-    where: { coachId: relationship.coachId, clientId: relationship.clientId },
+    where: {
+      coachId: relationship.coachId,
+      clientId: relationship.clientId,
+      ...(ignoreCheckInId ? { id: { not: ignoreCheckInId } } : {}),
+    },
     orderBy: { createdAt: "desc" },
     select: { status: true, createdAt: true },
   });
 
   // One at a time — never stack a scheduled check-in on an open one
   if (latest && (latest.status === "PENDING" || latest.status === "CLIENT_RESPONDED")) {
-    return null;
+    return false;
   }
 
   // The cadence runs from whichever came later: the last check-in or the
@@ -119,7 +142,7 @@ export async function ensureScheduledCheckIn(relationship: {
     client?.planStartDate?.getTime() ?? -Infinity
   );
   if (anchorMs === -Infinity) {
-    return null;
+    return false;
   }
   // Anchored cadences get a one-day grace: the sweep fires at a fixed hour,
   // so demanding a full interval to the millisecond would skip the anchor
@@ -127,20 +150,65 @@ export async function ensureScheduledCheckIn(relationship: {
   // turning "every Monday" into "every other Monday".
   const requiredMs =
     dayOfWeek !== null ? (intervalDays - 1) * DAY_MS : intervalDays * DAY_MS;
-  if (Date.now() - anchorMs < requiredMs) {
+  return Date.now() - anchorMs >= requiredMs;
+}
+
+/**
+ * Materialize the check-in schedule for one coach-client pair.
+ *
+ * If the relationship has the schedule enabled, there's no check-in currently
+ * in flight, and a full cadence has passed since the later of the most recent
+ * check-in and the current plan's start, a fresh PENDING check-in is created.
+ * A client with neither a plan nor a past check-in gets nothing. The cadence is per
+ * relationship: every `checkInIntervalDays` days, optionally anchored to a
+ * weekday (`checkInDayOfWeek`, 0 = Sunday … 6 = Saturday, evaluated in the
+ * client's timezone: the check-in is for them, so "Monday" means their
+ * Monday; UTC when their timezone is unknown).
+ *
+ * Called from two places: the nightly sweep (runScheduledCheckIns, the
+ * authority, since it reaches every client whether or not anyone opens the app),
+ * and opportunistically when either party loads check-in data, so a due
+ * check-in appears immediately rather than at the next sweep.
+ *
+ * Returns the created check-in, or null when nothing was due.
+ */
+export async function ensureScheduledCheckIn(relationship: ScheduleRelationship) {
+  if (relationship.status !== "ACTIVE") {
     return null;
   }
 
-  const created = await prisma.checkIn.create({
-    data: {
-      coachId: relationship.coachId,
-      clientId: relationship.clientId,
-    },
-    include: {
-      client: { select: { userId: true } },
-      coach: { select: { user: { select: { name: true } } } },
-    },
-  });
+  const intervalDays = relationship.checkInIntervalDays ?? DEFAULT_INTERVAL_DAYS;
+
+  // Runs even when the schedule is off: a manually sent check-in the client
+  // ignored should also stop pinning the workspace to "waiting" forever
+  await expireStaleCheckIns(
+    relationship.clientId,
+    intervalDays,
+    anchorDayOfWeek(relationship, intervalDays) !== null
+  );
+
+  if (!(await scheduledCheckInDue(relationship))) {
+    return null;
+  }
+
+  let created;
+  try {
+    created = await prisma.checkIn.create({
+      data: {
+        coachId: relationship.coachId,
+        clientId: relationship.clientId,
+      },
+      include: {
+        client: { select: { userId: true } },
+        coach: { select: { user: { select: { name: true } } } },
+      },
+    });
+  } catch (error) {
+    // Another request materialized this same due check-in a moment ago; it
+    // sent the push too, so there's nothing left to do
+    if (isDuplicatePendingCheckIn(error)) return null;
+    throw error;
+  }
 
   // An auto-sent check-in needs the ping more than a manual one does: no
   // human is watching to follow it up, and the client has no other cue that
@@ -151,6 +219,55 @@ export async function ensureScheduledCheckIn(relationship: {
   });
 
   return created;
+}
+
+/**
+ * Coach unsends a check-in that's still unanswered.
+ *
+ * When it's the check-in the schedule was owed (it would send one right back
+ * if this one disappeared), unsending means "skip this one": it's closed out
+ * as EXPIRED, hidden on both sides like any unanswered check-in, and still
+ * counts as this cycle's, so the next one comes a full cadence later.
+ * Deleting it instead would leave the schedule due, and the very next load of
+ * the coach's workspace would send a fresh copy and ping the client again.
+ * An extra check-in sent ahead of schedule is deleted outright, so the
+ * cadence carries on as if it had never been sent (and Undo stays exact).
+ *
+ * Returns "deleted" or "skipped", or null when there's no unanswered
+ * check-in by that id for this coach (including one the client answered a
+ * moment ago).
+ */
+export async function unsendCheckIn(coachId: string, checkInId: string) {
+  const checkIn = await prisma.checkIn.findFirst({
+    where: { id: checkInId, coachId, status: "PENDING" },
+    select: { id: true, clientId: true },
+  });
+  if (!checkIn) return null;
+
+  const relationship = await prisma.coachClientRelationship.findUnique({
+    where: { clientId: checkIn.clientId },
+    select: {
+      coachId: true,
+      clientId: true,
+      status: true,
+      checkInScheduleEnabled: true,
+      checkInIntervalDays: true,
+      checkInDayOfWeek: true,
+    },
+  });
+  const owedBySchedule =
+    relationship?.coachId === coachId &&
+    (await scheduledCheckInDue(relationship, { ignoreCheckInId: checkIn.id }));
+
+  // Conditional on still being PENDING: a response that lands between the
+  // read above and this write is part of the conversation and stays
+  const where = { id: checkIn.id, status: "PENDING" as const };
+  const { count } = owedBySchedule
+    ? await prisma.checkIn.updateMany({ where, data: { status: "EXPIRED" } })
+    : await prisma.checkIn.deleteMany({ where });
+  if (count === 0) return null;
+
+  return owedBySchedule ? ("skipped" as const) : ("deleted" as const);
 }
 
 export type ScheduleSweepResult = {
