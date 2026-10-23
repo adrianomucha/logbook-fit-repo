@@ -21,7 +21,10 @@ import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { FlagMessageSheet } from '@/components/workout/FlagMessageSheet';
 import { KeypadDoneBar } from '@/components/workout/KeypadDoneBar';
+import { EffortPicker } from '@/components/EffortPicker';
 import { buildFlagMessageContent } from '@logbook/shared/flag-message';
+import { workoutTitle } from '@logbook/shared/progress';
+import { parseSessionName } from '@logbook/shared/parse-session-name';
 
 const FINISH_BAR_HEIGHT = 56 + 24;
 
@@ -143,7 +146,7 @@ export default function WorkoutScreen() {
   };
 
   const onRestartPress = () => {
-    Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this session are cleared.", [
+    Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this workout are cleared.", [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Restart workout',
@@ -229,8 +232,8 @@ export default function WorkoutScreen() {
           <View className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-brand">
             <Feather name="check" size={40} color="#1e2702" />
           </View>
-          <Eyebrow className="mb-1.5">Session complete</Eyebrow>
-          <Text className="text-center font-sans-bold text-2xl tracking-tight text-foreground">{day.name}</Text>
+          <Eyebrow className="mb-1.5">Workout complete</Eyebrow>
+          <Text className="text-center font-sans-bold text-2xl tracking-tight text-foreground">{workoutTitle(day.name ?? 'Workout')}</Text>
         </View>
         <View className="mb-10 w-full max-w-xs flex-row gap-3">
           <View className="flex-1 items-center rounded-xl bg-muted/60 px-3 py-6">
@@ -245,19 +248,8 @@ export default function WorkoutScreen() {
           </View>
         </View>
         <Eyebrow className="mb-4">How did that feel?</Eyebrow>
-        <View className="flex-row gap-3">
-          {(['EASY', 'MEDIUM', 'HARD'] as const).map((level) => (
-            <Pressable
-              key={level}
-              onPress={() => void rateEffort(level)}
-              disabled={isSavingRating}
-              className="min-h-[44px] items-center justify-center rounded-full bg-foreground px-6 py-3.5 active:opacity-80"
-            >
-              <Text className="font-sans-bold text-sm uppercase tracking-[0.7px] text-background">
-                {level === 'EASY' ? 'Easy' : level === 'MEDIUM' ? 'Medium' : 'Hard'}
-              </Text>
-            </Pressable>
-          ))}
+        <View className="w-full">
+          <EffortPicker onPick={(rating) => void rateEffort(rating)} disabled={isSavingRating} />
         </View>
         <Pressable onPress={() => router.replace('/client')} disabled={isSavingRating} className="mt-8 min-h-[44px] justify-center px-4">
           <Eyebrow>Skip for now</Eyebrow>
@@ -268,7 +260,8 @@ export default function WorkoutScreen() {
 
   const pct = stats.exercisesTotal > 0 ? Math.round((stats.exercisesDone / stats.exercisesTotal) * 100) : 0;
   const eyebrow = [
-    day.orderIndex ? `Day ${day.orderIndex}` : null,
+    // The day the coach named it, like the Today card, else its place in the week
+    (parseSessionName(day.name ?? '').day ?? day.orderIndex) ? `Day ${parseSessionName(day.name ?? '').day ?? day.orderIndex}` : null,
     isReadOnly && completion?.completedAt ? format(new Date(completion.completedAt), 'MMM d') : null,
   ]
     .filter(Boolean)

@@ -91,7 +91,7 @@ export function ExerciseCard({
           className="flex-1 flex-row items-center gap-3.5 rounded-lg py-2.5 active:bg-muted/30"
         >
           <Text
-            className={`w-7 text-right font-mono-medium text-[11px] ${isComplete ? 'text-success' : 'text-muted-foreground'}`}
+            className={`w-7 text-right font-mono-medium text-[11px] ${isComplete ? 'text-foreground' : 'text-muted-foreground'}`}
           >
             {displayLabel}
           </Text>
@@ -108,7 +108,7 @@ export function ExerciseCard({
             <Text className="font-mono text-xs text-muted-foreground">
               {prescription}
               {completedSets > 0 && !isComplete ? (
-                <Text className="font-mono-bold text-success">{`  ${completedSets}/${exercise.sets}`}</Text>
+                <Text className="font-mono-bold text-foreground">{`  ${completedSets}/${exercise.sets}`}</Text>
               ) : null}
             </Text>
           </View>
@@ -122,10 +122,10 @@ export function ExerciseCard({
           accessibilityLabel={isComplete ? 'Mark all sets incomplete' : 'Mark all sets complete'}
           hitSlop={8}
           className={`h-8 w-8 items-center justify-center rounded-full border-2 ${
-            isComplete ? 'border-success bg-success' : 'border-foreground/15 bg-transparent'
+            isComplete ? 'border-brand bg-brand' : 'border-foreground/15 bg-transparent'
           }`}
         >
-          {isComplete ? <Feather name="check" size={16} color="#fafafa" /> : null}
+          {isComplete ? <Feather name="check" size={16} color="#1e2702" /> : null}
         </Pressable>
       </View>
 

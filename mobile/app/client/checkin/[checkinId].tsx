@@ -9,6 +9,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCheckIn } from '@/hooks/useCheckIns';
 import { Button, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ChoiceGrid, type Choice } from '@/components/checkin/ChoiceGrid';
+import { BACK_HOME, CHECKIN_ALREADY_SENT, CHECKIN_EXPIRED, checkInReplyNote } from '@logbook/shared/client-copy';
 
 const EFFORT_OPTIONS: Choice[] = [
   { value: 'EASY', label: 'Too Easy', emoji: '😴', tone: 'success' },
@@ -28,11 +29,18 @@ function Terminal({ icon, tone, title, body, onBack }: { icon: 'alert-triangle' 
   return (
     <View className="flex-1 items-center justify-center bg-background px-4">
       <View className="w-full max-w-md items-center rounded-xl border border-border/70 bg-card px-6 py-12">
-        <Feather name={icon} size={tone === 'success' ? 56 : 40} color={tone === 'success' ? '#21c45d' : '#a3a3a3'} />
+        {tone === 'success' ? (
+          // The lime check the sent screen and the web carry
+          <View className="h-12 w-12 items-center justify-center rounded-full bg-brand">
+            <Feather name="check" size={24} color="#1e2702" />
+          </View>
+        ) : (
+          <Feather name={icon} size={40} color="#a3a3a3" />
+        )}
         <Text className="mt-4 font-sans-bold text-lg tracking-tight text-foreground">{title}</Text>
         <Text className="mb-5 mt-1.5 text-center font-sans text-sm text-muted-foreground">{body}</Text>
         <Button variant="primary" className="h-11 px-6" onPress={onBack}>
-          Back to dashboard
+          {BACK_HOME}
         </Button>
       </View>
     </View>
@@ -78,11 +86,11 @@ function SentScreen({
 
         <View>
           <Eyebrow className="mb-2">Check-in sent</Eyebrow>
-          <Text accessibilityRole="header" className="font-sans-bold text-3xl uppercase leading-[34px] tracking-tight text-foreground">
+          <Text accessibilityRole="header" className="font-sans-bold text-3xl leading-[36px] tracking-tight text-foreground">
             {coachFirstName ? `Sent to ${coachFirstName}` : 'Sent to your coach'}
           </Text>
           <Text className="mt-3 font-sans text-sm leading-5 text-muted-foreground">
-            {coachFirstName ?? 'Your coach'} will read it and get back to you — their reply shows up on your dashboard.
+            {checkInReplyNote(coachFirstName)}
           </Text>
         </View>
 
@@ -106,7 +114,7 @@ function SentScreen({
         <View className="gap-1.5 pt-1">
           {/* Same volt CTA the today card uses — one clear way onward */}
           <Button variant="brand" onPress={onHome}>
-            Back to today
+            {BACK_HOME}
           </Button>
           <Pressable onPress={onMessage} accessibilityRole="button" className="h-11 items-center justify-center rounded-xl active:opacity-70">
             <Text className="font-sans-medium text-sm text-muted-foreground">Message {coachFirstName ?? 'your coach'}</Text>
@@ -154,10 +162,10 @@ export default function CheckInScreen() {
     );
   }
   if (checkIn.status === 'EXPIRED') {
-    return <Terminal icon="alert-triangle" tone="muted" title="Check-in expired" body="This check-in is no longer open — the next one will appear on your dashboard." onBack={goHome} />;
+    return <Terminal icon="alert-triangle" tone="muted" title="Check-in expired" body={CHECKIN_EXPIRED} onBack={goHome} />;
   }
   if (checkIn.status !== 'PENDING') {
-    return <Terminal icon="check-circle" tone="success" title="Already sent" body="You already sent this one to your coach." onBack={goHome} />;
+    return <Terminal icon="check-circle" tone="success" title="Already sent" body={CHECKIN_ALREADY_SENT} onBack={goHome} />;
   }
 
   const submit = async () => {
@@ -181,7 +189,7 @@ export default function CheckInScreen() {
         // Answered elsewhere or expired while the form sat open — refetch so
         // the right terminal screen renders instead of a dead end.
         await refresh();
-        setErrors({ submit: 'This check-in is no longer open — it may have been answered already or expired.' });
+        setErrors({ submit: 'This check-in is no longer open. It may have been answered already or expired.' });
       } else {
         setErrors({ submit: 'Failed to submit. Please try again.' });
       }

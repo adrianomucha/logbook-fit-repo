@@ -29,7 +29,7 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
   if (trainedSec >= 60 && avgSessionMin !== null) {
     const [value, unit] = formatTrainingTime(trainedSec);
     stats.push([value, `${unit} trained`]);
-    stats.push([avgSessionMin, 'min avg session']);
+    stats.push([avgSessionMin, 'min avg workout']);
   }
 
   // Meter fills in from the left; reanimated skips it under Reduce Motion
@@ -89,13 +89,13 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
         <Text className="font-sans text-sm leading-5 text-muted-foreground">
           {coachFirst ?? 'Your coach'} will line up your next block. Tell them how this one went and what you want to chase next.
         </Text>
-        <Button onPress={onMessageCoach} className="mt-4">
+        <Button onPress={onMessageCoach} className="mt-4 h-11">
           {`Message ${coachFirst ?? 'coach'}`}
         </Button>
         <Pressable
           accessibilityRole="button"
           onPress={onViewProgress}
-          className="mt-2 h-12 items-center justify-center rounded-xl border border-border active:opacity-70"
+          className="mt-2 h-11 items-center justify-center rounded-xl border border-border active:opacity-70"
         >
           <Text className="font-sans-semibold text-sm text-foreground">See your progress</Text>
         </Pressable>

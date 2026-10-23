@@ -6,19 +6,19 @@ import { format } from 'date-fns';
 import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
-import { EMPTY_WEEK_COPY, NO_COACH_COPY } from '@logbook/shared/client-empty-states';
+import { EMPTY_WEEK_COPY, LOAD_ERROR_COPY, NO_COACH_COPY, WEEK_NOT_BUILT_COPY } from '@logbook/shared/client-empty-states';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
 import { useClientCheckIns, useClientProgress } from '@/hooks/useCheckIns';
 import { useMessages } from '@/hooks/useMessages';
 import { Screen } from '@/components/Screen';
-import { EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
+import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { SessionCard } from '@/components/today/SessionCard';
 import { SessionCompleteCard } from '@/components/today/SessionCompleteCard';
 import { PlanCompleteCard } from '@/components/today/PlanCompleteCard';
 import { CoachContextStrip } from '@/components/today/CoachContextStrip';
-import { PhotoNudge } from '@/components/today/PhotoNudge';
+import { WelcomeAwaitingPlan } from '@/components/today/WelcomeAwaitingPlan';
 import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle';
 import { WeekOverview } from '@/components/today/WeekOverview';
 import { PendingCheckInBanner } from '@/components/checkin/PendingCheckInBanner';
@@ -132,22 +132,30 @@ export default function TodayScreen() {
       </Screen>
     );
   }
-  if ((planError && isNotFound(planError)) || (weekError && isNotFound(weekError))) {
+  // No plan yet: the coach is on it. Welcome them, as the web does.
+  if (planError && isNotFound(planError)) {
+    return (
+      <Screen withHeader onRefresh={refresh} refreshing={false}>
+        <WelcomeAwaitingPlan
+          clientName={user?.name ?? ''}
+          coachName={coach.user.name ?? 'Your coach'}
+          onMessageCoach={() => router.push('/client/chat')}
+          hasPhoto={!!user?.avatarUrl}
+          onAddPhoto={() => router.push('/client/settings?section=profile')}
+          onLeaveCoach={() => router.push('/client/settings?section=account')}
+        />
+      </Screen>
+    );
+  }
+  // A plan, but this week isn't built yet
+  if (weekError && isNotFound(weekError)) {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState
-          eyebrow="Getting started"
-          title={`${coach.user.name?.split(' ')[0] ?? 'Your coach'} is building your plan`}
-          body="Usually ready within a day or two. Your workouts will appear right here."
-        />
-        {!user?.avatarUrl ? (
-          <PhotoNudge
-            clientName={user?.name ?? ''}
-            coachName={coach.user.name ?? 'Your coach'}
-            onAddPhoto={() => router.push('/client/settings?section=profile')}
-          />
-        ) : null}
+        <EmptyState title={WEEK_NOT_BUILT_COPY.title} body={WEEK_NOT_BUILT_COPY.body(coach.user.name)} />
+        <Button variant="primary" className="h-11" onPress={() => router.push('/client/chat')}>
+          {`Message ${coach.user.name?.split(' ')[0] ?? 'your coach'}`}
+        </Button>
       </Screen>
     );
   }
@@ -155,7 +163,10 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState title="Couldn't load your plan" body="Pull down to try again." />
+        <EmptyState title={LOAD_ERROR_COPY.title} body={LOAD_ERROR_COPY.body} />
+        <Button variant="primary" className="h-11" onPress={refresh}>
+          {LOAD_ERROR_COPY.retry}
+        </Button>
       </Screen>
     );
   }
@@ -177,7 +188,7 @@ export default function TodayScreen() {
         try {
           await sendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
         } catch {
-          Alert.alert('Feedback saved', 'Your note failed to send — try it from Chat.');
+          Alert.alert('Feedback saved', 'Your note didn’t send. Try it from Chat.');
         }
       }
       setFeedbackSent(true);
@@ -193,7 +204,7 @@ export default function TodayScreen() {
     const completionId = today?.completion?.id;
     const dayId = today?.workoutDay?.id;
     if (!completionId || !dayId) return;
-    Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this session are cleared.", [
+    Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this workout are cleared.", [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Restart workout',
@@ -270,7 +281,12 @@ export default function TodayScreen() {
             onOpenDay={openDay}
           />
           {latestFeedbackCheckIn ? (
-            <CoachFeedbackCard checkIn={latestFeedbackCheckIn} onViewDetails={() => setShowCheckInDetail(true)} />
+            <CoachFeedbackCard
+              checkIn={latestFeedbackCheckIn}
+              coachName={coach.user.name ?? 'Your coach'}
+              coachAvatar={coach.user.avatarUrl}
+              onViewDetails={() => setShowCheckInDetail(true)}
+            />
           ) : null}
         </>
       ) : today?.workoutDay ? (

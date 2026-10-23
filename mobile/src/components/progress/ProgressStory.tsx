@@ -2,41 +2,31 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { STORY_EMPTY_TEXT, STORY_PAGE_SIZE, type Moment, type MomentKind, type ThisWeek } from '@logbook/shared/progress';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 /**
- * This week as a stepper: a lime circle with a tick for each session done,
- * joined by a lime track, then a dashed ring for the next one, then the rest.
+ * This week as a stepper: a mark per workout (see WorkoutMarkIcon), the
+ * done ones joined by a lime track.
  */
 export function WeekCircles({ week }: { week: ThisWeek }) {
   const { slots } = week;
   const done = slots.filter((s) => s.state === 'done').length;
-  // Smaller circles once a week holds more sessions than fit comfortably
+  // Smaller circles once a week holds more workouts than fit comfortably
   const size = slots.length > 5 ? 40 : 52;
   // The lit part of the track runs from the first circle to the last one done
   const lit = slots.length > 1 && done > 1 ? (Math.min(done, slots.length) - 1) / (slots.length - 1) : 0;
   return (
-    <View accessibilityRole="image" accessibilityLabel={`${week.completed} of ${week.target} sessions done this week`}>
+    <View accessibilityRole="image" accessibilityLabel={`${week.completed} of ${week.target} workouts done this week`}>
       <View className="absolute h-1 rounded-full bg-muted" style={{ left: size / 2, right: size / 2, top: size / 2 - 2 }}>
         <View className="h-full rounded-full bg-brand" style={{ width: `${lit * 100}%` }} />
       </View>
       <View className="flex-row justify-between">
         {slots.map((slot, i) => (
           <View key={i} className="items-center gap-2">
-            <View
-              className={`items-center justify-center rounded-full ${
-                slot.state === 'done'
-                  ? 'bg-brand'
-                  : slot.state === 'next'
-                    ? 'border-2 border-dashed border-muted-foreground/60 bg-background'
-                    : 'border-2 border-border bg-background'
-              }`}
-              style={{ width: size, height: size }}
-            >
-              {slot.state === 'done' ? <Feather name="check" size={20} color="#1e2702" /> : null}
-            </View>
+            <WorkoutMarkIcon mark={slot.state} size={size} />
             <Text
               className={`h-4 text-[11px] leading-4 ${
-                slot.state === 'next' ? 'font-sans-semibold text-foreground' : 'font-sans-medium text-muted-foreground'
+                slot.state === 'next' || slot.state === 'started' ? 'font-sans-semibold text-foreground' : 'font-sans-medium text-muted-foreground'
               }`}
             >
               {slot.label}

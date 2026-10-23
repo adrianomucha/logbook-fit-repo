@@ -1,6 +1,5 @@
-import { Client, WorkoutCompletion } from '@/types';
+import { WorkoutCompletion } from '@/types';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
-import { StatusHeader } from './StatusHeader';
 import { CoachContextStrip } from './CoachContextStrip';
 import { WorkoutOverview } from './WorkoutOverview';
 import { SessionCompleteCard } from './SessionCompleteCard';
@@ -12,7 +11,6 @@ import { EMPTY_WEEK_COPY } from '@logbook/shared/client-empty-states';
 type ActionState = 'scheduled' | 'in-progress' | 'completed';
 
 interface TodayFocusViewProps {
-  client: Client;
   todayWorkout: WeekDayInfo | null;
   todayCompletion: WorkoutCompletion | null;
   /** Coach's instruction note from today's workout exercises */
@@ -29,8 +27,6 @@ interface TodayFocusViewProps {
   isRestarting?: boolean;
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
   onViewWeekly: () => void;
-  /** Show the "New plan" pill in the header (week 1, nothing started yet) */
-  showNewPlan?: boolean;
 }
 
 function getActionState(
@@ -42,7 +38,6 @@ function getActionState(
 }
 
 export function TodayFocusView({
-  client,
   todayWorkout,
   todayCompletion,
   coachNote,
@@ -57,7 +52,6 @@ export function TodayFocusView({
   isRestarting,
   onSendFeedback,
   onViewWeekly,
-  showNewPlan,
 }: TodayFocusViewProps) {
   const actionState = getActionState(todayCompletion);
   const completionPct = todayCompletion?.completionPct || 0;
@@ -68,11 +62,6 @@ export function TodayFocusView({
 
   return (
     <div className="space-y-6">
-      {/* Status Header */}
-      <div className="animate-fade-in-up">
-        <StatusHeader showNewPlan={showNewPlan} clientName={client.name} />
-      </div>
-
       {/* Today / week switcher — navigation chrome, kept quiet */}
       <div className="animate-fade-in-up" style={{ animationDelay: '30ms' }}>
         <WorkoutViewToggle value="today" onChange={(m) => m === 'weekly' && onViewWeekly()} />

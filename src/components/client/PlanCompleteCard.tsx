@@ -38,7 +38,7 @@ export function PlanCompleteCard({
   if (trainedSec >= 60 && avgSessionMin !== null) {
     const [value, unit] = formatTrainingTime(trainedSec);
     stats.push([value, `${unit} trained`]);
-    stats.push([avgSessionMin, 'min avg session']);
+    stats.push([avgSessionMin, 'min avg workout']);
   }
 
   return (

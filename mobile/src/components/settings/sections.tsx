@@ -509,7 +509,7 @@ export function AccountSection() {
 
       <FactRow
         label={SETTINGS_FIELD_COPY.email.label}
-        value={user?.email ?? '—'}
+        value={user?.email ?? '–'}
         hint={SETTINGS_FIELD_COPY.email.hint}
         className="pt-0"
       />
@@ -519,7 +519,7 @@ export function AccountSection() {
       <View className="border-t border-border/60">
         <FactRow
           label={SETTINGS_FIELD_COPY.memberSince.label}
-          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '—'}
+          value={user?.createdAt ? format(new Date(user.createdAt), 'MMMM yyyy') : '–'}
         />
       </View>
 

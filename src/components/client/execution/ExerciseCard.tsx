@@ -129,7 +129,7 @@ export function ExerciseCard({
           <span
             className={cn(
               'font-mono text-[11px] font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
-              isComplete ? 'text-success' : 'text-muted-foreground'
+              isComplete ? 'text-foreground' : 'text-muted-foreground'
             )}
           >
             {displayLabel}
@@ -153,7 +153,7 @@ export function ExerciseCard({
             <p className="font-mono text-xs tabular-nums text-muted-foreground">
               {getPrescription()}
               {completedSets > 0 && !isComplete && (
-                <span className="ml-1.5 text-success font-bold">
+                <span className="ml-1.5 text-foreground font-bold">
                   {completedSets}/{exercise.sets}
                 </span>
               )}
@@ -171,13 +171,13 @@ export function ExerciseCard({
               'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200 cursor-pointer touch-manipulation',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               isComplete
-                ? 'bg-success border-success'
+                ? 'bg-brand border-brand'
                 : 'border-foreground/15 bg-transparent hover:border-foreground/30'
             )}
             aria-label={isComplete ? 'Mark all sets incomplete' : 'Mark all sets complete'}
           >
             {isComplete && (
-              <Check className="w-4 h-4 text-success-foreground animate-set-complete" />
+              <Check className="w-4 h-4 text-brand-foreground animate-set-complete" />
             )}
           </button>
         ) : (
@@ -185,12 +185,12 @@ export function ExerciseCard({
             className={cn(
               'w-8 h-8 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-[background-color,border-color] duration-200',
               isComplete
-                ? 'bg-success border-success'
+                ? 'bg-brand border-brand'
                 : 'border-foreground/15 bg-transparent'
             )}
           >
             {isComplete && (
-              <Check className="w-4 h-4 text-success-foreground" />
+              <Check className="w-4 h-4 text-brand-foreground" />
             )}
           </div>
         )}

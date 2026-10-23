@@ -1,42 +1,33 @@
 import { useState } from 'react';
-import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { STORY_EMPTY_TEXT, STORY_PAGE_SIZE, type Moment, type MomentKind, type ThisWeek } from '@logbook/shared/progress';
 import { cn } from '@/lib/utils';
+import { WorkoutMarkIcon } from '../WorkoutMarkIcon';
 
 /**
- * This week as a stepper: a lime circle with a tick for each session done,
- * joined by a lime track, then a dashed ring for the next one, then the rest.
+ * This week as a stepper: a mark per workout (see WorkoutMarkIcon), the
+ * done ones joined by a lime track.
  */
 export function WeekCircles({ week }: { week: ThisWeek }) {
   const { slots } = week;
   const done = slots.filter((s) => s.state === 'done').length;
-  // Smaller circles once a week holds more sessions than fit comfortably
+  // Smaller circles once a week holds more workouts than fit comfortably
   const size = slots.length > 5 ? 40 : 52;
   // The lit part of the track runs from the first circle to the last one done
   const lit = slots.length > 1 && done > 1 ? (Math.min(done, slots.length) - 1) / (slots.length - 1) : 0;
   return (
-    <div role="img" aria-label={`${week.completed} of ${week.target} sessions done this week`} className="relative">
+    <div role="img" aria-label={`${week.completed} of ${week.target} workouts done this week`} className="relative">
       <div className="absolute h-1 rounded-full bg-muted" style={{ left: size / 2, right: size / 2, top: size / 2 - 2 }}>
         <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${lit * 100}%` }} />
       </div>
       <div className="relative flex justify-between">
         {slots.map((slot, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
-            <div
-              className={cn(
-                'rounded-full flex items-center justify-center',
-                slot.state === 'done' && 'bg-brand',
-                slot.state === 'next' && 'bg-background border-2 border-dashed border-muted-foreground/60',
-                slot.state === 'upcoming' && 'bg-background border-2 border-border'
-              )}
-              style={{ width: size, height: size }}
-            >
-              {slot.state === 'done' && <Check className="w-5 h-5 text-brand-foreground" strokeWidth={3} />}
-            </div>
+            <WorkoutMarkIcon mark={slot.state} size={size} />
             <span
               className={cn(
                 'h-4 text-[11px] leading-4',
-                slot.state === 'next' ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground'
+                slot.state === 'next' || slot.state === 'started' ? 'font-semibold text-foreground' : 'font-medium text-muted-foreground'
               )}
             >
               {slot.label}

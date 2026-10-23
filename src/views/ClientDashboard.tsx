@@ -23,6 +23,7 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { WeeklyOverview } from '@/components/client/weekly/WeeklyOverview';
 import { TodayFocusView } from '@/components/client/today/TodayFocusView';
+import { StatusHeader } from '@/components/client/today/StatusHeader';
 import { ChatView } from '@/components/chat/ChatView';
 import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
@@ -36,7 +37,13 @@ import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
 import { Loader2, UserMinus } from 'lucide-react';
 import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
-import { NO_COACH_COPY } from '@logbook/shared/client-empty-states';
+import {
+  LOAD_ERROR_COPY,
+  NO_COACH_COPY,
+  PROGRESS_BEFORE_PLAN_COPY,
+  WEEK_NOT_BUILT_COPY,
+  WELCOME_COPY,
+} from '@logbook/shared/client-empty-states';
 
 // ---- Component ----
 
@@ -377,15 +384,14 @@ export function ClientDashboard() {
   if (hasFatalError) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
+        <div className="bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
           <div className="py-10 px-6 text-center">
-            <div className="text-4xl select-none mb-4 animate-bounce-once">😵</div>
-            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Something went wrong</h2>
+            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">{LOAD_ERROR_COPY.title}</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">
-              Check your connection and try again.
+              {LOAD_ERROR_COPY.body}
             </p>
             <Button onClick={() => window.location.reload()} className="active:scale-[0.96] transition-transform duration-150">
-              Retry
+              {LOAD_ERROR_COPY.retry}
             </Button>
           </div>
         </div>
@@ -400,7 +406,6 @@ export function ClientDashboard() {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="text-center animate-enter max-w-sm">
-          <div className="text-5xl select-none mb-4 animate-bounce-once">🤝</div>
           <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">
             {NO_COACH_COPY.title}
           </h1>
@@ -421,13 +426,7 @@ export function ClientDashboard() {
         className={cn('bg-background', isChat ? chatShellClass : 'min-h-dvh sm:pb-4')}
         style={isChat ? chatShellStyle : undefined}
       >
-        <ClientNav
-          activeTab={isChat ? 'chat' : 'workout'}
-          onTabChange={(tab) => {
-            // Progress has nothing to show before the first plan — land on the welcome
-            handleTabChange(tab === 'progress' ? 'workout' : tab);
-          }}
-        />
+        <ClientNav activeTab={isChat ? 'chat' : currentView === 'progress' ? 'progress' : 'workout'} onTabChange={handleTabChange} />
         <div className={cn(
           'max-w-2xl mx-auto w-full px-4 pt-4 sm:pt-7',
           isChat
@@ -458,6 +457,18 @@ export function ClientDashboard() {
                 />
               </div>
             </>
+          ) : currentView === 'progress' ? (
+            // Nothing to show before the first plan; say so, as the app does
+            <>
+              <div className="py-4">
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Your training</p>
+                <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">Progress</h1>
+              </div>
+              <div className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center">
+                <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">{PROGRESS_BEFORE_PLAN_COPY.title}</h2>
+                <p className="text-sm text-muted-foreground antialiased">{PROGRESS_BEFORE_PLAN_COPY.body}</p>
+              </div>
+            </>
           ) : (
             <>
               <WelcomeAwaitingPlan
@@ -477,7 +488,7 @@ export function ClientDashboard() {
                   className="text-muted-foreground hover:text-destructive"
                 >
                   <UserMinus className="w-3.5 h-3.5 mr-1.5" />
-                  Leave this coach
+                  {WELCOME_COPY.leave}
                 </Button>
               </div>
             </>
@@ -505,10 +516,18 @@ export function ClientDashboard() {
           : 'space-y-5 sm:space-y-6 pb-[calc(var(--tabbar-h)+1.25rem+env(safe-area-inset-bottom))] sm:pb-8'
       )}>
 
-        {/* Check-in prompt banner */}
-        {pendingCheckIn && (
+        {/* The greeting heads the whole Workout tab, Today, This week and plan
+            complete alike, with the check-in prompt under it. The app does the same. */}
+        {currentView === 'workout' && (
+          <div className="animate-fade-in-up">
+            <StatusHeader showNewPlan={showNewPlan} clientName={client.name} />
+          </div>
+        )}
+
+        {/* Check-in prompt banner: on the Workout tab only, like the app */}
+        {currentView === 'workout' && pendingCheckIn && (
           <section aria-label="Pending check-in">
-            <div className="rounded-xl border border-border/70 bg-card px-4 py-4">
+            <div className="rounded-2xl border border-border/70 bg-card px-4 py-4">
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-2 antialiased flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />
                 Check-in
@@ -548,16 +567,11 @@ export function ClientDashboard() {
             aria-label="Week unavailable"
             className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center"
           >
-            <div className="text-4xl select-none mb-4">🗓️</div>
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">
-              {isNotFound(weekError)
-                ? "This week isn't set up yet"
-                : "Couldn't load this week"}
+              {isNotFound(weekError) ? WEEK_NOT_BUILT_COPY.title : LOAD_ERROR_COPY.title}
             </h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">
-              {isNotFound(weekError)
-                ? `${coach?.user.name?.split(' ')[0] ?? 'Your coach'} hasn't built this week of your plan yet — send them a message.`
-                : 'Check your connection and try again.'}
+              {isNotFound(weekError) ? WEEK_NOT_BUILT_COPY.body(coach?.user.name) : LOAD_ERROR_COPY.body}
             </p>
             {isNotFound(weekError) ? (
               <Button onClick={handleMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
@@ -565,7 +579,7 @@ export function ClientDashboard() {
               </Button>
             ) : (
               <Button onClick={() => refreshWeek()} className="active:scale-[0.96] transition-transform duration-150">
-                Retry
+                {LOAD_ERROR_COPY.retry}
               </Button>
             )}
           </section>
@@ -574,7 +588,6 @@ export function ClientDashboard() {
         {/* Workout Views */}
         {currentView === 'workout' && !planEnded && !!weekOverview && workoutViewMode === 'today' && (
           <TodayFocusView
-            client={client}
             todayWorkout={todayWorkout}
             todayCompletion={todayCompletion}
             coachNote={todayCoachNote}
@@ -589,7 +602,6 @@ export function ClientDashboard() {
             isRestarting={isRestartingWorkout}
             onSendFeedback={handleSendFeedback}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
-            showNewPlan={showNewPlan}
           />
         )}
 
@@ -613,6 +625,8 @@ export function ClientDashboard() {
             {latestFeedbackCheckIn && (
               <CoachFeedbackCard
                 checkIn={latestFeedbackCheckIn}
+                coachName={coach?.user.name ?? 'Your coach'}
+                coachAvatar={coach?.user.avatarUrl ?? undefined}
                 onViewDetails={() => setShowCheckInModal(true)}
               />
             )}
@@ -649,8 +663,8 @@ export function ClientDashboard() {
         {currentView === 'progress' && (
           <>
             <div className="py-4">
-              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Progress</p>
-              <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">This week</h1>
+              <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Your training</p>
+              <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">Progress</h1>
             </div>
             <ProgressHistory
               plans={plan ? [plan] : []}
@@ -662,6 +676,12 @@ export function ClientDashboard() {
               totalWorkouts={progress?.stats.totalWorkouts}
               // Once the plan has ended the week overview stays on its final week; that isn't this week
               weekNumber={weekOverview && !weekOverview.planEnded ? weekOverview.weekNumber : null}
+              // A workout started but not finished (the progress history only holds finished ones)
+              startedDayId={
+                weekOverview && !weekOverview.planEnded
+                  ? weekOverview.days.find((d) => d.status === 'IN_PROGRESS')?.dayId ?? null
+                  : null
+              }
             />
           </>
         )}

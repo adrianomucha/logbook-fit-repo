@@ -139,7 +139,7 @@ export function parseDurationInput(input: string | number | null | undefined): {
   if (!raw) return { reps: null, repsMax: null };
 
   // Split a range on a dash that sits between two terms ("30-60s", "1:00 - 1:30").
-  const parts = raw.split(/[-–—]/).map((p) => p.trim()).filter(Boolean);
+  const parts = raw.split(/[-\u2013\u2014]/).map((p) => p.trim()).filter(Boolean);
   if (parts.length === 0) return { reps: null, repsMax: null };
 
   if (parts.length === 1) {

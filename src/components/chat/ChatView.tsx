@@ -328,7 +328,7 @@ export function ChatView({
                     </p>
                     <p className={cn('text-muted-foreground antialiased', isBrand ? 'text-sm max-w-[280px] mx-auto leading-relaxed' : 'text-xs')}>
                       {isBrand
-                        ? `Questions, wins, sore spots — it all helps ${peerFirst} coach you better.`
+                        ? `Questions, wins, sore spots: it all helps ${peerFirst} coach you better.`
                         : <>Drop {peerFirst} a note. They&apos;ll see it next time they open the app.</>}
                     </p>
                   </div>

@@ -15,6 +15,7 @@ import {
 } from '@/components/settings/sections';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { cn } from '@/lib/utils';
+import { HOME_TAB } from '@logbook/shared/client-copy';
 
 const SECTION_PANES: Record<SettingsSectionId, () => React.JSX.Element> = {
   profile: () => <ProfileSection role="client" />,
@@ -53,7 +54,7 @@ export function ClientSettingsPage() {
             className="flex items-center gap-0.5 -ms-1.5 mb-1 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target"
           >
             <ChevronLeft className="w-3.5 h-3.5" aria-hidden="true" />
-            Today
+            {HOME_TAB}
           </button>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight antialiased">
             Settings
@@ -74,7 +75,7 @@ export function ClientSettingsPage() {
                   scroll={false}
                   aria-current={section === id ? 'page' : undefined}
                   className={cn(
-                    'inline-flex w-full items-center justify-center gap-1.5 sm:justify-start sm:gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
+                    'inline-flex w-full items-center justify-center gap-1.5 sm:justify-start sm:gap-2 text-[11px] font-medium uppercase tracking-[0.12em]',
                     'transition-colors touch-manipulation tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     'border-b-2 px-1 sm:px-0.5 pb-2.5 pt-1',
                     section === id

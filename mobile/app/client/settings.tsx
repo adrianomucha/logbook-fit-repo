@@ -12,6 +12,7 @@ import {
   resolveSettingsSection,
   type SettingsSectionId,
 } from '@/components/settings/sections';
+import { HOME_TAB } from '@logbook/shared/client-copy';
 
 /**
  * The client's settings — the web's /client/settings: one column under the
@@ -48,7 +49,7 @@ export default function SettingsScreen() {
                 className="-ml-1 mb-1 min-h-[36px] flex-row items-center gap-0.5 self-start active:opacity-70"
               >
                 <Feather name="chevron-left" size={14} color="#737373" />
-                <Text className="font-mono-medium text-[11px] uppercase tracking-[1.3px] text-muted-foreground">Today</Text>
+                <Text className="font-mono-medium text-[11px] uppercase tracking-[1.3px] text-muted-foreground">{HOME_TAB}</Text>
               </Pressable>
               <Text className="font-sans-bold text-2xl tracking-tight text-foreground">Settings</Text>
             </View>
@@ -69,7 +70,7 @@ export default function SettingsScreen() {
                       active ? 'border-brand' : 'border-transparent'
                     }`}
                   >
-                    <Text className={`font-mono-medium text-[11px] uppercase tracking-[1.3px] ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                    <Text className={`font-sans-medium text-[11px] uppercase tracking-[1.3px] ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
                       {label}
                     </Text>
                   </Pressable>

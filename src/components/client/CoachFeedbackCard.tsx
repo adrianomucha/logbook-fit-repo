@@ -1,41 +1,33 @@
 import { CheckIn } from '@/types';
-import { truncateText } from '@/lib/utils';
 import { format } from 'date-fns';
+import { CoachContextStrip } from './today/CoachContextStrip';
 
 interface CoachFeedbackCardProps {
   checkIn: CheckIn | null;
+  coachName: string;
+  coachAvatar?: string;
   onViewDetails: () => void;
 }
 
 /**
- * Coach feedback strip for the weekly view.
- * Only renders if there's a completed check-in with coach response.
+ * The coach's reply to the latest check-in, on the week view. The same card
+ * as the coach's note on Today. Renders only for a check-in with a reply.
  */
-export function CoachFeedbackCard({ checkIn, onViewDetails }: CoachFeedbackCardProps) {
+export function CoachFeedbackCard({ checkIn, coachName, coachAvatar, onViewDetails }: CoachFeedbackCardProps) {
   if (!checkIn || checkIn.status !== 'completed' || !checkIn.coachResponse) {
     return null;
   }
 
-  const feedbackPreview = truncateText(checkIn.coachResponse, 180);
-  const checkInDate = format(
-    new Date(checkIn.completedAt || checkIn.date),
-    'MMM d'
-  );
+  const date = format(new Date(checkIn.completedAt || checkIn.date), 'MMM d');
 
   return (
-    <div className="rounded-xl bg-muted/40 px-4 py-4 border-l-2 border-brand">
-      <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
-        Coach feedback · {checkInDate}
-      </p>
-      <p className="text-sm text-foreground/80 leading-relaxed line-clamp-2 mb-2">
-        {feedbackPreview}
-      </p>
-      <button
-        onClick={onViewDetails}
-        className="text-[11px] uppercase tracking-wide font-bold text-muted-foreground hover:text-foreground transition-colors touch-manipulation underline underline-offset-2"
-      >
-        View Check-in
-      </button>
-    </div>
+    <CoachContextStrip
+      coachName={coachName}
+      coachAvatar={coachAvatar}
+      label={`Check-in reply, ${date}`}
+      note={checkIn.coachResponse}
+      maxLines={3}
+      action={{ label: 'View check-in', onClick: onViewDetails }}
+    />
   );
 }

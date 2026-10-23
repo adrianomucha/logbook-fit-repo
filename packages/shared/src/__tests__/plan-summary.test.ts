@@ -48,23 +48,23 @@ describe('describeMisses', () => {
   const w = (...nums: number[]) => nums.map((weekNumber) => ({ weekNumber }));
 
   it('celebrates a clean sweep', () => {
-    expect(describeMisses([])).toBe('Didn’t miss a single session.');
+    expect(describeMisses([])).toBe('Didn’t miss a single workout.');
   });
 
   it('names a single week', () => {
-    expect(describeMisses(w(5))).toBe('Missed 1 session, in week 5.');
-    expect(describeMisses(w(5, 5))).toBe('Missed 2 sessions, both in week 5.');
-    expect(describeMisses(w(5, 5, 5))).toBe('Missed 3 sessions, all in week 5.');
+    expect(describeMisses(w(5))).toBe('Missed 1 workout, in week 5.');
+    expect(describeMisses(w(5, 5))).toBe('Missed 2 workouts, both in week 5.');
+    expect(describeMisses(w(5, 5, 5))).toBe('Missed 3 workouts, all in week 5.');
   });
 
   it('calls out the week holding most of the misses', () => {
-    expect(describeMisses(w(3, 5, 5, 5, 7))).toBe('Missed 5 sessions, 3 of them in week 5.');
+    expect(describeMisses(w(3, 5, 5, 5, 7))).toBe('Missed 5 workouts, 3 of them in week 5.');
   });
 
   it('lists up to three weeks, then just counts them', () => {
-    expect(describeMisses(w(6, 10))).toBe('Missed 2 sessions across weeks 6 and 10.');
-    expect(describeMisses(w(1, 4, 9))).toBe('Missed 3 sessions across weeks 1, 4 and 9.');
-    expect(describeMisses(w(2, 4, 7, 9, 10))).toBe('Missed 5 sessions across 5 weeks.');
+    expect(describeMisses(w(6, 10))).toBe('Missed 2 workouts across weeks 6 and 10.');
+    expect(describeMisses(w(1, 4, 9))).toBe('Missed 3 workouts across weeks 1, 4 and 9.');
+    expect(describeMisses(w(2, 4, 7, 9, 10))).toBe('Missed 5 workouts across 5 weeks.');
   });
 });
 
@@ -80,7 +80,7 @@ describe('summarizeCompletedPlan', () => {
   it('counts training days only and ignores rest days', () => {
     const s = summarizeCompletedPlan(plan(2, 3, 2), ['w1d1', 'w1d2', 'w1d3', 'w2d1', 'w2d2'].map((id) => done(id)));
     expect(s).toMatchObject({ weekCount: 2, planned: 6, completed: 5, pct: 83 });
-    expect(s.missNote).toBe('Missed 1 session, in week 2.');
+    expect(s.missNote).toBe('Missed 1 workout, in week 2.');
   });
 
   it('ignores other plans and unfinished sessions', () => {
@@ -106,7 +106,7 @@ describe('summarizeCompletedPlan', () => {
     // Week 1: 2 of 3 · week 2 (current): 1 done so far · week 3: not reached
     const s = summarizeCompletedPlan(plan(3, 3), ['w1d1', 'w1d2', 'w2d1'].map((id) => done(id)), { throughWeek: 2 });
     expect(s).toMatchObject({ planned: 4, completed: 3, pct: 75 });
-    expect(s.missNote).toBe('Missed 1 session, in week 1.');
+    expect(s.missNote).toBe('Missed 1 workout, in week 1.');
   });
 
   it('handles a plan with nothing planned', () => {

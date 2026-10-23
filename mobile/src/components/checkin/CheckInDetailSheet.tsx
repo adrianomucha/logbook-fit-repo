@@ -5,7 +5,9 @@ import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { FEELING_DISPLAY } from '@logbook/shared/feeling-display';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@logbook/shared/workout-helpers';
+import { COACH_REPLY_PENDING, formatWeekTally } from '@logbook/shared/client-copy';
 import { Eyebrow } from '@/components/ui';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 interface CheckInDetailSheetProps {
   checkIn: CheckIn | null;
@@ -23,7 +25,7 @@ const TONE_TEXT: Record<string, string> = {
 };
 
 function SectionTitle({ children }: { children: string }) {
-  return <Text className="mb-3 font-sans-bold text-[11px] uppercase tracking-[1.3px] text-muted-foreground">{children}</Text>;
+  return <Text className="mb-3 font-mono-medium text-[10px] uppercase tracking-[1.6px] text-muted-foreground">{children}</Text>;
 }
 
 /** Full detail of one check-in — the web's CheckInDetailModal. */
@@ -116,7 +118,7 @@ export function CheckInDetailSheet({ checkIn, visible, onClose, completedWorkout
                   ) : null}
                 </View>
               ) : (
-                <Text className="font-sans text-sm text-muted-foreground">Your coach will respond soon!</Text>
+                <Text className="font-sans text-sm text-muted-foreground">{COACH_REPLY_PENDING}</Text>
               )}
             </View>
 
@@ -128,21 +130,13 @@ export function CheckInDetailSheet({ checkIn, visible, onClose, completedWorkout
                 <View className="gap-2">
                   {weekWorkouts.map((w) => (
                     <View key={w.id} className="flex-row items-center gap-2">
-                      <Feather name="check-circle" size={16} color="#21c45d" />
+                      <WorkoutMarkIcon mark="done" size={16} />
                       <Text className="font-sans text-sm text-foreground">{workoutName(w.dayId)}</Text>
                       <Text className="font-sans text-xs text-muted-foreground">({format(new Date(w.completedAt!), 'MMM d')})</Text>
                     </View>
                   ))}
                   <View className="mt-3 border-t border-border pt-3">
-                    {completed >= totalExpected ? (
-                      <Text className="font-sans-medium text-sm text-success-text">
-                        Target hit — {completed} workout{completed === 1 ? '' : 's'} against a target of {totalExpected}
-                      </Text>
-                    ) : (
-                      <Text className="font-sans-medium text-sm text-foreground">
-                        You completed {completed} out of {totalExpected} workouts
-                      </Text>
-                    )}
+                    <Text className="font-sans-medium text-sm text-foreground">{formatWeekTally(completed, totalExpected)}</Text>
                   </View>
                 </View>
               ) : (

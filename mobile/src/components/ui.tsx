@@ -11,7 +11,7 @@ export function Eyebrow({ children, className = '' }: { children: ReactNode; cla
 }
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <View className={`rounded-2xl border border-border bg-card p-5 ${className}`}>{children}</View>;
+  return <View className={`rounded-2xl border border-border/70 bg-card p-5 ${className}`}>{children}</View>;
 }
 
 interface ButtonProps extends Omit<PressableProps, 'children'> {

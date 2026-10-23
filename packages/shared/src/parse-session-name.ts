@@ -14,7 +14,7 @@ export function parseSessionName(rawName: string): {
   let day: string | undefined;
   let subtitle: string | undefined;
 
-  const dayMatch = title.match(/^day\s*(\d+)\s*[—–:-]\s*(.\S.*)$/i);
+  const dayMatch = title.match(/^day\s*(\d+)\s*[\u2014\u2013:-]\s*(.\S.*)$/i);
   if (dayMatch) {
     day = dayMatch[1];
     title = dayMatch[2].trim();
