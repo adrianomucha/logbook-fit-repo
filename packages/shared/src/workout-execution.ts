@@ -33,6 +33,23 @@ export function getNextIncompleteExerciseId(exercises: WorkoutExercise[]): strin
   return null;
 }
 
+/**
+ * Sets ticked off across the session. Zero means there's nothing to finish:
+ * a workout only counts once something was logged.
+ */
+export function getLoggedSetsCount(exercises: WorkoutExercise[]): number {
+  return exercises.reduce((sum, ex) => sum + Math.min(getCompletedSetsCount(ex), ex.sets), 0);
+}
+
+/** What the client sees on Finish with nothing logged, worded once for web and app. */
+export const NOTHING_LOGGED_COPY = {
+  title: 'Nothing logged yet',
+  body: 'Tick off the sets you did, then finish. Not training today? Just leave, and nothing is marked done.',
+  dismiss: 'Got it',
+  /** The server's refusal, for any client that finishes anyway */
+  error: 'Log at least one set before finishing.',
+} as const;
+
 /** Compute exercisesDone / exercisesTotal from the exercise list */
 export function getCompletionStats(exercises: WorkoutExercise[]) {
   const exercisesTotal = exercises.length;

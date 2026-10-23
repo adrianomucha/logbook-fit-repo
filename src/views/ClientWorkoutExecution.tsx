@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Check, Dumbbell, Flag, Loader2, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { buildFlagMessageContent } from '@logbook/shared/flag-message';
+import { getLoggedSetsCount, NOTHING_LOGGED_COPY } from '@logbook/shared/workout-execution';
 import { formatWeight } from '@logbook/shared/weight-units';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { EffortPicker } from '@/components/client/EffortPicker';
@@ -204,6 +205,11 @@ export function ClientWorkoutExecution() {
 
   // Handle finish workout
   const handleFinishClick = () => {
+    // Nothing logged isn't a workout; say how to finish instead
+    if (getLoggedSetsCount(exercises) === 0) {
+      toast(NOTHING_LOGGED_COPY.title, { description: NOTHING_LOGGED_COPY.body });
+      return;
+    }
     if (stats.exercisesDone === stats.exercisesTotal) {
       completeWorkout();
     } else {

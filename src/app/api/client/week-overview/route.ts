@@ -2,14 +2,17 @@ import { NextResponse } from "next/server";
 import { withClient } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
-import { getRawWeekNumber } from "@/lib/workout-week-helpers";
+import { getPlanStartsOn, getRawWeekNumber } from "@/lib/workout-week-helpers";
 
 /**
  * GET /api/client/week-overview
  * Returns the current week's days with workout status for the client's active plan.
- * Week math comes from the shared helper (Monday-anchored) so this can never
- * disagree with what the UI shows. Past the last week the response clamps to
- * the final week and sets planEnded instead of 404ing.
+ * Week math comes from the shared helper (Monday-anchored, on the client's
+ * own calendar) so this can never disagree with what the UI shows. Past the
+ * last week the response clamps to the final week and sets planEnded instead
+ * of 404ing; before a plan set to start next Monday it returns week 1 as a
+ * preview with startsOn set. Days with no exercises aren't workouts and are
+ * left out.
  */
 export const GET = withClient(
   async (
@@ -23,6 +26,7 @@ export const GET = withClient(
       select: {
         activePlanId: true,
         planStartDate: true,
+        user: { select: { timezone: true } },
       },
     });
 
@@ -45,7 +49,8 @@ export const GET = withClient(
     }
 
     // Current week, clamped to the plan's last week once it has ended
-    const rawWeekNumber = getRawWeekNumber(client.planStartDate);
+    const timeZone = client.user.timezone;
+    const rawWeekNumber = getRawWeekNumber(client.planStartDate, timeZone);
     const planEnded = rawWeekNumber > plan.durationWeeks;
     const currentWeekNumber = Math.max(
       1,
@@ -95,7 +100,7 @@ export const GET = withClient(
       );
     }
 
-    const days = week.days.map((day) => {
+    const days = week.days.filter((day) => day.exercises.length > 0).map((day) => {
       const completion = day.completions[0];
       return {
         dayId: day.id,
@@ -119,6 +124,7 @@ export const GET = withClient(
       weekId: week.id,
       planStartDate: client.planStartDate,
       planEnded,
+      startsOn: getPlanStartsOn(client.planStartDate, timeZone),
       days,
     });
   }

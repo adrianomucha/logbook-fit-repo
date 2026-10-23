@@ -2,7 +2,7 @@ import { addWeeks, differenceInCalendarDays, format, getDay, parseISO, startOfWe
 import type { CheckIn, WorkoutCompletion, WorkoutDay, WorkoutPlan } from './types';
 import { formatBestGain, formatBestValue, type PersonalBest } from './personal-bests';
 import type { WeightUnit } from './weight-units';
-import { WORKOUT_MARK_LABEL, type WorkoutMark } from './workout-week-helpers';
+import { isWorkoutDay, WORKOUT_MARK_LABEL, type WorkoutMark } from './workout-week-helpers';
 import { parseSessionName } from './parse-session-name';
 
 /**
@@ -99,13 +99,15 @@ export function describeThisWeek({
 }): ThisWeek {
   const sessions = completedSessions(completions);
   const week = plan?.weeks.find((w) => w.weekNumber === weekNumber);
+  // Days with no exercises aren't workouts (the Today tab leaves them out too)
+  const weekWorkouts = week?.days.filter(isWorkoutDay) ?? [];
 
   let done: WorkoutCompletion[];
   let total = target;
   let nextUp: string | null = null;
   let started = false;
-  if (week && week.days.length > 0) {
-    const days = [...week.days].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+  if (week && weekWorkouts.length > 0) {
+    const days = [...weekWorkouts].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
     const byDay = new Map(sessions.filter((c) => c.weekId === week.id).map((c) => [c.dayId, c]));
     // Circles fill in the order the workouts were done, whatever their order in the plan
     done = completedSessions(days.flatMap((d) => byDay.get(d.id) ?? []));
@@ -113,7 +115,7 @@ export function describeThisWeek({
     const left = days.filter((d) => !byDay.has(d.id));
     const current = left.find((d) => d.id === startedDayId) ?? left[0];
     started = !!current && current.id === startedDayId;
-    nextUp = current ? workoutTitle(current.name || `Day ${days.indexOf(current) + 1}`) : null;
+    nextUp = current ? workoutTitle(current.name || `Day ${current.orderIndex ?? days.indexOf(current) + 1}`) : null;
     total = days.length;
   } else {
     const thisMonday = startOfWeek(now, { weekStartsOn: 1 }).getTime();
@@ -302,9 +304,10 @@ export function buildProgressStory({
   // Every session of a plan week done, marked on the one that finished it
   for (const plan of plans) {
     for (const week of plan.weeks) {
-      if (week.days.length === 0) continue;
+      const workouts = week.days.filter(isWorkoutDay);
+      if (workouts.length === 0) continue;
       const inWeek = sessions.filter((c) => c.planId === plan.id && c.weekId === week.id);
-      if (!week.days.every((d) => inWeek.some((c) => c.dayId === d.id))) continue;
+      if (!workouts.every((d) => inWeek.some((c) => c.dayId === d.id))) continue;
       const last = inWeek[inWeek.length - 1];
       moments.push(
         moment({
@@ -312,7 +315,7 @@ export function buildProgressStory({
           kind: 'week',
           at: last.completedAt!,
           title: `Finished Week ${week.weekNumber}`,
-          detail: `${plan.name} · all ${week.days.length} workouts`,
+          detail: `${plan.name} · all ${workouts.length} workouts`,
         }),
       );
       notable.add(last.id);

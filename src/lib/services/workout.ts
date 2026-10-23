@@ -2,6 +2,9 @@ import { PrismaClient } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { findPersonalBests, type PersonalBest } from "@logbook/shared/personal-bests";
 import { MAX_SESSION_SEC, finishedSessionSec, plausibleSessionSec } from "@logbook/shared/session-duration";
+import { NOTHING_LOGGED_COPY } from "@logbook/shared/workout-execution";
+
+const NOTHING_LOGGED_MESSAGE = NOTHING_LOGGED_COPY.error;
 
 // ---------------------------------------------------------------------------
 // Types
@@ -143,6 +146,10 @@ class WorkoutServiceImpl {
     });
     if (!day || day.week.planId !== client.activePlanId) {
       throw new ValidationError("Day not found");
+    }
+    // A day the coach hasn't filled in yet is nothing to train
+    if (day.exercises.length === 0) {
+      throw new ValidationError("This workout has no exercises yet");
     }
 
     // Idempotent — return existing if already started
@@ -309,6 +316,12 @@ class WorkoutServiceImpl {
       (ex) => ex.sets > 0 && (completedByExercise.get(ex.id) ?? 0) >= ex.sets,
     ).length;
 
+    // Finishing with nothing logged isn't a workout: it would count as
+    // trained for the client's week and tell the coach they showed up
+    if (completedSets === 0) {
+      throw new InvalidStateError(NOTHING_LOGGED_MESSAGE);
+    }
+
     const completionPct =
       totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
     const now = new Date();
@@ -370,6 +383,23 @@ class WorkoutServiceImpl {
       );
     }
 
+    // A set keeps the time it was first ticked: editing its weight or reps
+    // afterwards resends completed: true, and must not move that time
+    // (a session left open falls back to the span of these times)
+    const existing = await this.db.setCompletion.findMany({
+      where: {
+        workoutCompletionId: params.completionId,
+        workoutExerciseId: { in: uniqueWeIds },
+      },
+      select: { workoutExerciseId: true, setNumber: true, completedAt: true },
+    });
+    const tickedAt = new Map(
+      existing.map((e) => [`${e.workoutExerciseId}:${e.setNumber}`, e.completedAt])
+    );
+    const now = new Date();
+    const completedAtFor = (s: SetInput) =>
+      s.completed ? (tickedAt.get(`${s.workoutExerciseId}:${s.setNumber}`) ?? now) : null;
+
     await this.db.$transaction(
       params.sets.map((s) =>
         this.db.setCompletion.upsert({
@@ -387,13 +417,13 @@ class WorkoutServiceImpl {
             completed: s.completed,
             actualWeight: s.actualWeight,
             actualReps: s.actualReps,
-            completedAt: s.completed ? new Date() : null,
+            completedAt: completedAtFor(s),
           },
           update: {
             completed: s.completed,
             actualWeight: s.actualWeight,
             actualReps: s.actualReps,
-            completedAt: s.completed ? new Date() : null,
+            completedAt: completedAtFor(s),
           },
         }),
       ),

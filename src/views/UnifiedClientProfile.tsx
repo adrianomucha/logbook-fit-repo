@@ -33,6 +33,8 @@ import { NotificationToggle } from '@/components/notifications/NotificationToggl
 import { PlanSetupModal } from '@/components/coach/PlanSetupModal';
 import { AssignPlanModal } from '@/components/coach/AssignPlanModal';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
+import { PlanStartChoice } from '@/components/coach/PlanStartChoice';
+import { defaultPlanStart, planStartOptions, type PlanStartChoice as StartChoice } from '@logbook/shared/plan-start';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { UserAvatar } from '@/components/UserAvatar';
@@ -45,14 +47,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AlertCircle, ArrowLeftRight, Loader2, MessageCircle, MoreHorizontal, MoreVertical, Pencil, RotateCcw, Undo2, UserMinus } from 'lucide-react';
+import { AlertCircle, ArrowLeftRight, CalendarDays, Loader2, MessageCircle, MoreHorizontal, MoreVertical, Pencil, RotateCcw, Undo2, UserMinus } from 'lucide-react';
 import { toast } from 'sonner';
-import { addDays, format, formatDistanceToNowStrict, isThisYear, startOfWeek } from 'date-fns';
+import { format, formatDistanceToNowStrict, isThisYear, parseISO } from 'date-fns';
 import { summarizeCompletedPlan } from '@logbook/shared/plan-summary';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
 import { newPlanHint } from '@logbook/shared/urgency';
-import { getCurrentWeekNumber, getPlanProgressStatus, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
+import { getCurrentWeekNumber, getPlanEndsOn, getPlanProgressStatus, getPlanStartDay, getPlanStartsOn, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
 function daysAgoLabel(iso?: string | Date | null): string | null {
@@ -167,6 +169,10 @@ export function UnifiedClientProfile() {
   const [showContinueConfirm, setShowContinueConfirm] = useState(false);
   const [showUnsendConfirm, setShowUnsendConfirm] = useState(false);
   const [isContinuingPlan, setIsContinuingPlan] = useState(false);
+  // A plan picked (or just created) for the client, waiting on the coach's
+  // choice of start: today or next Monday
+  const [pendingAssign, setPendingAssign] = useState<{ planId: string; planName?: string } | null>(null);
+  const [startChoice, setStartChoice] = useState<StartChoice>('today');
   // Optimistic override for the check-in schedule settings (null = follow server)
   const [scheduleOverride, setScheduleOverride] =
     useState<Partial<CheckInScheduleSettings> | null>(null);
@@ -435,27 +441,31 @@ export function UnifiedClientProfile() {
     refreshPlan();
   };
 
+  // Week 1 is either what's left of this week or a full week from Monday;
+  // the coach decides, preselected by the client's weekday
+  const askWhenItStarts = (planId: string, planName?: string) => {
+    setStartChoice(defaultPlanStart(apiClient?.user.timezone));
+    setPendingAssign({ planId, planName });
+  };
+
   const handlePlanCreated = async (formData: import('@/types').PlanSetupFormData) => {
     if (!clientId) return;
+    let newPlan: { id: string; name: string };
     try {
-      const newPlan = await createPlan({
+      newPlan = await createPlan({
         name: formData.name,
         description: formData.description,
         durationWeeks: formData.durationWeeks,
         workoutsPerWeek: formData.workoutsPerWeek,
       });
-      // Auto-assign the new plan to this client
-      await apiFetch(`/api/plans/${newPlan.id}/assign`, {
-        method: 'POST',
-        body: JSON.stringify({ clientProfileId: clientId }),
-      });
-      setShowPlanSetupModal(false);
-      refreshClient();
-      refreshPlan();
-      refreshCoachPlans();
     } catch {
-      toast.error('Failed to create and assign plan. Please try again.');
+      toast.error('Failed to create the plan. Please try again.');
+      return;
     }
+    setShowPlanSetupModal(false);
+    refreshCoachPlans();
+    // Assigned once the coach picks when it starts
+    askWhenItStarts(newPlan.id, newPlan.name);
   };
 
   // The finished plan is working — run it again rather than build a new block.
@@ -467,11 +477,16 @@ export function UnifiedClientProfile() {
     try {
       await apiFetch(`/api/coach/clients/${clientId}/plan/continue`, {
         method: 'POST',
+        body: JSON.stringify({ startOn: startChoice }),
       });
       setShowContinueConfirm(false);
       await Promise.all([refreshClient(), refreshPlan()]);
       const name = client?.name?.split(' ')[0] ?? 'Your client';
-      toast.success(`${plan?.name ?? 'Plan'} restarted — ${name} is on week 1`);
+      toast.success(
+        startChoice === 'monday'
+          ? `${plan?.name ?? 'Plan'} restarts Monday for ${name}`
+          : `${plan?.name ?? 'Plan'} restarted. ${name} is on week 1`
+      );
     } catch (e) {
       toast.error(
         e instanceof ApiError && e.status === 409
@@ -484,23 +499,33 @@ export function UnifiedClientProfile() {
   };
 
   const handleAssignPlan = async (templateId: string) => {
-    if (!clientId) return;
+    setShowAssignPlanModal(false);
+    askWhenItStarts(templateId, coachPlans.find((p) => p.id === templateId)?.name);
+  };
+
+  const confirmAssign = async () => {
+    if (!clientId || !pendingAssign) return;
     try {
-      await apiFetch(`/api/plans/${templateId}/assign`, {
+      await apiFetch(`/api/plans/${pendingAssign.planId}/assign`, {
         method: 'POST',
-        body: JSON.stringify({ clientProfileId: clientId }),
+        body: JSON.stringify({ clientProfileId: clientId, startOn: startChoice }),
       });
     } catch {
       toast.error('Failed to assign plan. Please try again.');
-      setShowAssignPlanModal(false);
       return;
     }
     // The assignment is saved; refreshing is best-effort, so a flaky
     // refetch never reports a plan that did land as a failure
-    const planName = coachPlans.find((p) => p.id === templateId)?.name;
     const name = client?.name?.split(' ')[0] ?? 'Your client';
-    toast.success(planName ? `${name} is on ${planName}` : 'Plan assigned');
-    setShowAssignPlanModal(false);
+    const planName = pendingAssign.planName;
+    toast.success(
+      planName
+        ? startChoice === 'monday'
+          ? `${name} starts ${planName} on Monday`
+          : `${name} is on ${planName}`
+        : 'Plan assigned'
+    );
+    setPendingAssign(null);
     await Promise.allSettled([refreshClient(), refreshPlan(), refreshCoachPlans()]);
   };
 
@@ -607,14 +632,24 @@ export function UnifiedClientProfile() {
 
   // Safe first-name extraction — never returns empty string
   const firstName = client.name?.split(' ')[0] || client.name || 'Client';
+  // Today / next Monday, worded for the client's current day where they are
+  const startOptions = planStartOptions(apiClient.user.timezone);
 
   // ---- At-a-glance vitals (plain derivations — we're past all hooks/early returns) ----
   const planTotalWeeks = plan ? (plan.durationWeeks || plan.weeks.length) : 0;
-  const currentWeekNum = plan && client.planStartDate
-    ? getCurrentWeekNumber(client.planStartDate, planTotalWeeks)
+  // Plan weeks run on the client's calendar, not the coach's
+  const clientTimeZone = apiClient.user.timezone;
+  const planStatus = plan && client.planStartDate
+    ? getPlanProgressStatus(client.planStartDate, planTotalWeeks, clientTimeZone)
     : null;
-  const planEnded = !!plan && !!client.planStartDate
-    && getPlanProgressStatus(client.planStartDate, planTotalWeeks) === 'ENDED';
+  const currentWeekNum = plan && client.planStartDate
+    ? getCurrentWeekNumber(client.planStartDate, planTotalWeeks, clientTimeZone)
+    : null;
+  const planEnded = planStatus === 'ENDED';
+  // Set to start next Monday: "Starts Mon, Oct 26" instead of "Week 1"
+  const planStartsOn = client.planStartDate
+    ? getPlanStartsOn(client.planStartDate, clientTimeZone)
+    : null;
   const currentWeek = plan
     ? (plan.weeks.find((w) => w.weekNumber === currentWeekNum) ?? plan.weeks[0])
     : null;
@@ -634,10 +669,9 @@ export function UnifiedClientProfile() {
 
   // Final week — the block ends Sunday, and the client's app is about to
   // tell them their coach is lining up the next one
-  const isFinalWeek = !!plan && !!client.planStartDate
-    && getPlanProgressStatus(client.planStartDate, planTotalWeeks) === 'FINAL_WEEK';
+  const isFinalWeek = planStatus === 'FINAL_WEEK';
   const planEndsOn = plan && client.planStartDate
-    ? addDays(startOfWeek(new Date(client.planStartDate), { weekStartsOn: 1 }), planTotalWeeks * 7 - 1)
+    ? parseISO(getPlanEndsOn(client.planStartDate, planTotalWeeks, clientTimeZone))
     : null;
 
   // Adherence — same shared summary the client's plan-complete card uses.
@@ -664,7 +698,7 @@ export function UnifiedClientProfile() {
   const lastWorkoutName = lastWorkoutDay?.name ? parseSessionName(lastWorkoutDay.name) : null;
   // A plan they haven't trained on yet, still inside the at-risk grace
   // window — the same "started Nd ago" hint the roster row shows
-  const newPlanStarted = plan ? newPlanHint(client.planStartDate, lastWorkoutAt) : null;
+  const newPlanStarted = plan ? newPlanHint(client.planStartDate, lastWorkoutAt, Date.now(), planStatus ?? undefined) : null;
 
   // Derive inline status info from the same server-computed urgency the
   // dashboard ranks by, so this page can never disagree with the roster.
@@ -834,7 +868,10 @@ export function UnifiedClientProfile() {
                 {/* "Assign next plan" is the header's primary action here */}
                 <Button
                   variant="outline"
-                  onClick={() => setShowContinueConfirm(true)}
+                  onClick={() => {
+                    setStartChoice(defaultPlanStart(apiClient.user.timezone));
+                    setShowContinueConfirm(true);
+                  }}
                   disabled={isContinuingPlan}
                   className="shrink-0 self-start sm:self-auto active:scale-[0.96] transition-transform duration-150"
                 >
@@ -927,7 +964,11 @@ export function UnifiedClientProfile() {
                         : undefined
                     }
                   >
-                    Wk {currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span>
+                    {planStartsOn ? (
+                      <>Starts <span className="text-muted-foreground font-normal">{format(parseISO(planStartsOn), 'EEE')}</span></>
+                    ) : (
+                      <>Wk {currentWeekNum ?? 1} <span className="text-muted-foreground font-normal">of {planTotalWeeks}</span></>
+                    )}
                   </Vital>
                   <Vital
                     label="Adherence"
@@ -1147,7 +1188,11 @@ export function UnifiedClientProfile() {
                             <span className="truncate">{plan.name}</span>
                           </h3>
                           <p className="font-mono text-[11px] uppercase tracking-[0.1em] text-muted-foreground tabular-nums antialiased mt-1">
-                            {planEnded ? 'Plan complete' : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
+                            {planEnded
+                              ? 'Plan complete'
+                              : planStartsOn
+                                ? `Starts ${format(parseISO(planStartsOn), 'EEE, MMM d')}`
+                                : `Week ${currentWeekNum ?? 1} of ${planTotalWeeks}`}
                           </p>
                         </div>
                         {/* -ms cancels the first button's padding so the
@@ -1168,7 +1213,7 @@ export function UnifiedClientProfile() {
                         <InteractiveWeeklyStrip
                           client={client}
                           plan={plan}
-                          planStartDate={client.planStartDate}
+                          currentWeekNumber={currentWeekNum ?? undefined}
                           workoutCompletions={workoutCompletions}
                           onEditPlan={handleEditPlan}
                           variant="flat"
@@ -1179,7 +1224,9 @@ export function UnifiedClientProfile() {
                       <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased pt-3 mt-1 border-t border-border/40 lg:shrink-0 text-pretty leading-relaxed">
                         {planTotalWeeks} {planTotalWeeks === 1 ? 'week' : 'weeks'}
                         {plan.workoutsPerWeek ? ` · ${plan.workoutsPerWeek}×/week` : ''}
-                        {client.planStartDate ? ` · Started ${format(new Date(client.planStartDate), 'MMM d')}` : ''}
+                        {client.planStartDate
+                          ? ` · ${planStartsOn ? 'Starts' : 'Started'} ${format(parseISO(getPlanStartDay(client.planStartDate, clientTimeZone)), 'MMM d')}`
+                          : ''}
                         {plan.sourceTemplateId ? ` · ${firstName}’s copy` : ''}
                       </p>
                     </>
@@ -1277,10 +1324,24 @@ export function UnifiedClientProfile() {
            balanced wrapping split it mid-name ("Run 4 week / Metabolic…") */
         eyebrow={plan?.name}
         title="Run it again?"
-        message={`${client.name?.split(' ')[0] || 'They'} starts back at week 1 from today with the same workouts, including any edits you made for them. Their completed weeks stay in their history.`}
+        message={`${firstName} goes back to week 1 with the same workouts, including any edits you made for them. Their completed weeks stay in their history.`}
         confirmLabel="Start week 1"
         icon={RotateCcw}
-      />
+      >
+        <PlanStartChoice options={startOptions} value={startChoice} onChange={setStartChoice} />
+      </ConfirmationModal>
+      <ConfirmationModal
+        isOpen={!!pendingAssign}
+        onClose={() => setPendingAssign(null)}
+        onConfirm={confirmAssign}
+        eyebrow={pendingAssign?.planName}
+        title={`When does ${firstName} start?`}
+        message="Weeks run Monday to Sunday on their calendar. Start now with what's left of this week, or give them a full first week."
+        confirmLabel="Assign plan"
+        icon={CalendarDays}
+      >
+        <PlanStartChoice options={startOptions} value={startChoice} onChange={setStartChoice} />
+      </ConfirmationModal>
       <ConfirmationModal
         isOpen={showUnsendConfirm}
         onClose={() => setShowUnsendConfirm(false)}
