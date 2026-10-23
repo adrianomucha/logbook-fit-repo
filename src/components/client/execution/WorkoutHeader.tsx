@@ -6,7 +6,7 @@ import { ArrowLeft, RotateCcw } from 'lucide-react';
  * Falls back to the original if stripping would leave nothing.
  */
 function stripDayPrefix(name: string): string {
-  const stripped = name.replace(/^\s*day\s*\d+\s*(?:[—–\-:.]+\s*)?/i, '').trim();
+  const stripped = name.replace(/^\s*day\s*\d+\s*(?:[\u2014\u2013\-:.]+\s*)?/i, '').trim();
   return stripped.length > 0 ? stripped : name;
 }
 

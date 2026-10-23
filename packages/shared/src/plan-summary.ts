@@ -28,9 +28,9 @@ function listWeeks(nums: number[]): string {
 }
 
 export function describeMisses(missed: { weekNumber: number }[]): string {
-  if (missed.length === 0) return "Didn’t miss a single session.";
+  if (missed.length === 0) return "Didn’t miss a single workout.";
   const n = missed.length;
-  const noun = n === 1 ? "session" : "sessions";
+  const noun = n === 1 ? "workout" : "workouts";
 
   const perWeek = new Map<number, number>();
   for (const s of missed) perWeek.set(s.weekNumber, (perWeek.get(s.weekNumber) ?? 0) + 1);
@@ -38,8 +38,8 @@ export function describeMisses(missed: { weekNumber: number }[]): string {
 
   if (weekNums.length === 1) {
     return n === 1
-      ? `Missed 1 session, in week ${weekNums[0]}.`
-      : `Missed ${n} sessions, ${n === 2 ? "both" : "all"} in week ${weekNums[0]}.`;
+      ? `Missed 1 workout, in week ${weekNums[0]}.`
+      : `Missed ${n} ${noun}, ${n === 2 ? "both" : "all"} in week ${weekNums[0]}.`;
   }
   // One week holding most of the misses is the story worth telling
   const [worstWeek, worstCount] = [...perWeek.entries()].sort((a, b) => b[1] - a[1] || a[0] - b[0])[0];

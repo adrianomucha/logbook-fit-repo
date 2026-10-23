@@ -3,7 +3,9 @@ import { cn } from '@/lib/utils';
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { Modal } from '@/components/ui/Modal';
-import { CheckCircle2, CheckSquare } from 'lucide-react';
+import { CheckSquare } from 'lucide-react';
+import { COACH_REPLY_PENDING, formatWeekTally } from '@logbook/shared/client-copy';
+import { WorkoutMarkIcon } from './WorkoutMarkIcon';
 import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 
 interface CheckInDetailModalProps {
@@ -93,7 +95,7 @@ export function CheckInDetailModal({
       <div className="space-y-6">
         {/* What You Said */}
         <section>
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
+          <h3 className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground mb-3">
             What you said
           </h3>
           <div className="space-y-3">
@@ -122,7 +124,7 @@ export function CheckInDetailModal({
 
         {/* Coach's Feedback */}
         <section>
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
+          <h3 className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground mb-3">
             Your coach&apos;s feedback
           </h3>
           {checkIn.coachResponse ? (
@@ -139,7 +141,7 @@ export function CheckInDetailModal({
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Your coach will respond soon!
+              {COACH_REPLY_PENDING}
             </p>
           )}
         </section>
@@ -149,7 +151,7 @@ export function CheckInDetailModal({
 
         {/* This Week's Workouts */}
         <section>
-          <h3 className="text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
+          <h3 className="font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground mb-3">
             That week&apos;s workouts
           </h3>
           {weekWorkouts.length > 0 ? (
@@ -159,7 +161,7 @@ export function CheckInDetailModal({
                   key={workout.id}
                   className="flex items-center gap-2 text-sm"
                 >
-                  <CheckCircle2 className="w-4 h-4 text-success" />
+                  <WorkoutMarkIcon mark="done" size={16} />
                   <span>{getWorkoutName(workout.dayId)}</span>
                   <span className="text-muted-foreground text-xs">
                     ({format(new Date(workout.completedAt!), 'MMM d')})
@@ -168,15 +170,7 @@ export function CheckInDetailModal({
               ))}
               <div className="mt-3 pt-3 border-t">
                 <p className="text-sm font-medium">
-                  {completed >= totalExpected ? (
-                    <span className="text-success">
-                      Target hit — {completed} workout{completed === 1 ? '' : 's'} against a target of {totalExpected}
-                    </span>
-                  ) : (
-                    <span className="text-foreground">
-                      You completed {completed} out of {totalExpected} workouts
-                    </span>
-                  )}
+                  {formatWeekTally(completed, totalExpected)}
                 </p>
               </div>
             </div>

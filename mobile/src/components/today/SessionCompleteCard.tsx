@@ -5,15 +5,8 @@ import type { WorkoutCompletion } from '@logbook/shared/types';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { Button, Card, Eyebrow } from '@/components/ui';
 
-type EffortRating = 'EASY' | 'MEDIUM' | 'HARD';
-
-// Selected states reuse the app's effort colour semantics (check-in form,
-// workout history): easy = success, medium = neutral, hard = warning.
-const EFFORT_OPTIONS: { value: EffortRating; label: string; shell: string; text: string }[] = [
-  { value: 'EASY', label: 'Easy', shell: 'border-success/40 bg-success/10', text: 'text-success-text' },
-  { value: 'MEDIUM', label: 'Medium', shell: 'border-foreground/25 bg-muted', text: 'text-foreground' },
-  { value: 'HARD', label: 'Hard', shell: 'border-warning/40 bg-warning/10', text: 'text-warning-text' },
-];
+import type { EffortRating } from '@logbook/shared/client-copy';
+import { EffortPicker } from '@/components/EffortPicker';
 
 interface SessionCompleteCardProps {
   workoutName?: string;
@@ -57,7 +50,7 @@ export function SessionCompleteCard({
     <Card>
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
-          <Eyebrow>{day ? `Session complete · Day ${day}` : 'Session complete'}</Eyebrow>
+          <Eyebrow>{day ? `Workout complete · Day ${day}` : 'Workout complete'}</Eyebrow>
           <Text className="mt-2.5 font-sans-bold text-[26px] leading-[30px] tracking-tight text-foreground">{title}</Text>
           {subtitle ? <Text className="mt-1.5 font-sans text-[15px] text-muted-foreground">{subtitle}</Text> : null}
         </View>
@@ -90,30 +83,11 @@ export function SessionCompleteCard({
       ) : (
         <View className="mt-5 border-t border-border/50 pt-5">
           <Text className="mb-3 font-mono text-[11px] uppercase tracking-[1.8px] text-muted-foreground">How did that feel?</Text>
-          <View accessibilityRole="radiogroup" accessibilityLabel="How did that feel?" className="flex-row gap-2.5">
-            {EFFORT_OPTIONS.map((option) => {
-              const isSelected = selected === option.value;
-              return (
-                <Pressable
-                  key={option.value}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: isSelected }}
-                  onPress={() => setSelected(option.value)}
-                  className={`min-h-[52px] flex-1 items-center justify-center rounded-lg border-2 px-2 py-3.5 active:opacity-80 ${
-                    isSelected ? option.shell : 'border-transparent bg-muted/50'
-                  }`}
-                >
-                  <Text className={`font-sans-bold text-sm uppercase tracking-[0.35px] ${isSelected ? option.text : 'text-muted-foreground'}`}>
-                    {option.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+          <EffortPicker value={selected} onPick={setSelected} />
 
           {selected && !showNotes ? (
             <Pressable onPress={() => setShowNotes(true)} className="mt-1 min-h-[44px] justify-center self-start">
-              <Text className="font-sans text-xs text-muted-foreground underline">Add a note (optional)</Text>
+              <Eyebrow>Add a note (optional)</Eyebrow>
             </Pressable>
           ) : null}
 
@@ -133,7 +107,7 @@ export function SessionCompleteCard({
           {selected ? (
             <Button
               variant="primary"
-              className="mt-3 h-10"
+              className="mt-3 h-11"
               onPress={() => onSubmitFeedback(selected, notes.trim() || undefined)}
               loading={isSubmittingFeedback}
             >

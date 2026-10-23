@@ -118,7 +118,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
         <div className="flex flex-col items-center gap-3 py-6 text-center">
           <CheckCircle2 className="h-8 w-8 text-brand" aria-hidden="true" />
           <div>
-            <p className="font-medium text-foreground">Thanks — got it.</p>
+            <p className="font-medium text-foreground">Thanks, got it.</p>
             <p className="mt-1 text-sm text-muted-foreground">
               Every note gets read. It genuinely shapes what gets built next.
             </p>
@@ -180,7 +180,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
               placeholder={
                 category === 'BUG'
                   ? 'What did you do, and what went wrong?'
-                  : 'The rough shape is plenty — no need to polish it.'
+                  : 'The rough shape is plenty, no need to polish it.'
               }
             />
             {message.length >= MESSAGE_MAX_LENGTH - 200 && (

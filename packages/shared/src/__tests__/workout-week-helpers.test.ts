@@ -5,6 +5,9 @@ import {
   getPlanProgressStatus,
   getWeekDays,
   getActiveWorkout,
+  workoutMark,
+  WORKOUT_MARK_LABEL,
+  type WeekDayInfo,
 } from '../workout-week-helpers';
 import type { WorkoutWeek, WorkoutCompletion } from '@/types';
 
@@ -152,5 +155,19 @@ describe('getActiveWorkout', () => {
         completion('day-3', 'COMPLETED', '2026-07-14T09:00:00'),
       ])?.workoutDay.id
     ).toBe('day-3');
+  });
+});
+
+describe('workoutMark', () => {
+  const row = (status: WeekDayInfo['status'], completionStatus?: WorkoutCompletion['status']) =>
+    ({ status, completion: completionStatus ? { status: completionStatus } : undefined }) as WeekDayInfo;
+
+  it('reads a week-list row the way the Progress stepper draws it', () => {
+    expect(workoutMark(row('COMPLETED', 'COMPLETED'))).toBe('done');
+    expect(workoutMark(row('CURRENT', 'IN_PROGRESS'))).toBe('started');
+    expect(workoutMark(row('UPCOMING', 'IN_PROGRESS'))).toBe('started');
+    expect(workoutMark(row('CURRENT'))).toBe('next');
+    expect(workoutMark(row('UPCOMING'))).toBe('upcoming');
+    expect([WORKOUT_MARK_LABEL.next, WORKOUT_MARK_LABEL.started]).toEqual(['Next', 'Started']);
   });
 });

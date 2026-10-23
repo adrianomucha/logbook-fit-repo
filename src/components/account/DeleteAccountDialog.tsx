@@ -59,7 +59,7 @@ export function DeleteAccountDialog({ isOpen, onClose, role }: DeleteAccountDial
       setError(
         e instanceof ApiError && (e.status === 403 || e.status === 429)
           ? e.message
-          : 'Couldn’t delete the account. Nothing was changed — try again.'
+          : 'Couldn’t delete the account. Nothing was changed. Try again.'
       );
       setIsDeleting(false);
     }

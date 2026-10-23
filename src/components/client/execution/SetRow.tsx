@@ -139,7 +139,7 @@ export function SetRow({
       type="text"
       inputMode={opts.inputMode}
       value={opts.value}
-      placeholder={opts.placeholder ?? '—'}
+      placeholder={opts.placeholder ?? '–'}
       disabled={isReadOnly}
       aria-label={`Set ${setNumber} ${opts.label}`}
       onChange={(e) => opts.onChange(e.target.value)}
@@ -180,7 +180,7 @@ export function SetRow({
       </span>
 
       <span className="font-mono text-xs tabular-nums text-muted-foreground truncate">
-        {previous || '—'}
+        {previous || '–'}
       </span>
 
       {cellInput({
@@ -210,11 +210,11 @@ export function SetRow({
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
           !isReadOnly && 'active:scale-[0.92] cursor-pointer',
           completed
-            ? 'bg-success border-success'
+            ? 'bg-brand border-brand'
             : 'border-foreground/15 bg-transparent hover:border-foreground/30'
         )}
       >
-        {completed && <Check className="w-4 h-4 text-success-foreground animate-set-complete" />}
+        {completed && <Check className="w-4 h-4 text-brand-foreground animate-set-complete" />}
       </button>
     </div>
   );
