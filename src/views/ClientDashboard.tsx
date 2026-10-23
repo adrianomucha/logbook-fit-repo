@@ -170,6 +170,16 @@ export function ClientDashboard() {
   const dismissedReply = useDismissedCheckInReply();
   const showReply =
     !!freshReplyCheckIn && dismissedReply.ready && dismissedReply.dismissedId !== freshReplyCheckIn.id;
+  const checkInReply =
+    showReply && freshReplyCheckIn ? (
+      <CoachFeedbackCard
+        checkIn={freshReplyCheckIn}
+        coachName={coach?.user.name ?? 'Your coach'}
+        coachAvatar={coach?.user.avatarUrl ?? undefined}
+        onViewDetails={() => setShowCheckInModal(true)}
+        onDismiss={() => dismissedReply.dismiss(freshReplyCheckIn.id)}
+      />
+    ) : null;
 
   // Build adapted workout completions from week overview
   const clientWorkoutCompletions: WorkoutCompletion[] = useMemo(() => {
@@ -607,6 +617,8 @@ export function ClientDashboard() {
             onPreviewWeek={() => setWorkoutViewMode('weekly')}
           />
         )}
+        {/* The reply still reaches a client whose next plan hasn't started */}
+        {currentView === 'workout' && !planEnded && !!weekOverview?.startsOn && workoutViewMode === 'today' && checkInReply}
 
         {currentView === 'workout' && !planEnded && !!weekOverview && !weekOverview.startsOn && workoutViewMode === 'today' && (
           <TodayFocusView
@@ -624,17 +636,7 @@ export function ClientDashboard() {
             isRestarting={isRestartingWorkout}
             onSendFeedback={handleSendFeedback}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
-            checkInReply={
-              showReply && freshReplyCheckIn && (
-                <CoachFeedbackCard
-                  checkIn={freshReplyCheckIn}
-                  coachName={coach?.user.name ?? 'Your coach'}
-                  coachAvatar={coach?.user.avatarUrl ?? undefined}
-                  onViewDetails={() => setShowCheckInModal(true)}
-                  onDismiss={() => dismissedReply.dismiss(freshReplyCheckIn.id)}
-                />
-              )
-            }
+            checkInReply={checkInReply}
           />
         )}
 
