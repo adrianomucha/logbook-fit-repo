@@ -1,10 +1,13 @@
 import { format } from 'date-fns';
 import type { CheckIn } from '@logbook/shared/types';
+import { CHECK_IN_REPLY_COPY } from '@logbook/shared/checkin-reply';
 import { CoachContextStrip } from '@/components/today/CoachContextStrip';
 
 /**
- * The coach's reply to the latest check-in, on the week view. The same card
- * as the coach's note on Today. Renders only for a check-in with a reply.
+ * The coach's reply to the latest check-in, on Today while it's fresh. The
+ * same card as the coach's note; tapping it opens the full check-in, and
+ * the close button puts it away.
+ * Renders only for a check-in with a reply.
  * The web's CoachFeedbackCard.
  */
 export function CoachFeedbackCard({
@@ -12,22 +15,27 @@ export function CoachFeedbackCard({
   coachName,
   coachAvatar,
   onViewDetails,
+  onDismiss,
 }: {
   checkIn: CheckIn | null;
   coachName: string;
   coachAvatar?: string | null;
   onViewDetails: () => void;
+  onDismiss: () => void;
 }) {
   if (!checkIn || checkIn.status !== 'completed' || !checkIn.coachResponse) return null;
-  const date = format(new Date(checkIn.completedAt || checkIn.date), 'MMM d');
   return (
     <CoachContextStrip
       coachName={coachName}
       coachAvatar={coachAvatar}
-      label={`Check-in reply, ${date}`}
+      label={CHECK_IN_REPLY_COPY.label}
+      meta={format(new Date(checkIn.completedAt || checkIn.date), 'MMM d')}
       note={checkIn.coachResponse}
       maxLines={3}
-      action={{ label: 'View check-in', onPress: onViewDetails }}
+      onPress={onViewDetails}
+      openLabel={CHECK_IN_REPLY_COPY.open}
+      onDismiss={onDismiss}
+      dismissLabel={CHECK_IN_REPLY_COPY.dismiss}
     />
   );
 }

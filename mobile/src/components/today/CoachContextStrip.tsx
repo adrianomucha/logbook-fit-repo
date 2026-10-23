@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { noWidows } from '@logbook/shared/no-widows';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Eyebrow } from '@/components/ui';
@@ -12,7 +13,15 @@ interface CoachContextStripProps {
   label?: string;
   /** Lines shown before the text is cut (the full note lives behind the action) */
   maxLines?: number;
-  action?: { label: string; onPress: () => void };
+  /** Quiet detail on the right of the eyebrow row, e.g. the reply's date */
+  meta?: string;
+  /** Makes the whole card the way into the full note */
+  onPress?: () => void;
+  /** Accessible name for the whole-card action */
+  openLabel?: string;
+  /** Puts the card away; shows a close button in place of the chevron */
+  onDismiss?: () => void;
+  dismissLabel?: string;
 }
 
 /**
@@ -21,29 +30,61 @@ interface CoachContextStripProps {
  * Same card anatomy as the hero above it (surface, radius, mono eyebrow) so
  * the completed state reads as a stack of matched cards rather than a card
  * with loose fragments underneath; the avatar and eyebrow carry the voice.
+ * With onPress the whole card opens the full note, so there's no loose link
+ * line hanging under the text.
  */
-export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach note', maxLines, action }: CoachContextStripProps) {
+export function CoachContextStrip({
+  coachName,
+  coachAvatar,
+  note,
+  label = 'Coach note',
+  maxLines,
+  meta,
+  onPress,
+  openLabel,
+  onDismiss,
+  dismissLabel = 'Dismiss',
+}: CoachContextStripProps) {
   const coachFirst = coachName.split(' ')[0];
-  return (
-    <View className="rounded-2xl border border-border/70 bg-card p-5">
+  const body = (
+    <>
       <View className="flex-row items-center gap-2.5">
         <UserAvatar name={coachName} avatarUrl={coachAvatar} size={28} textSize={10} />
-        <Eyebrow>
+        <Text className="flex-1 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground" numberOfLines={1}>
           {label}
-          <Text className="text-muted-foreground/50">{' · '}</Text>
+          <Text className="text-muted-foreground/50">{' · '}</Text>
           {coachFirst}
-        </Eyebrow>
+        </Text>
+        {meta ? <Eyebrow>{meta}</Eyebrow> : null}
+        {onDismiss ? (
+          // Nested pressable takes the touch before the card does; hitSlop
+          // gives it a 40pt target without growing the header row
+          <Pressable
+            onPress={onDismiss}
+            accessibilityRole="button"
+            accessibilityLabel={dismissLabel}
+            hitSlop={12}
+            className="-mr-1 active:opacity-50"
+          >
+            <Feather name="x" size={16} color="#a3a3a3" />
+          </Pressable>
+        ) : onPress ? (
+          <Feather name="chevron-right" size={16} color="#a3a3a3" style={{ marginRight: -4 }} />
+        ) : null}
       </View>
       {/* Coach-written copy of unknowable length: glue the last pair so the
           note never ends on a lone word, whatever the phone width */}
       <Text className="mt-3 font-sans text-[15px] leading-6 text-foreground" numberOfLines={maxLines}>
         {noWidows(note)}
       </Text>
-      {action ? (
-        <Pressable onPress={action.onPress} accessibilityRole="button" className="-mb-2 mt-2 min-h-[44px] justify-center self-start active:opacity-60">
-          <Eyebrow>{action.label}</Eyebrow>
-        </Pressable>
-      ) : null}
-    </View>
+    </>
+  );
+  const cardClass = 'rounded-2xl border border-border/70 bg-card p-5';
+  return onPress ? (
+    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={openLabel} className={`${cardClass} active:opacity-70`}>
+      {body}
+    </Pressable>
+  ) : (
+    <View className={cardClass}>{body}</View>
   );
 }

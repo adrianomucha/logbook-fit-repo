@@ -24,6 +24,8 @@ import { ViewToggle, type WorkoutViewMode } from '@/components/today/ViewToggle'
 import { WeekOverview } from '@/components/today/WeekOverview';
 import { PendingCheckInBanner } from '@/components/checkin/PendingCheckInBanner';
 import { CoachFeedbackCard } from '@/components/checkin/CoachFeedbackCard';
+import { freshCheckInReply } from '@logbook/shared/checkin-reply';
+import { useDismissedCheckInReply } from '@/hooks/useDismissedCheckInReply';
 import { CheckInDetailSheet } from '@/components/checkin/CheckInDetailSheet';
 
 function greeting(): string {
@@ -83,15 +85,15 @@ export default function TodayScreen() {
     [apiCheckIns, clientProfileId, coach]
   );
   const pendingCheckIn = useMemo(() => checkIns.find((c) => c.status === 'pending') ?? null, [checkIns]);
-  // Newest completed check-in with a reply, whenever it arrived — the one
-  // reply the whole loop exists to deliver must not vanish on a Monday.
-  const latestFeedbackCheckIn = useMemo(
-    () =>
-      checkIns
-        .filter((c) => c.status === 'completed' && c.completedAt)
-        .sort((a, b) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())[0] ?? null,
-    [checkIns]
-  );
+  // The coach's reply leads on Today for a week after it arrives (where the
+  // "replied to your check-in" push lands), then steps aside; the full
+  // history lives in Progress. Same rule as the web.
+  const freshReplyCheckIn = useMemo(() => freshCheckInReply(checkIns), [checkIns]);
+  // The client can put it away sooner: the close button, or reading it in
+  // full. Remembered per device by check-in id, so the next reply shows.
+  const dismissedReply = useDismissedCheckInReply();
+  const showReply =
+    !!freshReplyCheckIn && dismissedReply.ready && dismissedReply.dismissedId !== freshReplyCheckIn.id;
   const allCompletions: WorkoutCompletion[] = useMemo(
     () => (progress?.allCompletions ? apiProgressToWorkoutCompletions(progress.allCompletions) : completions),
     [progress, completions]
@@ -253,6 +255,17 @@ export default function TodayScreen() {
     openDay(today);
   };
 
+  // The coach's fresh check-in reply, on Today under the day's cards
+  const checkInReply = showReply && freshReplyCheckIn ? (
+    <CoachFeedbackCard
+      checkIn={freshReplyCheckIn}
+      coachName={coach.user.name ?? 'Your coach'}
+      coachAvatar={coach.user.avatarUrl}
+      onViewDetails={() => setShowCheckInDetail(true)}
+      onDismiss={() => dismissedReply.dismiss(freshReplyCheckIn.id)}
+    />
+  ) : null;
+
   return (
     <Screen withHeader onRefresh={refresh} refreshing={refreshing}>
       {header}
@@ -281,14 +294,6 @@ export default function TodayScreen() {
             days={weekDays}
             onOpenDay={openDay}
           />
-          {latestFeedbackCheckIn ? (
-            <CoachFeedbackCard
-              checkIn={latestFeedbackCheckIn}
-              coachName={coach.user.name ?? 'Your coach'}
-              coachAvatar={coach.user.avatarUrl}
-              onViewDetails={() => setShowCheckInDetail(true)}
-            />
-          ) : null}
         </>
       ) : weekOverview?.startsOn ? (
         // Set to start next Monday: say when, and let them look ahead
@@ -316,6 +321,7 @@ export default function TodayScreen() {
             {todayCoachNote && coach.user.name ? (
               <CoachContextStrip coachName={coach.user.name} coachAvatar={coach.user.avatarUrl} note={todayCoachNote} />
             ) : null}
+            {checkInReply}
             {/* Restart — rare, deliberate action. A hairline footer row with a
                 reason on the left gives the quiet ghost button a place to
                 belong, instead of floating alone under the cards */}
@@ -346,10 +352,20 @@ export default function TodayScreen() {
         <EmptyState title={EMPTY_WEEK_COPY.title} body={EMPTY_WEEK_COPY.body(coach.user.name)} />
       )}
 
+      {/* Below the day's card; when the workout is done it sits above the
+          restart footer instead (inside the completed branch) */}
+      {view === 'today' && !weekOverview?.planEnded && !(today?.workoutDay && state === 'completed' && today.completion)
+        ? checkInReply
+        : null}
+
       <CheckInDetailSheet
-        checkIn={latestFeedbackCheckIn}
+        checkIn={freshReplyCheckIn}
         visible={showCheckInDetail}
-        onClose={() => setShowCheckInDetail(false)}
+        onClose={() => {
+          setShowCheckInDetail(false);
+          // Read in full: it's done its job on Today
+          if (freshReplyCheckIn) dismissedReply.dismiss(freshReplyCheckIn.id);
+        }}
         completedWorkouts={allCompletions}
         plan={plan}
       />
