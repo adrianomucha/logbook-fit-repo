@@ -16,7 +16,7 @@ interface PhotoNudgeProps {
 export function PhotoNudge({ clientName, coachName, onAddPhoto }: PhotoNudgeProps) {
   const coachFirst = coachName.split(' ')[0];
   return (
-    <View className="gap-3 rounded-xl border border-dashed border-border bg-muted/30 px-4 py-3.5">
+    <View className="gap-3 rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-3.5">
       <View className="flex-row items-center gap-3">
         <UserAvatar name={clientName} size={36} textSize={14} />
         <View className="flex-1">

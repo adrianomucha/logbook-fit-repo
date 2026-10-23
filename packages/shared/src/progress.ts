@@ -2,7 +2,8 @@ import { addWeeks, differenceInCalendarDays, format, getDay, parseISO, startOfWe
 import type { CheckIn, WorkoutCompletion, WorkoutDay, WorkoutPlan } from './types';
 import { formatBestGain, formatBestValue, type PersonalBest } from './personal-bests';
 import type { WeightUnit } from './weight-units';
-import { isWorkoutDay } from './workout-week-helpers';
+import { isWorkoutDay, WORKOUT_MARK_LABEL, type WorkoutMark } from './workout-week-helpers';
+import { parseSessionName } from './parse-session-name';
 
 /**
  * The Progress tab's pure logic, shared by web and app: this week as a
@@ -37,16 +38,25 @@ export function getWorkoutDisplayName(day: WorkoutDay | undefined, dayIndex: num
   return 'Workout';
 }
 
+/**
+ * A workout's name as the client reads it in a sentence: the coach's
+ * "Day 5: Lower B + Core (Backup)" becomes "Lower B + Core". The same
+ * cleanup the Today card and the week list apply.
+ */
+export function workoutTitle(name: string): string {
+  return parseSessionName(name).title || name;
+}
+
 function sessionName(completion: WorkoutCompletion, plans: WorkoutPlan[]): string {
   const week = plans.find((p) => p.id === completion.planId)?.weeks.find((w) => w.id === completion.weekId);
   const dayIndex = week?.days.findIndex((d) => d.id === completion.dayId) ?? -1;
-  return getWorkoutDisplayName(week?.days[dayIndex], dayIndex, completion);
+  return workoutTitle(getWorkoutDisplayName(week?.days[dayIndex], dayIndex, completion));
 }
 
 /** One circle in this week's stepper */
 export interface WeekSlot {
-  state: 'done' | 'next' | 'upcoming';
-  /** Under the circle: the weekday it was done ("Tue"), "Next", or nothing */
+  state: WorkoutMark;
+  /** Under the circle: the weekday it was done ("Tue"), "Started", "Next", or nothing */
   label: string;
 }
 
@@ -67,13 +77,14 @@ export interface ThisWeek {
  * This week as circles and a sentence that always ends on what to do next.
  * It counts the plan's current week, the same workouts the Today tab lists,
  * so the two tabs never disagree. Without a plan week (no plan, or the coach
- * hasn't built it yet) it counts sessions since Monday against the target.
+ * hasn't built it yet) it counts workouts since Monday against the target.
  */
 export function describeThisWeek({
   plan,
   weekNumber,
   completions,
   target,
+  startedDayId = null,
   now = new Date(),
 }: {
   plan: WorkoutPlan | null;
@@ -82,6 +93,8 @@ export function describeThisWeek({
   completions: WorkoutCompletion[];
   /** Workouts a week, for when there's no plan week to count */
   target: number;
+  /** A workout of this plan week that's been started but not finished */
+  startedDayId?: string | null;
   now?: Date;
 }): ThisWeek {
   const sessions = completedSessions(completions);
@@ -92,13 +105,17 @@ export function describeThisWeek({
   let done: WorkoutCompletion[];
   let total = target;
   let nextUp: string | null = null;
+  let started = false;
   if (week && weekWorkouts.length > 0) {
     const days = [...weekWorkouts].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
     const byDay = new Map(sessions.filter((c) => c.weekId === week.id).map((c) => [c.dayId, c]));
     // Circles fill in the order the workouts were done, whatever their order in the plan
     done = completedSessions(days.flatMap((d) => byDay.get(d.id) ?? []));
-    const i = days.findIndex((d) => !byDay.has(d.id));
-    nextUp = i < 0 ? null : days[i].name || `Day ${days[i].orderIndex ?? i + 1}`;
+    // A workout already underway comes before the next one in plan order
+    const left = days.filter((d) => !byDay.has(d.id));
+    const current = left.find((d) => d.id === startedDayId) ?? left[0];
+    started = !!current && current.id === startedDayId;
+    nextUp = current ? workoutTitle(current.name || `Day ${current.orderIndex ?? days.indexOf(current) + 1}`) : null;
     total = days.length;
   } else {
     const thisMonday = startOfWeek(now, { weekStartsOn: 1 }).getTime();
@@ -106,26 +123,28 @@ export function describeThisWeek({
   }
 
   const completed = done.length;
+  const currentMark: WorkoutMark = started ? 'started' : 'next';
   const slots: WeekSlot[] = Array.from({ length: Math.min(7, Math.max(total, completed)) }, (_, i) =>
     i < completed
       ? { state: 'done', label: format(parseISO(done[i].completedAt!), 'EEE') }
       : i === completed
-        ? { state: 'next', label: 'Next' }
+        ? { state: currentMark, label: WORKOUT_MARK_LABEL[currentMark] }
         : { state: 'upcoming', label: '' },
   );
   const base = { completed, target: total, slots };
+  const upNext = nextUp ? (started ? `Finish ${nextUp}.` : completed > 0 ? `Next up, ${nextUp}.` : `First up, ${nextUp}.`) : null;
 
   if (completed >= total) {
     return { ...base, lead: completed > total ? `${completed} done.` : `All ${total} done.`, rest: 'Week complete. Rest up.' };
   }
   if (completed > 0) {
     const left = total - completed;
-    return { ...base, lead: `${completed} down.`, rest: `${left} to go${nextUp ? `. Next up, ${nextUp}.` : '.'}` };
+    return { ...base, lead: `${completed} down.`, rest: `${left} to go${upNext ? `. ${upNext}` : '.'}` };
   }
   if (sessions.length === 0) {
-    return { ...base, lead: 'Fresh start.', rest: nextUp ? `First up, ${nextUp}.` : 'Your first workout kicks things off.' };
+    return { ...base, lead: 'Fresh start.', rest: upNext ?? 'Your first workout kicks things off.' };
   }
-  return { ...base, lead: 'New week.', rest: nextUp ? `First up, ${nextUp}.` : `${total} sessions to go.` };
+  return { ...base, lead: 'New week.', rest: upNext ?? `${total} workouts to go.` };
 }
 
 export type MomentKind = 'best' | 'streak' | 'week' | 'milestone' | 'comeback' | 'coach' | 'quiet';
@@ -296,7 +315,7 @@ export function buildProgressStory({
           kind: 'week',
           at: last.completedAt!,
           title: `Finished Week ${week.weekNumber}`,
-          detail: `${plan.name} · all ${workouts.length} sessions`,
+          detail: `${plan.name} · all ${workouts.length} workouts`,
         }),
       );
       notable.add(last.id);

@@ -50,9 +50,9 @@ export function WorkoutOverview({
   const categories = getUniqueCategories(exercises);
   const inProgress = actionState === 'in-progress';
 
-  const { day, title, subtitle } = parseSessionName(workoutDay.name || 'Today’s Workout');
+  const { day, title, subtitle } = parseSessionName(workoutDay.name || 'Today’s workout');
   const eyebrowParts = [
-    day ? `Today · Day ${day}` : 'Today’s session',
+    day ? `Today · Day ${day}` : 'Today’s workout',
     coachName ? `Coach ${coachName.split(' ')[0]}` : null,
   ].filter(Boolean);
 

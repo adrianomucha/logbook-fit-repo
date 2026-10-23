@@ -214,3 +214,25 @@ export function getActiveWorkout(weekDays: WeekDayInfo[]): WeekDayInfo | null {
     weekDays[weekDays.length - 1]
   );
 }
+
+/**
+ * How a workout reads wherever this week is drawn (the week list and the
+ * Progress stepper): one look per state, so both say the same thing.
+ */
+export type WorkoutMark = 'done' | 'started' | 'next' | 'upcoming';
+
+/** The word beside or under a mark; done and upcoming need none */
+export const WORKOUT_MARK_LABEL: Record<WorkoutMark, string> = {
+  done: '',
+  started: 'Started',
+  next: 'Next',
+  upcoming: '',
+};
+
+/** A week-list row's mark */
+export function workoutMark(day: WeekDayInfo): WorkoutMark {
+  if (day.status === 'COMPLETED') return 'done';
+  if (day.completion?.status === 'IN_PROGRESS') return 'started';
+  if (day.status === 'CURRENT') return 'next';
+  return 'upcoming';
+}

@@ -66,7 +66,7 @@ export const passwordSchema = z
     message: "Password must be at most 72 characters",
   })
   .refine((password) => !isCommonPassword(password), {
-    message: "This password is too common — pick something harder to guess",
+    message: "This password is too common. Pick something harder to guess",
   });
 
 export const signupSchema = z

@@ -3,18 +3,10 @@ import { WorkoutCompletion } from '@/types';
 import { parseSessionName } from '@/lib/parse-session-name';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { cn } from '@/lib/utils';
 import { Check, Send } from 'lucide-react';
 
-type EffortRating = 'EASY' | 'MEDIUM' | 'HARD';
-
-// Selected states reuse the app's effort color semantics (check-in form,
-// workout history): easy = success, medium = neutral, hard = warning.
-const EFFORT_OPTIONS: { value: EffortRating; label: string; selectedClass: string }[] = [
-  { value: 'EASY', label: 'Easy', selectedClass: 'text-success bg-success/10 border-success/40 ring-1 ring-success/20' },
-  { value: 'MEDIUM', label: 'Medium', selectedClass: 'text-foreground bg-muted border-foreground/25 ring-1 ring-foreground/10' },
-  { value: 'HARD', label: 'Hard', selectedClass: 'text-warning bg-warning/10 border-warning/40 ring-1 ring-warning/20' },
-];
+import type { EffortRating } from '@logbook/shared/client-copy';
+import { EffortPicker } from '../EffortPicker';
 
 interface SessionCompleteCardProps {
   /** Raw coach-authored session name, e.g. "Day 5 — Lower B + Core (Backup)" */
@@ -76,7 +68,7 @@ export function SessionCompleteCard({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            {day ? `Session complete · Day ${day}` : 'Session complete'}
+            {day ? `Workout complete · Day ${day}` : 'Workout complete'}
           </p>
           <h2 className="text-[26px] sm:text-[28px] font-bold tracking-tight leading-[1.15] mt-2.5 text-balance">
             {title}
@@ -128,35 +120,13 @@ export function SessionCompleteCard({
             How did that feel?
           </p>
 
-          <div role="group" aria-labelledby={promptId} className="flex gap-2.5">
-            {EFFORT_OPTIONS.map((option) => {
-              const isSelected = selectedRating === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  aria-pressed={isSelected}
-                  onClick={() => setSelectedRating(option.value)}
-                  className={cn(
-                    'flex-1 py-3.5 px-2 rounded-lg border-2 transition-[background-color,border-color,color,box-shadow] min-h-[52px] touch-manipulation',
-                    'text-sm font-bold uppercase tracking-wide',
-                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                    isSelected
-                      ? option.selectedClass
-                      : 'border-transparent bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
-                  )}
-                >
-                  {option.label}
-                </button>
-              );
-            })}
-          </div>
+          <EffortPicker value={selectedRating} onPick={setSelectedRating} labelledBy={promptId} />
 
           {selectedRating && !showNotes && (
             <button
               type="button"
               onClick={() => setShowNotes(true)}
-              className="text-xs text-muted-foreground hover:text-foreground underline mt-1 min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground mt-1 min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               Add a note (optional)
             </button>
@@ -181,7 +151,7 @@ export function SessionCompleteCard({
             <Button
               onClick={handleSubmit}
               disabled={isSubmittingFeedback}
-              className="w-full mt-3"
+              className="w-full mt-3 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
             >
               <Send className="w-4 h-4 mr-2" />
               {isSubmittingFeedback

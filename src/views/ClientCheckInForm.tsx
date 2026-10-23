@@ -5,9 +5,11 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { AlertTriangle, Check, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertTriangle, Check, Loader2 } from 'lucide-react';
+import { WorkoutMarkIcon } from '@/components/client/WorkoutMarkIcon';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { BACK_HOME, CHECKIN_ALREADY_SENT, CHECKIN_EXPIRED, checkInReplyNote } from '@logbook/shared/client-copy';
 
 // Selected states reuse the app's effort color semantics (SessionCompleteCard,
 // workout history): easy/fresh = success, strained = warning, run down = destructive.
@@ -79,7 +81,7 @@ export function ClientCheckInForm() {
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in not found</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in doesn&apos;t exist or has expired.</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to dashboard</Button>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">{BACK_HOME}</Button>
           </div>
         </div>
       </div>
@@ -111,13 +113,12 @@ export function ClientCheckInForm() {
             <h1
               ref={successHeadingRef}
               tabIndex={-1}
-              className="text-3xl sm:text-4xl font-black uppercase tracking-tight leading-[0.95] text-balance antialiased focus:outline-none"
+              className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight text-balance antialiased focus:outline-none"
             >
               {coachFirstName ? `Sent to ${coachFirstName}` : 'Sent to your coach'}
             </h1>
             <p className="text-sm text-muted-foreground leading-relaxed mt-3">
-              {coachFirstName ?? 'Your coach'} will read it and get back to you — their reply
-              shows up on your dashboard.
+              {checkInReplyNote(coachFirstName)}
             </p>
           </div>
 
@@ -160,7 +161,7 @@ export function ClientCheckInForm() {
               onClick={() => router.push('/client')}
               className="w-full h-14 rounded-xl bg-brand text-brand-foreground text-sm font-bold uppercase tracking-wider flex items-center justify-center gap-2 hover:bg-brand/90 active:scale-[0.98] transition-[background-color,transform] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              Back to today
+              {BACK_HOME}
             </button>
             <Button
               variant="ghost"
@@ -183,8 +184,8 @@ export function ClientCheckInForm() {
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in expired</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in is no longer open — the next one will appear on your dashboard.</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to dashboard</Button>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">{CHECKIN_EXPIRED}</p>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">{BACK_HOME}</Button>
           </div>
         </div>
       </div>
@@ -197,10 +198,12 @@ export function ClientCheckInForm() {
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
           <div className="text-center py-12 px-6">
-            <CheckCircle2 className="w-10 h-10 mx-auto mb-4 text-success" />
+            <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-brand flex items-center justify-center">
+              <Check className="w-6 h-6 text-brand-foreground" strokeWidth={3} aria-hidden="true" />
+            </div>
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Already sent</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">You already sent this one to your coach.</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">Back to dashboard</Button>
+            <p className="text-sm text-muted-foreground mb-5 antialiased">{CHECKIN_ALREADY_SENT}</p>
+            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">{BACK_HOME}</Button>
           </div>
         </div>
       </div>
@@ -236,7 +239,7 @@ export function ClientCheckInForm() {
         // terminal screen (submitted/expired) renders instead of a dead end.
         await refresh();
         setErrors({
-          submit: 'This check-in is no longer open — it may have been answered already or expired.',
+          submit: 'This check-in is no longer open. It may have been answered already or expired.',
         });
       } else {
         setErrors({ submit: 'Failed to submit. Please try again.' });
@@ -363,7 +366,7 @@ export function ClientCheckInForm() {
                   key={completion.id}
                   className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-muted/40"
                 >
-                  <span className="w-2 h-2 rounded-full bg-success shrink-0" />
+                  <WorkoutMarkIcon mark="done" size={16} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold tracking-tight truncate">
                       {completion.day?.name ?? 'Workout'}

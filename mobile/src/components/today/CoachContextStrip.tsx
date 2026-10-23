@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { noWidows } from '@logbook/shared/no-widows';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Eyebrow } from '@/components/ui';
@@ -6,30 +6,44 @@ import { Eyebrow } from '@/components/ui';
 interface CoachContextStripProps {
   coachName: string;
   coachAvatar?: string | null;
+  /** Today's coaching note, or a check-in reply */
   note: string;
+  /** What the note is; defaults to "Coach note" */
+  label?: string;
+  /** Lines shown before the text is cut (the full note lives behind the action) */
+  maxLines?: number;
+  action?: { label: string; onPress: () => void };
 }
 
 /**
- * The coach's note for today's session, shown once the session is done.
+ * A note from the coach: today's coaching note once the workout is done,
+ * or the reply to the latest check-in. One look for both, as on the web.
  * Same card anatomy as the hero above it (surface, radius, mono eyebrow) so
  * the completed state reads as a stack of matched cards rather than a card
  * with loose fragments underneath; the avatar and eyebrow carry the voice.
  */
-export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContextStripProps) {
+export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach note', maxLines, action }: CoachContextStripProps) {
   const coachFirst = coachName.split(' ')[0];
   return (
     <View className="rounded-2xl border border-border/70 bg-card p-5">
       <View className="flex-row items-center gap-2.5">
         <UserAvatar name={coachName} avatarUrl={coachAvatar} size={28} textSize={10} />
         <Eyebrow>
-          Coach note
+          {label}
           <Text className="text-muted-foreground/50">{' · '}</Text>
           {coachFirst}
         </Eyebrow>
       </View>
       {/* Coach-written copy of unknowable length: glue the last pair so the
           note never ends on a lone word, whatever the phone width */}
-      <Text className="mt-3 font-sans text-[15px] leading-6 text-foreground">{noWidows(note)}</Text>
+      <Text className="mt-3 font-sans text-[15px] leading-6 text-foreground" numberOfLines={maxLines}>
+        {noWidows(note)}
+      </Text>
+      {action ? (
+        <Pressable onPress={action.onPress} accessibilityRole="button" className="-mb-2 mt-2 min-h-[44px] justify-center self-start active:opacity-60">
+          <Eyebrow>{action.label}</Eyebrow>
+        </Pressable>
+      ) : null}
     </View>
   );
 }

@@ -61,7 +61,7 @@ export function FeedbackSheet({ visible, onClose, pageUrl }: { visible: boolean;
           {isSent ? (
             <View className="flex-1 items-center justify-center gap-3">
               <Feather name="check-circle" size={32} color="#c3f910" />
-              <Text className="font-sans-medium text-foreground">Thanks — got it.</Text>
+              <Text className="font-sans-medium text-foreground">Thanks, got it.</Text>
               <Text className="text-center font-sans text-sm text-muted-foreground">Every note gets read. It genuinely shapes what gets built next.</Text>
               <Button variant="primary" className="mt-4 h-11 px-8" onPress={onClose}>Done</Button>
             </View>
@@ -93,7 +93,7 @@ export function FeedbackSheet({ visible, onClose, pageUrl }: { visible: boolean;
                 </Text>
                 <TextInput
                   className="min-h-[120px] rounded-md border border-input bg-background px-3 py-2 font-sans text-base text-foreground"
-                  placeholder={category === 'BUG' ? 'What did you do, and what went wrong?' : 'The rough shape is plenty — no need to polish it.'}
+                  placeholder={category === 'BUG' ? 'What did you do, and what went wrong?' : 'The rough shape is plenty, no need to polish it.'}
                   placeholderTextColor="#737373"
                   value={message}
                   onChangeText={setMessage}

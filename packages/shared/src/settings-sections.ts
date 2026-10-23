@@ -51,15 +51,15 @@ export const SETTINGS_SECTION_COPY: Record<
   profile: {
     title: 'Profile',
     description: {
-      coach: 'How clients see you — on invites and around the app.',
-      client: 'How your coach sees you — on your card in their app.',
+      coach: 'How clients see you: on invites and around the app.',
+      client: 'How your coach sees you: on your card in their app.',
     },
   },
   preferences: {
     title: 'Preferences',
     description: {
-      coach: 'How the app works for you — alerts, units and time.',
-      client: 'How the app works for you — alerts, units and time.',
+      coach: 'How the app works for you: alerts, units and time.',
+      client: 'How the app works for you: alerts, units and time.',
     },
   },
   account: {
@@ -95,8 +95,8 @@ export const SETTINGS_FIELD_COPY = {
   timezone: {
     label: 'Timezone',
     hint: {
-      coach: 'Detected from your device — check-in schedules follow it automatically, even when you travel.',
-      client: 'Detected from your device — your check-in schedule follows it, even when you travel.',
+      coach: 'Detected from your device. Check-in schedules follow it automatically, even when you travel.',
+      client: 'Detected from your device. Your check-in schedule follows it, even when you travel.',
     },
   },
 } as const;

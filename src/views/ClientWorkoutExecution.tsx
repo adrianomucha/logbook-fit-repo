@@ -21,6 +21,9 @@ import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 import { getLoggedSetsCount, NOTHING_LOGGED_COPY } from '@logbook/shared/workout-execution';
 import { formatWeight } from '@logbook/shared/weight-units';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { EffortPicker } from '@/components/client/EffortPicker';
+import { workoutTitle } from '@logbook/shared/progress';
+import { parseSessionName } from '@logbook/shared/parse-session-name';
 
 export function ClientWorkoutExecution() {
   const router = useRouter();
@@ -368,10 +371,10 @@ export function ClientWorkoutExecution() {
             <Check className="w-10 h-10 text-brand-foreground" strokeWidth={3} />
           </div>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
-            Session complete
+            Workout complete
           </p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-            {day.name}
+            {workoutTitle(day.name ?? 'Workout')}
           </h1>
         </div>
 
@@ -396,19 +399,7 @@ export function ClientWorkoutExecution() {
           <p id="celebration-effort-label" className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-4">
             How did that feel?
           </p>
-          <div role="group" aria-labelledby="celebration-effort-label" className="flex gap-2 sm:gap-3">
-            {(['EASY', 'MEDIUM', 'HARD'] as const).map((level) => (
-              <button
-                key={level}
-                type="button"
-                onClick={() => handleEffortRating(level)}
-                disabled={isSavingRating}
-                className="px-5 sm:px-6 py-3.5 sm:py-3 rounded-full bg-foreground text-background font-bold uppercase tracking-wider text-sm hover:bg-foreground/90 active:scale-[0.95] transition-[background-color,transform] duration-150 touch-manipulation min-h-[44px] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              >
-                {level === 'EASY' ? 'Easy' : level === 'MEDIUM' ? 'Medium' : 'Hard'}
-              </button>
-            ))}
-          </div>
+          <EffortPicker onPick={handleEffortRating} disabled={isSavingRating} labelledBy="celebration-effort-label" />
         </div>
 
         {/* A real control, not a whole-screen click target: the pointer-only
@@ -431,7 +422,11 @@ export function ClientWorkoutExecution() {
       {/* Sticky header */}
       <WorkoutHeader
         workoutName={day.name ?? 'Workout'}
-        dayLabel={day.orderIndex ? `Day ${day.orderIndex}` : undefined}
+        // The day the coach named it, like the Today card, else its place in the week
+        dayLabel={(() => {
+          const n = parseSessionName(day.name ?? '').day ?? day.orderIndex;
+          return n ? `Day ${n}` : undefined;
+        })()}
         exercisesDone={stats.exercisesDone}
         exercisesTotal={stats.exercisesTotal}
         onBack={handleBack}
@@ -537,7 +532,7 @@ export function ClientWorkoutExecution() {
         onConfirm={handleRestartConfirm}
         title="Restart this workout?"
         message="You'll start again from the first set."
-        warningMessage="All progress, flags, and notes from this session are cleared."
+        warningMessage="All progress, flags, and notes from this workout are cleared."
         confirmLabel="Restart workout"
         confirmVariant="destructive"
         icon={RotateCcw}

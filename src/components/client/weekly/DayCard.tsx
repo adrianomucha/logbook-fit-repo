@@ -1,6 +1,7 @@
-import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { WeekDayInfo } from '@/lib/workout-week-helpers';
+import { WeekDayInfo, WORKOUT_MARK_LABEL, workoutMark } from '@/lib/workout-week-helpers';
+import { parseSessionName } from '@logbook/shared/parse-session-name';
+import { WorkoutMarkIcon } from '../WorkoutMarkIcon';
 
 interface DayCardProps {
   day: WeekDayInfo;
@@ -18,18 +19,16 @@ export function DayCard({ day, onClick }: DayCardProps) {
   };
 
   const isCompleted = status === 'COMPLETED';
-  const isInProgress = day.completion?.status === 'IN_PROGRESS';
   const isCurrent = status === 'CURRENT';
+  const mark = workoutMark(day);
+  const markLabel = WORKOUT_MARK_LABEL[mark];
+  // The coach's "Day 5: Lower B (Backup)" reads as day 05, "Lower B"
+  const parsed = parseSessionName(workoutDay?.name || 'Workout');
+  const dayNumber = parsed.day ?? String(orderIndex);
 
-  // Status reaches sighted users through a badge or an icon-only check, so it
-  // has to travel in the accessible name too — aria-label replaces the content.
-  const statusText = isCompleted
-    ? 'completed'
-    : isInProgress
-      ? 'in progress'
-      : isCurrent
-        ? 'up next'
-        : null;
+  // Status reaches sighted users through the mark, so it has to travel in
+  // the accessible name too; aria-label replaces the content.
+  const statusText = isCompleted ? 'done' : markLabel.toLowerCase() || null;
 
   const content = (
     <>
@@ -39,36 +38,25 @@ export function DayCard({ day, onClick }: DayCardProps) {
           Day
         </p>
         <p className="font-mono text-sm font-bold tabular-nums leading-none mt-0.5">
-          {String(orderIndex).padStart(2, '0')}
+          {dayNumber.padStart(2, '0')}
         </p>
       </div>
 
       {/* Middle — workout info */}
       <div className="flex-1 min-w-0 text-left">
-        <p className="text-[15px] font-semibold truncate tracking-tight">
-          {workoutDay?.name || 'Workout'}
+        <p className={cn('text-[15px] font-semibold truncate tracking-tight', isCompleted && 'text-muted-foreground')}>
+          {parsed.title}
         </p>
         <p className="font-mono text-[10px] text-muted-foreground tabular-nums mt-0.5">
           {exerciseCount} exercises
         </p>
       </div>
 
-      {/* Right — status indicator. A started workout must never look
-          identical to an untouched one, wherever it sits in the week. */}
-      <div className="shrink-0">
-        {isCompleted ? (
-          <div className="w-6 h-6 rounded-full bg-success/15 flex items-center justify-center">
-            <Check className="w-3.5 h-3.5 text-success stroke-[3]" />
-          </div>
-        ) : isInProgress ? (
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] font-bold bg-warning/15 text-warning rounded-full px-2 py-1">
-            In progress
-          </span>
-        ) : isCurrent ? (
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] font-bold bg-brand text-brand-foreground rounded-full px-2 py-1">
-            Up next
-          </span>
-        ) : null}
+      {/* Right: the same mark as the Progress stepper. A started workout
+          must never look identical to an untouched one. */}
+      <div className="shrink-0 flex items-center gap-2">
+        {markLabel && <span className="text-[11px] font-semibold text-foreground">{markLabel}</span>}
+        <WorkoutMarkIcon mark={mark} size={24} />
       </div>
     </>
   );
@@ -78,7 +66,6 @@ export function DayCard({ day, onClick }: DayCardProps) {
   const shell = cn(
     'w-full flex items-center gap-3 px-3.5 py-3 rounded-lg transition-colors touch-manipulation min-h-[56px]',
     isCurrent && 'bg-muted/60 ring-1 ring-inset ring-brand/50',
-    isCompleted && 'opacity-60',
   );
 
   if (!isInteractive) {
@@ -96,7 +83,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
       )}
       aria-label={[
         `Workout ${orderIndex}`,
-        workoutDay?.name || 'Workout',
+        parsed.title,
         statusText,
       ]
         .filter(Boolean)

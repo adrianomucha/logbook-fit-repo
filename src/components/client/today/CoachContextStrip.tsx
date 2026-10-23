@@ -4,17 +4,23 @@ import { avatarColor } from '@/lib/avatar-colors';
 interface CoachContextStripProps {
   coachName: string;
   coachAvatar?: string;
-  /** Coaching note/instruction for today's workout */
+  /** Coaching note/instruction for today's workout, or a check-in reply */
   note: string;
+  /** What the note is; defaults to "Coach note" */
+  label?: string;
+  /** Lines shown before the text is cut (the full note lives behind the action) */
+  maxLines?: 2 | 3;
+  action?: { label: string; onClick: () => void };
 }
 
 /**
- * The coach's note for today's session, shown once the session is done.
+ * A note from the coach: today's coaching note once the workout is done,
+ * or the reply to the latest check-in. One look for both.
  * Same card anatomy as the hero above it (surface, radius, mono eyebrow) so
  * the completed state reads as a stack of matched cards rather than a card
  * with loose fragments underneath; the avatar and eyebrow carry the voice.
  */
-export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContextStripProps) {
+export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach note', maxLines, action }: CoachContextStripProps) {
   const coachFirst = coachName.split(' ')[0];
 
   return (
@@ -41,7 +47,7 @@ export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContext
           )}
         </div>
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-          Coach note
+          {label}
           <span className="text-muted-foreground/50">&ensp;·&ensp;</span>
           {coachFirst}
         </p>
@@ -49,9 +55,24 @@ export function CoachContextStrip({ coachName, coachAvatar, note }: CoachContext
 
       {/* Coach-written copy of unknowable length: glue the last pair so the
           note never ends on a lone word, whatever the phone width */}
-      <p className="mt-3 text-[15px] leading-relaxed text-foreground">
+      <p
+        className={cn(
+          'mt-3 text-[15px] leading-relaxed text-foreground',
+          maxLines === 2 && 'line-clamp-2',
+          maxLines === 3 && 'line-clamp-3'
+        )}
+      >
         {noWidows(note)}
       </p>
+      {action && (
+        <button
+          type="button"
+          onClick={action.onClick}
+          className="mt-2 min-h-[44px] -mb-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {action.label}
+        </button>
+      )}
     </div>
   );
 }

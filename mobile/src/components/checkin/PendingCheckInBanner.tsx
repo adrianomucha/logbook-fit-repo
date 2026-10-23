@@ -4,7 +4,7 @@ import { Button } from '@/components/ui';
 /** The prompt at the top of the Workout tab while a check-in is waiting. */
 export function PendingCheckInBanner({ onComplete }: { onComplete: () => void }) {
   return (
-    <View accessibilityLabel="Pending check-in" className="rounded-xl border border-border/70 bg-card px-4 py-4">
+    <View accessibilityLabel="Pending check-in" className="rounded-2xl border border-border/70 bg-card px-4 py-4">
       <View className="mb-2 flex-row items-center gap-1.5">
         <View className="h-1.5 w-1.5 rounded-full bg-brand" />
         <Text className="font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Check-in</Text>

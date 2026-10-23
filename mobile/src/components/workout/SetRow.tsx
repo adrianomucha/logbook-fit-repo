@@ -135,14 +135,14 @@ export function SetRow({
         {setNumber}
       </Text>
       <Text className="flex-1 font-mono text-xs text-muted-foreground" numberOfLines={1}>
-        {previous || '—'}
+        {previous || '–'}
       </Text>
       <TextInput
         style={{ width: SET_COLS.weight, textAlignVertical: 'center' }}
         className={inputClass}
         value={weight}
         onChangeText={commitWeight}
-        placeholder={defaultWeight != null ? String(defaultWeight) : '—'}
+        placeholder={defaultWeight != null ? String(defaultWeight) : '–'}
         placeholderTextColor="#737373"
         keyboardType="decimal-pad"
         inputAccessoryViewID={KEYPAD_DONE_BAR_ID}
@@ -155,7 +155,7 @@ export function SetRow({
         className={inputClass}
         value={reps}
         onChangeText={commitReps}
-        placeholder={defaultReps != null ? String(defaultReps) : '—'}
+        placeholder={defaultReps != null ? String(defaultReps) : '–'}
         placeholderTextColor="#737373"
         keyboardType="number-pad"
         inputAccessoryViewID={KEYPAD_DONE_BAR_ID}
@@ -172,10 +172,10 @@ export function SetRow({
         hitSlop={8}
         style={{ width: SET_COLS.check, height: SET_COLS.check }}
         className={`items-center justify-center rounded-full border-2 active:scale-95 ${
-          completed ? 'border-success bg-success' : 'border-foreground/15 bg-transparent'
+          completed ? 'border-brand bg-brand' : 'border-foreground/15 bg-transparent'
         }`}
       >
-        {completed ? <Feather name="check" size={16} color="#fafafa" /> : null}
+        {completed ? <Feather name="check" size={16} color="#1e2702" /> : null}
       </Pressable>
     </View>
   );

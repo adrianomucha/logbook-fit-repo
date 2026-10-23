@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildProgressStory, describeThisWeek, formatMomentWhen } from '../progress';
+import { buildProgressStory, describeThisWeek, formatMomentWhen, workoutTitle } from '../progress';
 import type { PersonalBest } from '../personal-bests';
 import { MAX_SESSION_SEC, finishedSessionSec, plausibleSessionSec } from '../session-duration';
 import type { WorkoutCompletion, WorkoutPlan } from '../types';
@@ -90,6 +90,26 @@ describe('describeThisWeek', () => {
   it('fills circles in the order workouts were done, and names the first one left', () => {
     const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'lo' })];
     expect(week(c)).toMatchObject({ lead: '1 down.', rest: '1 to go. Next up, Upper.' });
+  });
+
+  it('shows a started workout instead of the next one, and says to finish it', () => {
+    const c = [done('2026-09-29T10:00:00', { weekId: 'w1', dayId: 'up' })];
+    const w = describeThisWeek({ plan, weekNumber: 1, completions: c, target: 4, startedDayId: 'lo', now });
+    expect(w.slots).toEqual([
+      { state: 'done', label: 'Tue' },
+      { state: 'started', label: 'Started' },
+    ]);
+    expect(w.rest).toBe('1 to go. Finish Lower.');
+  });
+
+  it("names workouts the way the client reads them, without the coach's day prefix", () => {
+    const named = {
+      ...plan,
+      weeks: [{ ...plan.weeks[0], days: [{ id: 'up', name: 'Day 5 \u2014 Lower B + Core (Backup)', orderIndex: 1, exercises: ex }] }],
+    } as unknown as WorkoutPlan;
+    expect(describeThisWeek({ plan: named, weekNumber: 1, completions: [], target: 4, now }).rest).toBe('First up, Lower B + Core.');
+    expect(workoutTitle('Day 1: Chest + Lats (Posture Focus)')).toBe('Chest + Lats');
+    expect(workoutTitle('Upper A')).toBe('Upper A');
   });
 
   it('calls a finished plan week done', () => {
@@ -190,7 +210,7 @@ describe('buildProgressStory', () => {
       done('2026-09-28T10:00:00', { weekId: 'w2', dayId: 'up2' }),
       done('2026-09-29T10:00:00', { id: 'fin', weekId: 'w2', dayId: 'lo2' }),
     ];
-    expect(story(c)[0]).toMatchObject({ kind: 'week', title: 'Finished Week 2', detail: 'Block A · all 2 sessions', when: 'Yesterday' });
+    expect(story(c)[0]).toMatchObject({ kind: 'week', title: 'Finished Week 2', detail: 'Block A · all 2 workouts', when: 'Yesterday' });
   });
 
   it("brings in the coach's replies", () => {

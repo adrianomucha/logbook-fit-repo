@@ -77,7 +77,7 @@ export function PasswordRules({ password }: { password: string }) {
             aria-hidden="true"
           />
           {tooCommon
-            ? 'This one tops the most-hacked lists — pick something harder to guess'
+            ? 'This one tops the most-hacked lists. Pick something harder to guess'
             : 'Passwords max out at 72 characters'}
         </p>
       )}
