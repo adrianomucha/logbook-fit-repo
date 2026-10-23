@@ -28,6 +28,7 @@ import type { PlanDetail } from '@/hooks/api/usePlanDetail';
 import type { WorkoutPlan } from '@/types';
 import type { PlanSummary } from '@/types/api';
 import { rosterSummary } from '@logbook/shared/roster';
+import { CREATE_PLAN, INVITE_CLIENT } from '@logbook/shared/coach-copy';
 
 // The roster is the coach's home, so /coach opens on it; Plans is ?view=plans
 type View = 'clients' | 'plans';
@@ -244,8 +245,9 @@ export function CoachDashboard() {
     <div className="pb-0 sm:pb-4">
       {/* Success Toast — checkmark draws in */}
       {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(16,185,129,0.3)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
-          <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="none">
+        <div className="fixed top-4 right-4 z-50 bg-foreground text-background px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
+          {/* Lime check on ink: the app's "done", not a stray green */}
+          <svg className="w-5 h-5 shrink-0 text-brand" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
             <path
               d="M8 12.5l2.5 2.5 5.5-5.5"
@@ -336,12 +338,14 @@ export function CoachDashboard() {
             {!isDashboardBootstrapping && !showGettingStarted && (
               <div className="animate-enter">
                 <PageHeader
+                  eyebrow="Your coaching"
                   title="Clients"
                   subtitle={dashboardClients.length > 0 ? rosterSummary(dashboardClients) : undefined}
                   action={
-                    <Button size="sm" variant="outline" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
+                    // The page's one lime action; the rows' own actions stay outline
+                    <Button size="sm" variant="brand" onClick={() => setShowInviteModal(true)}>
                       <Plus className="w-4 h-4 mr-1.5" />
-                      Invite Client
+                      {INVITE_CLIENT}
                     </Button>
                   }
                 />
@@ -415,17 +419,18 @@ export function CoachDashboard() {
           <div className="space-y-6 sm:space-y-8">
             <div className="animate-enter">
               <PageHeader
+                eyebrow="Your coaching"
                 title="Plans"
-                subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'template' : 'templates'}` : undefined}
+                subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'plan' : 'plans'}` : undefined}
                 action={templates.length > 0 ? (
                   <div className="flex items-center gap-2">
                     <Button onClick={() => setShowImportModal(true)} size="sm" variant="outline" className="active:scale-[0.96] transition-transform duration-150 tap-target">
                       <FileSpreadsheet className="w-4 h-4 mr-1.5" />
                       Import
                     </Button>
-                    <Button onClick={handleCreateNewPlan} size="sm" className="active:scale-[0.96] transition-transform duration-150 tap-target">
+                    <Button onClick={handleCreateNewPlan} size="sm" variant="brand" className="tap-target">
                       <Plus className="w-4 h-4 mr-1.5" />
-                      New Plan
+                      {CREATE_PLAN}
                     </Button>
                   </div>
                 ) : undefined}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { STORY_EMPTY_TEXT, STORY_PAGE_SIZE, type Moment, type MomentKind, type ThisWeek } from '@logbook/shared/progress';
 import { cn } from '@/lib/utils';
-import { WorkoutMarkIcon } from '../WorkoutMarkIcon';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 /**
  * This week as a stepper: a mark per workout (see WorkoutMarkIcon), the

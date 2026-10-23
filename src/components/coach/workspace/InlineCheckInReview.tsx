@@ -26,6 +26,8 @@ import { completeCheckIn, createCheckIn } from '@/lib/checkin-helpers';
 // One shared feeling map for the whole loop (client form, standalone review,
 // this panel) — same labels, same AA-contrast status colors everywhere
 import { FEELING_DISPLAY } from '@/lib/feeling-display';
+import { CHECKIN_ACTION, CHECKIN_STATUS } from '@logbook/shared/coach-copy';
+import { workoutTitle } from '@logbook/shared/progress';
 
 /**
  * How long the "Sent to <name>" confirmation stays up with its Undo button.
@@ -164,7 +166,8 @@ export function InlineCheckInReview({
       flagsWithContext.push({
         flag,
         exerciseName: exercise.name,
-        workoutName: dayNameMap.get(completion.dayId) || 'Workout',
+        // The name the client sees: "Lower B", not "Day 4: Lower B"
+        workoutName: workoutTitle(dayNameMap.get(completion.dayId) || 'Workout'),
         date: new Date(flag.flaggedAt),
       });
     });
@@ -277,8 +280,9 @@ export function InlineCheckInReview({
       <Wrapper className="animate-fade-in-up">
         <div className={cn("py-8", isFlat ? '' : 'px-3 sm:px-6')}>
           <div className="flex flex-col items-center text-center gap-2">
-            <div className="p-2.5 bg-emerald-50 dark:bg-emerald-950/30 rounded-full animate-bounce-once">
-              <SendHorizonal className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            {/* The same lime confirmation as "Check-in complete" */}
+            <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+              <SendHorizonal className="w-5 h-5 text-brand-foreground" aria-hidden="true" />
             </div>
             <h3 className="font-bold text-lg antialiased">
               Sent to {firstName}
@@ -332,7 +336,6 @@ export function InlineCheckInReview({
               flaggedExercisesWithContext.length > 0 && "border-t pt-4 mt-4"
             )}>
               <div className="flex-1 flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className="text-2xl select-none sm:ps-1" aria-hidden="true">📋</div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold antialiased">Time for a check-in?</p>
                   <p className="text-sm text-muted-foreground antialiased">
@@ -340,9 +343,10 @@ export function InlineCheckInReview({
                   </p>
                 </div>
               </div>
-              <Button onClick={handleStartNewCheckIn} size="sm" disabled={isSubmitting} className="self-start sm:self-auto shrink-0 ps-2.5 active:scale-[0.96] transition-transform duration-150">
+              {/* Inside a card: ink. The page header holds the lime action */}
+              <Button onClick={handleStartNewCheckIn} variant="ink" disabled={isSubmitting} className="h-11 self-start sm:self-auto shrink-0 ps-3.5">
                 <ClipboardCheck className="w-4 h-4 me-2" />
-                {isSubmitting ? 'Sending…' : 'Send Check-in'}
+                {isSubmitting ? 'Sending…' : CHECKIN_ACTION.send}
               </Button>
             </div>
           )}
@@ -399,9 +403,9 @@ export function InlineCheckInReview({
                   </>
                 ) : (
                   <>
-                    <h3 className="font-semibold antialiased">Waiting on {firstName}</h3>
+                    <h3 className="font-semibold antialiased">{CHECKIN_STATUS.waitingOn(firstName)}</h3>
                     <p className="text-sm text-muted-foreground antialiased">
-                      Check-in sent <span className="tabular-nums">{sentAgo}</span> — you’ll review their answers here.
+                      Check-in sent <span className="tabular-nums">{sentAgo}</span>. You’ll review their answers here.
                     </p>
                   </>
                 )}
@@ -524,7 +528,7 @@ export function InlineCheckInReview({
           )}
           <div>
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-2">
-              Submitted
+              Replied
             </p>
             <p className="font-mono text-sm font-semibold tabular-nums leading-none antialiased">
               {submittedAgo}
@@ -595,14 +599,9 @@ export function InlineCheckInReview({
             <span className="text-sm">I’ll adjust the plan based on this feedback</span>
           </label>
 
-          {/* Submit — the section's one volt moment */}
-          <Button
-            onClick={handleCompleteCheckIn}
-            disabled={isSubmitting}
-            className="w-full h-12 mt-4 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] transition-[background-color,transform] duration-150"
-            size="lg"
-          >
-            {isSubmitting ? 'Sending…' : 'Complete check-in'}
+          {/* Submit: ink inside the profile's card; the page header holds the lime action */}
+          <Button onClick={handleCompleteCheckIn} disabled={isSubmitting} variant="ink" className="w-full h-11 mt-4">
+            {isSubmitting ? 'Sending…' : CHECKIN_ACTION.complete}
           </Button>
         </div>
       </div>

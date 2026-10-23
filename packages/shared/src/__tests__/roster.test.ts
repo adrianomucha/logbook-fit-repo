@@ -23,7 +23,7 @@ function client(overrides: Partial<DashboardClient> = {}): DashboardClient {
 describe('rosterAction', () => {
   it('names the next plan for a client whose plan ended', () => {
     expect(rosterAction(client({ urgency: 'PLAN_ENDED' }))).toEqual({
-      label: 'Assign Next Plan',
+      label: 'Assign next plan',
       target: 'profile',
     });
   });
@@ -33,12 +33,12 @@ describe('rosterAction', () => {
       urgency: 'AT_RISK',
       pendingCheckIn: { id: 'c1', status: 'CLIENT_RESPONDED', createdAt: '' },
     });
-    expect(rosterAction(c)).toEqual({ label: 'Review Check-in', target: 'check-in' });
+    expect(rosterAction(c)).toEqual({ label: 'Review check-in', target: 'check-in' });
   });
 
   it('opens a new client with a hello', () => {
     const c = client({ urgency: 'NEEDS_PLAN', awaitingHello: true });
-    expect(rosterAction(c)).toEqual({ label: 'Say Hello', target: 'chat' });
+    expect(rosterAction(c)).toEqual({ label: 'Say hello', target: 'chat' });
   });
 
   it('leaves a check-in the client has yet to answer off the to-do list', () => {
@@ -88,7 +88,7 @@ describe('rosterSummary', () => {
 });
 
 describe('clientSignal', () => {
-  it('names the finished plan instead of repeating the Plan Ended chip', () => {
+  it('names the finished plan instead of repeating the Plan ended chip', () => {
     expect(clientSignal(client({ urgency: 'PLAN_ENDED' }))).toEqual({
       lead: '4-Week Strength Foundation finished',
       rest: [],

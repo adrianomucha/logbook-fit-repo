@@ -41,9 +41,10 @@ export function CoachSettingsPage() {
       {/* Narrower measure than the roster pages: the rail plus one form
           column is all this page is, and centering it keeps a wide screen
           balanced instead of stranding the content on the left */}
-      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
-        <div className="animate-enter mb-1.5 sm:mb-3">
+      <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
+        <div className="animate-enter">
           <PageHeader
+            eyebrow="Your account"
             title="Settings"
             subtitle={SETTINGS_SUMMARY}
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach') }}
@@ -67,12 +68,13 @@ export function CoachSettingsPage() {
                     scroll={false}
                     aria-current={section === id ? 'page' : undefined}
                     className={cn(
-                      'inline-flex w-full items-center justify-center gap-1.5 lg:justify-start lg:gap-2 font-mono text-[11px] font-medium uppercase tracking-[0.12em]',
+                      'inline-flex w-full items-center justify-center gap-1.5 lg:justify-start lg:gap-2 text-[11px] font-medium uppercase tracking-[0.12em]',
                       'transition-colors touch-manipulation tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                       'border-b-2 px-1 pb-2.5 pt-1',
                       'lg:border-b-0 lg:border-s-2 lg:px-3 lg:py-2',
+                      // Lime underline, as the client's settings and the nav tabs
                       section === id
-                        ? 'border-foreground text-foreground'
+                        ? 'border-brand text-foreground'
                         : 'border-transparent text-muted-foreground hover:text-foreground'
                     )}
                   >

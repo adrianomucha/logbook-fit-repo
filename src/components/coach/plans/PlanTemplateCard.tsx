@@ -67,20 +67,20 @@ export function PlanTemplateCard({
     >
       {/* Name; stats collapse into a meta line under it on mobile */}
       <div className="flex-1 min-w-0">
-        <h3 className="text-sm sm:text-[15px] font-black tracking-tight leading-tight truncate antialiased group-hover:translate-x-0.5 transition-transform duration-150">
+        <h3 className="text-sm sm:text-[15px] font-bold tracking-tight leading-tight truncate antialiased group-hover:translate-x-0.5 transition-transform duration-150">
           {plan.name}
         </h3>
         <p className="sm:hidden font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums mt-0.5 truncate antialiased">
-          {[weeksLabel, perWeekLabel].filter(Boolean).join(' · ') || '—'}
+          {[weeksLabel, perWeekLabel].filter(Boolean).join(' · ') || '–'}
         </p>
       </div>
 
       {/* Stat columns — fixed widths so they align down the list */}
       <span className="hidden sm:block w-[72px] text-right font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased shrink-0">
-        {weeksLabel || '—'}
+        {weeksLabel || '–'}
       </span>
       <span className="hidden sm:block w-[72px] text-right font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased shrink-0">
-        {perWeekLabel || '—'}
+        {perWeekLabel || '–'}
       </span>
 
       {/* Usage — clients on the plan as a mini-avatar stack, volt dot marks it live */}
@@ -120,7 +120,7 @@ export function PlanTemplateCard({
             </span>
           )
         ) : (
-          <span className="hidden sm:inline font-mono text-[10px] font-medium text-muted-foreground/50 antialiased">{'—'}</span>
+          <span className="hidden sm:inline font-mono text-[10px] font-medium text-muted-foreground/50 antialiased">{'–'}</span>
         )}
       </span>
 

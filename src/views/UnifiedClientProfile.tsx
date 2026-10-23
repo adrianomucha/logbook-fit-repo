@@ -55,6 +55,8 @@ import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
 import { newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanEndsOn, getPlanProgressStatus, getPlanStartDay, getPlanStartsOn, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
+import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN } from '@logbook/shared/coach-copy';
+import { URGENCY_LABEL } from '@logbook/shared/roster';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
 function daysAgoLabel(iso?: string | Date | null): string | null {
@@ -82,8 +84,8 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn(
-      "bg-card rounded-xl overflow-hidden p-4 sm:p-5",
-      "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
+      "bg-card rounded-2xl overflow-hidden p-4 sm:p-5",
+      "border border-border/70",
       className
     )}>
       {children}
@@ -484,8 +486,8 @@ export function UnifiedClientProfile() {
       const name = client?.name?.split(' ')[0] ?? 'Your client';
       toast.success(
         startChoice === 'monday'
-          ? `${plan?.name ?? 'Plan'} restarts Monday for ${name}`
-          : `${plan?.name ?? 'Plan'} restarted. ${name} is on week 1`
+          ? `${plan?.name ?? 'Plan'} restarts Monday for ${name}.`
+          : `${plan?.name ?? 'Plan'} restarted. ${name} is on week 1.`
       );
     } catch (e) {
       toast.error(
@@ -609,10 +611,9 @@ export function UnifiedClientProfile() {
     return (
       <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
-        <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6 px-3 pt-3 sm:px-4 sm:pt-7">
-          <div className="max-w-md mx-auto bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+        <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
+          <div className="max-w-md mx-auto bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
             <div className="text-center py-12 px-6">
-              <div className="text-4xl select-none mb-4 animate-bounce-once">🔍</div>
               <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Can&apos;t find this client</h2>
               <p className="text-sm text-muted-foreground mb-5 antialiased">
                 They may have been removed, or the link might be outdated.
@@ -621,7 +622,7 @@ export function UnifiedClientProfile() {
                 onClick={() => router.push('/coach')}
                 className="active:scale-[0.96] transition-transform duration-150"
               >
-                Back to Clients
+                Back to clients
               </Button>
             </div>
           </div>
@@ -703,10 +704,10 @@ export function UnifiedClientProfile() {
   // Derive inline status info from the same server-computed urgency the
   // dashboard ranks by, so this page can never disagree with the roster.
   // Suppress the urgent banner while a check-in is in flight — the
-  // "Waiting for X" section is the real status then.
+  // "Waiting on X" section is the real status then.
   const hasActiveCheckIn = !!activeCheckIn;
   const statusIsUrgent = apiClient.urgency === 'AT_RISK' && !hasActiveCheckIn;
-  const statusLabel = statusIsUrgent ? 'At Risk' : null;
+  const statusLabel = statusIsUrgent ? URGENCY_LABEL.AT_RISK : null;
 
   // Days-silent detail folded into the subtitle — the same signal ("Nd
   // silent" since the last workout) the roster row shows.
@@ -727,11 +728,11 @@ export function UnifiedClientProfile() {
       : planEnded
       ? { label: 'Assign next plan', onClick: handleChangePlan, kind: 'assign' }
       : activeCheckIn?.status === 'responded'
-        ? { label: 'Review check-in', onClick: handleScrollToCheckIn, kind: 'review' }
+        ? { label: CHECKIN_ACTION.review, onClick: handleScrollToCheckIn, kind: 'review' }
         : activeCheckIn?.status === 'pending'
           ? null
           : statusIsUrgent || !hasUnread
-            ? { label: isSendingCheckIn ? 'Sending…' : 'Send check-in', onClick: handleStartCheckIn, disabled: isSendingCheckIn, kind: 'send' }
+            ? { label: isSendingCheckIn ? 'Sending…' : CHECKIN_ACTION.send, onClick: handleStartCheckIn, disabled: isSendingCheckIn, kind: 'send' }
             : null;
 
   // Same status chip the roster row shows, so the two pages read as one
@@ -797,12 +798,13 @@ export function UnifiedClientProfile() {
             action={
               <div className="flex items-center gap-2.5 shrink-0">
                 {primaryAction && (
+                  // The page's one lime action, the same Send check-in the check-in page has
                   <Button
-                    variant="default"
+                    variant="brand"
                     size="sm"
                     onClick={primaryAction.onClick}
                     disabled={primaryAction.disabled}
-                    className="active:scale-[0.96] transition-transform duration-150 tap-target"
+                    className="tap-target"
                   >
                     {primaryAction.label}
                   </Button>
@@ -912,7 +914,7 @@ export function UnifiedClientProfile() {
                     onClick={() => router.push('/coach?view=plans')}
                     className="active:scale-[0.96] transition-transform duration-150"
                   >
-                    Build a plan
+                    {CREATE_PLAN}
                   </Button>
                 </div>
               </div>
@@ -947,7 +949,7 @@ export function UnifiedClientProfile() {
                             key={i}
                             className={cn(
                               'flex-1 h-1.5 rounded-full',
-                              i < weekProgress.completed ? 'bg-success' : 'bg-success/15'
+                              i < weekProgress.completed ? 'bg-brand' : 'bg-muted-foreground/15'
                             )}
                           />
                         ))}
@@ -978,7 +980,7 @@ export function UnifiedClientProfile() {
                         : 'None due yet'
                     }
                   >
-                    {planSummary && planSummary.planned > 0 ? `${planSummary.pct}%` : '—'}
+                    {planSummary && planSummary.planned > 0 ? `${planSummary.pct}%` : '–'}
                   </Vital>
                 </>
               )}
@@ -987,14 +989,10 @@ export function UnifiedClientProfile() {
                 sub={
                   newPlanStarted
                     ? `Plan ${newPlanStarted}`
-                    : lastWorkoutName
-                      ? lastWorkoutName.day
-                        ? `Day ${lastWorkoutName.day} · ${lastWorkoutName.title}`
-                        : lastWorkoutName.title
-                      : undefined
+                    : lastWorkoutName?.title
                 }
               >
-                {daysAgoLabel(lastWorkoutAt) ?? '—'}
+                {daysAgoLabel(lastWorkoutAt) ?? '–'}
               </Vital>
               {activeCheckIn?.status === 'pending' ? (
                 <Vital
@@ -1021,21 +1019,21 @@ export function UnifiedClientProfile() {
                     </DropdownMenu>
                   }
                 >
-                  Waiting
+                  {CHECKIN_STATUS.waiting}
                 </Vital>
               ) : activeCheckIn?.status === 'responded' ? (
                 <Vital
                   label="Check-in"
                   sub={activeCheckIn.clientRespondedAt
-                    ? `Replied ${formatDistanceToNowStrict(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true })}`
-                    : 'Replied'}
+                    ? CHECKIN_STATUS.replied(formatDistanceToNowStrict(new Date(activeCheckIn.clientRespondedAt), { addSuffix: true }))
+                    : undefined}
                 >
                   <button
                     type="button"
                     onClick={handleScrollToCheckIn}
                     className="underline decoration-foreground/30 underline-offset-4 hover:decoration-foreground transition-colors"
                   >
-                    To review
+                    {CHECKIN_STATUS.ready}
                   </button>
                 </Vital>
               ) : (
@@ -1102,8 +1100,8 @@ export function UnifiedClientProfile() {
           {/* Messages */}
           <section className="lg:col-span-2">
             <div ref={chatRef} className={cn(
-              "bg-card rounded-xl overflow-hidden lg:h-[480px] flex flex-col",
-              "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]",
+              "bg-card rounded-2xl overflow-hidden lg:h-[480px] flex flex-col",
+              "border border-border/70",
             )}>
               <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 shrink-0">
                 {/* A plain card title, not a tab: there's nothing to switch to */}

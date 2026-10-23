@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { avatarColor } from '@/lib/avatar-colors';
 import { cn } from '@/lib/utils';
 import { WELCOME_COPY } from '@logbook/shared/client-empty-states';
-import { WorkoutMarkIcon } from './WorkoutMarkIcon';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 interface WelcomeAwaitingPlanProps {
   clientName: string;

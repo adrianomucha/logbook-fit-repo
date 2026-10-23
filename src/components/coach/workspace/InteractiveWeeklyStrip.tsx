@@ -11,7 +11,11 @@ import {
   getWeekDays,
   getWeekProgress,
   WeekDayInfo,
+  WORKOUT_MARK_LABEL,
+  workoutMark,
 } from '@/lib/workout-week-helpers';
+import { parseSessionName } from '@logbook/shared/parse-session-name';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 interface InteractiveWeeklyStripProps {
   client: Client;
@@ -77,7 +81,7 @@ export function InteractiveWeeklyStrip({
     if (compact) {
       return (
         <div className="flex items-center justify-between py-3 px-4 bg-card border rounded-xl text-muted-foreground">
-          <span className="text-sm antialiased">This Week</span>
+          <span className="text-sm antialiased">This week</span>
           <span className="text-xs antialiased">No plan assigned</span>
         </div>
       );
@@ -85,7 +89,6 @@ export function InteractiveWeeklyStrip({
     if (isFlat) {
       return (
         <div className="text-center py-6">
-          <div className="text-3xl select-none mb-2">📅</div>
           <p className="text-sm text-muted-foreground antialiased">No plan to show yet</p>
         </div>
       );
@@ -94,7 +97,6 @@ export function InteractiveWeeklyStrip({
       <Card>
         <CardContent>
           <div className="text-center py-6">
-            <div className="text-3xl select-none mb-2">📅</div>
             <p className="text-sm text-muted-foreground antialiased">No plan assigned</p>
           </div>
         </CardContent>
@@ -120,11 +122,11 @@ export function InteractiveWeeklyStrip({
         {/* Header row */}
         <div className="flex items-baseline justify-between">
           <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
-            This Week
+            This week
           </p>
           <p className={cn(
             "text-[11px] uppercase tracking-[0.12em] font-medium antialiased transition-colors duration-300",
-            allDone ? 'text-success' : 'text-muted-foreground'
+            allDone ? 'text-foreground' : 'text-muted-foreground'
           )}>
             {paceMessage}
           </p>
@@ -137,9 +139,10 @@ export function InteractiveWeeklyStrip({
               key={day.orderIndex}
               className={cn(
                 'flex-1 h-4 rounded-full transition-[transform,background-color] duration-500 ease-out',
+                // Lime for done, as the client's week shows it
                 day.status === 'COMPLETED'
-                  ? 'bg-success'
-                  : 'bg-success/15'
+                  ? 'bg-brand'
+                  : 'bg-muted-foreground/15'
               )}
               style={{
                 transform: pillsMounted ? 'scaleX(1)' : 'scaleX(0)',
@@ -152,7 +155,7 @@ export function InteractiveWeeklyStrip({
 
         {/* Session count */}
         <p className="text-sm antialiased">
-          <span className="text-3xl sm:text-4xl font-black tabular-nums tracking-tight">
+          <span className="text-3xl sm:text-4xl font-bold tabular-nums tracking-tight">
             {progress.completed}
           </span>
           <span className="text-muted-foreground mx-0.5">/</span>
@@ -160,7 +163,7 @@ export function InteractiveWeeklyStrip({
             {progress.total}
           </span>
           <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-medium ms-2">
-            {allDone ? 'Complete' : 'Sessions'}
+            {allDone ? 'Complete' : 'Workouts'}
           </span>
         </p>
       </div>
@@ -171,15 +174,6 @@ export function InteractiveWeeklyStrip({
 
   const content = (
     <div className="space-y-4">
-      {/* Week label */}
-      {!isFlat && (
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
-            Week {currentWeekNum} of {plan.weeks.length}
-          </p>
-        </div>
-      )}
-
       {/* 7-day interactive list — exercises expand inline under each day */}
       <div className="divide-y divide-border/40">
         {weekDays.map((day) => {
@@ -213,7 +207,7 @@ export function InteractiveWeeklyStrip({
                         >
                           <span className="flex-1 truncate antialiased">{exercise.name}</span>
                           <span className="font-mono text-xs text-muted-foreground shrink-0 tabular-nums antialiased ms-3">
-                            {exercise.sets}×{exercise.reps || '—'}
+                            {exercise.sets}×{exercise.reps || '–'}
                             {exercise.weight && ` · ${formatStoredWeight(exercise.weight, weightUnit)}`}
                           </span>
                         </div>
@@ -273,7 +267,7 @@ export function InteractiveWeeklyStrip({
         <p className="text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium antialiased">
           Week {currentWeekNum} of {plan.weeks.length}
         </p>
-        <CardTitle className="text-base antialiased">This Week</CardTitle>
+        <CardTitle className="text-base antialiased">This week</CardTitle>
       </CardHeader>
       <CardContent>
         {content}
@@ -301,6 +295,10 @@ function InteractiveDayRow({ day, flagCount, isExpanded, onClick }: InteractiveD
   const isClickable = !!day.workoutDay;
   const isCompleted = day.status === 'COMPLETED';
   const isCurrent = day.status === 'CURRENT';
+  // The same mark and name the client sees for this workout
+  const mark = workoutMark(day);
+  const markLabel = WORKOUT_MARK_LABEL[mark];
+  const parsed = parseSessionName(day.workoutDay?.name || 'Workout');
   const exerciseCount = day.workoutDay?.exercises?.length || 0;
   const completion = isCompleted ? day.completion : null;
   const durationMin = completion?.durationSec ? Math.max(1, Math.round(completion.durationSec / 60)) : null;
@@ -342,7 +340,7 @@ function InteractiveDayRow({ day, flagCount, isExpanded, onClick }: InteractiveD
           'font-mono text-sm font-bold tabular-nums leading-none antialiased',
           isCurrent ? 'text-foreground' : 'text-muted-foreground'
         )}>
-          {day.orderIndex}
+          {parsed.day ?? day.orderIndex}
         </p>
       </div>
 
@@ -354,7 +352,7 @@ function InteractiveDayRow({ day, flagCount, isExpanded, onClick }: InteractiveD
           'text-sm font-bold tracking-tight antialiased leading-snug line-clamp-2 sm:line-clamp-1',
           isCompleted && 'text-foreground/80'
         )}>
-          {day.workoutDay?.name || 'Workout'}
+          {parsed.title}
         </p>
         {/* A finished row says how it went — when, how hard, how long, and
             any flags — instead of repeating the exercise count */}
@@ -393,20 +391,11 @@ function InteractiveDayRow({ day, flagCount, isExpanded, onClick }: InteractiveD
         )}
       </div>
 
-      {/* Status indicator */}
-      <div className="shrink-0 flex items-center">
-        {isCompleted && (
-          /* The AA text cut of the success hue: the fill shade is 2.3:1 on
-              white, under the 3:1 a lone status icon needs */
-          <svg className="w-5 h-5 text-success-text" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
-            <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        )}
-        {isCurrent && (
-          <span className="font-mono text-[10px] uppercase tracking-wide text-info font-bold antialiased">
-            Up next
-          </span>
-        )}
+      {/* Status: the client's own mark for this workout (the tick sits dark
+          on lime, so it reads without leaning on the fill's contrast) */}
+      <div className="shrink-0 flex items-center gap-2">
+        {markLabel && <span className="text-[11px] font-semibold text-foreground">{markLabel}</span>}
+        <WorkoutMarkIcon mark={mark} size={24} />
       </div>
     </button>
   );

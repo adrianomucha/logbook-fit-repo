@@ -18,8 +18,8 @@ interface AssignPlanModalProps {
   clientName?: string;
 }
 
-const cardShadow =
-  'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]';
+const cardEdge =
+  'border border-border/70';
 
 const statClass =
   'font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums antialiased';
@@ -134,7 +134,7 @@ export function AssignPlanModal({
           </div>
           <p className="text-sm font-semibold antialiased mb-1">No templates yet</p>
           <p className="text-[13px] text-muted-foreground antialiased">
-            Create a plan template first, then assign it to a client.
+            Create a plan first, then assign it to a client.
           </p>
         </div>
       </Modal>
@@ -209,12 +209,12 @@ export function AssignPlanModal({
           </div>
         )}
 
-        <div className={cn('bg-card rounded-xl divide-y divide-border overflow-hidden', cardShadow)}>
+        <div className={cn('bg-card rounded-2xl divide-y divide-border/50 overflow-hidden', cardEdge)}>
           {/* Current plan — pinned first, tagged rather than selectable */}
           {currentPlan && !q && (
             <div className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 bg-muted/40">
               <div className="flex-1 min-w-0">
-                <p className="text-sm sm:text-[15px] font-black tracking-tight leading-tight truncate antialiased">
+                <p className="text-sm sm:text-[15px] font-bold tracking-tight leading-tight truncate antialiased">
                   {currentPlan.name}
                 </p>
                 <p className="flex items-center gap-1.5 mt-1 font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased truncate">
@@ -263,7 +263,7 @@ export function AssignPlanModal({
                       aria-hidden="true"
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm sm:text-[15px] font-black tracking-tight leading-tight truncate antialiased group-hover:translate-x-0.5 transition-transform duration-150">
+                      <p className="text-sm sm:text-[15px] font-bold tracking-tight leading-tight truncate antialiased group-hover:translate-x-0.5 transition-transform duration-150">
                         {plan.name}
                       </p>
                       <p className={cn(statClass, 'sm:hidden mt-0.5 truncate')}>

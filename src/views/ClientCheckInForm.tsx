@@ -6,7 +6,7 @@ import { ApiError } from '@/lib/api-client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertTriangle, Check, Loader2 } from 'lucide-react';
-import { WorkoutMarkIcon } from '@/components/client/WorkoutMarkIcon';
+import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { BACK_HOME, CHECKIN_ALREADY_SENT, CHECKIN_EXPIRED, checkInReplyNote } from '@logbook/shared/client-copy';
@@ -76,7 +76,7 @@ export function ClientCheckInForm() {
   if (!checkIn) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+        <div className="max-w-md w-full bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in not found</h2>
@@ -180,7 +180,7 @@ export function ClientCheckInForm() {
   if (checkIn.status === 'EXPIRED') {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+        <div className="max-w-md w-full bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
           <div className="text-center py-12 px-6">
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in expired</h2>
@@ -196,7 +196,7 @@ export function ClientCheckInForm() {
   if (checkIn.status !== 'PENDING') {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="max-w-md w-full bg-card rounded-xl overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)] animate-enter">
+        <div className="max-w-md w-full bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
           <div className="text-center py-12 px-6">
             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-brand flex items-center justify-center">
               <Check className="w-6 h-6 text-brand-foreground" strokeWidth={3} aria-hidden="true" />

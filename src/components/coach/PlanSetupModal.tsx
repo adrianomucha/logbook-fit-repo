@@ -164,7 +164,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
         isOpen={isOpen}
         onClose={handleCancelDiscard}
         title={
-          <span className="block text-2xl font-black tracking-tight leading-none antialiased">
+          <span className="block text-2xl font-bold tracking-tight leading-none antialiased">
             Discard changes?
           </span>
         }
@@ -193,7 +193,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
       isOpen={isOpen}
       onClose={isSubmitting ? () => {} : handleCancel}
       title={
-        <span className="block text-2xl sm:text-[28px] font-black tracking-tight leading-none antialiased">
+        <span className="block text-2xl sm:text-[28px] font-bold tracking-tight leading-none antialiased">
           Create a plan
         </span>
       }

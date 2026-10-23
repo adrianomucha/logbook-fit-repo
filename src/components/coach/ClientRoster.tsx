@@ -23,7 +23,7 @@ import {
 } from '@/components/coach/shared/clientSignals';
 
 const CARD =
-  'bg-card rounded-xl divide-y divide-border overflow-hidden shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]';
+  'bg-card rounded-2xl divide-y divide-border/50 overflow-hidden border border-border/70';
 
 function SampleChip() {
   return (
@@ -236,7 +236,8 @@ export function ClientRoster({ clients }: ClientRosterProps) {
             </section>
           ) : (
             !isSearching && (
-              <p className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 px-4 py-3.5 text-sm font-medium text-emerald-700 dark:text-emerald-300 antialiased">
+              <p className="flex items-center gap-2 rounded-2xl border border-border/70 bg-card px-4 py-3.5 text-sm font-medium antialiased">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" aria-hidden="true" />
                 {ROSTER_COPY.allClear}
               </p>
             )

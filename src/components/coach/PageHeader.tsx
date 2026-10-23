@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils';
 
 interface PageHeaderProps {
   title: string;
+  /** Mono label above the title, as on the client's pages */
+  eyebrow?: string;
   /** String subtitles render as uppercase tracked labels; pass a node for custom metadata styling */
   subtitle?: ReactNode;
   action?: ReactNode;
@@ -13,7 +15,7 @@ interface PageHeaderProps {
   avatar?: ReactNode;
 }
 
-export function PageHeader({ title, subtitle, action, breadcrumb, avatar }: PageHeaderProps) {
+export function PageHeader({ title, eyebrow, subtitle, action, breadcrumb, avatar }: PageHeaderProps) {
   const crumb = breadcrumb && (
     <button
       onClick={breadcrumb.onClick}
@@ -31,6 +33,9 @@ export function PageHeader({ title, subtitle, action, breadcrumb, avatar }: Page
 
   const heading = (
     <div className="min-w-0">
+      {eyebrow && (
+        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1 antialiased">{eyebrow}</p>
+      )}
       {/* Wrap on phones: beside the action block a truncated name has
           nowhere else on the page to be read in full */}
       <h1 className="text-2xl sm:text-3xl font-bold tracking-tight antialiased break-words sm:truncate">

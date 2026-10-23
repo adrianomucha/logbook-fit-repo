@@ -14,8 +14,8 @@ interface PlanTemplateListProps {
   onDelete: (planId: string) => void;
 }
 
-const cardShadow =
-  'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_8px_rgba(0,0,0,0.03),0_0_0_1px_rgba(0,0,0,0.04)]';
+const cardEdge =
+  'border border-border/70';
 
 /** Search appears once the list is big enough that scrolling stops being enough */
 const SEARCH_THRESHOLD = 8;
@@ -86,7 +86,6 @@ export function PlanTemplateList({
 
       {sections.length === 0 && q && (
         <div className="text-center py-12">
-          <div className="text-2xl select-none mb-2">🔍</div>
           <p className="text-sm text-muted-foreground antialiased">
             No plans match &ldquo;{query.trim()}&rdquo;
           </p>
@@ -131,7 +130,7 @@ export function PlanTemplateList({
             )}
 
             {isOpen && (
-              <div className={`bg-card rounded-xl divide-y divide-border overflow-hidden ${cardShadow}`}>
+              <div className={`bg-card rounded-2xl divide-y divide-border/50 overflow-hidden ${cardEdge}`}>
                 {section.plans.map((plan) => (
                   <PlanTemplateCard
                     key={plan.id}

@@ -229,7 +229,7 @@ export function ChatView({
                   }}
                   disabled={isLoadingEarlier} className="rounded-full bg-muted/60 px-3.5 py-2 active:opacity-70">
                   <Text className="font-mono-bold text-[10px] uppercase tracking-[1.5px] text-muted-foreground">
-                    {isLoadingEarlier ? 'Loading…' : 'Load earlier messages'}
+                    {isLoadingEarlier ? 'Loading…' : 'Show earlier'}
                   </Text>
                 </Pressable>
               </View>
