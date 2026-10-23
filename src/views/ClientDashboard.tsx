@@ -27,6 +27,7 @@ import { StatusHeader } from '@/components/client/today/StatusHeader';
 import { ChatView } from '@/components/chat/ChatView';
 import { ProgressHistory } from '@/components/client/ProgressHistory';
 import { CoachFeedbackCard } from '@/components/client/CoachFeedbackCard';
+import { freshCheckInReply } from '@logbook/shared/checkin-reply';
 import { CheckInDetailModal } from '@/components/client/CheckInDetailModal';
 import { ClientNav } from '@/components/client/ClientNav';
 import { ClientChatHeader } from '@/components/client/ClientChatHeader';
@@ -157,22 +158,11 @@ export function ClientDashboard() {
     [checkIns]
   );
 
-  // The client's check-in is with their coach, not with the calendar: this
-  // used to be filtered to the current Monday-anchored week, so feedback the
-  // coach sent on Sunday night vanished when the client opened the app on
-  // Monday — the one reply the whole loop exists to deliver, gone unread.
-  // Newest completed check-in with a reply, whenever it arrived.
-  const latestFeedbackCheckIn = useMemo(
-    () =>
-      checkIns
-        .filter((c) => c.status === 'completed' && c.completedAt)
-        .sort(
-          (a, b) =>
-            new Date(b.completedAt!).getTime() -
-            new Date(a.completedAt!).getTime()
-        )[0] ?? null,
-    [checkIns]
-  );
+  // The coach's reply leads on Today for a week after it arrives (where the
+  // "replied to your check-in" push lands), then steps aside; the full
+  // history lives in Progress. Not tied to the calendar week, so a reply
+  // sent on Sunday night is still there on Monday.
+  const freshReplyCheckIn = useMemo(() => freshCheckInReply(checkIns), [checkIns]);
 
   // Build adapted workout completions from week overview
   const clientWorkoutCompletions: WorkoutCompletion[] = useMemo(() => {
@@ -560,7 +550,7 @@ export function ClientDashboard() {
 
         {/* No banner between submitting a check-in and the coach replying:
             the form's own "Sent" screen is the confirmation, and the reply
-            arrives as CoachFeedbackCard. A card that only says "waiting" sat
+            arrives as CoachFeedbackCard on Today. A card that only says "waiting" sat
             at the top of the dashboard for days with nothing to act on. */}
 
         {/* Plan complete — the last week must not replay as if un-started */}
@@ -616,6 +606,16 @@ export function ClientDashboard() {
             isRestarting={isRestartingWorkout}
             onSendFeedback={handleSendFeedback}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
+            checkInReply={
+              freshReplyCheckIn && (
+                <CoachFeedbackCard
+                  checkIn={freshReplyCheckIn}
+                  coachName={coach?.user.name ?? 'Your coach'}
+                  coachAvatar={coach?.user.avatarUrl ?? undefined}
+                  onViewDetails={() => setShowCheckInModal(true)}
+                />
+              )
+            }
           />
         )}
 
@@ -635,15 +635,6 @@ export function ClientDashboard() {
               currentWeekNumber={weekOverview.weekNumber}
               completions={clientWorkoutCompletions}
             />
-
-            {latestFeedbackCheckIn && (
-              <CoachFeedbackCard
-                checkIn={latestFeedbackCheckIn}
-                coachName={coach?.user.name ?? 'Your coach'}
-                coachAvatar={coach?.user.avatarUrl ?? undefined}
-                onViewDetails={() => setShowCheckInModal(true)}
-              />
-            )}
           </>
         )}
 
@@ -705,7 +696,7 @@ export function ClientDashboard() {
       <CheckInDetailModal
         isOpen={showCheckInModal}
         onClose={() => setShowCheckInModal(false)}
-        checkIn={latestFeedbackCheckIn}
+        checkIn={freshReplyCheckIn}
         completedWorkouts={allWorkoutCompletions}
         plan={plan}
       />

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { WorkoutCompletion } from '@/types';
 import { WeekDayInfo } from '@/lib/workout-week-helpers';
 import { CoachContextStrip } from './CoachContextStrip';
@@ -27,6 +28,8 @@ interface TodayFocusViewProps {
   isRestarting?: boolean;
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
   onViewWeekly: () => void;
+  /** The coach's fresh check-in reply, under the day's cards */
+  checkInReply?: ReactNode;
 }
 
 function getActionState(
@@ -52,6 +55,7 @@ export function TodayFocusView({
   isRestarting,
   onSendFeedback,
   onViewWeekly,
+  checkInReply,
 }: TodayFocusViewProps) {
   const actionState = getActionState(todayCompletion);
   const completionPct = todayCompletion?.completionPct || 0;
@@ -117,6 +121,14 @@ export function TodayFocusView({
             coachAvatar={coachAvatar}
             note={coachNote}
           />
+        </div>
+      )}
+
+      {/* The coach's check-in reply: Today is where the push lands, so the
+          reply is here while it's news, below the day's own cards */}
+      {checkInReply && (
+        <div className="animate-fade-in-up" style={{ animationDelay: '135ms' }}>
+          {checkInReply}
         </div>
       )}
 

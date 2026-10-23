@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react';
 import { cn, noWidows } from '@/lib/utils';
 import { avatarColor } from '@/lib/avatar-colors';
 
@@ -10,7 +11,10 @@ interface CoachContextStripProps {
   label?: string;
   /** Lines shown before the text is cut (the full note lives behind the action) */
   maxLines?: 2 | 3;
-  action?: { label: string; onClick: () => void };
+  /** Quiet detail on the right of the eyebrow row, e.g. the reply's date */
+  meta?: string;
+  /** Makes the whole card the way into the full note */
+  onClick?: () => void;
 }
 
 /**
@@ -19,14 +23,25 @@ interface CoachContextStripProps {
  * Same card anatomy as the hero above it (surface, radius, mono eyebrow) so
  * the completed state reads as a stack of matched cards rather than a card
  * with loose fragments underneath; the avatar and eyebrow carry the voice.
+ * With onClick the whole card opens the full note, so there's no loose link
+ * line hanging under the text.
  */
-export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach note', maxLines, action }: CoachContextStripProps) {
+export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach note', maxLines, meta, onClick }: CoachContextStripProps) {
   const coachFirst = coachName.split(' ')[0];
+  // A button can only hold phrasing content, so the parts are spans
+  const Root = onClick ? 'button' : 'div';
 
   return (
-    <div className="rounded-2xl bg-card border border-border/70 p-5 sm:p-6">
-      <div className="flex items-center gap-2.5">
-        <div
+    <Root
+      {...(onClick ? { type: 'button' as const, onClick } : {})}
+      className={cn(
+        'block w-full text-left rounded-2xl bg-card border border-border/70 p-5 sm:p-6',
+        onClick &&
+          'group hover:border-border active:scale-[0.99] transition-[transform,border-color] duration-150 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+      )}
+    >
+      <span className="flex items-center gap-2.5">
+        <span
           className={cn(
             'w-7 h-7 rounded-full flex items-center justify-center shrink-0 overflow-hidden',
             // Same deterministic avatar color the coach surfaces use — the client
@@ -45,34 +60,36 @@ export function CoachContextStrip({ coachName, coachAvatar, note, label = 'Coach
               {coachName.charAt(0)}
             </span>
           )}
-        </div>
-        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+        </span>
+        <span className="flex-1 min-w-0 truncate font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
           {label}
           <span className="text-muted-foreground/50">&ensp;·&ensp;</span>
           {coachFirst}
-        </p>
-      </div>
+        </span>
+        {meta && (
+          <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            {meta}
+          </span>
+        )}
+        {onClick && (
+          <ChevronRight
+            className="-mr-1 w-4 h-4 shrink-0 text-muted-foreground/60 group-hover:text-foreground transition-colors"
+            aria-hidden="true"
+          />
+        )}
+      </span>
 
       {/* Coach-written copy of unknowable length: glue the last pair so the
           note never ends on a lone word, whatever the phone width */}
-      <p
+      <span
         className={cn(
-          'mt-3 text-[15px] leading-relaxed text-foreground',
+          'block mt-3 text-[15px] leading-relaxed text-foreground',
           maxLines === 2 && 'line-clamp-2',
           maxLines === 3 && 'line-clamp-3'
         )}
       >
         {noWidows(note)}
-      </p>
-      {action && (
-        <button
-          type="button"
-          onClick={action.onClick}
-          className="mt-2 min-h-[44px] -mb-2 font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {action.label}
-        </button>
-      )}
-    </div>
+      </span>
+    </Root>
   );
 }
