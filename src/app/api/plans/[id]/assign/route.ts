@@ -7,12 +7,15 @@ import { parseBody } from "@/lib/validations/parseBody";
 import { assignPlanSchema } from "@/lib/validations/schemas";
 import { clonePlanForClient } from "@/lib/plan-clone";
 import { notifyPlanAssigned } from "@/lib/push";
+import { planStartDateFor } from "@logbook/shared/plan-start";
 
 /**
  * POST /api/plans/[id]/assign
  * Gives the client their OWN COPY of the plan (clone-on-assign) — editing
  * the template later never mutates a plan a client is mid-workout on.
  * Coach must own the plan and have an active relationship with the client.
+ * `startOn` is the coach's choice of today or next Monday (default today);
+ * "next Monday" means the client's Monday, in their timezone.
  */
 export const POST = withCoach(
   async (
@@ -36,7 +39,7 @@ export const POST = withCoach(
 
     const result = await parseBody(req, assignPlanSchema);
     if (!result.success) return result.response;
-    const { clientProfileId } = result.data;
+    const { clientProfileId, startOn = "today" } = result.data;
 
     // Verify coach-client relationship
     const relationship = await prisma.coachClientRelationship.findFirst({
@@ -62,7 +65,7 @@ export const POST = withCoach(
         id: true,
         activePlanId: true,
         planStartDate: true,
-        user: { select: { name: true } },
+        user: { select: { name: true, timezone: true } },
         activePlan: { select: { sourceTemplateId: true } },
       },
     });
@@ -75,7 +78,7 @@ export const POST = withCoach(
         id: current.id,
         activePlanId: current.activePlanId,
         planStartDate: current.planStartDate,
-        user: current.user,
+        user: { name: current.user.name },
       });
     }
 
@@ -89,7 +92,7 @@ export const POST = withCoach(
       where: { id: clientProfileId },
       data: {
         activePlanId: instance.id,
-        planStartDate: new Date(),
+        planStartDate: planStartDateFor(startOn, current?.user.timezone),
       },
       select: {
         id: true,
@@ -110,6 +113,7 @@ export const POST = withCoach(
       clientUserId: updatedClient.userId,
       coachName: coach?.user.name ?? null,
       planName: instance.name,
+      startsMonday: startOn === "monday",
     });
 
     return NextResponse.json(updatedClient);

@@ -10,8 +10,10 @@ import { exerciseLabel, groupBySuperset, isSuperset } from '@logbook/shared/supe
 import {
   formatExercisePrescription,
   getCompletedSetsCount,
+  getLoggedSetsCount,
   getNextIncompleteExerciseId,
   isExerciseComplete,
+  NOTHING_LOGGED_COPY,
   stripDayPrefix,
 } from '@logbook/shared/workout-execution';
 import { apiFetch } from '@/lib/api';
@@ -131,6 +133,11 @@ export default function WorkoutScreen() {
   }, [completion, stats, finishWorkout]);
 
   const onFinishPress = () => {
+    // Nothing logged isn't a workout; say how to finish instead
+    if (getLoggedSetsCount(exercises) === 0) {
+      Alert.alert(NOTHING_LOGGED_COPY.title, NOTHING_LOGGED_COPY.body, [{ text: NOTHING_LOGGED_COPY.dismiss }]);
+      return;
+    }
     if (stats.exercisesDone === stats.exercisesTotal) {
       void completeWorkout();
       return;

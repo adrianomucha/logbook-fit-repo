@@ -49,6 +49,9 @@ export const GET = withCoach(
             email: true,
             avatarUrl: true,
             createdAt: true,
+            // Plan weeks run on the client's calendar; the coach's screens
+            // count them in this zone, not the coach's own
+            timezone: true,
           },
         },
         activePlan: {
@@ -181,6 +184,7 @@ export const GET = withCoach(
       hasPlan: !!client.activePlan,
       planStartDate: client.planStartDate,
       planDurationWeeks: client.activePlan?.durationWeeks,
+      timeZone: client.user.timezone,
       lastWorkoutAt,
       openCheckInStatus: openCheckIn?.status ?? null,
     });

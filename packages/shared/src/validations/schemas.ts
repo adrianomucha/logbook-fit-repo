@@ -258,8 +258,16 @@ export const createPlanSchema = z.object({
   workoutsPerWeek: z.number().int().min(1).max(7).optional().default(4),
 });
 
+/** When a newly assigned plan begins (see plan-start.ts); omitted means today */
+export const planStartChoiceSchema = z.enum(["today", "monday"]);
+
 export const assignPlanSchema = z.object({
   clientProfileId: z.string().uuid(),
+  startOn: planStartChoiceSchema.optional(),
+});
+
+export const continuePlanSchema = z.object({
+  startOn: planStartChoiceSchema.optional(),
 });
 
 // ──────────────────────────────────────

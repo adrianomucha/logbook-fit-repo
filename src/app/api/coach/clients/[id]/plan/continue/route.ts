@@ -7,16 +7,17 @@ import {
   continueClientPlan,
   continuePlanStatus,
 } from "@/lib/plan-continue";
+import { continuePlanSchema } from "@/lib/validations/schemas";
 
 /**
  * POST /api/coach/clients/[id]/plan/continue
  * Runs the client's finished plan again for another cycle — the one-tap
  * alternative to building a new block for a client who is doing fine on
- * this one.
+ * this one. Body (optional): { startOn: "today" | "monday" }, default today.
  */
 export const POST = withCoach(
   async (
-    _req: Request,
+    req: Request,
     ctx: { params: Record<string, string> },
     _session: Session,
     coachProfileId: string
@@ -38,7 +39,13 @@ export const POST = withCoach(
       );
     }
 
-    const result = await continueClientPlan(clientProfileId);
+    // No body is fine: older clients sent none, and that meant "today"
+    const parsed = continuePlanSchema.safeParse(await req.json().catch(() => ({})));
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Validation failed" }, { status: 400 });
+    }
+
+    const result = await continueClientPlan(clientProfileId, parsed.data.startOn);
 
     if (!result.ok) {
       return NextResponse.json(

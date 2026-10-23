@@ -8,9 +8,10 @@ function daysAgo(n: number): Date {
 describe('getClientUrgency', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    // Wednesday, July 15 2026, noon local — the plan-week math runs in local
-    // time, so "now" and plan start dates are pinned as local wall-clock times
-    vi.setSystemTime(new Date('2026-07-15T12:00:00'));
+    // Wednesday, July 15 2026, noon. Plan weeks run on the client's
+    // calendar; with no timeZone given that is UTC, so this machine's own
+    // zone can't move a week boundary
+    vi.setSystemTime(new Date('2026-07-15T12:00:00Z'));
   });
 
   afterEach(() => {
@@ -182,11 +183,36 @@ describe('getClientUrgency', () => {
   it('reports FINAL_WEEK planStatus without changing urgency', () => {
     const result = getClientUrgency({
       hasPlan: true,
-      planStartDate: new Date('2026-07-13T12:00:00'), // week 1 of a 1-week plan
+      planStartDate: new Date('2026-07-13T12:00:00Z'), // week 1 of a 1-week plan
       planDurationWeeks: 1,
       lastWorkoutAt: daysAgo(1),
     });
     expect(result.planStatus).toBe('FINAL_WEEK');
+    expect(result.urgency).toBe('ON_TRACK');
+  });
+
+  it("judges the plan week on the client's calendar", () => {
+    // Started Monday July 6; Sunday July 19 22:00 in LA is Monday 05:00 UTC
+    vi.setSystemTime(new Date('2026-07-20T05:00:00Z'));
+    const input = {
+      hasPlan: true,
+      planStartDate: new Date('2026-07-06T17:00:00Z'),
+      planDurationWeeks: 2,
+      lastWorkoutAt: daysAgo(1),
+    };
+    expect(getClientUrgency({ ...input, timeZone: 'America/Los_Angeles' }).planStatus).toBe('FINAL_WEEK');
+    expect(getClientUrgency({ ...input, timeZone: 'UTC' }).urgency).toBe('PLAN_ENDED');
+  });
+
+  it('a plan set to start next Monday is UPCOMING and never at risk', () => {
+    const result = getClientUrgency({
+      hasPlan: true,
+      planStartDate: new Date('2026-07-20T00:00:00Z'),
+      planDurationWeeks: 4,
+      timeZone: 'UTC',
+      lastWorkoutAt: daysAgo(30),
+    });
+    expect(result.planStatus).toBe('UPCOMING');
     expect(result.urgency).toBe('ON_TRACK');
   });
 
@@ -223,6 +249,12 @@ describe('newPlanHint', () => {
 
   it('is null once the grace window has run out', () => {
     expect(newPlanHint(daysAgo(AT_RISK_AFTER_DAYS), null)).toBeNull();
+  });
+
+  it('says when a plan set for next Monday begins', () => {
+    expect(newPlanHint(new Date('2026-07-20T12:00:00Z'), daysAgo(30), Date.now(), 'UPCOMING')).toBe('starts Monday');
+    // Hours before the stored start, on a calendar where Monday has begun
+    expect(newPlanHint(new Date(Date.now() + 3_600_000), null, Date.now(), 'ACTIVE')).toBe('started today');
   });
 
   it('is null without a plan start', () => {
