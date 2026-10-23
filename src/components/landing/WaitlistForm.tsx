@@ -4,7 +4,7 @@ import { useId, useState } from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Loader2 } from 'lucide-react';
+import { Check, Loader2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { cn } from '@/lib/utils';
 import { WAITLIST_NEXT_STEPS } from '@/lib/landing-copy';
@@ -66,7 +66,14 @@ function readAttribution(pageCampaign?: string) {
  * what they coach on today. They sit after the submit deliberately: extra
  * fields before it would cost signups.
  */
-export function WaitlistForm({ campaign }: { campaign?: string } = {}) {
+export function WaitlistForm({
+  campaign,
+  promises,
+}: {
+  campaign?: string;
+  /** Short reassurances shown under the button, above the consent line */
+  promises?: readonly string[];
+} = {}) {
   const inputId = useId();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<
@@ -280,7 +287,19 @@ export function WaitlistForm({ campaign }: { campaign?: string } = {}) {
           )}
         </FormError>
       )}
-      <p className="text-xs text-muted-foreground antialiased">
+      {/* A check per item rather than dot separators: a wrapped line on a
+          phone then starts with a check, never with a stray dot. */}
+      {promises && (
+        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-2 text-sm text-muted-foreground antialiased">
+          {promises.map((promise) => (
+            <li key={promise} className="flex items-center gap-1.5 whitespace-nowrap">
+              <Check className="h-3.5 w-3.5 shrink-0 text-brand" strokeWidth={3} aria-hidden="true" />
+              {promise}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="text-xs text-muted-foreground/80 antialiased">
         By requesting an invite you agree to our{' '}
         <Link
           href="/privacy"

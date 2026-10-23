@@ -4,7 +4,7 @@ import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
 import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
-import { FOUNDING_PRICE, FOUNDING_PRICE_SHORT } from '@/lib/landing-copy';
+import { FOUNDING_PRICE, FORM_PROMISES } from '@/lib/landing-copy';
 import { SITE_URL, absoluteUrl, pageMetadata } from '@/lib/seo';
 
 const PATH = '/spreadsheet-migration';
@@ -143,11 +143,7 @@ export default function SpreadsheetMigrationPage() {
                 you say so.
               </p>
               <div className="mt-10 w-full max-w-md">
-                <WaitlistForm campaign={CAMPAIGN} />
-                <p className="mt-4 text-sm text-muted-foreground antialiased">
-                  {FOUNDING_PRICE_SHORT} Every coach gets a setup call, and we
-                  bring your first program in with you.
-                </p>
+                <WaitlistForm campaign={CAMPAIGN} promises={FORM_PROMISES} />
               </div>
             </div>
           </div>

@@ -8,9 +8,16 @@
 export const FOUNDING_PRICE =
   'Logbook.fit is free during the private beta. Coaches who join during the beta keep a founding price, lower than the regular one, for as long as they stay, and you’ll hear about pricing well before anything costs money.';
 
-/** The same promise, short enough for a line under a form. */
-export const FOUNDING_PRICE_SHORT =
-  'Free during the beta, then a founding price for as long as you stay.';
+/**
+ * The hero form's one line of reassurance: price, then the human touch.
+ * Three short phrases in one style, so the space under the button reads as
+ * a single note instead of a stack of competing lines.
+ */
+export const FORM_PROMISES = [
+  'Free in the beta',
+  'Then a founding price',
+  'Setup call included',
+] as const;
 
 /**
  * What happens after signup. Deliberately no timing: batches go out when

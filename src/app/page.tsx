@@ -18,7 +18,7 @@ import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
 import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
-import { FOUNDING_PRICE, FOUNDING_PRICE_SHORT } from '@/lib/landing-copy';
+import { FOUNDING_PRICE, FORM_PROMISES } from '@/lib/landing-copy';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 
 // Title/description/OG for this route come from the root layout: the landing
@@ -317,17 +317,7 @@ export default function HomePage() {
               roster by who needs you today.
             </p>
             <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
-              <WaitlistForm />
-              <div className="mt-4 flex flex-col items-center gap-1.5 text-sm text-muted-foreground antialiased">
-                <p>{FOUNDING_PRICE_SHORT}</p>
-                <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                  <span className="font-medium text-foreground">
-                    We onboard in batches of 10
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>every coach gets a setup call</span>
-                </p>
-              </div>
+              <WaitlistForm promises={FORM_PROMISES} />
             </div>
           </div>
         </div>
