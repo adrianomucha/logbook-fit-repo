@@ -20,9 +20,10 @@ const CLIENT_COUNTS = [
 /**
  * Reads campaign attribution from the current URL, falling back to the
  * referring host so an untagged link from a forum or newsletter still lands
- * in a bucket instead of "unknown".
+ * in a bucket instead of "unknown". `pageCampaign` names the page the form
+ * sits on, for signups whose link carried no utm_campaign of its own.
  */
-function readAttribution() {
+function readAttribution(pageCampaign?: string) {
   if (typeof window === 'undefined') return {};
 
   const params = new URLSearchParams(window.location.search);
@@ -42,7 +43,7 @@ function readAttribution() {
   return {
     source: params.get('utm_source') ?? referrerHost ?? 'direct',
     medium: params.get('utm_medium') ?? undefined,
-    campaign: params.get('utm_campaign') ?? undefined,
+    campaign: params.get('utm_campaign') ?? pageCampaign,
     referrer,
   };
 }
@@ -53,7 +54,7 @@ function readAttribution() {
  * optional qualifying question rather than on a receipt. The question sits
  * after the submit deliberately: extra fields before it would cost signups.
  */
-export function WaitlistForm() {
+export function WaitlistForm({ campaign }: { campaign?: string } = {}) {
   const inputId = useId();
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'qualify' | 'done'>(
@@ -70,7 +71,7 @@ export function WaitlistForm() {
       const res = await fetch('/api/waitlist', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, ...readAttribution() }),
+        body: JSON.stringify({ email, ...readAttribution(campaign) }),
       });
 
       if (!res.ok) {
@@ -112,7 +113,7 @@ export function WaitlistForm() {
 
   // Shared header for both confirmation states: the card keeps one identity
   // while its body swaps from the question to the sign-off. The volt fill is
-  // deliberate — this is the page's accent color spent on its best moment.
+  // deliberate: this is the page's accent color spent on its best moment.
   const confirmationHeader = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -234,7 +235,7 @@ export function WaitlistForm() {
         <FormError>
           {error === 'registered' ? (
             <>
-              Good news — you already have an account.{' '}
+              Good news: you already have an account.{' '}
               <Link
                 href="/login"
                 className="font-medium underline underline-offset-2"
