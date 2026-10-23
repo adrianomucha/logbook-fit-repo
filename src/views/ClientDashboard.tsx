@@ -458,16 +458,30 @@ export function ClientDashboard() {
               </div>
             </>
           ) : currentView === 'progress' ? (
-            // Nothing to show before the first plan; say so, as the app does
+            // No plan assigned: the history still shows (a coach may have
+            // unassigned one); only a client with none yet sees the empty state
             <>
               <div className="py-4">
                 <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">Your training</p>
                 <h1 className="text-[24px] sm:text-2xl font-bold tracking-tight">Progress</h1>
               </div>
-              <div className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center">
-                <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">{PROGRESS_BEFORE_PLAN_COPY.title}</h2>
-                <p className="text-sm text-muted-foreground antialiased">{PROGRESS_BEFORE_PLAN_COPY.body}</p>
-              </div>
+              {allWorkoutCompletions.some((c) => c.status === 'COMPLETED') ? (
+                <ProgressHistory
+                  plans={[]}
+                  plan={null}
+                  workoutCompletions={allWorkoutCompletions}
+                  personalBests={progress?.personalBests}
+                  checkIns={checkIns}
+                  coachName={coach?.user.name}
+                  totalWorkouts={progress?.stats.totalWorkouts}
+                  weekNumber={null}
+                />
+              ) : (
+                <div className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center">
+                  <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">{PROGRESS_BEFORE_PLAN_COPY.title}</h2>
+                  <p className="text-sm text-muted-foreground antialiased">{PROGRESS_BEFORE_PLAN_COPY.body}</p>
+                </div>
+              )}
             </>
           ) : (
             <>

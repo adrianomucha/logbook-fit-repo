@@ -8,7 +8,8 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 
 interface ProgressHistoryProps {
   plans: WorkoutPlan[];
-  plan: WorkoutPlan;
+  /** Null when no plan is assigned (yet, or any more): the history still shows */
+  plan: WorkoutPlan | null;
   workoutCompletions: WorkoutCompletion[];
   /** Every personal best in the history, newest first (from the progress API) */
   personalBests?: PersonalBest[];
@@ -39,7 +40,7 @@ export function ProgressHistory({
   weekNumber,
   startedDayId,
 }: ProgressHistoryProps) {
-  const target = plan.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
+  const target = plan?.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
   const { weightUnit } = useCurrentUser();
   const week = useMemo(
     () => describeThisWeek({ plan, weekNumber, completions: workoutCompletions, target, startedDayId }),

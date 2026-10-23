@@ -73,8 +73,9 @@ export default function ProgressScreen() {
         <Text className="font-sans-bold text-2xl tracking-tight text-foreground">Progress</Text>
       </View>
 
-      {!planDetail ? (
-        // Nothing to show before the first plan; the web says the same
+      {!planDetail && !completions.some((c) => c.status === 'COMPLETED') ? (
+        // Nothing to show before the first workout; a client whose plan was
+        // unassigned still sees their history. The web does the same.
         <EmptyState title={PROGRESS_BEFORE_PLAN_COPY.title} body={PROGRESS_BEFORE_PLAN_COPY.body} />
       ) : (
         <>
