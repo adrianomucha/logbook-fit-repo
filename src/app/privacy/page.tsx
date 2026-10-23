@@ -64,8 +64,14 @@ export default function PrivacyPage() {
           items={[
             <>
               <Strong>Account information</Strong> — your name, email address,
-              and password. Passwords are stored only as a salted hash; we
-              never see or store the password itself.
+              password, and time zone. Passwords are stored only as a salted
+              hash; we never see or store the password itself.
+            </>,
+            <>
+              <Strong>Profile photo</Strong> (optional). If you add one,
+              it&rsquo;s stored as a publicly reachable image so it can load
+              anywhere in the app: anyone who has its link can view it, but
+              it isn&rsquo;t listed or searchable anywhere.
             </>,
             <>
               <Strong>Coaching and training data</Strong> — workout plans,
@@ -83,6 +89,15 @@ export default function PrivacyPage() {
               inside the app.
             </>,
             <>
+              <Strong>Invites</Strong>: when a coach invites a client, we
+              store the email address and note the coach enters, so the
+              invite can be matched when it&rsquo;s accepted.
+            </>,
+            <>
+              <Strong>Feedback</Strong>: if you send us feedback from the app,
+              we store your message and the page you sent it from.
+            </>,
+            <>
               <Strong>Waitlist details</Strong> — if you join the waitlist, we
               store your email, your answer to the client-count question if
               you give one, and basic &ldquo;how you found us&rdquo; context
@@ -91,9 +106,20 @@ export default function PrivacyPage() {
             </>,
             <>
               <Strong>Push notification tokens</Strong> — if you turn on
-              notifications, your browser gives us a delivery address for
-              them. It contains no personal information and is deleted when
-              you turn notifications off.
+              notifications, your browser or our iOS app gives us a delivery
+              address for them, which we store with a label for the device
+              (its browser or device name) so you can tell your devices
+              apart. Both are deleted when you turn notifications off on that
+              device or delete your account.
+            </>,
+            <>
+              <Strong>Technical data</Strong>: like any website, our servers
+              see your IP address and browser details when you connect. We use
+              them to keep the service running and to rate-limit abuse (the
+              rate limiter only stores scrambled, non-reversible versions of
+              them), and our hosting provider keeps short-lived request logs.
+              If the app crashes, it sends us the error and the page it
+              happened on.
             </>,
           ]}
         />
@@ -102,13 +128,14 @@ export default function PrivacyPage() {
       <LegalSection title="Analytics and cookies">
         <p>
           We use Vercel Web Analytics to count page views and understand
-          roughly what devices people use. It is cookieless, does not track
-          you across other sites, and reports to us only in aggregate.
+          roughly what devices people use, and Vercel Speed Insights to
+          measure how fast pages load. Both are cookieless, don&rsquo;t track
+          you across other sites, and report to us only in aggregate.
         </p>
         <p>
-          The only cookie we set is the session cookie that keeps you signed
-          in. There are no advertising or third-party tracking cookies, which
-          is why you don&rsquo;t see a cookie banner.
+          The only cookies we set are the ones that keep you signed in and
+          protect the sign-in form. There are no advertising or third-party
+          tracking cookies, which is why you don&rsquo;t see a cookie banner.
         </p>
         <p>
           Because we don&rsquo;t track you across sites in the first place,
@@ -134,10 +161,17 @@ export default function PrivacyPage() {
               profile details on their invite.
             </>,
             <>
-              <Strong>Service providers</Strong> that run our infrastructure —
-              hosting, database, and analytics (including Vercel) — process
-              data on our behalf to operate the service, and for no other
-              purpose.
+              <Strong>Service providers</Strong> process data on our behalf to
+              operate the service, and for no other purpose: Vercel (hosting
+              and analytics), Supabase (database and profile photos), Resend
+              (account and waitlist emails), and Upstash (rate limiting).
+            </>,
+            <>
+              <Strong>Push notification services</Strong>: notifications are
+              delivered through your browser&rsquo;s push service, or through
+              Expo and Apple for the iOS app. A new-message notification
+              includes the sender&rsquo;s name and a preview of the message;
+              check-in notifications never include your answers.
             </>,
             <>
               <Strong>Anthropic</Strong> (if you&rsquo;re a coach importing a
@@ -165,9 +199,14 @@ export default function PrivacyPage() {
       <LegalSection title="How long we keep it">
         <p>
           We keep your data while your account is active. You can delete your
-          account yourself from the account menu (your name and email are
-          removed; workouts and check-ins you shared with a coach stay in
-          their history as “Deleted account”). If you&rsquo;d rather we do it,
+          account yourself from the account menu: your name, email, profile
+          photo, and coach bio are removed and your notification tokens are
+          deleted.
+          Workouts, check-ins, and messages you shared with a coach or client
+          stay on record under &ldquo;Deleted account&rdquo;, so their history
+          doesn&rsquo;t develop holes, and
+          feedback you sent us is kept without your name. If you&rsquo;d
+          rather we do it,
           or want everything gone, email us at{' '}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
@@ -197,10 +236,17 @@ export default function PrivacyPage() {
 
       <LegalSection title="Children">
         <p>
-          Logbook.fit is not directed to children under 13, and we
-          don&rsquo;t knowingly collect personal information from them. If
-          you believe a child under 13 has an account, contact us and
-          we&rsquo;ll delete it.
+          Logbook.fit is for adults: our{' '}
+          <Link
+            href="/terms"
+            className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+          >
+            Terms of Service
+          </Link>{' '}
+          require you to be at least 18, and we don&rsquo;t knowingly collect
+          personal information from children under 13. If you believe
+          someone under 18 has an account, contact us and we&rsquo;ll delete
+          it.
         </p>
       </LegalSection>
 
