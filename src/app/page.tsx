@@ -4,6 +4,7 @@ import {
   Check,
   ClipboardList,
   Dumbbell,
+  FileSpreadsheet,
   LayoutDashboard,
   Library,
   Link2,
@@ -12,12 +13,15 @@ import {
   Sun,
   X,
 } from 'lucide-react';
-import { Logo, LogoMark } from '@/components/brand/LogoMark';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
+import { SheetToPlan } from '@/components/landing/SheetToPlan';
+import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
+import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
+import { FOUNDING_PRICE, FORM_PROMISES } from '@/lib/landing-copy';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 
-// Title/description/OG for this route come from the root layout — the landing
+// Title/description/OG for this route come from the root layout: the landing
 // page *is* the site root, so duplicating them here would only create two
 // places to keep in sync. The canonical, though, lives here rather than in the
 // layout: layout metadata is inherited by every child route, and a canonical
@@ -27,9 +31,48 @@ export const metadata: Metadata = {
 };
 
 /**
+ * The objections a coach has before handing over their email: who it's for,
+ * why not the big platforms, switching, the client side, price, timing and
+ * data. Plain-text answers, so the FAQPage JSON-LD below carries the same
+ * words and an answer engine can quote them.
+ */
+const FAQ: FaqItem[] = [
+  {
+    q: 'Who is Logbook.fit for?',
+    a: 'Independent coaches who write their own programs and run their own check-ins, whether that’s five clients or thirty. It isn’t a workout log for people training on their own.',
+  },
+  {
+    q: 'How is it different from Trainerize or TrueCoach?',
+    a: 'It’s built around one question: which client needs you today? Your roster is ranked by who’s at risk, whose check-in is due and who’s waiting on your reply, so a quiet client shows up before they cancel. It doesn’t track nutrition or take payments, so if you need those, a bigger platform is the better fit.',
+  },
+  {
+    q: 'Can I bring my programs from a spreadsheet?',
+    a: 'Yes. Upload the Excel or CSV file you coach from. Logbook.fit reads your layout and shows you every week before anything is saved, so you don’t retype a thing.',
+    link: { href: '/spreadsheet-migration', label: 'How importing works' },
+  },
+  {
+    q: 'What do my clients need?',
+    a: 'Just their phone. They join from the invite link you send, train from Logbook.fit in their browser, and can add it to their home screen like an app.',
+  },
+  {
+    q: 'What does it cost?',
+    a: FOUNDING_PRICE,
+  },
+  {
+    q: 'When will I get my invite?',
+    a: 'When your spot opens, the invite comes to the email you signed up with. We let coaches in a small batch at a time so each one gets a setup call, where we bring your programs across with you.',
+  },
+  {
+    q: 'Who can see my clients’ data?',
+    a: 'You and the clients you coach, and nobody else. We don’t sell data or run ad trackers.',
+    link: { href: '/privacy', label: 'Privacy Policy' },
+  },
+];
+
+/**
  * Structured data for the waitlist page. Tells Google what Logbook.fit is
  * (a product, not a blog), which entity owns the domain, and what to show in
- * the knowledge panel / sitelinks — none of which is inferable from a hero
+ * the knowledge panel / sitelinks, none of which is inferable from a hero
  * that leads with a point of view rather than a product category.
  */
 const JSON_LD = {
@@ -73,11 +116,13 @@ const JSON_LD = {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
-        description: 'Free during the private beta.',
+        description:
+          'Free during the private beta. Beta coaches keep a founding price once paid plans start.',
         availability: 'https://schema.org/PreOrder',
       },
       featureList: [
         'Multi-week workout plan builder',
+        'Workout plan import from Excel and CSV',
         'Structured client check-in loop',
         'Urgency-sorted coach dashboard',
         'Custom exercise library',
@@ -85,6 +130,7 @@ const JSON_LD = {
         'Progress and completion tracking',
       ],
     },
+    faqJsonLd(FAQ, `${SITE_URL}/#faq`),
   ],
 };
 
@@ -95,7 +141,7 @@ const MARQUEE_ITEMS = [
   'Private beta · onboarding in small batches',
 ];
 
-// The filter, as two lists. Every line is short enough to scan in one pass —
+// The filter, as two lists. Every line is short enough to scan in one pass:
 // the point lands from the shape of the section before any of it is read.
 const AUDIENCE = [
   {
@@ -153,6 +199,11 @@ const COACH_FEATURES = [
     icon: ClipboardList,
     title: 'Workout plan builder',
     body: 'Multi-week plans with a visual week/day sidebar. Duplicate, reorder, and copy across days.',
+  },
+  {
+    icon: FileSpreadsheet,
+    title: 'Spreadsheet import',
+    body: 'Upload the Excel or CSV you coach from. Check every week before it saves.',
   },
   {
     icon: Library,
@@ -213,7 +264,7 @@ function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
 export default function HomePage() {
   // The "signed-in visitors go straight to /coach" bounce lives in middleware
   // (see src/middleware.ts). Reading cookies() here opted the page into dynamic
-  // rendering, so every crawler hit — and every real visitor — paid a server
+  // rendering, so every crawler hit (and every real visitor) paid a server
   // round trip for markup that never changes. Statically prerendered, it now
   // ships from the CDN edge, which is the single biggest TTFB/LCP win available
   // to this page.
@@ -226,24 +277,16 @@ export default function HomePage() {
     <div className="bg-background">
       <script
         type="application/ld+json"
-        // Serialised from a literal defined in this file — no user input reaches it.
+        // Serialised from a literal defined in this file, no user input reaches it.
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
       />
       {/* One <main> around every content section, so the h1 and the primary
           waitlist CTA sit inside the document's main landmark rather than
           floating outside it. */}
       <main>
-      {/* Hero — dark brand canvas, centered display type */}
+      {/* Hero: dark brand canvas, centered display type */}
       <section className="dark flex min-h-dvh flex-col bg-background text-foreground">
-        <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-5 sm:px-6">
-          <Logo markSize={24} />
-          <Link
-            href="/login"
-            className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
-          >
-            Sign in
-          </Link>
-        </header>
+        <LandingHeader />
 
         <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
           <div className="animate-enter flex flex-col items-center">
@@ -274,17 +317,7 @@ export default function HomePage() {
               roster by who needs you today.
             </p>
             <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
-              <WaitlistForm />
-              <div className="mt-4 flex flex-col items-center gap-1.5 text-sm text-muted-foreground antialiased">
-                <p>Free during the beta. No spam, just your invite.</p>
-                <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
-                  <span className="font-medium text-foreground">
-                    We onboard in batches of 10
-                  </span>
-                  <span aria-hidden="true">·</span>
-                  <span>every coach gets a setup call</span>
-                </p>
-              </div>
+              <WaitlistForm promises={FORM_PROMISES} />
             </div>
           </div>
         </div>
@@ -314,7 +347,7 @@ export default function HomePage() {
         </div>
       </div>
 
-        {/* Who it's for — the filter. Naming who this isn't for is what makes
+        {/* Who it's for: the filter. Naming who this isn't for is what makes
             the right coach feel it was built for them specifically. Two columns
             rather than prose: the section is *about* a line between two groups,
             so it should be shaped like one instead of describing it. */}
@@ -353,6 +386,37 @@ export default function HomePage() {
                   </ul>
                 </div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Spreadsheet import: answers the audience list's "today it lives in
+            spreadsheets" the moment it's read. Switching cost is the reason a
+            coach who agrees with everything above still doesn't move, so it's
+            settled here, before the product tour starts. */}
+        <section className="border-b border-border/70">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+            <div className="mx-auto max-w-2xl text-center">
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                Already in a spreadsheet?
+              </p>
+              <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
+                Bring it with you.
+              </h2>
+              <p className="mt-4 text-pretty text-muted-foreground antialiased sm:text-lg">
+                Upload the Excel or CSV you coach from. Logbook.fit reads your
+                layout and shows you every week before it saves, so a client can
+                train from your program the same day.
+              </p>
+            </div>
+            <SheetToPlan className="mt-12" />
+            <div className="mt-8 flex justify-center">
+              <Link
+                href="/spreadsheet-migration"
+                className="inline-flex rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
+              >
+                How importing works
+              </Link>
             </div>
           </div>
         </section>
@@ -453,7 +517,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* For clients — mirrored */}
+        {/* For clients: mirrored */}
         <section className="border-t border-border/70">
           <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
             <div className="lg:order-2">
@@ -487,49 +551,15 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Final CTA — dark */}
-        <section className="dark border-t border-border/70 bg-background text-foreground">
-          <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-            <div className="mx-auto max-w-2xl text-center">
-              <div className="mb-8 flex justify-center">
-                <LogoMark size={44} />
-              </div>
-              <h2 className="text-[clamp(2.75rem,9vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
-                Get on
-                <br />
-                the list<span className="text-brand">.</span>
-              </h2>
-              <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
-                Ten coaches at a time. Every one gets a setup call where we import
-                your roster with you.
-              </p>
-              <div className="mx-auto mt-9 max-w-md text-left">
-                <WaitlistForm />
-              </div>
-            </div>
-          </div>
-        </section>
+        <FaqSection eyebrow="Questions" title="Before you join." items={FAQ} />
+
+        <JoinListSection>
+          Ten coaches at a time. Every one gets a setup call where we import
+          your roster with you.
+        </JoinListSection>
       </main>
 
-      {/* Footer */}
-      <footer className="dark border-t border-border bg-background text-foreground">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
-          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-            © 2026 Logbook.fit · All rights reserved
-          </p>
-          <nav className="flex items-center gap-5 text-sm text-muted-foreground antialiased">
-            <Link href="/privacy" className="transition-colors hover:text-foreground">
-              Privacy
-            </Link>
-            <Link href="/terms" className="transition-colors hover:text-foreground">
-              Terms
-            </Link>
-            <Link href="/login" className="transition-colors hover:text-foreground">
-              Sign in
-            </Link>
-          </nav>
-        </div>
-      </footer>
+      <LandingFooter />
     </div>
   );
 }
