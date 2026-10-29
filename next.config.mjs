@@ -68,6 +68,16 @@ const nextConfig = {
   // page switched by ?tab=. Keep the old URLs (bookmarks, log links) working.
   async redirects() {
     return [
+      // www.logbook.fit used to serve the whole site with a 200, so Google saw
+      // two copies of every page and had to guess which host to index. One
+      // permanent redirect makes the apex the only host (and passes any links
+      // pointing at www through to it).
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.logbook.fit" }],
+        destination: "https://logbook.fit/:path*",
+        permanent: true,
+      },
       { source: "/admin/waitlist", destination: "/admin?tab=waitlist", permanent: false },
       { source: "/admin/users", destination: "/admin?tab=accounts", permanent: false },
       { source: "/admin/feedback", destination: "/admin?tab=feedback", permanent: false },

@@ -14,7 +14,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "postinstall": "prisma generate",
-    "seed:demo-call": "tsx prisma/seed_demo_call.ts"
+    "seed:demo-call": "tsx prisma/seed_demo_call.ts",
+    "indexnow": "tsx scripts/indexnow.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

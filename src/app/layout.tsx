@@ -77,6 +77,15 @@ export const metadata: Metadata = {
       'max-video-preview': -1,
     },
   },
+  // Search Console / Bing Webmaster Tools ownership tags. Set the token each
+  // tool gives you for its "HTML tag" method; unset emits nothing. Inlined at
+  // build time, so changing either needs a redeploy.
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+    other: process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION
+      ? { 'msvalidate.01': process.env.NEXT_PUBLIC_BING_SITE_VERIFICATION }
+      : undefined,
+  },
   // Stops iOS Safari from auto-linking numbers in copy (e.g. "01", "1200")
   // as phone numbers, which injects unwanted <a> tags into the crawled DOM.
   formatDetection: { telephone: false, address: false, email: false },

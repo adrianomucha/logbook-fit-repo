@@ -2,10 +2,9 @@ import type { Metadata } from 'next';
 
 /**
  * The login page is a client component, so it can't export metadata itself —
- * this layout carries it. robots.txt already asks crawlers not to fetch
- * /login, but a Disallow only stops the *crawl*: Google will still index a
- * URL it has never fetched if enough external links point at it, showing a
- * blank result. noindex is the directive that actually keeps it out.
+ * this layout carries it. noindex is what keeps /login out of the index, so
+ * robots.txt must NOT disallow it: a crawler that can't fetch the page never
+ * sees the tag, and can still index the bare URL from links to it.
  */
 export const metadata: Metadata = {
   title: 'Sign in',
