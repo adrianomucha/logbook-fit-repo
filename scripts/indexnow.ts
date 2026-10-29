@@ -10,13 +10,21 @@
  *
  * The key is not a secret. IndexNow proves ownership by fetching
  * https://logbook.fit/<key>.txt, which is public/<key>.txt, so that file must
- * be deployed before this runs.
+ * be deployed before this runs. The key is read from that file's name rather
+ * than repeated here, so there is one place to change it (and no key-shaped
+ * literal for the secrets scan to flag).
  */
+import { readdirSync } from 'node:fs';
+import path from 'node:path';
 import { SITE_URL } from '../src/lib/seo';
 
-const KEY = '0b64033dec9b85883d4ff0f01e4f7009';
+const KEY = readdirSync(path.resolve(__dirname, '../public'))
+  .find((name) => /^[0-9a-f]{32}\.txt$/.test(name))
+  ?.slice(0, -'.txt'.length);
 
 async function main() {
+  if (!KEY) throw new Error('No IndexNow key file (public/<32 hex chars>.txt) found.');
+
   const sitemap = await fetch(`${SITE_URL}/sitemap.xml`);
   if (!sitemap.ok) throw new Error(`sitemap.xml returned ${sitemap.status}`);
   const urlList = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
