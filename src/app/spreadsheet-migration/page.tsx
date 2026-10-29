@@ -116,6 +116,15 @@ const JSON_LD = {
       isPartOf: { '@id': `${SITE_URL}/#website` },
       about: { '@id': `${SITE_URL}/#software` },
       inLanguage: 'en-US',
+      breadcrumb: { '@id': `${absoluteUrl(PATH)}#breadcrumb` },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      '@id': `${absoluteUrl(PATH)}#breadcrumb`,
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Logbook.fit', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 2, name: 'Spreadsheet import', item: absoluteUrl(PATH) },
+      ],
     },
     faqJsonLd(FAQ, `${absoluteUrl(PATH)}#faq`),
   ],
@@ -130,70 +139,98 @@ export default function SpreadsheetMigrationPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
       />
       <main>
-        {/* Hero. The extra bottom padding is the room the diagram below
-            overlaps into, so the product shows in the first screen. */}
-        <section className="dark bg-background text-foreground">
-          <LandingHeader linkHome />
-          <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-28 pt-12 text-center sm:px-6 sm:pb-40 sm:pt-16">
-            <div className="animate-enter flex flex-col items-center">
-              <p className="mb-7 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-                Spreadsheet import
-                <span className="hidden sm:inline">· for independent coaches</span>
-              </p>
-              <h1 className="text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
-                Bring your
-                <br />
-                <span className="text-brand">spreadsheet.</span>
-              </h1>
-              <p className="mt-7 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
-                Your programs already work. Upload the file you coach from, check
-                what came across, and assign it to a client. Nothing is saved until
-                you say so.
-              </p>
-              <div className="mt-9 w-full max-w-md">
-                <WaitlistForm campaign={CAMPAIGN} promises={FORM_PROMISES} />
+        {/* Hero. Light and left-aligned on purpose: the homepage owns the
+            dark, centered statement hero, and a coach clicking through from
+            it should land somewhere that plainly isn't the homepage again.
+            The faint cell grid behind it is the spreadsheet, fading out. */}
+        <section className="relative overflow-hidden border-b border-border/70">
+          <div
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border)/0.7)_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border)/0.7)_1px,transparent_1px)] bg-[size:112px_40px] [mask-image:linear-gradient(to_bottom,black,transparent_75%)]"
+            aria-hidden="true"
+          />
+          <div className="relative">
+            <LandingHeader linkHome />
+            <div className="mx-auto max-w-6xl px-4 pb-16 pt-8 sm:px-6 sm:pb-24 sm:pt-12">
+              <div className="animate-enter">
+                <nav aria-label="Breadcrumb">
+                  <ol className="flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                    <li>
+                      <Link href="/" className="transition-colors hover:text-foreground">
+                        Logbook.fit
+                      </Link>
+                    </li>
+                    <li aria-hidden="true">/</li>
+                    <li aria-current="page" className="text-foreground">
+                      Spreadsheet import
+                    </li>
+                  </ol>
+                </nav>
+                <div className="mt-6 grid gap-10 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-end lg:gap-16">
+                  <div>
+                    <h1 className="text-[clamp(2.5rem,6.5vw,4.5rem)] font-bold uppercase leading-[0.95] tracking-tight antialiased">
+                      Bring your
+                      <br />
+                      {/* Volt as a highlighter: volt text on white doesn't read */}
+                      <span className="mt-2 inline-block bg-brand px-2.5 py-1 text-brand-foreground">
+                        spreadsheet.
+                      </span>
+                    </h1>
+                    <p className="mt-6 max-w-xl text-pretty text-base text-muted-foreground antialiased sm:text-lg">
+                      Your programs already work. Upload the file you coach from, check
+                      what came across, and assign it to a client. Nothing is saved until
+                      you say so.
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-6">
+                    <p className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                      Private beta
+                    </p>
+                    <p className="mb-4 mt-2 text-pretty text-base font-semibold antialiased">
+                      Ten coaches at a time, each with a setup call to bring the first program in.
+                    </p>
+                    <WaitlistForm campaign={CAMPAIGN} promises={FORM_PROMISES} align="start" />
+                  </div>
+                </div>
+              </div>
+              {/* The before and after, framed like a product window */}
+              <div className="mt-12 rounded-2xl border border-border bg-muted p-2 shadow-xl shadow-black/5 sm:mt-16 sm:p-6 lg:p-8">
+                <SheetToPlan />
               </div>
             </div>
           </div>
         </section>
 
-        {/* The before and after, framed like a product window and lifted
-            into the hero */}
+        {/* What it reads */}
         <section className="border-b border-border/70">
-          <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 sm:pb-24">
-            <div className="relative -mt-20 rounded-2xl border border-border bg-muted p-2 shadow-2xl shadow-black/10 sm:-mt-28 sm:p-6 lg:p-8">
-              <SheetToPlan />
+          <div className="mx-auto grid max-w-6xl gap-8 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-center lg:gap-16">
+            <div>
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                Keep your programming
+              </p>
+              <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
+                No retyping.
+              </h2>
+              <p className="mt-4 max-w-md text-pretty text-muted-foreground antialiased sm:text-lg">
+                Logbook.fit reads the layout you already use. You don&rsquo;t rebuild
+                your library or start from a blank plan to try it.
+              </p>
             </div>
-            <div className="mt-12 grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-center lg:gap-16">
-              <div>
-                <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                  Keep your programming
-                </p>
-                <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
-                  No retyping.
-                </h2>
-                <p className="mt-4 max-w-md text-pretty text-muted-foreground antialiased sm:text-lg">
-                  Logbook.fit reads the layout you already use. You don&rsquo;t rebuild
-                  your library or start from a blank plan to try it.
-                </p>
-              </div>
-              <div>
-                <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                  Reads
-                </h3>
-                <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {FORMATS.map((format) => (
-                    <li
-                      key={format}
-                      className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 shadow-sm"
-                    >
-                      <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
-                      <span className="text-pretty text-sm font-medium antialiased sm:text-base">{format}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            <div>
+              <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                Reads
+              </h3>
+              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+                {FORMATS.map((format) => (
+                  <li
+                    key={format}
+                    className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3.5 shadow-sm"
+                  >
+                    <FileSpreadsheet className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
+                    <span className="text-pretty text-sm font-medium antialiased sm:text-base">{format}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
         </section>

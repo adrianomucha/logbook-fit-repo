@@ -69,10 +69,13 @@ function readAttribution(pageCampaign?: string) {
 export function WaitlistForm({
   campaign,
   promises,
+  align = 'center',
 }: {
   campaign?: string;
   /** Short reassurances shown under the button, above the consent line */
   promises?: readonly string[];
+  /** Where the promises line sits: under a centered hero, or a left-aligned one */
+  align?: 'center' | 'start';
 } = {}) {
   const inputId = useId();
   const [email, setEmail] = useState('');
@@ -290,10 +293,16 @@ export function WaitlistForm({
       {/* A check per item rather than dot separators: a wrapped line on a
           phone then starts with a check, never with a stray dot. */}
       {promises && (
-        <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-2 text-sm text-muted-foreground antialiased">
+        <ul
+          className={cn(
+            'flex flex-wrap gap-x-4 gap-y-1.5 pt-2 text-sm text-muted-foreground antialiased',
+            align === 'center' ? 'justify-center' : 'justify-start'
+          )}
+        >
           {promises.map((promise) => (
             <li key={promise} className="flex items-center gap-1.5 whitespace-nowrap">
-              <Check className="h-3.5 w-3.5 shrink-0 text-brand" strokeWidth={3} aria-hidden="true" />
+              {/* Volt reads on a dark section; on a light one it washes out */}
+              <Check className="h-3.5 w-3.5 shrink-0 text-foreground dark:text-brand" strokeWidth={3} aria-hidden="true" />
               {promise}
             </li>
           ))}
