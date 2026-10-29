@@ -8,9 +8,13 @@ import { absoluteUrl } from '@/lib/seo';
  * (/coach, /client, /admin) and every API route is disallowed — those pages
  * would 302 to /login for a crawler anyway, so letting bots walk them just
  * burns crawl budget and risks thin, duplicate "Sign in" pages entering the
- * index. /signup is disallowed because invite links are unguessable one-time
- * tokens that should never be indexed, and /reset-password for the same
- * reason (its links carry one-time tokens in the query string).
+ * index.
+ *
+ * /login, /signup, /forgot-password and /reset-password are deliberately NOT
+ * disallowed. Each carries a noindex meta tag, and a crawler can only obey
+ * noindex on a page it is allowed to fetch. Blocking them here hid that tag:
+ * the landing page links to /login, so Google could index the bare URL as a
+ * contentless "No information is available for this page" result.
  */
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -23,10 +27,6 @@ export default function robots(): MetadataRoute.Robots {
           '/admin/',
           '/coach/',
           '/client/',
-          '/login',
-          '/signup',
-          '/forgot-password',
-          '/reset-password',
         ],
       },
     ],

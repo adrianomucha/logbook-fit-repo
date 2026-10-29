@@ -1,0 +1,8 @@
+# False positives the secrets job (gitleaks, .github/workflows/ci.yml) should
+# skip. One fingerprint per line, as printed in the job log. Only add a line
+# after confirming the match is not a credential.
+#
+# IndexNow key, briefly hardcoded in scripts/indexnow.ts. Public by design:
+# it is served at https://logbook.fit/<key>.txt so search engines can verify
+# it. The script now reads it from the public/ file name instead.
+d877e876fd42eaa30683b2b188e109d57908f716:scripts/indexnow.ts:generic-api-key:17
