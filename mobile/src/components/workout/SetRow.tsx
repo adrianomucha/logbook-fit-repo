@@ -33,6 +33,8 @@ interface SetRowProps {
    * exercise card turns it on for the next set still to be done.
    */
   showTimer?: boolean;
+  /** The next set to log: raised and full strength; later sets read as planned */
+  isCurrent?: boolean;
 }
 
 /** Column widths shared with the header row in ExerciseCard: SET · LAST · WEIGHT · REPS · ✓ */
@@ -59,6 +61,7 @@ export function SetRow({
   isReadOnly = false,
   showDivider = false,
   showTimer = false,
+  isCurrent = false,
 }: SetRowProps) {
   const isTime = trackingType === 'TIME';
   const defaultReps = isTime ? parseTargetSeconds(repsTarget) : parseTargetReps(repsTarget);
@@ -122,15 +125,26 @@ export function SetRow({
 
   // Font size only, no line height: on iOS a lineHeight on a one-line
   // TextInput pushes the text below the middle of the box
-  const inputClass = `h-11 rounded-lg py-0 text-center font-mono-bold text-[16px] ${
-    completed ? 'bg-transparent text-muted-foreground' : 'bg-muted/50 text-foreground'
+  const inputClass = `rounded-lg py-0 text-center font-mono-bold ${isCurrent ? 'h-12 text-[18px]' : 'h-11 text-[16px]'} ${
+    completed
+      ? 'bg-transparent text-muted-foreground'
+      : isCurrent
+        ? 'bg-muted text-foreground'
+        : // Planned, not yet reached: the values are there, just quieter
+          'bg-transparent text-muted-foreground'
   }`;
 
   const row = (
-    <View className={`h-14 flex-row items-center gap-2 ${showDivider ? 'border-t border-border/30' : ''}`}>
+    <View
+      className={`flex-row items-center gap-2 ${showDivider ? 'border-t border-border/30' : ''} ${
+        // Raised off the tinted exercise panel: white, hairline, soft shadow
+        isCurrent ? '-mx-2 h-16 rounded-xl border border-black/5 bg-background px-2' : 'h-14'
+      }`}
+      style={isCurrent ? { shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 2, shadowOffset: { width: 0, height: 1 }, elevation: 1 } : undefined}
+    >
       <Text
         style={{ width: SET_COLS.set }}
-        className={`font-mono-bold text-sm ${completed ? 'text-muted-foreground' : 'text-foreground'}`}
+        className={`font-mono-bold text-sm ${completed || !isCurrent ? 'text-muted-foreground' : 'text-foreground'}`}
       >
         {setNumber}
       </Text>
@@ -172,7 +186,7 @@ export function SetRow({
         hitSlop={8}
         style={{ width: SET_COLS.check, height: SET_COLS.check }}
         className={`items-center justify-center rounded-full border-2 active:scale-95 ${
-          completed ? 'border-brand bg-brand' : 'border-foreground/15 bg-transparent'
+          completed ? 'border-brand bg-brand' : isCurrent ? 'border-foreground/40 bg-transparent' : 'border-foreground/15 bg-transparent'
         }`}
       >
         {completed ? <Feather name="check" size={16} color="#1e2702" /> : null}

@@ -448,14 +448,6 @@ export function ClientWorkoutExecution() {
         )}
       >
         <section aria-label="Exercises">
-          <div className="flex items-baseline justify-between mb-1 px-1">
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">
-              Exercises
-            </h2>
-            <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
-              {stats.exercisesDone}/{exercises.length}
-            </span>
-          </div>
           <div className="divide-y divide-border/50">
             {groupBySuperset(exercises).map((group, groupIndex) => {
             const renderCard = (exercise: WorkoutExercise, memberIndex: number) => (

@@ -41,6 +41,8 @@ interface SetRowProps {
    * exercise card turns it on for the next set still to be done.
    */
   showTimer?: boolean;
+  /** The next set to log: raised and full strength; later sets read as planned */
+  isCurrent?: boolean;
 }
 
 // Prescription → default value parsing lives in @logbook/shared (the app uses it too)
@@ -62,6 +64,7 @@ export function SetRow({
   isReadOnly = false,
   showDivider = false,
   showTimer = false,
+  isCurrent = false,
 }: SetRowProps) {
   const isTime = trackingType === 'TIME';
   // For TIME the "reps" cell holds seconds ("1m 30s" target → 90).
@@ -145,7 +148,8 @@ export function SetRow({
       onChange={(e) => opts.onChange(e.target.value)}
       className={cn(
         // text-base (16px) on mobile prevents iOS focus zoom; text-sm on larger screens
-        'h-11 w-full rounded-lg text-center font-mono text-base sm:text-sm font-bold tabular-nums outline-none transition-colors',
+        'w-full rounded-lg text-center font-mono font-bold tabular-nums outline-none transition-colors',
+        isCurrent ? 'h-12 text-lg' : 'h-11 text-base sm:text-sm',
         // Full-strength muted-foreground: any alpha below 100% drops this text
         // under 4.5:1 on the card, and these cells hold logged training data.
         'placeholder:font-semibold placeholder:text-muted-foreground disabled:opacity-100',
@@ -153,7 +157,10 @@ export function SetRow({
           ? 'bg-transparent text-muted-foreground'
           // ring-foreground/20 measured 1.6:1 against the card — too faint to
           // read as a focus indicator on the screen's main data-entry control.
-          : 'bg-muted/50 text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
+          : isCurrent
+            ? 'bg-muted text-foreground focus:bg-background focus:ring-2 focus:ring-ring'
+            // Planned, not yet reached: the values are there, just quieter
+            : 'bg-transparent text-muted-foreground focus:bg-background focus:text-foreground focus:ring-2 focus:ring-ring'
       )}
     />
   );
@@ -165,7 +172,9 @@ export function SetRow({
       className={cn(
         SET_GRID,
         'h-[56px]',
-        showDivider && 'border-t border-border/30'
+        showDivider && 'border-t border-border/30',
+        // Raised off the tinted exercise panel: white, hairline, soft shadow
+        isCurrent && 'h-[64px] -mx-2 px-2 rounded-xl bg-background shadow-[0_1px_2px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.05)]'
       )}
     >
       {/* Two-step hierarchy that still clears AA: the live set number carries
@@ -173,7 +182,7 @@ export function SetRow({
       <span
         className={cn(
           'font-mono text-sm font-bold tabular-nums transition-colors',
-          completed ? 'text-muted-foreground' : 'text-foreground'
+          completed || !isCurrent ? 'text-muted-foreground' : 'text-foreground'
         )}
       >
         {setNumber}
@@ -211,7 +220,9 @@ export function SetRow({
           !isReadOnly && 'active:scale-[0.92] cursor-pointer',
           completed
             ? 'bg-brand border-brand'
-            : 'border-foreground/15 bg-transparent hover:border-foreground/30'
+            : isCurrent
+              ? 'border-foreground/40 bg-transparent hover:border-foreground/60'
+              : 'border-foreground/15 bg-transparent hover:border-foreground/30'
         )}
       >
         {completed && <Check className="w-4 h-4 text-brand-foreground animate-set-complete" />}

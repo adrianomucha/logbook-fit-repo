@@ -74,7 +74,7 @@ export function WorkoutHeader({
 
         {/* Eyebrow — mono data voice, same as the dashboard */}
         {eyebrow && (
-          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+          <p className="font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground">
             {eyebrow}
           </p>
         )}

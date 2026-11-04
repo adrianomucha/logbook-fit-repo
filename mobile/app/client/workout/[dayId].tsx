@@ -294,7 +294,9 @@ export default function WorkoutScreen() {
             </Text>
           </View>
         </View>
-        {eyebrow ? <Eyebrow>{eyebrow}</Eyebrow> : null}
+        {eyebrow ? (
+          <Text className="font-mono text-xs uppercase tracking-[1px] text-muted-foreground">{eyebrow}</Text>
+        ) : null}
         <Text className="mt-1 font-sans-bold text-2xl leading-7 tracking-tight text-foreground">
           {stripDayPrefix(day.name ?? 'Workout')}
         </Text>
@@ -321,12 +323,6 @@ export default function WorkoutScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
-        <View className="mb-1 flex-row items-baseline justify-between px-1">
-          <Eyebrow>Exercises</Eyebrow>
-          <Text className="font-mono text-[11px] text-muted-foreground">
-            {stats.exercisesDone}/{exercises.length}
-          </Text>
-        </View>
         {groupBySuperset(exercises).map((group, groupIndex) => {
           const card = (exercise: WorkoutExercise, memberIndex: number) => (
             <View key={exercise.workoutExerciseId} onLayout={(e) => cardY.current.set(exercise.workoutExerciseId, e.nativeEvent.layout.y)}>

@@ -76,6 +76,9 @@ export function ExerciseCard({
       ? setRows.find((n) => !isSetCompleted(exercise.setCompletions, n))
       : undefined;
 
+  // The set the athlete is on: the first one not yet logged
+  const currentSetNumber = setRows.find((n) => !isSetCompleted(exercise.setCompletions, n));
+
   const handleFlagClick = () => {
     if (!isReadOnly && onToggleFlag) onToggleFlag();
   };
@@ -112,7 +115,14 @@ export function ExerciseCard({
   };
 
   return (
-    <div id={id}>
+    <div
+      id={id}
+      className={cn(
+        'transition-colors',
+        // The exercise being worked is one block: a tinted panel, no border
+        isExpanded && '-mx-3 px-3 rounded-2xl bg-muted/50 my-1.5'
+      )}
+    >
       {/* ── Exercise row ──
           Expand and mark-all are siblings, never nested: a <button> may not
           contain another interactive element, and nesting them hid the
@@ -128,7 +138,7 @@ export function ExerciseCard({
           {/* Left — mono index, same voice as the dashboard preview list */}
           <span
             className={cn(
-              'font-mono text-[11px] font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
+              'font-mono text-xs font-medium tabular-nums w-7 text-right flex-shrink-0 transition-colors',
               isComplete ? 'text-foreground' : 'text-muted-foreground'
             )}
           >
@@ -140,7 +150,8 @@ export function ExerciseCard({
             <div className="flex items-center gap-1.5">
               <p
                 className={cn(
-                  'text-[15px] font-semibold tracking-tight leading-snug truncate transition-colors',
+                  'font-semibold tracking-tight leading-snug truncate transition-colors',
+                  isExpanded ? 'text-lg' : 'text-base',
                   isComplete ? 'text-muted-foreground' : 'text-foreground'
                 )}
               >
@@ -198,7 +209,7 @@ export function ExerciseCard({
 
       {/* ── Expanded: coach tip + set table + flag ── */}
       {isExpanded && (
-        <div className="pl-[42px] pr-1 pb-4 pt-1.5 space-y-3.5 animate-fade-in-up">
+        <div className="pl-[42px] pr-1 pb-4 pt-0.5 space-y-4 animate-fade-in-up">
           {/* Coach note — the volt rail alone marks the voice; no label line */}
           {exercise.coachNotes && (
             <p className="pl-3 border-l-2 border-brand text-sm leading-relaxed text-foreground/75">
@@ -265,23 +276,23 @@ export function ExerciseCard({
           {/* Set table — SET · LAST · WEIGHT · REPS · ✓. Labels live in this
               header once, so the rows below are pure numbers. */}
           <div>
-            <div className={cn(SET_GRID, 'pb-1')}>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+            <div className={cn(SET_GRID, 'pb-1.5')}>
+              <span className="font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground">
                 Set
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              <span className="font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground">
                 Last
               </span>
               {/* The athlete's own unit — the cells below show and take it */}
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
+              <span className="font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground text-center">
                 {weightUnitLabel(weightUnit)}
               </span>
-              <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground text-center">
+              <span className="font-mono text-xs uppercase tracking-[0.08em] text-muted-foreground text-center">
                 {exercise.trackingType === 'TIME' ? 'Sec' : 'Reps'}
               </span>
               <span aria-hidden="true" />
             </div>
-            {setRows.map((setNumber, idx) => {
+            {setRows.map((setNumber) => {
               const sc = exercise.setCompletions.find(
                 (s) => s.setNumber === setNumber
               );
@@ -322,7 +333,8 @@ export function ExerciseCard({
                     })
                   }
                   isReadOnly={isReadOnly}
-                  showDivider={idx > 0}
+                  showDivider={false}
+                  isCurrent={!isReadOnly && setNumber === currentSetNumber}
                   showTimer={setNumber === nextSetNumber}
                 />
               );
@@ -334,7 +346,7 @@ export function ExerciseCard({
             <button
               type="button"
               onClick={handleFlagClick}
-              className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground hover:text-foreground transition-colors touch-manipulation py-2 -my-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex items-center gap-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors touch-manipulation py-2 -my-2 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Flag className="w-3.5 h-3.5" />
               Flag for coach
