@@ -3,19 +3,19 @@ import { Text, View } from 'react-native';
 import type { WorkoutPlan } from '@logbook/shared/types';
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@logbook/shared/workout-helpers';
-import { buildProgressStory, describeThisWeek } from '@logbook/shared/progress';
+import { buildProgressLog, describeThisWeek } from '@logbook/shared/progress';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
 import { useClientCheckIns, useClientProgress } from '@/hooks/useCheckIns';
 import { Screen } from '@/components/Screen';
 import { EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { PROGRESS_BEFORE_PLAN_COPY } from '@logbook/shared/client-empty-states';
-import { ProgressStory, WeekCircles } from '@/components/progress/ProgressStory';
+import { ProgressLog, WeekCircles } from '@/components/progress/ProgressLog';
 
 /**
  * The Progress tab, the web's ProgressHistory. This week as circles and a
- * sentence that ends on the next workout, then the story: only the moments
- * worth noticing. Leaving a coach lives in Settings → Account.
+ * sentence that ends on the next workout, then the log: week by week, every
+ * workout with its wins. Leaving a coach lives in Settings → Account.
  */
 export default function ProgressScreen() {
   const { weightUnit, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
@@ -31,7 +31,7 @@ export default function ProgressScreen() {
     [apiCheckIns, clientProfileId, coach]
   );
 
-  // Same shared helpers as the web's ProgressHistory, so both tell the same story
+  // Same shared helpers as the web's ProgressHistory, so both say the same thing
   const target = plan?.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
   // Once the plan has ended the week overview stays on its final week; that isn't this week
   const weekNumber = weekOverview && !weekOverview.planEnded ? weekOverview.weekNumber : null;
@@ -41,9 +41,9 @@ export default function ProgressScreen() {
     () => describeThisWeek({ plan, weekNumber, completions, target, startedDayId }),
     [completions, target, plan, weekNumber, startedDayId]
   );
-  const moments = useMemo(
+  const weeks = useMemo(
     () =>
-      buildProgressStory({
+      buildProgressLog({
         completions,
         plans: plan ? [plan] : [],
         personalBests: progress?.personalBests,
@@ -84,8 +84,8 @@ export default function ProgressScreen() {
             {week.lead} <Text className="font-sans-medium text-muted-foreground">{week.rest}</Text>
           </Text>
 
-          <View className="mt-8">
-            <ProgressStory moments={moments} />
+          <View className="mt-10">
+            <ProgressLog weeks={weeks} />
           </View>
         </>
       )}

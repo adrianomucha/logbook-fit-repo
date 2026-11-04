@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildProgressStory, describeThisWeek, formatMomentWhen, workoutTitle } from '../progress';
+import { buildProgressLog, describeThisWeek, formatWeekTitle, workoutTitle } from '../progress';
 import type { PersonalBest } from '../personal-bests';
 import { MAX_SESSION_SEC, finishedSessionSec, plausibleSessionSec } from '../session-duration';
 import type { WorkoutCompletion, WorkoutPlan } from '../types';
@@ -62,9 +62,8 @@ describe('describeThisWeek', () => {
     expect(result.target).toBe(2);
     expect(result.rest).toBe('Week complete. Rest up.');
     expect(
-      buildProgressStory({ completions: c.map((x) => ({ ...x, planId: 'p' })), plans: [withEmptyDay], weightUnit: 'LB', now })
-        .some((m) => m.title === 'Finished Week 1')
-    ).toBe(true);
+      buildProgressLog({ completions: c.map((x) => ({ ...x, planId: 'p' })), plans: [withEmptyDay], weightUnit: 'LB', now })[0].badges
+    ).toEqual([{ kind: 'week', text: 'Week 1 complete' }]);
   });
 
   it("counts the plan week's workouts, like the Today tab, and points at the next one", () => {
@@ -135,96 +134,121 @@ describe('describeThisWeek', () => {
   });
 });
 
-describe('formatMomentWhen', () => {
-  it('says when relative to now', () => {
-    expect(formatMomentWhen('2026-09-30T08:00:00', now)).toBe('Today');
-    expect(formatMomentWhen('2026-09-29T08:00:00', now)).toBe('Yesterday');
-    expect(formatMomentWhen('2026-09-27T08:00:00', now)).toBe('Sunday');
-    expect(formatMomentWhen('2026-09-11T08:00:00', now)).toBe('Sep 11');
-    expect(formatMomentWhen('2025-12-11T08:00:00', now)).toBe('Dec 11, 2025');
+describe('formatWeekTitle', () => {
+  it('names recent weeks, and dates the rest', () => {
+    expect(formatWeekTitle(new Date('2026-09-28T00:00:00'), now)).toBe('This week');
+    expect(formatWeekTitle(new Date('2026-09-21T00:00:00'), now)).toBe('Last week');
+    expect(formatWeekTitle(new Date('2026-09-14T00:00:00'), now)).toBe('Sep 14 – 20');
+    expect(formatWeekTitle(new Date('2026-08-31T00:00:00'), now)).toBe('Aug 31 – Sep 6');
+    expect(formatWeekTitle(new Date('2025-12-29T00:00:00'), now)).toBe('Dec 29 – Jan 4');
+    expect(formatWeekTitle(new Date('2025-12-22T00:00:00'), now)).toBe('Dec 22 – 28, 2025');
   });
 });
 
-describe('buildProgressStory', () => {
-  const story = (completions: WorkoutCompletion[], extra: Partial<Parameters<typeof buildProgressStory>[0]> = {}) =>
-    buildProgressStory({ completions, plans: [plan], weightUnit: 'LB', now, ...extra });
+describe('buildProgressLog', () => {
+  const log = (completions: WorkoutCompletion[], extra: Partial<Parameters<typeof buildProgressLog>[0]> = {}) =>
+    buildProgressLog({ completions, plans: [plan], weightUnit: 'LB', now, ...extra });
+  const entries = (weeks: ReturnType<typeof log>) => weeks.flatMap((w) => w.entries);
 
-  it('opens with the first workout and folds ordinary ones between moments', () => {
+  it('lists every workout in its week, newest week first and each week in order', () => {
     const c = [
       done('2026-09-15T10:00:00', { id: 'a', weekId: 'w1', dayId: 'up' }),
+      done('2026-09-24T10:00:00', { id: 'c', dayName: 'Day 3: Legs (Heavy)' }),
       done('2026-09-22T10:00:00', { id: 'b', dayName: 'Arms' }),
-      done('2026-09-23T10:00:00', { id: 'c', dayName: 'Legs' }),
     ];
-    const s = story(c);
-    expect(s.map((m) => [m.kind, m.title])).toEqual([
-      ['quiet', '+ 2 workouts'],
-      ['milestone', 'First workout logged'],
+    const weeks = log(c);
+    expect(weeks.map((w) => [w.title, w.summary])).toEqual([
+      ['Last week', '2 workouts'],
+      ['Sep 14 – 20', '1 workout'],
     ]);
-    expect(s[0].sessions).toEqual(['Legs · Wed 23', 'Arms · Tue 22']);
-    expect(s[1]).toMatchObject({ when: 'Sep 15', detail: 'Upper. This is where it starts.' });
+    expect(weeks[0].entries.map((e) => [e.weekday, e.date, e.title])).toEqual([
+      ['Tue', '22', 'Arms'],
+      ['Thu', '24', 'Legs'],
+    ]);
+    expect(weeks[1].entries[0]).toMatchObject({ kind: 'workout', title: 'Upper', wins: [{ kind: 'milestone', label: 'First workout logged' }] });
+  });
+
+  it('leaves out weeks with nothing in them', () => {
+    const weeks = log([done('2026-08-31T10:00:00'), done('2026-09-29T10:00:00')]);
+    expect(weeks.map((w) => w.title)).toEqual(['This week', 'Aug 31 – Sep 6']);
   });
 
   it('counts milestones from the lifetime total when older history is cut off', () => {
     // 8 workouts before the year we were given, then 3 more: the 10th is the second here
     const c = ['2026-09-01T10:00:00', '2026-09-03T10:00:00', '2026-09-05T10:00:00'].map((d) => done(d));
-    const s = story(c, { totalWorkouts: 11 });
-    expect(s.filter((m) => m.kind === 'milestone')).toEqual([
-      expect.objectContaining({ title: '10 workouts logged', when: 'Sep 3', detail: undefined }),
-    ]);
+    const wins = entries(log(c, { totalWorkouts: 11 })).map((e) => e.wins);
+    expect(wins).toEqual([[], [{ kind: 'milestone', label: '10 workouts logged' }], []]);
   });
 
-  it('names a single best with its gain, and groups several from one session', () => {
-    const c = [done('2026-09-01T10:00:00'), done('2026-09-29T10:00:00', { id: 'x', weekId: 'w1', dayId: 'up' })];
-    const one = story(c, { personalBests: [best('x', '2026-09-29T10:00:00', 'Bench Press')] });
-    expect(one[0]).toMatchObject({ kind: 'best', when: 'Yesterday', title: 'New best on Bench Press', detail: '185 lb × 5, up 5 lb' });
-    const many = story(c, {
-      personalBests: ['Bench Press', 'Row', 'Squat', 'Dip'].map((e) => best('x', '2026-09-29T10:00:00', e)),
+  it('puts each best, with its numbers, on the workout it came from', () => {
+    const c = [done('2026-09-25T10:00:00'), done('2026-09-29T10:00:00', { id: 'x', weekId: 'w1', dayId: 'up' })];
+    const weeks = log(c, {
+      personalBests: [best('x', '2026-09-29T10:00:00', 'Bench Press'), best('x', '2026-09-29T10:00:00', 'Row', { kind: 'reps', weight: null, reps: 12, delta: 2 })],
     });
-    expect(many[0]).toMatchObject({ title: '4 new bests in Upper', detail: 'Bench Press, Row and 2 more' });
+    expect(weeks[0].entries[0]).toMatchObject({
+      title: 'Upper',
+      wins: [
+        { kind: 'best', label: 'Bench Press', detail: '185 lb × 5, up 5 lb' },
+        { kind: 'best', label: 'Row', detail: '12 reps, 2 more reps' },
+      ],
+    });
   });
 
   it('marks a comeback after two weeks off', () => {
-    const s = story([done('2026-09-01T10:00:00'), done('2026-09-29T10:00:00', { dayName: 'Push' })]);
-    expect(s[0]).toMatchObject({ kind: 'comeback', title: 'Back at it', detail: 'Push, after 4 weeks off' });
+    const weeks = log([done('2026-09-01T10:00:00'), done('2026-09-29T10:00:00', { dayName: 'Push' })]);
+    expect(weeks[0].entries[0]).toMatchObject({ title: 'Push', wins: [{ kind: 'comeback', label: 'Back after 4 weeks off' }] });
   });
 
-  it('marks streak milestones on the week that reached them', () => {
+  it('badges the week a run of weeks reaches a milestone', () => {
     const c = ['2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00', '2026-09-29T10:00:00'].map((d) => done(d));
-    const streak = story(c).find((m) => m.kind === 'streak');
-    expect(streak).toMatchObject({ title: '3 weeks in a row', when: 'Monday', detail: 'Every week since Sep 14' });
+    expect(log(c).map((w) => w.badges)).toEqual([[{ kind: 'streak', text: '3 weeks in a row' }], [], []]);
   });
 
-  it('gives no streak lines to a run that may have started before the history we have', () => {
+  it('gives no streak badge to a run that may have started before the history we have', () => {
     const c = ['2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00'].map((d) => done(d));
-    expect(story(c, { totalWorkouts: 40 }).some((m) => m.kind === 'streak')).toBe(false);
+    expect(log(c, { totalWorkouts: 40 }).flatMap((w) => w.badges)).toEqual([]);
   });
 
   it('says when a run beats every earlier one', () => {
     // Two weeks in August, a break, then three in a row
     const c = ['2026-08-03T10:00:00', '2026-08-10T10:00:00', '2026-09-14T10:00:00', '2026-09-21T10:00:00', '2026-09-28T10:00:00'].map((d) => done(d));
-    expect(story(c).find((m) => m.kind === 'streak')?.detail).toBe('Your longest run yet.');
+    expect(log(c)[0].badges).toEqual([{ kind: 'streak', text: '3 weeks in a row, your longest yet' }]);
   });
 
-  it('celebrates a finished plan week', () => {
+  it('badges a finished plan week on the week its last workout fell in', () => {
     const c = [
-      done('2026-09-28T10:00:00', { weekId: 'w2', dayId: 'up2' }),
+      done('2026-09-25T10:00:00', { weekId: 'w2', dayId: 'up2' }),
       done('2026-09-29T10:00:00', { id: 'fin', weekId: 'w2', dayId: 'lo2' }),
     ];
-    expect(story(c)[0]).toMatchObject({ kind: 'week', title: 'Finished Week 2', detail: 'Block A · all 2 workouts', when: 'Yesterday' });
+    const weeks = log(c);
+    expect(weeks[0].badges).toEqual([{ kind: 'week', text: 'Week 2 complete' }]);
+    expect(weeks[1].badges).toEqual([]);
   });
 
-  it("brings in the coach's replies", () => {
+  it("puts the coach's replies in the week they came, in order with the workouts", () => {
     const checkIns = [
-      { id: 'k1', status: 'completed' as const, coachResponse: 'Great depth on those squats.', completedAt: '2026-09-29T20:00:00' },
+      { id: 'k1', status: 'completed' as const, coachResponse: ' Great depth on those squats. ', completedAt: '2026-09-29T20:00:00' },
       { id: 'k2', status: 'responded' as const, coachResponse: undefined, completedAt: undefined },
     ];
-    const s = story([], { checkIns, coachName: 'Sam Rivera' });
-    expect(s).toEqual([
-      expect.objectContaining({ kind: 'coach', title: 'Sam on your check-in', detail: 'Great depth on those squats.' }),
+    const weeks = log([done('2026-09-28T10:00:00', { dayName: 'Legs' }), done('2026-09-30T10:00:00', { dayName: 'Arms' })], { checkIns, coachName: 'Sam Rivera' });
+    expect(weeks[0].summary).toBe('2 workouts');
+    expect(weeks[0].entries.map((e) => [e.kind, e.title])).toEqual([
+      ['workout', 'Legs'],
+      ['coach', 'Sam on your check-in'],
+      ['workout', 'Arms'],
     ]);
+    expect(weeks[0].entries[1]).toMatchObject({ weekday: 'Tue', date: '29', note: 'Great depth on those squats.' });
+    expect(weeks[0].entries.map((e) => e.firstOfDay)).toEqual([true, true, true]);
+    const sameDay = log([done('2026-09-29T08:00:00', { dayName: 'Legs' })], { checkIns, coachName: 'Sam Rivera' });
+    expect(sameDay[0].entries.map((e) => [e.title, e.firstOfDay])).toEqual([
+      ['Legs', true],
+      ['Sam on your check-in', false],
+    ]);
+    // A week with only the coach's note has no workout count
+    expect(log([], { checkIns }).map((w) => [w.title, w.summary])).toEqual([['This week', '']]);
   });
 
   it('skips sessions that were never finished', () => {
-    expect(story([done('2026-09-29T10:00:00', { status: 'IN_PROGRESS' })])).toEqual([]);
+    expect(log([done('2026-09-29T10:00:00', { status: 'IN_PROGRESS' })])).toEqual([]);
   });
 });

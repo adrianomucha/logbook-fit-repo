@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { WorkoutPlan, WorkoutCompletion, CheckIn } from '@/types';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
-import { ProgressStory, WeekCircles } from './progress/ProgressStory';
-import { buildProgressStory, describeThisWeek } from '@logbook/shared/progress';
+import { ProgressLog, WeekCircles } from './progress/ProgressLog';
+import { buildProgressLog, describeThisWeek } from '@logbook/shared/progress';
 import type { PersonalBest } from '@logbook/shared/personal-bests';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -13,7 +13,7 @@ interface ProgressHistoryProps {
   workoutCompletions: WorkoutCompletion[];
   /** Every personal best in the history, newest first (from the progress API) */
   personalBests?: PersonalBest[];
-  /** The coach's replies become moments in the story */
+  /** The coach's replies show in the week they came */
   checkIns: CheckIn[];
   coachName?: string | null;
   /** All-time finished workouts; the completions only reach back a year */
@@ -26,8 +26,8 @@ interface ProgressHistoryProps {
 
 /**
  * The Progress tab: this week as circles and a sentence that ends on the
- * next workout, then the story: only the moments worth noticing. The
- * shared helpers keep the wording identical to the app.
+ * next workout, then the log: week by week, every workout with its wins.
+ * The shared helpers keep the wording identical to the app.
  */
 export function ProgressHistory({
   plans,
@@ -46,9 +46,9 @@ export function ProgressHistory({
     () => describeThisWeek({ plan, weekNumber, completions: workoutCompletions, target, startedDayId }),
     [workoutCompletions, target, plan, weekNumber, startedDayId]
   );
-  const moments = useMemo(
+  const weeks = useMemo(
     () =>
-      buildProgressStory({ completions: workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit, totalWorkouts }),
+      buildProgressLog({ completions: workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit, totalWorkouts }),
     [workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit, totalWorkouts]
   );
 
@@ -58,8 +58,8 @@ export function ProgressHistory({
       <p className="mt-4 text-[22px] leading-7 font-bold tracking-tight">
         {week.lead} <span className="font-medium text-muted-foreground">{week.rest}</span>
       </p>
-      <div className="mt-8">
-        <ProgressStory moments={moments} />
+      <div className="mt-10">
+        <ProgressLog weeks={weeks} />
       </div>
     </div>
   );
