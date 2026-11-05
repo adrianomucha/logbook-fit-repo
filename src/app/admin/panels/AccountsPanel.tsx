@@ -1,4 +1,5 @@
 import { isDemoAccount, isLockedDemoAccount } from '@/lib/demo';
+import { isAdminEmail } from '@/lib/admin';
 import prisma from '@/lib/prisma';
 import { ResetPasswordButton } from './ResetPasswordButton';
 
@@ -89,7 +90,10 @@ export async function AccountsPanel() {
             <tbody>
               {users.map((user) => {
                 const locked = isLockedDemoAccount(user.email);
-                const resettable = !user.deletedAt && !locked;
+                // Admin accounts are refused by the reset endpoint, so don't
+                // offer a button that can only fail.
+                const resettable =
+                  !user.deletedAt && !locked && !isAdminEmail(user.email);
                 return (
                   <tr
                     key={user.id}

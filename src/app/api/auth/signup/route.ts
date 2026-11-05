@@ -6,6 +6,7 @@ import { parseBody } from "@/lib/validations/parseBody";
 import { signupSchema } from "@/lib/validations/schemas";
 import { signupLimiter, getClientIp } from "@/lib/rate-limit";
 import { isCoachSignupOpen } from "@/lib/waitlist";
+import { isAdminEmail } from "@/lib/admin";
 import { notifyClientJoined } from "@/lib/push";
 import { Prisma } from "@prisma/client";
 
@@ -47,6 +48,17 @@ export async function POST(req: Request) {
 
     const { email, password, name, role, inviteToken, betaToken } =
       result.data;
+
+    // Admin access is granted by email (ADMIN_EMAILS) and signup never
+    // proves the caller owns the address, so an allowlisted email with no
+    // live account (never registered, or freed by account deletion) would
+    // otherwise be claimable by anyone. Answer exactly as if it were taken.
+    // To add an admin: create the account first, then add its email to
+    // ADMIN_EMAILS.
+    if (isAdminEmail(email)) {
+      console.error("[AUTH] Signup refused for an admin-allowlisted email");
+      return emailTaken(Boolean(inviteToken));
+    }
 
     // If invite token provided, validate it and force CLIENT role
     let invite: {
