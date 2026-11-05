@@ -6,6 +6,7 @@
  */
 
 import { Readable } from "stream";
+import { inflateRawSync } from "zlib";
 import ExcelJS from "exceljs";
 import {
   IMPORT_COLUMNS,
@@ -155,9 +156,144 @@ const startsWith = (buffer: Buffer, magic: number[]) =>
   magic.every((byte, i) => buffer[i] === byte);
 
 /**
+ * Ceilings on what an upload may expand to before exceljs sees it.
+ *
+ * The route caps the upload at 2 MB, but that's the compressed size: an
+ * .xlsx is a zip, and exceljs inflates every entry into memory and builds an
+ * object per cell (about 270 bytes each). Repetitive XML deflates around
+ * 1000x, so a 400 KB file measured 843 MB of heap, and a 2 MB one would run
+ * the function out of memory. Real plan workbooks (2000 rows at most)
+ * inflate to well under 2 MB, so these leave lots of headroom while keeping
+ * exceljs under roughly 100 MB.
+ */
+export const UPLOAD_EXPANSION_LIMITS = {
+  /** Total inflated bytes across every entry of an .xlsx archive. */
+  maxXlsxInflatedBytes: 10 * 1024 * 1024,
+  /** Entries in an .xlsx archive (sheets, styles, rels, media...). */
+  maxXlsxEntries: 1000,
+  /** Fields in a CSV, counted generously by delimiters. */
+  maxCsvFields: 100_000,
+} as const;
+
+export const FILE_TOO_COMPLEX_ERROR =
+  "That file is too big to read as a workout plan. Remove extra sheets or unused rows and columns, or start from the template.";
+
+const UNREADABLE_FILE_ERROR = "Couldn’t read that file. Upload an Excel (.xlsx) or CSV file.";
+
+type ArchiveCheck = { ok: true } | { ok: false; reason: "unreadable" | "too_large" };
+
+/**
+ * Walk an .xlsx (zip) archive and inflate every entry under a byte budget,
+ * without trusting the sizes the archive declares (a bomb can lie about
+ * them; zlib's maxOutputLength is what actually bounds memory here).
+ *
+ * Entries are located the way JSZip (inside exceljs) locates them: the last
+ * end-of-central-directory record, then the central directory, then each
+ * local header. Anything this reader can't follow exactly (ZIP64, prepended
+ * bytes that make JSZip shift offsets, encryption, unknown compression) is
+ * refused, so the bytes checked here are the bytes exceljs will inflate.
+ */
+export function checkXlsxArchive(
+  buffer: Buffer,
+  limits: { maxInflatedBytes: number; maxEntries: number } = {
+    maxInflatedBytes: UPLOAD_EXPANSION_LIMITS.maxXlsxInflatedBytes,
+    maxEntries: UPLOAD_EXPANSION_LIMITS.maxXlsxEntries,
+  }
+): ArchiveCheck {
+  const unreadable: ArchiveCheck = { ok: false, reason: "unreadable" };
+  const EOCD_SIG = 0x06054b50;
+  const CEN_SIG = 0x02014b50;
+  const LOC_SIG = 0x04034b50;
+  const EOCD_MIN = 22;
+
+  // The EOCD record sits at the end, followed by a comment of up to 64 KB
+  let eocd = -1;
+  const stop = Math.max(0, buffer.length - EOCD_MIN - 0xffff);
+  for (let i = buffer.length - EOCD_MIN; i >= stop; i--) {
+    if (buffer.readUInt32LE(i) === EOCD_SIG) {
+      eocd = i;
+      break;
+    }
+  }
+  if (eocd < 0) return unreadable;
+
+  const entries = buffer.readUInt16LE(eocd + 10);
+  const cenSize = buffer.readUInt32LE(eocd + 12);
+  const cenOffset = buffer.readUInt32LE(eocd + 16);
+  // 0xFFFF / 0xFFFFFFFF mean "see the ZIP64 record": never a plan workbook
+  if (entries === 0xffff || cenSize === 0xffffffff || cenOffset === 0xffffffff) {
+    return unreadable;
+  }
+  if (entries > limits.maxEntries) return { ok: false, reason: "too_large" };
+  // The central directory must end exactly where the EOCD starts, or JSZip
+  // would treat the gap as prepended data and read different offsets
+  if (cenOffset + cenSize !== eocd) return unreadable;
+
+  let inflated = 0;
+  let p = cenOffset;
+  for (let n = 0; n < entries; n++) {
+    if (p + 46 > eocd || buffer.readUInt32LE(p) !== CEN_SIG) return unreadable;
+    const flags = buffer.readUInt16LE(p + 8);
+    const method = buffer.readUInt16LE(p + 10);
+    const compressedSize = buffer.readUInt32LE(p + 20);
+    const nameLength = buffer.readUInt16LE(p + 28);
+    const extraLength = buffer.readUInt16LE(p + 30);
+    const commentLength = buffer.readUInt16LE(p + 32);
+    const localOffset = buffer.readUInt32LE(p + 42);
+    p += 46 + nameLength + extraLength + commentLength;
+    if (p > eocd) return unreadable;
+
+    if (flags & 0x1) return unreadable; // encrypted
+    if (compressedSize === 0xffffffff || localOffset === 0xffffffff) return unreadable;
+    if (localOffset + 30 > cenOffset || buffer.readUInt32LE(localOffset) !== LOC_SIG) {
+      return unreadable;
+    }
+    const dataStart =
+      localOffset + 30 + buffer.readUInt16LE(localOffset + 26) + buffer.readUInt16LE(localOffset + 28);
+    const dataEnd = dataStart + compressedSize;
+    if (dataEnd > cenOffset) return unreadable;
+
+    const remaining = limits.maxInflatedBytes - inflated;
+    if (method === 0) {
+      inflated += compressedSize; // stored: inflates to itself
+    } else if (method === 8) {
+      try {
+        inflated += inflateRawSync(buffer.subarray(dataStart, dataEnd), {
+          // +1 so "exactly at the limit" still inflates and the sum decides
+          maxOutputLength: remaining + 1,
+        }).length;
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "ERR_BUFFER_TOO_LARGE") {
+          return { ok: false, reason: "too_large" };
+        }
+        return unreadable;
+      }
+    } else {
+      return unreadable;
+    }
+    if (inflated > limits.maxInflatedBytes) return { ok: false, reason: "too_large" };
+  }
+  return { ok: true };
+}
+
+/**
+ * Upper bound on a CSV's field count: every comma and line break starts a
+ * new field, so counting them (quoted ones included) can only over-count.
+ */
+export function csvFieldCount(buffer: Buffer): number {
+  let fields = 1;
+  for (let i = 0; i < buffer.length; i++) {
+    const byte = buffer[i];
+    if (byte === 0x2c || byte === 0x0a) fields++;
+  }
+  return fields;
+}
+
+/**
  * Open an uploaded spreadsheet: .xlsx by its zip signature, anything else
  * named .csv as CSV. CSV cells stay the exact text the coach typed — exceljs
- * would otherwise turn "6-8" into a date.
+ * would otherwise turn "6-8" into a date. Both formats are size-checked
+ * before parsing (see UPLOAD_EXPANSION_LIMITS).
  */
 export async function loadWorkbook(buffer: Buffer, filename: string): Promise<LoadWorkbookResult> {
   const workbook = new ExcelJS.Workbook();
@@ -168,17 +304,27 @@ export async function loadWorkbook(buffer: Buffer, filename: string): Promise<Lo
 
   try {
     if (startsWith(buffer, XLSX_MAGIC)) {
+      const archive = checkXlsxArchive(buffer);
+      if (!archive.ok) {
+        return {
+          ok: false,
+          error: archive.reason === "too_large" ? FILE_TOO_COMPLEX_ERROR : UNREADABLE_FILE_ERROR,
+        };
+      }
       await workbook.xlsx.load(buffer as unknown as ExcelJS.Buffer);
       return { ok: true, workbook };
     }
     if (/\.csv$/i.test(filename)) {
+      if (csvFieldCount(buffer) > UPLOAD_EXPANSION_LIMITS.maxCsvFields) {
+        return { ok: false, error: FILE_TOO_COMPLEX_ERROR };
+      }
       await workbook.csv.read(Readable.from(buffer), { map: (value: string) => value });
       return { ok: true, workbook };
     }
   } catch {
     // Fall through to the generic message
   }
-  return { ok: false, error: "Couldn’t read that file. Upload an Excel (.xlsx) or CSV file." };
+  return { ok: false, error: UNREADABLE_FILE_ERROR };
 }
 
 /**

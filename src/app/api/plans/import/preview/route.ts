@@ -3,7 +3,7 @@ import { Session } from "next-auth";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { coachScope } from "@/lib/scoping";
-import { planImportAiLimiter } from "@/lib/rate-limit";
+import { planImportAiLimiter, planImportPreviewLimiter } from "@/lib/rate-limit";
 import { createPlanSchema } from "@/lib/validations/schemas";
 import {
   applyImportChoices,
@@ -34,6 +34,11 @@ export const maxDuration = 300;
 /** Plan spreadsheets are tiny; anything bigger than this isn't one. */
 const MAX_UPLOAD_BYTES = 2 * 1024 * 1024;
 
+/** Room for the multipart boundaries and the plan-name field. */
+const MAX_REQUEST_BYTES = MAX_UPLOAD_BYTES + 64 * 1024;
+
+const FILE_TOO_LARGE_ERROR = "File is too large. A plan spreadsheet stays well under 2 MB.";
+
 /**
  * POST /api/plans/import/preview
  * Reads an uploaded spreadsheet (multipart: `file` plus the plan `name`) and
@@ -50,6 +55,22 @@ export const POST = withCoach(
     session: Session,
     coachProfileId: string
   ) => {
+    const { allowed } = await planImportPreviewLimiter(session.user.id);
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Too many spreadsheets uploaded in the last hour. Try again later." },
+        { status: 429 }
+      );
+    }
+
+    // Refuse an oversized body before formData() buffers all of it. A body
+    // without a Content-Length still hits the file-size check below (and
+    // the platform's own request cap).
+    const declaredLength = Number(req.headers.get("content-length"));
+    if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BYTES) {
+      return NextResponse.json({ error: FILE_TOO_LARGE_ERROR }, { status: 413 });
+    }
+
     let form: FormData;
     try {
       form = await req.formData();
@@ -63,7 +84,7 @@ export const POST = withCoach(
     }
     if (file.size > MAX_UPLOAD_BYTES) {
       return NextResponse.json(
-        { error: "File is too large — a plan spreadsheet stays well under 2 MB" },
+        { error: FILE_TOO_LARGE_ERROR },
         { status: 413 }
       );
     }
