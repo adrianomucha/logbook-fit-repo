@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import prisma from "@/lib/prisma";
-import { bearerToken, isAdminEmail, isValidAdminToken } from "@/lib/admin";
+import { isAdminEmail } from "@/lib/admin";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { generateSecureToken } from "@/lib/tokens";
 
@@ -15,23 +14,26 @@ export const dynamic = "force-dynamic";
  * There is no self-serve reset flow yet, so this is how the owner regains
  * access to legacy accounts. Generates a strong temporary password and
  * returns it ONCE in the response for the admin to hand over out-of-band;
- * only the bcrypt hash is stored. Authorized like the other admin
- * endpoints: admin session or the WAITLIST_ADMIN_TOKEN bearer token.
+ * only the bcrypt hash is stored.
+ *
+ * Admin session only. Unlike the waitlist endpoints this deliberately does
+ * NOT accept the WAITLIST_ADMIN_TOKEN bearer token: that token lives in
+ * export scripts, and here it would turn into "take over any account".
+ * getSession() (not getServerSession) so a deleted admin's leftover JWT is
+ * refused. Admin accounts can't be reset here either, so one compromised
+ * admin session can't lock the other admins out or take their accounts.
  *
  * Note: existing JWT sessions stay valid — this changes the credential,
  * it doesn't evict sessions.
  */
 export async function POST(
-  req: Request,
+  _req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const token = bearerToken(req);
-    if (!isValidAdminToken(token)) {
-      const session = await getServerSession(authOptions);
-      if (!isAdminEmail(session?.user?.email)) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
+    const session = await getSession();
+    if (!isAdminEmail(session?.user?.email)) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { id } = await params;
@@ -47,6 +49,15 @@ export async function POST(
       return NextResponse.json(
         { error: "This account is deleted" },
         { status: 409 }
+      );
+    }
+    if (isAdminEmail(user.email)) {
+      return NextResponse.json(
+        {
+          error:
+            "Admin accounts can't be reset from here. Use the forgot-password flow instead.",
+        },
+        { status: 403 }
       );
     }
     if (isLockedDemoAccount(user.email)) {
