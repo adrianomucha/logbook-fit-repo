@@ -2,13 +2,9 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { bearerToken, isAdminEmail, isValidAdminToken } from "@/lib/admin";
+import { csvCell } from "@/lib/csv";
 
 export const dynamic = "force-dynamic";
-
-/** Wrap a field in quotes and escape embedded quotes for safe CSV. */
-function csvCell(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
-}
 
 /**
  * Downloads the waitlist as CSV. Authorized two ways:
