@@ -26,6 +26,15 @@ export const PUT = withCoach(
         id: checkInId,
         coachId: coachProfileId,
         status: { in: ["CLIENT_RESPONDED", "COMPLETED"] },
+        // Only the client's current coach may reply or edit feedback.
+        // Termination keeps answered check-ins as history, so without this
+        // an ex-coach could keep writing into them (and, on a first reply,
+        // push-notify the ex-client), around the messaging lock.
+        client: {
+          coachRelationship: {
+            is: { coachId: coachProfileId, status: "ACTIVE" },
+          },
+        },
       },
     });
 
