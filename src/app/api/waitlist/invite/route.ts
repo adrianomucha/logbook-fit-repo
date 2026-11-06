@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import prisma from "@/lib/prisma";
 import { bearerToken, isAdminEmail, isValidAdminToken } from "@/lib/admin";
 import { parseBody } from "@/lib/validations/parseBody";
@@ -27,7 +26,7 @@ export async function POST(req: Request) {
   try {
     const token = bearerToken(req);
     if (!isValidAdminToken(token)) {
-      const session = await getServerSession(authOptions);
+      const session = await getSession();
       if (!isAdminEmail(session?.user?.email)) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }

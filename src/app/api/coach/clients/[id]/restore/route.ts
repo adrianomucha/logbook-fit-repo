@@ -24,6 +24,12 @@ export const POST = withCoach(
       where: {
         coachId: coachProfileId,
         clientId: clientProfileId,
+        // A client who deleted their account is gone for good. Account
+        // deletion only ends relationships that were still ACTIVE, so one
+        // the coach had already ended keeps endedBy COACH and would
+        // otherwise be restorable, reopening the deleted user's workout
+        // history, check-ins and messaging to the coach.
+        client: { user: { deletedAt: null } },
       },
     });
 
