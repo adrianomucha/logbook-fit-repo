@@ -246,6 +246,15 @@ export const planImportAiLimiter = rateLimit("plan-import-ai", {
   maxRequests: 20,
 });
 
+// Every spreadsheet preview is parsed in memory, AI path or not, so the
+// whole route is capped per user too: generous for a coach fixing and
+// re-uploading a sheet, a ceiling on how hard one account can work the
+// parser. The AI limiter above still applies on top for model calls.
+export const planImportPreviewLimiter = rateLimit("plan-import-preview", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 60,
+});
+
 // Periodic cleanup of expired in-memory entries (every 5 minutes)
 if (!hasUpstash && typeof setInterval !== "undefined") {
   setInterval(() => {
