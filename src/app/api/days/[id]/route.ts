@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { updateDaySchema } from "@/lib/validations/schemas";
 
 /**
  * PUT /api/days/[id]
@@ -36,11 +38,9 @@ export const PUT = withCoach(
       return NextResponse.json({ error: "Day not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { name, description } = body as {
-      name?: string;
-      description?: string | null;
-    };
+    const parsed = await parseBody(req, updateDaySchema);
+    if (!parsed.success) return parsed.response;
+    const { name, description } = parsed.data;
 
     const updated = await prisma.day.update({
       where: { id: dayId },

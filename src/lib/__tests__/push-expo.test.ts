@@ -142,7 +142,7 @@ describe("sendPushToUser over Expo", () => {
   });
 
   it("skips WEB rows without VAPID but still reaches the app", async () => {
-    findMany.mockResolvedValue([webRow("https://push.example/1"), expoRow("ExponentPushToken[a]")]);
+    findMany.mockResolvedValue([webRow("https://fcm.googleapis.com/fcm/send/1"), expoRow("ExponentPushToken[a]")]);
     sendExpo.mockResolvedValue([{ status: "ok", id: "r1" }]);
 
     expect(await sendPushToUser("u1", PAYLOAD)).toBe(1);
@@ -156,17 +156,31 @@ describe("sendPushToUser over Expo", () => {
     vi.resetModules();
     const { sendPushToUser: send } = await import("../push");
 
-    findMany.mockResolvedValue([webRow("https://push.example/1"), expoRow("ExponentPushToken[a]")]);
+    findMany.mockResolvedValue([webRow("https://fcm.googleapis.com/fcm/send/1"), expoRow("ExponentPushToken[a]")]);
     sendExpo.mockResolvedValue([{ status: "ok", id: "r1" }]);
 
     expect(await send("u1", PAYLOAD)).toBe(2);
     expect(sendWeb).toHaveBeenCalledTimes(1);
     expect(sendWeb.mock.calls[0][0]).toEqual({
-      endpoint: "https://push.example/1",
+      endpoint: "https://fcm.googleapis.com/fcm/send/1",
       keys: { p256dh: "p", auth: "a" },
     });
     // The browser payload is unchanged — the service worker reads url/tag
     expect(JSON.parse(sendWeb.mock.calls[0][1])).toEqual(PAYLOAD);
+  });
+
+  it("never posts to a stored endpoint outside the push-service allowlist", async () => {
+    process.env.VAPID_PUBLIC_KEY = "pub";
+    process.env.VAPID_PRIVATE_KEY = "priv";
+    vi.resetModules();
+    const { sendPushToUser: send } = await import("../push");
+
+    findMany.mockResolvedValue([webRow("https://10.0.0.5:8443/x")]);
+    expect(await send("u1", PAYLOAD)).toBe(0);
+    expect(sendWeb).not.toHaveBeenCalled();
+    expect(deleteMany).toHaveBeenCalledWith({
+      where: { endpoint: { in: ["https://10.0.0.5:8443/x"] } },
+    });
   });
 
   it("returns 0 with no devices and touches nothing", async () => {
