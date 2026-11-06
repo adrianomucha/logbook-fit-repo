@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { isAdminEmail } from "@/lib/admin";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { generateSecureToken } from "@/lib/tokens";
+import { revokeSessionsAt } from "@/lib/session-validity";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +24,7 @@ export const dynamic = "force-dynamic";
  * refused. Admin accounts can't be reset here either, so one compromised
  * admin session can't lock the other admins out or take their accounts.
  *
- * Note: existing JWT sessions stay valid — this changes the credential,
- * it doesn't evict sessions.
+ * Also signs the account out on every device (sessionsValidAfter).
  */
 export async function POST(
   _req: Request,
@@ -75,7 +75,11 @@ export async function POST(
     const tempPassword = generateSecureToken(12);
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash: await bcrypt.hash(tempPassword, 10) },
+      // Ends every existing login too (lib/session-validity.ts)
+      data: {
+        passwordHash: await bcrypt.hash(tempPassword, 10),
+        sessionsValidAfter: revokeSessionsAt(),
+      },
     });
 
     return NextResponse.json({ ok: true, tempPassword });

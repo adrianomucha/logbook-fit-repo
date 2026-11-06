@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { bearerFromAuthorization, readMobileToken } from "@/lib/mobile-token";
+import { sessionStillValid } from "@/lib/session-validity";
 
 /**
  * The current caller's session, whichever way they authenticated.
@@ -18,9 +19,11 @@ import { bearerFromAuthorization, readMobileToken } from "@/lib/mobile-token";
  * cookie sitting next to an expired token must not quietly extend it.
  *
  * Both kinds of session are stateless 30-day tokens, so this is also where
- * a deleted account is turned away: one primary-key lookup per request,
- * which is what makes "delete my account" end the session on every device
- * instead of a month later.
+ * a deleted account is turned away, and a login that signed in before the
+ * account's last password change or reset (lib/session-validity.ts): one
+ * primary-key lookup per request, which is what makes "delete my account"
+ * and "change my password" end the session on every device instead of a
+ * month later.
  */
 export async function getSession(): Promise<Session | null> {
   const authorization = (await headers()).get("authorization");
@@ -30,10 +33,13 @@ export async function getSession(): Promise<Session | null> {
     : await getServerSession(authOptions);
   if (!session?.user?.id) return null;
 
-  const live = await prisma.user.count({
+  const account = await prisma.user.findFirst({
     where: { id: session.user.id, deletedAt: null },
+    select: { sessionsValidAfter: true },
   });
-  return live > 0 ? session : null;
+  if (!account) return null;
+  // A password change or reset since this login signed in ends it
+  return sessionStillValid(session.authTime, account.sessionsValidAfter) ? session : null;
 }
 
 /** Build a `Session` from a mobile token, or null when it doesn't verify. */
@@ -49,5 +55,6 @@ export async function sessionFromBearer(token: string): Promise<Session | null> 
       image: null,
     },
     expires: new Date(claims.expiresAt * 1000).toISOString(),
+    authTime: claims.authTime,
   };
 }

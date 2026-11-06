@@ -6,6 +6,8 @@ import { isDemoAccount, isLockedDemoAccount } from "@/lib/demo";
 import { parseBody } from "@/lib/validations/parseBody";
 import { changePasswordSchema } from "@/lib/validations/schemas";
 import { changePasswordLimiter } from "@/lib/rate-limit";
+import { nowEpochSeconds, revokeSessionsAt } from "@/lib/session-validity";
+import { respondWithFreshLogin } from "@/lib/reissue-login";
 
 export const dynamic = "force-dynamic";
 
@@ -14,8 +16,10 @@ export const dynamic = "force-dynamic";
  *
  * Updating passwordHash also invalidates any outstanding emailed reset
  * links: their tokens carry a fingerprint of the old hash (see
- * lib/reset-token.ts). Sessions are 30-day JWTs and survive the change,
- * same trade-off as the reset flow.
+ * lib/reset-token.ts). It also signs out every other device: the cutoff in
+ * sessionsValidAfter (lib/session-validity.ts) revokes every existing
+ * login, and this device gets a fresh one in the response (a new cookie on
+ * web, `session` in the body for the native app).
  */
 export async function PUT(req: Request) {
   try {
@@ -38,7 +42,7 @@ export async function PUT(req: Request) {
 
     const user = await prisma.user.findFirst({
       where: { id: session.user.id, deletedAt: null },
-      select: { id: true, email: true, passwordHash: true },
+      select: { id: true, email: true, name: true, role: true, passwordHash: true },
     });
     // Demo accounts are shared logins — letting one visitor change the
     // password locks everyone else out
@@ -55,14 +59,26 @@ export async function PUT(req: Request) {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
+    const now = Date.now();
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash },
+      data: { passwordHash, sessionsValidAfter: revokeSessionsAt(now) },
       select: { id: true },
     });
 
     console.log("[AUTH] Password changed for user:", user.id);
-    return NextResponse.json({ ok: true });
+    const res = await respondWithFreshLogin(
+      req,
+      { id: user.id, email: user.email, name: user.name, role: user.role },
+      nowEpochSeconds(now),
+      { ok: true }
+    );
+    if (!res) {
+      // The password did change; only re-signing this device in failed
+      console.error("[AUTH_ALERT] NEXTAUTH_SECRET unset, cannot re-issue login");
+      return NextResponse.json({ ok: true });
+    }
+    return res;
   } catch (error) {
     console.error("Password change error:", error);
     return NextResponse.json(

@@ -134,6 +134,11 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
+  // Every login (web cookie or mobile token) carries the time it signed in
+  // (authTime). Ones that signed in before this moment are refused: set on
+  // a password change or reset, it signs out every other device. Null for
+  // accounts that never changed their password since this column existed.
+  sessionsValidAfter DateTime?
 
   // Role-specific profiles
   coachProfile  CoachProfile?

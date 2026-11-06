@@ -11,6 +11,8 @@ declare module "next-auth" {
       id: string;
       role: string;
     } & DefaultSession["user"];
+    /** Epoch seconds this login signed in; see lib/session-validity.ts. */
+    authTime?: number;
   }
 }
 
@@ -18,5 +20,7 @@ declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     role?: string;
     userId?: string;
+    /** Epoch seconds this login signed in; see lib/session-validity.ts. */
+    authTime?: number;
   }
 }

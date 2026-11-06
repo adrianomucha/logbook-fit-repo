@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 
-const { userCount, requestHeaders, cookieSession } = vi.hoisted(() => ({
-  userCount: vi.fn(),
+const { userFindFirst, requestHeaders, cookieSession } = vi.hoisted(() => ({
+  userFindFirst: vi.fn(),
   requestHeaders: { value: new Headers() },
   cookieSession: vi.fn(),
 }));
 
-vi.mock("@/lib/prisma", () => ({ default: { user: { count: userCount } } }));
+vi.mock("@/lib/prisma", () => ({ default: { user: { findFirst: userFindFirst } } }));
 vi.mock("next/headers", () => ({ headers: async () => requestHeaders.value }));
 vi.mock("next-auth", () => ({ getServerSession: cookieSession }));
 vi.mock("@/lib/auth", () => ({ authOptions: {} }));
@@ -23,7 +23,7 @@ beforeEach(() => {
   savedSecret = process.env.NEXTAUTH_SECRET;
   process.env.NEXTAUTH_SECRET = "test-secret";
   requestHeaders.value = new Headers();
-  userCount.mockResolvedValue(1);
+  userFindFirst.mockResolvedValue({ sessionsValidAfter: null });
   cookieSession.mockResolvedValue(null);
 });
 
@@ -75,13 +75,14 @@ describe("getSession", () => {
     cookieSession.mockResolvedValue({ user: { id: "cookie-user", role: "CLIENT" } });
     const session = await getSession();
     expect(session?.user.id).toBe("cookie-user");
-    expect(userCount).toHaveBeenCalledWith({
+    expect(userFindFirst).toHaveBeenCalledWith({
       where: { id: "cookie-user", deletedAt: null },
+      select: { sessionsValidAfter: true },
     });
   });
 
   it("turns away a deleted account on either path", async () => {
-    userCount.mockResolvedValue(0);
+    userFindFirst.mockResolvedValue(null);
     cookieSession.mockResolvedValue({ user: { id: "gone", role: "CLIENT" } });
     expect(await getSession()).toBeNull();
 
@@ -92,6 +93,38 @@ describe("getSession", () => {
 
   it("is null when nobody is signed in, without touching the database", async () => {
     expect(await getSession()).toBeNull();
-    expect(userCount).not.toHaveBeenCalled();
+    expect(userFindFirst).not.toHaveBeenCalled();
+  });
+
+  it("turns away a mobile login that signed in before the password changed", async () => {
+    const signedIn = Date.UTC(2026, 0, 1);
+    const minted = (await createMobileToken(USER, Date.now(), signedIn / 1000))!;
+    requestHeaders.value = new Headers({ authorization: `Bearer ${minted.token}` });
+
+    userFindFirst.mockResolvedValue({ sessionsValidAfter: new Date(signedIn + 1000) });
+    expect(await getSession()).toBeNull();
+
+    // Same second as the cutoff: the device that changed the password
+    userFindFirst.mockResolvedValue({ sessionsValidAfter: new Date(signedIn) });
+    expect((await getSession())?.user.id).toBe("u1");
+  });
+
+  it("turns away a cookie login that signed in before the cutoff, or predates authTime", async () => {
+    userFindFirst.mockResolvedValue({ sessionsValidAfter: new Date(Date.UTC(2026, 0, 2)) });
+
+    cookieSession.mockResolvedValue({
+      user: { id: "c1", role: "COACH" },
+      authTime: Date.UTC(2026, 0, 1) / 1000,
+    });
+    expect(await getSession()).toBeNull();
+
+    cookieSession.mockResolvedValue({ user: { id: "c1", role: "COACH" } });
+    expect(await getSession()).toBeNull();
+
+    cookieSession.mockResolvedValue({
+      user: { id: "c1", role: "COACH" },
+      authTime: Date.UTC(2026, 0, 3) / 1000,
+    });
+    expect((await getSession())?.user.id).toBe("c1");
   });
 });
