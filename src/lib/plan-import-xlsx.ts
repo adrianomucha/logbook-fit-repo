@@ -188,10 +188,13 @@ type ArchiveCheck = { ok: true } | { ok: false; reason: "unreadable" | "too_larg
  * them; zlib's maxOutputLength is what actually bounds memory here).
  *
  * Entries are located the way JSZip (inside exceljs) locates them: the last
- * end-of-central-directory record, then the central directory, then each
- * local header. Anything this reader can't follow exactly (ZIP64, prepended
- * bytes that make JSZip shift offsets, encryption, unknown compression) is
- * refused, so the bytes checked here are the bytes exceljs will inflate.
+ * end-of-central-directory record, then every central directory record
+ * (JSZip reads records until their signature stops and ignores the declared
+ * count, so this does too, and requires them to fill the directory exactly),
+ * then each local header. Anything this reader can't follow exactly (ZIP64,
+ * prepended bytes that make JSZip shift offsets, encryption, unknown
+ * compression) is refused, so the bytes checked here are the bytes exceljs
+ * will inflate.
  */
 export function checkXlsxArchive(
   buffer: Buffer,
@@ -217,22 +220,25 @@ export function checkXlsxArchive(
   }
   if (eocd < 0) return unreadable;
 
-  const entries = buffer.readUInt16LE(eocd + 10);
+  const declaredEntries = buffer.readUInt16LE(eocd + 10);
   const cenSize = buffer.readUInt32LE(eocd + 12);
   const cenOffset = buffer.readUInt32LE(eocd + 16);
   // 0xFFFF / 0xFFFFFFFF mean "see the ZIP64 record": never a plan workbook
-  if (entries === 0xffff || cenSize === 0xffffffff || cenOffset === 0xffffffff) {
+  if (declaredEntries === 0xffff || cenSize === 0xffffffff || cenOffset === 0xffffffff) {
     return unreadable;
   }
-  if (entries > limits.maxEntries) return { ok: false, reason: "too_large" };
   // The central directory must end exactly where the EOCD starts, or JSZip
   // would treat the gap as prepended data and read different offsets
   if (cenOffset + cenSize !== eocd) return unreadable;
 
+  // Walk the records actually present, not the declared count: a forged
+  // count of 0 would otherwise skip every check while JSZip reads them all
   let inflated = 0;
+  let entries = 0;
   let p = cenOffset;
-  for (let n = 0; n < entries; n++) {
+  while (p < eocd) {
     if (p + 46 > eocd || buffer.readUInt32LE(p) !== CEN_SIG) return unreadable;
+    if (++entries > limits.maxEntries) return { ok: false, reason: "too_large" };
     const flags = buffer.readUInt16LE(p + 8);
     const method = buffer.readUInt16LE(p + 10);
     const compressedSize = buffer.readUInt32LE(p + 20);
@@ -273,18 +279,22 @@ export function checkXlsxArchive(
     }
     if (inflated > limits.maxInflatedBytes) return { ok: false, reason: "too_large" };
   }
+  // The loop only exits with p === eocd (each record is bounds-checked),
+  // so every byte of the directory belonged to a record checked above
   return { ok: true };
 }
 
 /**
  * Upper bound on a CSV's field count: every comma and line break starts a
  * new field, so counting them (quoted ones included) can only over-count.
+ * Line breaks include a bare carriage return, which the CSV parser treats as
+ * a row break on its own (a CRLF counts twice, which is still an over-count).
  */
 export function csvFieldCount(buffer: Buffer): number {
   let fields = 1;
   for (let i = 0; i < buffer.length; i++) {
     const byte = buffer[i];
-    if (byte === 0x2c || byte === 0x0a) fields++;
+    if (byte === 0x2c || byte === 0x0a || byte === 0x0d) fields++;
   }
   return fields;
 }

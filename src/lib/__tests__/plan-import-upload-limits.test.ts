@@ -101,6 +101,23 @@ describe('checkXlsxArchive', () => {
     expect(checkXlsxArchive(zip(entries), small)).toEqual({ ok: false, reason: 'too_large' });
   });
 
+  it('checks every central directory record, whatever the entry count says', () => {
+    // JSZip reads records until their signatures stop and tolerates a count
+    // mismatch, so a count of 0 must not skip the check
+    const archive = zip([{ name: 'xl/worksheets/sheet1.xml', data: Buffer.alloc(2 * MB, 'a') }]);
+    const eocd = archive.length - 22;
+    archive.writeUInt16LE(0, eocd + 8);
+    archive.writeUInt16LE(0, eocd + 10);
+    expect(checkXlsxArchive(archive, small)).toEqual({ ok: false, reason: 'too_large' });
+  });
+
+  it('counts the entries actually present against the limit', () => {
+    const entries = Array.from({ length: 11 }, (_, i) => ({ name: `e${i}`, data: Buffer.from('x') }));
+    const archive = zip(entries);
+    archive.writeUInt16LE(1, archive.length - 22 + 10);
+    expect(checkXlsxArchive(archive, small)).toEqual({ ok: false, reason: 'too_large' });
+  });
+
   it('refuses archives it cannot read the way exceljs would', () => {
     const fine = zip([{ name: 'a', data: Buffer.from('hello') }]);
     expect(checkXlsxArchive(fine, small)).toEqual({ ok: true });
@@ -133,6 +150,10 @@ describe('csvFieldCount', () => {
     expect(csvFieldCount(Buffer.from('a'))).toBe(1);
     expect(csvFieldCount(Buffer.from('a,b\nc,d'))).toBe(4);
   });
+
+  it('counts bare carriage returns, which the CSV parser treats as row breaks', () => {
+    expect(csvFieldCount(Buffer.from('a\rb\rc'))).toBe(3);
+  });
 });
 
 describe('loadWorkbook upload limits', () => {
@@ -150,6 +171,17 @@ describe('loadWorkbook upload limits', () => {
   it('refuses a CSV with too many fields', async () => {
     const csv = Buffer.from(','.repeat(UPLOAD_EXPANSION_LIMITS.maxCsvFields));
     expect(await loadWorkbook(csv, 'plan.csv')).toEqual({ ok: false, error: FILE_TOO_COMPLEX_ERROR });
+  });
+
+  it('refuses a CSV of carriage-return-only rows', async () => {
+    const csv = Buffer.from('a\r'.repeat(UPLOAD_EXPANSION_LIMITS.maxCsvFields));
+    expect(await loadWorkbook(csv, 'plan.csv')).toEqual({ ok: false, error: FILE_TOO_COMPLEX_ERROR });
+  });
+
+  it('still opens a plan-sized CSV with Windows line endings', async () => {
+    const row = 'Week 1,Day 1,Squat,3,8,100,90,notes\r\n';
+    const loaded = await loadWorkbook(Buffer.from(row.repeat(2000)), 'plan.csv');
+    expect(loaded.ok).toBe(true);
   });
 
   it('still opens a plan-sized CSV', async () => {
