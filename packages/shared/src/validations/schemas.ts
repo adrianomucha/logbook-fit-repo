@@ -251,11 +251,39 @@ export const checkInScheduleSchema = z
 // PLANS
 // ──────────────────────────────────────
 
+/** Most weeks a plan can have, in every path that creates or grows one. */
+export const MAX_PLAN_WEEKS = 12;
+
 export const createPlanSchema = z.object({
   name: z.string().min(3, "Plan name must be at least 3 characters").max(50),
   description: z.string().max(200).optional().default(""),
-  durationWeeks: z.number().int().min(1).max(12).optional().default(4),
+  durationWeeks: z.number().int().min(1).max(MAX_PLAN_WEEKS).optional().default(4),
   workoutsPerWeek: z.number().int().min(1).max(7).optional().default(4),
+});
+
+// PUT /api/plans/[id]. Partial, and the name cap matches the editor's
+// rename field (100), which is looser than creation's 50.
+export const updatePlanSchema = z.object({
+  name: z.string().trim().min(1, "Plan name is required").max(100).optional(),
+  description: z.string().max(200).optional(),
+  durationWeeks: z.number().int().min(1).max(MAX_PLAN_WEEKS).optional(),
+  workoutsPerWeek: z.number().int().min(1).max(7).optional(),
+});
+
+// PUT /api/days/[id]. An empty name clears it; caps sit at or above the
+// editor's own (80 and 500) so nothing it sends is refused.
+export const updateDaySchema = z.object({
+  name: z.string().max(100).optional(),
+  description: z.string().max(1000).nullable().optional(),
+});
+
+// POST /api/plans/[id]/weeks: optional names for the new week's days
+export const addWeekSchema = z.object({
+  days: z
+    .array(z.object({ name: z.string().max(100).optional() }))
+    .min(1)
+    .max(7)
+    .optional(),
 });
 
 /** When a newly assigned plan begins (see plan-start.ts); omitted means today */
@@ -287,10 +315,41 @@ export const sendMessageSchema = z.object({
 // PUSH NOTIFICATIONS
 // ──────────────────────────────────────
 
+/**
+ * Hosts of the browser push services (Chrome and most Chromium browsers use
+ * FCM, Firefox Mozilla's autopush, Edge WNS, Safari Apple's). The server
+ * POSTs to a subscription's endpoint, so accepting any URL would let a
+ * signed-in user point those requests at a host of their choosing.
+ */
+const WEB_PUSH_HOST_SUFFIXES = [
+  "fcm.googleapis.com",
+  "android.googleapis.com",
+  "push.services.mozilla.com",
+  "notify.windows.com",
+  "push.apple.com",
+];
+
+/** True for an https URL on a known browser push service. */
+export function isAllowedWebPushEndpoint(endpoint: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(endpoint);
+  } catch {
+    return false;
+  }
+  if (url.protocol !== "https:" || url.port !== "") return false;
+  const host = url.hostname.toLowerCase();
+  return WEB_PUSH_HOST_SUFFIXES.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
+}
+
 // Shape produced by PushSubscription.toJSON() in the browser. The endpoint is
 // an https URL owned by the browser's push service (FCM, Mozilla, Apple).
 const webPushSubscriptionSchema = z.object({
-  endpoint: z.string().url().max(1000),
+  endpoint: z
+    .string()
+    .url()
+    .max(1000)
+    .refine(isAllowedWebPushEndpoint, "Unsupported push service"),
   keys: z.object({
     p256dh: z.string().min(1).max(255),
     auth: z.string().min(1).max(255),
@@ -340,10 +399,14 @@ export const updateSetsSchema = z.object({
     .array(
       z.object({
         workoutExerciseId: z.string().uuid(),
-        setNumber: z.number().int().min(1),
+        // Bounded like the coach's side: prescriptions top out at 20 sets,
+        // 3600 reps-or-seconds and MAX_STORED_WEIGHT, so a client can't store
+        // absurd "personal bests", overflow the Int columns (a 500), or pile
+        // up unlimited set rows on one workout
+        setNumber: z.number().int().min(1).max(20),
         completed: z.boolean(),
-        actualWeight: z.number().min(0).optional(),
-        actualReps: z.number().int().min(0).optional(),
+        actualWeight: z.number().min(0).max(MAX_STORED_WEIGHT).optional(),
+        actualReps: z.number().int().min(0).max(3600).optional(),
       })
     )
     .min(1)

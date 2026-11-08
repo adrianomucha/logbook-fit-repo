@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import prisma from "@/lib/prisma";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { createSwitchToken } from "@/lib/switch-token";
@@ -17,7 +16,7 @@ export const dynamic = "force-dynamic";
  */
 export async function POST() {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

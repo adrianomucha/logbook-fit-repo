@@ -19,6 +19,8 @@ export type CredentialCheck =
   | {
       ok: true;
       user: { id: string; email: string; name: string; role: "COACH" | "CLIENT" };
+      /** The account's login version (lib/session-validity.ts). */
+      sessionVersion: number;
     }
   | { ok: false; reason: "invalid" | "rate_limited" | "demo_locked" };
 
@@ -72,6 +74,7 @@ export async function verifyCredentials(params: {
     return {
       ok: true,
       user: { id: user.id, email: user.email, name: user.name, role: user.role },
+      sessionVersion: user.sessionVersion,
     };
   } catch (error) {
     console.error("[AUTH] Error verifying credentials:", error);

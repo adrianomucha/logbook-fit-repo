@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { avatarUploadLimiter } from "@/lib/rate-limit";
 import { detectImageType } from "@/lib/image-type";
+import { sanitizeAvatar } from "@/lib/avatar-image";
 import {
   AVATAR_MAX_BYTES,
   avatarStorageConfigured,
@@ -17,7 +18,8 @@ export const dynamic = "force-dynamic";
  * PUT /api/account/avatar — replace the profile photo.
  *
  * The raw image bytes are the request body. The server decides the type by
- * sniffing magic bytes (headers and filenames are client-controlled), stores
+ * sniffing magic bytes (headers and filenames are client-controlled),
+ * re-encodes it to strip metadata such as GPS (lib/avatar-image.ts), stores
  * under a timestamped name so the public CDN never serves a stale cached
  * photo, then deletes the previous file best-effort.
  */
@@ -43,6 +45,15 @@ export async function PUT(req: Request) {
       );
     }
 
+    // Refuse an oversized body before reading all of it
+    const declaredLength = Number(req.headers.get("content-length"));
+    if (Number.isFinite(declaredLength) && declaredLength > AVATAR_MAX_BYTES) {
+      return NextResponse.json(
+        { error: "Choose an image under 4MB" },
+        { status: 413 }
+      );
+    }
+
     const buffer = new Uint8Array(await req.arrayBuffer());
     if (buffer.byteLength === 0) {
       return NextResponse.json({ error: "No image received" }, { status: 400 });
@@ -62,6 +73,15 @@ export async function PUT(req: Request) {
       );
     }
 
+    // Drops EXIF (including GPS) before the photo goes to a public bucket
+    const clean = await sanitizeAvatar(buffer, type);
+    if (!clean) {
+      return NextResponse.json(
+        { error: "Use a JPG, PNG, or WebP image" },
+        { status: 400 }
+      );
+    }
+
     const user = await prisma.user.findFirst({
       where: { id: session.user.id, deletedAt: null },
       select: { id: true, avatarUrl: true },
@@ -71,7 +91,7 @@ export async function PUT(req: Request) {
     }
 
     const path = `${user.id}-${Date.now()}.${type.ext}`;
-    const avatarUrl = await uploadAvatar(path, buffer, type.mime);
+    const avatarUrl = await uploadAvatar(path, clean, type.mime);
 
     await prisma.user.update({
       where: { id: user.id },

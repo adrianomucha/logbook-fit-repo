@@ -1,7 +1,6 @@
 import { Suspense } from 'react';
-import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
-import { authOptions } from '@/lib/auth';
+import { getSession } from '@/lib/session';
 import { isAdminEmail } from '@/lib/admin';
 import { runHealthChecks } from '@/lib/health';
 import { AdminPanels } from './AdminTabs';
@@ -22,7 +21,7 @@ export const metadata = { title: 'Admin', robots: { index: false } };
  * AdminTabs.tsx — and costs no request.
  */
 export default async function AdminPage() {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   // Non-admins get a 404, not a redirect, so the route's existence isn't
   // advertised to signed-in users who aren't on the allowlist.

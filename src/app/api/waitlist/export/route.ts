@@ -1,5 +1,4 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
+import { getSession } from "@/lib/session";
 import prisma from "@/lib/prisma";
 import { bearerToken, isAdminEmail, isValidAdminToken } from "@/lib/admin";
 import { csvCell } from "@/lib/csv";
@@ -20,7 +19,7 @@ export async function GET(req: Request) {
 
   // Token path first, so scripts never depend on a session/next-auth secret.
   if (!isValidAdminToken(token)) {
-    const session = await getServerSession(authOptions);
+    const session = await getSession();
     if (!isAdminEmail(session?.user?.email)) {
       return new Response("Unauthorized", { status: 401 });
     }

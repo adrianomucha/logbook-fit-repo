@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { parseBody } from "@/lib/validations/parseBody";
 import { passwordResetRequestSchema } from "@/lib/validations/schemas";
@@ -15,7 +15,8 @@ import { isDemoAccount } from "@/lib/demo";
  * whether the account exists, is soft-deleted, is a demo account, or the
  * mailer isn't configured — an attacker learns nothing about which emails
  * have accounts. Only the rate limit (429) and validation (400) differ, and
- * neither depends on account existence.
+ * neither depends on account existence. The email goes out after the
+ * response, so timing doesn't tell them apart either.
  */
 export async function POST(req: Request) {
   try {
@@ -47,7 +48,14 @@ export async function POST(req: Request) {
           const resetUrl = `${appBaseUrl()}/reset-password?token=${encodeURIComponent(token)}`;
           // Log user ids rather than emails — same PII rule as login.
           console.log("[AUTH] Password reset requested for user:", user.id);
-          await sendPasswordReset(email, resetUrl);
+          // Sent after the response: awaiting it here made a request for a
+          // real account measurably slower than one for an unknown email,
+          // which leaked exactly what the identical { ok: true } hides
+          after(() =>
+            sendPasswordReset(email, resetUrl).catch((error) =>
+              console.error("[EMAIL_ALERT] Password reset send failed:", error)
+            )
+          );
         } else {
           // NEXTAUTH_SECRET is unset — the user still sees "check your
           // inbox" (anti-enumeration), so this log line is the ONLY signal

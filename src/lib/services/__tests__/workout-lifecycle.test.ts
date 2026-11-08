@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 const db = vi.hoisted(() => ({
   clientProfile: { findUnique: vi.fn() },
   day: { findUnique: vi.fn() },
-  workoutCompletion: { findFirst: vi.fn(), update: vi.fn() },
+  workoutCompletion: { findFirst: vi.fn(), findUnique: vi.fn(), update: vi.fn(), updateMany: vi.fn() },
   workoutExercise: { findMany: vi.fn() },
   setCompletion: {
     groupBy: vi.fn(),
@@ -71,6 +71,63 @@ describe("finish", () => {
         data: expect.objectContaining({ status: "COMPLETED", completionPct: 50, exercisesDone: 1 }),
       })
     );
+  });
+});
+
+describe("autoFinish", () => {
+  const LAST_SET = new Date("2026-10-21T19:40:00Z");
+  const openSession = {
+    id: "wc-1",
+    status: "IN_PROGRESS",
+    startedAt: new Date("2026-10-21T19:00:00Z"),
+    day: { exercises: [{ id: "we-1", sets: 3 }, { id: "we-2", sets: 3 }] },
+  };
+
+  beforeEach(() => {
+    db.workoutCompletion.findUnique.mockResolvedValue(openSession);
+    db.setCompletion.aggregate.mockResolvedValue({
+      _min: { completedAt: new Date("2026-10-21T19:05:00Z") },
+      _max: { completedAt: LAST_SET },
+    });
+    db.workoutCompletion.updateMany.mockResolvedValue({ count: 1 });
+  });
+
+  it("ends the session at the last logged set, not when the sweep ran", async () => {
+    db.setCompletion.groupBy.mockResolvedValue([{ workoutExerciseId: "we-1", _count: { _all: 3 } }]);
+
+    await expect(workoutService.autoFinish("wc-1", NOW)).resolves.toBe(true);
+    expect(db.workoutCompletion.updateMany).toHaveBeenCalledWith({
+      where: { id: "wc-1", status: "IN_PROGRESS" },
+      data: expect.objectContaining({
+        status: "COMPLETED",
+        completedAt: LAST_SET,
+        completionPct: 50,
+        exercisesDone: 1,
+        durationSec: 40 * 60,
+        autoFinishedAt: NOW,
+      }),
+    });
+  });
+
+  it("leaves a session with nothing logged open", async () => {
+    db.setCompletion.groupBy.mockResolvedValue([]);
+
+    await expect(workoutService.autoFinish("wc-1", NOW)).resolves.toBe(false);
+    expect(db.workoutCompletion.updateMany).not.toHaveBeenCalled();
+  });
+
+  it("does nothing to a session the client already finished", async () => {
+    db.workoutCompletion.findUnique.mockResolvedValue({ ...openSession, status: "COMPLETED" });
+
+    await expect(workoutService.autoFinish("wc-1", NOW)).resolves.toBe(false);
+    expect(db.setCompletion.groupBy).not.toHaveBeenCalled();
+  });
+
+  it("loses to a Finish tap that lands first", async () => {
+    db.setCompletion.groupBy.mockResolvedValue([{ workoutExerciseId: "we-1", _count: { _all: 3 } }]);
+    db.workoutCompletion.updateMany.mockResolvedValue({ count: 0 });
+
+    await expect(workoutService.autoFinish("wc-1", NOW)).resolves.toBe(false);
   });
 });
 

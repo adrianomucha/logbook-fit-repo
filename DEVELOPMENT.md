@@ -205,7 +205,11 @@ was done live.
 
 ## Scheduled work
 
-One cron, declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
+Two jobs, both authenticated with `Authorization: Bearer $CRON_SECRET`.
+
+### Check-in sweep
+
+Declared in `vercel.json`: `/api/cron/check-ins` runs nightly at
 09:00 UTC, authenticated with `Authorization: Bearer $CRON_SECRET`. It expires
 check-ins the client never answered and sends the ones that are due, for every
 active relationship with `checkInScheduleEnabled`. The cadence is per
@@ -234,6 +238,54 @@ It answers `{ok, relationshipsScanned, checkInsCreated, failures}` and logs
 reads: a sweep with no run in 36 hours is shown as down, so a cron that
 silently stops (rotated secret, schedule dropped) is visible without
 digging through Vercel logs.
+
+### Idle workout sweep
+
+`/api/cron/idle-workouts` (`lib/idle-workouts.ts`) looks at every
+`IN_PROGRESS` session that has sets logged:
+
+- **Nudge.** After 90 minutes with no change to any set, the client gets a
+  "Still training?" push, once per session (`idleReminderSentAt`), never
+  between 22:00 and 08:00 in their timezone.
+- **Auto-finish.** After 12 hours idle, the session is finished for them
+  (`WorkoutService.autoFinish`): same stats as tapping Finish, but
+  `completedAt` is the last logged set, so the workout counts on the day it
+  happened. `autoFinishedAt` records it. A "Workout saved" push replaces the
+  nudge, unless it's the client's night or the session is more than 36 hours
+  old (so the first run closes long-forgotten sessions silently).
+
+Sessions with nothing logged are never touched. A restart clears both columns.
+
+The nudge needs the job called every 15 minutes, and Vercel's free plan only
+allows one cron run a day. So `vercel.json` runs it daily at 10:00 UTC as a
+backstop (it still auto-finishes), and the frequent schedule comes from
+Supabase `pg_cron`. One-time setup in the Supabase SQL editor (Database →
+Extensions: enable `pg_cron` and `pg_net` first), with the deployment's real
+host and `CRON_SECRET`:
+
+```sql
+select vault.create_secret('<CRON_SECRET>', 'cron_secret');
+
+select cron.schedule(
+  'idle-workouts',
+  '*/15 * * * *',
+  $$
+  select net.http_get(
+    url := 'https://<host>/api/cron/idle-workouts',
+    headers := jsonb_build_object(
+      'Authorization',
+      'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')
+    ),
+    timeout_milliseconds := 30000
+  );
+  $$
+);
+```
+
+Rotating `CRON_SECRET` means updating the vault secret too
+(`vault.update_secret`). Overlapping runs are safe: each nudge and each
+auto-finish is claimed with a conditional update. Runs land in `cron_runs`
+under `idle-workouts`; `cron.job_run_details` shows whether pg_cron fired.
 
 ## Admin
 
