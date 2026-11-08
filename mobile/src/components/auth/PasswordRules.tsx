@@ -49,7 +49,7 @@ export function PasswordRules({ password }: { password: string }) {
       {tooCommon || tooLong ? (
         <View className="flex-row items-start gap-1.5">
           <Feather name="alert-triangle" size={12} color="#c52020" style={{ marginTop: 2 }} />
-          <Text className="flex-1 font-sans text-xs text-destructive">
+          <Text className="flex-1 font-sans text-xs text-destructive-text">
             {tooCommon ? 'This one tops the most-hacked lists. Pick something harder to guess' : 'Passwords max out at 72 characters'}
           </Text>
         </View>

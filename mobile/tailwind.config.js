@@ -15,7 +15,7 @@ module.exports = {
         muted: { DEFAULT: '#f5f5f5', foreground: '#737373' },
         border: '#e5e5e5',
         input: '#e5e5e5',
-        destructive: { DEFAULT: '#c52020', foreground: '#fafafa' },
+        destructive: { DEFAULT: '#c52020', foreground: '#fafafa', text: '#c52020' },
         success: { DEFAULT: '#21c45d', foreground: '#fafafa', text: '#157f3c' },
         warning: { DEFAULT: '#f59f0a', foreground: '#171717', text: '#b35309' },
         info: { DEFAULT: '#2463eb', foreground: '#fafafa' },

@@ -65,7 +65,7 @@ export function FeedbackStatusActions({
   return (
     <span className="inline-flex items-center gap-1">
       {failed && (
-        <span className="text-xs text-destructive">Failed — retry</span>
+        <span className="text-xs text-destructive-text">Failed — retry</span>
       )}
       {status === 'NEW' && (
         <>

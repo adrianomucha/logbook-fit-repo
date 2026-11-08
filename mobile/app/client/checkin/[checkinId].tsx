@@ -228,7 +228,7 @@ export default function CheckInScreen() {
                 setErrors((e) => ({ ...e, effortRating: '' }));
               }}
             />
-            {errors.effortRating ? <Text className="mt-2 font-sans text-sm text-destructive">{errors.effortRating}</Text> : null}
+            {errors.effortRating ? <Text className="mt-2 font-sans text-sm text-destructive-text">{errors.effortRating}</Text> : null}
           </View>
 
           <View>
@@ -243,7 +243,7 @@ export default function CheckInScreen() {
                 setErrors((e) => ({ ...e, clientFeeling: '' }));
               }}
             />
-            {errors.clientFeeling ? <Text className="mt-2 font-sans text-sm text-destructive">{errors.clientFeeling}</Text> : null}
+            {errors.clientFeeling ? <Text className="mt-2 font-sans text-sm text-destructive-text">{errors.clientFeeling}</Text> : null}
           </View>
 
           <View>
@@ -291,7 +291,7 @@ export default function CheckInScreen() {
             </View>
           )}
 
-          {errors.submit ? <Text className="text-center font-sans text-sm text-destructive">{errors.submit}</Text> : null}
+          {errors.submit ? <Text className="text-center font-sans text-sm text-destructive-text">{errors.submit}</Text> : null}
 
           <Button variant="brand" onPress={submit} loading={isSubmitting}>
             Send check-in

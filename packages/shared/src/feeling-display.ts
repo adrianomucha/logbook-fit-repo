@@ -13,5 +13,5 @@ export const FEELING_DISPLAY: Record<string, { label: string; emoji: string; tex
   FRESH: { label: 'Fresh', emoji: '✨', text: 'text-success-text' },
   NORMAL: { label: 'Normal', emoji: '👍', text: 'text-foreground' },
   TIRED: { label: 'Tired', emoji: '😓', text: 'text-warning-text' },
-  RUN_DOWN: { label: 'Run Down', emoji: '🥴', text: 'text-destructive' },
+  RUN_DOWN: { label: 'Run Down', emoji: '🥴', text: 'text-destructive-text' },
 };

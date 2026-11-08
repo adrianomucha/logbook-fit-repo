@@ -198,7 +198,7 @@ export function ExerciseEditorContent({
     rest: `${idPrefix}-rest`,
     notes: `${idPrefix}-notes`,
   };
-  const removeLink = 'w-full flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive hover:text-destructive/80 transition-colors py-1.5';
+  const removeLink = 'w-full flex items-center justify-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.14em] font-medium text-destructive-text hover:text-destructive-text/80 transition-colors py-1.5';
 
   // Segmented controls share one shape: mono caps, the active option a dark tile
   const segment = (active: boolean) => cn(

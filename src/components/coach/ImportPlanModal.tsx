@@ -197,7 +197,7 @@ function ChoicePicker({
         />
       )}
       {error && (
-        <p role="alert" className="mt-1 text-xs text-destructive text-pretty antialiased">
+        <p role="alert" className="mt-1 text-xs text-destructive-text text-pretty antialiased">
           {error}
         </p>
       )}
@@ -451,11 +451,11 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
 
   const errorBox = error && (
     <div id={ids.error} role="alert" className="rounded-xl bg-destructive/10 px-4 py-3 space-y-2 animate-in fade-in-0 slide-in-from-top-1 duration-150">
-      <p className="text-sm font-medium text-destructive antialiased">{error}</p>
+      <p className="text-sm font-medium text-destructive-text antialiased">{error}</p>
       {rowErrors.length > 0 && (
         <ul className="max-h-36 overflow-y-auto overscroll-contain space-y-1">
           {rowErrors.map((rowError, i) => (
-            <li key={i} className="text-xs text-destructive/90 antialiased">
+            <li key={i} className="text-xs text-destructive-text/90 antialiased">
               {rowLabel(rowError)}: {rowError.message}
             </li>
           ))}

@@ -259,7 +259,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
             </div>
           </FieldShell>
           {errors.name && touched.name && (
-            <p id={ids.nameError} className="text-destructive text-xs mt-1.5 px-1" role="alert">
+            <p id={ids.nameError} className="text-destructive-text text-xs mt-1.5 px-1" role="alert">
               {errors.name}
             </p>
           )}
@@ -297,7 +297,7 @@ export function PlanSetupModal({ isOpen, onClose, onSubmit }: PlanSetupModalProp
               {errors.description && touched.description && (
                 <p
                   id={ids.descriptionError}
-                  className="text-destructive text-xs mt-1.5 px-1"
+                  className="text-destructive-text text-xs mt-1.5 px-1"
                   role="alert"
                 >
                   {errors.description}

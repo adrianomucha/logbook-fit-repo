@@ -22,7 +22,7 @@ const URGENCY_TINT: Record<Urgency, { chip: string; dot: string }> = {
   NEEDS_PLAN: COACHS_MOVE,
   AWAITING_RESPONSE: COACHS_MOVE,
   PLAN_ENDED: { chip: 'bg-warning/10 text-warning-text', dot: 'bg-warning' },
-  AT_RISK: { chip: 'bg-destructive/10 text-destructive', dot: 'bg-destructive' },
+  AT_RISK: { chip: 'bg-destructive/10 text-destructive-text', dot: 'bg-destructive' },
   CHECKIN_DUE: NOTHING_TO_DO,
   ON_TRACK: NOTHING_TO_DO,
 };

@@ -827,7 +827,7 @@ export function UnifiedClientProfile() {
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem
                       onClick={() => setShowEndConfirm(true)}
-                      className="text-destructive focus:text-destructive"
+                      className="text-destructive-text focus:text-destructive-text"
                     >
                       <UserMinus className="w-4 h-4 me-2" />
                       End coaching relationship

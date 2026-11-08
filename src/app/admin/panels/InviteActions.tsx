@@ -111,7 +111,7 @@ export function InviteActions({ id, status, invitePath }: InviteActionsProps) {
         </p>
       )}
       {notice === 'error' && (
-        <p role="alert" className="text-[11px] text-destructive">
+        <p role="alert" className="text-[11px] text-destructive-text">
           Something went wrong. Try again.
         </p>
       )}
