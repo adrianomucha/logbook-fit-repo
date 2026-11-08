@@ -9,6 +9,7 @@ import { differenceInHours, format, formatDistanceToNow } from 'date-fns';
 import { plausibleSessionSec } from '@logbook/shared/session-duration';
 import { workoutTitle } from '@logbook/shared/progress';
 import { WORKOUT_MARK_LABEL } from '@logbook/shared/workout-week-helpers';
+import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 interface WorkoutHistoryPanelProps {
@@ -114,9 +115,16 @@ export function WorkoutHistoryPanel({
                       {WORKOUT_MARK_LABEL.started}
                     </span>
                   )
-                ) : effort ? (
-                  <span className={cn('text-xs font-semibold shrink-0', effort.text)}>
-                    {effort.label}
+                ) : effort || completion.autoFinishedAt ? (
+                  <span className="inline-flex items-center gap-2 shrink-0">
+                    {completion.autoFinishedAt && (
+                      <span className="text-xs font-semibold text-muted-foreground" title={AUTO_FINISHED_COPY.coach}>
+                        {AUTO_FINISHED_COPY.label}
+                      </span>
+                    )}
+                    {effort && (
+                      <span className={cn('text-xs font-semibold', effort.text)}>{effort.label}</span>
+                    )}
                   </span>
                 ) : null}
               </div>

@@ -29,6 +29,7 @@ import { EffortPicker } from '@/components/EffortPicker';
 import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 import { workoutTitle } from '@logbook/shared/progress';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
+import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 
 const FINISH_BAR_HEIGHT = 56 + 24;
 
@@ -342,6 +343,13 @@ export default function WorkoutScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
       >
+        {isReadOnly && completion?.autoFinishedAt ? (
+          <View className="mb-4 rounded-xl bg-muted px-3.5 py-3">
+            <Text className="font-sans text-sm leading-5 text-muted-foreground">
+              <Text className="font-sans-semibold text-foreground">{AUTO_FINISHED_COPY.label}.</Text> {AUTO_FINISHED_COPY.client}
+            </Text>
+          </View>
+        ) : null}
         <View className="mb-1 flex-row items-baseline justify-between px-1">
           <Eyebrow>Exercises</Eyebrow>
           <Text className="font-mono text-[11px] text-muted-foreground">

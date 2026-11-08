@@ -149,6 +149,8 @@ export interface WorkoutCompletion {
   dayName?: string;
   /** Sets actually logged, when the server counted them */
   setsDone?: number;
+  /** Finished by the idle sweep because the client never tapped Finish */
+  autoFinished?: boolean;
 }
 
 // Set-level completion tracking

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Check, ChevronDown, ChevronUp, Flag, RotateCcw, Trophy, Zap } from 'lucide-react';
 import { LOG_EMPTY_TEXT, LOG_PAGE_WEEKS, type LogBadge, type LogEntry, type LogWeek, type LogWin, type ThisWeek } from '@logbook/shared/progress';
+import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { cn } from '@/lib/utils';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
@@ -101,6 +102,9 @@ function Entry({ entry, first }: { entry: LogEntry; first: boolean }) {
       ) : (
         <div className="min-w-0 flex-1 pt-[7px]">
           <p className="text-[15px] font-semibold leading-5">{entry.title}</p>
+          {entry.autoFinished && (
+            <p className="mt-0.5 text-xs leading-4 text-muted-foreground">{AUTO_FINISHED_COPY.label}</p>
+          )}
           {entry.wins.length > 0 && (
             <ul className="mt-2 space-y-1.5">
               {entry.wins.map((w, i) => (

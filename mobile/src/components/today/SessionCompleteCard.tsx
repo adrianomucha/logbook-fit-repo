@@ -3,6 +3,7 @@ import { Pressable, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import type { WorkoutCompletion } from '@logbook/shared/types';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
+import { AUTO_FINISHED_COPY, sessionCompleteEyebrow } from '@logbook/shared/auto-finish';
 import { Button, Card, Eyebrow } from '@/components/ui';
 
 import type { EffortRating } from '@logbook/shared/client-copy';
@@ -50,7 +51,7 @@ export function SessionCompleteCard({
     <Card>
       <View className="flex-row items-start justify-between gap-4">
         <View className="flex-1">
-          <Eyebrow>{day ? `Workout complete · Day ${day}` : 'Workout complete'}</Eyebrow>
+          <Eyebrow>{sessionCompleteEyebrow(day, completion.autoFinished)}</Eyebrow>
           <Text className="mt-2.5 font-sans-bold text-[26px] leading-[30px] tracking-tight text-foreground">{title}</Text>
           {subtitle ? <Text className="mt-1.5 font-sans text-[15px] text-muted-foreground">{subtitle}</Text> : null}
         </View>
@@ -72,6 +73,10 @@ export function SessionCompleteCard({
       <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
         <View className="h-full rounded-full bg-brand" style={{ width: `${completion.completionPct}%` }} />
       </View>
+
+      {completion.autoFinished ? (
+        <Text className="mt-3 font-sans text-sm leading-5 text-muted-foreground">{AUTO_FINISHED_COPY.client}</Text>
+      ) : null}
 
       {feedbackSubmitted ? (
         <View className="mt-5 flex-row items-center gap-2 border-t border-border/50 pt-4">

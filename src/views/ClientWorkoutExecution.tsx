@@ -25,6 +25,7 @@ import { useWorkoutClock } from '@/hooks/useWorkoutClock';
 import { EffortPicker } from '@/components/client/EffortPicker';
 import { workoutTitle } from '@logbook/shared/progress';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
+import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 
 export function ClientWorkoutExecution() {
   const router = useRouter();
@@ -454,6 +455,11 @@ export function ClientWorkoutExecution() {
           isReadOnly ? 'pb-8' : 'pb-6'
         )}
       >
+        {isReadOnly && completion?.autoFinishedAt && (
+          <p className="mb-4 rounded-xl bg-muted px-3.5 py-3 text-sm leading-5 text-muted-foreground">
+            <span className="font-semibold text-foreground">{AUTO_FINISHED_COPY.label}.</span> {AUTO_FINISHED_COPY.client}
+          </p>
+        )}
         <section aria-label="Exercises">
           <div className="flex items-baseline justify-between mb-1 px-1">
             <h2 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-medium">

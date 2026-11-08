@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LOG_EMPTY_TEXT, LOG_PAGE_WEEKS, type LogBadge, type LogEntry, type LogWeek, type LogWin, type ThisWeek } from '@logbook/shared/progress';
+import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 /**
@@ -89,6 +90,9 @@ function Entry({ entry, first }: { entry: LogEntry; first: boolean }) {
       ) : (
         <View className="flex-1 pt-[7px]">
           <Text className="font-sans-semibold text-[15px] leading-5 text-foreground">{entry.title}</Text>
+          {entry.autoFinished ? (
+            <Text className="mt-0.5 font-sans text-xs leading-4 text-muted-foreground">{AUTO_FINISHED_COPY.label}</Text>
+          ) : null}
           {entry.wins.length > 0 ? (
             <View className="mt-2 gap-1.5">
               {entry.wins.map((w, i) => (

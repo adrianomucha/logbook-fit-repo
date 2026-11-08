@@ -70,6 +70,8 @@ type ProgressResult = {
     effortRating?: string;
     dayName?: string;
     setsDone: number;
+    /** Finished by the idle sweep, not by the client */
+    autoFinished: boolean;
   }[];
   stats: {
     totalWorkouts: number;
@@ -633,6 +635,7 @@ class WorkoutServiceImpl {
         exercisesTotal: true,
         durationSec: true,
         effortRating: true,
+        autoFinishedAt: true,
         day: { select: { name: true, orderIndex: true, weekId: true } },
       },
     });
@@ -727,6 +730,7 @@ class WorkoutServiceImpl {
       // Unnamed days read "Day N", as the plan adapter names them.
       dayName: c.day ? (c.day.name ?? `Day ${c.day.orderIndex}`) : undefined,
       setsDone: setsBySession.get(c.id) ?? 0,
+      autoFinished: c.autoFinishedAt !== null,
     }));
 
     return {
