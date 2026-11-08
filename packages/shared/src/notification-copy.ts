@@ -8,5 +8,5 @@ export const ALERTS_COPY = {
   body: (role: 'coach' | 'client') =>
     role === 'coach'
       ? 'A push notification on this device when a client messages you, answers a check-in or joins. Alerts are per device, so turn them on wherever you coach from.'
-      : 'A push notification on this device when your coach messages you, sends or answers a check-in, or assigns you a plan. Alerts are per device, so turn them on wherever you train from.',
+      : 'A push notification on this device when your coach messages you, sends or answers a check-in, or assigns you a plan, and when a workout is left open. Alerts are per device, so turn them on wherever you train from.',
 } as const;

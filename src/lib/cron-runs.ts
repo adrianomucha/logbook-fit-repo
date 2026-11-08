@@ -14,6 +14,7 @@ import prisma from "@/lib/prisma";
 /** Scheduled jobs known to the app. Add a member when wiring a second cron. */
 export const CRON_JOBS = {
   checkIns: "check-ins",
+  idleWorkouts: "idle-workouts",
 } as const;
 
 export type CronJob = (typeof CRON_JOBS)[keyof typeof CRON_JOBS];
