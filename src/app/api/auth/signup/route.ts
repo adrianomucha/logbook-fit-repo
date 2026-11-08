@@ -13,6 +13,8 @@ import { Prisma } from "@prisma/client";
 // Thrown inside the signup transaction when a beta invite was redeemed by a
 // concurrent signup between validation and commit; rolls the account back.
 class BetaInviteRedeemedError extends Error {}
+// Same, for a coach's client invite redeemed by a concurrent signup.
+class InviteRedeemedError extends Error {}
 
 /**
  * The email already has an account. From an invite link that's usually a
@@ -193,17 +195,24 @@ export async function POST(req: Request) {
 
       // For invite-based signups: create coach-client relationship + accept invite
       if (invite && newUser.clientProfile) {
+        // Redeem first, with a status guard, like the beta invite above:
+        // the token is checked before the transaction, so two concurrent
+        // signups with one link could otherwise both attach to the coach.
+        // The loser gets count 0 and its whole signup rolls back.
+        const { count } = await tx.clientInvite.updateMany({
+          where: { id: invite.id, status: 'PENDING' },
+          data: { status: 'ACCEPTED' },
+        });
+        if (count === 0) {
+          throw new InviteRedeemedError();
+        }
+
         await tx.coachClientRelationship.create({
           data: {
             coachId: invite.coachId,
             clientId: newUser.clientProfile.id,
             status: 'ACTIVE',
           },
-        });
-
-        await tx.clientInvite.update({
-          where: { id: invite.id },
-          data: { status: 'ACCEPTED' },
         });
 
         // The coach's invite note becomes their first chat message, so the
@@ -259,6 +268,12 @@ export async function POST(req: Request) {
       error.code === "P2002"
     ) {
       return emailTaken(false);
+    }
+    if (error instanceof InviteRedeemedError) {
+      return NextResponse.json(
+        { error: "Invite link is invalid or expired" },
+        { status: 400 }
+      );
     }
     if (error instanceof BetaInviteRedeemedError) {
       return NextResponse.json(
