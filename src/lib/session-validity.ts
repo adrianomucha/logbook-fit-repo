@@ -3,36 +3,23 @@
  *
  * Both kinds of login are stateless 30-day tokens (the NextAuth cookie and
  * the mobile bearer token, lib/mobile-token.ts), so nothing can be deleted
- * to end one. Instead each carries `authTime`, the epoch second it signed in
- * (kept across NextAuth's rolling re-encodes and mobile refreshes, unlike
- * `iat`), and the account carries `sessionsValidAfter`. A login whose
- * authTime is earlier than that is dead. A password change or reset moves
- * the cutoff to "now", which ends every other device's login at once.
+ * to end one. Instead each records `sessionVersion`, the account's version
+ * when it signed in (kept across NextAuth's rolling re-encodes and mobile
+ * refreshes), and only logins at the account's current version are valid.
+ * A password change or reset increments the version, which ends every
+ * existing login at once; the device that made the change is handed a
+ * fresh login at the new version.
  *
- * Tokens from before authTime existed read as 0, so they die on the
- * account's first cutoff, which is the right answer: they predate it.
- */
-
-/** The current epoch second, the unit authTime is stored in. */
-export function nowEpochSeconds(now = Date.now()): number {
-  return Math.floor(now / 1000);
-}
-
-/** The cutoff to store for "every login up to now is revoked". */
-export function revokeSessionsAt(now = Date.now()): Date {
-  return new Date(nowEpochSeconds(now) * 1000);
-}
-
-/**
- * True when a login that signed in at `authTime` (epoch seconds, undefined
- * for tokens that predate the claim) survives the account's cutoff.
- * Inclusive: the credential re-issued in the same second as the cutoff (to
- * keep the device that changed the password signed in) stays valid.
+ * An exact counter rather than a timestamp: any clock comparison leaves a
+ * window where a login from just before the change still matches.
+ *
+ * Tokens from before the claim existed read as version 0, which is every
+ * account's starting version, so they keep working until that account's
+ * first password change, and no later.
  */
 export function sessionStillValid(
-  authTime: number | undefined,
-  sessionsValidAfter: Date | null | undefined
+  tokenVersion: number | undefined,
+  accountVersion: number
 ): boolean {
-  if (!sessionsValidAfter) return true;
-  return (authTime ?? 0) >= nowEpochSeconds(sessionsValidAfter.getTime());
+  return (tokenVersion ?? 0) === accountVersion;
 }

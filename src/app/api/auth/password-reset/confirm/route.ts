@@ -6,7 +6,6 @@ import { passwordResetConfirmSchema } from "@/lib/validations/schemas";
 import { passwordResetConfirmLimiter, getClientIp } from "@/lib/rate-limit";
 import { verifyResetToken, passwordFingerprint } from "@/lib/reset-token";
 import { isDemoAccount } from "@/lib/demo";
-import { revokeSessionsAt } from "@/lib/session-validity";
 
 /**
  * Redeem a reset token and set the new password.
@@ -14,7 +13,7 @@ import { revokeSessionsAt } from "@/lib/session-validity";
  * The fingerprint comparison is what makes the emailed link single-use:
  * updating passwordHash changes the fingerprint, so the just-redeemed token
  * (and any earlier unredeemed ones) stops verifying. A reset also ends
- * every existing login on every device (sessionsValidAfter, see
+ * every existing login on every device (sessionVersion, see
  * lib/session-validity.ts); the user signs in again with the new password.
  */
 export async function POST(req: Request) {
@@ -65,7 +64,7 @@ export async function POST(req: Request) {
       where: { id: user.id },
       // Whoever needed a reset may have lost a device or a password to
       // someone else: end every existing login (lib/session-validity.ts)
-      data: { passwordHash, sessionsValidAfter: revokeSessionsAt() },
+      data: { passwordHash, sessionVersion: { increment: 1 } },
     });
 
     console.log("[AUTH] Password reset completed for user:", user.id);

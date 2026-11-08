@@ -5,7 +5,6 @@ import { isLockedDemoAccount } from "@/lib/demo";
 import { verifyCredentials } from "@/lib/credentials";
 import { verifySwitchToken } from "@/lib/switch-token";
 import { reportEnvProblemsOnce } from "@/lib/env-check";
-import { nowEpochSeconds } from "@/lib/session-validity";
 import {
   LOGIN_ERROR_DEMO_LOCKED,
   LOGIN_ERROR_RATE_LIMITED,
@@ -37,7 +36,7 @@ export const authOptions: NextAuthOptions = {
           password: credentials?.password,
           ip,
         });
-        if (check.ok) return check.user;
+        if (check.ok) return { ...check.user, sessionVersion: check.sessionVersion };
         if (check.reason === "demo_locked") throw new Error(LOGIN_ERROR_DEMO_LOCKED);
         if (check.reason === "rate_limited") throw new Error(LOGIN_ERROR_RATE_LIMITED);
         return null;
@@ -75,6 +74,7 @@ export const authOptions: NextAuthOptions = {
             email: user.email,
             role: user.role,
             name: user.name,
+            sessionVersion: user.sessionVersion,
           };
         } catch (error) {
           console.error("[AUTH] Error in account-switch authorize:", error);
@@ -89,9 +89,9 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = (user as { role: string }).role;
         token.userId = user.id;
-        // When this login signed in. Unlike iat, it survives the rolling
+        // The account's login version at sign-in. Kept by the rolling
         // re-encode, so a password change can revoke it (session-validity.ts)
-        token.authTime = nowEpochSeconds();
+        token.sessionVersion = (user as { sessionVersion?: number }).sessionVersion ?? 0;
       }
       return token;
     },
@@ -100,7 +100,8 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as string;
         session.user.id = token.userId as string;
       }
-      session.authTime = typeof token.authTime === "number" ? token.authTime : undefined;
+      session.sessionVersion =
+        typeof token.sessionVersion === "number" ? token.sessionVersion : undefined;
       return session;
     },
   },

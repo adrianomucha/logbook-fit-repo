@@ -6,7 +6,6 @@ import { isDemoAccount, isLockedDemoAccount } from "@/lib/demo";
 import { parseBody } from "@/lib/validations/parseBody";
 import { changePasswordSchema } from "@/lib/validations/schemas";
 import { changePasswordLimiter } from "@/lib/rate-limit";
-import { nowEpochSeconds, revokeSessionsAt } from "@/lib/session-validity";
 import { respondWithFreshLogin } from "@/lib/reissue-login";
 
 export const dynamic = "force-dynamic";
@@ -16,9 +15,9 @@ export const dynamic = "force-dynamic";
  *
  * Updating passwordHash also invalidates any outstanding emailed reset
  * links: their tokens carry a fingerprint of the old hash (see
- * lib/reset-token.ts). It also signs out every other device: the cutoff in
- * sessionsValidAfter (lib/session-validity.ts) revokes every existing
- * login, and this device gets a fresh one in the response (a new cookie on
+ * lib/reset-token.ts). It also signs out every other device: incrementing
+ * sessionVersion (lib/session-validity.ts) revokes every existing login,
+ * and this device gets a fresh one in the response (a new cookie on
  * web, `session` in the body for the native app).
  */
 export async function PUT(req: Request) {
@@ -59,18 +58,19 @@ export async function PUT(req: Request) {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
-    const now = Date.now();
-    await prisma.user.update({
+    // Incrementing the version ends every existing login (this device's
+    // included); the device is re-issued one at the new version below
+    const { sessionVersion } = await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash, sessionsValidAfter: revokeSessionsAt(now) },
-      select: { id: true },
+      data: { passwordHash, sessionVersion: { increment: 1 } },
+      select: { sessionVersion: true },
     });
 
     console.log("[AUTH] Password changed for user:", user.id);
     const res = await respondWithFreshLogin(
       req,
       { id: user.id, email: user.email, name: user.name, role: user.role },
-      nowEpochSeconds(now),
+      sessionVersion,
       { ok: true }
     );
     if (!res) {

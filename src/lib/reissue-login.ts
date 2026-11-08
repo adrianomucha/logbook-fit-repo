@@ -9,8 +9,8 @@ import {
 
 /**
  * After a password change revokes every login (session-validity.ts), keep
- * the device that made the change signed in by handing it a fresh one,
- * signed in at `authTime` (the same second as the new cutoff).
+ * the device that made the change signed in by handing it a fresh one at
+ * the account's new `sessionVersion`.
  *
  * The caller is answered in kind:
  * - a bearer caller (native app) gets `session` in the JSON body, the same
@@ -23,14 +23,14 @@ import {
 export async function respondWithFreshLogin(
   req: Request,
   user: MobileTokenUser,
-  authTime: number,
+  sessionVersion: number,
   body: Record<string, unknown>
 ): Promise<NextResponse | null> {
   const secret = process.env.NEXTAUTH_SECRET;
   if (!secret) return null;
 
   if (bearerFromAuthorization(req.headers.get("authorization"))) {
-    const minted = await createMobileToken(user, Date.now(), authTime);
+    const minted = await createMobileToken(user, Date.now(), sessionVersion);
     if (!minted) return null;
     return NextResponse.json({
       ...body,
@@ -48,7 +48,7 @@ export async function respondWithFreshLogin(
       email: user.email,
       role: user.role,
       userId: user.id,
-      authTime,
+      sessionVersion,
     },
   });
   const res = NextResponse.json(body);

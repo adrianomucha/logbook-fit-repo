@@ -35,11 +35,11 @@ export async function getSession(): Promise<Session | null> {
 
   const account = await prisma.user.findFirst({
     where: { id: session.user.id, deletedAt: null },
-    select: { sessionsValidAfter: true },
+    select: { sessionVersion: true },
   });
   if (!account) return null;
-  // A password change or reset since this login signed in ends it
-  return sessionStillValid(session.authTime, account.sessionsValidAfter) ? session : null;
+  // A password change or reset since this login was issued ends it
+  return sessionStillValid(session.sessionVersion, account.sessionVersion) ? session : null;
 }
 
 /** Build a `Session` from a mobile token, or null when it doesn't verify. */
@@ -55,6 +55,6 @@ export async function sessionFromBearer(token: string): Promise<Session | null> 
       image: null,
     },
     expires: new Date(claims.expiresAt * 1000).toISOString(),
-    authTime: claims.authTime,
+    sessionVersion: claims.sessionVersion,
   };
 }

@@ -26,21 +26,20 @@ export async function POST(req: Request) {
 
   const account = await prisma.user.findFirst({
     where: { id: claims.id, deletedAt: null },
-    select: { id: true, email: true, name: true, role: true, sessionsValidAfter: true },
+    select: { id: true, email: true, name: true, role: true, sessionVersion: true },
   });
   if (
     !account ||
     isLockedDemoAccount(account.email) ||
-    // Revoked by a password change or reset since this login signed in
-    !sessionStillValid(claims.authTime, account.sessionsValidAfter)
+    // Revoked by a password change or reset since this login was issued
+    !sessionStillValid(claims.sessionVersion, account.sessionVersion)
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { sessionsValidAfter: _cutoff, ...user } = account;
+  const { sessionVersion, ...user } = account;
 
-  // The new token keeps the login's original sign-in time, so refreshing
-  // can't outlive a later revocation
-  const minted = await createMobileToken(user, Date.now(), claims.authTime);
+  // At the version just checked, so a later password change still ends it
+  const minted = await createMobileToken(user, Date.now(), sessionVersion);
   if (!minted) {
     console.error("[AUTH_ALERT] NEXTAUTH_SECRET unset — cannot mint mobile token");
     return NextResponse.json({ error: "Refresh unavailable" }, { status: 500 });

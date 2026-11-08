@@ -38,23 +38,21 @@ afterEach(() => {
 const bearer = (token: string) => ({ authorization: `Bearer ${token}` });
 
 describe("POST /api/auth/mobile/refresh", () => {
-  const signedIn = Date.UTC(2026, 0, 1);
-
-  it("refuses a login that signed in before the password changed", async () => {
-    const old = (await createMobileToken(USER, Date.now(), signedIn / 1000))!;
-    userFindFirst.mockResolvedValue({ ...USER, sessionsValidAfter: new Date(signedIn + 5000) });
+  it("refuses a login issued before the password changed", async () => {
+    const old = (await createMobileToken(USER, Date.now(), 0))!;
+    userFindFirst.mockResolvedValue({ ...USER, sessionVersion: 1 });
     const res = await refresh(new Request("http://x", { method: "POST", headers: bearer(old.token) }));
     expect(res.status).toBe(401);
   });
 
-  it("refreshes a valid login and keeps its original sign-in time", async () => {
-    const current = (await createMobileToken(USER, Date.now(), signedIn / 1000))!;
-    userFindFirst.mockResolvedValue({ ...USER, sessionsValidAfter: null });
+  it("refreshes a current login at the same version", async () => {
+    const current = (await createMobileToken(USER, Date.now(), 4))!;
+    userFindFirst.mockResolvedValue({ ...USER, sessionVersion: 4 });
     const res = await refresh(new Request("http://x", { method: "POST", headers: bearer(current.token) }));
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.user).toEqual(USER);
-    expect((await readMobileToken(body.token))?.authTime).toBe(signedIn / 1000);
+    expect((await readMobileToken(body.token))?.sessionVersion).toBe(4);
   });
 });
 
@@ -64,32 +62,30 @@ describe("PUT /api/account/password", () => {
   beforeEach(async () => {
     getSession.mockResolvedValue({ user: { id: USER.id, email: USER.email, role: USER.role } });
     userFindFirst.mockResolvedValue({ ...USER, passwordHash: await bcrypt.hash("old-password-1", 4) });
-    userUpdate.mockResolvedValue({ id: USER.id });
+    // The account was at version 0; the change increments it to 1
+    userUpdate.mockResolvedValue({ sessionVersion: 1 });
   });
 
-  const cutoffWritten = () => userUpdate.mock.calls[0][0].data.sessionsValidAfter as Date;
-
-  it("revokes every login and hands a native caller a fresh one", async () => {
-    const current = (await createMobileToken(USER))!;
+  it("increments the version and hands a native caller a login at the new one", async () => {
+    // Signed in moments before the change, at the old version: the case a
+    // clock-based cutoff could miss within the same second
+    const before = (await createMobileToken(USER, Date.now(), 0))!;
     const req = new Request("http://x", {
       method: "PUT",
-      headers: { ...bearer(current.token), "content-type": "application/json" },
+      headers: { ...bearer(before.token), "content-type": "application/json" },
       body,
     });
     const res = await changePassword(req);
     expect(res.status).toBe(200);
-
-    const cutoff = cutoffWritten();
-    expect(cutoff).toBeInstanceOf(Date);
+    expect(userUpdate.mock.calls[0][0].data.sessionVersion).toEqual({ increment: 1 });
 
     const data = await res.json();
     expect(data.ok).toBe(true);
     expect(data.session.user).toEqual(USER);
     const fresh = await readMobileToken(data.session.token);
-    expect(sessionStillValid(fresh?.authTime, cutoff)).toBe(true);
-    // The token the device sent before the change is now dead
-    const before = await readMobileToken(current.token);
-    expect(sessionStillValid((before?.authTime ?? 0) - 1, cutoff)).toBe(false);
+    expect(sessionStillValid(fresh?.sessionVersion, 1)).toBe(true);
+    // Any login from before the change, however recent, is now dead
+    expect(sessionStillValid((await readMobileToken(before.token))?.sessionVersion, 1)).toBe(false);
   });
 
   it("re-mints the web session cookie under the name the browser uses", async () => {
@@ -111,7 +107,7 @@ describe("PUT /api/account/password", () => {
     const claims = await decode({ token: cookie!.value, secret: "test-secret" });
     expect(claims?.userId).toBe(USER.id);
     expect(claims?.role).toBe(USER.role);
-    expect(sessionStillValid(claims?.authTime as number, cutoffWritten())).toBe(true);
+    expect(claims?.sessionVersion).toBe(1);
   });
 
   it("changes nothing when the current password is wrong", async () => {

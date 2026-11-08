@@ -23,7 +23,7 @@ beforeEach(() => {
   savedSecret = process.env.NEXTAUTH_SECRET;
   process.env.NEXTAUTH_SECRET = "test-secret";
   requestHeaders.value = new Headers();
-  userFindFirst.mockResolvedValue({ sessionsValidAfter: null });
+  userFindFirst.mockResolvedValue({ sessionVersion: 0 });
   cookieSession.mockResolvedValue(null);
 });
 
@@ -77,7 +77,7 @@ describe("getSession", () => {
     expect(session?.user.id).toBe("cookie-user");
     expect(userFindFirst).toHaveBeenCalledWith({
       where: { id: "cookie-user", deletedAt: null },
-      select: { sessionsValidAfter: true },
+      select: { sessionVersion: true },
     });
   });
 
@@ -96,35 +96,27 @@ describe("getSession", () => {
     expect(userFindFirst).not.toHaveBeenCalled();
   });
 
-  it("turns away a mobile login that signed in before the password changed", async () => {
-    const signedIn = Date.UTC(2026, 0, 1);
-    const minted = (await createMobileToken(USER, Date.now(), signedIn / 1000))!;
+  it("turns away a mobile login issued before the password changed", async () => {
+    const minted = (await createMobileToken(USER, Date.now(), 2))!;
     requestHeaders.value = new Headers({ authorization: `Bearer ${minted.token}` });
 
-    userFindFirst.mockResolvedValue({ sessionsValidAfter: new Date(signedIn + 1000) });
+    userFindFirst.mockResolvedValue({ sessionVersion: 3 });
     expect(await getSession()).toBeNull();
 
-    // Same second as the cutoff: the device that changed the password
-    userFindFirst.mockResolvedValue({ sessionsValidAfter: new Date(signedIn) });
+    userFindFirst.mockResolvedValue({ sessionVersion: 2 });
     expect((await getSession())?.user.id).toBe("u1");
   });
 
-  it("turns away a cookie login that signed in before the cutoff, or predates authTime", async () => {
-    userFindFirst.mockResolvedValue({ sessionsValidAfter: new Date(Date.UTC(2026, 0, 2)) });
+  it("turns away a cookie login from an older version, or one that predates the claim", async () => {
+    userFindFirst.mockResolvedValue({ sessionVersion: 1 });
 
-    cookieSession.mockResolvedValue({
-      user: { id: "c1", role: "COACH" },
-      authTime: Date.UTC(2026, 0, 1) / 1000,
-    });
+    cookieSession.mockResolvedValue({ user: { id: "c1", role: "COACH" }, sessionVersion: 0 });
     expect(await getSession()).toBeNull();
 
     cookieSession.mockResolvedValue({ user: { id: "c1", role: "COACH" } });
     expect(await getSession()).toBeNull();
 
-    cookieSession.mockResolvedValue({
-      user: { id: "c1", role: "COACH" },
-      authTime: Date.UTC(2026, 0, 3) / 1000,
-    });
+    cookieSession.mockResolvedValue({ user: { id: "c1", role: "COACH" }, sessionVersion: 1 });
     expect((await getSession())?.user.id).toBe("c1");
   });
 });

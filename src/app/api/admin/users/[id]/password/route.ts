@@ -5,7 +5,6 @@ import prisma from "@/lib/prisma";
 import { isAdminEmail } from "@/lib/admin";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { generateSecureToken } from "@/lib/tokens";
-import { revokeSessionsAt } from "@/lib/session-validity";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +23,7 @@ export const dynamic = "force-dynamic";
  * refused. Admin accounts can't be reset here either, so one compromised
  * admin session can't lock the other admins out or take their accounts.
  *
- * Also signs the account out on every device (sessionsValidAfter).
+ * Also signs the account out on every device (sessionVersion).
  */
 export async function POST(
   _req: Request,
@@ -78,7 +77,7 @@ export async function POST(
       // Ends every existing login too (lib/session-validity.ts)
       data: {
         passwordHash: await bcrypt.hash(tempPassword, 10),
-        sessionsValidAfter: revokeSessionsAt(),
+        sessionVersion: { increment: 1 },
       },
     });
 
