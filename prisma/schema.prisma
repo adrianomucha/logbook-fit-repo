@@ -405,6 +405,12 @@ model WorkoutCompletion {
   exercisesTotal Int?
   durationSec    Int?
   effortRating   EffortRating?
+  // When the idle sweep (lib/idle-workouts.ts) pushed the client a "still
+  // training?" nudge for this session. One nudge per session; a restart clears it.
+  idleReminderSentAt DateTime?
+  // Set when the idle sweep closed a session the client left open instead of
+  // the client tapping Finish. completedAt is then the last logged set.
+  autoFinishedAt     DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
@@ -418,6 +424,7 @@ model WorkoutCompletion {
   @@unique([clientId, planId, dayId]) // One completion per client per day
   @@index([clientId, status])         // Coach dashboard: find in-progress/missed
   @@index([clientId, completedAt])    // Recent workouts query
+  @@index([status])                   // Idle sweep: every open session
   @@map("workout_completions")
 }
 

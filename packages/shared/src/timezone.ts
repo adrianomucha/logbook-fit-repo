@@ -68,6 +68,14 @@ function wallClockMs(date: Date, timeZone: string | null | undefined): number {
 }
 
 /**
+ * Hour of the day (0 to 23) at `date` in `timeZone`. UTC when the zone is
+ * missing or unresolvable.
+ */
+export function hourInTimeZone(date: Date, timeZone: string | null | undefined): number {
+  return new Date(wallClockMs(date, timeZone)).getUTCHours();
+}
+
+/**
  * The calendar date of `date` in `timeZone`, as whole days since 1970-01-01.
  * Two instants on the same local day get the same number, so day and week
  * arithmetic happens on the person's calendar rather than the server's.

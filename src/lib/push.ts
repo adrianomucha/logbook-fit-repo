@@ -15,6 +15,7 @@ import webpush from "web-push";
 import { Expo, type ExpoPushMessage } from "expo-server-sdk";
 import prisma from "@/lib/prisma";
 import type { PushSubscription } from "@prisma/client";
+import { parseSessionName } from "@logbook/shared/parse-session-name";
 
 const VAPID_PUBLIC_KEY = process.env.VAPID_PUBLIC_KEY;
 const VAPID_PRIVATE_KEY = process.env.VAPID_PRIVATE_KEY;
@@ -382,5 +383,65 @@ export async function notifyClientJoined(params: {
     });
   } catch (error) {
     console.error("[PUSH] notifyClientJoined failed:", error);
+  }
+}
+
+/** The coach's session name as the client reads it ("Day 1: Push" reads "Push"). */
+function sessionTitle(dayName: string | null | undefined): string | null {
+  const title = dayName?.trim() ? parseSessionName(dayName).title : "";
+  return title ? previewText(title, 60) : null;
+}
+
+/**
+ * Where tapping a workout notification lands: the session itself. The native
+ * app maps this web path onto its own route (resolveNotificationUrl).
+ */
+export function workoutUrl(weekId: string, dayId: string): string {
+  return `/client/workout/${weekId}/${dayId}`;
+}
+
+/**
+ * Tell a client their workout is still open: they logged sets, then nothing
+ * for a while (see lib/idle-workouts.ts). Tagged per session so the
+ * auto-finish notice that may follow replaces it rather than stacking.
+ */
+export async function notifyWorkoutIdle(params: {
+  clientUserId: string;
+  completionId: string;
+  dayName: string | null;
+  url: string;
+}): Promise<void> {
+  const { clientUserId, completionId, dayName, url } = params;
+  const title = sessionTitle(dayName);
+  try {
+    await sendPushToUser(clientUserId, {
+      title: "Still training?",
+      body: `${title ?? "Your workout"} is still open. Finish it to save your session, or pick up where you left off.`,
+      url,
+      tag: `workout-open:${completionId}`,
+    });
+  } catch (error) {
+    console.error("[PUSH] notifyWorkoutIdle failed:", error);
+  }
+}
+
+/** Tell a client the idle sweep finished a workout they left open. */
+export async function notifyWorkoutAutoFinished(params: {
+  clientUserId: string;
+  completionId: string;
+  dayName: string | null;
+  url: string;
+}): Promise<void> {
+  const { clientUserId, completionId, dayName, url } = params;
+  const title = sessionTitle(dayName);
+  try {
+    await sendPushToUser(clientUserId, {
+      title: "Workout saved",
+      body: `${title ?? "Your workout"} was left open, so we saved it as of your last logged set.`,
+      url,
+      tag: `workout-open:${completionId}`,
+    });
+  } catch (error) {
+    console.error("[PUSH] notifyWorkoutAutoFinished failed:", error);
   }
 }

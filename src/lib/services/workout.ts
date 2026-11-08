@@ -242,6 +242,9 @@ class WorkoutServiceImpl {
           exercisesTotal: completion.day.exercises.length,
           durationSec: null,
           effortRating: null,
+          // A fresh session gets its own nudge, and is the client's again
+          idleReminderSentAt: null,
+          autoFinishedAt: null,
         },
       });
 
@@ -287,13 +290,96 @@ class WorkoutServiceImpl {
       throw new InvalidStateError("Workout already completed");
     }
 
-    const totalSets = completion.day.exercises.reduce(
-      (sum, ex) => sum + ex.sets,
-      0,
+    const stats = await this.finishStats(
+      params.completionId,
+      completion.day.exercises,
+      completion.startedAt,
+      new Date(),
     );
+    // Finishing with nothing logged isn't a workout: it would count as
+    // trained for the client's week and tell the coach they showed up
+    if (!stats) {
+      throw new InvalidStateError(NOTHING_LOGGED_MESSAGE);
+    }
+
+    return this.db.workoutCompletion.update({
+      where: { id: params.completionId },
+      data: {
+        status: "COMPLETED",
+        completedAt: stats.finishedAt,
+        completionPct: stats.completionPct,
+        exercisesDone: stats.exercisesDone,
+        exercisesTotal: stats.exercisesTotal,
+        durationSec: stats.durationSec,
+        ...(params.effortRating
+          ? { effortRating: params.effortRating as never }
+          : {}),
+      },
+    });
+  }
+
+  /**
+   * Close a session the client left open, on their behalf (the idle sweep in
+   * lib/idle-workouts.ts). Same stats as tapping Finish, except the session
+   * ends at the last logged set rather than now: the sweep runs hours later,
+   * and a workout done Monday evening must not land on Tuesday, or in the
+   * next week, for adherence.
+   *
+   * Returns false, changing nothing, when there's nothing to close: the
+   * session is no longer open (the client finished or restarted it while the
+   * sweep ran) or nothing was logged. An empty session stays open on purpose:
+   * finishing it would count a workout that never happened, and an abandoned
+   * start is a signal the coach's review already surfaces.
+   */
+  async autoFinish(completionId: string, now: Date = new Date()): Promise<boolean> {
+    const completion = await this.db.workoutCompletion.findUnique({
+      where: { id: completionId },
+      include: {
+        day: { include: { exercises: { select: { id: true, sets: true } } } },
+      },
+    });
+    if (!completion || completion.status !== "IN_PROGRESS") return false;
+
+    const stats = await this.finishStats(
+      completionId,
+      completion.day.exercises,
+      completion.startedAt,
+      null,
+    );
+    if (!stats) return false;
+
+    // Conditional on still being open, so a Finish tap racing the sweep wins
+    // and keeps the client's own effort rating and finish time
+    const { count } = await this.db.workoutCompletion.updateMany({
+      where: { id: completionId, status: "IN_PROGRESS" },
+      data: {
+        status: "COMPLETED",
+        completedAt: stats.finishedAt ?? now,
+        completionPct: stats.completionPct,
+        exercisesDone: stats.exercisesDone,
+        exercisesTotal: stats.exercisesTotal,
+        durationSec: stats.durationSec,
+        autoFinishedAt: now,
+      },
+    });
+    return count > 0;
+  }
+
+  /**
+   * The numbers a finished session stores, or null when nothing was logged.
+   * `finishedAt` null means "at the last logged set" (auto-finish); the
+   * returned `finishedAt` is then that set's time.
+   */
+  private async finishStats(
+    completionId: string,
+    exercises: { id: string; sets: number }[],
+    startedAt: Date | null,
+    finishedAt: Date | null,
+  ) {
+    const totalSets = exercises.reduce((sum, ex) => sum + ex.sets, 0);
     const completedGroups = await this.db.setCompletion.groupBy({
       by: ["workoutExerciseId"],
-      where: { workoutCompletionId: params.completionId, completed: true },
+      where: { workoutCompletionId: completionId, completed: true },
       _count: { _all: true },
     });
     const completedByExercise = new Map(
@@ -304,53 +390,44 @@ class WorkoutServiceImpl {
     // exercise: orphaned rows (a coach lowering set counts mid-workout leaves
     // completed rows beyond the new count) must not push stats past 100%.
     //
-    // An exercise counts as done only when ALL its sets are completed —
+    // An exercise counts as done only when ALL its sets are completed:
     // the same definition the execution UI uses, so what the client saw
     // ("2 of 5 exercises") is what gets stored and shown to the coach.
-    const completedSets = completion.day.exercises.reduce(
+    const completedSets = exercises.reduce(
       (sum, ex) =>
         sum + Math.min(completedByExercise.get(ex.id) ?? 0, ex.sets),
       0,
     );
-    const exercisesDone = completion.day.exercises.filter(
+    const exercisesDone = exercises.filter(
       (ex) => ex.sets > 0 && (completedByExercise.get(ex.id) ?? 0) >= ex.sets,
     ).length;
 
-    // Finishing with nothing logged isn't a workout: it would count as
-    // trained for the client's week and tell the coach they showed up
-    if (completedSets === 0) {
-      throw new InvalidStateError(NOTHING_LOGGED_MESSAGE);
-    }
+    if (completedSets === 0) return null;
 
     const completionPct =
       totalSets > 0 ? Math.round((completedSets / totalSets) * 100) : 0;
-    const now = new Date();
     // Start → Finish, unless the session was left open for days; then the
     // span of the logged sets is the honest answer
     const setSpan = await this.db.setCompletion.aggregate({
-      where: { workoutCompletionId: params.completionId, completed: true },
+      where: { workoutCompletionId: completionId, completed: true },
       _min: { completedAt: true },
       _max: { completedAt: true },
     });
-    const durationSec = finishedSessionSec(completion.startedAt, now, {
-      first: setSpan._min.completedAt,
-      last: setSpan._max.completedAt,
-    });
+    const endedAt = finishedAt ?? setSpan._max.completedAt;
+    const durationSec = endedAt
+      ? finishedSessionSec(startedAt, endedAt, {
+          first: setSpan._min.completedAt,
+          last: setSpan._max.completedAt,
+        })
+      : null;
 
-    return this.db.workoutCompletion.update({
-      where: { id: params.completionId },
-      data: {
-        status: "COMPLETED",
-        completedAt: now,
-        completionPct,
-        exercisesDone,
-        exercisesTotal: completion.day.exercises.length,
-        durationSec,
-        ...(params.effortRating
-          ? { effortRating: params.effortRating as never }
-          : {}),
-      },
-    });
+    return {
+      finishedAt: endedAt,
+      completionPct,
+      exercisesDone,
+      exercisesTotal: exercises.length,
+      durationSec,
+    };
   }
 
   async updateSets(

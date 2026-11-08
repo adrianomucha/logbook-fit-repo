@@ -97,7 +97,11 @@ export function resolveNotificationUrl(url: unknown): string | null {
     if (tab === 'progress') return '/client/progress';
     return '/client';
   }
-  if (path.startsWith('/client/checkin/') || path.startsWith('/client/workout/')) return path;
+  // The web nests a session under its week (/client/workout/<weekId>/<dayId>);
+  // the app's route is the day alone
+  const workout = path.match(/^\/client\/workout\/(?:[^/]+\/)?([^/]+)\/?$/);
+  if (workout) return `/client/workout/${workout[1]}`;
+  if (path.startsWith('/client/checkin/')) return path;
   if (path.startsWith('/coach')) return '/coach';
   return '/client';
 }
