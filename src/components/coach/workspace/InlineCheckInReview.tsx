@@ -585,7 +585,7 @@ export function InlineCheckInReview({
           {/* Stable live region so repeat empty submits re-announce */}
           <div role="alert" aria-live="assertive">
             {responseError && (
-              <p id="inline-coach-response-error" className="text-sm text-destructive mt-1">
+              <p id="inline-coach-response-error" className="text-sm text-destructive-text mt-1">
                 {responseError}
               </p>
             )}

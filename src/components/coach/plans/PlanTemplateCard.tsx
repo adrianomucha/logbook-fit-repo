@@ -161,7 +161,7 @@ export function PlanTemplateCard({
           ) : null}
           <DropdownMenuItem
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="text-destructive focus:text-destructive"
+            className="text-destructive-text focus:text-destructive-text"
           >
             <Trash2 className="w-4 h-4 mr-2" />
             Delete

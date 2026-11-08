@@ -237,7 +237,7 @@ export function ExerciseCard({
                         <button
                           type="button"
                           onClick={handleFlagClick}
-                          className="text-sm text-muted-foreground hover:text-destructive transition-colors min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          className="text-sm text-muted-foreground hover:text-destructive-text transition-colors min-h-[44px] flex items-center touch-manipulation rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                         >
                           Remove flag
                         </button>

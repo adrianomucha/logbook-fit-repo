@@ -106,7 +106,7 @@ export function FeedbackSheet({ visible, onClose, pageUrl }: { visible: boolean;
                   <Text className="mt-1 text-right font-mono text-[11px] text-muted-foreground">{message.length}/{MESSAGE_MAX_LENGTH}</Text>
                 ) : null}
               </View>
-              {error ? <Text className="font-sans text-sm text-destructive">{error}</Text> : null}
+              {error ? <Text className="font-sans text-sm text-destructive-text">{error}</Text> : null}
               <Button variant="primary" className="h-11" onPress={send} loading={isSending} disabled={!message.trim()}>Send</Button>
             </View>
           )}

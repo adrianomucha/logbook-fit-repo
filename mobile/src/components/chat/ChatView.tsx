@@ -248,7 +248,7 @@ export function ChatView({
       ) : null}
 
       <View className="border-t border-border/50 px-3 py-2.5">
-        {sendError ? <Text className="mb-1.5 font-sans text-xs text-destructive">{sendError}</Text> : null}
+        {sendError ? <Text className="mb-1.5 font-sans text-xs text-destructive-text">{sendError}</Text> : null}
         <View className="flex-row items-center gap-2">
           <View className="min-h-[44px] flex-1 justify-center rounded-full bg-muted/40 px-4">
             <TextInput

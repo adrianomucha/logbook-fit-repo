@@ -96,7 +96,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
               editable={!isDeleting}
             />
           </View>
-          {error ? <Text className="mt-3 font-sans text-sm text-destructive">{error}</Text> : null}
+          {error ? <Text className="mt-3 font-sans text-sm text-destructive-text">{error}</Text> : null}
 
           <View className="mt-6 flex-row items-center justify-end gap-2">
             <Button variant="ghost" className="h-11 px-4" onPress={onClose} disabled={isDeleting}>Keep my account</Button>

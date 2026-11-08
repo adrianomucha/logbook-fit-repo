@@ -21,7 +21,7 @@ const TONE_TEXT: Record<string, string> = {
   'text-success-text': 'text-success-text',
   'text-foreground': 'text-foreground',
   'text-warning-text': 'text-warning-text',
-  'text-destructive': 'text-destructive',
+  'text-destructive-text': 'text-destructive-text',
 };
 
 function SectionTitle({ children }: { children: string }) {

@@ -23,7 +23,7 @@ const FEELING_OPTIONS: { value: string; label: string; emoji: string; selectedCl
   { value: 'FRESH', label: 'Fresh', emoji: '✨', selectedClass: 'text-success bg-success/10 border-success/40 ring-1 ring-success/20' },
   { value: 'NORMAL', label: 'Normal', emoji: '👍', selectedClass: 'text-foreground bg-muted border-foreground/25 ring-1 ring-foreground/10' },
   { value: 'TIRED', label: 'Tired', emoji: '😓', selectedClass: 'text-warning bg-warning/10 border-warning/40 ring-1 ring-warning/20' },
-  { value: 'RUN_DOWN', label: 'Run Down', emoji: '🥴', selectedClass: 'text-destructive bg-destructive/10 border-destructive/40 ring-1 ring-destructive/20' },
+  { value: 'RUN_DOWN', label: 'Run Down', emoji: '🥴', selectedClass: 'text-destructive-text bg-destructive/10 border-destructive/40 ring-1 ring-destructive/20' },
 ];
 
 export function ClientCheckInForm() {
@@ -303,7 +303,7 @@ export function ClientCheckInForm() {
             ))}
           </div>
           {errors.effortRating && (
-            <p id={effortErrorId} className="text-sm text-destructive mt-2">{errors.effortRating}</p>
+            <p id={effortErrorId} className="text-sm text-destructive-text mt-2">{errors.effortRating}</p>
           )}
         </div>
 
@@ -339,7 +339,7 @@ export function ClientCheckInForm() {
             ))}
           </div>
           {errors.clientFeeling && (
-            <p id={feelingErrorId} className="text-sm text-destructive mt-2">{errors.clientFeeling}</p>
+            <p id={feelingErrorId} className="text-sm text-destructive-text mt-2">{errors.clientFeeling}</p>
           )}
         </div>
 
@@ -397,7 +397,7 @@ export function ClientCheckInForm() {
         {/* Submit Error — stable region so repeat failures re-announce */}
         <div role="alert" aria-live="assertive">
           {errors.submit && (
-            <p className="text-sm text-destructive text-center">{errors.submit}</p>
+            <p className="text-sm text-destructive-text text-center">{errors.submit}</p>
           )}
         </div>
 
