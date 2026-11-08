@@ -11,6 +11,7 @@ import { LEAVE_COACH_COPY } from '@logbook/shared/leave-coach';
 import { SETTINGS_FIELD_COPY, SETTINGS_SECTION_COPY, type SettingsSectionId } from '@logbook/shared/settings-sections';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
+import { saveSession, type StoredSession } from '@/lib/session-store';
 import { AVATAR_MAX_BYTES, removeAvatar, uploadAvatar } from '@/lib/avatar';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { WEB_URL } from '@/lib/config';
@@ -390,10 +391,13 @@ function PasswordField() {
 
     setIsSaving(true);
     try {
-      await apiFetch('/api/account/password', {
+      const res = await apiFetch<{ ok: true; session?: StoredSession }>('/api/account/password', {
         method: 'PUT',
         body: JSON.stringify({ currentPassword, newPassword }),
       });
+      // The change signs out every device, this one included; the response
+      // carries this device's fresh login, which keeps it signed in
+      if (res.session) await saveSession(res.session);
       close();
       setFlash(copy.saved);
     } catch (e) {

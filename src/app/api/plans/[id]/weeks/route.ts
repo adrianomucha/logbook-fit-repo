@@ -3,6 +3,7 @@ import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { coachScope } from "@/lib/scoping";
 import { Session } from "next-auth";
+import { addWeekSchema, MAX_PLAN_WEEKS } from "@/lib/validations/schemas";
 
 /**
  * POST /api/plans/[id]/weeks
@@ -33,12 +34,25 @@ export const POST = withCoach(
     }
 
     const nextWeekNumber = (plan.weeks[0]?.weekNumber ?? 0) + 1;
+    // Every other path caps a plan at MAX_PLAN_WEEKS; without this, repeated
+    // calls grew one without bound (and every assign deep-clones it)
+    if (nextWeekNumber > MAX_PLAN_WEEKS) {
+      return NextResponse.json(
+        { error: `A plan can have at most ${MAX_PLAN_WEEKS} weeks` },
+        { status: 400 }
+      );
+    }
 
-    // Parse optional day templates from body
-    const body = await req.json().catch(() => ({}));
-    const { days: dayTemplates } = body as {
-      days?: { name?: string }[];
-    };
+    // Optional day templates; an empty body means "use the plan's default"
+    const raw = await req.json().catch(() => ({}));
+    const parsed = addWeekSchema.safeParse(raw ?? {});
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.issues[0]?.message ?? "Invalid week" },
+        { status: 400 }
+      );
+    }
+    const dayTemplates = parsed.data.days;
 
     const wpw = plan.workoutsPerWeek || 3;
 

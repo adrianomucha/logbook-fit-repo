@@ -116,8 +116,14 @@ export const GET = withCoach(
               },
             },
             // Exercises the client flagged mid-workout — the coach reviews
-            // these alongside check-ins
+            // these alongside check-ins. Only flags on this coach's own
+            // plans: after a coach switch the workout history stays visible,
+            // but notes the client wrote to the previous coach don't carry
+            // over (same rule as check-ins below).
             flags: {
+              where: {
+                workoutExercise: { day: { week: { plan: { coachId: coachProfileId } } } },
+              },
               select: {
                 id: true,
                 workoutExerciseId: true,

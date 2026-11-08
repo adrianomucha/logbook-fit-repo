@@ -3,6 +3,8 @@ import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
 import { coachScope } from "@/lib/scoping";
 import { Session } from "next-auth";
+import { parseBody } from "@/lib/validations/parseBody";
+import { updatePlanSchema } from "@/lib/validations/schemas";
 
 /**
  * GET /api/plans/[id]
@@ -88,13 +90,9 @@ export const PUT = withCoach(
       return NextResponse.json({ error: "Plan not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { name, description, durationWeeks, workoutsPerWeek } = body as {
-      name?: string;
-      description?: string;
-      durationWeeks?: number;
-      workoutsPerWeek?: number;
-    };
+    const parsed = await parseBody(req, updatePlanSchema);
+    if (!parsed.success) return parsed.response;
+    const { name, description, durationWeeks, workoutsPerWeek } = parsed.data;
 
     // If renaming a TEMPLATE, check for duplicate name among templates.
     // Client instances share (or tailor) names freely — no uniqueness there.

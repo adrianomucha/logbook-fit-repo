@@ -134,6 +134,11 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
+  // Every login (web cookie or mobile token) records the version it was
+  // issued under, and only logins at the current version are accepted. A
+  // password change or reset increments it, which signs out every other
+  // device (see lib/session-validity.ts).
+  sessionVersion Int @default(0)
 
   // Role-specific profiles
   coachProfile  CoachProfile?

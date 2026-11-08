@@ -1,7 +1,6 @@
-import { getServerSession } from 'next-auth';
 import { notFound } from 'next/navigation';
 import { AlertTriangle } from 'lucide-react';
-import { authOptions } from '@/lib/auth';
+import { getSession } from '@/lib/session';
 import { isAdminEmail } from '@/lib/admin';
 import { emailConfigStatus } from '@/lib/services/email';
 import { envProblems, reportEnvProblemsOnce } from '@/lib/env-check';
@@ -25,7 +24,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await getServerSession(authOptions);
+  const session = await getSession();
 
   if (!isAdminEmail(session?.user?.email)) {
     notFound();

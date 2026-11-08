@@ -12,9 +12,9 @@ import { isDemoAccount } from "@/lib/demo";
  *
  * The fingerprint comparison is what makes the emailed link single-use:
  * updating passwordHash changes the fingerprint, so the just-redeemed token
- * (and any earlier unredeemed ones) stops verifying. Sessions are JWTs, so
- * existing logins survive a reset — acceptable for now, since whoever holds
- * the inbox controls the account either way.
+ * (and any earlier unredeemed ones) stops verifying. A reset also ends
+ * every existing login on every device (sessionVersion, see
+ * lib/session-validity.ts); the user signs in again with the new password.
  */
 export async function POST(req: Request) {
   try {
@@ -62,7 +62,9 @@ export async function POST(req: Request) {
     const passwordHash = await bcrypt.hash(password, 10);
     await prisma.user.update({
       where: { id: user.id },
-      data: { passwordHash },
+      // Whoever needed a reset may have lost a device or a password to
+      // someone else: end every existing login (lib/session-validity.ts)
+      data: { passwordHash, sessionVersion: { increment: 1 } },
     });
 
     console.log("[AUTH] Password reset completed for user:", user.id);

@@ -31,6 +31,11 @@ export interface MobileTokenUser {
 export interface MobileTokenClaims extends MobileTokenUser {
   /** Epoch seconds. */
   expiresAt: number;
+  /**
+   * The account's login version when this login was issued; undefined for
+   * tokens minted before the claim existed. See session-validity.ts.
+   */
+  sessionVersion?: number;
 }
 
 function secret(): string | null {
@@ -43,7 +48,9 @@ function secret(): string | null {
  */
 export async function createMobileToken(
   user: MobileTokenUser,
-  now = Date.now()
+  now = Date.now(),
+  /** The account's current login version (lib/session-validity.ts). */
+  sessionVersion = 0
 ): Promise<{ token: string; expiresAt: Date } | null> {
   const key = secret();
   if (!key || !user.id) return null;
@@ -57,6 +64,7 @@ export async function createMobileToken(
       role: user.role,
       email: user.email,
       name: user.name,
+      sessionVersion,
     },
   });
   return { token, expiresAt: new Date(now + MOBILE_TOKEN_MAX_AGE_SEC * 1000) };
@@ -93,6 +101,8 @@ export async function readMobileToken(
     email: typeof claims.email === "string" ? claims.email : "",
     name: typeof claims.name === "string" ? claims.name : "",
     expiresAt: exp,
+    sessionVersion:
+      typeof claims.sessionVersion === "number" ? claims.sessionVersion : undefined,
   };
 }
 

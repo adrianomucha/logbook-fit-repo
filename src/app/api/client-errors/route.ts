@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { parseBody } from "@/lib/validations/parseBody";
 import { clientErrorReportSchema } from "@/lib/validations/schemas";
 import { clientErrorLimiter, getClientIp } from "@/lib/rate-limit";
+import { scrubReportUrl } from "@/lib/report-client-error";
 
 /**
  * Crash reports from the error boundaries (src/app/error.tsx and
@@ -24,7 +25,9 @@ export async function POST(req: Request) {
   const result = await parseBody(req, clientErrorReportSchema);
   if (!result.success) return result.response;
 
-  const { message, digest, url, stack } = result.data;
+  const { message, digest, stack } = result.data;
+  // Query strings can hold reset or invite tokens; never log them
+  const url = scrubReportUrl(result.data.url);
   console.error(
     "[CLIENT_ERROR_ALERT]",
     JSON.stringify({ message, digest, url, stack })

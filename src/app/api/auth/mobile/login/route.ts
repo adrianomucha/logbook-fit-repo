@@ -61,7 +61,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const minted = await createMobileToken(check.user);
+  const minted = await createMobileToken(check.user, Date.now(), check.sessionVersion);
   if (!minted) {
     console.error("[AUTH_ALERT] NEXTAUTH_SECRET unset — cannot mint mobile token");
     return NextResponse.json({ error: "Sign-in unavailable" }, { status: 500 });

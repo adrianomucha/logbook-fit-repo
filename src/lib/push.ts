@@ -13,6 +13,7 @@
  */
 import webpush from "web-push";
 import { Expo, type ExpoPushMessage } from "expo-server-sdk";
+import { isAllowedWebPushEndpoint } from "@/lib/validations/schemas";
 import prisma from "@/lib/prisma";
 import type { PushSubscription } from "@prisma/client";
 
@@ -164,6 +165,12 @@ async function sendWebPush(
       // A WEB row always has keys (enforced by a DB check); guard anyway so a
       // bad row can't throw its way out of a notification.
       if (!sub.p256dh || !sub.auth) return;
+      // Rows saved before the endpoint allowlist existed are re-checked
+      // here, so the server never POSTs to a host a user chose
+      if (!isAllowedWebPushEndpoint(sub.endpoint)) {
+        outcome.stale.push(sub.endpoint);
+        return;
+      }
       try {
         await webpush.sendNotification(
           {

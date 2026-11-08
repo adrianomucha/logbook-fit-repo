@@ -18,12 +18,31 @@ export function reportClientError(error: Error & { digest?: string }): void {
         digest: error?.digest?.slice(0, 100),
         url:
           typeof window !== "undefined"
-            ? window.location.href.slice(0, 1000)
+            ? scrubReportUrl(window.location.href)
             : undefined,
         stack: error?.stack?.slice(0, 4000),
       }),
     }).catch(() => {});
   } catch {
     // Deliberately swallowed — see above.
+  }
+}
+
+/**
+ * The page a crash happened on, minus anything that could be a credential.
+ * Reset links, coach invites and beta invites all carry their token in the
+ * query string (/reset-password?token=, /signup?invite=, /signup?beta=), so
+ * a crash on one of those pages would otherwise write a live token into the
+ * logs. Keeps origin and path, notes that a query existed, drops the
+ * fragment. Used by the sender and again by the API route, which can't
+ * trust what an older cached client sends.
+ */
+export function scrubReportUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined;
+  try {
+    const parsed = new URL(url);
+    return `${parsed.origin}${parsed.pathname}${parsed.search ? "?[redacted]" : ""}`.slice(0, 1000);
+  } catch {
+    return undefined;
   }
 }
