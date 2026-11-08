@@ -8,8 +8,9 @@ import { unsendCheckIn } from "@/lib/checkin-schedule";
 
 /**
  * GET /api/check-ins/[id]
- * Returns a check-in. Accessible by both the coach who created it
- * and the client it's for.
+ * Returns a check-in. Accessible by the client it's for, and by the coach
+ * who created it while that coach still has an ACTIVE relationship with
+ * the client.
  */
 export async function GET(
   _req: Request,
@@ -61,6 +62,24 @@ export async function GET(
 
   if (!isCoach && !isClient) {
     return NextResponse.json({ error: "Check-in not found" }, { status: 404 });
+  }
+
+  // A coach reads a check-in only while still coaching this client. The
+  // response carries the client's latest workouts (live data, not a
+  // snapshot), so without this an ex-coach could keep polling an old
+  // check-in to follow the client's training under their new coach. The
+  // client keeps access to their own check-ins whoever sent them.
+  if (isCoach && !isClient) {
+    const active = await prisma.coachClientRelationship.count({
+      where: {
+        coachId: checkIn.coachId,
+        clientId: checkIn.clientId,
+        status: "ACTIVE",
+      },
+    });
+    if (active === 0) {
+      return NextResponse.json({ error: "Check-in not found" }, { status: 404 });
+    }
   }
 
   return NextResponse.json(checkIn);
