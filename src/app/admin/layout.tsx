@@ -58,11 +58,11 @@ export default async function AdminLayout({
             className="flex items-start gap-3 rounded-xl border border-destructive/40 bg-destructive/10 p-4"
           >
             <AlertTriangle
-              className="mt-0.5 h-4 w-4 shrink-0 text-destructive"
+              className="mt-0.5 h-4 w-4 shrink-0 text-destructive-text"
               aria-hidden="true"
             />
             <div className="text-sm leading-relaxed">
-              <p className="font-semibold text-destructive">
+              <p className="font-semibold text-destructive-text">
                 {problems.length === 1
                   ? 'Deployment configuration problem'
                   : 'Deployment configuration problems'}

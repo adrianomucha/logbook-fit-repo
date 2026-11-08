@@ -89,7 +89,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          {error ? <Text className="font-sans text-sm text-destructive">{error}</Text> : null}
+          {error ? <Text className="font-sans text-sm text-destructive-text">{error}</Text> : null}
 
           <Button variant="primary" onPress={submit} loading={busy} disabled={!email.trim() || !password}>
             Sign in

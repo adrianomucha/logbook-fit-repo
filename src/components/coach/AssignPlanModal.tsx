@@ -169,8 +169,8 @@ export function AssignPlanModal({
                 'mr-auto text-sm font-medium antialiased rounded-md px-2 py-1.5 -ml-2 transition-colors tap-target',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
                 confirmingRemove
-                  ? 'text-destructive bg-destructive/10'
-                  : 'text-muted-foreground hover:text-destructive'
+                  ? 'text-destructive-text bg-destructive/10'
+                  : 'text-muted-foreground hover:text-destructive-text'
               )}
             >
               {confirmingRemove ? 'Tap again to remove' : 'Remove plan'}

@@ -116,7 +116,7 @@ export function ResetPasswordButton({ userId }: { userId: string }) {
         <span className="ml-1.5">Reset password</span>
       </Button>
       {error && (
-        <span role="alert" className="text-[11px] text-destructive">
+        <span role="alert" className="text-[11px] text-destructive-text">
           {error}
         </span>
       )}

@@ -506,7 +506,7 @@ export function ClientDashboard() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setShowLeaveConfirm(true)}
-                  className="text-muted-foreground hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive-text"
                 >
                   <UserMinus className="w-3.5 h-3.5 mr-1.5" />
                   {WELCOME_COPY.leave}

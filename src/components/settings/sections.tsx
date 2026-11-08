@@ -289,7 +289,7 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
                     className={cn(
                       'font-mono text-[10px] tracking-[0.08em] tabular-nums',
                       bio.length >= BIO_MAX_LENGTH
-                        ? 'text-destructive'
+                        ? 'text-destructive-text'
                         : 'text-muted-foreground'
                     )}
                   >
@@ -760,7 +760,7 @@ function CoachingRow() {
         variant="outline"
         size="sm"
         onClick={() => setIsConfirmOpen(true)}
-        className="shrink-0 text-muted-foreground hover:text-destructive"
+        className="shrink-0 text-muted-foreground hover:text-destructive-text"
       >
         <UserMinus className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
         {LEAVE_COACH_COPY.action}

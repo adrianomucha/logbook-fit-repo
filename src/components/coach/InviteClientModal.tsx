@@ -322,7 +322,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
 
         {error ? (
           <div className="flex items-center justify-between gap-2 rounded-xl border border-destructive/30 bg-destructive/5 px-3.5 py-2.5">
-            <p className="text-xs text-destructive font-medium antialiased">{error}</p>
+            <p className="text-xs text-destructive-text font-medium antialiased">{error}</p>
             <Button variant="outline" size="sm" onClick={() => generate(appliedEmail, appliedNote)}>
               <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
               Retry
@@ -367,7 +367,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
                     className={cn(
                       'text-xs antialiased text-pretty pt-1.5',
                       emailSend.status === 'failed'
-                        ? 'text-destructive'
+                        ? 'text-destructive-text'
                         : emailSend.status === 'sent'
                           ? 'text-foreground'
                           : 'text-muted-foreground/70'

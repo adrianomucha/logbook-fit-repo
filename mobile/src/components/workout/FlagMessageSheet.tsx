@@ -78,7 +78,7 @@ export function FlagMessageSheet({ exercise, onClose, onSend }: FlagMessageSheet
             maxLength={2000}
             autoFocus
           />
-          {error ? <Text className="mt-2 font-sans text-sm text-destructive">{error}</Text> : null}
+          {error ? <Text className="mt-2 font-sans text-sm text-destructive-text">{error}</Text> : null}
 
           <Button variant="primary" className="mt-4" onPress={send} loading={sending}>
             Send to coach

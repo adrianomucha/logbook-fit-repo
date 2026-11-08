@@ -12,7 +12,7 @@ const SELECTED: Record<Choice['tone'], { shell: string; text: string }> = {
   success: { shell: 'border-success/40 bg-success/10', text: 'text-success-text' },
   neutral: { shell: 'border-foreground/25 bg-muted', text: 'text-foreground' },
   warning: { shell: 'border-warning/40 bg-warning/10', text: 'text-warning-text' },
-  destructive: { shell: 'border-destructive/40 bg-destructive/10', text: 'text-destructive' },
+  destructive: { shell: 'border-destructive/40 bg-destructive/10', text: 'text-destructive-text' },
 };
 
 interface ChoiceGridProps {

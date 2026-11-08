@@ -478,7 +478,7 @@ function PasswordField() {
       {error ? (
         <View className="flex-row items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
           <Feather name="alert-triangle" size={14} color="#c52020" style={{ marginTop: 2 }} />
-          <Text className="flex-1 font-sans text-sm text-destructive">{error}</Text>
+          <Text className="flex-1 font-sans text-sm text-destructive-text">{error}</Text>
         </View>
       ) : null}
 
@@ -546,7 +546,7 @@ export function AccountSection() {
       <View className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
         <View className="flex-row items-center gap-1.5">
           <Feather name="alert-triangle" size={12} color="#c52020" />
-          <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-destructive">Danger zone</Text>
+          <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-destructive-text">Danger zone</Text>
         </View>
         <Text className="mt-1.5 font-sans text-xs leading-5 text-muted-foreground">
           Deleting your account removes your name and email everywhere. Your coach keeps their history under “Deleted account”. This can’t be undone.
@@ -557,7 +557,7 @@ export function AccountSection() {
           className="mt-3 h-11 flex-row items-center justify-center gap-1.5 self-start rounded-lg border border-destructive/40 bg-background px-4 active:scale-[0.96]"
         >
           <Feather name="trash-2" size={14} color="#c52020" />
-          <Text className="font-sans-semibold text-sm text-destructive">Delete account…</Text>
+          <Text className="font-sans-semibold text-sm text-destructive-text">Delete account…</Text>
         </Pressable>
       </View>
 

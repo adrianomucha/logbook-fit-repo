@@ -21,6 +21,8 @@
     /* 45% lightness keeps red text on white and white text on red ≥4.5:1 (WCAG AA) */
     --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 98%;
+    /* Red as small text (chips, inline errors). Same as the fill in light mode */
+    --destructive-text: 0 72% 45%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
     --ring: 0 0% 3.9%;
@@ -65,6 +67,8 @@
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
+    /* The dark fill is ~2:1 as text on the background; this cut is ~7:1 */
+    --destructive-text: 0 91% 71%;
     --border: 0 0% 14.9%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;

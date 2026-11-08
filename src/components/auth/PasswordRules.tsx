@@ -71,7 +71,7 @@ export function PasswordRules({ password }: { password: string }) {
         })}
       </ul>
       {(tooCommon || tooLong) && (
-        <p className="flex items-start gap-1.5 text-xs text-destructive">
+        <p className="flex items-start gap-1.5 text-xs text-destructive-text">
           <AlertTriangle
             className="mt-0.5 h-3 w-3 shrink-0"
             aria-hidden="true"
