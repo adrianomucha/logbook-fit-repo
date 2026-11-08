@@ -62,7 +62,8 @@ export function WorkoutHeader({
             {clockSec !== undefined && (
               <span
                 role="timer"
-                className="mr-2 inline-flex items-center gap-1 font-mono text-sm tabular-nums text-muted-foreground"
+                // The restart button's own padding already spaces it from the clock
+                className={`${isReadOnly && onRestart ? '' : 'mr-2 '}inline-flex items-center gap-1 font-mono text-sm tabular-nums text-muted-foreground`}
               >
                 <Clock className="w-3.5 h-3.5" aria-hidden="true" />
                 <span className="sr-only">{WORKOUT_CLOCK_LABEL} </span>

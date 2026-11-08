@@ -295,7 +295,8 @@ export default function WorkoutScreen() {
                 accessible
                 accessibilityRole="timer"
                 accessibilityLabel={`${WORKOUT_CLOCK_LABEL} ${formatWorkoutClock(clockSec)}`}
-                className="mr-2 flex-row items-center gap-1"
+                // The restart button's own padding already spaces it from the clock
+                className={`${isReadOnly ? '' : 'mr-2 '}flex-row items-center gap-1`}
               >
                 <Feather name="clock" size={13} color="#737373" />
                 <Text className="font-mono text-sm text-muted-foreground" style={{ fontVariant: ['tabular-nums'] }}>
