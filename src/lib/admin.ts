@@ -33,7 +33,7 @@ export function bearerToken(req: Request): string | null {
  * Timing-safe string comparison. Compares via SHA-256 digests so
  * timingSafeEqual accepts unequal lengths.
  */
-function tokenMatches(token: string, expected: string): boolean {
+export function tokenMatches(token: string, expected: string): boolean {
   return timingSafeEqual(
     createHash("sha256").update(token).digest(),
     createHash("sha256").update(expected).digest()

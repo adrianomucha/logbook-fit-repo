@@ -259,22 +259,31 @@ Sessions with nothing logged are never touched. A restart clears both columns.
 The nudge needs the job called every 15 minutes, and Vercel's free plan only
 allows one cron run a day. So `vercel.json` runs it daily at 10:00 UTC as a
 backstop (it still auto-finishes), and the frequent schedule comes from
-Supabase `pg_cron`. One-time setup in the Supabase SQL editor (Database →
-Extensions: enable `pg_cron` and `pg_net` first), with the deployment's real
-host and `CRON_SECRET`:
+Supabase `pg_cron`.
+
+pg_cron authenticates with its own token, not `CRON_SECRET`: the
+`idle_workouts_token` secret in Supabase Vault. The endpoint accepts either,
+and checks this one against the vault (`lib/vault-token.ts`), so the token is
+generated, stored, sent and checked without leaving the database. One-time
+setup in the Supabase SQL editor (Database, Extensions: enable `pg_cron` and
+`pg_net` first):
 
 ```sql
-select vault.create_secret('<CRON_SECRET>', 'cron_secret');
+select vault.create_secret(
+  encode(extensions.gen_random_bytes(32), 'hex'),
+  'idle_workouts_token',
+  'Bearer token pg_cron sends to /api/cron/idle-workouts'
+);
 
 select cron.schedule(
   'idle-workouts',
   '*/15 * * * *',
   $$
   select net.http_get(
-    url := 'https://<host>/api/cron/idle-workouts',
+    url := 'https://logbook.fit/api/cron/idle-workouts',
     headers := jsonb_build_object(
       'Authorization',
-      'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cron_secret')
+      'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'idle_workouts_token')
     ),
     timeout_milliseconds := 30000
   );
@@ -282,8 +291,8 @@ select cron.schedule(
 );
 ```
 
-Rotating `CRON_SECRET` means updating the vault secret too
-(`vault.update_secret`). Overlapping runs are safe: each nudge and each
+To rotate the token, `vault.update_secret` it to a new random value; both
+sides pick it up on the next run. Overlapping runs are safe: each nudge and each
 auto-finish is claimed with a conditional update. Runs land in `cron_runs`
 under `idle-workouts`; `cron.job_run_details` shows whether pg_cron fired.
 
