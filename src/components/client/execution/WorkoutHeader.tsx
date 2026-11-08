@@ -1,4 +1,5 @@
-import { ArrowLeft, RotateCcw } from 'lucide-react';
+import { ArrowLeft, Clock, RotateCcw } from 'lucide-react';
+import { formatWorkoutClock, WORKOUT_CLOCK_LABEL } from '@logbook/shared/workout-clock';
 
 /**
  * Drop a leading "Day N" prefix from the title — the day number already lives in
@@ -20,6 +21,8 @@ interface WorkoutHeaderProps {
   onRestart?: () => void;
   isReadOnly?: boolean;
   completedDate?: string;
+  /** Elapsed workout seconds for the clock; undefined hides it (not started yet). */
+  clockSec?: number;
 }
 
 export function WorkoutHeader({
@@ -31,6 +34,7 @@ export function WorkoutHeader({
   onRestart,
   isReadOnly,
   completedDate,
+  clockSec,
 }: WorkoutHeaderProps) {
   const pct =
     exercisesTotal > 0
@@ -55,6 +59,17 @@ export function WorkoutHeader({
           </button>
 
           <div className="flex items-center gap-1">
+            {clockSec !== undefined && (
+              <span
+                role="timer"
+                // The restart button's own padding already spaces it from the clock
+                className={`${isReadOnly && onRestart ? '' : 'mr-2 '}inline-flex items-center gap-1 font-mono text-sm tabular-nums text-muted-foreground`}
+              >
+                <Clock className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="sr-only">{WORKOUT_CLOCK_LABEL} </span>
+                {formatWorkoutClock(clockSec)}
+              </span>
+            )}
             {isReadOnly && onRestart && (
               <button
                 type="button"

@@ -21,6 +21,7 @@ import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 import { getLoggedSetsCount, NOTHING_LOGGED_COPY } from '@logbook/shared/workout-execution';
 import { formatWeight } from '@logbook/shared/weight-units';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useWorkoutClock } from '@/hooks/useWorkoutClock';
 import { EffortPicker } from '@/components/client/EffortPicker';
 import { workoutTitle } from '@logbook/shared/progress';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
@@ -56,6 +57,11 @@ export function ClientWorkoutExecution() {
   const [isRestarting, setIsRestarting] = useState(false);
   const [messageSheetExercise, setMessageSheetExercise] = useState<WorkoutExercise | null>(null);
   const { weightUnit } = useCurrentUser();
+  const clockSec = useWorkoutClock({
+    startedAt: completion?.startedAt,
+    durationSec: completion?.durationSec,
+    isFinished: isReadOnly,
+  });
   const [completedWorkoutData, setCompletedWorkoutData] = useState<{
     exercisesDone: number;
     exercisesTotal: number;
@@ -437,6 +443,7 @@ export function ClientWorkoutExecution() {
             ? format(new Date(completion.completedAt), 'MMM d')
             : undefined
         }
+        clockSec={clockSec}
       />
 
       {/* Exercise list — open and full-width: bigger tap targets mid-workout */}

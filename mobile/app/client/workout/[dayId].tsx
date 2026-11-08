@@ -19,6 +19,8 @@ import {
 import { apiFetch } from '@/lib/api';
 import { useWorkoutExecution } from '@/hooks/useWorkoutExecution';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { useWorkoutClock } from '@/hooks/useWorkoutClock';
+import { formatWorkoutClock, WORKOUT_CLOCK_LABEL } from '@logbook/shared/workout-clock';
 import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { FlagMessageSheet } from '@/components/workout/FlagMessageSheet';
@@ -58,6 +60,11 @@ export default function WorkoutScreen() {
     updateFlagNote,
     finishWorkout,
   } = useWorkoutExecution(dayId ?? null);
+  const clockSec = useWorkoutClock({
+    startedAt: completion?.startedAt,
+    durationSec: completion?.durationSec,
+    isFinished: isReadOnly,
+  });
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [isFinishing, setIsFinishing] = useState(false);
@@ -283,6 +290,20 @@ export default function WorkoutScreen() {
             <Feather name="arrow-left" size={20} color="#0a0a0a" />
           </Pressable>
           <View className="flex-row items-center gap-1">
+            {clockSec !== undefined ? (
+              <View
+                accessible
+                accessibilityRole="timer"
+                accessibilityLabel={`${WORKOUT_CLOCK_LABEL} ${formatWorkoutClock(clockSec)}`}
+                // The restart button's own padding already spaces it from the clock
+                className={`${isReadOnly ? '' : 'mr-2 '}flex-row items-center gap-1`}
+              >
+                <Feather name="clock" size={13} color="#737373" />
+                <Text className="font-mono text-sm text-muted-foreground" style={{ fontVariant: ['tabular-nums'] }}>
+                  {formatWorkoutClock(clockSec)}
+                </Text>
+              </View>
+            ) : null}
             {isReadOnly ? (
               <Pressable onPress={onRestartPress} disabled={isRestarting} hitSlop={8} accessibilityRole="button" accessibilityLabel="Restart workout" className="h-10 w-10 items-center justify-center active:opacity-70">
                 <Feather name="rotate-ccw" size={18} color="#737373" />
