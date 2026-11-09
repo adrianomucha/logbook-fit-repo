@@ -1,11 +1,13 @@
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Linking, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { ALERTS_COPY } from '@logbook/shared/alerts-copy';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 /**
- * The web's NotificationToggle pill: nothing when push can't work here, a
- * line of copy when permission is blocked, otherwise "Turn on alerts" /
- * "Alerts on".
+ * The bell in the chat header, same as the web's icon-only NotificationToggle:
+ * nothing when push can't work here; a slashed bell on a filled chip while
+ * alerts are off (the nudge); a quiet plain bell once they're on. Blocked
+ * permission keeps the slashed bell, unfilled, and a tap says where to fix it.
  */
 export function NotificationToggle() {
   const { available, isSubscribed, isBlocked, isBusy, isLoading, enable, disable } = usePushNotifications();
@@ -14,10 +16,19 @@ export function NotificationToggle() {
 
   if (isBlocked && !isSubscribed) {
     return (
-      <View className="flex-row items-center gap-1.5">
-        <Feather name="bell-off" size={12} color="#737373" />
-        <Text className="font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">Alerts off in Settings</Text>
-      </View>
+      <Pressable
+        onPress={() =>
+          Alert.alert(ALERTS_COPY.blockedInSettingsTitle, ALERTS_COPY.blockedInSettings, [
+            { text: ALERTS_COPY.notNow, style: 'cancel' },
+            { text: ALERTS_COPY.openSettings, onPress: () => void Linking.openSettings() },
+          ])
+        }
+        accessibilityRole="button"
+        accessibilityLabel={ALERTS_COPY.blockedLabel}
+        className="h-10 w-10 items-center justify-center rounded-full active:opacity-70"
+      >
+        <Feather name="bell-off" size={16} color="#737373" />
+      </Pressable>
     );
   }
 
@@ -26,7 +37,7 @@ export function NotificationToggle() {
       if (isSubscribed) await disable();
       else await enable();
     } catch (e) {
-      Alert.alert("Couldn't update notifications", e instanceof Error ? e.message : undefined);
+      Alert.alert(ALERTS_COPY.failed, e instanceof Error ? e.message : undefined);
     }
   };
 
@@ -36,12 +47,14 @@ export function NotificationToggle() {
       disabled={isBusy}
       accessibilityRole="switch"
       accessibilityState={{ checked: isSubscribed }}
-      className={`min-h-[32px] flex-row items-center gap-1.5 rounded-full px-3 py-1.5 active:opacity-70 ${isSubscribed ? '' : 'bg-muted/60'}`}
+      accessibilityLabel={isSubscribed ? ALERTS_COPY.turnOff : ALERTS_COPY.turnOn}
+      className={`h-10 w-10 items-center justify-center rounded-full active:opacity-70 ${isSubscribed ? '' : 'bg-muted/60'}`}
     >
-      {isBusy ? <ActivityIndicator size="small" color="#737373" /> : <Feather name="bell" size={12} color={isSubscribed ? '#737373' : '#0a0a0a'} />}
-      <Text className={`font-mono-bold text-[10px] uppercase tracking-[1.2px] ${isSubscribed ? 'text-muted-foreground' : 'text-foreground'}`}>
-        {isSubscribed ? 'Alerts on' : 'Turn on alerts'}
-      </Text>
+      {isBusy ? (
+        <ActivityIndicator size="small" color="#737373" />
+      ) : (
+        <Feather name={isSubscribed ? 'bell' : 'bell-off'} size={16} color={isSubscribed ? '#737373' : '#0a0a0a'} />
+      )}
     </Pressable>
   );
 }
