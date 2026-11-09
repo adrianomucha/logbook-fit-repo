@@ -613,7 +613,7 @@ export function UnifiedClientProfile() {
       <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
-          <StateView art={CLIENT_NOT_FOUND_COPY.art} title={CLIENT_NOT_FOUND_COPY.title} tail={CLIENT_NOT_FOUND_COPY.tail}>
+          <StateView fill art={CLIENT_NOT_FOUND_COPY.art} title={CLIENT_NOT_FOUND_COPY.title} tail={CLIENT_NOT_FOUND_COPY.tail}>
             <Button
               onClick={() => router.push('/coach')}
               className="active:scale-[0.96] transition-transform duration-150"
@@ -1307,6 +1307,7 @@ export function UnifiedClientProfile() {
         /* The client trains on their own copy — match against its template */
         currentPlanId={plan?.sourceTemplateId ?? plan?.id}
         clientName={client.name}
+        onCreatePlan={handleCreateNewPlan}
       />
       <PlanEditorDrawer
         open={showPlanDrawer}

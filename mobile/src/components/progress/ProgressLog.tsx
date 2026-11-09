@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LOG_EMPTY_TEXT, LOG_PAGE_WEEKS, type LogBadge, type LogEntry, type LogWeek, type LogWin, type ThisWeek } from '@logbook/shared/progress';
-import { LOG_EMPTY_ART } from '@logbook/shared/state-copy';
-import { StateArt } from '@/components/StateArt';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
@@ -116,14 +114,7 @@ function Entry({ entry, first }: { entry: LogEntry; first: boolean }) {
 export function ProgressLog({ weeks }: { weeks: LogWeek[] }) {
   const [showAll, setShowAll] = useState(false);
   if (weeks.length === 0) {
-    return (
-      <View className="items-center py-2">
-        <View className="mb-3">
-          <StateArt art={LOG_EMPTY_ART} size="sm" />
-        </View>
-        <Text className="max-w-[340px] text-center font-sans text-[15px] leading-6 text-muted-foreground">{LOG_EMPTY_TEXT}</Text>
-      </View>
-    );
+    return <Text className="font-sans text-[15px] leading-6 text-muted-foreground">{LOG_EMPTY_TEXT}</Text>;
   }
   const shown = showAll ? weeks : weeks.slice(0, LOG_PAGE_WEEKS);
   return (

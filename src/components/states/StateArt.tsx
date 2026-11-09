@@ -8,6 +8,7 @@ import {
   artViewBox,
   framedOrigin,
   poseOf,
+  stillPose,
   type ArtKeyframe,
   type ArtTone,
 } from '@logbook/shared/iso-art';
@@ -36,7 +37,7 @@ const ACCENT = {
   warning: { fill: 'fill-warning', stroke: 'stroke-warning' },
 } as const;
 
-const SIZES = { xs: 80, sm: 112, md: 160, lg: 208 } as const;
+const SIZES = { sm: 112, md: 160, lg: 208 } as const;
 
 /** WAAPI eases the segment that starts at a keyframe; ours ease into one. */
 function toWebKeyframes(motion: ArtKeyframe[]): Keyframe[] {
@@ -54,8 +55,8 @@ function toWebKeyframes(motion: ArtKeyframe[]): Keyframe[] {
 
 /**
  * One of the shared isometric state illustrations, looping its motion.
- * Decorative: the heading beside it carries the meaning. Renders its rest
- * pose on the server and under reduced motion.
+ * Decorative: the heading beside it carries the meaning. Shows the loop's
+ * first frame on the server and under reduced motion.
  */
 export function StateArt({
   art,
@@ -97,11 +98,18 @@ export function StateArt({
     >
       {def.layers.map((layer) => {
         const [ox, oy] = framedOrigin(def, layer);
+        const still = stillPose(layer.motion);
         return (
           <g
             key={layer.id}
             data-layer={layer.id}
-            style={{ transformBox: 'view-box', transformOrigin: `${ox}px ${oy}px` }}
+            style={{
+              transformBox: 'view-box',
+              transformOrigin: `${ox}px ${oy}px`,
+              // The still picture; the loop takes over once it starts
+              opacity: still.opacity,
+              transform: `translate(${still.x}px, ${still.y}px) rotate(${still.rotate}deg) scale(${still.scale})`,
+            }}
           >
             {layer.shapes.map((s, i) => (
               <path

@@ -4,7 +4,6 @@ import { avatarColor } from '@/lib/avatar-colors';
 import { cn } from '@/lib/utils';
 import { WELCOME_COPY } from '@logbook/shared/client-empty-states';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
-import { StateArt } from '@/components/states/StateArt';
 
 interface WelcomeAwaitingPlanProps {
   clientName: string;
@@ -40,8 +39,6 @@ export function WelcomeAwaitingPlan({
     <div className="space-y-5 sm:space-y-6 animate-enter">
       {/* Welcome header */}
       <div className="pt-2 sm:pt-4">
-        {/* The plan being stacked together, sheet by sheet */}
-        <StateArt art={WELCOME_COPY.art} size="sm" className="-ml-2 mb-2" />
         <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5 antialiased">
           {WELCOME_COPY.eyebrow}
         </p>

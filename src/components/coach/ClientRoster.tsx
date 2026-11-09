@@ -8,8 +8,7 @@ import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { usePastClients } from '@/hooks/api/useCoachClients';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { ALL_CLEAR_COPY, NO_MATCH_COPY } from '@logbook/shared/state-copy';
-import { StateArt } from '@/components/states/StateArt';
+import { NO_MATCH_COPY } from '@logbook/shared/state-copy';
 import { StateView } from '@/components/states/StateView';
 import {
   ROSTER_COPY,
@@ -221,7 +220,7 @@ export function ClientRoster({ clients }: ClientRosterProps) {
             onClick={() => setQuery('')}
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors tap-target"
           >
-            Clear search
+            {NO_MATCH_COPY.clear}
           </button>
         </StateView>
       ) : sortMode === 'name' ? (
@@ -238,13 +237,10 @@ export function ClientRoster({ clients }: ClientRosterProps) {
             </section>
           ) : (
             !isSearching && (
-              <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card pl-2 pr-4 py-2 animate-enter">
-                <StateArt art={ALL_CLEAR_COPY.art} size="xs" />
-                <p className="text-sm font-semibold leading-snug tracking-tight antialiased">
-                  {ALL_CLEAR_COPY.title}
-                  <span className="block font-normal text-muted-foreground">{ROSTER_COPY.allClear}</span>
-                </p>
-              </div>
+              <p className="flex items-center gap-2 rounded-2xl border border-border/70 bg-card px-4 py-3.5 text-sm font-medium antialiased">
+                <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" aria-hidden="true" />
+                {ROSTER_COPY.allClear}
+              </p>
             )
           )}
           {groups.rest.length > 0 && (

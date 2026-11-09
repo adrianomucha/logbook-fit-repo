@@ -87,7 +87,14 @@ export function PlanTemplateList({
       )}
 
       {sections.length === 0 && q && (
-        <StateView size="sm" art={NO_MATCH_COPY.art} title={NO_MATCH_COPY.title(query.trim())} tail={NO_MATCH_COPY.plans} />
+        <StateView size="sm" art={NO_MATCH_COPY.art} title={NO_MATCH_COPY.title(query.trim())} tail={NO_MATCH_COPY.plans}>
+          <button
+            onClick={() => setQuery('')}
+            className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors tap-target"
+          >
+            {NO_MATCH_COPY.clear}
+          </button>
+        </StateView>
       )}
 
       {sections.map((section, si) => {

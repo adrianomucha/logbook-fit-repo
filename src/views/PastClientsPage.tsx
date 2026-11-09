@@ -114,11 +114,15 @@ export function PastClientsPage() {
           </div>
         ) : pastClients.length === 0 ? (
           <StateView
+            fill
             art={NO_PAST_CLIENTS_COPY.art}
             title={NO_PAST_CLIENTS_COPY.title}
             tail={NO_PAST_CLIENTS_COPY.tail}
-            body={NO_PAST_CLIENTS_COPY.body}
-          />
+          >
+            <Button onClick={() => router.push('/coach')} className="active:scale-[0.96] transition-transform duration-150">
+              {NO_PAST_CLIENTS_COPY.back}
+            </Button>
+          </StateView>
         ) : (
           <div className="bg-card rounded-2xl divide-y divide-border/50 overflow-hidden border border-border/70 animate-enter">
             {pastClients.map((client) => (

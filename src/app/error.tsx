@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { reportClientError } from '@/lib/report-client-error';
+import Link from 'next/link';
 import { CRASH_COPY } from '@logbook/shared/state-copy';
 import { StateView } from '@/components/states/StateView';
 
@@ -33,6 +34,13 @@ export default function Error({
         >
           {CRASH_COPY.retry}
         </button>
+        {/* Retrying can fail the same way: always leave a way out */}
+        <Link
+          href="/"
+          className="inline-flex items-center h-11 px-6 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          {CRASH_COPY.home}
+        </Link>
       </StateView>
     </div>
   );

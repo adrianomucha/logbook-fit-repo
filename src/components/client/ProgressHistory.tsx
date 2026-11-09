@@ -3,6 +3,9 @@ import { WorkoutPlan, WorkoutCompletion, CheckIn } from '@/types';
 import { DEFAULT_WORKOUTS_PER_WEEK } from '@/lib/workout-helpers';
 import { ProgressLog, WeekCircles } from './progress/ProgressLog';
 import { buildProgressLog, describeThisWeek } from '@logbook/shared/progress';
+import { LOG_EMPTY_COPY } from '@logbook/shared/client-empty-states';
+import { StateView } from '@/components/states/StateView';
+import { Button } from '@/components/ui/button';
 import type { PersonalBest } from '@logbook/shared/personal-bests';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 
@@ -22,6 +25,8 @@ interface ProgressHistoryProps {
   weekNumber: number | null;
   /** A workout of this week started but not finished */
   startedDayId?: string | null;
+  /** The way out of an empty log: go train */
+  onOpenWorkout?: () => void;
 }
 
 /**
@@ -39,6 +44,7 @@ export function ProgressHistory({
   totalWorkouts,
   weekNumber,
   startedDayId,
+  onOpenWorkout,
 }: ProgressHistoryProps) {
   const target = plan?.workoutsPerWeek || DEFAULT_WORKOUTS_PER_WEEK;
   const { weightUnit } = useCurrentUser();
@@ -51,6 +57,20 @@ export function ProgressHistory({
       buildProgressLog({ completions: workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit, totalWorkouts }),
     [workoutCompletions, plans, personalBests, checkIns, coachName, weightUnit, totalWorkouts]
   );
+
+  // Nothing logged yet: empty week circles over an empty log say nothing, so
+  // the tab is one centered state that points at the workout instead
+  if (weeks.length === 0) {
+    return (
+      <StateView fill art={LOG_EMPTY_COPY.art} title={LOG_EMPTY_COPY.title} tail={LOG_EMPTY_COPY.tail}>
+        {onOpenWorkout && (
+          <Button onClick={onOpenWorkout} className="active:scale-[0.96] transition-transform duration-150">
+            {LOG_EMPTY_COPY.cta}
+          </Button>
+        )}
+      </StateView>
+    );
+  }
 
   return (
     <div className="animate-fade-in-up">
