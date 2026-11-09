@@ -87,7 +87,7 @@ function ghostSheet(z: number): ArtShape[] {
 
 const plans: StateArt = {
   id: 'plans',
-  frame: [-2.5, -6],
+  frame: [25.5, -2],
   duration: 3200,
   accent: 'brand',
   layers: [
@@ -131,7 +131,7 @@ const drop = (start: number): ArtKeyframe[] => [
 
 const building: StateArt = {
   id: 'building',
-  frame: [-2.5, 1],
+  frame: [25.5, 5],
   duration: 3600,
   accent: 'brand',
   layers: [
@@ -175,7 +175,7 @@ const typingDot = (i: number): ArtLayer =>
 
 const inbox: StateArt = {
   id: 'inbox',
-  frame: [0, 0.5],
+  frame: [25, 5],
   duration: 3400,
   accent: 'brand',
   layers: [
@@ -227,7 +227,7 @@ const checkAt: [number, number] = [btnTop[0], btnTop[1] - 30];
 
 const caughtUp: StateArt = {
   id: 'caughtUp',
-  frame: [0, -4.5],
+  frame: [28, -0.5],
   duration: 3000,
   accent: 'brand',
   layers: [
@@ -309,7 +309,7 @@ const settle = (at: number): ArtKeyframe[] => [
 
 const plates: StateArt = {
   id: 'plates',
-  frame: [6, 2],
+  frame: [24.5, 8],
   duration: 3200,
   accent: 'brand',
   layers: [
@@ -340,7 +340,7 @@ const slotY = CAL.y + 13;
 
 const week: StateArt = {
   id: 'week',
-  frame: [1.5, 10.5],
+  frame: [29.5, 14.5],
   duration: 3200,
   accent: 'brand',
   layers: [
@@ -394,7 +394,7 @@ function pencil(): ArtShape[] {
 
 const logbook: StateArt = {
   id: 'logbook',
-  frame: [-18, 0],
+  frame: [10, 4],
   duration: 3400,
   accent: 'brand',
   layers: [
@@ -436,7 +436,7 @@ const gap = iso(SOCKET.x + SOCKET.w + 4, 19, 10);
 
 const unplugged: StateArt = {
   id: 'unplugged',
-  frame: [-11, -0.5],
+  frame: [17, 3.5],
   duration: 2800,
   accent: 'warning',
   layers: [
@@ -529,7 +529,7 @@ const ticketFoot = iso(TICKET.x + TICKET.w / 2, TICKET.y + TICKET.d / 2, 0);
 
 const noCoach: StateArt = {
   id: 'noCoach',
-  frame: [8.5, -8],
+  frame: [33, -3],
   duration: 3000,
   accent: 'brand',
   layers: [
@@ -560,7 +560,7 @@ const KB_BASE: [number, number] = [KB.x, KB.y + KB.r - 1];
 
 const lost: StateArt = {
   id: 'lost',
-  frame: [-2, 6.5],
+  frame: [25.5, 10],
   duration: 3000,
   accent: 'brand',
   layers: [
@@ -631,7 +631,7 @@ const sweep: ArtKeyframe[] = [
 
 const search: StateArt = {
   id: 'search',
-  frame: [-10, 1],
+  frame: [17.5, 5],
   duration: 3600,
   accent: 'brand',
   layers: [

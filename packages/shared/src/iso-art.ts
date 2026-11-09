@@ -14,7 +14,7 @@ const COS30 = Math.cos(Math.PI / 6);
 const SIN30 = 0.5;
 
 /** The frame every illustration is shown in. Fixed, so stroke weights match. */
-export const ART_VIEWBOX = { width: 160, height: 100 } as const;
+export const ART_VIEWBOX = { width: 104, height: 92 } as const;
 
 /** Where world (0, 0, 0) lands in the viewBox. */
 const ORIGIN = { x: 80, y: 40 } as const;
@@ -78,8 +78,10 @@ export interface ArtLayer {
 export interface StateArt {
   id: string;
   /**
-   * Top-left of the visible frame in drawing units: centers this scene's
-   * drawing (with all its motion) in the ART_VIEWBOX-sized frame.
+   * Top-left of the visible frame in drawing units. Set so the scene's
+   * subject (everything but the sparkles, across its whole loop) sits at the
+   * frame's center, and so every layer at every pose stays inside the frame:
+   * native SVG clips at the edge.
    */
   frame: [number, number];
   /** Loop length in ms */
@@ -90,7 +92,7 @@ export interface StateArt {
   layers: ArtLayer[];
 }
 
-export const ART_STROKE = 1.5;
+export const ART_STROKE = 1.3;
 
 // ── Projection ──────────────────────────────────────────────────────────────
 
