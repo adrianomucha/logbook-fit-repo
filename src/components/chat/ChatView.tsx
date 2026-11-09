@@ -275,7 +275,7 @@ export function ChatView({
           tabIndex={0}
           role="log"
           aria-label="Message history"
-          className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-md"
+          className="flex-1 min-h-0 overflow-y-auto px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-md"
         >
           <div className={cn("flex flex-col min-h-full", clientMessages.length === 0 ? "justify-center" : "justify-end")}>
             <div
@@ -397,69 +397,44 @@ export function ChatView({
                       )}
                       <div
                         className={cn(
-                          'max-w-[80%] sm:max-w-[65%] px-4 py-2.5',
-                          isCurrentUser ? 'bg-foreground text-background' : 'bg-muted/50'
+                          'max-w-[80%] sm:max-w-[65%] min-w-0 flex flex-col gap-[5px]',
+                          isCurrentUser ? 'items-end' : 'items-start'
                         )}
-                        style={bubbleRadius(isCurrentUser, isFirstInGroup, isLastInGroup)}
                       >
-                        {/* Exercise context card */}
+                        {/* The exercise sits above the bubble as its own
+                            outlined attachment, the way a link preview does.
+                            Nesting it inside the bubble stacked a panel on a
+                            bubble on a card. */}
                         {message.exerciseContext && (
-                          <div className={cn(
-                            'rounded-lg px-3 py-2.5 mb-2 -mx-0.5',
-                            // Brand: a raised panel with a hairline edge all
-                            // round, so the card lifts off the bubble without
-                            // a side rail
-                            isCurrentUser
-                              ? isBrand
-                                ? 'bg-background/15 ring-1 ring-inset ring-background/10'
-                                : 'bg-background/10'
-                              : isBrand
-                                ? 'bg-background ring-1 ring-inset ring-border'
-                                : 'bg-muted/50'
-                          )}>
-                            {/* Label opacities are contrast-bound (WCAG AA 4.5:1):
-                                incoming needs 70 (50 was 3.7:1 on light); the
-                                default outgoing keeps 50 (5.0:1 on near-black).
-                                The brand eyebrow is volt on ink — the logo's
-                                pairing — and on the light incoming card, where
-                                volt text would fail contrast, a volt dot. */}
-                            {isBrand ? (
-                              <p className={cn(
-                                'flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] font-semibold mb-1',
-                                isCurrentUser ? 'text-brand' : 'text-foreground/70'
-                              )}>
-                                {!isCurrentUser && <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />}
-                                Exercise
-                              </p>
-                            ) : (
-                              <p className={cn(
-                                'text-[10px] uppercase tracking-[0.12em] font-medium mb-0.5',
-                                isCurrentUser ? 'opacity-50' : 'opacity-70'
-                              )}>Exercise</p>
-                            )}
-                            <p className={cn('font-bold tracking-tight truncate', isBrand ? 'text-[15px]' : 'text-sm')}>{message.exerciseContext.exerciseName}</p>
-                            <p className={cn(
-                              'text-[10px] uppercase tracking-[0.12em] font-medium mt-0.5',
-                              isCurrentUser ? (isBrand ? 'opacity-80' : 'opacity-50') : 'opacity-70'
-                            )}>
+                          <div
+                            className="max-w-full border border-border px-3.5 py-2.5"
+                            style={bubbleRadius(isCurrentUser, isFirstInGroup, false)}
+                          >
+                            <p className="text-[15px] font-bold tracking-tight truncate">{message.exerciseContext.exerciseName}</p>
+                            <p className="font-mono text-[11px] text-muted-foreground mt-0.5">
                               {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets
                             </p>
                             {message.exerciseContext.flagNote && (
-                              <p className={cn(
-                                'font-prose text-[13px] mt-1.5 italic',
-                                isBrand && isCurrentUser ? 'opacity-80' : 'opacity-70'
-                              )}>
+                              <p className="font-prose text-[13px] mt-1.5 italic text-foreground/70">
                                 &ldquo;{message.exerciseContext.flagNote}&rdquo;
                               </p>
                             )}
                           </div>
                         )}
 
-                        {/* The card above already carries the flag context the
-                            text repeats at its top — show only the question */}
-                        <p className="font-prose text-[15px] leading-[1.55] whitespace-pre-wrap">
-                          {message.exerciseContext ? stripFlagContext(message.content) : message.content}
-                        </p>
+                        <div
+                          className={cn(
+                            'max-w-full px-4 py-2.5',
+                            isCurrentUser ? 'bg-foreground text-background' : 'bg-muted/50'
+                          )}
+                          style={bubbleRadius(isCurrentUser, isFirstInGroup && !message.exerciseContext, isLastInGroup)}
+                        >
+                          {/* The card above already carries the flag context the
+                              text repeats at its top — show only the question */}
+                          <p className="font-prose text-[15px] leading-[1.55] whitespace-pre-wrap">
+                            {message.exerciseContext ? stripFlagContext(message.content) : message.content}
+                          </p>
+                        </div>
                       </div>
                     </div>
 
@@ -510,7 +485,7 @@ export function ChatView({
         )}
 
         {/* Input bar — hairline separator anchors the composer, like card footers elsewhere */}
-        <div className="px-3 sm:px-4 py-2.5 border-t border-border/50">
+        <div className="px-4 py-2.5 border-t border-border/50">
           <div className="flex gap-2 items-center">
             <label htmlFor="chat-message-input" className="sr-only">
               Message to {client.name}
