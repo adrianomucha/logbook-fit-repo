@@ -479,10 +479,10 @@ export function ClientDashboard() {
                 />
               ) : (
                 <StateView
+                  fill
                   art={PROGRESS_BEFORE_PLAN_COPY.art}
                   title={PROGRESS_BEFORE_PLAN_COPY.title}
                   tail={PROGRESS_BEFORE_PLAN_COPY.tail}
-                  body={PROGRESS_BEFORE_PLAN_COPY.body}
                 />
               )}
             </>
@@ -583,6 +583,7 @@ export function ClientDashboard() {
           <section aria-label="Week unavailable">
             {isNotFound(weekError) ? (
               <StateView
+                fill
                 art={WEEK_NOT_BUILT_COPY.art}
                 title={WEEK_NOT_BUILT_COPY.title}
                 tail={WEEK_NOT_BUILT_COPY.tail(coach?.user.name)}
@@ -592,7 +593,7 @@ export function ClientDashboard() {
                 </Button>
               </StateView>
             ) : (
-              <StateView art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
+              <StateView fill art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
                 <Button onClick={() => refreshWeek()} className="active:scale-[0.96] transition-transform duration-150">
                   {LOAD_ERROR_COPY.retry}
                 </Button>
@@ -650,6 +651,7 @@ export function ClientDashboard() {
               plan={plan}
               currentWeekNumber={weekOverview.weekNumber}
               completions={clientWorkoutCompletions}
+              coachName={coach?.user.name}
             />
           </>
         )}

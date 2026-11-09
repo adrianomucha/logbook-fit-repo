@@ -15,7 +15,7 @@ export const NO_COACH_COPY = {
   art: 'noCoach' satisfies StateArtId,
   title: 'No coach connected.',
   tail: 'Your workout history is still saved.',
-  body: 'Got an invite link from a coach? Open it and sign in to accept.',
+  body: 'Open an invite link and sign in to accept.',
 } as const;
 
 /** The plan's current week has no workouts in it (or no week matches yet). */
@@ -24,12 +24,11 @@ export const EMPTY_WEEK_COPY = {
   title: 'Nothing scheduled this week.',
   tail: 'Rest is part of the plan.',
   body: (coachName: string | null | undefined) =>
-    `${coachFirst(coachName)} hasn't added workouts for this week yet. Message them if you were expecting one.`,
+    `Expecting one? Message ${coachName?.split(' ')[0] || 'your coach'}.`,
 } as const;
 
 /** Signed up, no plan yet: the welcome on the Workout tab */
 export const WELCOME_COPY = {
-  art: 'building' satisfies StateArtId,
   eyebrow: 'Getting started',
   title: (clientFirstName: string) => `You're in, ${clientFirstName}`,
   body: (coachName: string) => `${coachName} is putting your training plan together.`,
@@ -66,5 +65,4 @@ export const PROGRESS_BEFORE_PLAN_COPY = {
   art: 'plates' satisfies StateArtId,
   title: 'Your progress starts here.',
   tail: 'Every workout adds to the stack.',
-  body: 'Once your plan arrives and you log your first workout, your wins show up here.',
 } as const;

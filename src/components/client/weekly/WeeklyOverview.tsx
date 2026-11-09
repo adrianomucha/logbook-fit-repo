@@ -14,6 +14,8 @@ interface WeeklyOverviewProps {
    *  source of truth. Recomputing it client-side can disagree across timezones. */
   currentWeekNumber: number;
   completions: WorkoutCompletion[];
+  /** Named in the "not set up yet" state, as on Today */
+  coachName?: string | null;
 }
 
 export function WeeklyOverview({
@@ -21,6 +23,7 @@ export function WeeklyOverview({
   plan,
   currentWeekNumber,
   completions,
+  coachName,
 }: WeeklyOverviewProps) {
   const router = useRouter();
 
@@ -50,11 +53,11 @@ export function WeeklyOverview({
   if (!currentWeek) {
     return (
       <StateView
+        fill
         as="h3"
         art={WEEK_NOT_BUILT_COPY.art}
-        kicker={`Week ${currentWeekNumber}`}
         title={WEEK_NOT_BUILT_COPY.title}
-        tail={WEEK_NOT_BUILT_COPY.tail(null)}
+        tail={WEEK_NOT_BUILT_COPY.tail(coachName)}
       />
     );
   }

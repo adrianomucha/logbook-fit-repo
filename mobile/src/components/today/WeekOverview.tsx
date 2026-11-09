@@ -10,17 +10,19 @@ interface WeekOverviewProps {
   durationWeeks: number;
   days: WeekDayInfo[];
   onOpenDay: (day: WeekDayInfo) => void;
+  /** Named in the "not set up yet" state, as on Today */
+  coachName?: string | null;
 }
 
 /** The "This week" view: week header and the day checklist, the web's WeeklyOverview. */
-export function WeekOverview({ planName, weekNumber, durationWeeks, days, onOpenDay }: WeekOverviewProps) {
+export function WeekOverview({ planName, weekNumber, durationWeeks, days, onOpenDay, coachName }: WeekOverviewProps) {
   if (days.length === 0) {
     return (
       <EmptyState
+        fill
         art={WEEK_NOT_BUILT_COPY.art}
-        eyebrow={`Week ${weekNumber}`}
         title={WEEK_NOT_BUILT_COPY.title}
-        tail={WEEK_NOT_BUILT_COPY.tail(null)}
+        tail={WEEK_NOT_BUILT_COPY.tail(coachName)}
       />
     );
   }

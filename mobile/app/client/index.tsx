@@ -131,7 +131,7 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
+        <EmptyState fill art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
       </Screen>
     );
   }
@@ -155,7 +155,7 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState art={WEEK_NOT_BUILT_COPY.art} title={WEEK_NOT_BUILT_COPY.title} tail={WEEK_NOT_BUILT_COPY.tail(coach.user.name)}>
+        <EmptyState fill art={WEEK_NOT_BUILT_COPY.art} title={WEEK_NOT_BUILT_COPY.title} tail={WEEK_NOT_BUILT_COPY.tail(coach.user.name)}>
           <Button variant="primary" className="h-11 w-full" onPress={() => router.push('/client/chat')}>
             {WEEK_NOT_BUILT_COPY.message(coach.user.name)}
           </Button>
@@ -167,7 +167,7 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
+        <EmptyState fill art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
           <Button variant="primary" className="h-11 w-full" onPress={refresh}>
             {LOAD_ERROR_COPY.retry}
           </Button>
@@ -295,6 +295,7 @@ export default function TodayScreen() {
             durationWeeks={weekOverview.plan.durationWeeks}
             days={weekDays}
             onOpenDay={openDay}
+            coachName={coach.user.name}
           />
         </>
       ) : weekOverview?.startsOn ? (
@@ -352,6 +353,7 @@ export default function TodayScreen() {
         )
       ) : (
         <EmptyState
+          fill
           art={EMPTY_WEEK_COPY.art}
           title={EMPTY_WEEK_COPY.title}
           tail={EMPTY_WEEK_COPY.tail}

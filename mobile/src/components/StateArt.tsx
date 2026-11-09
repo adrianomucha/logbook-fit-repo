@@ -16,7 +16,7 @@ import {
   ART_EASES,
   ART_STROKE,
   ART_VIEWBOX,
-  REST_POSE,
+  stillPose,
   artViewBox,
   framedOrigin,
   motionSegments,
@@ -37,7 +37,7 @@ const PAINT: Record<Exclude<ArtTone, 'accent'>, string> = {
 };
 const ACCENT = { brand: '#c3f910', warning: '#f59f0a' } as const;
 
-const SIZES = { xs: 80, sm: 112, md: 160, lg: 208 } as const;
+const SIZES = { sm: 112, md: 160, lg: 208 } as const;
 
 type PoseKey = keyof ArtPose;
 const KEYS: PoseKey[] = ['x', 'y', 'scale', 'rotate', 'opacity'];
@@ -79,11 +79,14 @@ function ArtLayerView({
   const height = ART_VIEWBOX.height * k;
   const [ox, oy] = framedOrigin(art, layer);
 
-  const x = useSharedValue(REST_POSE.x);
-  const y = useSharedValue(REST_POSE.y);
-  const scale = useSharedValue(REST_POSE.scale);
-  const rotate = useSharedValue(REST_POSE.rotate);
-  const opacity = useSharedValue(REST_POSE.opacity);
+  // Start on the still picture (the loop's first frame); under Reduce Motion
+  // it stays there
+  const still = stillPose(layer.motion);
+  const x = useSharedValue(still.x);
+  const y = useSharedValue(still.y);
+  const scale = useSharedValue(still.scale);
+  const rotate = useSharedValue(still.rotate);
+  const opacity = useSharedValue(still.opacity);
   const values = useMemo(() => ({ x, y, scale, rotate, opacity }), [x, y, scale, rotate, opacity]);
   const moving = animate && !!layer.motion;
   useLoop(values, layer, duration, moving);
@@ -101,7 +104,7 @@ function ArtLayerView({
   const paint = (tone: ArtTone) => (tone === 'accent' ? accent : PAINT[tone]);
 
   return (
-    <Animated.View style={[StyleSheet.absoluteFill, { transformOrigin: [ox * k, oy * k, 0] }, moving ? style : null]}>
+    <Animated.View style={[StyleSheet.absoluteFill, { transformOrigin: [ox * k, oy * k, 0] }, style]}>
       <Svg width={width} height={height} viewBox={artViewBox(art)}>
         {layer.shapes.map((s, i) => (
           <Path
@@ -122,7 +125,8 @@ function ArtLayerView({
 
 /**
  * One of the shared isometric state illustrations, looping its motion.
- * Same drawing and timing as the web's StateArt; still under Reduce Motion.
+ * Same drawing and timing as the web's StateArt. Under Reduce Motion it
+ * holds the loop's first frame, the still picture.
  */
 export function StateArt({ art, size = 'md' }: { art: StateArtId; size?: keyof typeof SIZES }) {
   const def = STATE_ART[art];

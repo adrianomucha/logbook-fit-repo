@@ -8,7 +8,6 @@ export default function NotFound() {
       <StateView
         as="h1"
         art={PAGE_NOT_FOUND_COPY.art}
-        kicker={PAGE_NOT_FOUND_COPY.kicker}
         title={PAGE_NOT_FOUND_COPY.title}
         tail={PAGE_NOT_FOUND_COPY.tail}
       >

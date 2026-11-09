@@ -77,10 +77,10 @@ export default function ProgressScreen() {
         // Nothing to show before the first workout; a client whose plan was
         // unassigned still sees their history. The web does the same.
         <EmptyState
+          fill
           art={PROGRESS_BEFORE_PLAN_COPY.art}
           title={PROGRESS_BEFORE_PLAN_COPY.title}
           tail={PROGRESS_BEFORE_PLAN_COPY.tail}
-          body={PROGRESS_BEFORE_PLAN_COPY.body}
         />
       ) : (
         <>

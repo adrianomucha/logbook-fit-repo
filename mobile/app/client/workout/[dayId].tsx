@@ -232,7 +232,7 @@ export default function WorkoutScreen() {
   if (error || !day) {
     const copy = error ? WORKOUT_LOAD_ERROR_COPY : WORKOUT_NOT_FOUND_COPY;
     return (
-      <View className="flex-1 bg-background px-5" style={{ paddingTop: insets.top + 24 }}>
+      <View className="flex-1 justify-center bg-background px-5" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
         <EmptyState art={copy.art} title={copy.title} tail={copy.tail}>
           <Button variant="primary" className="w-full" onPress={goBack}>{copy.back}</Button>
         </EmptyState>

@@ -78,10 +78,10 @@ export interface ArtLayer {
 export interface StateArt {
   id: string;
   /**
-   * Top-left of the visible frame in drawing units. Set so the scene's
-   * subject (everything but the sparkles, across its whole loop) sits at the
-   * frame's center, and so every layer at every pose stays inside the frame:
-   * native SVG clips at the edge.
+   * Top-left of the visible frame in drawing units. Set so the still
+   * picture (the loop's first frame) sits at the frame's center, and so
+   * every layer at every pose stays inside the frame: native SVG clips at
+   * the edge.
    */
   frame: [number, number];
   /** Loop length in ms */
@@ -207,22 +207,6 @@ export function solidBox(
   return [solid(f.left, sides), solid(f.right, sides), solid(f.top, top)];
 }
 
-/** Cylinder drawn as two shapes */
-export function solidCylinder(
-  cx: number, cy: number, z: number, r: number, h: number,
-  { top = 'paper', side = 'shade' }: { top?: ArtTone; side?: ArtTone } = {},
-): ArtShape[] {
-  const f = cylinder(cx, cy, z, r, h);
-  return [solid(f.side, side), solid(f.top, top)];
-}
-
-/** Small diamond, the sparkle accent. Size is its half-width in viewBox units. */
-export function sparkle(x: number, y: number, z: number, s = 3.2): string {
-  const [cx, cy] = iso(x, y, z);
-  const h = s * 0.7;
-  return flat([[cx - s, cy], [cx, cy - h], [cx + s, cy], [cx, cy + h]]);
-}
-
 // ── Motion ──────────────────────────────────────────────────────────────────
 
 export interface ArtPose {
@@ -246,6 +230,15 @@ export function artViewBox(art: StateArt): string {
 }
 
 export const REST_POSE: ArtPose = { x: 0, y: 0, scale: 1, rotate: 0, opacity: 1 };
+
+/**
+ * The pose a layer shows when nothing is playing: its loop's first frame.
+ * Renderers draw this on the server and under reduced motion, so parts that
+ * only belong to the motion stay hidden in the still picture.
+ */
+export function stillPose(motion: ArtKeyframe[] | undefined): ArtPose {
+  return motion?.length ? poseOf(motion[0]) : REST_POSE;
+}
 
 export function poseOf(k: ArtKeyframe): ArtPose {
   return {
@@ -271,7 +264,7 @@ function bezierAt(p1x: number, p1y: number, p2x: number, p2y: number, t: number)
   return coord((lo + hi) / 2, p1y, p2y);
 }
 
-/** The layer's pose at loop progress t (0..1). Used for previews and tests. */
+/** The layer's pose at loop progress t (0..1) */
 export function samplePose(motion: ArtKeyframe[] | undefined, t: number): ArtPose {
   if (!motion || motion.length === 0) return REST_POSE;
   let prev = motion[0];

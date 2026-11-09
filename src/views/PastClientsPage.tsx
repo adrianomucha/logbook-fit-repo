@@ -114,10 +114,10 @@ export function PastClientsPage() {
           </div>
         ) : pastClients.length === 0 ? (
           <StateView
+            fill
             art={NO_PAST_CLIENTS_COPY.art}
             title={NO_PAST_CLIENTS_COPY.title}
             tail={NO_PAST_CLIENTS_COPY.tail}
-            body={NO_PAST_CLIENTS_COPY.body}
           />
         ) : (
           <div className="bg-card rounded-2xl divide-y divide-border/50 overflow-hidden border border-border/70 animate-enter">

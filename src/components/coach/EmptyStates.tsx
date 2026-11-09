@@ -8,18 +8,18 @@ import { StateView } from '@/components/states/StateView';
 const voltCta =
   'h-11 px-6 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-[background-color,transform] duration-150';
 
-/** Branded load-failure state: the unplugged scene in amber, a pulsing
-    amber kicker, and a volt retry CTA. Must never masquerade as an empty
-    state: the kicker, the amber and the art carry the distinction. */
+/** Branded load-failure state: the unplugged scene with its amber alert, and
+    a volt retry CTA. Must never masquerade as an empty state: the amber art
+    and the "couldn't load" headline carry the distinction. */
 export function LoadErrorState({
   copy,
   onRetry,
 }: {
-  copy: { art: StateArtId; kicker: string; title: string; tail: string };
+  copy: { art: StateArtId; title: string; tail: string };
   onRetry: () => void;
 }) {
   return (
-    <StateView art={copy.art} kicker={copy.kicker} tone="warning" title={copy.title} tail={copy.tail}>
+    <StateView fill art={copy.art} title={copy.title} tail={copy.tail}>
       <Button onClick={onRetry} className={voltCta}>
         <RefreshCw className="w-4 h-4" />
         Try again
@@ -37,8 +37,8 @@ export function EmptyStateNoPlans({
 }) {
   return (
     <StateView
+      fill
       art={NO_PLANS_COPY.art}
-      kicker={NO_PLANS_COPY.kicker}
       title={NO_PLANS_COPY.title}
       tail={NO_PLANS_COPY.tail}
       body={NO_PLANS_COPY.body}

@@ -90,6 +90,7 @@ export function TodayFocusView({
           leaving the page at a bare greeting */}
       {!todayWorkout?.workoutDay && !todayCompletion && (
         <StateView
+          fill
           art={EMPTY_WEEK_COPY.art}
           title={EMPTY_WEEK_COPY.title}
           tail={EMPTY_WEEK_COPY.tail}

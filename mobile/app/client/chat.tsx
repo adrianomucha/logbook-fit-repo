@@ -40,7 +40,7 @@ export default function ChatScreen() {
     <KeyboardAvoidingView className="flex-1 bg-background" behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <AppHeader />
       {!coach || !coachUserId ? (
-        <View className="flex-1 px-5">
+        <View className="flex-1 justify-center px-5">
           <EmptyState art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
         </View>
       ) : (

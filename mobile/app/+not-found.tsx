@@ -12,7 +12,6 @@ export default function NotFound() {
     <View className="flex-1 justify-center bg-background px-5" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
       <EmptyState
         art={PAGE_NOT_FOUND_COPY.art}
-        eyebrow={PAGE_NOT_FOUND_COPY.kicker}
         title={PAGE_NOT_FOUND_COPY.title}
         tail={PAGE_NOT_FOUND_COPY.tail}
       >

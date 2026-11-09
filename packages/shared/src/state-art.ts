@@ -5,8 +5,10 @@
  * one accent per scene: volt when the news is fine, amber when something
  * broke. Dashed outlines mark the thing that is not here yet.
  *
- * Each scene's rest pose (no motion applied) is a complete picture: it is
- * what renders under reduced motion and on the server.
+ * Each scene is one object. Its first frame is the still picture, shown
+ * under reduced motion and on the server, so anything that only belongs to
+ * the motion (a dashed sheet dropping in, a typing bubble, a check) starts
+ * the loop hidden.
  */
 import {
   type ArtKeyframe,
@@ -25,8 +27,6 @@ import {
   shadow,
   solid,
   solidBox,
-  solidCylinder,
-  sparkle,
   stroke,
 } from './iso-art';
 
@@ -37,26 +37,12 @@ const layer = (
   origin?: [number, number],
 ): ArtLayer => ({ id, shapes, motion, origin });
 
-/** Twinkle for sparkles: shrink away and come back */
-const twinkle = (start: number): ArtKeyframe[] => [
-  { at: 0, scale: 1 },
-  { at: start, scale: 1 },
-  { at: start + 0.08, scale: 0.2, opacity: 0.4, ease: 'in' },
-  { at: start + 0.18, scale: 1, ease: 'spring' },
-  { at: 1, scale: 1 },
-];
-
 // ── Plans: a stack of plan sheets, a dashed sheet settling on top ──────────
 
 const SHEET = { x: 2, y: -2, w: 32, d: 40, h: 2.5 } as const;
 
-/**
- * Height a dashed sheet hovers at so it clears a stack whose top surface is
- * at `top`: a sheet's isometric footprint is (w + d) / 2 tall on screen, so
- * the dashed outline has to sit that far up, plus a gap, to never cross the
- * rows on the top sheet.
- */
-const hoverAbove = (top: number) => top + (SHEET.w + SHEET.d) / 2 + 2;
+/** How far above the stack the dashed sheet appears before it drops */
+const DROP = 22;
 
 function sheet(z: number, rows: boolean): ArtShape[] {
   const { x, y, w, d, h } = SHEET;
@@ -95,7 +81,7 @@ function ghostSheet(z: number): ArtShape[] {
 
 const plans: StateArt = {
   id: 'plans',
-  frame: [26.5, -12],
+  frame: [26.5, 6.0],
   duration: 3200,
   accent: 'brand',
   layers: [
@@ -111,53 +97,44 @@ const plans: StateArt = {
         { at: 1 },
       ],
     ),
-    // Hovers clear of the stack, then drops onto the top sheet (surface at 11.5)
-    layer('ghost', ghostSheet(hoverAbove(11.5)), [
-      { at: 0 },
-      { at: 0.3 },
-      { at: 0.52, y: hoverAbove(11.5) - 11.5, ease: 'in' },
-      { at: 0.6, y: hoverAbove(11.5) - 11.5, opacity: 0, ease: 'linear' },
-      // Back at its hover height, fading in for the next drop
-      { at: 0.62, y: 0, opacity: 0, ease: 'linear' },
-      { at: 0.94, y: 0, ease: 'out' },
-      { at: 1 },
+    // Only in motion: fades in above the stack, drops onto the top sheet
+    // (surface at 11.5) and disappears into it
+    layer('ghost', ghostSheet(11.5 + DROP), [
+      { at: 0, opacity: 0 },
+      { at: 0.12, opacity: 0 },
+      { at: 0.24, opacity: 1, ease: 'out' },
+      { at: 0.34 },
+      { at: 0.52, y: DROP, ease: 'in' },
+      { at: 0.58, y: DROP, opacity: 0, ease: 'linear' },
+      { at: 1, y: 0, opacity: 0 },
     ]),
   ],
 };
 
 // ── Building: the coach is putting the plan together, sheet by sheet ───────
 
-const drop = (start: number): ArtKeyframe[] => [
-  { at: 0, y: -12, opacity: 0 },
-  { at: start, y: -12, opacity: 0 },
-  { at: start + 0.04, y: -10, ease: 'linear' },
-  { at: start + 0.16, y: 0, ease: 'in' },
-  { at: start + 0.2, y: -0.8, ease: 'out' },
-  { at: start + 0.24, y: 0, ease: 'in' },
-  { at: 0.84, y: 0 },
-  { at: 0.92, y: 0, opacity: 0, ease: 'linear' },
-  { at: 1, y: -12, opacity: 0 },
+/** A sheet lifts off the stack and drops back in, starting at `out` */
+const restack = (out: number, back: number): ArtKeyframe[] => [
+  { at: 0 },
+  { at: out },
+  { at: out + 0.08, y: -12, opacity: 0, ease: 'out' },
+  { at: back, y: -12, opacity: 0 },
+  { at: back + 0.12, y: 0, opacity: 1, ease: 'in' },
+  { at: back + 0.16, y: -0.8, ease: 'out' },
+  { at: back + 0.2, y: 0, ease: 'in' },
+  { at: 1 },
 ];
 
 const building: StateArt = {
   id: 'building',
-  frame: [26.5, -13],
+  frame: [26.5, 6.0],
   duration: 3600,
   accent: 'brand',
   layers: [
     layer('shadow', [sheetShadow()]),
     layer('base', sheet(0, false)),
-    layer('second', [...planTab(5.5), ...sheet(5.5, false)], drop(0.08)),
-    layer('third', sheet(11, true), drop(0.36)),
-    // The next sheet on its way, hovering clear of the finished stack
-    layer('ghost', ghostSheet(hoverAbove(13.5)), [
-      { at: 0, opacity: 0 },
-      { at: 0.6, opacity: 0 },
-      { at: 0.66, opacity: 1, ease: 'linear' },
-      { at: 0.84 },
-      { at: 0.9, opacity: 0, ease: 'linear' },
-      { at: 1, opacity: 0 },
-    ]),
+    layer('second', [...planTab(5.5), ...sheet(5.5, false)], restack(0.12, 0.3)),
+    layer('third', sheet(11, true), restack(0.08, 0.56)),
   ],
 };
 
@@ -186,7 +163,7 @@ const typingDot = (i: number): ArtLayer =>
 
 const inbox: StateArt = {
   id: 'inbox',
-  frame: [25, 5],
+  frame: [21.0, 14.5],
   duration: 3400,
   accent: 'brand',
   layers: [
@@ -216,83 +193,6 @@ const inbox: StateArt = {
     typingDot(0),
     typingDot(1),
     typingDot(2),
-    layer('spark1', [solid(sparkle(-14, 2, 16))], twinkle(0.2), iso(-14, 2, 16)),
-    layer('spark2', [solid(sparkle(50, 0, 10, 2))], twinkle(0.55), iso(50, 0, 10)),
-  ],
-};
-
-// ── Caught up: the button's been pressed, nothing left to answer ───────────
-
-const BTN = { cx: 22, cy: 22 } as const;
-const btnTop = iso(BTN.cx, BTN.cy, 13);
-
-function rays(): ArtShape[] {
-  const [cx, cy] = btnTop;
-  return [-160, -125, -90, -55, -20].map((deg) => {
-    const a = (deg * Math.PI) / 180;
-    return stroke(`M${(cx + Math.cos(a) * 22).toFixed(2)} ${(cy + Math.sin(a) * 16).toFixed(2)}L${(cx + Math.cos(a) * 28).toFixed(2)} ${(cy + Math.sin(a) * 21).toFixed(2)}`);
-  });
-}
-
-const checkAt: [number, number] = [btnTop[0], btnTop[1] - 30];
-
-const caughtUp: StateArt = {
-  id: 'caughtUp',
-  frame: [28, -0.5],
-  duration: 3000,
-  accent: 'brand',
-  layers: [
-    layer('shadow', [shadow(disc(BTN.cx, BTN.cy + 4, 0, 20))]),
-    layer('base', solidCylinder(BTN.cx, BTN.cy, 0, 20, 4)),
-    layer(
-      'ripple',
-      [stroke(disc(BTN.cx, BTN.cy, 4, 20))],
-      [
-        { at: 0, opacity: 0 },
-        { at: 0.12, opacity: 0 },
-        { at: 0.13, opacity: 0.9, ease: 'linear' },
-        { at: 0.5, scale: 1.4, opacity: 0, ease: 'out' },
-        { at: 1, opacity: 0 },
-      ],
-      iso(BTN.cx, BTN.cy, 4),
-    ),
-    layer(
-      'button',
-      [
-        ...solidCylinder(BTN.cx, BTN.cy, 4, 12, 7),
-        ...solidCylinder(BTN.cx, BTN.cy, 11, 5, 2.5, { top: 'shade', side: 'paper' }),
-      ],
-      [
-        { at: 0 },
-        { at: 0.06 },
-        { at: 0.13, y: 3, ease: 'in' },
-        { at: 0.28, y: 0, ease: 'spring' },
-        { at: 1 },
-      ],
-    ),
-    layer('rays', rays(), [
-      { at: 0 },
-      { at: 0.1 },
-      { at: 0.14, opacity: 0.15, ease: 'linear' },
-      { at: 0.32, opacity: 1, ease: 'out' },
-      { at: 1 },
-    ]),
-    layer(
-      'check',
-      [
-        solid(circle(checkAt[0], checkAt[1], 6), 'accent'),
-        stroke(`M${checkAt[0] - 2.6} ${checkAt[1] + 0.2}L${checkAt[0] - 0.6} ${checkAt[1] + 2.2}L${checkAt[0] + 2.8} ${checkAt[1] - 1.8}`, 1.6),
-      ],
-      [
-        { at: 0, scale: 0.4, opacity: 0 },
-        { at: 0.2, scale: 0.4, opacity: 0 },
-        { at: 0.34, scale: 1, opacity: 1, ease: 'spring' },
-        { at: 0.84 },
-        { at: 0.92, scale: 0.6, opacity: 0, ease: 'in' },
-        { at: 1, scale: 0.4, opacity: 0 },
-      ],
-      checkAt,
-    ),
   ],
 };
 
@@ -320,12 +220,11 @@ const settle = (at: number): ArtKeyframe[] => [
 
 const plates: StateArt = {
   id: 'plates',
-  frame: [24.5, 8],
+  frame: [24.5, 6.0],
   duration: 3200,
   accent: 'brand',
   layers: [
-    layer('shadow', [shadow(disc(STACK.cx, STACK.cy + 4, 0, STACK.r)), shadow(disc(46, 40, 0, 9))]),
-    layer('loose', plate(46, 37, 0, 9, 3)),
+    layer('shadow', [shadow(disc(STACK.cx, STACK.cy + 4, 0, STACK.r))]),
     layer('stack', [...plate(STACK.cx, STACK.cy, 0, STACK.r, STACK.h), ...plate(STACK.cx, STACK.cy, 4.5, STACK.r, STACK.h)], settle(0.5)),
     layer('top', plate(STACK.cx, STACK.cy, 9, STACK.r, STACK.h, 'accent'), [
       { at: 0 },
@@ -337,8 +236,6 @@ const plates: StateArt = {
       { at: 0.62, y: 0, ease: 'spring' },
       { at: 1 },
     ]),
-    layer('spark1', [solid(sparkle(44, 4, 26))], twinkle(0.5), iso(44, 4, 26)),
-    layer('spark2', [solid(sparkle(-12, 8, 22, 2))], twinkle(0.62), iso(-12, 8, 22)),
   ],
 };
 
@@ -356,7 +253,7 @@ const TODAY = 2;
 
 const week: StateArt = {
   id: 'week',
-  frame: [33, 12],
+  frame: [33.0, 12.0],
   duration: 3200,
   accent: 'brand',
   layers: [
@@ -367,14 +264,19 @@ const week: StateArt = {
       ...solidBox(CAL.x, CAL.y, CAL.h, CAL.w, 5, 1.5, { top: 'shade', sides: 'shade' }),
       ...Array.from({ length: DAYS }, (_, i) => ghost(box(slotX(i), slotY, CAL.h, SLOT, SLOT, 0).top)),
     ]),
+    // Only in motion: a workout fades in above the middle day, lands, then
+    // fades away, leaving the week empty again
     layer('workout', solidBox(slotX(TODAY), slotY, CAL.h + 11, SLOT, SLOT, 3, { top: 'accent' }), [
-      { at: 0 },
-      { at: 0.3, y: -3 },
-      { at: 0.54, y: 11, ease: 'in' },
-      { at: 0.59, y: 10.2, ease: 'out' },
-      { at: 0.64, y: 11, ease: 'in' },
+      { at: 0, opacity: 0 },
+      { at: 0.1, opacity: 0 },
+      { at: 0.24, opacity: 1, ease: 'out' },
+      { at: 0.32 },
+      { at: 0.5, y: 11, ease: 'in' },
+      { at: 0.55, y: 10.2, ease: 'out' },
+      { at: 0.6, y: 11, ease: 'in' },
       { at: 0.8, y: 11 },
-      { at: 1, ease: 'inOut' },
+      { at: 0.9, y: 11, opacity: 0, ease: 'linear' },
+      { at: 1, y: 0, opacity: 0 },
     ]),
   ],
 };
@@ -410,7 +312,7 @@ function pencil(): ArtShape[] {
 
 const logbook: StateArt = {
   id: 'logbook',
-  frame: [10, 4],
+  frame: [10.0, 4.0],
   duration: 3400,
   accent: 'brand',
   layers: [
@@ -452,7 +354,7 @@ const gap = iso(SOCKET.x + SOCKET.w + 4, 19, 10);
 
 const unplugged: StateArt = {
   id: 'unplugged',
-  frame: [17, 3.5],
+  frame: [17.0, 4.0],
   duration: 2800,
   accent: 'warning',
   layers: [
@@ -520,7 +422,7 @@ const unplugged: StateArt = {
 // ── No coach: an invite, waiting to be dropped into place ──────────────────
 
 const TICKET = { x: -6, y: -4, w: 44, d: 28, h: 2.5 } as const;
-const TICKET_Z = 14;
+const TICKET_Z = 0;
 
 function ticket(): ArtShape[] {
   const { x, y, w, d, h } = TICKET;
@@ -541,46 +443,37 @@ function ticket(): ArtShape[] {
   ];
 }
 
-const ticketFoot = iso(TICKET.x + TICKET.w / 2, TICKET.y + TICKET.d / 2, 0);
-
 const noCoach: StateArt = {
   id: 'noCoach',
-  frame: [33, -3],
+  frame: [31.5, 7.0],
   duration: 3000,
   accent: 'brand',
   layers: [
-    layer(
-      'dock',
-      [ghost(box(TICKET.x, TICKET.y, 0, TICKET.w, TICKET.d, 0).base)],
-      [
-        { at: 0 },
-        { at: 0.5, scale: 0.9 },
-        { at: 1 },
-      ],
-      ticketFoot,
-    ),
+    layer('shadow', [shadow(box(TICKET.x, TICKET.y + 4, 0, TICKET.w, TICKET.d, 0).base)]),
+    // The invite lifts, as if picked up, and settles back down
     layer('ticket', ticket(), [
       { at: 0 },
-      { at: 0.5, y: -4 },
+      { at: 0.2 },
+      { at: 0.45, y: -8, ease: 'out' },
+      { at: 0.62, y: 0, ease: 'in' },
+      { at: 0.67, y: -1, ease: 'out' },
+      { at: 0.72, y: 0, ease: 'in' },
       { at: 1 },
     ]),
-    layer('spark1', [solid(sparkle(44, -6, 26))], twinkle(0.25), iso(44, -6, 26)),
-    layer('spark2', [solid(sparkle(-16, 16, 26, 2))], twinkle(0.6), iso(-16, 16, 26)),
   ],
 };
 
-// ── Lost: the kettlebell is not where the page said it would be ────────────
+// ── Lost: a kettlebell knocked off balance, nothing where the link pointed ─
 
 const KB = { x: 70, y: 66, r: 17 } as const;
 const KB_BASE: [number, number] = [KB.x, KB.y + KB.r - 1];
 
 const lost: StateArt = {
   id: 'lost',
-  frame: [25.5, 10],
+  frame: [16.0, 14.5],
   duration: 3000,
   accent: 'brand',
   layers: [
-    layer('spot', [ghost(disc(40, 26, 0, 13)), stroke(line([[38, 24, 0], [42, 28, 0]])), stroke(line([[42, 24, 0], [38, 28, 0]]))]),
     layer('shadow', [shadow(`M${KB.x - 21} ${KB.y + 16}A16 5 0 1 0 ${KB.x + 11} ${KB.y + 16}A16 5 0 1 0 ${KB.x - 21} ${KB.y + 16}Z`)]),
     layer(
       'kettlebell',
@@ -608,14 +501,6 @@ const lost: StateArt = {
       ],
       KB_BASE,
     ),
-    layer('mark', [
-      stroke(`M${KB.x + 22} ${KB.y - 34}C${KB.x + 22} ${KB.y - 40} ${KB.x + 31} ${KB.y - 40} ${KB.x + 31} ${KB.y - 34}C${KB.x + 31} ${KB.y - 30} ${KB.x + 26.5} ${KB.y - 30} ${KB.x + 26.5} ${KB.y - 26}`, 1.8),
-      solid(circle(KB.x + 26.5, KB.y - 21.5, 0.6), 'ink'),
-    ], [
-      { at: 0, opacity: 1 },
-      { at: 0.4, y: -2 },
-      { at: 1 },
-    ]),
   ],
 };
 
@@ -647,7 +532,7 @@ const sweep: ArtKeyframe[] = [
 
 const search: StateArt = {
   id: 'search',
-  frame: [17.5, 5],
+  frame: [15.0, 4.5],
   duration: 3600,
   accent: 'brand',
   layers: [
@@ -662,7 +547,6 @@ export const STATE_ART = {
   plans,
   building,
   inbox,
-  caughtUp,
   plates,
   week,
   logbook,
