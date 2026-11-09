@@ -31,7 +31,7 @@ export function ClientChatHeader({ coachName, coachAvatar }: ClientChatHeaderPro
           </h1>
         </div>
       </div>
-      <NotificationToggle className="shrink-0" />
+      <NotificationToggle iconOnly className="shrink-0" />
     </div>
   );
 }

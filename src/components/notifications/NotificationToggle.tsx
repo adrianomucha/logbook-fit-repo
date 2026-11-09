@@ -4,12 +4,23 @@ import { Bell, BellOff, BellRing, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { cn } from '@/lib/utils';
+import { ALERTS_COPY } from '@logbook/shared/alerts-copy';
 
 interface NotificationToggleProps {
   className?: string;
   /** Hide once notifications are on (for surfaces that only need the nudge) */
   hideWhenOn?: boolean;
+  /**
+   * Just the bell, no wording: the client's chat header, where the pill
+   * crowded the coach's name. A slashed bell on a filled chip while alerts
+   * are off, a plain bell once on. States the user has to fix elsewhere
+   * (blocked, not installed) keep the slashed bell and explain on click.
+   */
+  iconOnly?: boolean;
 }
+
+const iconButtonClass =
+  'inline-flex items-center justify-center w-10 h-10 rounded-full transition-colors duration-150 touch-manipulation';
 
 /**
  * Per-device opt-in for message notifications — the quiet chat-surface pill.
@@ -20,7 +31,7 @@ interface NotificationToggleProps {
  * The two cases the user *can* act on get a line of copy instead: blocked
  * permission (browser settings) and iOS-in-a-tab (install the app first).
  */
-export function NotificationToggle({ className, hideWhenOn }: NotificationToggleProps) {
+export function NotificationToggle({ className, hideWhenOn, iconOnly }: NotificationToggleProps) {
   const {
     available,
     isSubscribed,
@@ -34,7 +45,22 @@ export function NotificationToggle({ className, hideWhenOn }: NotificationToggle
 
   if (isLoading) return null;
 
+  // Icon-only: a state the app can't change itself is a muted slashed bell
+  // that says what to do when clicked
+  const explainer = (label: string, message: string) => (
+    <button
+      type="button"
+      onClick={() => toast(message)}
+      aria-label={label}
+      title={label}
+      className={cn(iconButtonClass, 'text-muted-foreground hover:text-foreground', className)}
+    >
+      <BellOff className="w-4 h-4" aria-hidden="true" />
+    </button>
+  );
+
   if (needsInstall) {
+    if (iconOnly) return explainer(ALERTS_COPY.turnOn, ALERTS_COPY.needsInstall);
     return (
       <p
         className={cn(
@@ -51,6 +77,7 @@ export function NotificationToggle({ className, hideWhenOn }: NotificationToggle
   if (!available) return null;
 
   if (isBlocked && !isSubscribed) {
+    if (iconOnly) return explainer(ALERTS_COPY.blockedLabel, ALERTS_COPY.blockedInBrowser);
     return (
       <p
         className={cn(
@@ -70,15 +97,45 @@ export function NotificationToggle({ className, hideWhenOn }: NotificationToggle
     try {
       if (isSubscribed) {
         await disable();
-        toast.success('Message notifications off');
+        toast.success(ALERTS_COPY.nowOff);
       } else {
         await enable();
-        toast.success('Message notifications on');
+        toast.success(ALERTS_COPY.nowOn);
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Couldn’t update notifications.');
+      toast.error(e instanceof Error ? e.message : ALERTS_COPY.failed);
     }
   };
+
+  if (iconOnly) {
+    const label = isSubscribed ? ALERTS_COPY.turnOff : ALERTS_COPY.turnOn;
+    return (
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={isBusy}
+        aria-pressed={isSubscribed}
+        aria-label={label}
+        title={label}
+        className={cn(
+          iconButtonClass,
+          'disabled:opacity-50',
+          isSubscribed
+            ? 'text-muted-foreground hover:text-foreground'
+            : 'bg-muted/60 text-foreground hover:bg-foreground hover:text-background',
+          className
+        )}
+      >
+        {isBusy ? (
+          <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+        ) : isSubscribed ? (
+          <Bell className="w-4 h-4" aria-hidden="true" />
+        ) : (
+          <BellOff className="w-4 h-4" aria-hidden="true" />
+        )}
+      </button>
+    );
+  }
 
   return (
     <button
@@ -120,7 +177,7 @@ export function NotificationToggle({ className, hideWhenOn }: NotificationToggle
           </span>
         </span>
       )}
-      {isSubscribed ? 'Alerts on' : 'Turn on alerts'}
+      {isSubscribed ? 'Alerts on' : ALERTS_COPY.turnOn}
     </button>
   );
 }
