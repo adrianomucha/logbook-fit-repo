@@ -8,8 +8,9 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useClientPlan, useClientWeekOverview } from '@/hooks/useClientWeek';
 import { useClientCheckIns, useClientProgress } from '@/hooks/useCheckIns';
 import { Screen } from '@/components/Screen';
-import { EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
-import { PROGRESS_BEFORE_PLAN_COPY } from '@logbook/shared/client-empty-states';
+import { useRouter } from 'expo-router';
+import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
+import { LOG_EMPTY_COPY, PROGRESS_BEFORE_PLAN_COPY } from '@logbook/shared/client-empty-states';
 import { ProgressLog, WeekCircles } from '@/components/progress/ProgressLog';
 
 /**
@@ -18,6 +19,7 @@ import { ProgressLog, WeekCircles } from '@/components/progress/ProgressLog';
  * workout with its wins. Leaving a coach lives in Settings → Account.
  */
 export default function ProgressScreen() {
+  const router = useRouter();
   const { weightUnit, coach, clientProfileId, isLoading: loadingUser } = useCurrentUser();
   const { plan: planDetail, isLoading: loadingPlan, refresh: refreshPlan } = useClientPlan();
   const { weekOverview, refresh: refreshWeek } = useClientWeekOverview();
@@ -76,12 +78,22 @@ export default function ProgressScreen() {
       {!planDetail && !completions.some((c) => c.status === 'COMPLETED') ? (
         // Nothing to show before the first workout; a client whose plan was
         // unassigned still sees their history. The web does the same.
-        <EmptyState
-          fill
-          art={PROGRESS_BEFORE_PLAN_COPY.art}
-          title={PROGRESS_BEFORE_PLAN_COPY.title}
-          tail={PROGRESS_BEFORE_PLAN_COPY.tail}
-        />
+        <EmptyState fill art={PROGRESS_BEFORE_PLAN_COPY.art} title={PROGRESS_BEFORE_PLAN_COPY.title} tail={PROGRESS_BEFORE_PLAN_COPY.tail}>
+          {coach ? (
+            <Button variant="primary" className="h-11 w-full" onPress={() => router.push('/client/chat')}>
+              {PROGRESS_BEFORE_PLAN_COPY.message(coach.user.name)}
+            </Button>
+          ) : null}
+        </EmptyState>
+      ) : weeks.length === 0 ? (
+        // Nothing logged yet: empty week circles over an empty log say
+        // nothing, so the tab is one centered state that points at the
+        // workout. The web does the same.
+        <EmptyState fill art={LOG_EMPTY_COPY.art} title={LOG_EMPTY_COPY.title} tail={LOG_EMPTY_COPY.tail}>
+          <Button variant="primary" className="h-11 w-full" onPress={() => router.push('/client')}>
+            {LOG_EMPTY_COPY.cta}
+          </Button>
+        </EmptyState>
       ) : (
         <>
           <WeekCircles week={week} />

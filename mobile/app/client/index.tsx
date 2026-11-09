@@ -6,7 +6,7 @@ import { format } from 'date-fns';
 import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
 import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
-import { EMPTY_WEEK_COPY, LOAD_ERROR_COPY, NO_COACH_COPY, WEEK_NOT_BUILT_COPY } from '@logbook/shared/client-empty-states';
+import { EMPTY_WEEK_COPY, LOAD_ERROR_COPY, WEEK_NOT_BUILT_COPY } from '@logbook/shared/client-empty-states';
 import { PLAN_STARTS_COPY } from '@logbook/shared/plan-start';
 import { ApiError, apiFetch } from '@/lib/api';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
@@ -27,6 +27,8 @@ import { CoachFeedbackCard } from '@/components/checkin/CoachFeedbackCard';
 import { freshCheckInReply } from '@logbook/shared/checkin-reply';
 import { useDismissedCheckInReply } from '@/hooks/useDismissedCheckInReply';
 import { CheckInDetailSheet } from '@/components/checkin/CheckInDetailSheet';
+import { NoCoachState } from '@/components/NoCoachState';
+import { useAuth } from '@/lib/auth';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -44,6 +46,7 @@ const isNotFound = (e: unknown) => e instanceof ApiError && e.status === 404;
  */
 export default function TodayScreen() {
   const router = useRouter();
+  const { signOut } = useAuth();
   const [view, setView] = useState<WorkoutViewMode>('today');
   const [showCheckInDetail, setShowCheckInDetail] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState(false);
@@ -131,7 +134,7 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState fill art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
+        <NoCoachState fill />
       </Screen>
     );
   }
@@ -170,6 +173,9 @@ export default function TodayScreen() {
         <EmptyState fill art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
           <Button variant="primary" className="h-11 w-full" onPress={refresh}>
             {LOAD_ERROR_COPY.retry}
+          </Button>
+          <Button variant="ghost" className="h-11 w-full" onPress={() => void signOut()}>
+            {LOAD_ERROR_COPY.signOut}
           </Button>
         </EmptyState>
       </Screen>
@@ -296,6 +302,7 @@ export default function TodayScreen() {
             days={weekDays}
             onOpenDay={openDay}
             coachName={coach.user.name}
+            onMessageCoach={() => router.push('/client/chat')}
           />
         </>
       ) : weekOverview?.startsOn ? (
@@ -352,13 +359,11 @@ export default function TodayScreen() {
           />
         )
       ) : (
-        <EmptyState
-          fill
-          art={EMPTY_WEEK_COPY.art}
-          title={EMPTY_WEEK_COPY.title}
-          tail={EMPTY_WEEK_COPY.tail}
-          body={EMPTY_WEEK_COPY.body(coach.user.name)}
-        />
+        <EmptyState fill art={EMPTY_WEEK_COPY.art} title={EMPTY_WEEK_COPY.title} tail={EMPTY_WEEK_COPY.tail}>
+          <Button variant="primary" className="h-11 w-full" onPress={() => router.push('/client/chat')}>
+            {EMPTY_WEEK_COPY.message(coach.user.name)}
+          </Button>
+        </EmptyState>
       )}
 
       {/* Below the day's card; when the workout is done it sits above the

@@ -42,6 +42,7 @@ export const CRASH_COPY = {
   tail: "It's been reported.",
   reference: (digest: string) => `Reference: ${digest}`,
   retry: 'Try again',
+  home: 'Go home',
 } as const;
 
 // ── Coach workspace (web) ───────────────────────────────────────────────────
@@ -92,12 +93,14 @@ export const NO_MATCH_COPY = {
   title: (query: string) => `Nothing matches “${query}”.`,
   clients: 'Try a first name or an email.',
   plans: 'Try a shorter name.',
+  clear: 'Clear search',
 } as const;
 
 export const NO_PAST_CLIENTS_COPY = {
   art: 'logbook' satisfies StateArtId,
   title: 'No past clients.',
   tail: 'When coaching ends, it lands here.',
+  back: 'Back to clients',
 } as const;
 
 export const CLIENT_NO_WORKOUTS_COPY = {

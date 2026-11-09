@@ -1307,6 +1307,7 @@ export function UnifiedClientProfile() {
         /* The client trains on their own copy — match against its template */
         currentPlanId={plan?.sourceTemplateId ?? plan?.id}
         clientName={client.name}
+        onCreatePlan={handleCreateNewPlan}
       />
       <PlanEditorDrawer
         open={showPlanDrawer}

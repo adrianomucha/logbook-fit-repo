@@ -2,14 +2,14 @@ import { useCallback, useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Text, View } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { apiMessagesToMessages } from '@logbook/shared/adapters/api';
-import { NO_COACH_COPY } from '@logbook/shared/client-empty-states';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useMessages } from '@/hooks/useMessages';
 import { useClientPlan } from '@/hooks/useClientWeek';
 import { AppHeader } from '@/components/nav/AppHeader';
 import { ChatView } from '@/components/chat/ChatView';
+import { NoCoachState } from '@/components/NoCoachState';
 import { UserAvatar } from '@/components/UserAvatar';
-import { EmptyState, LoadingScreen } from '@/components/ui';
+import { LoadingScreen } from '@/components/ui';
 import { NotificationToggle } from '@/components/notifications/NotificationToggle';
 
 /** The Chat tab — the web's ClientChatHeader plus ChatView in the brand voice. */
@@ -41,7 +41,7 @@ export default function ChatScreen() {
       <AppHeader />
       {!coach || !coachUserId ? (
         <View className="flex-1 justify-center px-5">
-          <EmptyState art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
+          <NoCoachState />
         </View>
       ) : (
         <View className="flex-1 px-4 pt-4">

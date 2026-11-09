@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Loader2, Search } from 'lucide-react';
+import { Check, Loader2, Plus, Search } from 'lucide-react';
+import { CREATE_PLAN } from '@logbook/shared/coach-copy';
 import { cn } from '@/lib/utils';
 import type { WorkoutPlan } from '@/types';
 import { NO_TEMPLATES_COPY } from '@logbook/shared/state-copy';
@@ -18,6 +19,8 @@ interface AssignPlanModalProps {
   currentPlanId?: string;
   /** Client receiving the plan — named in the header and the confirm button */
   clientName?: string;
+  /** The way out of an empty library: start a new plan */
+  onCreatePlan?: () => void;
 }
 
 const cardEdge =
@@ -47,6 +50,7 @@ export function AssignPlanModal({
   plans,
   currentPlanId,
   clientName,
+  onCreatePlan,
 }: AssignPlanModalProps) {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -130,7 +134,20 @@ export function AssignPlanModal({
   if (selectablePlans.length === 0 && !currentPlan) {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title={title} maxWidth="md">
-        <StateView size="sm" as="h3" art={NO_TEMPLATES_COPY.art} title={NO_TEMPLATES_COPY.title} tail={NO_TEMPLATES_COPY.tail} />
+        <StateView size="sm" as="h3" art={NO_TEMPLATES_COPY.art} title={NO_TEMPLATES_COPY.title} tail={NO_TEMPLATES_COPY.tail}>
+          {onCreatePlan && (
+            <Button
+              onClick={() => {
+                handleClose();
+                onCreatePlan();
+              }}
+              className="h-10 px-5 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-[background-color,transform] duration-150"
+            >
+              <Plus className="w-4 h-4" />
+              {CREATE_PLAN}
+            </Button>
+          )}
+        </StateView>
       </Modal>
     );
   }

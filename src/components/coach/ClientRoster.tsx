@@ -220,7 +220,7 @@ export function ClientRoster({ clients }: ClientRosterProps) {
             onClick={() => setQuery('')}
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors tap-target"
           >
-            Clear search
+            {NO_MATCH_COPY.clear}
           </button>
         </StateView>
       ) : sortMode === 'name' ? (

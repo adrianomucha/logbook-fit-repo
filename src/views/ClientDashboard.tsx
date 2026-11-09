@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useEffect, type CSSProperties } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { signOut } from 'next-auth/react';
 import { useSWRConfig } from 'swr';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
 import { getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
@@ -396,6 +397,9 @@ export function ClientDashboard() {
           <Button onClick={() => window.location.reload()} className="active:scale-[0.96] transition-transform duration-150">
             {LOAD_ERROR_COPY.retry}
           </Button>
+          <Button variant="ghost" onClick={() => signOut({ callbackUrl: '/login' })}>
+            {LOAD_ERROR_COPY.signOut}
+          </Button>
         </StateView>
       </div>
     );
@@ -413,7 +417,16 @@ export function ClientDashboard() {
           title={NO_COACH_COPY.title}
           tail={NO_COACH_COPY.tail}
           body={NO_COACH_COPY.body}
-        />
+        >
+          {/* This screen replaces the whole dashboard, nav included, so it
+              carries its own ways out */}
+          <Button onClick={() => router.push('/client/settings')} className="active:scale-[0.96] transition-transform duration-150">
+            {NO_COACH_COPY.settings}
+          </Button>
+          <Button variant="ghost" onClick={() => signOut({ callbackUrl: '/login' })}>
+            {NO_COACH_COPY.signOut}
+          </Button>
+        </StateView>
       </div>
     );
   }
@@ -483,7 +496,13 @@ export function ClientDashboard() {
                   art={PROGRESS_BEFORE_PLAN_COPY.art}
                   title={PROGRESS_BEFORE_PLAN_COPY.title}
                   tail={PROGRESS_BEFORE_PLAN_COPY.tail}
-                />
+                >
+                  {coachUserId && (
+                    <Button onClick={handleMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+                      {PROGRESS_BEFORE_PLAN_COPY.message(coach?.user.name)}
+                    </Button>
+                  )}
+                </StateView>
               )}
             </>
           ) : (
@@ -632,6 +651,7 @@ export function ClientDashboard() {
             isRestarting={isRestartingWorkout}
             onSendFeedback={handleSendFeedback}
             onViewWeekly={() => setWorkoutViewMode('weekly')}
+            onMessageCoach={coachUserId ? handleMessageCoach : undefined}
             checkInReply={checkInReply}
           />
         )}
@@ -652,6 +672,7 @@ export function ClientDashboard() {
               currentWeekNumber={weekOverview.weekNumber}
               completions={clientWorkoutCompletions}
               coachName={coach?.user.name}
+              onMessageCoach={coachUserId ? handleMessageCoach : undefined}
             />
           </>
         )}
@@ -699,6 +720,7 @@ export function ClientDashboard() {
               totalWorkouts={progress?.stats.totalWorkouts}
               // Once the plan has ended the week overview stays on its final week; that isn't this week
               weekNumber={weekOverview && !weekOverview.planEnded ? weekOverview.weekNumber : null}
+              onOpenWorkout={() => handleTabChange('workout')}
               // A workout started but not finished (the progress history only holds finished ones)
               startedDayId={
                 weekOverview && !weekOverview.planEnded

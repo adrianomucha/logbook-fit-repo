@@ -29,6 +29,8 @@ interface TodayFocusViewProps {
   isRestarting?: boolean;
   onSendFeedback: (rating: 'EASY' | 'MEDIUM' | 'HARD', notes?: string) => void;
   onViewWeekly: () => void;
+  /** The way out of an empty week: ask the coach */
+  onMessageCoach?: () => void;
   /** The coach's fresh check-in reply, under the day's cards */
   checkInReply?: ReactNode;
 }
@@ -56,6 +58,7 @@ export function TodayFocusView({
   isRestarting,
   onSendFeedback,
   onViewWeekly,
+  onMessageCoach,
   checkInReply,
 }: TodayFocusViewProps) {
   const actionState = getActionState(todayCompletion);
@@ -94,8 +97,13 @@ export function TodayFocusView({
           art={EMPTY_WEEK_COPY.art}
           title={EMPTY_WEEK_COPY.title}
           tail={EMPTY_WEEK_COPY.tail}
-          body={EMPTY_WEEK_COPY.body(coachName)}
-        />
+        >
+          {onMessageCoach && (
+            <Button onClick={onMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+              {EMPTY_WEEK_COPY.message(coachName)}
+            </Button>
+          )}
+        </StateView>
       )}
 
       {/* Completed hero — session summary + effort feedback in one card */}

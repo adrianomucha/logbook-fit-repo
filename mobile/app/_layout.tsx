@@ -2,7 +2,7 @@ import '../global.css';
 
 import { useEffect } from 'react';
 import { View } from 'react-native';
-import { Stack, useRouter, type ErrorBoundaryProps } from 'expo-router';
+import { router, Stack, useRouter, type ErrorBoundaryProps } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -49,6 +49,10 @@ export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
       <EmptyState art={CRASH_COPY.art} title={CRASH_COPY.title} tail={CRASH_COPY.tail}>
         <Button variant="primary" className="w-full" onPress={() => void retry()}>
           {CRASH_COPY.retry}
+        </Button>
+        {/* Retrying can fail the same way: always leave a way out */}
+        <Button variant="ghost" className="w-full" onPress={() => router.replace('/')}>
+          {CRASH_COPY.home}
         </Button>
       </EmptyState>
     </View>

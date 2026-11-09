@@ -281,20 +281,19 @@ export function ClientCheckIn() {
   if (!activeCheckIn && !activeCheckInId) {
     return (
       <PageShell clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null} subtitle="No active check-in" onBack={handleBack}>
-        <div className="animate-enter" style={{ animationDelay: '100ms' }}>
-          <SectionCard className="max-w-2xl">
-            <StateView
-              art={NO_ACTIVE_CHECKIN_COPY.art}
-              title={NO_ACTIVE_CHECKIN_COPY.title}
-              tail={NO_ACTIVE_CHECKIN_COPY.tail(firstName)}
-            >
-              <Button onClick={handleStartNewCheckIn} disabled={isCreating} variant="brand" className="h-11 px-6">
-                {isCreating && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-                {CHECKIN_ACTION.send}
-              </Button>
-            </StateView>
-          </SectionCard>
-        </div>
+        {/* No card: centered in the page like every other state. With no
+            past check-ins below, it fills the page height too. */}
+        <StateView
+          fill={completedCheckIns.length === 0}
+          art={NO_ACTIVE_CHECKIN_COPY.art}
+          title={NO_ACTIVE_CHECKIN_COPY.title}
+          tail={NO_ACTIVE_CHECKIN_COPY.tail(firstName)}
+        >
+          <Button onClick={handleStartNewCheckIn} disabled={isCreating} variant="brand" className="h-11 px-6">
+            {isCreating && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+            {CHECKIN_ACTION.send}
+          </Button>
+        </StateView>
 
         {completedCheckIns.length > 0 && (
           <div className="animate-enter" style={{ animationDelay: '200ms' }}>

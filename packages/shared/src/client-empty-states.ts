@@ -11,11 +11,17 @@ import type { StateArtId } from './state-art';
  */
 const coachFirst = (coachName: string | null | undefined) => coachName?.split(' ')[0] || 'Your coach';
 
+/** The way out on any state the coach can unblock: open the chat */
+export const messageCoach = (coachName: string | null | undefined) =>
+  `Message ${coachName?.split(' ')[0] || 'your coach'}`;
+
 export const NO_COACH_COPY = {
   art: 'noCoach' satisfies StateArtId,
   title: 'No coach connected.',
   tail: 'Your workout history is still saved.',
   body: 'Open an invite link and sign in to accept.',
+  settings: 'Settings',
+  signOut: 'Sign out',
 } as const;
 
 /** The plan's current week has no workouts in it (or no week matches yet). */
@@ -23,8 +29,7 @@ export const EMPTY_WEEK_COPY = {
   art: 'week' satisfies StateArtId,
   title: 'Nothing scheduled this week.',
   tail: 'Rest is part of the plan.',
-  body: (coachName: string | null | undefined) =>
-    `Expecting one? Message ${coachName?.split(' ')[0] || 'your coach'}.`,
+  message: messageCoach,
 } as const;
 
 /** Signed up, no plan yet: the welcome on the Workout tab */
@@ -49,7 +54,7 @@ export const WEEK_NOT_BUILT_COPY = {
   art: 'building' satisfies StateArtId,
   title: "This week isn't set up yet.",
   tail: (coachName: string | null | undefined) => `${coachFirst(coachName)} is still building it.`,
-  message: (coachName: string | null | undefined) => `Message ${coachName?.split(' ')[0] || 'coach'}`,
+  message: messageCoach,
 } as const;
 
 /** The plan or week couldn't be loaded */
@@ -58,6 +63,7 @@ export const LOAD_ERROR_COPY = {
   title: "Couldn't load your plan.",
   tail: 'Check your connection and try again.',
   retry: 'Try again',
+  signOut: 'Sign out',
 } as const;
 
 /** The Progress tab before there's a plan to make progress on */
@@ -65,4 +71,13 @@ export const PROGRESS_BEFORE_PLAN_COPY = {
   art: 'plates' satisfies StateArtId,
   title: 'Your progress starts here.',
   tail: 'Every workout adds to the stack.',
+  message: messageCoach,
+} as const;
+
+/** The Progress tab with a plan but nothing logged yet */
+export const LOG_EMPTY_COPY = {
+  art: 'logbook' satisfies StateArtId,
+  title: 'Nothing logged yet.',
+  tail: 'Your first workout starts the log.',
+  cta: 'Go to your workout',
 } as const;
