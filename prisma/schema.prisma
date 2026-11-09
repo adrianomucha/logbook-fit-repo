@@ -139,6 +139,9 @@ model User {
   // password change or reset increments it, which signs out every other
   // device (see lib/session-validity.ts).
   sessionVersion Int @default(0)
+  // When this account first signed in from the native app; null means never.
+  // The web's install banner reads it (see lib/native-app.ts).
+  nativeAppFirstSeenAt DateTime?
 
   // Role-specific profiles
   coachProfile  CoachProfile?

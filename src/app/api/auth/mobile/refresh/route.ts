@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { isLockedDemoAccount } from "@/lib/demo";
 import { bearerFromAuthorization, createMobileToken, readMobileToken } from "@/lib/mobile-token";
+import { recordNativeAppUse } from "@/lib/native-app";
 import { sessionStillValid } from "@/lib/session-validity";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
 
   const account = await prisma.user.findFirst({
     where: { id: claims.id, deletedAt: null },
-    select: { id: true, email: true, name: true, role: true, sessionVersion: true },
+    select: { id: true, email: true, name: true, role: true, sessionVersion: true, nativeAppFirstSeenAt: true },
   });
   if (
     !account ||
@@ -36,7 +37,7 @@ export async function POST(req: Request) {
   ) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const { sessionVersion, ...user } = account;
+  const { sessionVersion, nativeAppFirstSeenAt, ...user } = account;
 
   // At the version just checked, so a later password change still ends it
   const minted = await createMobileToken(user, Date.now(), sessionVersion);
@@ -44,6 +45,9 @@ export async function POST(req: Request) {
     console.error("[AUTH_ALERT] NEXTAUTH_SECRET unset — cannot mint mobile token");
     return NextResponse.json({ error: "Refresh unavailable" }, { status: 500 });
   }
+
+  // Picks up people who signed in before this was tracked
+  if (!nativeAppFirstSeenAt) await recordNativeAppUse(user.id);
 
   return NextResponse.json({
     token: minted.token,

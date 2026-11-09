@@ -2,15 +2,16 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import bcrypt from "bcryptjs";
 import { decode } from "next-auth/jwt";
 
-const { getSession, userFindFirst, userUpdate } = vi.hoisted(() => ({
+const { getSession, userFindFirst, userUpdate, userUpdateMany } = vi.hoisted(() => ({
   getSession: vi.fn(),
   userFindFirst: vi.fn(),
   userUpdate: vi.fn(),
+  userUpdateMany: vi.fn(),
 }));
 
 vi.mock("@/lib/session", () => ({ getSession }));
 vi.mock("@/lib/prisma", () => ({
-  default: { user: { findFirst: userFindFirst, update: userUpdate } },
+  default: { user: { findFirst: userFindFirst, update: userUpdate, updateMany: userUpdateMany } },
 }));
 vi.mock("@/lib/rate-limit", () => ({
   changePasswordLimiter: async () => ({ allowed: true }),
@@ -53,6 +54,33 @@ describe("POST /api/auth/mobile/refresh", () => {
     const body = await res.json();
     expect(body.user).toEqual(USER);
     expect((await readMobileToken(body.token))?.sessionVersion).toBe(4);
+  });
+
+  it("notes the account's first sighting in the native app, and only the first", async () => {
+    const current = (await createMobileToken(USER, Date.now(), 0))!;
+    const call = () =>
+      refresh(new Request("http://x", { method: "POST", headers: bearer(current.token) }));
+
+    userFindFirst.mockResolvedValue({ ...USER, sessionVersion: 0, nativeAppFirstSeenAt: null });
+    const first = await call();
+    expect(userUpdateMany).toHaveBeenCalledTimes(1);
+    expect(userUpdateMany.mock.calls[0][0].where).toEqual({ id: USER.id, nativeAppFirstSeenAt: null });
+    // Never leaks into the session the app stores
+    expect((await first.json()).user).toEqual(USER);
+
+    userFindFirst.mockResolvedValue({ ...USER, sessionVersion: 0, nativeAppFirstSeenAt: new Date() });
+    await call();
+    expect(userUpdateMany).toHaveBeenCalledTimes(1);
+  });
+
+  it("still refreshes when the sighting cannot be written", async () => {
+    const current = (await createMobileToken(USER, Date.now(), 0))!;
+    userFindFirst.mockResolvedValue({ ...USER, sessionVersion: 0, nativeAppFirstSeenAt: null });
+    userUpdateMany.mockRejectedValueOnce(new Error("db down"));
+    const errors = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    const res = await refresh(new Request("http://x", { method: "POST", headers: bearer(current.token) }));
+    expect(res.status).toBe(200);
+    errors.mockRestore();
   });
 });
 
