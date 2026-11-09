@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { verifyCredentials } from "@/lib/credentials";
 import { createMobileToken } from "@/lib/mobile-token";
+import { recordNativeAppUse } from "@/lib/native-app";
 import { getClientIp } from "@/lib/rate-limit";
 import { parseBody } from "@/lib/validations/parseBody";
 import { mobileLoginSchema } from "@/lib/validations/schemas";
@@ -66,6 +67,8 @@ export async function POST(req: Request) {
     console.error("[AUTH_ALERT] NEXTAUTH_SECRET unset — cannot mint mobile token");
     return NextResponse.json({ error: "Sign-in unavailable" }, { status: 500 });
   }
+
+  await recordNativeAppUse(check.user.id);
 
   return NextResponse.json({
     token: minted.token,

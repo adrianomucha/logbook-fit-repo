@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { PlusSquare, Share, X } from 'lucide-react';
 import { LogoMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
+import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isFromApp } from '@logbook/shared/app-handoff';
 import {
   INSTALL_PROMPT_STORAGE_KEY,
@@ -158,6 +159,12 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
   const [method, setMethod] = useState<InstallMethod>('none');
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [showSteps, setShowSteps] = useState(false);
+  // The account knows what the browser cannot: whether this person already
+  // has the native app. The decision waits for it, so a slow profile load
+  // never lets the banner through.
+  const { user } = useCurrentUser();
+  const profileLoaded = user !== null;
+  const accountHasNativeApp = user?.hasNativeApp ?? false;
 
   // Set once the banner has gone on screen this page view. Without it, a late
   // `beforeinstallprompt` would re-run the check, find the record just written,
@@ -194,7 +201,7 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
   }, []);
 
   useEffect(() => {
-    if (offered.current) return;
+    if (offered.current || !profileLoaded) return;
 
     const timer = setTimeout(() => {
       const navigatorStandalone =
@@ -208,6 +215,7 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
           displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
           hasNativePrompt: deferred !== null,
           openedFromNativeApp: fromNativeApp.current || openedFromNativeApp(),
+          accountHasNativeApp,
         },
         readState(),
         audience
@@ -224,7 +232,7 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
 
     return () => clearTimeout(timer);
     // Re-runs if Chromium's prompt lands after the first pass.
-  }, [deferred, audience]);
+  }, [deferred, audience, profileLoaded, accountHasNativeApp]);
 
   const dismiss = useCallback(() => {
     setMethod('none');

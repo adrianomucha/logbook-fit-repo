@@ -54,6 +54,7 @@ const snapshot = (over: Partial<BrowserSnapshot> = {}): BrowserSnapshot => ({
   displayModeStandalone: false,
   hasNativePrompt: false,
   openedFromNativeApp: false,
+  accountHasNativeApp: false,
   ...over,
 });
 
@@ -189,6 +190,19 @@ describe("detectInstallMethod", () => {
   it("never prompts in the native app's in-app browser, which looks like Safari", () => {
     expect(detectInstallMethod(snapshot({ openedFromNativeApp: true }))).toBe("none");
     expect(detectInstallMethod(snapshot({ openedFromNativeApp: true }), "coach")).toBe("none");
+  });
+
+  it("never prompts a client whose account already uses the native app", () => {
+    expect(detectInstallMethod(snapshot({ accountHasNativeApp: true }))).toBe("none");
+    expect(
+      detectInstallMethod(
+        snapshot({ userAgent: UA.androidChrome, hasNativePrompt: true, accountHasNativeApp: true })
+      )
+    ).toBe("none");
+  });
+
+  it("still prompts a coach who has signed in to the native app, which sends coaches to the web", () => {
+    expect(detectInstallMethod(snapshot({ accountHasNativeApp: true }), "coach")).toBe("ios-safari");
   });
 
   it("never prompts inside an already-installed app", () => {

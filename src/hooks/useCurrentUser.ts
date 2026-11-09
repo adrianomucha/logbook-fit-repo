@@ -27,6 +27,8 @@ interface UserProfile {
     } | null;
   } | null;
   isAdmin: boolean;
+  /** Has signed in from the native app at least once */
+  hasNativeApp: boolean;
   linkedAccount: { role: 'COACH' | 'CLIENT'; name: string } | null;
 }
 
@@ -48,6 +50,8 @@ export function useCurrentUser() {
     coach: user?.clientProfile?.coachRelationship?.coach ?? null,
     /** On the ADMIN_EMAILS allowlist — shows the nav's Admin entry point */
     isAdmin: user?.isAdmin ?? false,
+    /** Has signed in from the native app at least once */
+    hasNativeApp: user?.hasNativeApp ?? false,
     /** kg or lb — how this person reads and types weights (stored as lb) */
     weightUnit: normalizeWeightUnit(user?.weightUnit),
     /** This person's paired account, if one is linked and switchable */

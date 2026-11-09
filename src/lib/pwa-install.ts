@@ -45,6 +45,12 @@ export interface BrowserSnapshot {
    * has nothing to install.
    */
   openedFromNativeApp: boolean;
+  /**
+   * The signed-in account has used the native app (`hasNativeApp` on
+   * /api/me). Covers what the link tag cannot: someone with the app who
+   * arrives in real Safari, say from a password reset email.
+   */
+  accountHasNativeApp: boolean;
 }
 
 /** localStorage key remembering that this browser is the native app's sheet.
@@ -133,6 +139,9 @@ export function detectInstallMethod(
 ): InstallMethod {
   if (isRunningInstalled(snapshot)) return 'none';
   if (snapshot.openedFromNativeApp) return 'none';
+  // Clients only. The native app is the client app; a coach who signs in to
+  // it is sent back to the web, so installing the web app is still their path.
+  if (audience === 'client' && snapshot.accountHasNativeApp) return 'none';
   // A captured native prompt beats any instructions we could write.
   if (snapshot.hasNativePrompt) return 'native';
   if (audience === 'coach' && isMacSafari(snapshot.userAgent, snapshot.maxTouchPoints)) {

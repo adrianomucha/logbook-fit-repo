@@ -27,6 +27,7 @@ export async function GET() {
       weightUnit: true,
       createdAt: true,
       linkedUserId: true,
+      nativeAppFirstSeenAt: true,
       coachProfile: {
         select: {
           id: true,
@@ -83,8 +84,13 @@ export async function GET() {
     }
   }
 
+  const { nativeAppFirstSeenAt, ...profile } = user;
+
   return NextResponse.json({
-    ...user,
+    ...profile,
+    // Has signed in from the native app at least once. The install banner
+    // reads it: a client with the real app has nothing to add to a Home Screen.
+    hasNativeApp: Boolean(nativeAppFirstSeenAt),
     clientProfile,
     linkedAccount,
     // Lets the nav show the Admin entry point. Informational only — every
