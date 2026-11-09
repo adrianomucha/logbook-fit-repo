@@ -38,7 +38,19 @@ export interface BrowserSnapshot {
   displayModeStandalone: boolean;
   /** Whether a `beforeinstallprompt` event has been captured this page view. */
   hasNativePrompt: boolean;
+  /**
+   * The page was opened by the native app, in its in-app browser sheet. On iOS
+   * that sheet's user agent is identical to Safari's, so the app tags its links
+   * instead (see `@logbook/shared/app-handoff`). Someone who has the real app
+   * has nothing to install.
+   */
+  openedFromNativeApp: boolean;
 }
+
+/** localStorage key remembering that this browser is the native app's sheet.
+ *  The sheet keeps its own storage, apart from Safari's, so the mark never
+ *  leaks into a real browser. */
+export const NATIVE_APP_STORAGE_KEY = 'logbook.opened-from-native-app.v1';
 
 /** localStorage key. Versioned so the offer rule can change later without
  *  inheriting records written under different semantics. */
@@ -120,6 +132,7 @@ export function detectInstallMethod(
   audience: InstallAudience = 'client'
 ): InstallMethod {
   if (isRunningInstalled(snapshot)) return 'none';
+  if (snapshot.openedFromNativeApp) return 'none';
   // A captured native prompt beats any instructions we could write.
   if (snapshot.hasNativePrompt) return 'native';
   if (audience === 'coach' && isMacSafari(snapshot.userAgent, snapshot.maxTouchPoints)) {

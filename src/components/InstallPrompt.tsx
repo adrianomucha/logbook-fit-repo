@@ -4,8 +4,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { PlusSquare, Share, X } from 'lucide-react';
 import { LogoMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
+import { isFromApp } from '@logbook/shared/app-handoff';
 import {
   INSTALL_PROMPT_STORAGE_KEY,
+  NATIVE_APP_STORAGE_KEY,
   markOffered,
   parseInstallPromptState,
   resolveInstallPrompt,
@@ -49,6 +51,23 @@ function persistOffered(): void {
     );
   } catch {
     // Nothing to do. The banner still goes away for this page view.
+  }
+}
+
+/**
+ * Whether this browser is the native app's in-app sheet. The tag only rides on
+ * the URL the app opened, so it is written down on sight: moving around the
+ * site drops the query, and the answer must outlive that.
+ */
+function openedFromNativeApp(): boolean {
+  try {
+    if (isFromApp(window.location.search)) {
+      window.localStorage.setItem(NATIVE_APP_STORAGE_KEY, '1');
+      return true;
+    }
+    return window.localStorage.getItem(NATIVE_APP_STORAGE_KEY) !== null;
+  } catch {
+    return isFromApp(window.location.search);
   }
 }
 
@@ -168,6 +187,12 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
     };
   }, []);
 
+  // Read on mount, before the delay, while the app's tag is still on the URL.
+  const fromNativeApp = useRef(false);
+  useEffect(() => {
+    fromNativeApp.current = openedFromNativeApp();
+  }, []);
+
   useEffect(() => {
     if (offered.current) return;
 
@@ -182,6 +207,7 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
           navigatorStandalone,
           displayModeStandalone: window.matchMedia('(display-mode: standalone)').matches,
           hasNativePrompt: deferred !== null,
+          openedFromNativeApp: fromNativeApp.current || openedFromNativeApp(),
         },
         readState(),
         audience
