@@ -1,7 +1,7 @@
 import { UserAvatar } from '@/components/UserAvatar';
 import { useState, useEffect, useLayoutEffect, useRef, useMemo, useCallback } from 'react';
 import { Message, Client } from '@/types';
-import { Send, ChevronDown } from 'lucide-react';
+import { Send, ChevronDown, Flag } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { stripFlagContext } from '@logbook/shared/flag-message';
@@ -13,6 +13,8 @@ import { StateArt } from '@/components/states/StateArt';
 const MAX_MESSAGE_LENGTH = 5000;
 
 const NEAR_BOTTOM_THRESHOLD = 100; // px from bottom to count as "at bottom"
+// Past this many sets the tally pips stop reading at a glance; the count stands alone
+const MAX_SET_PIPS = 8;
 
 interface ChatViewProps {
   client: Client;
@@ -410,12 +412,35 @@ export function ChatView({
                             className="max-w-full border border-border px-3.5 py-2.5"
                             style={bubbleRadius(isCurrentUser, isFirstInGroup, false)}
                           >
-                            <p className="text-[15px] font-bold tracking-tight truncate">{message.exerciseContext.exerciseName}</p>
-                            <p className="font-mono text-[11px] text-muted-foreground mt-0.5">
-                              {message.exerciseContext.prescription} · {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets
-                            </p>
+                            {/* Volt tile with the flag: the mark the client
+                                tapped in the workout, in the logo's pairing */}
+                            <div className="flex items-center gap-2.5">
+                              <span className="shrink-0 w-8 h-8 rounded-[10px] bg-brand text-brand-foreground flex items-center justify-center" aria-hidden="true">
+                                <Flag className="w-3.5 h-3.5" strokeWidth={2.5} />
+                              </span>
+                              <div className="min-w-0">
+                                <p className="text-[15px] font-bold tracking-tight leading-tight truncate">{message.exerciseContext.exerciseName}</p>
+                                <p className="font-mono text-[11px] text-muted-foreground mt-0.5 truncate">{message.exerciseContext.prescription}</p>
+                              </div>
+                            </div>
+                            {/* Sets as tally pips: one per set, inked when done */}
+                            <div className="flex items-center gap-2 mt-2.5">
+                              {message.exerciseContext.totalSets <= MAX_SET_PIPS && (
+                                <span className="flex gap-[3px]" aria-hidden="true">
+                                  {Array.from({ length: message.exerciseContext.totalSets }, (_, i) => (
+                                    <span
+                                      key={i}
+                                      className={cn('w-1 h-3 rounded-full', i < message.exerciseContext!.setsCompleted ? 'bg-foreground' : 'bg-border')}
+                                    />
+                                  ))}
+                                </span>
+                              )}
+                              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground">
+                                {message.exerciseContext.setsCompleted}/{message.exerciseContext.totalSets} sets
+                              </p>
+                            </div>
                             {message.exerciseContext.flagNote && (
-                              <p className="font-prose text-[13px] mt-1.5 italic text-foreground/70">
+                              <p className="font-prose text-[13px] mt-2 italic text-foreground/70">
                                 &ldquo;{message.exerciseContext.flagNote}&rdquo;
                               </p>
                             )}

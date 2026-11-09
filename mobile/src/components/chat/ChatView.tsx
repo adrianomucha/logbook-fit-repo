@@ -12,6 +12,8 @@ const MAX_MESSAGE_LENGTH = 5000;
 const NEAR_BOTTOM_THRESHOLD = 100;
 const FULL = 20;
 const FLAT = 4;
+/** Past this many sets the tally pips stop reading at a glance; the count stands alone */
+const MAX_SET_PIPS = 8;
 
 interface ChatViewProps {
   /** Oldest first, as apiMessagesToMessages returns them */
@@ -149,12 +151,32 @@ export function ChatView({
                 className="border border-border px-3.5 py-2.5"
                 style={bubbleRadius(mine, isFirstInGroup, false)}
               >
-                <Text className="font-sans-bold text-[15px] tracking-tight text-foreground" numberOfLines={1}>{ctx.exerciseName}</Text>
-                <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-                  {ctx.prescription} · {ctx.setsCompleted}/{ctx.totalSets} sets
-                </Text>
+                {/* Volt tile with the flag: the mark the client tapped in
+                    the workout, in the logo's pairing */}
+                <View className="flex-row items-center gap-2.5">
+                  <View className="h-8 w-8 items-center justify-center rounded-[10px] bg-brand">
+                    <Feather name="flag" size={14} color="#1e2702" />
+                  </View>
+                  <View className="shrink">
+                    <Text className="font-sans-bold text-[15px] leading-5 tracking-tight text-foreground" numberOfLines={1}>{ctx.exerciseName}</Text>
+                    <Text className="mt-0.5 font-mono text-[11px] text-muted-foreground" numberOfLines={1}>{ctx.prescription}</Text>
+                  </View>
+                </View>
+                {/* Sets as tally pips: one per set, inked when done */}
+                <View className="mt-2.5 flex-row items-center gap-2">
+                  {ctx.totalSets <= MAX_SET_PIPS ? (
+                    <View className="flex-row gap-[3px]">
+                      {Array.from({ length: ctx.totalSets }, (_, i) => (
+                        <View key={i} className={`h-3 w-1 rounded-full ${i < ctx.setsCompleted ? 'bg-foreground' : 'bg-border'}`} />
+                      ))}
+                    </View>
+                  ) : null}
+                  <Text className="font-mono text-[10px] uppercase tracking-[1.2px] text-muted-foreground">
+                    {ctx.setsCompleted}/{ctx.totalSets} sets
+                  </Text>
+                </View>
                 {ctx.flagNote ? (
-                  <Text className="mt-1.5 font-sans text-[13px] italic text-foreground/70">“{ctx.flagNote}”</Text>
+                  <Text className="mt-2 font-sans text-[13px] italic text-foreground/70">“{ctx.flagNote}”</Text>
                 ) : null}
               </View>
             ) : null}
