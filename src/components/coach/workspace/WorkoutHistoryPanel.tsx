@@ -11,6 +11,8 @@ import { workoutTitle } from '@logbook/shared/progress';
 import { WORKOUT_MARK_LABEL } from '@logbook/shared/workout-week-helpers';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
+import { CLIENT_NO_WORKOUTS_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 
 interface WorkoutHistoryPanelProps {
   completions: ClientDetail['completions'];
@@ -57,12 +59,14 @@ export function WorkoutHistoryPanel({
   // family
   if (rows.length === 0) {
     return (
-      <div className="h-full lg:flex-1 lg:min-h-0 flex flex-col items-center justify-center text-center py-8">
-        <p className="font-semibold antialiased">No workouts yet</p>
-        <p className="text-sm text-muted-foreground antialiased">
-          Workouts {firstName} completes will show up here.
-        </p>
-      </div>
+      <StateView
+        size="sm"
+        as="h3"
+        art={CLIENT_NO_WORKOUTS_COPY.art}
+        title={CLIENT_NO_WORKOUTS_COPY.title}
+        tail={CLIENT_NO_WORKOUTS_COPY.tail(firstName)}
+        className="h-full lg:flex-1 lg:min-h-0 justify-center"
+      />
     );
   }
 

@@ -41,7 +41,7 @@ export default function ChatScreen() {
       <AppHeader />
       {!coach || !coachUserId ? (
         <View className="flex-1 px-5">
-          <EmptyState title={NO_COACH_COPY.title} body={NO_COACH_COPY.body} />
+          <EmptyState art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
         </View>
       ) : (
         <View className="flex-1 px-4 pt-4">

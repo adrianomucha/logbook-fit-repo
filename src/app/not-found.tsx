@@ -1,20 +1,24 @@
 import Link from 'next/link';
+import { PAGE_NOT_FOUND_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 
 export default function NotFound() {
   return (
-    <div className="min-h-dvh flex items-center justify-center p-4">
-      <div className="text-center space-y-4">
-        <h2 className="text-xl font-bold">Page Not Found</h2>
-        <p className="text-muted-foreground text-sm">
-          The page you&apos;re looking for doesn&apos;t exist.
-        </p>
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4">
+      <StateView
+        as="h1"
+        art={PAGE_NOT_FOUND_COPY.art}
+        kicker={PAGE_NOT_FOUND_COPY.kicker}
+        title={PAGE_NOT_FOUND_COPY.title}
+        tail={PAGE_NOT_FOUND_COPY.tail}
+      >
         <Link
           href="/"
-          className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium"
+          className="inline-flex items-center h-11 px-6 rounded-xl bg-primary text-primary-foreground text-sm font-medium active:scale-[0.97] transition-transform duration-150"
         >
-          Go Home
+          {PAGE_NOT_FOUND_COPY.home}
         </Link>
-      </div>
+      </StateView>
     </div>
   );
 }

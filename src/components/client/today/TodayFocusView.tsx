@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { WorkoutViewToggle } from '@/components/client/WorkoutViewToggle';
 import { RotateCcw } from 'lucide-react';
 import { EMPTY_WEEK_COPY } from '@logbook/shared/client-empty-states';
+import { StateView } from '@/components/states/StateView';
 
 type ActionState = 'scheduled' | 'in-progress' | 'completed';
 
@@ -88,15 +89,12 @@ export function TodayFocusView({
       {/* The week has no workouts (or none matches yet) — say so instead of
           leaving the page at a bare greeting */}
       {!todayWorkout?.workoutDay && !todayCompletion && (
-        <div
-          className="rounded-2xl bg-card border border-border/70 px-5 py-10 text-center animate-fade-in-up"
-          style={{ animationDelay: '60ms' }}
-        >
-          <h2 className="text-lg font-bold tracking-tight antialiased">{EMPTY_WEEK_COPY.title}</h2>
-          <p className="text-sm text-muted-foreground mt-1.5 antialiased text-pretty">
-            {EMPTY_WEEK_COPY.body(coachName)}
-          </p>
-        </div>
+        <StateView
+          art={EMPTY_WEEK_COPY.art}
+          title={EMPTY_WEEK_COPY.title}
+          tail={EMPTY_WEEK_COPY.tail}
+          body={EMPTY_WEEK_COPY.body(coachName)}
+        />
       )}
 
       {/* Completed hero — session summary + effort feedback in one card */}

@@ -76,7 +76,12 @@ export default function ProgressScreen() {
       {!planDetail && !completions.some((c) => c.status === 'COMPLETED') ? (
         // Nothing to show before the first workout; a client whose plan was
         // unassigned still sees their history. The web does the same.
-        <EmptyState title={PROGRESS_BEFORE_PLAN_COPY.title} body={PROGRESS_BEFORE_PLAN_COPY.body} />
+        <EmptyState
+          art={PROGRESS_BEFORE_PLAN_COPY.art}
+          title={PROGRESS_BEFORE_PLAN_COPY.title}
+          tail={PROGRESS_BEFORE_PLAN_COPY.tail}
+          body={PROGRESS_BEFORE_PLAN_COPY.body}
+        />
       ) : (
         <>
           <WeekCircles week={week} />

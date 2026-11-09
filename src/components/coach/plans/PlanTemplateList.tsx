@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { PlanTemplateCard } from './PlanTemplateCard';
 import type { WorkoutPlan } from '@/types';
+import { NO_MATCH_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 
 interface PlanTemplateListProps {
   templates: WorkoutPlan[];
@@ -85,11 +87,7 @@ export function PlanTemplateList({
       )}
 
       {sections.length === 0 && q && (
-        <div className="text-center py-12">
-          <p className="text-sm text-muted-foreground antialiased">
-            No plans match &ldquo;{query.trim()}&rdquo;
-          </p>
-        </div>
+        <StateView size="sm" art={NO_MATCH_COPY.art} title={NO_MATCH_COPY.title(query.trim())} tail={NO_MATCH_COPY.plans} />
       )}
 
       {sections.map((section, si) => {

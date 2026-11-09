@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils';
 import { CheckIn } from '@/types';
 import { format, formatDistanceToNow } from 'date-fns';
 import { WORKOUT_FEELING_DISPLAY, BODY_FEELING_DISPLAY } from '@/lib/checkin-display';
+import { CLIENT_NO_CHECKINS_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 
 export interface CheckInScheduleSettings {
   enabled: boolean;
@@ -198,11 +200,14 @@ export function CheckInHistoryPanel({
       <div className="h-full lg:flex-1 lg:min-h-0 flex flex-col">
         {/* Same shape as the Workouts tab's empty state so the tabs read
             as one family */}
-        <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-          <p className="font-semibold antialiased">No check-ins yet</p>
-          <p className="text-sm text-muted-foreground antialiased">
-            Completed check-ins with {firstName} will show up here.
-          </p>
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <StateView
+            size="sm"
+            as="h3"
+            art={CLIENT_NO_CHECKINS_COPY.art}
+            title={CLIENT_NO_CHECKINS_COPY.title}
+            tail={CLIENT_NO_CHECKINS_COPY.tail(firstName)}
+          />
         </div>
         {scheduleToggle && (
           <div className="pt-2">

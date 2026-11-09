@@ -8,6 +8,9 @@ import { useUnreadMessages } from '@/hooks/api/useUnreadMessages';
 import { usePastClients } from '@/hooks/api/useCoachClients';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ALL_CLEAR_COPY, NO_MATCH_COPY } from '@logbook/shared/state-copy';
+import { StateArt } from '@/components/states/StateArt';
+import { StateView } from '@/components/states/StateView';
 import {
   ROSTER_COPY,
   rosterAction,
@@ -213,15 +216,14 @@ export function ClientRoster({ clients }: ClientRosterProps) {
       </div>
 
       {visibleClients.length === 0 ? (
-        <div className="text-center py-10 space-y-2">
-          <p className="text-sm font-medium antialiased">No clients match &ldquo;{query.trim()}&rdquo;</p>
+        <StateView size="sm" art={NO_MATCH_COPY.art} title={NO_MATCH_COPY.title(query.trim())} tail={NO_MATCH_COPY.clients}>
           <button
             onClick={() => setQuery('')}
             className="text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors tap-target"
           >
             Clear search
           </button>
-        </div>
+        </StateView>
       ) : sortMode === 'name' ? (
         // Alphabetical is for finding someone — one flat list, actions intact
         renderRows(visibleClients)
@@ -236,10 +238,13 @@ export function ClientRoster({ clients }: ClientRosterProps) {
             </section>
           ) : (
             !isSearching && (
-              <p className="flex items-center gap-2 rounded-2xl border border-border/70 bg-card px-4 py-3.5 text-sm font-medium antialiased">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" aria-hidden="true" />
-                {ROSTER_COPY.allClear}
-              </p>
+              <div className="flex items-center gap-3 rounded-2xl border border-border/70 bg-card pl-2 pr-4 py-2 animate-enter">
+                <StateArt art={ALL_CLEAR_COPY.art} size="xs" />
+                <p className="text-sm font-semibold leading-snug tracking-tight antialiased">
+                  {ALL_CLEAR_COPY.title}
+                  <span className="block font-normal text-muted-foreground">{ROSTER_COPY.allClear}</span>
+                </p>
+              </div>
             )
           )}
           {groups.rest.length > 0 && (

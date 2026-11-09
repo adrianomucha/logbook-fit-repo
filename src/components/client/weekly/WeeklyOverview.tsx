@@ -4,6 +4,8 @@ import { WorkoutPlan, WorkoutCompletion, Client } from '@/types';
 import { getWeekDays, WeekDayInfo } from '@/lib/workout-week-helpers';
 import { WeekHeader } from './WeekHeader';
 import { DayCardGrid } from './DayCardGrid';
+import { WEEK_NOT_BUILT_COPY } from '@logbook/shared/client-empty-states';
+import { StateView } from '@/components/states/StateView';
 
 interface WeeklyOverviewProps {
   client: Client;
@@ -47,17 +49,13 @@ export function WeeklyOverview({
   // Empty state — the plan has no week built for the current week number
   if (!currentWeek) {
     return (
-      <div className="text-center py-12">
-        <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium mb-2">
-          Week {currentWeekNumber}
-        </p>
-        <h3 className="font-bold text-lg tracking-tight mb-1">
-          This week isn&apos;t set up yet
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Your coach hasn&apos;t built this week of your plan yet.
-        </p>
-      </div>
+      <StateView
+        as="h3"
+        art={WEEK_NOT_BUILT_COPY.art}
+        kicker={`Week ${currentWeekNumber}`}
+        title={WEEK_NOT_BUILT_COPY.title}
+        tail={WEEK_NOT_BUILT_COPY.tail(null)}
+      />
     );
   }
 

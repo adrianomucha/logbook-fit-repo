@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, View, type PressableProps } from 'react-native';
+import type { StateArtId } from '@logbook/shared/state-art';
+import { StateArt } from './StateArt';
 
 /** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
 export function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -50,12 +52,60 @@ export function Button({ children, variant = 'primary', loading, disabled, class
   );
 }
 
-export function EmptyState({ eyebrow, title, body }: { eyebrow?: string; title: string; body?: string }) {
+/**
+ * The one layout for every empty, caught-up, error and not-found state, the
+ * same anatomy as the web's StateView: a looping isometric illustration, an
+ * optional mono kicker, a two-tone headline (what's true in ink, what to do
+ * about it in grey), a short body, then actions.
+ */
+export function EmptyState({
+  art,
+  eyebrow,
+  tone = 'brand',
+  title,
+  tail,
+  body,
+  children,
+  size = 'md',
+}: {
+  art?: StateArtId;
+  eyebrow?: string;
+  /** Eyebrow dot: volt for empty, amber when something broke */
+  tone?: 'brand' | 'warning';
+  title: string;
+  tail?: string;
+  body?: string;
+  /** Actions */
+  children?: ReactNode;
+  size?: 'sm' | 'md';
+}) {
+  const small = size === 'sm';
   return (
-    <View className="items-center py-12">
-      {eyebrow ? <Eyebrow className="mb-2">{eyebrow}</Eyebrow> : null}
-      <Text className="font-sans-bold text-lg text-foreground">{title}</Text>
-      {body ? <Text className="mt-1 text-center font-sans text-sm text-muted-foreground">{body}</Text> : null}
+    <View className={`items-center px-4 ${small ? 'py-6' : 'py-10'}`}>
+      {art ? (
+        <View className={small ? 'mb-3' : 'mb-5'}>
+          <StateArt art={art} size={small ? 'sm' : 'md'} />
+        </View>
+      ) : null}
+      {eyebrow ? (
+        <View className="mb-2.5 flex-row items-center gap-1.5">
+          <View className={`h-1.5 w-1.5 rounded-full ${tone === 'warning' ? 'bg-warning' : 'bg-brand'}`} />
+          <Eyebrow>{eyebrow}</Eyebrow>
+        </View>
+      ) : null}
+      <Text
+        accessibilityRole="header"
+        className={`max-w-[340px] text-center font-sans-semibold tracking-tight text-foreground ${small ? 'text-base leading-snug' : 'text-xl leading-7'}`}
+      >
+        {title}
+        {tail ? <Text className="text-muted-foreground">{`\n${tail}`}</Text> : null}
+      </Text>
+      {body ? (
+        <Text className={`max-w-[320px] text-center font-sans text-muted-foreground ${small ? 'mt-1.5 text-[13px]' : 'mt-2.5 text-sm leading-5'}`}>
+          {body}
+        </Text>
+      ) : null}
+      {children ? <View className={`w-full items-center gap-2.5 ${small ? 'mt-4' : 'mt-6'}`}>{children}</View> : null}
     </View>
   );
 }

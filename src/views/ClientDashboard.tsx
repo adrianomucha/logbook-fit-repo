@@ -47,6 +47,7 @@ import {
   WEEK_NOT_BUILT_COPY,
   WELCOME_COPY,
 } from '@logbook/shared/client-empty-states';
+import { StateView } from '@/components/states/StateView';
 
 // ---- Component ----
 
@@ -391,17 +392,11 @@ export function ClientDashboard() {
   if (hasFatalError) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
-          <div className="py-10 px-6 text-center">
-            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">{LOAD_ERROR_COPY.title}</h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">
-              {LOAD_ERROR_COPY.body}
-            </p>
-            <Button onClick={() => window.location.reload()} className="active:scale-[0.96] transition-transform duration-150">
-              {LOAD_ERROR_COPY.retry}
-            </Button>
-          </div>
-        </div>
+        <StateView art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
+          <Button onClick={() => window.location.reload()} className="active:scale-[0.96] transition-transform duration-150">
+            {LOAD_ERROR_COPY.retry}
+          </Button>
+        </StateView>
       </div>
     );
   }
@@ -412,14 +407,13 @@ export function ClientDashboard() {
   if (!client || !coach) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="text-center animate-enter max-w-sm">
-          <h1 className="text-2xl font-bold mb-2 tracking-tight antialiased">
-            {NO_COACH_COPY.title}
-          </h1>
-          <p className="text-sm text-muted-foreground antialiased">
-            {NO_COACH_COPY.body}
-          </p>
-        </div>
+        <StateView
+          as="h1"
+          art={NO_COACH_COPY.art}
+          title={NO_COACH_COPY.title}
+          tail={NO_COACH_COPY.tail}
+          body={NO_COACH_COPY.body}
+        />
       </div>
     );
   }
@@ -484,10 +478,12 @@ export function ClientDashboard() {
                   weekNumber={null}
                 />
               ) : (
-                <div className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center">
-                  <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">{PROGRESS_BEFORE_PLAN_COPY.title}</h2>
-                  <p className="text-sm text-muted-foreground antialiased">{PROGRESS_BEFORE_PLAN_COPY.body}</p>
-                </div>
+                <StateView
+                  art={PROGRESS_BEFORE_PLAN_COPY.art}
+                  title={PROGRESS_BEFORE_PLAN_COPY.title}
+                  tail={PROGRESS_BEFORE_PLAN_COPY.tail}
+                  body={PROGRESS_BEFORE_PLAN_COPY.body}
+                />
               )}
             </>
           ) : (
@@ -584,24 +580,23 @@ export function ClientDashboard() {
         {/* This week couldn't be loaded — say so instead of rendering a blank
             Today tab or a mislabeled week (chat and progress still work) */}
         {currentView === 'workout' && !planEnded && !weekOverview && (
-          <section
-            aria-label="Week unavailable"
-            className="rounded-2xl border border-border/70 bg-card px-6 py-10 text-center"
-          >
-            <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">
-              {isNotFound(weekError) ? WEEK_NOT_BUILT_COPY.title : LOAD_ERROR_COPY.title}
-            </h2>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">
-              {isNotFound(weekError) ? WEEK_NOT_BUILT_COPY.body(coach?.user.name) : LOAD_ERROR_COPY.body}
-            </p>
+          <section aria-label="Week unavailable">
             {isNotFound(weekError) ? (
-              <Button onClick={handleMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
-                Message {coach?.user.name?.split(' ')[0] ?? 'Coach'}
-              </Button>
+              <StateView
+                art={WEEK_NOT_BUILT_COPY.art}
+                title={WEEK_NOT_BUILT_COPY.title}
+                tail={WEEK_NOT_BUILT_COPY.tail(coach?.user.name)}
+              >
+                <Button onClick={handleMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+                  {WEEK_NOT_BUILT_COPY.message(coach?.user.name)}
+                </Button>
+              </StateView>
             ) : (
-              <Button onClick={() => refreshWeek()} className="active:scale-[0.96] transition-transform duration-150">
-                {LOAD_ERROR_COPY.retry}
-              </Button>
+              <StateView art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
+                <Button onClick={() => refreshWeek()} className="active:scale-[0.96] transition-transform duration-150">
+                  {LOAD_ERROR_COPY.retry}
+                </Button>
+              </StateView>
             )}
           </section>
         )}

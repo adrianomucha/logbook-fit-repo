@@ -1,7 +1,8 @@
 import '../global.css';
 
 import { useEffect } from 'react';
-import { Stack, useRouter } from 'expo-router';
+import { View } from 'react-native';
+import { Stack, useRouter, type ErrorBoundaryProps } from 'expo-router';
 import * as Notifications from 'expo-notifications';
 import { StatusBar } from 'expo-status-bar';
 import * as SplashScreen from 'expo-splash-screen';
@@ -14,6 +15,8 @@ import { IBMPlexMono_400Regular } from '@expo-google-fonts/ibm-plex-mono/400Regu
 import { IBMPlexMono_500Medium } from '@expo-google-fonts/ibm-plex-mono/500Medium';
 import { IBMPlexMono_600SemiBold } from '@expo-google-fonts/ibm-plex-mono/600SemiBold';
 import { IBMPlexMono_700Bold } from '@expo-google-fonts/ibm-plex-mono/700Bold';
+import { CRASH_COPY } from '@logbook/shared/state-copy';
+import { Button, EmptyState } from '@/components/ui';
 import { AuthProvider } from '@/lib/auth';
 import { resolveNotificationUrl } from '@/lib/push';
 
@@ -34,6 +37,22 @@ function useNotificationDeepLinks() {
     const sub = Notifications.addNotificationResponseReceivedListener(open);
     return () => sub.remove();
   }, [router]);
+}
+
+/**
+ * Catches a crash anywhere below and offers a retry instead of a blank
+ * screen. The web's error.tsx. No error.message: it can carry internals.
+ */
+export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
+  return (
+    <View className="flex-1 justify-center bg-background px-5">
+      <EmptyState art={CRASH_COPY.art} title={CRASH_COPY.title} tail={CRASH_COPY.tail}>
+        <Button variant="primary" className="w-full" onPress={() => void retry()}>
+          {CRASH_COPY.retry}
+        </Button>
+      </EmptyState>
+    </View>
+  );
 }
 
 export default function RootLayout() {

@@ -6,6 +6,8 @@ import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { stripFlagContext } from '@logbook/shared/flag-message';
 import { toast } from 'sonner';
+import { COACH_CHAT_EMPTY_COPY } from '@logbook/shared/state-copy';
+import { StateArt } from '@/components/states/StateArt';
 
 // Server-side cap on message content (sendMessageSchema)
 const MAX_MESSAGE_LENGTH = 5000;
@@ -316,7 +318,7 @@ export function ChatView({
                         <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-brand ring-2 ring-card animate-bounce-once" />
                       </div>
                     ) : (
-                      <div className="text-3xl select-none mb-1">👋</div>
+                      <StateArt art={COACH_CHAT_EMPTY_COPY.art} size="sm" className="mx-auto mb-1" />
                     )}
                     {isBrand && (
                       <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
@@ -324,7 +326,7 @@ export function ChatView({
                       </p>
                     )}
                     <p className={cn('antialiased', isBrand ? 'text-lg font-bold tracking-tight' : 'text-sm font-medium')}>
-                      {isBrand ? `Talk to ${peerFirst}` : 'Start the conversation'}
+                      {isBrand ? `Talk to ${peerFirst}` : COACH_CHAT_EMPTY_COPY.title}
                     </p>
                     <p className={cn('text-muted-foreground antialiased', isBrand ? 'text-sm max-w-[280px] mx-auto leading-relaxed' : 'text-xs')}>
                       {isBrand
