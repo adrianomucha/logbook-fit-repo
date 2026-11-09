@@ -140,30 +140,40 @@ export function ChatView({
               ) : null}
             </View>
           ) : null}
-          <View
-            className={`max-w-[80%] px-4 py-2.5 ${mine ? 'bg-foreground' : 'bg-muted/50'}`}
-            style={bubbleRadius(mine, isFirstInGroup, isLastInGroup)}
-          >
+          <View className={`max-w-[80%] gap-[5px] ${mine ? 'items-end' : 'items-start'}`}>
             {ctx ? (
-              // A raised panel with a hairline edge all round, so the card
-              // lifts off the bubble without a side rail
-              <View className={`-mx-0.5 mb-2 rounded-lg border px-3 py-2.5 ${mine ? 'border-white/10 bg-white/15' : 'border-border bg-background'}`}>
-                {/* Volt eyebrow on ink — the logo's pairing; on the light
-                    incoming card volt text would fail contrast, so a volt dot */}
-                <View className="mb-1 flex-row items-center gap-1.5">
-                  {!mine ? <View className="h-1.5 w-1.5 rounded-full bg-brand" /> : null}
-                  <Text className={`font-mono-semibold text-[10px] uppercase tracking-[1.6px] ${mine ? 'text-brand' : 'text-foreground/70'}`}>Exercise</Text>
+              // The exercise sits above the bubble as its own outlined
+              // attachment, the way a link preview does. Nesting it inside
+              // the ink bubble stacked a panel on a bubble on a card.
+              <View
+                className="flex-row items-start gap-3 border border-border p-3"
+                style={bubbleRadius(mine, isFirstInGroup, false)}
+              >
+                {/* The usual attachment row: a square mark on the left, one
+                    text column on the right, equal padding all round. Volt
+                    tile with the flag the client tapped in the workout. */}
+                <View className="h-10 w-10 items-center justify-center rounded-lg bg-brand">
+                  <Feather name="flag" size={16} color="#1e2702" />
                 </View>
-                <Text className={`font-sans-bold text-[15px] tracking-tight ${mine ? 'text-white' : 'text-foreground'}`} numberOfLines={1}>{ctx.exerciseName}</Text>
-                <Text className={`mt-0.5 font-sans-medium text-[10px] uppercase tracking-[1.2px] ${mine ? 'text-white/80' : 'text-foreground/70'}`}>
-                  {ctx.prescription} · {ctx.setsCompleted}/{ctx.totalSets} sets
-                </Text>
-                {ctx.flagNote ? (
-                  <Text className={`mt-1.5 font-sans text-[13px] italic ${mine ? 'text-white/80' : 'text-foreground/70'}`}>“{ctx.flagNote}”</Text>
-                ) : null}
+                {/* Three steps, one edge: title, data line in mono, the
+                    client's note. Title and data line match the tile's height. */}
+                <View className="shrink">
+                  <Text className="font-sans-semibold text-[15px] leading-5 tracking-tight text-foreground" numberOfLines={1}>{ctx.exerciseName}</Text>
+                  <Text className="mt-0.5 font-mono text-xs leading-4 text-muted-foreground">
+                    {ctx.prescription} · {ctx.setsCompleted}/{ctx.totalSets} sets
+                  </Text>
+                  {ctx.flagNote ? (
+                    <Text className="mt-2 font-sans text-[13px] leading-[18px] text-foreground/70">“{ctx.flagNote}”</Text>
+                  ) : null}
+                </View>
               </View>
             ) : null}
-            <Text className={`font-sans text-[15px] leading-[23px] ${mine ? 'text-background' : 'text-foreground'}`}>{ctx ? stripFlagContext(message.content) : message.content}</Text>
+            <View
+              className={`px-4 py-2.5 ${mine ? 'bg-foreground' : 'bg-muted/50'}`}
+              style={bubbleRadius(mine, isFirstInGroup && !ctx, isLastInGroup)}
+            >
+              <Text className={`font-sans text-[15px] leading-[23px] ${mine ? 'text-background' : 'text-foreground'}`}>{ctx ? stripFlagContext(message.content) : message.content}</Text>
+            </View>
           </View>
         </View>
         {isLastInGroup ? (
@@ -182,7 +192,7 @@ export function ChatView({
         <View className="flex-1 items-center justify-center px-6 py-8">
           <View className="relative mb-3">
             <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size={56} textSize={18} />
-            <View className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-brand" />
+            <View className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-brand" />
           </View>
           <Text className="mb-2 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Direct line</Text>
           <Text className="font-sans-bold text-lg tracking-tight text-foreground">Talk to {peerFirst}</Text>
@@ -215,7 +225,7 @@ export function ChatView({
           renderItem={renderRow}
           onScroll={onScroll}
           scrollEventThrottle={64}
-          contentContainerStyle={{ paddingHorizontal: 12, paddingTop: 8, paddingBottom: 16 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 16 }}
           keyboardShouldPersistTaps="handled"
           keyboardDismissMode="interactive"
           // Inverted: the footer renders at the top of the conversation
@@ -247,7 +257,7 @@ export function ChatView({
         </View>
       ) : null}
 
-      <View className="border-t border-border/50 px-3 py-2.5">
+      <View className="border-t border-border/50 px-4 py-2.5">
         {sendError ? <Text className="mb-1.5 font-sans text-xs text-destructive-text">{sendError}</Text> : null}
         <View className="flex-row items-center gap-2">
           <View className="min-h-[44px] flex-1 justify-center rounded-full bg-muted/40 px-4">

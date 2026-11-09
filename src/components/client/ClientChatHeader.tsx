@@ -10,10 +10,12 @@ interface ClientChatHeaderProps {
  * Conversation header for the client's chat tab. Leads with the coach —
  * avatar in the shared deterministic color, "Your coach" eyebrow — so the
  * thread reads as a line to a person, not a generic "Messages" screen.
+ * On a phone it carries one full-bleed hairline in place of a card around
+ * the thread; from sm up the thread's own card does that job.
  */
 export function ClientChatHeader({ coachName, coachAvatar }: ClientChatHeaderProps) {
   return (
-    <div className="shrink-0 py-4 flex items-center justify-between gap-3">
+    <div className="shrink-0 -mx-4 px-4 pb-3 sm:mx-0 sm:px-0 sm:py-4 border-b border-border/50 sm:border-b-0 flex items-center justify-between gap-3">
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative w-10 h-10 shrink-0" aria-hidden="true">
           <UserAvatar name={coachName} avatarUrl={coachAvatar} className="w-10 h-10 text-sm" />

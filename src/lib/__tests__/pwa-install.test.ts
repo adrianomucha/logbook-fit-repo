@@ -53,6 +53,7 @@ const snapshot = (over: Partial<BrowserSnapshot> = {}): BrowserSnapshot => ({
   navigatorStandalone: false,
   displayModeStandalone: false,
   hasNativePrompt: false,
+  openedFromNativeApp: false,
   ...over,
 });
 
@@ -183,6 +184,11 @@ describe("detectInstallMethod", () => {
         "coach"
       )
     ).toBe("none");
+  });
+
+  it("never prompts in the native app's in-app browser, which looks like Safari", () => {
+    expect(detectInstallMethod(snapshot({ openedFromNativeApp: true }))).toBe("none");
+    expect(detectInstallMethod(snapshot({ openedFromNativeApp: true }), "coach")).toBe("none");
   });
 
   it("never prompts inside an already-installed app", () => {

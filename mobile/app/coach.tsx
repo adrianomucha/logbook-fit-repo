@@ -2,7 +2,7 @@ import { Text, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuth } from '@/lib/auth';
-import { WEB_URL } from '@/lib/config';
+import { webUrl } from '@/lib/config';
 import { Screen } from '@/components/Screen';
 import { Button, Eyebrow, LoadingScreen } from '@/components/ui';
 
@@ -26,7 +26,7 @@ export default function CoachScreen() {
           client dashboard are at logbook.fit, where there's room for them.
         </Text>
       </View>
-      <Button variant="primary" onPress={() => WebBrowser.openBrowserAsync(`${WEB_URL}/coach`)}>
+      <Button variant="primary" onPress={() => WebBrowser.openBrowserAsync(webUrl('/coach'))}>
         Open logbook.fit
       </Button>
       <Button variant="ghost" onPress={signOut}>

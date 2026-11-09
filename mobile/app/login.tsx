@@ -4,7 +4,7 @@ import { Redirect } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SignInError, useAuth } from '@/lib/auth';
-import { WEB_URL } from '@/lib/config';
+import { webUrl } from '@/lib/config';
 import { Button, Eyebrow } from '@/components/ui';
 
 const inputClass =
@@ -71,7 +71,7 @@ export default function LoginScreen() {
           <View className="gap-2">
             <View className="flex-row items-baseline justify-between">
               <Eyebrow>Password</Eyebrow>
-              <Pressable onPress={() => WebBrowser.openBrowserAsync(`${WEB_URL}/forgot-password`)}>
+              <Pressable onPress={() => WebBrowser.openBrowserAsync(webUrl('/forgot-password'))}>
                 <Eyebrow>Forgot password?</Eyebrow>
               </Pressable>
             </View>
