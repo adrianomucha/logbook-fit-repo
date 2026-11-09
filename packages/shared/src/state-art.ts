@@ -344,14 +344,19 @@ const plates: StateArt = {
 
 // ── Week: a calendar of empty days, one workout waiting to land ────────────
 
-const CAL = { x: -16, y: 6, w: 80, d: 28, h: 3 } as const;
-const SLOT = 8.5;
-const slotX = (i: number) => CAL.x + 3.5 + i * 10.9;
-const slotY = CAL.y + 13;
+// Five big day slots rather than seven small ones: at app size seven dashed
+// squares ran together into a ruler. Five still reads as a training week.
+const DAYS = 5;
+const SLOT = 11;
+const GAP = 2.5;
+const CAL = { x: -12, y: 4, w: DAYS * SLOT + (DAYS - 1) * GAP + 5, d: 22, h: 3 } as const;
+const slotX = (i: number) => CAL.x + 2.5 + i * (SLOT + GAP);
+const slotY = CAL.y + 8;
+const TODAY = 2;
 
 const week: StateArt = {
   id: 'week',
-  frame: [29.5, 14.5],
+  frame: [33, 12],
   duration: 3200,
   accent: 'brand',
   layers: [
@@ -359,10 +364,10 @@ const week: StateArt = {
     layer('calendar', [
       ...solidBox(CAL.x, CAL.y, 0, CAL.w, CAL.d, CAL.h),
       // Header band, like the top of a wall planner
-      ...solidBox(CAL.x, CAL.y, CAL.h, CAL.w, 7, 2, { top: 'ink', sides: 'shade' }),
-      ...Array.from({ length: 7 }, (_, i) => ghost(box(slotX(i), slotY, CAL.h, SLOT, SLOT, 0).top)),
+      ...solidBox(CAL.x, CAL.y, CAL.h, CAL.w, 5, 1.5, { top: 'shade', sides: 'shade' }),
+      ...Array.from({ length: DAYS }, (_, i) => ghost(box(slotX(i), slotY, CAL.h, SLOT, SLOT, 0).top)),
     ]),
-    layer('workout', solidBox(slotX(3), slotY, CAL.h + 11, SLOT, SLOT, 3, { top: 'accent' }), [
+    layer('workout', solidBox(slotX(TODAY), slotY, CAL.h + 11, SLOT, SLOT, 3, { top: 'accent' }), [
       { at: 0 },
       { at: 0.3, y: -3 },
       { at: 0.54, y: 11, ease: 'in' },
