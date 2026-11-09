@@ -15,7 +15,9 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ConfirmationModal } from '@/components/coach/ConfirmationModal';
 import { Button } from '@/components/ui/button';
-import { Check, Dumbbell, Flag, Loader2, RotateCcw } from 'lucide-react';
+import { Check, Flag, Loader2, RotateCcw } from 'lucide-react';
+import { WORKOUT_LOAD_ERROR_COPY, WORKOUT_NOT_FOUND_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 import { format } from 'date-fns';
 import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 import { getLoggedSetsCount, NOTHING_LOGGED_COPY } from '@logbook/shared/workout-execution';
@@ -337,14 +339,11 @@ export function ClientWorkoutExecution() {
   if (error) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
-          <div className="py-8 px-6 text-center">
-            <p className="text-muted-foreground antialiased">Failed to load workout.</p>
-            <Button onClick={handleBack} className="mt-4 active:scale-[0.96] transition-transform duration-150">
-              Go back
-            </Button>
-          </div>
-        </div>
+        <StateView art={WORKOUT_LOAD_ERROR_COPY.art} title={WORKOUT_LOAD_ERROR_COPY.title} tail={WORKOUT_LOAD_ERROR_COPY.tail}>
+          <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">
+            {WORKOUT_LOAD_ERROR_COPY.back}
+          </Button>
+        </StateView>
       </div>
     );
   }
@@ -352,16 +351,11 @@ export function ClientWorkoutExecution() {
   if (!day) {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
-        <div className="bg-card rounded-xl overflow-hidden border border-border/70 animate-enter">
-          <div className="py-8 px-6 text-center">
-            <Dumbbell className="w-10 h-10 mx-auto text-muted-foreground/60 mb-4" />
-            <p className="font-semibold mb-1.5 tracking-tight antialiased">Workout not found</p>
-            <p className="text-sm text-muted-foreground mb-5 antialiased">
-              This workout doesn&apos;t exist in your plan.
-            </p>
-            <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">Go back</Button>
-          </div>
-        </div>
+        <StateView art={WORKOUT_NOT_FOUND_COPY.art} title={WORKOUT_NOT_FOUND_COPY.title} tail={WORKOUT_NOT_FOUND_COPY.tail}>
+          <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">
+            {WORKOUT_NOT_FOUND_COPY.back}
+          </Button>
+        </StateView>
       </div>
     );
   }

@@ -41,6 +41,12 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { urgencyStyle } from '@/components/coach/shared/clientSignals';
 import { Button } from '@/components/ui/button';
 import { LoadErrorState } from '@/components/coach/EmptyStates';
+import { StateView } from '@/components/states/StateView';
+import {
+  CLIENT_NOT_FOUND_COPY,
+  CLIENT_PLAN_LOAD_ERROR_COPY,
+  PROFILE_LOAD_ERROR_COPY,
+} from '@logbook/shared/state-copy';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -595,12 +601,7 @@ export function UnifiedClientProfile() {
       <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto px-3 pt-3 sm:px-4 sm:pt-7">
-          <LoadErrorState
-            kicker="Client profile · Signal lost"
-            title="Couldn't load this client"
-            onRetry={() => refreshClient()}
-            preview="profile"
-          />
+          <LoadErrorState copy={PROFILE_LOAD_ERROR_COPY} onRetry={() => refreshClient()} />
         </div>
       </div>
     );
@@ -612,20 +613,14 @@ export function UnifiedClientProfile() {
       <div className="min-h-dvh bg-background pb-24 sm:pb-4">
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8 px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
-          <div className="max-w-md mx-auto bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
-            <div className="text-center py-12 px-6">
-              <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Can&apos;t find this client</h2>
-              <p className="text-sm text-muted-foreground mb-5 antialiased">
-                They may have been removed, or the link might be outdated.
-              </p>
-              <Button
-                onClick={() => router.push('/coach')}
-                className="active:scale-[0.96] transition-transform duration-150"
-              >
-                Back to clients
-              </Button>
-            </div>
-          </div>
+          <StateView art={CLIENT_NOT_FOUND_COPY.art} title={CLIENT_NOT_FOUND_COPY.title} tail={CLIENT_NOT_FOUND_COPY.tail}>
+            <Button
+              onClick={() => router.push('/coach')}
+              className="active:scale-[0.96] transition-transform duration-150"
+            >
+              {CLIENT_NOT_FOUND_COPY.back}
+            </Button>
+          </StateView>
         </div>
       </div>
     );
@@ -1230,12 +1225,18 @@ export function UnifiedClientProfile() {
                     </>
                   ) : !hasNoPlan ? (
                     planError ? (
-                      <div className="flex flex-col items-center justify-center gap-2 py-10 text-center lg:flex-1">
-                        <p className="text-sm text-muted-foreground antialiased">Couldn&apos;t load {firstName}&apos;s plan.</p>
+                      <StateView
+                        size="sm"
+                        as="h3"
+                        art={CLIENT_PLAN_LOAD_ERROR_COPY.art}
+                        title={CLIENT_PLAN_LOAD_ERROR_COPY.title(firstName)}
+                        tail={CLIENT_PLAN_LOAD_ERROR_COPY.tail}
+                        className="lg:flex-1 justify-center"
+                      >
                         <Button variant="outline" size="sm" onClick={() => refreshPlan()}>
                           Try again
                         </Button>
-                      </div>
+                      </StateView>
                     ) : (
                       <div className="flex items-center justify-center py-10 lg:flex-1" role="status">
                         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" aria-hidden="true" />

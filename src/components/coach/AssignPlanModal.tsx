@@ -2,9 +2,11 @@ import { useState, useMemo } from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Check, Dumbbell, Loader2, Search } from 'lucide-react';
+import { Check, Loader2, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkoutPlan } from '@/types';
+import { NO_TEMPLATES_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 
 interface AssignPlanModalProps {
   isOpen: boolean;
@@ -128,15 +130,7 @@ export function AssignPlanModal({
   if (selectablePlans.length === 0 && !currentPlan) {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title={title} maxWidth="md">
-        <div className="text-center py-10">
-          <div className="w-11 h-11 rounded-lg bg-muted/60 flex items-center justify-center mx-auto mb-3">
-            <Dumbbell className="w-5 h-5 text-muted-foreground" />
-          </div>
-          <p className="text-sm font-semibold antialiased mb-1">No templates yet</p>
-          <p className="text-[13px] text-muted-foreground antialiased">
-            Create a plan first, then assign it to a client.
-          </p>
-        </div>
+        <StateView size="sm" as="h3" art={NO_TEMPLATES_COPY.art} title={NO_TEMPLATES_COPY.title} tail={NO_TEMPLATES_COPY.tail} />
       </Modal>
     );
   }

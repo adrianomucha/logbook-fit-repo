@@ -18,6 +18,7 @@ import { CoachNav } from '@/components/coach/CoachNav';
 import { InviteClientModal } from '@/components/coach/InviteClientModal';
 import { GettingStartedCard } from '@/components/coach/GettingStartedCard';
 import { EmptyStateNoPlans, LoadErrorState } from '@/components/coach/EmptyStates';
+import { ROSTER_LOAD_ERROR_COPY } from '@logbook/shared/state-copy';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useCoachDashboard } from '@/hooks/api/useCoachDashboard';
@@ -360,11 +361,7 @@ export function CoachDashboard() {
             ) : dashboardError && dashboardClients.length === 0 ? (
               // A failed fetch must never masquerade as the "no clients yet"
               // onboarding state — a coach with a full roster would see it
-              <LoadErrorState
-                kicker="Roster · Signal lost"
-                title="Couldn't load your roster"
-                onRetry={() => refreshDashboard()}
-              />
+              <LoadErrorState copy={ROSTER_LOAD_ERROR_COPY} onRetry={() => refreshDashboard()} />
             ) : showGettingStarted ? (
               <div className="animate-enter" style={{ animationDelay: '60ms' }}>
                 <GettingStartedCard

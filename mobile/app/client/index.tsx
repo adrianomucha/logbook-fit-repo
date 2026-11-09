@@ -131,7 +131,7 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState title={NO_COACH_COPY.title} body={NO_COACH_COPY.body} />
+        <EmptyState art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
       </Screen>
     );
   }
@@ -155,10 +155,11 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState title={WEEK_NOT_BUILT_COPY.title} body={WEEK_NOT_BUILT_COPY.body(coach.user.name)} />
-        <Button variant="primary" className="h-11" onPress={() => router.push('/client/chat')}>
-          {`Message ${coach.user.name?.split(' ')[0] ?? 'your coach'}`}
-        </Button>
+        <EmptyState art={WEEK_NOT_BUILT_COPY.art} title={WEEK_NOT_BUILT_COPY.title} tail={WEEK_NOT_BUILT_COPY.tail(coach.user.name)}>
+          <Button variant="primary" className="h-11 w-full" onPress={() => router.push('/client/chat')}>
+            {WEEK_NOT_BUILT_COPY.message(coach.user.name)}
+          </Button>
+        </EmptyState>
       </Screen>
     );
   }
@@ -166,10 +167,11 @@ export default function TodayScreen() {
     return (
       <Screen withHeader onRefresh={refresh} refreshing={false}>
         {header}
-        <EmptyState title={LOAD_ERROR_COPY.title} body={LOAD_ERROR_COPY.body} />
-        <Button variant="primary" className="h-11" onPress={refresh}>
-          {LOAD_ERROR_COPY.retry}
-        </Button>
+        <EmptyState art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
+          <Button variant="primary" className="h-11 w-full" onPress={refresh}>
+            {LOAD_ERROR_COPY.retry}
+          </Button>
+        </EmptyState>
       </Screen>
     );
   }
@@ -349,7 +351,12 @@ export default function TodayScreen() {
           />
         )
       ) : (
-        <EmptyState title={EMPTY_WEEK_COPY.title} body={EMPTY_WEEK_COPY.body(coach.user.name)} />
+        <EmptyState
+          art={EMPTY_WEEK_COPY.art}
+          title={EMPTY_WEEK_COPY.title}
+          tail={EMPTY_WEEK_COPY.tail}
+          body={EMPTY_WEEK_COPY.body(coach.user.name)}
+        />
       )}
 
       {/* Below the day's card; when the workout is done it sits above the

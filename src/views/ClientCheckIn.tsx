@@ -9,7 +9,7 @@ import type { ClientDetail } from '@/types/api';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Check, ChevronDown, ClipboardCheck, Flag, Loader2 } from 'lucide-react';
+import { Check, ChevronDown, Flag, Loader2 } from 'lucide-react';
 import { CoachNav } from '@/components/coach/CoachNav';
 import { PageHeader } from '@/components/coach/PageHeader';
 import { cn } from '@/lib/utils';
@@ -23,6 +23,8 @@ import { workoutTitle } from '@logbook/shared/progress';
 import { WORKOUT_MARK_LABEL } from '@logbook/shared/workout-week-helpers';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
+import { NO_ACTIVE_CHECKIN_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 
 /* ── Brand surface helpers — same vocabulary as the client profile ── */
 
@@ -280,18 +282,17 @@ export function ClientCheckIn() {
     return (
       <PageShell clientName={clientName} clientAvatar={client?.user.avatarUrl ?? null} subtitle="No active check-in" onBack={handleBack}>
         <div className="animate-enter" style={{ animationDelay: '100ms' }}>
-          <SectionCard className="max-w-2xl text-center py-12">
-            <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <ClipboardCheck className="w-6 h-6 text-muted-foreground" />
-            </div>
-            <h2 className="text-xl font-bold tracking-tight mb-1.5 text-balance">No active check-in</h2>
-            <p className="text-sm text-muted-foreground mb-6 text-pretty">
-              Start a new check-in to hear how {firstName} is doing.
-            </p>
-            <Button onClick={handleStartNewCheckIn} disabled={isCreating} variant="brand" className="h-11 px-6">
-              {isCreating && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-              {CHECKIN_ACTION.send}
-            </Button>
+          <SectionCard className="max-w-2xl">
+            <StateView
+              art={NO_ACTIVE_CHECKIN_COPY.art}
+              title={NO_ACTIVE_CHECKIN_COPY.title}
+              tail={NO_ACTIVE_CHECKIN_COPY.tail(firstName)}
+            >
+              <Button onClick={handleStartNewCheckIn} disabled={isCreating} variant="brand" className="h-11 px-6">
+                {isCreating && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+                {CHECKIN_ACTION.send}
+              </Button>
+            </StateView>
           </SectionCard>
         </div>
 

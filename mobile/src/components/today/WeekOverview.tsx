@@ -1,6 +1,7 @@
 import { Text, View } from 'react-native';
 import type { WeekDayInfo } from '@logbook/shared/workout-week-helpers';
-import { Eyebrow } from '@/components/ui';
+import { WEEK_NOT_BUILT_COPY } from '@logbook/shared/client-empty-states';
+import { EmptyState, Eyebrow } from '@/components/ui';
 import { WeekList } from './WeekList';
 
 interface WeekOverviewProps {
@@ -15,11 +16,12 @@ interface WeekOverviewProps {
 export function WeekOverview({ planName, weekNumber, durationWeeks, days, onOpenDay }: WeekOverviewProps) {
   if (days.length === 0) {
     return (
-      <View className="items-center py-12">
-        <Eyebrow className="mb-2">Week {weekNumber}</Eyebrow>
-        <Text className="font-sans-bold text-lg tracking-tight text-foreground">This week isn't set up yet</Text>
-        <Text className="mt-1 font-sans text-sm text-muted-foreground">Your coach hasn't built this week of your plan yet.</Text>
-      </View>
+      <EmptyState
+        art={WEEK_NOT_BUILT_COPY.art}
+        eyebrow={`Week ${weekNumber}`}
+        title={WEEK_NOT_BUILT_COPY.title}
+        tail={WEEK_NOT_BUILT_COPY.tail(null)}
+      />
     );
   }
 

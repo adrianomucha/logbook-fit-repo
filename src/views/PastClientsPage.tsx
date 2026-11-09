@@ -11,6 +11,8 @@ import { apiFetch } from '@/lib/api-client';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Loader2, RotateCcw } from 'lucide-react';
+import { NO_PAST_CLIENTS_COPY } from '@logbook/shared/state-copy';
+import { StateView } from '@/components/states/StateView';
 
 function PastClientRow({
   client,
@@ -111,15 +113,12 @@ export function PastClientsPage() {
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
           </div>
         ) : pastClients.length === 0 ? (
-          <div className="bg-card rounded-2xl overflow-hidden border border-border/70 animate-enter">
-            <div className="text-center py-12 px-6">
-              <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">No past clients</h2>
-              <p className="text-sm text-muted-foreground antialiased">
-                When a coaching relationship ends, it lands here, with its
-                history intact and a way back.
-              </p>
-            </div>
-          </div>
+          <StateView
+            art={NO_PAST_CLIENTS_COPY.art}
+            title={NO_PAST_CLIENTS_COPY.title}
+            tail={NO_PAST_CLIENTS_COPY.tail}
+            body={NO_PAST_CLIENTS_COPY.body}
+          />
         ) : (
           <div className="bg-card rounded-2xl divide-y divide-border/50 overflow-hidden border border-border/70 animate-enter">
             {pastClients.map((client) => (

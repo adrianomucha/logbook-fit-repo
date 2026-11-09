@@ -22,6 +22,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useWorkoutClock } from '@/hooks/useWorkoutClock';
 import { formatWorkoutClock, WORKOUT_CLOCK_LABEL } from '@logbook/shared/workout-clock';
 import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
+import { WORKOUT_LOAD_ERROR_COPY, WORKOUT_NOT_FOUND_COPY } from '@logbook/shared/state-copy';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { FlagMessageSheet } from '@/components/workout/FlagMessageSheet';
 import { KeypadDoneBar } from '@/components/workout/KeypadDoneBar';
@@ -229,13 +230,12 @@ export default function WorkoutScreen() {
   if (isLoading) return <LoadingScreen />;
 
   if (error || !day) {
+    const copy = error ? WORKOUT_LOAD_ERROR_COPY : WORKOUT_NOT_FOUND_COPY;
     return (
       <View className="flex-1 bg-background px-5" style={{ paddingTop: insets.top + 24 }}>
-        <EmptyState
-          title={error ? "Couldn't load this workout" : 'Workout not found'}
-          body={error ? 'Check your connection and try again.' : "This workout doesn't exist in your plan."}
-        />
-        <Button variant="primary" onPress={goBack}>Go back</Button>
+        <EmptyState art={copy.art} title={copy.title} tail={copy.tail}>
+          <Button variant="primary" className="w-full" onPress={goBack}>{copy.back}</Button>
+        </EmptyState>
       </View>
     );
   }

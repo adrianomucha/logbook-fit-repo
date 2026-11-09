@@ -1,22 +1,35 @@
+import type { StateArtId } from './state-art';
+
 /**
  * The client's empty states, worded once for web and app. Each one says only
  * what's true: an invite link accepts into an existing account (signed in,
  * via /signup?invite=…), so the no-coach state can point at one.
+ *
+ * Headlines come in two parts, rendered as two lines: `title` (what's true,
+ * in ink) and `tail` (what happens next, in grey). `art` names the
+ * illustration from @logbook/shared/state-art.
  */
+const coachFirst = (coachName: string | null | undefined) => coachName?.split(' ')[0] || 'Your coach';
+
 export const NO_COACH_COPY = {
-  title: "You're not connected to a coach",
-  body: 'Your workout history is saved on your account. Got an invite link from a coach? Open it and sign in to accept.',
+  art: 'noCoach' satisfies StateArtId,
+  title: 'No coach connected.',
+  tail: 'Your workout history is still saved.',
+  body: 'Got an invite link from a coach? Open it and sign in to accept.',
 } as const;
 
 /** The plan's current week has no workouts in it (or no week matches yet). */
 export const EMPTY_WEEK_COPY = {
-  title: 'Nothing scheduled this week',
+  art: 'week' satisfies StateArtId,
+  title: 'Nothing scheduled this week.',
+  tail: 'Rest is part of the plan.',
   body: (coachName: string | null | undefined) =>
-    `${coachName?.split(' ')[0] || 'Your coach'} hasn't added workouts for this week yet. Message them if you were expecting one.`,
+    `${coachFirst(coachName)} hasn't added workouts for this week yet. Message them if you were expecting one.`,
 } as const;
 
 /** Signed up, no plan yet: the welcome on the Workout tab */
 export const WELCOME_COPY = {
+  art: 'building' satisfies StateArtId,
   eyebrow: 'Getting started',
   title: (clientFirstName: string) => `You're in, ${clientFirstName}`,
   body: (coachName: string) => `${coachName} is putting your training plan together.`,
@@ -32,22 +45,26 @@ export const WELCOME_COPY = {
   leave: 'Leave this coach',
 } as const;
 
-/** The plan exists but this week hasn't been built yet */
+/** The plan exists but this week hasn't been built yet (Today and Week views) */
 export const WEEK_NOT_BUILT_COPY = {
-  title: "This week isn't set up yet",
-  body: (coachName: string | null | undefined) =>
-    `${coachName?.split(' ')[0] || 'Your coach'} hasn't built this week of your plan yet. Send them a message.`,
+  art: 'building' satisfies StateArtId,
+  title: "This week isn't set up yet.",
+  tail: (coachName: string | null | undefined) => `${coachFirst(coachName)} is still building it.`,
+  message: (coachName: string | null | undefined) => `Message ${coachName?.split(' ')[0] || 'coach'}`,
 } as const;
 
 /** The plan or week couldn't be loaded */
 export const LOAD_ERROR_COPY = {
-  title: "Couldn't load your plan",
-  body: 'Check your connection and try again.',
+  art: 'unplugged' satisfies StateArtId,
+  title: "Couldn't load your plan.",
+  tail: 'Check your connection and try again.',
   retry: 'Try again',
 } as const;
 
 /** The Progress tab before there's a plan to make progress on */
 export const PROGRESS_BEFORE_PLAN_COPY = {
-  title: 'Your progress starts here',
+  art: 'plates' satisfies StateArtId,
+  title: 'Your progress starts here.',
+  tail: 'Every workout adds to the stack.',
   body: 'Once your plan arrives and you log your first workout, your wins show up here.',
 } as const;

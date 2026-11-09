@@ -3,6 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { WELCOME_COPY } from '@logbook/shared/client-empty-states';
 import { Button, Eyebrow } from '@/components/ui';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
+import { StateArt } from '@/components/StateArt';
 import { PhotoNudge } from './PhotoNudge';
 
 interface WelcomeAwaitingPlanProps {
@@ -29,6 +30,10 @@ export function WelcomeAwaitingPlan({ clientName, coachName, onMessageCoach, has
   return (
     <View className="gap-5">
       <View className="pt-2">
+        {/* The plan being stacked together, sheet by sheet */}
+        <View className="-ml-2 mb-2">
+          <StateArt art={WELCOME_COPY.art} size="sm" />
+        </View>
         <Eyebrow className="mb-1.5">{WELCOME_COPY.eyebrow}</Eyebrow>
         <Text className="font-sans-bold text-2xl tracking-tight text-foreground">{WELCOME_COPY.title(firstName)}</Text>
         <Text className="mt-1.5 font-sans text-sm leading-5 text-muted-foreground">{WELCOME_COPY.body(coachName)}</Text>
