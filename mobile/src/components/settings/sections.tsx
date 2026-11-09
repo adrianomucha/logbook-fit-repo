@@ -14,7 +14,7 @@ import { useAuth } from '@/lib/auth';
 import { saveSession, type StoredSession } from '@/lib/session-store';
 import { AVATAR_MAX_BYTES, removeAvatar, uploadAvatar } from '@/lib/avatar';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { WEB_URL } from '@/lib/config';
+import { webUrl } from '@/lib/config';
 import { UserAvatar } from '@/components/UserAvatar';
 import { PasswordRules } from '@/components/auth/PasswordRules';
 import { NotificationPreferenceTile } from '@/components/notifications/NotificationPreferenceTile';
@@ -535,7 +535,7 @@ export function AccountSection() {
           {SETTINGS_FIELD_COPY.legal.links.map((link) => (
             <Pressable
               key={link.path}
-              onPress={() => void WebBrowser.openBrowserAsync(`${WEB_URL}${link.path}`)}
+              onPress={() => void WebBrowser.openBrowserAsync(webUrl(link.path))}
               accessibilityRole="link"
               hitSlop={8}
               className="active:opacity-70"
