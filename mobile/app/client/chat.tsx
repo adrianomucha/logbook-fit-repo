@@ -44,8 +44,10 @@ export default function ChatScreen() {
           <EmptyState art={NO_COACH_COPY.art} title={NO_COACH_COPY.title} tail={NO_COACH_COPY.tail} body={NO_COACH_COPY.body} />
         </View>
       ) : (
-        <View className="flex-1 px-4 pt-4">
-          <View className="flex-row items-center gap-3 pb-4">
+        // No card around the thread: it runs edge to edge on the page, with
+        // one hairline under the coach and one over the composer
+        <View className="flex-1">
+          <View className="flex-row items-center gap-3 border-b border-border/50 px-4 py-3">
             <View className="relative">
               <UserAvatar name={coachName} avatarUrl={coach.user.avatarUrl} size={40} textSize={14} />
               {/* Volt dot — the same brand accent the coach-side avatars carry */}
@@ -57,7 +59,7 @@ export default function ChatScreen() {
             </View>
             <NotificationToggle />
           </View>
-          <View className="mb-3 flex-1 overflow-hidden rounded-2xl border border-border/70 bg-card">
+          <View className="flex-1">
             <ChatView
               messages={messages}
               currentUserId={user?.id ?? ''}

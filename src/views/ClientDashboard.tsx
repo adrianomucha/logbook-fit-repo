@@ -431,13 +431,13 @@ export function ClientDashboard() {
         <div className={cn(
           'max-w-2xl mx-auto w-full px-4 pt-4 sm:pt-7',
           isChat
-            ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
+            ? 'flex-1 flex flex-col min-h-0 sm:gap-4'
             : 'space-y-5 sm:space-y-6 pb-[calc(var(--tabbar-h)+1.25rem+env(safe-area-inset-bottom))] sm:pb-8'
         )}>
           {isChat ? (
             <>
               <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} coachAvatar={coach?.user.avatarUrl} />
-              <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
+              <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col -mx-4 sm:mx-0 sm:rounded-2xl sm:bg-card sm:border sm:border-border/70 overflow-hidden sm:mb-8">
                 <ChatView
                   client={client}
                   messages={messages}
@@ -529,7 +529,7 @@ export function ClientDashboard() {
       <div className={cn(
         'max-w-2xl mx-auto w-full px-4 pt-4 sm:pt-7',
         currentView === 'chat'
-          ? 'flex-1 flex flex-col min-h-0 gap-3 sm:gap-4'
+          ? 'flex-1 flex flex-col min-h-0 sm:gap-4'
           : 'space-y-5 sm:space-y-6 pb-[calc(var(--tabbar-h)+1.25rem+env(safe-area-inset-bottom))] sm:pb-8'
       )}>
 
@@ -657,8 +657,9 @@ export function ClientDashboard() {
         {currentView === 'chat' && coachUserId && (
           <>
             <ClientChatHeader coachName={coach?.user.name ?? 'Coach'} coachAvatar={coach?.user.avatarUrl} />
-            {/* Contained module — hairline card, matching the rest of the client pages */}
-            <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col rounded-2xl bg-card border border-border/70 overflow-hidden mb-3 sm:mb-8">
+            {/* On a phone the thread runs edge to edge like the native app;
+                from sm up it is a contained hairline card like the other pages */}
+            <div className="flex-1 min-h-0 sm:flex-none sm:h-[600px] flex flex-col -mx-4 sm:mx-0 sm:rounded-2xl sm:bg-card sm:border sm:border-border/70 overflow-hidden sm:mb-8">
               <ChatView
                 client={client}
                 messages={messages}
