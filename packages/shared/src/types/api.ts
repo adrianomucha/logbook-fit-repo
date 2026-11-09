@@ -146,6 +146,8 @@ export interface ClientDetail {
     exercisesTotal: number | null;
     effortRating: string | null;
     durationSec: number | null;
+    /** Set when the idle sweep finished it, not the client. Optional for older servers */
+    autoFinishedAt?: string | null;
     day: { name: string | null; orderIndex: number; week: { id: string } | null } | null;
     flags: {
       id: string;
@@ -232,6 +234,8 @@ export interface ClientProgressCompletion {
   /** Optional so an app build on an older server still renders */
   dayName?: string;
   setsDone?: number;
+  /** Finished by the idle sweep, not the client. Optional for older servers */
+  autoFinished?: boolean;
 }
 
 export interface ClientProgress {
@@ -388,6 +392,8 @@ export interface WorkoutCompletionRecord {
   completionPct: number | null;
   effortRating: string | null;
   durationSec: number | null;
+  /** Set when the idle sweep finished it, not the client. Optional for older servers */
+  autoFinishedAt?: string | null;
 }
 
 // GET /api/check-ins/[id]

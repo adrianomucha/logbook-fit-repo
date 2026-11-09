@@ -81,6 +81,7 @@ export const GET = withCoach(
             exercisesTotal: true,
             effortRating: true,
             durationSec: true,
+            autoFinishedAt: true,
             // Sets where the client overrode weight or reps — the coach
             // reviews these as deviations from the prescription
             sets: {

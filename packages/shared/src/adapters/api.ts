@@ -169,6 +169,7 @@ export function apiProgressToWorkoutCompletions(
     effortRating: c.effortRating as WorkoutCompletion['effortRating'],
     dayName: c.dayName,
     setsDone: c.setsDone,
+    autoFinished: c.autoFinished ?? false,
   }));
 }
 
@@ -192,6 +193,7 @@ export function apiClientDetailToWorkoutCompletions(
     exercisesTotal: c.exercisesTotal ?? 0,
     durationSec: c.durationSec ?? undefined,
     effortRating: (c.effortRating as WorkoutCompletion['effortRating']) ?? undefined,
+    autoFinished: c.autoFinishedAt != null,
   }));
 }
 

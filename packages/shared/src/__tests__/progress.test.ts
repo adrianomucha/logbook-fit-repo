@@ -168,6 +168,17 @@ describe('buildProgressLog', () => {
     expect(weeks[1].entries[0]).toMatchObject({ kind: 'workout', title: 'Upper', wins: [{ kind: 'milestone', label: 'First workout logged' }] });
   });
 
+  it('marks a workout the idle sweep finished, and only that one', () => {
+    const weeks = log([
+      done('2026-09-22T10:00:00', { id: 'mine', dayName: 'Arms' }),
+      done('2026-09-24T10:00:00', { id: 'swept', dayName: 'Legs', autoFinished: true }),
+    ]);
+    expect(entries(weeks).map((e) => [e.title, e.autoFinished ?? false])).toEqual([
+      ['Arms', false],
+      ['Legs', true],
+    ]);
+  });
+
   it('leaves out weeks with nothing in them', () => {
     const weeks = log([done('2026-08-31T10:00:00'), done('2026-09-29T10:00:00')]);
     expect(weeks.map((w) => w.title)).toEqual(['This week', 'Aug 31 – Sep 6']);

@@ -177,6 +177,8 @@ export interface LogEntry {
   note?: string;
   /** Bests, milestones and comebacks from this workout, biggest news first */
   wins: LogWin[];
+  /** A workout the client left open and the idle sweep finished for them */
+  autoFinished?: boolean;
 }
 
 /** A week's badge: the plan week finished, or a run of weeks reaching a milestone */
@@ -282,7 +284,9 @@ export function buildProgressLog({
     }
     const week = weekOf(c.completedAt!);
     week.workouts++;
-    week.entries.push(entry({ key: `workout-${c.id}`, kind: 'workout', at: c.completedAt!, title: sessionName(c, plans), wins }));
+    week.entries.push(
+      entry({ key: `workout-${c.id}`, kind: 'workout', at: c.completedAt!, title: sessionName(c, plans), wins, autoFinished: c.autoFinished || undefined })
+    );
   });
 
   // Every workout of a plan week done: a badge on the week the last one fell in

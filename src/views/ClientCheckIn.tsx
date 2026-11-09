@@ -21,6 +21,7 @@ import { format, formatDistanceToNow, differenceInHours, subDays, startOfWeek, a
 import { CHECKIN_ACTION, CHECKIN_STATUS } from '@logbook/shared/coach-copy';
 import { workoutTitle } from '@logbook/shared/progress';
 import { WORKOUT_MARK_LABEL } from '@logbook/shared/workout-week-helpers';
+import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 /* ── Brand surface helpers — same vocabulary as the client profile ── */
@@ -922,6 +923,9 @@ function WorkoutRow({ c, abandoned, exerciseNames }: {
           <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground font-medium tabular-nums">
             {isUnfinished && 'Started '}
             {format(timestamp, 'EEE, MMM d')}
+            {c.autoFinishedAt && (
+              <span title={AUTO_FINISHED_COPY.coach}> · {AUTO_FINISHED_COPY.label}</span>
+            )}
           </p>
         </div>
         {isUnfinished && !abandoned ? (

@@ -182,6 +182,7 @@ export const GET = withClient(
             completionPct: completion.completionPct,
             effortRating: completion.effortRating,
             durationSec: completion.durationSec,
+            autoFinishedAt: completion.autoFinishedAt,
           }
         : null,
     });

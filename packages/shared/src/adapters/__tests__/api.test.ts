@@ -313,6 +313,18 @@ describe("apiProgressToWorkoutCompletions", () => {
     expect(result[0].status).toBe("COMPLETED");
     expect(result[0].completionPct).toBe(85);
     expect(result[0].effortRating).toBe("MEDIUM");
+    // An older server says nothing about auto-finishing: the client did it
+    expect(result[0].autoFinished).toBe(false);
+  });
+
+  it("carries the auto-finished flag", () => {
+    const [c] = apiProgressToWorkoutCompletions([
+      {
+        id: "wc-1", clientId: "client-1", planId: "plan-1", weekId: "week-1", dayId: "day-1",
+        status: "COMPLETED", completionPct: 40, exercisesDone: 2, exercisesTotal: 5, autoFinished: true,
+      },
+    ]);
+    expect(c.autoFinished).toBe(true);
   });
 });
 
@@ -349,6 +361,36 @@ describe("apiClientDetailToWorkoutCompletions", () => {
     expect(result[0].weekId).toBe("week-1");
     expect(result[0].status).toBe("COMPLETED");
     expect(result[0].startedAt).toBe("2025-03-01T10:10:00Z");
+  });
+
+  it("flags a workout the idle sweep finished", () => {
+    const base: ClientDetail["completions"][number] = {
+      id: "wc-1",
+      dayId: "day-1",
+      status: "COMPLETED",
+      startedAt: "2025-03-01T10:10:00Z",
+      completedAt: "2025-03-01T11:00:00Z",
+      completionPct: 60,
+      exercisesDone: 3,
+      exercisesTotal: 5,
+      effortRating: null,
+      durationSec: 3000,
+      day: null,
+      flags: [],
+      sets: [],
+    };
+    const [swept, own, olderServer] = apiClientDetailToWorkoutCompletions(
+      [
+        { ...base, autoFinishedAt: "2025-03-02T09:00:00Z" },
+        { ...base, id: "wc-2", autoFinishedAt: null },
+        { ...base, id: "wc-3" },
+      ],
+      "client-1",
+      "plan-1"
+    );
+    expect(swept.autoFinished).toBe(true);
+    expect(own.autoFinished).toBe(false);
+    expect(olderServer.autoFinished).toBe(false);
   });
 
   it("handles null week with fallback", () => {

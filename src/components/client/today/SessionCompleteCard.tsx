@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { WorkoutCompletion } from '@/types';
 import { parseSessionName } from '@/lib/parse-session-name';
+import { AUTO_FINISHED_COPY, sessionCompleteEyebrow } from '@logbook/shared/auto-finish';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Check, Send } from 'lucide-react';
@@ -68,7 +69,7 @@ export function SessionCompleteCard({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            {day ? `Workout complete · Day ${day}` : 'Workout complete'}
+            {sessionCompleteEyebrow(day, completion.autoFinished)}
           </p>
           <h2 className="text-[26px] sm:text-[28px] font-bold tracking-tight leading-[1.15] mt-2.5 text-balance">
             {title}
@@ -103,6 +104,10 @@ export function SessionCompleteCard({
           style={{ width: `${completion.completionPct}%` }}
         />
       </div>
+
+      {completion.autoFinished && (
+        <p className="mt-3 text-sm leading-5 text-muted-foreground">{AUTO_FINISHED_COPY.client}</p>
+      )}
 
       {feedbackSubmitted ? (
         <div className="mt-5 pt-4 border-t border-border/50 flex items-center gap-2">
