@@ -48,7 +48,15 @@ const twinkle = (start: number): ArtKeyframe[] => [
 
 // ── Plans: a stack of plan sheets, a dashed sheet settling on top ──────────
 
-const SHEET = { x: 2, y: -2, w: 40, d: 50, h: 2.5 } as const;
+const SHEET = { x: 2, y: -2, w: 32, d: 40, h: 2.5 } as const;
+
+/**
+ * Height a dashed sheet hovers at so it clears a stack whose top surface is
+ * at `top`: a sheet's isometric footprint is (w + d) / 2 tall on screen, so
+ * the dashed outline has to sit that far up, plus a gap, to never cross the
+ * rows on the top sheet.
+ */
+const hoverAbove = (top: number) => top + (SHEET.w + SHEET.d) / 2 + 2;
 
 function sheet(z: number, rows: boolean): ArtShape[] {
   const { x, y, w, d, h } = SHEET;
@@ -56,7 +64,7 @@ function sheet(z: number, rows: boolean): ArtShape[] {
   if (rows) {
     const top = z + h;
     // Exercise rows on the top sheet, ragged like real names
-    for (const [ry, len] of [[8, 22], [17, 28], [26, 16], [35, 24]] as const) {
+    for (const [ry, len] of [[7, 18], [14, 22], [21, 13], [28, 20]] as const) {
       shapes.push(stroke(line([[x + 7, y + ry, top], [x + 7 + len, y + ry, top]])));
       shapes.push(solid(disc(x + 4, y + ry, top, 1), 'ink'));
     }
@@ -87,14 +95,14 @@ function ghostSheet(z: number): ArtShape[] {
 
 const plans: StateArt = {
   id: 'plans',
-  frame: [25.5, -2],
+  frame: [26.5, -12],
   duration: 3200,
   accent: 'brand',
   layers: [
     layer('shadow', [sheetShadow()]),
     layer(
       'stack',
-      [...sheet(0, false), ...planTab(5.5), ...sheet(5.5, false), ...sheet(11, true)],
+      [...sheet(0, false), ...planTab(4.5), ...sheet(4.5, false), ...sheet(9, true)],
       [
         { at: 0 },
         { at: 0.52 },
@@ -103,12 +111,14 @@ const plans: StateArt = {
         { at: 1 },
       ],
     ),
-    layer('ghost', ghostSheet(34), [
+    // Hovers clear of the stack, then drops onto the top sheet (surface at 11.5)
+    layer('ghost', ghostSheet(hoverAbove(11.5)), [
       { at: 0 },
-      { at: 0.3, y: -3 },
-      { at: 0.52, y: 20.5, ease: 'in' },
-      { at: 0.6, y: 20.5, opacity: 0, ease: 'linear' },
-      { at: 0.74, y: -6, opacity: 0, ease: 'linear' },
+      { at: 0.3 },
+      { at: 0.52, y: hoverAbove(11.5) - 11.5, ease: 'in' },
+      { at: 0.6, y: hoverAbove(11.5) - 11.5, opacity: 0, ease: 'linear' },
+      // Back at its hover height, fading in for the next drop
+      { at: 0.62, y: 0, opacity: 0, ease: 'linear' },
       { at: 0.94, y: 0, ease: 'out' },
       { at: 1 },
     ]),
@@ -131,7 +141,7 @@ const drop = (start: number): ArtKeyframe[] => [
 
 const building: StateArt = {
   id: 'building',
-  frame: [25.5, 5],
+  frame: [26.5, -13],
   duration: 3600,
   accent: 'brand',
   layers: [
@@ -139,7 +149,8 @@ const building: StateArt = {
     layer('base', sheet(0, false)),
     layer('second', [...planTab(5.5), ...sheet(5.5, false)], drop(0.08)),
     layer('third', sheet(11, true), drop(0.36)),
-    layer('ghost', ghostSheet(16.5), [
+    // The next sheet on its way, hovering clear of the finished stack
+    layer('ghost', ghostSheet(hoverAbove(13.5)), [
       { at: 0, opacity: 0 },
       { at: 0.6, opacity: 0 },
       { at: 0.66, opacity: 1, ease: 'linear' },
