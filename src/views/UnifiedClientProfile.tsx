@@ -78,7 +78,9 @@ function daysAgoLabel(iso?: string | Date | null): string | null {
 // doesn't remount everything inside and snap open menus shut.
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="px-1 pb-2.5">
+    // Flush with the card edge below it — an inset here was one more left
+    // edge on a page that should have two (page gutter, card content)
+    <div className="pb-3">
       <h2 className="font-mono text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium antialiased">
         {children}
       </h2>
@@ -86,11 +88,12 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Card surface — shadows over borders, concentric radii (outer 12px, inner content inherits)
+// Card surface — hairline border, 16px radius. Padding matches the gap
+// between cards (24px on desktop) so inside and outside share one rhythm.
 function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
     <div className={cn(
-      "bg-card rounded-2xl overflow-hidden p-4 sm:p-5",
+      "bg-card rounded-2xl overflow-hidden p-4 sm:p-6",
       "border border-border/70",
       className
     )}>
@@ -116,15 +119,15 @@ function Vital({
 }) {
   return (
     <div className="min-w-0">
-      <div className="flex items-center justify-between gap-2 mb-1.5 h-4">
+      <div className="flex items-center justify-between gap-2 mb-2.5 h-4">
         <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased">{label}</p>
         {action}
       </div>
-      <div className={cn('font-mono text-lg font-semibold tabular-nums leading-none antialiased', valueClassName)}>
+      <div className={cn('font-mono text-xl font-semibold tabular-nums leading-none antialiased', valueClassName)}>
         {children}
       </div>
       {sub && (
-        <p className="text-xs text-muted-foreground mt-1.5 truncate antialiased">{sub}</p>
+        <p className="text-[13px] leading-4 text-muted-foreground mt-2 truncate antialiased">{sub}</p>
       )}
     </div>
   );
@@ -772,13 +775,15 @@ export function UnifiedClientProfile() {
   ] as const).filter((tab) => !hasNoPlan || !('count' in tab) || tab.count > 0);
 
   return (
-    <div className="min-h-dvh bg-background pb-24 sm:pb-4">
+    <div className="min-h-dvh bg-background pb-24 sm:pb-16">
       <CoachNav activeTab="clients" />
 
       <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
-        <main className="space-y-6 sm:space-y-8">
+        {/* One rhythm: 24px between cards in both directions (matching the
+            grid gap and the card padding), 32px under the header */}
+        <main className="space-y-4 sm:space-y-6">
         {/* Page header — path-style title; "Clients /" crumb is the way back */}
-        <div className="animate-enter" style={{ animationDelay: '0ms' }}>
+        <div className="animate-enter pb-2" style={{ animationDelay: '0ms' }}>
           <PageHeader
             title={client.name}
             subtitle={headerSubtitle}
@@ -786,7 +791,7 @@ export function UnifiedClientProfile() {
               <UserAvatar
                 name={client.name}
                 avatarUrl={apiClient.user.avatarUrl}
-                className="w-12 h-12 sm:w-14 sm:h-14 text-lg sm:text-xl shrink-0"
+                className="w-12 h-12 sm:w-16 sm:h-16 text-lg sm:text-xl shrink-0"
               />
             }
             breadcrumb={{ label: 'Clients', onClick: () => router.push('/coach') }}
@@ -813,7 +818,9 @@ export function UnifiedClientProfile() {
                     <Button
                       variant={primaryAction ? 'ghost' : 'outline'}
                       size="icon"
-                      className="h-9 w-9 text-muted-foreground hover:text-foreground tap-target"
+                      /* As a ghost the glyph, not the invisible box, is what
+                         has to land on the page's right edge */
+                      className={cn('h-9 w-9 text-muted-foreground hover:text-foreground tap-target', primaryAction && '-me-2.5')}
                       aria-label="More actions"
                     >
                       <MoreVertical className="w-4 h-4" />
@@ -926,9 +933,11 @@ export function UnifiedClientProfile() {
             {/* Once the plan has ended, the banner above carries the plan,
                 the adherence and the final week — the strip keeps only what
                 still moves */}
+            {/* Five across on desktop get hairline dividers: each rule sits
+                a full gap after one cell and a full gap before the next */}
             <div className={cn(
-              'grid grid-cols-2 gap-x-6 gap-y-5',
-              !planEnded && 'sm:grid-cols-3 lg:grid-cols-5'
+              'grid grid-cols-2 gap-x-6 gap-y-6',
+              !planEnded && 'sm:grid-cols-3 lg:grid-cols-5 lg:[&>*+*]:border-s lg:[&>*+*]:border-border/60 lg:[&>*+*]:ps-6'
             )}>
               {!planEnded && (
                 <>
@@ -1061,7 +1070,8 @@ export function UnifiedClientProfile() {
         ) && (
         <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
           {/* The flags list titles itself; a "Check-in" label over it would mislabel it */}
-          {!(activeCheckIn?.status === 'pending' && !justSentCheckIn) && (
+          {!(activeCheckIn?.status === 'pending' && !justSentCheckIn)
+            && !(!activeCheckIn && !justSentCheckIn && primaryAction?.kind === 'send') && (
             <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
           )}
           <SectionCard>
@@ -1098,9 +1108,12 @@ export function UnifiedClientProfile() {
               "bg-card rounded-2xl overflow-hidden lg:h-[480px] flex flex-col",
               "border border-border/70",
             )}>
-              <div className="px-4 sm:px-5 pt-4 sm:pt-5 pb-0 shrink-0">
-                {/* A plain card title, not a tab: there's nothing to switch to */}
-                <div className="flex gap-2 items-center justify-between -mt-1">
+              <div className="px-4 sm:px-6 pt-2 sm:pt-4 pb-0 shrink-0">
+                {/* A plain card title, not a tab: there's nothing to switch to.
+                    Same bar height and rule as the tab bar in the card beside
+                    it, so the two cards share one horizon and the thread
+                    scrolls under a line instead of under the title */}
+                <div className="flex gap-2 items-center justify-between h-10 border-b border-border">
                   <h2 className="text-base font-semibold antialiased">Messages</h2>
                   <NotificationToggle />
                 </div>
@@ -1118,6 +1131,8 @@ export function UnifiedClientProfile() {
                 /* Fixed height below lg so the history scrolls inside the card instead
                    of stretching the page (flex-basis 0 from flex-1 would override h-[…]) */
                 heightClass="h-[420px] lg:h-auto lg:flex-1 lg:min-h-0"
+                /* Bubbles and composer on the card's content edge, under the title */
+                gutterClass="px-4 sm:px-6"
               />
             </div>
           </section>
@@ -1131,14 +1146,14 @@ export function UnifiedClientProfile() {
               {/* Tab bar — labels never wrap; "Training Plan" shortens to
                   "Plan" on phones where three full labels don't fit */}
               {secondaryTabs.length > 1 && (
-              <div className="flex gap-1 border-b border-border mb-3 -mt-1">
+              <div className="flex gap-5 h-10 border-b border-border mb-4 -mt-2">
                 {secondaryTabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setSecondaryTab(tab.id)}
                     aria-current={secondaryTab === tab.id ? 'true' : undefined}
                     className={cn(
-                      'pb-2 px-2 font-mono text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target whitespace-nowrap',
+                      'h-full inline-flex items-center font-mono text-[11px] uppercase tracking-[0.15em] font-medium antialiased transition-colors duration-150 relative tap-target whitespace-nowrap',
                       secondaryTab === tab.id
                         ? 'text-foreground'
                         : 'text-muted-foreground hover:text-foreground'
@@ -1160,7 +1175,7 @@ export function UnifiedClientProfile() {
                       </span>
                     )}
                     {secondaryTab === tab.id && (
-                      <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-foreground rounded-full" />
+                      <span className="absolute -bottom-px inset-x-0 h-0.5 bg-foreground rounded-full" />
                     )}
                   </button>
                 ))}
@@ -1175,7 +1190,7 @@ export function UnifiedClientProfile() {
                       {/* Plan actions row — stacked on phones so the plan
                           name keeps the full width instead of truncating
                           against three action buttons */}
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-3 lg:shrink-0">
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pb-4 lg:shrink-0">
                         <div className="min-w-0">
                           <h3 className="text-base font-semibold flex items-center gap-2 min-w-0 antialiased">
                             <span className="truncate">{plan.name}</span>

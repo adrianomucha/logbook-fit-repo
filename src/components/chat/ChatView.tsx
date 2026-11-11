@@ -28,6 +28,9 @@ interface ChatViewProps {
   initialPrefill?: string;
   /** Optional: custom height class (default: h-[600px]) */
   heightClass?: string;
+  /** Horizontal padding for the thread and composer, so a host card can line
+      them up with its own content edge. */
+  gutterClass?: string;
   /** Optional: name of the person on the other end (shown in empty state) */
   peerName?: string;
   /** Optional: the peer's photo, shown wherever their monogram would be */
@@ -82,6 +85,7 @@ export function ChatView({
   onLoadEarlier,
   initialPrefill,
   heightClass = 'h-[350px] sm:h-[600px]',
+  gutterClass = 'px-4',
   peerName,
   peerAvatarUrl,
   conversationStarters,
@@ -275,7 +279,7 @@ export function ChatView({
           tabIndex={0}
           role="log"
           aria-label="Message history"
-          className="flex-1 min-h-0 overflow-y-auto px-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-md"
+          className={cn('flex-1 min-h-0 overflow-y-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-md', gutterClass)}
         >
           <div className={cn("flex flex-col min-h-full", clientMessages.length === 0 ? "justify-center" : "justify-end")}>
             <div
@@ -497,7 +501,7 @@ export function ChatView({
         )}
 
         {/* Input bar — hairline separator anchors the composer, like card footers elsewhere */}
-        <div className="px-4 py-2.5 border-t border-border/50">
+        <div className={cn('py-2.5 border-t border-border/50', gutterClass)}>
           <div className="flex gap-2 items-center">
             <label htmlFor="chat-message-input" className="sr-only">
               Message to {client.name}
