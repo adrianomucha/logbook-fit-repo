@@ -23,6 +23,7 @@
  */
 
 import { FOUNDING_PRICE } from "@/lib/landing-copy";
+import { colors } from "@logbook/shared/palette";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -77,14 +78,15 @@ export function emailConfigStatus():
   return { ok: true };
 }
 
-const BG = "#f5f5f5";
-const CARD = "#ffffff";
-const PANEL = "#fafafa";
-const BORDER = "#e5e5e5";
-const INK = "#0a0a0a";
-const MUTED = "#525252";
-const FAINT = "#a3a3a3";
-const LIME = "#c6f542";
+// The app's own palette, as literals: email clients have no CSS variables.
+const BG = colors.muted;
+const CARD = colors.card;
+const PANEL = colors.background;
+const BORDER = colors.border;
+const INK = colors.foreground;
+const MUTED = colors.mutedForeground;
+const FAINT = colors.faint;
+const LIME = colors.brand;
 const SANS = "Arial,Helvetica,sans-serif";
 const MONO = "'Courier New',Courier,monospace";
 
@@ -237,7 +239,7 @@ function inviteHtml(inviteUrl: string): string {
             </p>
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
               <tr><td align="center" style="background:${LIME};border-radius:10px;">
-                <a href="${inviteUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
+                <a href="${inviteUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${INK};text-decoration:none;padding:15px 32px;">
                   Create your account&nbsp;&nbsp;&#8594;
                 </a>
               </td></tr>
@@ -317,7 +319,7 @@ function clientInviteHtml({ coachName, note, inviteUrl, expiresAt }: ClientInvit
             </p>${noteBlock}
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
               <tr><td align="center" style="background:${LIME};border-radius:10px;">
-                <a href="${inviteUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
+                <a href="${inviteUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${INK};text-decoration:none;padding:15px 32px;">
                   Accept invite&nbsp;&nbsp;&#8594;
                 </a>
               </td></tr>
@@ -363,7 +365,7 @@ function passwordResetHtml(resetUrl: string): string {
             </p>
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
               <tr><td align="center" style="background:${LIME};border-radius:10px;">
-                <a href="${resetUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
+                <a href="${resetUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:${INK};text-decoration:none;padding:15px 32px;">
                   Set new password&nbsp;&nbsp;&#8594;
                 </a>
               </td></tr>

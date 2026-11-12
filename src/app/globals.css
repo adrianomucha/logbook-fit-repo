@@ -4,46 +4,54 @@
 
 @layer base {
   :root {
+    /* Light surfaces are plain white and neutral grey. The one borrowed
+       colour is the ink: text, solid fills and every dark surface use the
+       app icon's near-black (#17180f), so a dark panel and the icon tile are
+       the same black. The literal values live in
+       packages/shared/src/palette.json, which the native app reads directly;
+       palette.test.ts keeps the two in step. */
     --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --foreground: 67 23% 7.6%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
+    --card-foreground: 67 23% 7.6%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
+    --popover-foreground: 67 23% 7.6%;
+    --primary: 67 23% 7.6%;
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
+    --secondary-foreground: 67 23% 7.6%;
     --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
+    --muted-foreground: 0 0% 42%;
     --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
-    /* 45% lightness keeps red text on white and white text on red ≥4.5:1 (WCAG AA) */
-    --destructive: 0 72% 45%;
+    --accent-foreground: 67 23% 7.6%;
+    /* Brick, not signal red. Clears 4.5:1 both as text on white and under
+       white text (WCAG AA) */
+    --destructive: 6 68% 42%;
     --destructive-foreground: 0 0% 98%;
     /* Red as small text (chips, inline errors). Same as the fill in light mode */
-    --destructive-text: 0 72% 45%;
+    --destructive-text: 6 68% 42%;
     --border: 0 0% 89.8%;
     --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --ring: 67 23% 7.6%;
     --radius: 0.625rem;
-    --success: 142 71% 45%;
+    --success: 152 52% 31%;
     --success-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 9%;
-    /* Text-on-light cuts of the status hues: the bright fills sit around
-       2:1 as small text on white (WCAG needs 4.5:1), so text gets a darker
-       shade of the same hue. Fills, dots, and chips keep the bright value. */
-    --success-text: 142 72% 29%;
-    --warning-text: 26 90% 37%;
-    --info: 221 83% 53%;
+    --warning: 36 88% 48%;
+    --warning-foreground: 67 23% 7.6%;
+    /* Text-on-light cuts of the status hues: the amber fill sits around
+       2.5:1 as small text on white (WCAG needs 4.5:1), so text gets a darker
+       shade of the same hue. Fills, dots, and chips keep the fill value. */
+    --success-text: 152 55% 26%;
+    --warning-text: 28 85% 33%;
+    --info: 212 48% 40%;
     --info-foreground: 0 0% 98%;
-    /* Brand accent: "volt" lime. Fills, indicators, and CTAs only;
-       never small text on light backgrounds (contrast). */
-    --brand: 74 95% 52%;
+    /* Brand accent: "volt", the slash in the app icon. Rationed: a screen's
+       one main action, or a logged set. Never text or an icon on a light
+       surface (about 1.2:1 on white). */
+    --brand: 74.2 90.3% 59.6%;
     --brand-foreground: 74 90% 8%;
     /* Attention marker on check-in stats: amber that clears 3:1 on the card */
-    --chart-short: 32 95% 44%;
+    --chart-short: 30 88% 40%;
     /* Content height of the fixed mobile tab bar, excluding the
        home-indicator inset. Every layout that has to clear the bar derives
        its padding from this, so the height lives in exactly one place. */
@@ -51,39 +59,40 @@
   }
 
   .dark {
-    --background: 0 0% 3.9%;
+    --background: 67 22% 6%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --card: 67 16% 8.5%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 67 16% 8.5%;
     --popover-foreground: 0 0% 98%;
     --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
+    --primary-foreground: 67 23% 7.6%;
+    --secondary: 67 8% 14.5%;
     --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
+    --muted: 67 8% 14.5%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 67 8% 14.5%;
     --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 6 60% 34%;
     --destructive-foreground: 0 0% 98%;
     /* The dark fill is ~2:1 as text on the background; this cut is ~7:1 */
-    --destructive-text: 0 91% 71%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 9%;
-    /* On dark surfaces the bright fills already clear AA (8–9:1) */
-    --success-text: 142 71% 45%;
-    --warning-text: 38 92% 50%;
-    --info: 217 91% 60%;
-    --info-foreground: 0 0% 98%;
-    --brand: 74 95% 56%;
+    --destructive-text: 6 88% 72%;
+    --border: 67 7% 17%;
+    --input: 67 7% 17%;
+    --ring: 0 0% 83%;
+    --success: 152 48% 42%;
+    --success-foreground: 67 23% 7.6%;
+    --warning: 36 88% 52%;
+    --warning-foreground: 67 23% 7.6%;
+    /* On dark surfaces the text cuts are lighter than the fills, and the
+       fills carry ink, not white (white on them is about 3:1) */
+    --success-text: 152 50% 55%;
+    --warning-text: 36 88% 56%;
+    --info: 212 60% 62%;
+    --info-foreground: 67 23% 7.6%;
+    --brand: 74.2 90.3% 59.6%;
     --brand-foreground: 74 90% 8%;
-    --chart-short: 32 95% 44%;
+    --chart-short: 30 88% 48%;
   }
 }
 
@@ -137,10 +146,11 @@
     }
   }
 
-  /* Completion celebration pop */
+  /* Completion medallion arriving. Eased, no overshoot: the only thing in
+     the app that bounces is a set being logged (setComplete below). */
   @keyframes completionPop {
     0% {
-      transform: scale(0.6);
+      transform: scale(0.85);
       opacity: 0;
     }
     100% {
@@ -159,7 +169,8 @@
     }
   }
 
-  /* Set completion check pop: snappy scale + fade */
+  /* Set completion check pop: snappy scale + fade. The one overshoot in the
+     app, because logging a set is the one moment that should feel physical. */
   .animate-set-complete {
     animation: setComplete 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
@@ -186,49 +197,28 @@
     }
   }
 
-  /* Continuous horizontal ticker for the landing-page marquee strip.
-     The content is rendered twice, so -50% loops seamlessly. */
-  .animate-marquee {
-    animation: marquee 110s linear infinite;
-  }
-  @keyframes marquee {
-    from {
-      transform: translateX(0);
-    }
-    to {
-      transform: translateX(-50%);
-    }
-  }
-
-  /* Mobile tab bar: the icon lands with the sliding pill instead of
+  /* Mobile tab bar: the icon settles in with the sliding pill instead of
      just changing colour */
   .animate-tab-pop {
-    animation: tabPop 0.35s cubic-bezier(0.34, 1.5, 0.5, 1) both;
+    animation: tabPop 0.25s cubic-bezier(0.25, 1, 0.5, 1) both;
   }
   @keyframes tabPop {
     0% {
-      transform: scale(0.85);
-    }
-    55% {
-      transform: scale(1.15);
+      transform: scale(0.9);
     }
     100% {
       transform: scale(1);
     }
   }
 
-  /* Single playful bounce, not repeating */
-  .animate-bounce-once {
-    animation: bounceOnce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  /* A medallion or icon arriving: scale up and fade in, once, no overshoot */
+  .animate-settle {
+    animation: settle 0.35s cubic-bezier(0.25, 1, 0.5, 1) both;
   }
-  @keyframes bounceOnce {
+  @keyframes settle {
     0% {
-      transform: scale(0.8);
+      transform: scale(0.85);
       opacity: 0;
-    }
-    60% {
-      transform: scale(1.08);
-      opacity: 1;
     }
     100% {
       transform: scale(1);
@@ -243,8 +233,7 @@
   .animate-set-complete,
   .animate-enter,
   .animate-draw-check,
-  .animate-bounce-once,
-  .animate-marquee,
+  .animate-settle,
   .animate-tab-pop,
   [class*="animate-[completionPop"],
   [class*="animate-[meterFill"] {

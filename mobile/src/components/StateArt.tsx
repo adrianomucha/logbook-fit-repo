@@ -27,15 +27,16 @@ import {
   type StateArt as StateArtDef,
 } from '@logbook/shared/iso-art';
 import { STATE_ART, type StateArtId } from '@logbook/shared/state-art';
+import { colors } from '@logbook/shared/palette';
 
 // Same tokens as tailwind.config.js (the app is light-only)
 const PAINT: Record<Exclude<ArtTone, 'accent'>, string> = {
-  ink: '#0a0a0a',
-  paper: '#ffffff',
-  shade: '#e5e5e5',
+  ink: colors.foreground,
+  paper: colors.card,
+  shade: colors.border,
   none: 'none',
 };
-const ACCENT = { brand: '#c3f910', warning: '#f59f0a' } as const;
+const ACCENT = { brand: colors.brand, warning: colors.warning } as const;
 
 const SIZES = { sm: 112, md: 160, lg: 208 } as const;
 

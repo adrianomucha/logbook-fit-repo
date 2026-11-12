@@ -21,8 +21,8 @@ const INTENT_STYLES: Record<
   { medallion: string; rail: string; confirm: string; icon: LucideIcon }
 > = {
   default: {
-    medallion: 'bg-brand text-brand-foreground',
-    rail: 'bg-brand',
+    medallion: 'bg-muted text-foreground',
+    rail: 'bg-foreground',
     confirm: 'bg-brand text-brand-foreground hover:bg-brand/90',
     icon: HelpCircle,
   },
@@ -150,7 +150,7 @@ export function ConfirmationModal({
           <div className="flex items-start gap-3.5 pr-9">
             <span
               className={cn(
-                'flex h-11 w-11 shrink-0 items-center justify-center rounded-full animate-bounce-once',
+                'flex h-11 w-11 shrink-0 items-center justify-center rounded-full animate-settle',
                 styles.medallion
               )}
             >

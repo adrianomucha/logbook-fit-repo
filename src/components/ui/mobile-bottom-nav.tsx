@@ -64,7 +64,7 @@ export function MobileBottomNav({
         <div className="pointer-events-none absolute inset-x-0 top-[5px] h-8" aria-hidden="true">
           <div
             className={cn(
-              'h-full transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.34,1.4,0.5,1)] motion-reduce:transition-none',
+              'h-full transition-[transform,opacity] duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] motion-reduce:transition-none',
               activeIndex < 0 && 'opacity-0'
             )}
             style={{
@@ -75,7 +75,7 @@ export function MobileBottomNav({
             <span
               className={cn(
                 'mx-auto block h-full w-16 rounded-full',
-                isBrand ? 'bg-brand' : 'bg-secondary'
+                isBrand ? 'bg-foreground' : 'bg-secondary'
               )}
             />
           </div>
@@ -107,7 +107,7 @@ export function MobileBottomNav({
                       isActive
                         ? cn(
                             'stroke-[2.2] animate-tab-pop',
-                            isBrand ? 'text-brand-foreground' : 'text-foreground'
+                            isBrand ? 'text-background' : 'text-foreground'
                           )
                         : 'stroke-[1.75] text-muted-foreground'
                     )}

@@ -31,6 +31,7 @@ import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 import { workoutTitle } from '@logbook/shared/progress';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
+import { colors } from '@logbook/shared/palette';
 
 const FINISH_BAR_HEIGHT = 56 + 24;
 
@@ -245,7 +246,7 @@ export default function WorkoutScreen() {
       <View className="flex-1 items-center justify-center bg-background px-6" style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}>
         <View className="mb-8 items-center">
           <View className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-brand">
-            <Feather name="check" size={40} color="#1e2702" />
+            <Feather name="check" size={40} color={colors.brandForeground} />
           </View>
           <Eyebrow className="mb-1.5">Workout complete</Eyebrow>
           <Text className="text-center font-sans-bold text-2xl tracking-tight text-foreground">{workoutTitle(day.name ?? 'Workout')}</Text>
@@ -288,7 +289,7 @@ export default function WorkoutScreen() {
       <View className="border-b border-border bg-background px-4 pb-4" style={{ paddingTop: insets.top }}>
         <View className="h-12 flex-row items-center justify-between">
           <Pressable onPress={goBack} hitSlop={12} accessibilityRole="button" accessibilityLabel="Back" className="-ml-2 h-11 w-11 items-center justify-center active:opacity-70">
-            <Feather name="arrow-left" size={20} color="#0a0a0a" />
+            <Feather name="arrow-left" size={20} color={colors.foreground} />
           </Pressable>
           <View className="flex-row items-center gap-1">
             {clockSec !== undefined ? (
@@ -299,7 +300,7 @@ export default function WorkoutScreen() {
                 // The restart button's own padding already spaces it from the clock
                 className={`${isReadOnly ? '' : 'mr-2 '}flex-row items-center gap-1`}
               >
-                <Feather name="clock" size={13} color="#737373" />
+                <Feather name="clock" size={13} color={colors.mutedForeground} />
                 <Text className="font-mono text-sm text-muted-foreground" style={{ fontVariant: ['tabular-nums'] }}>
                   {formatWorkoutClock(clockSec)}
                 </Text>
@@ -307,7 +308,7 @@ export default function WorkoutScreen() {
             ) : null}
             {isReadOnly ? (
               <Pressable onPress={onRestartPress} disabled={isRestarting} hitSlop={8} accessibilityRole="button" accessibilityLabel="Restart workout" className="h-10 w-10 items-center justify-center active:opacity-70">
-                <Feather name="rotate-ccw" size={18} color="#737373" />
+                <Feather name="rotate-ccw" size={18} color={colors.mutedForeground} />
               </Pressable>
             ) : null}
             <Text className="font-mono-bold text-sm text-foreground">
@@ -326,7 +327,7 @@ export default function WorkoutScreen() {
           accessibilityValue={{ min: 0, max: stats.exercisesTotal, now: stats.exercisesDone }}
           className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-muted"
         >
-          <View className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+          <View className="h-full rounded-full bg-foreground" style={{ width: `${pct}%` }} />
         </View>
       </View>
 
@@ -383,10 +384,10 @@ export default function WorkoutScreen() {
           return (
             <View key={group[0].workoutExerciseId} className="border-b border-border/50 py-3.5">
               <View className="mb-1 flex-row items-center gap-1.5">
-                <Feather name="link" size={12} color="#737373" />
+                <Feather name="link" size={12} color={colors.mutedForeground} />
                 <Eyebrow>Superset · Alternate sets</Eyebrow>
               </View>
-              <View className="border-l-2 border-brand/60 pl-3">{group.map((exercise, i) => card(exercise, i))}</View>
+              <View className="border-l-2 border-foreground/20 pl-3">{group.map((exercise, i) => card(exercise, i))}</View>
             </View>
           );
         })}

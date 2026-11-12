@@ -65,7 +65,7 @@ export function DayCard({ day, onClick }: DayCardProps) {
   // over its 8px padding; rounded-xl made the inner corner rounder than the outer.
   const shell = cn(
     'w-full flex items-center gap-3 px-3.5 py-3 rounded-lg transition-colors touch-manipulation min-h-[56px]',
-    isCurrent && 'bg-muted/60 ring-1 ring-inset ring-brand/50',
+    isCurrent && 'bg-muted/60 ring-1 ring-inset ring-foreground/25',
   );
 
   if (!isInteractive) {

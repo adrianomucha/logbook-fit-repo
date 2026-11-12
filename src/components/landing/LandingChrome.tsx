@@ -55,7 +55,7 @@ export function JoinListSection({
           <h2 className="text-[clamp(2.75rem,9vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
             Get on
             <br />
-            the list<span className="text-brand">.</span>
+            the list.
           </h2>
           <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
             {children}

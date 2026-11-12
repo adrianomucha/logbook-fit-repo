@@ -70,7 +70,7 @@ export function FeedbackStatusActions({
       {status === 'NEW' && (
         <>
           <span className="mr-1 inline-flex items-center gap-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.12em] text-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
             New
           </span>
           {action(

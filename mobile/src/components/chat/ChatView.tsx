@@ -6,6 +6,7 @@ import type { Message } from '@logbook/shared/types';
 import { stripFlagContext } from '@logbook/shared/flag-message';
 import { chatRowsNewestFirst, type ChatRow } from '@logbook/shared/chat-rows';
 import { UserAvatar } from '@/components/UserAvatar';
+import { colors } from '@logbook/shared/palette';
 
 /** Server-side cap on message content (sendMessageSchema) */
 const MAX_MESSAGE_LENGTH = 5000;
@@ -150,10 +151,10 @@ export function ChatView({
                 style={bubbleRadius(mine, isFirstInGroup, false)}
               >
                 {/* The usual attachment row: a square mark on the left, one
-                    text column on the right, equal padding all round. Volt
+                    text column on the right, equal padding all round. Quiet
                     tile with the flag the client tapped in the workout. */}
-                <View className="h-10 w-10 items-center justify-center rounded-lg bg-brand">
-                  <Feather name="flag" size={16} color="#1e2702" />
+                <View className="h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                  <Feather name="flag" size={16} color={colors.foreground} />
                 </View>
                 {/* Three steps, one edge: title, data line in mono, the
                     client's note. Title and data line match the tile's height. */}
@@ -192,7 +193,6 @@ export function ChatView({
         <View className="flex-1 items-center justify-center px-6 py-8">
           <View className="relative mb-3">
             <UserAvatar name={peerName} avatarUrl={peerAvatarUrl} size={56} textSize={18} />
-            <View className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background bg-brand" />
           </View>
           <Text className="mb-2 font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Direct line</Text>
           <Text className="font-sans-bold text-lg tracking-tight text-foreground">Talk to {peerFirst}</Text>
@@ -208,7 +208,7 @@ export function ChatView({
                     setDraft(starter);
                     inputRef.current?.focus();
                   }}
-                  className="min-h-[44px] justify-center rounded-full bg-muted/60 px-3.5 py-2 active:bg-brand"
+                  className="min-h-[44px] justify-center rounded-full bg-muted/60 px-3.5 py-2 active:bg-muted"
                 >
                   <Text className="font-sans-bold text-[11px] uppercase tracking-[0.5px] text-foreground">{starter}</Text>
                 </Pressable>
@@ -250,9 +250,9 @@ export function ChatView({
 
       {unseenCount > 0 ? (
         <View className="absolute inset-x-0 bottom-[68px] items-center">
-          <Pressable onPress={scrollToBottom} className="min-h-[44px] flex-row items-center gap-1.5 rounded-full bg-brand px-3.5 py-1.5 active:opacity-80">
-            <Feather name="chevron-down" size={12} color="#1e2702" />
-            <Text className="font-sans-bold text-[10px] uppercase tracking-[1.5px] text-brand-foreground">{unseenCount === 1 ? '1 new' : `${unseenCount} new`}</Text>
+          <Pressable onPress={scrollToBottom} className="min-h-[44px] flex-row items-center gap-1.5 rounded-full bg-foreground px-3.5 py-1.5 active:opacity-80">
+            <Feather name="chevron-down" size={12} color={colors.background} />
+            <Text className="font-sans-bold text-[10px] uppercase tracking-[1.5px] text-background">{unseenCount === 1 ? '1 new' : `${unseenCount} new`}</Text>
           </Pressable>
         </View>
       ) : null}
@@ -265,7 +265,7 @@ export function ChatView({
               ref={inputRef}
               className="py-2.5 font-sans text-base text-foreground"
               placeholder={`Message ${peerFirst}...`}
-              placeholderTextColor="#737373"
+              placeholderTextColor={colors.mutedForeground}
               value={draft}
               onChangeText={setDraft}
               maxLength={MAX_MESSAGE_LENGTH}
@@ -283,7 +283,7 @@ export function ChatView({
             className={`h-10 w-10 items-center justify-center rounded-full ${hasInput ? 'bg-brand active:opacity-80' : 'bg-muted/40'}`}
             style={{ transform: [{ scale: hasInput ? 1 : 0.9 }] }}
           >
-            <Feather name="send" size={16} color={hasInput ? '#1e2702' : '#c4c4c4'} />
+            <Feather name="send" size={16} color={hasInput ? colors.brandForeground : colors.faint} />
           </Pressable>
         </View>
       </View>

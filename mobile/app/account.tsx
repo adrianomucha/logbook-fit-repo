@@ -9,16 +9,17 @@ import { Eyebrow } from '@/components/ui';
 import { UserAvatar } from '@/components/UserAvatar';
 import { FeedbackSheet } from '@/components/account/FeedbackSheet';
 import { SETTINGS_SUMMARY } from '@logbook/shared/settings-sections';
+import { colors } from '@logbook/shared/palette';
 
 function Row({ icon, label, detail, onPress }: { icon: keyof typeof Feather.glyphMap; label: string; detail?: string; onPress: () => void }) {
   return (
     <Pressable onPress={onPress} accessibilityRole="button" className="min-h-[52px] flex-row items-center gap-3 px-4 py-3 active:bg-muted/40">
-      <Feather name={icon} size={16} color="#737373" />
+      <Feather name={icon} size={16} color={colors.mutedForeground} />
       <View className="flex-1">
         <Text className="font-sans-medium text-[15px] text-foreground">{label}</Text>
         {detail ? <Text className="mt-0.5 font-sans text-xs text-muted-foreground">{detail}</Text> : null}
       </View>
-      <Feather name="chevron-right" size={16} color="#a3a3a3" />
+      <Feather name="chevron-right" size={16} color={colors.faint} />
     </Pressable>
   );
 }
@@ -48,7 +49,7 @@ export default function AccountScreen() {
       <View className="flex-row items-center justify-between px-5 pb-4">
         <Eyebrow>Account</Eyebrow>
         <Pressable onPress={() => router.back()} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close">
-          <Feather name="x" size={20} color="#737373" />
+          <Feather name="x" size={20} color={colors.mutedForeground} />
         </Pressable>
       </View>
 

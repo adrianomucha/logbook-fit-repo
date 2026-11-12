@@ -8,6 +8,7 @@ import { DEFAULT_WORKOUTS_PER_WEEK } from '@logbook/shared/workout-helpers';
 import { COACH_REPLY_PENDING, formatWeekTally } from '@logbook/shared/client-copy';
 import { Eyebrow } from '@/components/ui';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
+import { colors } from '@logbook/shared/palette';
 
 interface CheckInDetailSheetProps {
   checkIn: CheckIn | null;
@@ -69,7 +70,7 @@ export function CheckInDetailSheet({ checkIn, visible, onClose, completedWorkout
             <Text className="font-sans-bold text-lg tracking-tight text-foreground">{date}</Text>
           </View>
           <Pressable onPress={onClose} hitSlop={12} accessibilityRole="button" accessibilityLabel="Close">
-            <Feather name="x" size={20} color="#737373" />
+            <Feather name="x" size={20} color={colors.mutedForeground} />
           </Pressable>
         </View>
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: insets.bottom + 24 }}>
@@ -107,12 +108,12 @@ export function CheckInDetailSheet({ checkIn, visible, onClose, completedWorkout
               <SectionTitle>Your coach's feedback</SectionTitle>
               {checkIn.coachResponse ? (
                 <View className="gap-3">
-                  <View className="rounded-xl border-l-2 border-brand bg-muted/40 px-4 py-4">
+                  <View className="rounded-xl border-l-2 border-foreground/20 bg-muted/40 px-4 py-4">
                     <Text className="font-sans text-sm leading-5 text-foreground/80">{checkIn.coachResponse}</Text>
                   </View>
                   {checkIn.planAdjustment ? (
                     <View className="flex-row items-center gap-2">
-                      <Feather name="check-square" size={16} color="#21c45d" />
+                      <Feather name="check-square" size={16} color={colors.success} />
                       <Text className="font-sans-medium text-sm text-success-text">Your coach is adjusting your plan based on this check-in</Text>
                     </View>
                   ) : null}

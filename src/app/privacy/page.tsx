@@ -171,7 +171,7 @@ export default function PrivacyPage() {
           or want everything gone, email us at{' '}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+            className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
           >
             {CONTACT_EMAIL}
           </a>{' '}
@@ -227,14 +227,14 @@ export default function PrivacyPage() {
           Questions about this policy or your data:{' '}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+            className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
           >
             {CONTACT_EMAIL}
           </a>
           . See also our{' '}
           <Link
             href="/terms"
-            className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+            className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
           >
             Terms of Service
           </Link>

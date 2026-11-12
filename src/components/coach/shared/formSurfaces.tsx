@@ -99,7 +99,7 @@ export function StatusLine({
     >
       <span
         className={`w-1.5 h-1.5 rounded-full shrink-0 ring-2 ${
-          tone === 'ready' ? 'bg-brand ring-brand/25' : 'bg-muted-foreground/40 ring-transparent'
+          tone === 'ready' ? 'bg-success ring-success/25' : 'bg-muted-foreground/40 ring-transparent'
         } ${pulse ? 'animate-pulse' : ''}`}
         aria-hidden="true"
       />

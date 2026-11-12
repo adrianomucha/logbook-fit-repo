@@ -29,6 +29,7 @@ import { useDismissedCheckInReply } from '@/hooks/useDismissedCheckInReply';
 import { CheckInDetailSheet } from '@/components/checkin/CheckInDetailSheet';
 import { NoCoachState } from '@/components/NoCoachState';
 import { useAuth } from '@/lib/auth';
+import { colors } from '@logbook/shared/palette';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -343,7 +344,7 @@ export default function TodayScreen() {
                 accessibilityRole="button"
                 className="-mr-2 min-h-[36px] flex-row items-center gap-1.5 rounded-md px-2 active:opacity-70"
               >
-                <Feather name="rotate-ccw" size={14} color="#737373" />
+                <Feather name="rotate-ccw" size={14} color={colors.mutedForeground} />
                 <Text className="font-sans-medium text-sm text-muted-foreground">{isRestarting ? 'Restarting…' : 'Restart workout'}</Text>
               </Pressable>
             </View>

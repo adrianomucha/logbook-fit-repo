@@ -201,7 +201,7 @@ export function ExerciseCard({
         <div className="pl-[42px] pr-1 pb-4 pt-1.5 space-y-3.5 animate-fade-in-up">
           {/* Coach note — the volt rail alone marks the voice; no label line */}
           {exercise.coachNotes && (
-            <p className="pl-3 border-l-2 border-brand text-sm leading-relaxed text-foreground/75">
+            <p className="pl-3 border-l-2 border-foreground/20 text-sm leading-relaxed text-foreground/75">
               {exercise.coachNotes}
             </p>
           )}

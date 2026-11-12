@@ -32,13 +32,13 @@ export function PlanStartChoice({ options, value, onChange }: PlanStartChoicePro
             className={cn(
               'relative flex w-full items-center gap-3 px-4 py-3 text-start transition-colors',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-              isSelected ? 'bg-brand/10' : 'hover:bg-muted/50 active:bg-muted/70'
+              isSelected ? 'bg-muted' : 'hover:bg-muted/50 active:bg-muted/70'
             )}
           >
-            {/* Volt edge marks the pick, as in the plan picker */}
+            {/* Ink edge marks the pick, as in the plan picker */}
             <span
               className={cn(
-                'absolute inset-y-0 left-0 w-[3px] bg-brand transition-opacity duration-150',
+                'absolute inset-y-0 left-0 w-[3px] bg-foreground transition-opacity duration-150',
                 isSelected ? 'opacity-100' : 'opacity-0'
               )}
               aria-hidden="true"

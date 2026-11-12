@@ -856,7 +856,7 @@ export function UnifiedClientProfile() {
                         </p>
                       </div>
                       <div className="mt-3 h-1.5 max-w-md rounded-full bg-muted overflow-hidden" aria-hidden="true">
-                        <div className="h-full rounded-full bg-brand" style={{ width: `${planSummary.pct}%` }} />
+                        <div className="h-full rounded-full bg-foreground" style={{ width: `${planSummary.pct}%` }} />
                       </div>
                       <p className="text-sm text-muted-foreground mt-2.5 antialiased">{planSummary.missNote}</p>
                     </>
@@ -880,7 +880,7 @@ export function UnifiedClientProfile() {
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-brand" aria-hidden="true" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
                     Final week · ends {format(planEndsOn, 'EEE, MMM d')}
                   </p>
                   <p className="text-[15px] font-bold tracking-tight mt-1.5 antialiased">

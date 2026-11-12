@@ -75,7 +75,7 @@ export function SessionCard({ workoutDay, coachName, state, completionPct = 0, i
               <Eyebrow>complete</Eyebrow>
             </View>
             <View className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <View className="h-full rounded-full bg-brand" style={{ width: `${completionPct}%` }} />
+              <View className="h-full rounded-full bg-foreground" style={{ width: `${completionPct}%` }} />
             </View>
           </View>
         ) : null}

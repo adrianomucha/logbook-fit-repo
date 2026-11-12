@@ -72,16 +72,16 @@ export function NotificationPreferenceTile({ role }: NotificationPreferenceTileP
     <div
       className={cn(
         'flex items-start gap-3.5 rounded-xl border border-border/60 p-4 transition-colors duration-300',
-        isSubscribed ? 'bg-brand/[0.06] border-brand/40' : 'bg-secondary/40'
+        isSubscribed ? 'bg-card border-foreground/25' : 'bg-secondary/40'
       )}
     >
-      {/* Icon well — lights up volt once alerts are on so the state reads
+      {/* Icon well: turns solid ink once alerts are on so the state reads
           from across the room, not only from the switch */}
       <div
         className={cn(
           'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-colors duration-300',
           isSubscribed
-            ? 'bg-brand text-brand-foreground'
+            ? 'bg-foreground text-background'
             : 'bg-background text-muted-foreground shadow-[0_0_0_1px_rgba(0,0,0,0.06)]'
         )}
         aria-hidden="true"
@@ -127,7 +127,7 @@ export function NotificationPreferenceTile({ role }: NotificationPreferenceTileP
           <span
             className={cn(
               'h-1.5 w-1.5 shrink-0 rounded-full transition-colors duration-300',
-              isSubscribed ? 'bg-brand' : 'bg-muted-foreground/40'
+              isSubscribed ? 'bg-success' : 'bg-muted-foreground/40'
             )}
             aria-hidden="true"
           />

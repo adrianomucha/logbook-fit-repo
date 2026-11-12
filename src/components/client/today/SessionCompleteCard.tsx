@@ -79,7 +79,7 @@ export function SessionCompleteCard({
           )}
         </div>
         <div
-          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
+          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-[completionPop_0.35s_cubic-bezier(0.25,1,0.5,1)_both]"
           aria-hidden="true"
         >
           <Check className="w-5 h-5 text-brand-foreground stroke-[3.5]" />
@@ -100,7 +100,7 @@ export function SessionCompleteCard({
       {/* The in-progress bar, landed — same element the client watched fill up */}
       <div className="mt-3 h-1.5 rounded-full bg-muted overflow-hidden">
         <div
-          className="h-full rounded-full bg-brand"
+          className="h-full rounded-full bg-foreground"
           style={{ width: `${completion.completionPct}%` }}
         />
       </div>

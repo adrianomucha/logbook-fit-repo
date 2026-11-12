@@ -13,10 +13,11 @@ export type UrgencyStyle = {
   dot: string;
 };
 
-// Colour says whose move it is, in the app's own tokens: lime is the
-// coach's move (as lime is the client's next step), amber needs attention
-// soon, red is a client slipping, grey is nothing to do.
-const COACHS_MOVE = { chip: 'bg-brand/25 text-brand-foreground dark:bg-brand/15 dark:text-brand', dot: 'bg-brand' };
+// Colour says whose move it is, in the app's own tokens: solid ink is the
+// coach's move, amber needs attention soon, red is a client slipping, grey
+// is nothing to do. Not volt: on this screen volt belongs to the one main
+// action, and a status that repeats down a roster would spend it many times.
+const COACHS_MOVE = { chip: 'bg-foreground/10 text-foreground', dot: 'bg-foreground' };
 const NOTHING_TO_DO = { chip: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground/50' };
 const URGENCY_TINT: Record<Urgency, { chip: string; dot: string }> = {
   NEEDS_PLAN: COACHS_MOVE,

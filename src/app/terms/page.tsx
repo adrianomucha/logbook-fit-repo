@@ -145,7 +145,7 @@ export default function TermsPage() {
           in our{' '}
           <Link
             href="/privacy"
-            className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+            className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
           >
             Privacy Policy
           </Link>
@@ -211,7 +211,7 @@ export default function TermsPage() {
           Questions about these terms:{' '}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+            className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
           >
             {CONTACT_EMAIL}
           </a>

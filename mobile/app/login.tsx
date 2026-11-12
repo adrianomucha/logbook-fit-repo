@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SignInError, useAuth } from '@/lib/auth';
 import { webUrl } from '@/lib/config';
 import { Button, Eyebrow } from '@/components/ui';
+import { colors } from '@logbook/shared/palette';
 
 const inputClass =
   'h-12 rounded-lg border border-border/60 bg-secondary/50 px-3.5 font-sans text-base text-foreground';
@@ -42,7 +43,7 @@ export default function LoginScreen() {
       >
         <View className="mb-8">
           <View className="mb-2 flex-row items-center gap-1.5">
-            <View className="h-1.5 w-1.5 rounded-full bg-brand" />
+            <View className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
             <Eyebrow>Welcome back</Eyebrow>
           </View>
           <Text className="font-sans-bold text-4xl uppercase leading-[38px] tracking-tight text-foreground">
@@ -59,7 +60,7 @@ export default function LoginScreen() {
               value={email}
               onChangeText={setEmail}
               placeholder="you@example.com"
-              placeholderTextColor="#737373"
+              placeholderTextColor={colors.mutedForeground}
               autoCapitalize="none"
               autoCorrect={false}
               keyboardType="email-address"
@@ -80,7 +81,7 @@ export default function LoginScreen() {
               value={password}
               onChangeText={setPassword}
               placeholder="Your password"
-              placeholderTextColor="#737373"
+              placeholderTextColor={colors.mutedForeground}
               secureTextEntry
               textContentType="password"
               autoComplete="current-password"

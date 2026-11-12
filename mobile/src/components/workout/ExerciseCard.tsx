@@ -15,6 +15,7 @@ import { weightUnitLabel } from '@logbook/shared/weight-units';
 import { Eyebrow } from '@/components/ui';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { SET_COLS, SetRow } from './SetRow';
+import { colors } from '@logbook/shared/palette';
 
 interface ExerciseCardProps {
   exercise: WorkoutExercise;
@@ -125,14 +126,14 @@ export function ExerciseCard({
             isComplete ? 'border-brand bg-brand' : 'border-foreground/15 bg-transparent'
           }`}
         >
-          {isComplete ? <Feather name="check" size={16} color="#1e2702" /> : null}
+          {isComplete ? <Feather name="check" size={16} color={colors.brandForeground} /> : null}
         </Pressable>
       </View>
 
       {isExpanded ? (
         <View className="gap-3.5 pb-4 pl-[42px] pr-1 pt-1.5">
           {exercise.coachNotes ? (
-            <Text className="border-l-2 border-brand pl-3 font-sans text-sm leading-5 text-foreground/75">
+            <Text className="border-l-2 border-foreground/20 pl-3 font-sans text-sm leading-5 text-foreground/75">
               {exercise.coachNotes}
             </Text>
           ) : null}
@@ -140,7 +141,7 @@ export function ExerciseCard({
           {isFlagged ? (
             <View className="rounded-lg border border-warning/20 bg-warning/5 p-3">
               <View className="mb-2 flex-row items-center gap-2">
-                <Feather name="flag" size={16} color="#f59f0a" />
+                <Feather name="flag" size={16} color={colors.warning} />
                 <Text className="font-sans-medium text-sm text-foreground">Flagged for coach</Text>
               </View>
               {!isReadOnly ? (
@@ -148,7 +149,7 @@ export function ExerciseCard({
                   <TextInput
                     className="h-11 rounded-lg border border-input bg-background px-3 font-sans text-base text-foreground"
                     placeholder="Sore left shoulder on the last set"
-                    placeholderTextColor="#737373"
+                    placeholderTextColor={colors.mutedForeground}
                     value={flagNote}
                     onChangeText={onUpdateFlagNote}
                     maxLength={200}
@@ -216,7 +217,7 @@ export function ExerciseCard({
 
           {!isFlagged && !isReadOnly ? (
             <Pressable onPress={onToggleFlag} hitSlop={8} className="flex-row items-center gap-1.5 py-2">
-              <Feather name="flag" size={14} color="#737373" />
+              <Feather name="flag" size={14} color={colors.mutedForeground} />
               <Eyebrow>Flag for coach</Eyebrow>
             </Pressable>
           ) : null}

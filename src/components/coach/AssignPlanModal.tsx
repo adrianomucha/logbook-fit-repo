@@ -229,7 +229,7 @@ export function AssignPlanModal({
                   {currentPlan.name}
                 </p>
                 <p className="flex items-center gap-1.5 mt-1 font-mono text-[10px] uppercase tracking-[0.12em] font-medium tabular-nums antialiased truncate">
-                  <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25 shrink-0" aria-hidden="true" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-success ring-2 ring-success/25 shrink-0" aria-hidden="true" />
                   <span className="text-foreground">Current</span>
                   <span className="sm:hidden text-muted-foreground">
                     · {weeksLabel(currentPlan)} · {perWeekLabel(currentPlan)}
@@ -262,13 +262,13 @@ export function AssignPlanModal({
                     className={cn(
                       'group relative w-full text-start flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 transition-colors',
                       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-                      isSelected ? 'bg-brand/10' : 'hover:bg-muted/50 active:bg-muted/70'
+                      isSelected ? 'bg-muted' : 'hover:bg-muted/50 active:bg-muted/70'
                     )}
                   >
-                    {/* Volt edge marks the pick */}
+                    {/* Ink edge marks the pick; volt is saved for the confirm button */}
                     <span
                       className={cn(
-                        'absolute left-0 inset-y-0 w-[3px] bg-brand transition-opacity duration-150',
+                        'absolute left-0 inset-y-0 w-[3px] bg-foreground transition-opacity duration-150',
                         isSelected ? 'opacity-100' : 'opacity-0'
                       )}
                       aria-hidden="true"
@@ -290,11 +290,11 @@ export function AssignPlanModal({
                     <span className="w-5 flex justify-end shrink-0" aria-hidden="true">
                       <span
                         className={cn(
-                          'w-5 h-5 rounded-full bg-brand flex items-center justify-center transition-[opacity,transform] duration-150',
+                          'w-5 h-5 rounded-full bg-foreground flex items-center justify-center transition-[opacity,transform] duration-150',
                           isSelected ? 'opacity-100 scale-100' : 'opacity-0 scale-75'
                         )}
                       >
-                        <Check className="w-3 h-3 text-brand-foreground" strokeWidth={3} />
+                        <Check className="w-3 h-3 text-background" strokeWidth={3} />
                       </span>
                     </span>
                   </button>

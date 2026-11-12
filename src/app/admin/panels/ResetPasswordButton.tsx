@@ -63,7 +63,7 @@ export function ResetPasswordButton({ userId }: { userId: string }) {
           title="Copy temporary password"
         >
           {copied ? (
-            <Check className="h-3.5 w-3.5 text-brand" strokeWidth={3} />
+            <Check className="h-3.5 w-3.5 text-success-text" strokeWidth={3} />
           ) : (
             <Copy className="h-3.5 w-3.5" />
           )}

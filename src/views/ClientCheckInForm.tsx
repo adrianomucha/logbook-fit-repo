@@ -102,7 +102,7 @@ export function ClientCheckInForm() {
         <div className="max-w-md mx-auto space-y-6 animate-enter">
           {/* Volt check — the same celebration mark the coach's success screen
               and the workout-complete state carry */}
-          <div className="w-16 h-16 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+          <div className="w-16 h-16 rounded-full bg-brand flex items-center justify-center animate-settle">
             <Check className="w-8 h-8 text-brand-foreground" strokeWidth={3} aria-hidden="true" />
           </div>
 

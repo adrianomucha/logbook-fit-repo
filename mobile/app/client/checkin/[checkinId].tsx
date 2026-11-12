@@ -10,6 +10,7 @@ import { useCheckIn } from '@/hooks/useCheckIns';
 import { Button, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ChoiceGrid, type Choice } from '@/components/checkin/ChoiceGrid';
 import { BACK_HOME, CHECKIN_ALREADY_SENT, CHECKIN_EXPIRED, checkInReplyNote } from '@logbook/shared/client-copy';
+import { colors } from '@logbook/shared/palette';
 
 const EFFORT_OPTIONS: Choice[] = [
   { value: 'EASY', label: 'Too Easy', emoji: '😴', tone: 'success' },
@@ -32,10 +33,10 @@ function Terminal({ icon, tone, title, body, onBack }: { icon: 'alert-triangle' 
         {tone === 'success' ? (
           // The lime check the sent screen and the web carry
           <View className="h-12 w-12 items-center justify-center rounded-full bg-brand">
-            <Feather name="check" size={24} color="#1e2702" />
+            <Feather name="check" size={24} color={colors.brandForeground} />
           </View>
         ) : (
-          <Feather name={icon} size={40} color="#a3a3a3" />
+          <Feather name={icon} size={40} color={colors.faint} />
         )}
         <Text className="mt-4 font-sans-bold text-lg tracking-tight text-foreground">{title}</Text>
         <Text className="mb-5 mt-1.5 text-center font-sans text-sm text-muted-foreground">{body}</Text>
@@ -81,7 +82,7 @@ function SentScreen({
       <View className="gap-6">
         {/* Volt check — the same celebration mark the workout-complete state carries */}
         <View className="h-16 w-16 items-center justify-center rounded-full bg-brand">
-          <Feather name="check" size={32} color="#1e2702" />
+          <Feather name="check" size={32} color={colors.brandForeground} />
         </View>
 
         <View>
@@ -251,7 +252,7 @@ export default function CheckInScreen() {
             <TextInput
               className="min-h-[88px] rounded-md border border-input bg-background px-3 py-2 font-sans text-base text-foreground"
               placeholder="Right knee twinged on squats Wednesday"
-              placeholderTextColor="#737373"
+              placeholderTextColor={colors.mutedForeground}
               value={painBlockers}
               onChangeText={(t) => setPainBlockers(t.slice(0, 500))}
               multiline

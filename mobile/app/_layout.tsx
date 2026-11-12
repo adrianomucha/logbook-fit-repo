@@ -17,6 +17,7 @@ import { IBMPlexMono_700Bold } from '@expo-google-fonts/ibm-plex-mono/700Bold';
 import { CrashScreen } from '@/components/CrashScreen';
 import { AuthProvider } from '@/lib/auth';
 import { resolveNotificationUrl } from '@/lib/push';
+import { colors } from '@logbook/shared/palette';
 
 // Keep the splash up until the fonts are in — a flash of system font on the
 // greeting is the first thing anyone would notice.
@@ -69,7 +70,7 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <StatusBar style="dark" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: '#ffffff' } }}>
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}>
         <Stack.Screen name="account" options={{ presentation: 'modal' }} />
       </Stack>
     </AuthProvider>

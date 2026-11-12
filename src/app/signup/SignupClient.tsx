@@ -109,7 +109,7 @@ function InviteCoachHeader({ inviteInfo }: { inviteInfo: InviteInfo | null }) {
       </div>
 
       {inviteInfo?.note && (
-        <div className="pl-3.5 border-l-2 border-brand">
+        <div className="pl-3.5 border-l-2 border-foreground/20">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">
             A note from {coachFirstName}
           </p>
@@ -521,7 +521,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
             {betaToken ? (
               <>
-                <span className="text-brand" aria-hidden="true">
+                <span className="text-success-text" aria-hidden="true">
                   &#9679;
                 </span>{' '}
                 Invite accepted

@@ -8,6 +8,7 @@ import { Button, Card, Eyebrow } from '@/components/ui';
 
 import type { EffortRating } from '@logbook/shared/client-copy';
 import { EffortPicker } from '@/components/EffortPicker';
+import { colors } from '@logbook/shared/palette';
 
 interface SessionCompleteCardProps {
   workoutName?: string;
@@ -56,7 +57,7 @@ export function SessionCompleteCard({
           {subtitle ? <Text className="mt-1.5 font-sans text-[15px] text-muted-foreground">{subtitle}</Text> : null}
         </View>
         <View className="h-11 w-11 items-center justify-center rounded-full bg-brand">
-          <Feather name="check" size={20} color="#1e2702" />
+          <Feather name="check" size={20} color={colors.brandForeground} />
         </View>
       </View>
 
@@ -71,7 +72,7 @@ export function SessionCompleteCard({
       </View>
 
       <View className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
-        <View className="h-full rounded-full bg-brand" style={{ width: `${completion.completionPct}%` }} />
+        <View className="h-full rounded-full bg-foreground" style={{ width: `${completion.completionPct}%` }} />
       </View>
 
       {completion.autoFinished ? (
@@ -80,7 +81,7 @@ export function SessionCompleteCard({
 
       {feedbackSubmitted ? (
         <View className="mt-5 flex-row items-center gap-2 border-t border-border/50 pt-4">
-          <Feather name="check" size={14} color="#157f3c" />
+          <Feather name="check" size={14} color={colors.successText} />
           <Text className="font-mono text-[11px] uppercase tracking-[1.5px] text-muted-foreground">
             Feedback sent{coachFirst ? ` to ${coachFirst}` : ''}
           </Text>
@@ -100,7 +101,7 @@ export function SessionCompleteCard({
             <TextInput
               className="mt-3 min-h-[60px] rounded-md border border-input bg-background px-3 py-2 font-sans text-base text-foreground"
               placeholder="Felt strong on the last set"
-              placeholderTextColor="#737373"
+              placeholderTextColor={colors.mutedForeground}
               value={notes}
               onChangeText={setNotes}
               multiline

@@ -56,7 +56,7 @@ export default function LegalPage() {
 
       <main className="mx-auto w-full max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
         <p className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
           Legal
         </p>
         <h1 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
@@ -67,7 +67,7 @@ export default function LegalPage() {
           about any of it:{' '}
           <a
             href="mailto:hello@logbook.fit"
-            className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+            className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
           >
             hello@logbook.fit
           </a>
@@ -93,7 +93,7 @@ export default function LegalPage() {
                   </p>
                 </div>
                 <ArrowRight
-                  className="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-brand"
+                  className="mt-1 h-5 w-5 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-foreground"
                   aria-hidden="true"
                 />
               </Link>

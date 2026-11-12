@@ -111,7 +111,7 @@ export function AccountMenu({ className }: { className?: string }) {
             )}
             {isAdmin && (
               <span
-                className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-brand ring-2 ring-background"
+                className="absolute -right-0.5 -top-0.5 h-1.5 w-1.5 rounded-full bg-muted-foreground/50 ring-2 ring-background"
                 aria-hidden="true"
               />
             )}
@@ -164,7 +164,7 @@ export function AccountMenu({ className }: { className?: string }) {
                 <DropdownMenuItem key={href} asChild className={itemClass}>
                   <Link href={href}>
                     <span
-                      className="h-1.5 w-1.5 rounded-full bg-brand"
+                      className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
                       aria-hidden="true"
                     />
                     {label}

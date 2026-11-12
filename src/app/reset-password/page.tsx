@@ -84,7 +84,7 @@ function ResetPasswordForm() {
     return (
       <div className="space-y-5">
         <div className="flex items-start gap-3 rounded-xl border border-border p-4">
-          <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+          <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
           <p className="text-sm leading-relaxed text-muted-foreground antialiased">
             Your password is updated. Sign in with the new one to pick up
             where you left off.
@@ -167,7 +167,7 @@ export default function ResetPasswordPage() {
     <AuthShell mode="login">
       <div>
         <p className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
           Account recovery
         </p>
         <h1 className="text-4xl font-black uppercase tracking-tight leading-[0.95] text-balance antialiased">

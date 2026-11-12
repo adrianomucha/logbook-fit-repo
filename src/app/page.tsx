@@ -1,18 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  Check,
-  ClipboardList,
-  Dumbbell,
-  FileSpreadsheet,
-  LayoutDashboard,
-  Library,
-  Link2,
-  LineChart,
-  MessageCircle,
-  Sun,
-  X,
-} from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
@@ -134,20 +122,13 @@ const JSON_LD = {
   ],
 };
 
-const MARQUEE_ITEMS = [
-  'Catch the fade before the refund',
-  'For independent coaches',
-  'Plan · Train · Check in',
-  'Private beta · onboarding in small batches',
-];
-
 // The filter, as two lists. Every line is short enough to scan in one pass:
 // the point lands from the shape of the section before any of it is read.
 const AUDIENCE = [
   {
     title: 'Built for',
     icon: Check,
-    iconClass: 'text-brand',
+    iconClass: 'text-foreground',
     items: [
       'Independent coaches with a real roster',
       'You write the plans and run the check-ins yourself',
@@ -191,27 +172,22 @@ const CHECK_IN_LOOP = [
 
 const COACH_FEATURES = [
   {
-    icon: LayoutDashboard,
     title: 'Urgency-sorted dashboard',
     body: 'Clients ranked by who needs attention most: at-risk, check-in due, awaiting response, on track.',
   },
   {
-    icon: ClipboardList,
     title: 'Workout plan builder',
     body: 'Multi-week plans with a visual week/day sidebar. Duplicate, reorder, and copy across days.',
   },
   {
-    icon: FileSpreadsheet,
     title: 'Spreadsheet import',
     body: 'Upload the Excel or CSV you coach from. Check every week before it saves.',
   },
   {
-    icon: Library,
     title: 'Exercise library',
     body: 'Your own library with categories, default prescriptions, and coaching notes.',
   },
   {
-    icon: Link2,
     title: 'Invite-based onboarding',
     body: 'Send a link with a personal note. They sign up already connected, your words waiting in chat.',
   },
@@ -219,42 +195,34 @@ const COACH_FEATURES = [
 
 const CLIENT_FEATURES = [
   {
-    icon: Sun,
     title: 'Today focus view',
     body: 'Exactly what’s scheduled today, with the coach’s notes front and center.',
   },
   {
-    icon: Dumbbell,
     title: 'Live workout execution',
     body: 'Tap through sets, override weight and reps on the fly, and flag what doesn’t feel right.',
   },
   {
-    icon: MessageCircle,
     title: 'A direct line to the coach',
     body: 'Flags and check-ins turn into focused conversations, not another group chat.',
   },
   {
-    icon: LineChart,
     title: 'Progress at a glance',
     body: 'Completion history and weekly progress without digging through spreadsheets.',
   },
 ];
 
+// Title and one line, nothing else. A stock icon beside each row said
+// "feature list" before it said anything about the feature.
 function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
   return (
     <ul className="divide-y divide-border/70 border-t border-border/70">
       {features.map((feature) => (
-        <li key={feature.title} className="flex gap-4 py-5">
-          <feature.icon
-            className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
-          <div>
-            <h3 className="text-sm font-semibold antialiased">{feature.title}</h3>
-            <p className="mt-1 text-pretty text-sm text-muted-foreground antialiased">
-              {feature.body}
-            </p>
-          </div>
+        <li key={feature.title} className="py-5">
+          <h3 className="text-base font-semibold antialiased">{feature.title}</h3>
+          <p className="mt-1 max-w-md text-pretty text-sm text-muted-foreground antialiased sm:text-base">
+            {feature.body}
+          </p>
         </li>
       ))}
     </ul>
@@ -291,7 +259,7 @@ export default function HomePage() {
         <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
           <div className="animate-enter flex flex-col items-center">
             <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+              <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
               Private beta · for independent coaches
             </p>
             {/* Sized so "Your quietest client" holds one line on desktop:
@@ -301,7 +269,7 @@ export default function HomePage() {
               <br />
               is your next
               <br />
-              <span className="text-brand">cancellation.</span>
+              cancellation.
               {/* The display h1 states a problem, which is what earns the read,
                   but it still names no product or category. This completes it
                   for a crawler and for a screen reader landing cold, without
@@ -322,30 +290,6 @@ export default function HomePage() {
           </div>
         </div>
       </section>
-
-      {/* Volt ticker */}
-      <div className="overflow-hidden border-y border-border/70 bg-brand py-3" aria-hidden="true">
-        {/* Two identical halves; the track scrolls by exactly one half (-50%)
-            for a seamless loop. Each half repeats the items enough times to
-            stay wider than any viewport, so the loop never reveals a gap. */}
-        <div className="flex w-max animate-marquee">
-          {[0, 1].map((half) => (
-            <div
-              key={half}
-              className="flex shrink-0 items-center font-mono text-[11px] font-bold uppercase tracking-[0.2em] text-brand-foreground antialiased"
-            >
-              {Array.from({ length: 4 }).flatMap((_, rep) =>
-                MARQUEE_ITEMS.map((item, i) => (
-                  <span key={`${rep}-${i}`} className="flex items-center">
-                    <span className="px-6">{item}</span>
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand-foreground/70" />
-                  </span>
-                ))
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
 
         {/* Who it's for: the filter. Naming who this isn't for is what makes
             the right coach feel it was built for them specifically. Two columns
@@ -464,9 +408,9 @@ export default function HomePage() {
                 {CHECK_IN_LOOP.map((item) => (
                   <li
                     key={item.step}
-                    className="flex gap-6 border-t border-border/70 py-6 sm:gap-8"
+                    className="flex gap-4 border-t border-border/70 py-6 sm:gap-6"
                   >
-                    <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
+                    <span className="w-7 shrink-0 pt-1 font-mono text-sm font-medium tabular-nums leading-none text-muted-foreground antialiased sm:pt-1.5">
                       {item.step}
                     </span>
                     <div>
@@ -504,11 +448,11 @@ export default function HomePage() {
                 For coaches
               </p>
               <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
-                Built for coaches.
+                Who needs you, in order.
               </h2>
               <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
-                No manual triage. A workspace that surfaces the right client at the
-                right time.
+                At risk, check-in due, waiting on your reply, on track. Your
+                roster stays sorted that way, so you never triage it by hand.
               </p>
               <div className="mt-8">
                 <FeatureList features={COACH_FEATURES} />

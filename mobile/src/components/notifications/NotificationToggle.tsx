@@ -2,6 +2,7 @@ import { ActivityIndicator, Alert, Linking, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { ALERTS_COPY } from '@logbook/shared/alerts-copy';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { colors } from '@logbook/shared/palette';
 
 /**
  * The bell in the chat header, same as the web's icon-only NotificationToggle:
@@ -27,7 +28,7 @@ export function NotificationToggle() {
         accessibilityLabel={ALERTS_COPY.blockedLabel}
         className="h-10 w-10 items-center justify-center rounded-full active:opacity-70"
       >
-        <Feather name="bell-off" size={16} color="#737373" />
+        <Feather name="bell-off" size={16} color={colors.mutedForeground} />
       </Pressable>
     );
   }
@@ -51,9 +52,9 @@ export function NotificationToggle() {
       className={`h-10 w-10 items-center justify-center rounded-full active:opacity-70 ${isSubscribed ? '' : 'bg-muted/60'}`}
     >
       {isBusy ? (
-        <ActivityIndicator size="small" color="#737373" />
+        <ActivityIndicator size="small" color={colors.mutedForeground} />
       ) : (
-        <Feather name={isSubscribed ? 'bell' : 'bell-off'} size={16} color={isSubscribed ? '#737373' : '#0a0a0a'} />
+        <Feather name={isSubscribed ? 'bell' : 'bell-off'} size={16} color={isSubscribed ? colors.mutedForeground : colors.foreground} />
       )}
     </Pressable>
   );

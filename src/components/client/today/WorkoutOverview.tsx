@@ -111,7 +111,7 @@ export function WorkoutOverview({
             </div>
             <div className="h-1.5 rounded-full bg-muted overflow-hidden">
               <div
-                className="h-full rounded-full bg-brand transition-[width] duration-500"
+                className="h-full rounded-full bg-foreground transition-[width] duration-500"
                 style={{ width: `${completionPct}%` }}
               />
             </div>

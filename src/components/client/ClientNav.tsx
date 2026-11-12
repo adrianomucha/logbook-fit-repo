@@ -61,7 +61,7 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
                   className={cn(
                     'inline-flex items-center gap-1.5 border-b-2 px-0.5 text-[11px] font-medium uppercase tracking-[0.12em] transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     activeTab === id
-                      ? 'border-brand text-foreground'
+                      ? 'border-foreground text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >
@@ -88,7 +88,7 @@ export function ClientNav({ activeTab, onTabChange }: ClientNavProps) {
         items={mobileNavItems}
         activeId={activeTab}
         onSelect={(id) => onTabChange(id as ClientNavTab)}
-        // Volt pill, matching the brand underline the desktop tabs use
+        // Ink pill, matching the ink underline the desktop tabs use
         accent="brand"
       />
     </>

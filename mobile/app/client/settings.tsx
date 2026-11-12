@@ -13,6 +13,7 @@ import {
   type SettingsSectionId,
 } from '@/components/settings/sections';
 import { HOME_TAB } from '@logbook/shared/client-copy';
+import { colors } from '@logbook/shared/palette';
 
 /**
  * The client's settings — the web's /client/settings: one column under the
@@ -48,13 +49,13 @@ export default function SettingsScreen() {
                 accessibilityRole="button"
                 className="-ml-1 mb-1 min-h-[36px] flex-row items-center gap-0.5 self-start active:opacity-70"
               >
-                <Feather name="chevron-left" size={14} color="#737373" />
+                <Feather name="chevron-left" size={14} color={colors.mutedForeground} />
                 <Text className="font-mono-medium text-[11px] uppercase tracking-[1.3px] text-muted-foreground">{HOME_TAB}</Text>
               </Pressable>
               <Text className="font-sans-bold text-2xl tracking-tight text-foreground">Settings</Text>
             </View>
 
-            {/* Section tabs — brand underline, matching the nav's own tabs.
+            {/* Section tabs: ink underline, matching the nav's own tabs.
                 Fixed segments, never a scroller: three tabs share the row. */}
             <View className="flex-row border-b border-border" accessibilityRole="tablist">
               {SETTINGS_SECTIONS.map(({ id, label }) => {
@@ -67,7 +68,7 @@ export default function SettingsScreen() {
                     accessibilityState={{ selected: active }}
                     style={{ marginBottom: -1 }}
                     className={`min-h-[44px] flex-1 items-center justify-end border-b-2 px-1 pb-2.5 pt-1 ${
-                      active ? 'border-brand' : 'border-transparent'
+                      active ? 'border-foreground' : 'border-transparent'
                     }`}
                   >
                     <Text className={`font-sans-medium text-[11px] uppercase tracking-[1.3px] ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
@@ -80,7 +81,7 @@ export default function SettingsScreen() {
 
             {isLoading || !user ? (
               <View className="items-center py-12" accessibilityLabel="Loading settings">
-                <ActivityIndicator color="#737373" />
+                <ActivityIndicator color={colors.mutedForeground} />
               </View>
             ) : (
               <View className="rounded-xl border border-border/70 bg-card p-4">

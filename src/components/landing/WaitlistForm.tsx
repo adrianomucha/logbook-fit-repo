@@ -135,7 +135,7 @@ export function WaitlistForm({
   const confirmationHeader = (
     <>
       <div className="flex items-start justify-between gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-foreground text-brand animate-bounce-once">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-foreground text-brand animate-settle">
           <svg
             viewBox="0 0 24 24"
             fill="none"
@@ -232,9 +232,8 @@ export function WaitlistForm({
             {WAITLIST_NEXT_STEPS}
           </p>
         </div>
-        {/* Echoes the page's black-on-volt marquee, inverted: a ticket-stub
-            footer that closes the loop on the brand's ticker language. */}
-        <p className="bg-brand-foreground px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-brand antialiased sm:px-7">
+        {/* A ticket-stub footer under a perforation line */}
+        <p className="border-t border-dashed border-brand-foreground/30 px-6 py-3 font-mono text-[10px] uppercase tracking-[0.2em] text-brand-foreground/75 antialiased sm:px-7">
           Invite incoming · Watch your inbox
         </p>
       </div>
@@ -293,7 +292,7 @@ export function WaitlistForm({
         <ul className="flex flex-wrap justify-center gap-x-4 gap-y-1.5 pt-2 text-sm text-muted-foreground antialiased">
           {promises.map((promise) => (
             <li key={promise} className="flex items-center gap-1.5 whitespace-nowrap">
-              <Check className="h-3.5 w-3.5 shrink-0 text-brand" strokeWidth={3} aria-hidden="true" />
+              <Check className="h-3.5 w-3.5 shrink-0 text-muted-foreground" strokeWidth={3} aria-hidden="true" />
               {promise}
             </li>
           ))}

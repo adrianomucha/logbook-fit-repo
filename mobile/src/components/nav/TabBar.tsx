@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from 'expo-router/build/layouts/Tabs';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { colors } from '@logbook/shared/palette';
 
 export const TAB_BAR_HEIGHT = 56;
 const PILL_WIDTH = 64;
@@ -52,9 +53,11 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   const pillX = useSharedValue(0);
   useEffect(() => {
     if (activeIndex >= 0) {
+      // Critically damped: the pill slides and stops. The only overshoot in
+      // the app belongs to logging a set.
       pillX.value = withSpring(activeIndex * columnWidth + (columnWidth - PILL_WIDTH) / 2, {
-        damping: 16,
-        stiffness: 180,
+        damping: 26,
+        stiffness: 220,
         mass: 0.8,
       });
     }
@@ -79,7 +82,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
       <View className="flex-row" style={{ height: TAB_BAR_HEIGHT }}>
         <Animated.View
           pointerEvents="none"
-          className="absolute rounded-full bg-brand"
+          className="absolute rounded-full bg-foreground"
           style={[{ top: 5, left: 0, width: PILL_WIDTH, height: PILL_HEIGHT }, pillStyle]}
         />
         {routes.map((route) => {
@@ -88,7 +91,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
           // Sitting in the chat marks it read within a poll — a badge on the
           // tab you're already reading is noise.
           const badge = tab.name === 'chat' && !isActive ? unread : 0;
-          const color = isActive ? '#1e2702' : '#737373';
+          const color = isActive ? colors.background : colors.mutedForeground;
           return (
             <Pressable
               key={route.key}

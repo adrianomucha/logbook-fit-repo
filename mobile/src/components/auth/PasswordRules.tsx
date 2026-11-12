@@ -6,6 +6,7 @@ import {
   PASSWORD_MIN_LENGTH,
   PASSWORD_MAX_BYTES,
 } from '@logbook/shared/validations/schemas';
+import { colors } from '@logbook/shared/palette';
 
 const RULES = [
   { id: 'length', label: '8+ chars', met: (password: string) => password.length >= PASSWORD_MIN_LENGTH },
@@ -37,7 +38,7 @@ export function PasswordRules({ password }: { password: string }) {
                   met ? 'border-success bg-success' : 'border-border/80'
                 }`}
               >
-                {met ? <Feather name="check" size={9} color="#fafafa" /> : null}
+                {met ? <Feather name="check" size={9} color={colors.primaryForeground} /> : null}
               </View>
               <Text className={`font-mono text-[10px] uppercase tracking-[1.4px] ${met ? 'text-success-text' : 'text-muted-foreground'}`}>
                 {rule.label}
@@ -48,7 +49,7 @@ export function PasswordRules({ password }: { password: string }) {
       </View>
       {tooCommon || tooLong ? (
         <View className="flex-row items-start gap-1.5">
-          <Feather name="alert-triangle" size={12} color="#c52020" style={{ marginTop: 2 }} />
+          <Feather name="alert-triangle" size={12} color={colors.destructive} style={{ marginTop: 2 }} />
           <Text className="flex-1 font-sans text-xs text-destructive-text">
             {tooCommon ? 'This one tops the most-hacked lists. Pick something harder to guess' : 'Passwords max out at 72 characters'}
           </Text>

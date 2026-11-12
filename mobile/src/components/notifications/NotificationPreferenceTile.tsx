@@ -2,6 +2,7 @@ import { ActivityIndicator, Alert, Switch, Text, View } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ALERTS_COPY } from '@logbook/shared/notification-copy';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { colors } from '@logbook/shared/palette';
 
 /**
  * The settings-page control for per-device message alerts — the web's
@@ -40,22 +41,22 @@ export function NotificationPreferenceTile() {
   return (
     <View
       className={`flex-row items-start gap-3.5 rounded-xl border p-4 ${
-        isSubscribed ? 'border-brand/40 bg-brand/[0.06]' : 'border-border/60 bg-secondary/40'
+        isSubscribed ? 'border-foreground/25 bg-card' : 'border-border/60 bg-secondary/40'
       }`}
     >
-      {/* Icon well — lights up volt once alerts are on so the state reads
+      {/* Icon well: turns solid ink once alerts are on so the state reads
           from across the room, not only from the switch */}
       <View
         className={`h-10 w-10 items-center justify-center rounded-lg ${
-          isSubscribed ? 'bg-brand' : 'border border-border/60 bg-background'
+          isSubscribed ? 'bg-foreground' : 'border border-border/60 bg-background'
         }`}
       >
         {isBusy ? (
-          <ActivityIndicator size="small" color={isSubscribed ? '#1e2702' : '#737373'} />
+          <ActivityIndicator size="small" color={isSubscribed ? colors.background : colors.mutedForeground} />
         ) : isSubscribed ? (
-          <MaterialCommunityIcons name="bell-ring" size={18} color="#1e2702" />
+          <MaterialCommunityIcons name="bell-ring" size={18} color={colors.background} />
         ) : (
-          <Feather name="bell" size={18} color="#737373" />
+          <Feather name="bell" size={18} color={colors.mutedForeground} />
         )}
       </View>
 
@@ -66,8 +67,8 @@ export function NotificationPreferenceTile() {
             value={isSubscribed}
             onValueChange={(v) => void handleChange(v)}
             disabled={!canToggle}
-            trackColor={{ true: '#c3f910', false: '#e5e5e5' }}
-            thumbColor="#ffffff"
+            trackColor={{ true: colors.foreground, false: colors.border }}
+            thumbColor={colors.card}
             accessibilityLabel={ALERTS_COPY.title}
           />
         </View>
@@ -76,9 +77,9 @@ export function NotificationPreferenceTile() {
           {ALERTS_COPY.body('client')}
         </Text>
 
-        {/* Status line — the product's mono data voice; a volt dot marks "on" */}
+        {/* Status line — the product's mono data voice; a green dot marks "on" */}
         <View className="mt-3 flex-row items-center gap-1.5" accessibilityLiveRegion="polite">
-          <View className={`h-1.5 w-1.5 rounded-full ${isSubscribed ? 'bg-brand' : 'bg-muted-foreground/40'}`} />
+          <View className={`h-1.5 w-1.5 rounded-full ${isSubscribed ? 'bg-success' : 'bg-muted-foreground/40'}`} />
           <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-muted-foreground">{status}</Text>
         </View>
       </View>

@@ -105,15 +105,10 @@ export function PlanTemplateCard({
                   +{clients.length - MAX_AVATARS}
                 </span>
               )}
-              {/* volt live-dot on the stack's corner */}
-              <span
-                className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-brand ring-2 ring-card"
-                aria-hidden="true"
-              />
             </span>
           ) : (
             <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.12em] tabular-nums antialiased">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand ring-2 ring-brand/25 shrink-0" aria-hidden="true" />
+              <span className="w-1.5 h-1.5 rounded-full bg-success ring-2 ring-success/25 shrink-0" aria-hidden="true" />
               <span className="font-medium text-foreground">
                 {clientCount} {clientCount === 1 ? 'client' : 'clients'}
               </span>

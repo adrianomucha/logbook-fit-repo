@@ -40,7 +40,7 @@ export function ExercisePreview({ exercises }: { exercises: Exercise[] }) {
         return (
           <View key={group[0].id} className={`py-3.5 ${last ? '' : 'border-b border-border/50'}`}>
             <Eyebrow className="mb-2">Superset</Eyebrow>
-            <View className="border-l-2 border-brand/60 pl-3">
+            <View className="border-l-2 border-foreground/20 pl-3">
               {group.map((exercise, mi) => (
                 <Row
                   key={exercise.id}

@@ -313,9 +313,6 @@ export function ChatView({
                           avatarUrl={peerAvatarUrl}
                           className="w-14 h-14 text-lg"
                         />
-                        {/* Volt presence dot — same accent the avatars in the
-                            coach empty states carry */}
-                        <span className="absolute -bottom-0.5 -end-0.5 w-3 h-3 rounded-full bg-brand ring-2 ring-card animate-bounce-once" />
                       </div>
                     ) : (
                       <StateArt art={COACH_CHAT_EMPTY_COPY.art} size="sm" className="mx-auto mb-1" />
@@ -345,9 +342,7 @@ export function ChatView({
                           }}
                           className={cn(
                             'text-[11px] uppercase tracking-wider font-bold px-3.5 py-2 rounded-full bg-muted/60 text-foreground active:scale-[0.96] transition-[background-color,color,transform] duration-150 touch-manipulation min-h-[44px]',
-                            isBrand
-                              ? 'hover:bg-brand hover:text-brand-foreground'
-                              : 'hover:bg-foreground hover:text-background'
+                            'hover:bg-foreground hover:text-background'
                           )}
                         >
                           {starter}
@@ -412,9 +407,9 @@ export function ChatView({
                           >
                             {/* The usual attachment row: a square mark on the
                                 left, one text column on the right, equal
-                                padding all round. Volt tile with the flag the
+                                padding all round. Quiet tile with the flag the
                                 client tapped in the workout. */}
-                            <span className="shrink-0 w-10 h-10 rounded-lg bg-brand text-brand-foreground flex items-center justify-center" aria-hidden="true">
+                            <span className="shrink-0 w-10 h-10 rounded-lg bg-muted text-foreground flex items-center justify-center" aria-hidden="true">
                               <Flag className="w-4 h-4" strokeWidth={2.25} />
                             </span>
                             {/* Three steps, one edge: title, data line in
@@ -485,9 +480,7 @@ export function ChatView({
               onClick={() => scrollToBottom(false)}
               className={cn(
                 'flex items-center gap-1.5 px-3.5 py-1.5 text-[10px] uppercase tracking-[0.15em] font-bold shadow-lg transition-colors animate-in fade-in slide-in-from-bottom-2 duration-200 motion-reduce:animate-none touch-manipulation rounded-full tap-target',
-                isBrand
-                  ? 'bg-brand text-brand-foreground hover:bg-brand/90'
-                  : 'bg-foreground text-background hover:bg-foreground/90'
+                'bg-foreground text-background hover:bg-foreground/90'
               )}
             >
               <ChevronDown className="w-3 h-3" />
@@ -526,7 +519,7 @@ export function ChatView({
                 'shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-[background-color,color,transform] duration-150 ease-out touch-manipulation tap-target',
                 hasInput
                   ? isBrand
-                    // Volt = "go", same as the workout CTA
+                    // Volt = "go", same as the workout CTA: send is this screen's one volt
                     ? 'bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.96] scale-100'
                     : 'bg-foreground text-background hover:bg-foreground/90 active:scale-[0.96] scale-100'
                   : 'bg-muted/40 text-muted-foreground/30 scale-90 pointer-events-none'

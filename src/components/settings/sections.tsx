@@ -310,7 +310,7 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
             </div>
 
             {/* Mirrors the invite signup hero, so "save" is never a leap of faith */}
-            <div className="ps-3.5 border-s-2 border-brand">
+            <div className="ps-3.5 border-s-2 border-foreground/20">
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1">
                 What an invited client sees
               </p>

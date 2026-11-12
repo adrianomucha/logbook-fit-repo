@@ -30,7 +30,7 @@ export function WeekList({ days, onOpenDay }: WeekListProps) {
             disabled={!day.isInteractive}
             onPress={() => onOpenDay(day)}
             className={`min-h-[56px] flex-row items-center gap-3 rounded-lg px-3.5 py-3 active:bg-muted ${
-              isCurrent ? 'border border-brand/50 bg-muted/60' : ''
+              isCurrent ? 'border border-foreground/25 bg-muted/60' : ''
             }`}
           >
             <View className="w-9">

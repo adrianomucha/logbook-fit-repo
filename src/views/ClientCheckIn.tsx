@@ -245,7 +245,7 @@ export function ClientCheckIn() {
         <CoachNav activeTab="clients" />
         <div className="max-w-7xl mx-auto px-4 pt-5 sm:px-6 sm:pt-10 lg:px-8">
           <SectionCard className="max-w-md mx-auto text-center py-12 animate-enter">
-            <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+            <div className="w-16 h-16 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-settle">
               <Check className="w-8 h-8 text-brand-foreground" strokeWidth={3} />
             </div>
             <h2
@@ -451,7 +451,7 @@ export function ClientCheckIn() {
                   <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
                     Notes from {firstName}
                   </p>
-                  <p className="border-s-2 border-brand/60 ps-3 text-base leading-relaxed text-foreground/90 max-w-prose text-pretty">
+                  <p className="border-s-2 border-foreground/20 ps-3 text-base leading-relaxed text-foreground/90 max-w-prose text-pretty">
                     {activeCheckIn.painBlockers}
                   </p>
                 </div>

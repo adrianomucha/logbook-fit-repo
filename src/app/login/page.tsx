@@ -100,7 +100,7 @@ export default function LoginPage() {
     <AuthShell mode="login">
       <div>
         <p className="mb-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
           Welcome back
         </p>
         <h1 className="text-4xl font-black uppercase tracking-tight leading-[0.95] text-balance antialiased">
@@ -170,7 +170,7 @@ export default function LoginPage() {
       {isDemoModeEnabled() && (
         <div className="mt-9 rounded-xl border border-dashed border-border p-4">
           <p className="mb-3 flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand ring-2 ring-brand/25" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-success ring-2 ring-success/25" aria-hidden="true" />
             Demo access
           </p>
           <div className="space-y-2">

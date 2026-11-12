@@ -19,7 +19,7 @@ export function WeekCircles({ week }: { week: ThisWeek }) {
   return (
     <div role="img" aria-label={`${week.completed} of ${week.target} workouts done this week`} className="relative">
       <div className="absolute h-1 rounded-full bg-muted" style={{ left: size / 2, right: size / 2, top: size / 2 - 2 }}>
-        <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${lit * 100}%` }} />
+        <div className="h-full rounded-full bg-foreground transition-[width] duration-500" style={{ width: `${lit * 100}%` }} />
       </div>
       <div className="relative flex justify-between">
         {slots.map((slot, i) => (
@@ -51,7 +51,7 @@ function Win({ win }: { win: LogWin }) {
         aria-hidden="true"
         className={cn(
           'mt-px h-[18px] w-[18px] shrink-0 rounded-full flex items-center justify-center',
-          win.kind === 'best' ? 'bg-brand text-brand-foreground' : 'bg-muted text-foreground'
+          win.kind === 'best' ? 'bg-foreground text-background' : 'bg-muted text-foreground'
         )}
       >
         <Icon className="w-3 h-3" strokeWidth={2.5} />
@@ -71,7 +71,7 @@ function Badge({ badge }: { badge: LogBadge }) {
     <span
       className={cn(
         'inline-flex items-center gap-1 h-6 rounded-full px-2.5 text-xs font-semibold',
-        badge.kind === 'week' ? 'bg-brand text-brand-foreground' : 'bg-foreground text-background'
+        badge.kind === 'week' ? 'bg-foreground text-background' : 'bg-muted text-foreground'
       )}
     >
       <Icon className="w-3 h-3" strokeWidth={3} aria-hidden="true" />

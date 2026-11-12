@@ -502,7 +502,7 @@ export function ClientWorkoutExecution() {
                     · Alternate sets
                   </span>
                 </div>
-                <div className="border-l-2 border-brand/60 pl-3 divide-y divide-border/40">
+                <div className="border-l-2 border-foreground/20 pl-3 divide-y divide-border/40">
                   {group.map((exercise, memberIndex) => renderCard(exercise, memberIndex))}
                 </div>
               </div>

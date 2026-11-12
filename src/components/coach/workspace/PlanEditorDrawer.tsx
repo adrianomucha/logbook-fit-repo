@@ -386,10 +386,10 @@ export function PlanEditorDrawer({
         {plan && hasWeeks && (
           <>
             {/* Plan header — always visible. Reads like the app's own pages:
-                a volt hairline on top, a mono eyebrow with the plan's shape,
+                an ink hairline on top, a mono eyebrow with the plan's shape,
                 then the name in display weight over faint logbook grid paper. */}
             <div className="relative z-10 shrink-0 overflow-hidden border-b">
-              <div aria-hidden="true" className="h-0.5 bg-brand" />
+              <div aria-hidden="true" className="h-0.5 bg-foreground" />
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 opacity-[0.045] [mask-image:linear-gradient(to_right,black,transparent_70%)]"
@@ -404,7 +404,7 @@ export function PlanEditorDrawer({
               <SheetHeader className="relative flex-row items-center gap-3 px-4 sm:px-5 pt-3 pb-3.5 space-y-0 text-left">
                 <div className="min-w-0 flex-1">
                   <p className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground tabular-nums antialiased">
-                    <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                    <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
                     Plan
                     <span className="text-border" aria-hidden="true">/</span>
                     {plan.weeks.length} {plan.weeks.length === 1 ? 'wk' : 'wks'}
@@ -556,10 +556,10 @@ export function PlanEditorDrawer({
                                 : 'hover:bg-muted text-foreground'
                             )}
                           >
-                            {/* Active row is the mark itself: dark tile, volt count */}
+                            {/* Active row is the mark itself: dark tile, quiet count */}
                             <span className={cn(
                               'font-mono text-[11px] font-semibold tabular-nums w-5 shrink-0 select-none',
-                              isActive ? 'text-brand' : 'text-muted-foreground'
+                              isActive ? 'text-background/70' : 'text-muted-foreground'
                             )}>
                               {String(idx + 1).padStart(2, '0')}
                             </span>
@@ -609,7 +609,7 @@ export function PlanEditorDrawer({
                           {exerciseCount > 0 && (
                             <span className={cn(
                               'font-mono text-[10px] tabular-nums font-semibold',
-                              isActive ? 'text-brand' : 'text-muted-foreground/70'
+                              isActive ? 'text-background/70' : 'text-muted-foreground/70'
                             )}>
                               {exerciseCount}
                             </span>

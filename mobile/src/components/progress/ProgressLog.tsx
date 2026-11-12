@@ -4,6 +4,7 @@ import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LOG_EMPTY_TEXT, LOG_PAGE_WEEKS, type LogBadge, type LogEntry, type LogWeek, type LogWin, type ThisWeek } from '@logbook/shared/progress';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
+import { colors } from '@logbook/shared/palette';
 
 /**
  * This week as a stepper: a mark per workout (see WorkoutMarkIcon), the
@@ -19,7 +20,7 @@ export function WeekCircles({ week }: { week: ThisWeek }) {
   return (
     <View accessibilityRole="image" accessibilityLabel={`${week.completed} of ${week.target} workouts done this week`}>
       <View className="absolute h-1 rounded-full bg-muted" style={{ left: size / 2, right: size / 2, top: size / 2 - 2 }}>
-        <View className="h-full rounded-full bg-brand" style={{ width: `${lit * 100}%` }} />
+        <View className="h-full rounded-full bg-foreground" style={{ width: `${lit * 100}%` }} />
       </View>
       <View className="flex-row justify-between">
         {slots.map((slot, i) => (
@@ -43,11 +44,11 @@ export function WeekCircles({ week }: { week: ThisWeek }) {
 function Win({ win }: { win: LogWin }) {
   return (
     <View className="flex-row items-start gap-2" accessible accessibilityLabel={`${win.kind === 'best' ? 'New best: ' : ''}${win.label}${win.detail ? ` ${win.detail}` : ''}`}>
-      <View className={`mt-px h-[18px] w-[18px] items-center justify-center rounded-full ${win.kind === 'best' ? 'bg-brand' : 'bg-muted'}`}>
+      <View className={`mt-px h-[18px] w-[18px] items-center justify-center rounded-full ${win.kind === 'best' ? 'bg-foreground' : 'bg-muted'}`}>
         {win.kind === 'best' ? (
-          <MaterialCommunityIcons name="trophy-outline" size={12} color="#1e2702" />
+          <MaterialCommunityIcons name="trophy-outline" size={12} color={colors.background} />
         ) : (
-          <Feather name={win.kind === 'milestone' ? 'flag' : 'rotate-ccw'} size={11} color="#0a0a0a" />
+          <Feather name={win.kind === 'milestone' ? 'flag' : 'rotate-ccw'} size={11} color={colors.foreground} />
         )}
       </View>
       <Text className="flex-1 font-sans text-sm leading-5 text-muted-foreground">
@@ -61,9 +62,9 @@ function Win({ win }: { win: LogWin }) {
 function Badge({ badge }: { badge: LogBadge }) {
   const week = badge.kind === 'week';
   return (
-    <View className={`h-6 flex-row items-center gap-1 rounded-full px-2.5 ${week ? 'bg-brand' : 'bg-foreground'}`}>
-      <Feather name={week ? 'check' : 'zap'} size={12} color={week ? '#1e2702' : '#ffffff'} />
-      <Text className={`font-sans-semibold text-xs ${week ? 'text-brand-foreground' : 'text-background'}`}>{badge.text}</Text>
+    <View className={`h-6 flex-row items-center gap-1 rounded-full px-2.5 ${week ? 'bg-foreground' : 'bg-muted'}`}>
+      <Feather name={week ? 'check' : 'zap'} size={12} color={week ? colors.background : colors.foreground} />
+      <Text className={`font-sans-semibold text-xs ${week ? 'text-background' : 'text-foreground'}`}>{badge.text}</Text>
     </View>
   );
 }
@@ -143,7 +144,7 @@ export function ProgressLog({ weeks }: { weeks: LogWeek[] }) {
       ))}
       {weeks.length > LOG_PAGE_WEEKS ? (
         <Pressable onPress={() => setShowAll((v) => !v)} className="h-11 flex-row items-center justify-center gap-1 active:opacity-60">
-          <Feather name={showAll ? 'chevron-up' : 'chevron-down'} size={16} color="#737373" />
+          <Feather name={showAll ? 'chevron-up' : 'chevron-down'} size={16} color={colors.mutedForeground} />
           <Text className="font-mono text-[11px] uppercase tracking-[1.4px] text-muted-foreground">{showAll ? 'Show less' : 'Show earlier weeks'}</Text>
         </Pressable>
       ) : null}

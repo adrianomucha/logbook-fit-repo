@@ -256,7 +256,7 @@ export function InlineCheckInReview({
         <div className="py-8">
           <div className="flex flex-col items-center text-center gap-2">
             {/* Same volt confirmation as the standalone review + finished workout */}
-            <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+            <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center animate-settle">
               <Check className="w-6 h-6 text-brand-foreground" strokeWidth={3} aria-hidden="true" />
             </div>
             <h3 className="font-bold text-lg tracking-tight mt-1">
@@ -281,7 +281,7 @@ export function InlineCheckInReview({
         <div className={cn("py-8", isFlat ? '' : 'px-3 sm:px-6')}>
           <div className="flex flex-col items-center text-center gap-2">
             {/* The same lime confirmation as "Check-in complete" */}
-            <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center animate-bounce-once">
+            <div className="w-12 h-12 rounded-full bg-brand flex items-center justify-center animate-settle">
               <SendHorizonal className="w-5 h-5 text-brand-foreground" aria-hidden="true" />
             </div>
             <h3 className="font-bold text-lg antialiased">
@@ -543,7 +543,7 @@ export function InlineCheckInReview({
             <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground font-medium antialiased mb-1.5">
               Notes from {firstName}
             </p>
-            <p className="border-s-2 border-brand/60 ps-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose text-pretty">
+            <p className="border-s-2 border-foreground/20 ps-3 text-[15px] leading-relaxed text-foreground/90 max-w-prose text-pretty">
               {activeCheckIn.clientNotes}
             </p>
           </div>

@@ -1,10 +1,9 @@
 import { ImageResponse } from 'next/og';
 import prisma from '@/lib/prisma';
+import { INK, PAPER, VOLT, darkColors } from '@logbook/shared/palette';
 
 export const runtime = 'nodejs';
 
-const VOLT = '#c3f910';
-const INK = '#0a0a0a';
 
 /**
  * GET /api/og/invite?token=…
@@ -48,7 +47,7 @@ export async function GET(req: Request) {
             display: 'flex',
             fontSize: 26,
             letterSpacing: 6,
-            color: '#a3a3a3',
+            color: darkColors.mutedForeground,
           }}
         >
           {(coachName ? 'YOUR COACH' : 'PERSONAL COACHING') + ' · LOGBOOK.FIT'}
@@ -68,7 +67,7 @@ export async function GET(req: Request) {
               display: 'flex',
               fontSize: 76,
               fontWeight: 700,
-              color: '#fafafa',
+              color: PAPER,
               lineHeight: 1.15,
               maxWidth: 900,
             }}
@@ -80,7 +79,7 @@ export async function GET(req: Request) {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {/* Rep-tally brand mark — three strokes and the volt slash */}
           <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
-            <rect width="64" height="64" rx="14.5" fill="#fafafa" />
+            <rect width="64" height="64" rx="14.5" fill={PAPER} />
             <path
               d="M21 20v24M32 20v24M43 20v24"
               stroke={INK}
@@ -101,7 +100,7 @@ export async function GET(req: Request) {
               fontSize: 30,
               fontWeight: 700,
               letterSpacing: 5,
-              color: '#fafafa',
+              color: PAPER,
             }}
           >
             LOGBOOK
@@ -112,7 +111,7 @@ export async function GET(req: Request) {
               marginLeft: 14,
               fontSize: 24,
               letterSpacing: 5,
-              color: '#a3a3a3',
+              color: darkColors.mutedForeground,
             }}
           >
             FITNESS

@@ -1,4 +1,5 @@
 import { ImageResponse } from 'next/og';
+import { INK, PAPER, VOLT, darkColors } from '@logbook/shared/palette';
 
 export const runtime = 'nodejs';
 
@@ -7,8 +8,6 @@ export const alt =
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-const VOLT = '#c3f910';
-const INK = '#0a0a0a';
 
 /**
  * Unfurl card for the landing page: what Twitter/X, LinkedIn, Slack, iMessage
@@ -33,7 +32,7 @@ export default function OpengraphImage() {
           padding: '72px 80px',
         }}
       >
-        <div style={{ display: 'flex', fontSize: 26, letterSpacing: 6, color: '#a3a3a3' }}>
+        <div style={{ display: 'flex', fontSize: 26, letterSpacing: 6, color: darkColors.mutedForeground }}>
           PRIVATE BETA · JOIN THE WAITLIST
         </div>
 
@@ -46,7 +45,7 @@ export default function OpengraphImage() {
               display: 'flex',
               fontSize: 82,
               fontWeight: 700,
-              color: '#fafafa',
+              color: PAPER,
               lineHeight: 1.0,
               letterSpacing: -2,
             }}
@@ -58,7 +57,7 @@ export default function OpengraphImage() {
               display: 'flex',
               fontSize: 82,
               fontWeight: 700,
-              color: '#fafafa',
+              color: PAPER,
               lineHeight: 1.0,
               letterSpacing: -2,
             }}
@@ -82,7 +81,7 @@ export default function OpengraphImage() {
               display: 'flex',
               marginTop: 28,
               fontSize: 30,
-              color: '#a3a3a3',
+              color: darkColors.mutedForeground,
               maxWidth: 860,
             }}
           >
@@ -93,7 +92,7 @@ export default function OpengraphImage() {
         <div style={{ display: 'flex', alignItems: 'center' }}>
           {/* Rep-tally brand mark: three strokes and the volt slash */}
           <svg width="52" height="52" viewBox="0 0 64 64" fill="none">
-            <rect width="64" height="64" rx="14.5" fill="#fafafa" />
+            <rect width="64" height="64" rx="14.5" fill={PAPER} />
             <path
               d="M21 20v24M32 20v24M43 20v24"
               stroke={INK}
@@ -114,7 +113,7 @@ export default function OpengraphImage() {
               fontSize: 30,
               fontWeight: 700,
               letterSpacing: 5,
-              color: '#fafafa',
+              color: PAPER,
             }}
           >
             LOGBOOK
@@ -125,7 +124,7 @@ export default function OpengraphImage() {
               marginLeft: 14,
               fontSize: 24,
               letterSpacing: 5,
-              color: '#a3a3a3',
+              color: darkColors.mutedForeground,
             }}
           >
             FITNESS

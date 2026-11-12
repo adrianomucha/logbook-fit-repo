@@ -1,20 +1,26 @@
+import { avatarToneIndex } from '@logbook/shared/palette';
+
 /**
- * Deterministic avatar color from a display name — avoids bland gray avatars.
- * Shared across coach and client surfaces so the same person renders the same
- * color everywhere (coach roster, stats-card faces, client's coach strip).
+ * Deterministic avatar color from a display name. Shared across coach and
+ * client surfaces so the same person renders the same color everywhere
+ * (coach roster, stats-card faces, client's coach strip).
+ *
+ * Eight hues at one saturation and lightness, from @logbook/shared/palette,
+ * so a roster reads as one set of people. Tailwind only emits classes it can
+ * see as literals, so the hex values are written out here; palette.test.ts
+ * fails if they stop matching the shared palette the native app reads.
  */
-const AVATAR_COLORS = [
-  'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
-  'bg-sky-100 text-sky-700 dark:bg-sky-950/60 dark:text-sky-300',
-  'bg-amber-100 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
-  'bg-violet-100 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300',
-  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300',
-  'bg-orange-100 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300',
-  'bg-teal-100 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300',
-  'bg-pink-100 text-pink-700 dark:bg-pink-950/60 dark:text-pink-300',
+export const AVATAR_CLASSES = [
+  'bg-[#ecddd9] text-[#5e3026] dark:bg-[#352522] dark:text-[#dcb5ad]', // clay
+  'bg-[#ecd9de] text-[#5e2634] dark:bg-[#352227] dark:text-[#dcadb9]', // rose
+  'bg-[#ecd9e9] text-[#5e2655] dark:bg-[#352232] dark:text-[#dcadd4]', // plum
+  'bg-[#ddd9ec] text-[#30265e] dark:bg-[#252235] dark:text-[#b5addc]', // iris
+  'bg-[#d9e2ec] text-[#26405e] dark:bg-[#222b35] dark:text-[#adc3dc]', // slate
+  'bg-[#d9e9ec] text-[#26555e] dark:bg-[#223235] dark:text-[#add4dc]', // sky
+  'bg-[#d9ece6] text-[#265e4c] dark:bg-[#22352f] dark:text-[#addccc]', // pine
+  'bg-[#dbecd9] text-[#2b5e26] dark:bg-[#233522] dark:text-[#b1dcad]', // moss
 ] as const;
 
 export function avatarColor(name: string) {
-  const code = name.charCodeAt(0) || 0;
-  return AVATAR_COLORS[code % AVATAR_COLORS.length];
+  return AVATAR_CLASSES[avatarToneIndex(name)];
 }

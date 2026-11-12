@@ -79,7 +79,7 @@ export function ClientSettingsPage() {
                     'transition-colors touch-manipulation tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
                     'border-b-2 px-1 sm:px-0.5 pb-2.5 pt-1',
                     section === id
-                      ? 'border-brand text-foreground'
+                      ? 'border-foreground text-foreground'
                       : 'border-transparent text-muted-foreground hover:text-foreground'
                   )}
                 >

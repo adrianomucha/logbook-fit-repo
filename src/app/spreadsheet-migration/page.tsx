@@ -129,13 +129,13 @@ export default function SpreadsheetMigrationPage() {
           <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-20 pt-14 text-center sm:px-6 sm:pb-28 sm:pt-20">
             <div className="animate-enter flex flex-col items-center">
               <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+                <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
                 Spreadsheet import · for independent coaches
               </p>
               <h1 className="text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
                 Bring your
                 <br />
-                <span className="text-brand">spreadsheet.</span>
+                spreadsheet.
               </h1>
               <p className="mt-8 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
                 Your programs already work. Upload the file you coach from, check
@@ -185,8 +185,8 @@ export default function SpreadsheetMigrationPage() {
             </div>
             <ol>
               {STEPS.map((item) => (
-                <li key={item.step} className="flex gap-6 border-t border-border/70 py-6 sm:gap-8">
-                  <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
+                <li key={item.step} className="flex gap-4 border-t border-border/70 py-6 sm:gap-6">
+                  <span className="w-7 shrink-0 pt-1 font-mono text-sm font-medium tabular-nums leading-none text-muted-foreground antialiased sm:pt-1.5">
                     {item.step}
                   </span>
                   <div>
@@ -222,7 +222,7 @@ export default function SpreadsheetMigrationPage() {
                 <ul className="mt-4 space-y-3">
                   {CARRIES_OVER.map((item) => (
                     <li key={item} className="flex gap-3">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand" strokeWidth={3} aria-hidden="true" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-foreground" strokeWidth={3} aria-hidden="true" />
                       <span className="text-pretty text-base antialiased">{item}</span>
                     </li>
                   ))}
@@ -257,7 +257,7 @@ export default function SpreadsheetMigrationPage() {
             <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
               Your sheet can&rsquo;t tell you
               <br />
-              who&rsquo;s <span className="text-brand">going quiet.</span>
+              who&rsquo;s going quiet.
             </h2>
             <p className="mx-auto mt-5 max-w-xl text-pretty text-muted-foreground antialiased sm:text-lg">
               Once clients train from the plan, your dashboard ranks them by who

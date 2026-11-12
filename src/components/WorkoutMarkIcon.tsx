@@ -4,8 +4,9 @@ import { cn } from '@/lib/utils';
 
 /**
  * One workout's state, drawn the same wherever a week appears: the client's
- * week list and Progress stepper, and the coach's view of that week. Lime
- * with a tick once done, a lime ring once started, a dashed ring for the
+ * week list and Progress stepper, and the coach's view of that week. Volt
+ * with a tick once done (a logged workout is the one thing that earns volt),
+ * an ink ring once started, a dashed ring for the
  * next one, a plain ring for the rest.
  */
 export function WorkoutMarkIcon({ mark, size }: { mark: WorkoutMark; size: number }) {
@@ -16,14 +17,14 @@ export function WorkoutMarkIcon({ mark, size }: { mark: WorkoutMark; size: numbe
       className={cn(
         'rounded-full flex items-center justify-center shrink-0',
         mark === 'done' && 'bg-brand',
-        mark === 'started' && 'bg-background border-2 border-brand',
+        mark === 'started' && 'bg-background border-2 border-foreground',
         mark === 'next' && 'bg-background border-2 border-dashed border-muted-foreground/60',
         mark === 'upcoming' && 'bg-background border-2 border-border'
       )}
       style={{ width: size, height: size }}
     >
       {mark === 'done' && <Check className={cn('text-brand-foreground', small ? 'w-3.5 h-3.5' : 'w-5 h-5')} strokeWidth={3} />}
-      {mark === 'started' && <span className="rounded-full bg-brand" style={{ width: size / 4, height: size / 4 }} />}
+      {mark === 'started' && <span className="rounded-full bg-foreground" style={{ width: size / 4, height: size / 4 }} />}
     </span>
   );
 }

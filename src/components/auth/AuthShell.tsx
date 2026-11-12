@@ -43,11 +43,6 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
             backgroundSize: '48px 48px',
           }}
         />
-        {/* Volt bloom behind the display type */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-24 top-1/3 h-[28rem] w-[28rem] rounded-full bg-brand/[0.07] blur-3xl"
-        />
         {/* Rep-tally watermark — the mark's geometry without its tile, blown up */}
         <svg
           aria-hidden="true"
@@ -78,7 +73,7 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
 
         <div className="relative">
           <p className="mb-6 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
             Coach-first training platform
           </p>
           <p className="text-[clamp(3.25rem,4.6vw,4.75rem)] font-bold uppercase leading-[0.88] tracking-tight antialiased">
@@ -86,7 +81,7 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
             <br />
             Train.
             <br />
-            <span className="text-brand">Check in.</span>
+            Check in.
           </p>
           <p className="mt-6 max-w-sm text-pretty text-sm leading-relaxed text-muted-foreground antialiased xl:text-base">
             You build the plans. Your clients execute them. A structured
@@ -97,7 +92,7 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
         <div className="relative flex flex-wrap gap-x-8 gap-y-2 font-mono text-[10px] uppercase tracking-[0.18em] antialiased">
           {LOOP_STEPS.map((step, i) => (
             <span key={step} className="flex items-baseline gap-2 text-muted-foreground">
-              <span className="font-bold text-brand">{String(i + 1).padStart(2, '0')}</span>
+              <span className="font-bold text-foreground">{String(i + 1).padStart(2, '0')}</span>
               {step}
             </span>
           ))}
@@ -106,7 +101,6 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
 
       {/* Form column — the app's own light chrome */}
       <div className="flex min-h-dvh flex-col">
-        <div className="h-1 shrink-0 bg-brand lg:hidden" aria-hidden="true" />
         {/* Mobile: hairline app bar. Desktop: borderless, with the 24px row
             (lg:h-6) centered on the brand panel's logo line — pt + h/2 equals
             the panel's p-10/xl:p-14 + half the 24px mark — so the button

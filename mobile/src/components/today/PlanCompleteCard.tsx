@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import type { WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { formatTrainingTime, summarizeCompletedPlan } from '@logbook/shared/plan-summary';
 import { Button, Card, Eyebrow } from '@/components/ui';
+import { colors } from '@logbook/shared/palette';
 
 interface PlanCompleteCardProps {
   plan: WorkoutPlan;
@@ -50,7 +51,7 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
           <Text className="mt-2.5 font-sans-bold text-[26px] leading-[30px] tracking-tight text-foreground">{plan.name}</Text>
         </View>
         <View className="h-11 w-11 items-center justify-center rounded-full bg-brand">
-          <Feather name="flag" size={20} color="#1e2702" />
+          <Feather name="flag" size={20} color={colors.brandForeground} />
         </View>
       </View>
 
@@ -64,7 +65,7 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
             </Text>
           </View>
           <View className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Animated.View className="h-full rounded-full bg-brand" style={fillStyle} />
+            <Animated.View className="h-full rounded-full bg-foreground" style={fillStyle} />
           </View>
           <Text className="mt-3 font-sans text-sm text-muted-foreground">{missNote}</Text>
         </>

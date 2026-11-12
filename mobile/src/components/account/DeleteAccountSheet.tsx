@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { ApiError, apiFetch } from '@/lib/api';
 import { Button, Eyebrow } from '@/components/ui';
+import { colors } from '@logbook/shared/palette';
 
 /** The typed phrase that arms the delete button. Exact, case-sensitive. */
 const CONFIRM_PHRASE = 'DELETE';
@@ -51,7 +52,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
           <View className="mb-1 flex-row items-center justify-between">
             <Text className="font-sans-bold text-lg tracking-tight text-foreground">Delete your account</Text>
             <Pressable onPress={onClose} hitSlop={12} disabled={isDeleting}>
-              <Feather name="x" size={20} color="#737373" />
+              <Feather name="x" size={20} color={colors.mutedForeground} />
             </Pressable>
           </View>
           <Text className="mb-5 font-sans text-sm text-muted-foreground">This can’t be undone.</Text>
@@ -74,7 +75,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
               value={confirmText}
               onChangeText={setConfirmText}
               placeholder={CONFIRM_PHRASE}
-              placeholderTextColor="#a3a3a3"
+              placeholderTextColor={colors.faint}
               autoCapitalize="characters"
               autoCorrect={false}
               autoComplete="off"
@@ -106,7 +107,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
               accessibilityRole="button"
               className={`h-11 flex-row items-center justify-center gap-2 rounded-xl bg-destructive px-5 active:opacity-80 ${isDeleting || !isArmed ? 'opacity-60' : ''}`}
             >
-              <Feather name="trash-2" size={16} color="#fafafa" />
+              <Feather name="trash-2" size={16} color={colors.primaryForeground} />
               <Text className="font-sans-bold text-sm uppercase tracking-[0.7px] text-destructive-foreground">Delete account</Text>
             </Pressable>
           </View>

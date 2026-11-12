@@ -4,6 +4,7 @@ import { WELCOME_COPY } from '@logbook/shared/client-empty-states';
 import { Button, Eyebrow } from '@/components/ui';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 import { PhotoNudge } from './PhotoNudge';
+import { colors } from '@logbook/shared/palette';
 
 interface WelcomeAwaitingPlanProps {
   clientName: string;
@@ -60,7 +61,7 @@ export function WelcomeAwaitingPlan({ clientName, coachName, onMessageCoach, has
 
       {/* Quiet exit: wrong coach, or changed your mind before day one */}
       <Pressable onPress={onLeaveCoach} accessibilityRole="button" className="h-11 flex-row items-center justify-center gap-1.5 self-center px-3 active:opacity-60">
-        <Feather name="user-minus" size={14} color="#737373" />
+        <Feather name="user-minus" size={14} color={colors.mutedForeground} />
         <Text className="font-sans-medium text-sm text-muted-foreground">{WELCOME_COPY.leave}</Text>
       </Pressable>
     </View>

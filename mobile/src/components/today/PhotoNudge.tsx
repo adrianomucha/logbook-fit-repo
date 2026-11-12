@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { UserAvatar } from '@/components/UserAvatar';
+import { colors } from '@logbook/shared/palette';
 
 interface PhotoNudgeProps {
   clientName: string;
@@ -29,7 +30,7 @@ export function PhotoNudge({ clientName, coachName, onAddPhoto }: PhotoNudgeProp
         accessibilityRole="button"
         className="ml-12 h-9 flex-row items-center gap-1.5 self-start rounded-lg border border-border bg-background px-3 active:scale-[0.96]"
       >
-        <Feather name="camera" size={14} color="#0a0a0a" />
+        <Feather name="camera" size={14} color={colors.foreground} />
         <Text className="font-sans-semibold text-sm text-foreground">Add photo</Text>
       </Pressable>
     </View>

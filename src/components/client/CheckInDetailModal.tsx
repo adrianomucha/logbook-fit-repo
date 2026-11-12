@@ -129,7 +129,7 @@ export function CheckInDetailModal({
           </h3>
           {checkIn.coachResponse ? (
             <div className="space-y-3">
-              <div className="rounded-xl bg-muted/40 px-4 py-4 border-l-2 border-brand">
+              <div className="rounded-xl bg-muted/40 px-4 py-4 border-l-2 border-foreground/20">
                 <p className="text-sm text-foreground/80 leading-relaxed">{checkIn.coachResponse}</p>
               </div>
               {checkIn.planAdjustment && (

@@ -7,6 +7,7 @@ import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook
 import { fromDisplayWeight, toDisplayWeight, type WeightUnit } from '@logbook/shared/weight-units';
 import { SetTimer } from './SetTimer';
 import { KEYPAD_DONE_BAR_ID } from './KeypadDoneBar';
+import { colors } from '@logbook/shared/palette';
 
 interface SetRowProps {
   setNumber: number;
@@ -143,7 +144,7 @@ export function SetRow({
         value={weight}
         onChangeText={commitWeight}
         placeholder={defaultWeight != null ? String(defaultWeight) : '–'}
-        placeholderTextColor="#737373"
+        placeholderTextColor={colors.mutedForeground}
         keyboardType="decimal-pad"
         inputAccessoryViewID={KEYPAD_DONE_BAR_ID}
         editable={!isReadOnly}
@@ -156,7 +157,7 @@ export function SetRow({
         value={reps}
         onChangeText={commitReps}
         placeholder={defaultReps != null ? String(defaultReps) : '–'}
-        placeholderTextColor="#737373"
+        placeholderTextColor={colors.mutedForeground}
         keyboardType="number-pad"
         inputAccessoryViewID={KEYPAD_DONE_BAR_ID}
         editable={!isReadOnly}
@@ -175,7 +176,7 @@ export function SetRow({
           completed ? 'border-brand bg-brand' : 'border-foreground/15 bg-transparent'
         }`}
       >
-        {completed ? <Feather name="check" size={16} color="#1e2702" /> : null}
+        {completed ? <Feather name="check" size={16} color={colors.brandForeground} /> : null}
       </Pressable>
     </View>
   );

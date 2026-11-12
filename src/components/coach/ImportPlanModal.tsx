@@ -586,7 +586,7 @@ export function ImportPlanModal({ isOpen, onClose, onImported }: ImportPlanModal
                   href="/privacy"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+                  className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
                 >
                   Privacy Policy
                 </a>

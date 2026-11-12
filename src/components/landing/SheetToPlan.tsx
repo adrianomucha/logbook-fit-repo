@@ -87,8 +87,8 @@ export function SheetToPlan({ className }: { className?: string }) {
           </div>
         </div>
 
-        <div className="flex justify-center text-brand-foreground" aria-hidden="true">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-brand">
+        <div className="flex justify-center text-background" aria-hidden="true">
+          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground">
             <ArrowDown className="h-4 w-4 md:hidden" />
             <ArrowRight className="hidden h-4 w-4 md:block" />
           </span>

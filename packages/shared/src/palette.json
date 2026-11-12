@@ -1,0 +1,113 @@
+{
+  "ink": "#17180f",
+  "paper": "#fafafa",
+  "volt": "#c9f53b",
+  "light": {
+    "background": "#ffffff",
+    "foreground": "#17180f",
+    "card": "#ffffff",
+    "primary": "#17180f",
+    "primaryForeground": "#fafafa",
+    "muted": "#f5f5f5",
+    "mutedForeground": "#6b6b6b",
+    "border": "#e5e5e5",
+    "destructive": "#b43122",
+    "destructiveForeground": "#fafafa",
+    "destructiveText": "#b43122",
+    "success": "#267852",
+    "successForeground": "#fafafa",
+    "successText": "#1e6745",
+    "warning": "#e6900f",
+    "warningForeground": "#17180f",
+    "warningText": "#9c4f0d",
+    "info": "#356397",
+    "infoForeground": "#fafafa",
+    "brand": "#c9f53b",
+    "brandForeground": "#1e2702",
+    "chartShort": "#c0660c",
+    "faint": "#a3a3a3"
+  },
+  "dark": {
+    "background": "#12130c",
+    "foreground": "#fafafa",
+    "card": "#181912",
+    "primary": "#fafafa",
+    "primaryForeground": "#17180f",
+    "muted": "#272822",
+    "mutedForeground": "#a3a3a3",
+    "border": "#2e2e28",
+    "destructive": "#8b2d23",
+    "destructiveForeground": "#fafafa",
+    "destructiveText": "#f68579",
+    "success": "#389f6f",
+    "successForeground": "#17180f",
+    "successText": "#53c690",
+    "warning": "#f09a19",
+    "warningForeground": "#17180f",
+    "warningText": "#f2a32c",
+    "info": "#649ad8",
+    "infoForeground": "#17180f",
+    "brand": "#c9f53b",
+    "brandForeground": "#1e2702",
+    "chartShort": "#e67a0f",
+    "faint": "#737373"
+  },
+  "avatars": [
+    {
+      "name": "clay",
+      "bg": "#ecddd9",
+      "text": "#5e3026",
+      "bgDark": "#352522",
+      "textDark": "#dcb5ad"
+    },
+    {
+      "name": "rose",
+      "bg": "#ecd9de",
+      "text": "#5e2634",
+      "bgDark": "#352227",
+      "textDark": "#dcadb9"
+    },
+    {
+      "name": "plum",
+      "bg": "#ecd9e9",
+      "text": "#5e2655",
+      "bgDark": "#352232",
+      "textDark": "#dcadd4"
+    },
+    {
+      "name": "iris",
+      "bg": "#ddd9ec",
+      "text": "#30265e",
+      "bgDark": "#252235",
+      "textDark": "#b5addc"
+    },
+    {
+      "name": "slate",
+      "bg": "#d9e2ec",
+      "text": "#26405e",
+      "bgDark": "#222b35",
+      "textDark": "#adc3dc"
+    },
+    {
+      "name": "sky",
+      "bg": "#d9e9ec",
+      "text": "#26555e",
+      "bgDark": "#223235",
+      "textDark": "#add4dc"
+    },
+    {
+      "name": "pine",
+      "bg": "#d9ece6",
+      "text": "#265e4c",
+      "bgDark": "#22352f",
+      "textDark": "#addccc"
+    },
+    {
+      "name": "moss",
+      "bg": "#dbecd9",
+      "text": "#2b5e26",
+      "bgDark": "#233522",
+      "textDark": "#b1dcad"
+    }
+  ]
+}

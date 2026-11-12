@@ -238,7 +238,7 @@ export function ClientRoster({ clients }: ClientRosterProps) {
           ) : (
             !isSearching && (
               <p className="flex items-center gap-2 rounded-2xl border border-border/70 bg-card px-4 py-3.5 text-sm font-medium antialiased">
-                <span className="w-1.5 h-1.5 rounded-full bg-brand shrink-0" aria-hidden="true" />
+                <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" aria-hidden="true" />
                 {ROSTER_COPY.allClear}
               </p>
             )

@@ -116,7 +116,7 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
     >
       {isSent ? (
         <div className="flex flex-col items-center gap-3 py-6 text-center">
-          <CheckCircle2 className="h-8 w-8 text-brand" aria-hidden="true" />
+          <CheckCircle2 className="h-8 w-8 text-success-text" aria-hidden="true" />
           <div>
             <p className="font-medium text-foreground">Thanks, got it.</p>
             <p className="mt-1 text-sm text-muted-foreground">

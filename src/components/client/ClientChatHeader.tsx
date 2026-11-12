@@ -19,8 +19,6 @@ export function ClientChatHeader({ coachName, coachAvatar }: ClientChatHeaderPro
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative w-10 h-10 shrink-0" aria-hidden="true">
           <UserAvatar name={coachName} avatarUrl={coachAvatar} className="w-10 h-10 text-sm" />
-          {/* Volt dot — the same brand accent the coach-side avatars carry */}
-          <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-brand ring-2 ring-background" />
         </div>
         <div className="min-w-0">
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-0.5">

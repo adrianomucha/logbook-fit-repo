@@ -5,6 +5,7 @@ import type { WorkoutExercise } from '@logbook/shared/types/api';
 import { formatExercisePrescription, getCompletedSetsCount } from '@logbook/shared/workout-execution';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button, Eyebrow } from '@/components/ui';
+import { colors } from '@logbook/shared/palette';
 
 interface FlagMessageSheetProps {
   exercise: WorkoutExercise | null;
@@ -70,7 +71,7 @@ export function FlagMessageSheet({ exercise, onClose, onSend }: FlagMessageSheet
           <TextInput
             className="min-h-[120px] rounded-lg border border-input bg-background px-3 py-3 font-sans text-base text-foreground"
             placeholder="Add more context for your coach..."
-            placeholderTextColor="#737373"
+            placeholderTextColor={colors.mutedForeground}
             value={message}
             onChangeText={setMessage}
             multiline

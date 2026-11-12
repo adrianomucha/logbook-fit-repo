@@ -1,5 +1,6 @@
 import { Text, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
+import { colors } from '@logbook/shared/palette';
 
 /**
  * Brand mark — a rep tally: three strokes and the volt slash that completes
@@ -8,9 +9,9 @@ import Svg, { Path, Rect } from 'react-native-svg';
 export function LogoMark({ size = 24 }: { size?: number }) {
   return (
     <Svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-      <Rect width="64" height="64" rx="14.5" fill="#0a0a0a" />
-      <Path d="M21 20v24M32 20v24M43 20v24" stroke="#ffffff" strokeWidth="5" strokeLinecap="round" />
-      <Path d="M14.5 41.5 49.5 22.5" stroke="#c3f910" strokeWidth="5.5" strokeLinecap="round" />
+      <Rect width="64" height="64" rx="14.5" fill={colors.foreground} />
+      <Path d="M21 20v24M32 20v24M43 20v24" stroke={colors.primaryForeground} strokeWidth="5" strokeLinecap="round" />
+      <Path d="M14.5 41.5 49.5 22.5" stroke={colors.brand} strokeWidth="5.5" strokeLinecap="round" />
     </Svg>
   );
 }

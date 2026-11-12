@@ -6,7 +6,7 @@ export function PendingCheckInBanner({ onComplete }: { onComplete: () => void })
   return (
     <View accessibilityLabel="Pending check-in" className="rounded-2xl border border-border/70 bg-card px-4 py-4">
       <View className="mb-2 flex-row items-center gap-1.5">
-        <View className="h-1.5 w-1.5 rounded-full bg-brand" />
+        <View className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" />
         <Text className="font-mono text-[10px] uppercase tracking-[1.6px] text-muted-foreground">Check-in</Text>
       </View>
       <Text className="font-sans-bold text-[15px] tracking-tight text-foreground">Your coach wants to hear how training is going</Text>

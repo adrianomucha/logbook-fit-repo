@@ -58,7 +58,7 @@ export function LegalPage({
           href="/legal"
           className="mb-3 flex w-fit items-center gap-1.5 rounded-sm font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased transition-colors hover:text-foreground"
         >
-          <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+          <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
           {kicker}
         </Link>
         <h1 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
@@ -76,7 +76,7 @@ export function LegalPage({
           {toc && toc.length > 0 && (
             <nav
               aria-label="On this page"
-              className="mb-10 border-l-2 border-brand pl-4 lg:order-2 lg:mb-0 lg:self-start lg:border-l lg:border-border lg:pl-5 lg:sticky lg:top-10"
+              className="mb-10 border-l-2 border-foreground/20 pl-4 lg:order-2 lg:mb-0 lg:self-start lg:border-l lg:border-border lg:pl-5 lg:sticky lg:top-10"
             >
               <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 On this page
@@ -151,7 +151,7 @@ export function LegalList({ items }: { items: React.ReactNode[] }) {
       {items.map((item, i) => (
         <li key={i} className="flex gap-3">
           <span
-            className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-brand"
+            className="mt-[0.6em] h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground/50"
             aria-hidden="true"
           />
           <span>{item}</span>

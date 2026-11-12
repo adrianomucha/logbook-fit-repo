@@ -3,6 +3,7 @@ import { Feather } from '@expo/vector-icons';
 import { noWidows } from '@logbook/shared/no-widows';
 import { UserAvatar } from '@/components/UserAvatar';
 import { Eyebrow } from '@/components/ui';
+import { colors } from '@logbook/shared/palette';
 
 interface CoachContextStripProps {
   coachName: string;
@@ -66,10 +67,10 @@ export function CoachContextStrip({
             hitSlop={12}
             className="-mr-1 active:opacity-50"
           >
-            <Feather name="x" size={16} color="#a3a3a3" />
+            <Feather name="x" size={16} color={colors.faint} />
           </Pressable>
         ) : onPress ? (
-          <Feather name="chevron-right" size={16} color="#a3a3a3" style={{ marginRight: -4 }} />
+          <Feather name="chevron-right" size={16} color={colors.faint} style={{ marginRight: -4 }} />
         ) : null}
       </View>
       {/* Coach-written copy of unknowable length: glue the last pair so the

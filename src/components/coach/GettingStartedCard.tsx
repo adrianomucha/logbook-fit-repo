@@ -224,19 +224,16 @@ export function GettingStartedCard({
         {/* Brand rail — the reason the checklist is worth finishing */}
         <div className="max-w-md lg:col-start-1 lg:row-start-1">
           <p className="mb-3 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased sm:mb-4">
-            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50" aria-hidden="true" />
             {greeting}
           </p>
           {/* Display type from the marketing site, brought in-app for the one
-              screen that is pure first impression. Volt sits behind the payoff
-              word as a fill — dark-on-volt, never volt text on white. */}
+              screen that is pure first impression. No volt in the headline:
+              this screen's volt is the checklist's next action. */}
           <h1 className="text-[clamp(1.7rem,3.4vw,2.75rem)] font-bold uppercase leading-[0.95] tracking-tight antialiased">
             Get your first
             <br />
-            client on your{' '}
-            <span className="inline-block bg-brand px-1.5 text-brand-foreground">
-              radar
-            </span>
+            client on your radar
           </h1>
           <p className="mt-4 text-sm text-muted-foreground antialiased sm:mt-5 sm:text-base">
             Logbook ranks your roster by who needs attention. It starts working
@@ -246,10 +243,10 @@ export function GettingStartedCard({
 
         {/* Checklist rail */}
         <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card p-4 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_12px_32px_-16px_rgba(0,0,0,0.16)] sm:p-6 lg:col-start-2 lg:row-start-1 lg:row-span-2">
-          {/* Setup progress as a volt rail on the card's top edge */}
+          {/* Setup progress as an ink rail on the card's top edge */}
           <span className="absolute inset-x-0 top-0 h-[3px] bg-border/70" aria-hidden="true">
             <span
-              className="block h-full bg-brand transition-[width] duration-500 ease-out"
+              className="block h-full bg-foreground transition-[width] duration-500 ease-out"
               style={{ width: `${(doneCount / steps.length) * 100}%` }}
             />
           </span>
@@ -266,11 +263,11 @@ export function GettingStartedCard({
           <ol>
             {steps.map((step, i) => (
               <li key={step.key} className="relative flex gap-3.5 pb-4 last:pb-0 sm:pb-5">
-                {/* Spine between markers — volt once the step above is cleared */}
+                {/* Spine between markers: inked once the step above is cleared */}
                 {i < steps.length - 1 && (
                   <span
                     className={`absolute left-[13.5px] top-8 bottom-1 w-px ${
-                      step.done ? 'bg-brand/45' : 'bg-border'
+                      step.done ? 'bg-foreground/40' : 'bg-border'
                     }`}
                     aria-hidden="true"
                   />

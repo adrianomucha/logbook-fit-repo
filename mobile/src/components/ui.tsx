@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, Text, useWindowDimensions, View, type PressableProps } from 'react-native';
 import type { StateArtId } from '@logbook/shared/state-art';
 import { StateArt } from './StateArt';
+import { colors } from '@logbook/shared/palette';
 
 /** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
 export function Eyebrow({ children, className = '' }: { children: ReactNode; className?: string }) {
@@ -44,7 +45,7 @@ export function Button({ children, variant = 'primary', loading, disabled, class
       {...rest}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'brand' ? '#1e2702' : variant === 'primary' ? '#fafafa' : '#737373'} />
+        <ActivityIndicator color={variant === 'brand' ? colors.brandForeground : variant === 'primary' ? colors.primaryForeground : colors.mutedForeground} />
       ) : (
         <Text className={`font-sans-bold text-sm uppercase tracking-[0.7px] ${text}`}>{children}</Text>
       )}
@@ -112,7 +113,7 @@ export function EmptyState({
 export function LoadingScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-background">
-      <ActivityIndicator color="#0a0a0a" />
+      <ActivityIndicator color={colors.foreground} />
     </View>
   );
 }

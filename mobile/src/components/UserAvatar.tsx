@@ -1,5 +1,6 @@
 import { Image, Text, View } from 'react-native';
 import { avatarColor } from '@/lib/avatar-colors';
+import { colors } from '@logbook/shared/palette';
 
 interface UserAvatarProps {
   /** Drives the monogram letter and its deterministic colour */
@@ -21,7 +22,7 @@ export function UserAvatar({ name, avatarUrl, size, textSize }: UserAvatarProps)
   const shape = { width: size, height: size, borderRadius: size / 2 };
 
   if (avatarUrl) {
-    return <Image source={{ uri: avatarUrl }} style={[shape, { backgroundColor: '#f5f5f5' }]} accessibilityIgnoresInvertColors />;
+    return <Image source={{ uri: avatarUrl }} style={[shape, { backgroundColor: colors.muted }]} accessibilityIgnoresInvertColors />;
   }
 
   const color = avatarColor(label);

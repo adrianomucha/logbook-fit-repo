@@ -62,7 +62,7 @@ export function FaqSection({
                     {' '}
                     <Link
                       href={link.href}
-                      className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+                      className="font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground"
                     >
                       {link.label}
                     </Link>

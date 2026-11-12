@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { formatClock } from '@logbook/shared/set-timer';
 import { formatDuration } from '@logbook/shared/reps';
 import { useSetTimer } from '@/hooks/useSetTimer';
+import { colors } from '@logbook/shared/palette';
 
 interface SetTimerProps {
   setNumber: number;
@@ -43,7 +44,7 @@ function Control({
         primary ? 'bg-primary' : 'bg-background'
       }`}
     >
-      <Feather name={icon} size={16} color={primary ? '#fafafa' : '#0a0a0a'} />
+      <Feather name={icon} size={16} color={primary ? colors.primaryForeground : colors.foreground} />
       <Text className={`font-sans-semibold text-sm ${primary ? 'text-primary-foreground' : 'text-foreground'}`}>{label}</Text>
     </Pressable>
   );
@@ -76,7 +77,7 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
         }
         className="mb-2 h-10 w-full flex-row items-center justify-center gap-1.5 rounded-lg border border-dashed border-foreground/20 active:bg-muted/40"
       >
-        <Feather name="play" size={16} color="#0a0a0a" />
+        <Feather name="play" size={16} color={colors.foreground} />
         <Text className="font-sans-semibold text-sm text-foreground">
           {timer.isCountdown ? `Start ${formatDuration(targetSeconds!)} timer` : 'Start stopwatch'}
         </Text>

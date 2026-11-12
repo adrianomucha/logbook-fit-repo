@@ -31,6 +31,7 @@ export {
   resolveSettingsSection,
   type SettingsSectionId,
 } from '@logbook/shared/settings-sections';
+import { colors } from '@logbook/shared/palette';
 
 const inputClass = 'h-11 rounded-lg border border-border/60 bg-secondary/50 px-3.5 font-sans text-base text-foreground';
 
@@ -69,7 +70,7 @@ function SaveButton({ label, onPress, disabled, busy }: { label: string; onPress
       accessibilityRole="button"
       className={`h-11 flex-row items-center justify-center gap-1.5 rounded-lg bg-primary px-5 active:scale-[0.96] ${off ? 'opacity-50' : ''}`}
     >
-      {busy ? <ActivityIndicator size="small" color="#fafafa" /> : null}
+      {busy ? <ActivityIndicator size="small" color={colors.primaryForeground} /> : null}
       <Text className="font-sans-semibold text-sm text-primary-foreground">{label}</Text>
     </Pressable>
   );
@@ -97,7 +98,7 @@ function Flash({ message }: { message: string | null }) {
   if (!message) return <View className="flex-1" />;
   return (
     <View className="flex-1 flex-row items-center gap-1.5" accessibilityLiveRegion="polite">
-      <Feather name="check" size={12} color="#157f3c" />
+      <Feather name="check" size={12} color={colors.successText} />
       <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-success-text">{message}</Text>
     </View>
   );
@@ -206,7 +207,7 @@ export function ProfileSection() {
                 <UserAvatar name={name.trim() || savedName || 'You'} avatarUrl={avatarUrl} size={44} textSize={16} />
                 {isPhotoBusy ? (
                   <View className="absolute inset-0 items-center justify-center rounded-full bg-background/70">
-                    <ActivityIndicator size="small" color="#0a0a0a" />
+                    <ActivityIndicator size="small" color={colors.foreground} />
                   </View>
                 ) : null}
               </Pressable>
@@ -214,7 +215,7 @@ export function ProfileSection() {
                 pointerEvents="none"
                 className="absolute -bottom-0.5 -right-0.5 h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-foreground"
               >
-                <Feather name="camera" size={9} color="#ffffff" />
+                <Feather name="camera" size={9} color={colors.primaryForeground} />
               </View>
             </View>
             <TextInput
@@ -222,7 +223,7 @@ export function ProfileSection() {
               value={name}
               onChangeText={setName}
               placeholder="Your name"
-              placeholderTextColor="#737373"
+              placeholderTextColor={colors.mutedForeground}
               autoComplete="name"
               textContentType="name"
               maxLength={100}
@@ -468,7 +469,7 @@ function PasswordField() {
           value={newPassword}
           onChangeText={setNewPassword}
           placeholder="Make it a strong one"
-          placeholderTextColor="#737373"
+          placeholderTextColor={colors.mutedForeground}
           secureTextEntry
           textContentType="newPassword"
           autoComplete="new-password"
@@ -481,7 +482,7 @@ function PasswordField() {
 
       {error ? (
         <View className="flex-row items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
-          <Feather name="alert-triangle" size={14} color="#c52020" style={{ marginTop: 2 }} />
+          <Feather name="alert-triangle" size={14} color={colors.destructive} style={{ marginTop: 2 }} />
           <Text className="flex-1 font-sans text-sm text-destructive-text">{error}</Text>
         </View>
       ) : null}
@@ -549,7 +550,7 @@ export function AccountSection() {
       {/* The one destructive action, behind its own sheet (type DELETE + password) */}
       <View className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4">
         <View className="flex-row items-center gap-1.5">
-          <Feather name="alert-triangle" size={12} color="#c52020" />
+          <Feather name="alert-triangle" size={12} color={colors.destructive} />
           <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-destructive-text">Danger zone</Text>
         </View>
         <Text className="mt-1.5 font-sans text-xs leading-5 text-muted-foreground">
@@ -560,7 +561,7 @@ export function AccountSection() {
           accessibilityRole="button"
           className="mt-3 h-11 flex-row items-center justify-center gap-1.5 self-start rounded-lg border border-destructive/40 bg-background px-4 active:scale-[0.96]"
         >
-          <Feather name="trash-2" size={14} color="#c52020" />
+          <Feather name="trash-2" size={14} color={colors.destructive} />
           <Text className="font-sans-semibold text-sm text-destructive-text">Delete account…</Text>
         </Pressable>
       </View>
@@ -621,7 +622,7 @@ function CoachingRow() {
         accessibilityRole="button"
         className="min-h-[36px] flex-row items-center gap-1.5 rounded-lg border border-border px-3 active:opacity-70"
       >
-        <Feather name="user-minus" size={14} color="#737373" />
+        <Feather name="user-minus" size={14} color={colors.mutedForeground} />
         <Text className="font-sans-medium text-sm text-muted-foreground">{LEAVE_COACH_COPY.action}</Text>
       </Pressable>
     </View>

@@ -57,7 +57,7 @@ export function ExercisePreviewList({ exercises }: ExercisePreviewListProps) {
                 Superset
               </span>
             </div>
-            <div className="border-l-2 border-brand/60 pl-3 divide-y divide-border/50">
+            <div className="border-l-2 border-foreground/20 pl-3 divide-y divide-border/50">
               {group.map((exercise, memberIndex) => (
                 <ExerciseRow
                   key={exercise.id}
