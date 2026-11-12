@@ -29,29 +29,40 @@ const PLAN_DAY = [
   { name: 'Split squat', prescription: '3 × 10', note: 'Per side' },
 ];
 
+// Both panels are built from the same three bands (a header, four rows, a
+// footer) at the same heights, so row N of the sheet sits level with row N of
+// the plan and the eye reads straight across the arrow. Type is the page's
+// own body scale, and the panels are flat hairline boxes like every other
+// surface on the landing page: no shadows, no card inside a card.
+const HEADER = 'flex h-12 items-center gap-2.5 border-b border-border px-4 sm:px-5';
+// On a <tr> a height is a minimum, so a wrapped cell can still grow the row
+// on a phone; from lg up nothing wraps and both panels stay level.
+const ROW = 'h-[3.25rem] border-b border-border';
+const FOOTER = 'flex h-12 items-center gap-1.5 bg-muted/50 px-3 sm:px-4';
+const COLUMN_LABEL = 'text-xs font-medium text-muted-foreground';
+const PILL = 'rounded-md px-2.5 py-1 text-xs font-medium tabular-nums antialiased';
+
 export function SheetToPlan({ className }: { className?: string }) {
   return (
     <figure className={cn('w-full', className)}>
-      <div className="grid items-center gap-3 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] md:gap-4">
+      <div className="grid items-stretch gap-4 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:gap-5">
         {/* Before: the coach's spreadsheet */}
-        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <FileSpreadsheet className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-            <span className="truncate font-mono text-[11px] text-muted-foreground antialiased">
-              strength-block.xlsx
-            </span>
+        <div className="overflow-hidden rounded-xl border border-border bg-card text-left">
+          <div className={HEADER}>
+            <FileSpreadsheet className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="truncate text-sm font-medium antialiased">strength-block.xlsx</span>
           </div>
-          <table className="w-full table-fixed border-collapse font-mono text-[10.5px] tabular-nums antialiased sm:text-[11px]">
+          <table className="w-full table-fixed border-collapse text-sm antialiased">
             <caption className="sr-only">
               Example spreadsheet: one row per exercise, one column per week, one tab per training day
             </caption>
             <thead>
-              <tr className="bg-muted/60 text-left text-muted-foreground">
-                <th scope="col" className="w-[38%] border-b border-r border-border px-2.5 py-2 font-medium">
+              <tr className={cn(ROW, 'bg-muted/50 text-left')}>
+                <th scope="col" className={cn(COLUMN_LABEL, 'w-[40%] border-r border-border px-4 sm:px-5')}>
                   Exercise
                 </th>
                 {WEEKS.map((week) => (
-                  <th key={week} scope="col" className="border-b border-r border-border px-2 py-2 font-medium last:border-r-0">
+                  <th key={week} scope="col" className={cn(COLUMN_LABEL, 'border-r border-border px-2.5 last:border-r-0')}>
                     {week.replace('Week ', 'Wk ')}
                   </th>
                 ))}
@@ -59,12 +70,12 @@ export function SheetToPlan({ className }: { className?: string }) {
             </thead>
             <tbody>
               {SHEET_ROWS.map((row) => (
-                <tr key={row.exercise}>
-                  <th scope="row" className="border-b border-r border-border px-2.5 py-2.5 text-left font-normal text-foreground">
+                <tr key={row.exercise} className={ROW}>
+                  <th scope="row" className="border-r border-border px-4 py-2 text-left font-medium text-foreground sm:px-5">
                     {row.exercise}
                   </th>
                   {row.cells.map((cell, i) => (
-                    <td key={i} className="border-b border-r border-border px-2 py-2.5 align-top text-muted-foreground last:border-r-0">
+                    <td key={i} className="border-r border-border px-2.5 py-2 font-mono text-[13px] tabular-nums text-muted-foreground last:border-r-0 lg:whitespace-nowrap">
                       {cell}
                     </td>
                   ))}
@@ -72,14 +83,11 @@ export function SheetToPlan({ className }: { className?: string }) {
               ))}
             </tbody>
           </table>
-          <div className="flex gap-1 bg-muted/40 px-2 py-1.5" aria-label="Sheet tabs">
+          <div className={FOOTER} aria-label="Sheet tabs">
             {SHEET_TABS.map((tab, i) => (
               <span
                 key={tab}
-                className={cn(
-                  'rounded px-2 py-1 font-mono text-[10px] antialiased',
-                  i === 0 ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground'
-                )}
+                className={cn(PILL, i === 0 ? 'bg-card text-foreground ring-1 ring-border' : 'text-muted-foreground')}
               >
                 {tab}
               </span>
@@ -87,60 +95,49 @@ export function SheetToPlan({ className }: { className?: string }) {
           </div>
         </div>
 
-        <div className="flex justify-center text-background" aria-hidden="true">
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-foreground">
-            <ArrowDown className="h-4 w-4 md:hidden" />
-            <ArrowRight className="hidden h-4 w-4 md:block" />
-          </span>
+        <div className="flex items-center justify-center text-muted-foreground" aria-hidden="true">
+          <ArrowDown className="h-5 w-5 lg:hidden" />
+          <ArrowRight className="hidden h-5 w-5 lg:block" />
         </div>
 
         {/* After: the plan, as the review step shows it */}
-        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
-          <p className="flex items-start gap-2 text-[12px] text-muted-foreground text-pretty antialiased">
-            <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-foreground" aria-hidden="true" />
-            <span>
-              Read automatically from your layout. Check it against your spreadsheet before you
-              create the plan.{' '}
-              <span className="font-medium text-foreground">3 weeks · 3 workouts a week</span>
-            </span>
-          </p>
-          <div className="mt-3 flex gap-1.5" aria-hidden="true">
+        <div className="overflow-hidden rounded-xl border border-border bg-card text-left">
+          <div className={HEADER}>
+            <Sparkles className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <span className="truncate text-sm font-medium antialiased">3 weeks · 3 workouts a week</span>
+          </div>
+          <div className={cn(ROW, 'flex items-center justify-between gap-3 bg-muted/50 px-4 sm:px-5')}>
+            <span className={COLUMN_LABEL}>Lower A</span>
+            <span className={COLUMN_LABEL}>Sets × reps · load</span>
+          </div>
+          <ul>
+            {PLAN_DAY.map((exercise) => (
+              <li key={exercise.name} className={cn(ROW, 'flex items-center justify-between gap-3 px-4 sm:px-5')}>
+                <span className="min-w-0 text-sm antialiased">
+                  <span className="font-medium">{exercise.name}</span>
+                  {exercise.note && <span className="text-muted-foreground"> · {exercise.note}</span>}
+                </span>
+                <span className="shrink-0 font-mono text-[13px] tabular-nums text-muted-foreground antialiased">
+                  {exercise.prescription}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className={FOOTER} aria-hidden="true">
             {WEEKS.map((week, i) => (
               <span
                 key={week}
-                className={cn(
-                  'rounded-full px-2.5 py-1 text-[11px] font-semibold tabular-nums',
-                  i === 0 ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
-                )}
+                className={cn(PILL, i === 0 ? 'bg-foreground text-background' : 'text-muted-foreground')}
               >
                 {week}
               </span>
             ))}
           </div>
-          <div className="mt-3 rounded-lg border border-border">
-            <p className="border-b border-border px-3 py-2 text-[13px] font-semibold antialiased">
-              Lower A
-            </p>
-            <ul className="divide-y divide-border">
-              {PLAN_DAY.map((exercise) => (
-                <li key={exercise.name} className="flex items-baseline justify-between gap-3 px-3 py-2">
-                  <span className="min-w-0">
-                    <span className="block truncate text-[13px] font-medium antialiased">{exercise.name}</span>
-                    {exercise.note && (
-                      <span className="block text-[11px] text-muted-foreground antialiased">{exercise.note}</span>
-                    )}
-                  </span>
-                  <span className="shrink-0 font-mono text-[11px] tabular-nums text-muted-foreground antialiased">
-                    {exercise.prescription}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
       </div>
-      <figcaption className="mt-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground antialiased">
-        Your layout in, a plan out. Sets, reps and load split out, the rest kept as notes.
+      <figcaption className="mx-auto mt-6 max-w-xl text-center text-pretty text-sm text-muted-foreground antialiased sm:text-base">
+        Sets, reps and load are split out. Everything else is kept as a note,
+        and you check every week against your sheet before the plan is created.
       </figcaption>
     </figure>
   );
