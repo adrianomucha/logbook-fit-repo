@@ -59,7 +59,7 @@ import { format, formatDistanceToNowStrict, isThisYear, parseISO } from 'date-fn
 import { summarizeCompletedPlan } from '@logbook/shared/plan-summary';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
-import { newPlanHint } from '@logbook/shared/urgency';
+import { calendarDaysSince, newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanEndsOn, getPlanProgressStatus, getPlanStartDay, getPlanStartsOn, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
 import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN } from '@logbook/shared/coach-copy';
 import { URGENCY_LABEL } from '@logbook/shared/roster';
@@ -67,7 +67,7 @@ import { URGENCY_LABEL } from '@logbook/shared/roster';
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
 function daysAgoLabel(iso?: string | Date | null): string | null {
   if (!iso) return null;
-  const days = Math.floor((Date.now() - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
+  const days = calendarDaysSince(iso);
   if (days <= 0) return 'Today';
   return `${days}d ago`;
 }
@@ -708,7 +708,7 @@ export function UnifiedClientProfile() {
   // silent" since the last workout) the roster row shows.
   const urgentDetail: string | null = statusIsUrgent
     ? lastWorkoutAt
-      ? `${Math.max(1, Math.floor((Date.now() - lastWorkoutAt.getTime()) / (1000 * 60 * 60 * 24)))}d since last workout`
+      ? `${Math.max(1, calendarDaysSince(lastWorkoutAt))}d since last workout`
       : 'no workouts logged yet'
     : null;
 

@@ -120,4 +120,17 @@ describe('clientSignal', () => {
       rest: ['4-Week Strength Foundation', 'trained yesterday'],
     });
   });
+
+  it('counts calendar days, not 24-hour blocks, for the last workout', () => {
+    // Thursday morning; the last workout was Tuesday evening, 39 hours ago
+    const now = new Date(2026, 10, 12, 9, 50).getTime();
+    const c = client({ lastWorkoutAt: new Date(2026, 10, 10, 18, 14).toISOString() });
+    expect(clientSignal(c, now).rest).toContain('last workout 2d ago');
+  });
+
+  it('says yesterday for a late workout seen early the next morning', () => {
+    const now = new Date(2026, 10, 12, 7, 0).getTime();
+    const c = client({ lastWorkoutAt: new Date(2026, 10, 11, 22, 0).toISOString() });
+    expect(clientSignal(c, now).rest).toContain('trained yesterday');
+  });
 });

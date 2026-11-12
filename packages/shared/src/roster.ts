@@ -1,6 +1,6 @@
 import { startOfWeek } from 'date-fns';
 import type { DashboardClient } from './types/api';
-import { newPlanHint } from './urgency';
+import { calendarDaysSince, newPlanHint } from './urgency';
 import { CHECKIN_ACTION, CHECKIN_STATUS } from './coach-copy';
 
 /**
@@ -102,10 +102,6 @@ export function rosterSummary(clients: DashboardClient[], now: Date = new Date()
   return `${count} · ${trainedThisWeek(clients, now)} trained this week`;
 }
 
-function daysSince(iso: string, now: number): number {
-  return Math.floor((now - new Date(iso).getTime()) / (1000 * 60 * 60 * 24));
-}
-
 export type ClientSignal = { lead?: string; rest: string[] };
 
 // The "signal": names *why* a client is flagged. An emphasized lead token
@@ -132,7 +128,7 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
     }
     case 'AT_RISK': {
       const lead = client.lastWorkoutAt
-        ? `${daysSince(client.lastWorkoutAt, now)}d silent`
+        ? `${calendarDaysSince(client.lastWorkoutAt, now)}d silent`
         : 'No workouts yet';
       if (client.pendingCheckIn?.status === 'CLIENT_RESPONDED') {
         rest.push('check-in ready to review');
@@ -161,7 +157,7 @@ export function clientSignal(client: DashboardClient, now: number = Date.now()):
       if (justStarted) {
         rest.push(justStarted);
       } else if (client.lastWorkoutAt) {
-        const d = daysSince(client.lastWorkoutAt, now);
+        const d = calendarDaysSince(client.lastWorkoutAt, now);
         rest.push(d <= 0 ? 'trained today' : d === 1 ? 'trained yesterday' : `last workout ${d}d ago`);
       }
       return { rest };

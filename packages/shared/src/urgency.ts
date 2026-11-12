@@ -1,3 +1,4 @@
+import { differenceInCalendarDays } from 'date-fns';
 import {
   getPlanProgressStatus,
   PlanProgressStatus,
@@ -55,6 +56,20 @@ function toMs(value: Date | string | null | undefined): number | null {
   if (!value) return null;
   const ms = new Date(value).getTime();
   return Number.isNaN(ms) ? null : ms;
+}
+
+/**
+ * Whole calendar days between a moment and now, on the viewer's own calendar:
+ * 0 is today, 1 is yesterday. Use this for anything worded as a day ("trained
+ * yesterday", "2d ago"). Elapsed 24-hour blocks get it wrong: a Tuesday
+ * evening workout is 39 hours before Thursday morning, which floors to one
+ * "day" and reads as yesterday.
+ */
+export function calendarDaysSince(
+  value: Date | string,
+  now: number = Date.now()
+): number {
+  return Math.max(0, differenceInCalendarDays(now, new Date(value)));
 }
 
 export function getClientUrgency(input: ClientUrgencyInput): ClientUrgencyResult {
@@ -125,7 +140,9 @@ export function newPlanHint(
   const lastWorkoutMs = toMs(lastWorkoutAt);
   if (lastWorkoutMs !== null && lastWorkoutMs >= planStartMs) return null;
 
-  const days = Math.max(0, Math.floor((now - planStartMs) / DAY_MS));
-  if (days >= AT_RISK_AFTER_DAYS) return null;
+  // The grace window is elapsed time (it matches the at-risk clock); the
+  // wording is calendar days, so "yesterday" is always the day before today
+  if (now - planStartMs >= AT_RISK_AFTER_DAYS * DAY_MS) return null;
+  const days = calendarDaysSince(new Date(planStartMs), now);
   return days === 0 ? 'started today' : days === 1 ? 'started yesterday' : `started ${days}d ago`;
 }
