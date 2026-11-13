@@ -17,6 +17,8 @@ import {
   EASE,
   ENTER_OFFSET,
   PRESS_SCALE,
+  TAB_LAND_FROM,
+  TAB_PRESS_SCALE,
 } from '@logbook/shared/motion';
 
 /**
@@ -30,6 +32,7 @@ import {
 
 export const EASE_OUT = Easing.bezier(...EASE.out);
 export const EASE_POP = Easing.bezier(...EASE.pop);
+export const EASE_IN_OUT = Easing.bezier(...EASE.inOut);
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -176,12 +179,14 @@ export function MeterFill({
 }
 
 /**
- * The tab bar's icon landing with the sliding pill, the web's
- * `animate-tab-pop`: it dips, overshoots, and settles when its tab becomes
- * the active one.
+ * The tab bar's icon: it dips under the thumb while its tab is held, and
+ * settles into place when its tab becomes the active one, as the pill
+ * arrives. The web's `group-active:scale-95` and `animate-tab-pop`. Small
+ * and quick, with no overshoot: tabs are switched all day.
  */
-export function TabIconPop({ active, children }: { active: boolean; children: ReactNode }) {
-  const scale = useSharedValue(1);
+export function TabIconPop({ active, pressed, children }: { active: boolean; pressed: boolean; children: ReactNode }) {
+  const land = useSharedValue(1);
+  const press = useSharedValue(0);
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) {
@@ -189,12 +194,17 @@ export function TabIconPop({ active, children }: { active: boolean; children: Re
       return;
     }
     if (!active) return;
-    scale.value = withSequence(
-      withTiming(0.85, { duration: 0 }),
-      withTiming(1.15, { duration: DURATION.tabPop * 0.55, easing: EASE_OUT }),
-      withTiming(1, { duration: DURATION.tabPop * 0.45, easing: EASE_OUT }),
+    land.value = withSequence(
+      withTiming(TAB_LAND_FROM, { duration: 0 }),
+      withTiming(1, { duration: DURATION.state, easing: EASE_OUT }),
     );
-  }, [active, scale]);
-  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  }, [active, land]);
+  useEffect(() => {
+    // Down is quick so the press registers at once
+    press.value = withTiming(pressed ? 1 : 0, { duration: pressed ? 100 : DURATION.press, easing: EASE_OUT });
+  }, [pressed, press]);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: land.value * (1 - press.value * (1 - TAB_PRESS_SCALE)) }],
+  }));
   return <Animated.View style={style}>{children}</Animated.View>;
 }

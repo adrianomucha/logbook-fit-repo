@@ -8,7 +8,7 @@
        native app reads; a test keeps the two in step. */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
-    --ease-slide: cubic-bezier(0.34, 1.4, 0.5, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -232,17 +232,14 @@
     }
   }
 
-  /* Mobile tab bar: the icon lands with the sliding pill instead of
-     just changing colour */
+  /* Mobile tab bar: the icon settles into place as the pill arrives. Small
+     and quick on purpose: tabs are switched all day, so no overshoot. */
   .animate-tab-pop {
-    animation: tabPop 0.35s var(--ease-pop) both;
+    animation: tabPop 0.2s var(--ease-out) both;
   }
   @keyframes tabPop {
     0% {
-      transform: scale(0.85);
-    }
-    55% {
-      transform: scale(1.15);
+      transform: scale(0.9);
     }
     100% {
       transform: scale(1);

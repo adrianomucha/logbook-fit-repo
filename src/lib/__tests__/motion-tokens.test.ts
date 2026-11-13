@@ -9,6 +9,8 @@ describe('motion tokens', () => {
   const css = readFileSync(join(process.cwd(), 'src/app/globals.css'), 'utf8');
 
   it.each(Object.entries(EASE))('--ease-%s matches the shared curve', (name, curve) => {
-    expect(css).toContain(`--ease-${name}: ${cssBezier(curve)};`);
+    // inOut is --ease-in-out in CSS
+    const cssName = name.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    expect(css).toContain(`--ease-${cssName}: ${cssBezier(curve)};`);
   });
 });
