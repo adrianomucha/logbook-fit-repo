@@ -321,7 +321,9 @@ export default function HomePage() {
             </div>
           </div>
 
-          <RosterPreview className="mt-14 max-w-3xl sm:mt-16" />
+          {/* Enters a beat after the headline block, so the eye lands on the
+              promise first and the proof second. */}
+          <RosterPreview className="animate-enter mt-14 max-w-3xl [animation-delay:120ms] sm:mt-16" />
         </div>
       </section>
 
@@ -529,7 +531,7 @@ export default function HomePage() {
             <div className="mt-12 flex justify-center">
               <Link
                 href="#waitlist"
-                className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 Request an invite
               </Link>
@@ -560,7 +562,7 @@ export default function HomePage() {
             <div className="mt-8 flex justify-center">
               <Link
                 href="/spreadsheet-migration"
-                className="inline-flex rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
+                className="inline-flex rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-[background-color,transform] duration-150 ease-out hover:bg-accent active:scale-[0.97]"
               >
                 How importing works
               </Link>

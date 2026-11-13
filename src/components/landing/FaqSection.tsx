@@ -49,20 +49,22 @@ export function FaqSection({
               <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-base font-semibold antialiased marker:hidden [&::-webkit-details-marker]:hidden sm:text-lg">
                 <h3>{q}</h3>
                 <span
-                  className="mt-1 font-mono text-lg leading-none text-muted-foreground transition-transform group-open:rotate-45"
+                  className="mt-1 font-mono text-lg leading-none text-muted-foreground transition-[transform,color] duration-200 ease-[cubic-bezier(0.23,1,0.32,1)] group-open:rotate-45 group-open:text-foreground"
                   aria-hidden="true"
                 >
                   +
                 </span>
               </summary>
-              <p className="mt-3 max-w-2xl text-pretty text-muted-foreground antialiased">
+              {/* Opening a <details> flips its content from display:none, which
+                  restarts this entrance each time; closing stays instant. */}
+              <p className="animate-fade-in-up mt-3 max-w-2xl text-pretty text-muted-foreground antialiased [animation-duration:200ms]">
                 {a}
                 {link && (
                   <>
                     {' '}
                     <Link
                       href={link.href}
-                      className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+                      className="font-medium text-foreground underline decoration-foreground/30 underline-offset-4 transition-colors hover:decoration-foreground"
                     >
                       {link.label}
                     </Link>

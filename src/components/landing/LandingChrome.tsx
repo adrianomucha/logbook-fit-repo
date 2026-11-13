@@ -27,7 +27,7 @@ export function LandingHeader({ linkHome = false }: { linkHome?: boolean }) {
       )}
       <Link
         href="/login"
-        className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
+        className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-[background-color,transform] duration-150 ease-out hover:bg-accent active:scale-[0.97]"
       >
         Sign in
       </Link>
