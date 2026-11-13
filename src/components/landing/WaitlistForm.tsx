@@ -302,6 +302,13 @@ export function WaitlistForm({
       <p className="text-xs text-muted-foreground/80 antialiased">
         By requesting an invite you agree to our{' '}
         <Link
+          href="/terms"
+          className="underline underline-offset-2 transition-colors hover:text-foreground"
+        >
+          Terms of Service
+        </Link>{' '}
+        and{' '}
+        <Link
           href="/privacy"
           className="underline underline-offset-2 transition-colors hover:text-foreground"
         >
