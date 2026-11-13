@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { LucideIcon } from 'lucide-react';
@@ -26,9 +27,10 @@ interface MobileBottomNavProps {
 /**
  * Mobile tab bar: a translucent blurred bar with a hairline top border, and a
  * single pill that slides to whichever tab is active (Material's active
- * indicator, with the app's volt accent). The icon pops as it lands and dips
- * under the thumb on press, so switching tabs reads as one motion instead of
- * a colour change. Bar height comes from --tabbar-h so layouts that sit above
+ * indicator, with the app's volt accent). The icon dips under the thumb on
+ * press and settles as the pill arrives, so switching tabs reads as one
+ * motion instead of a colour change. All of it is quick and without
+ * overshoot: this is the most-used control in the app. Bar height comes from --tabbar-h so layouts that sit above
  * a fixed bar clear exactly the right amount.
  */
 export function MobileBottomNav({
@@ -44,6 +46,9 @@ export function MobileBottomNav({
   // shrink — so it strands a band of blank page above the keys. Native chat
   // apps drop the bar while you type; so do we.
   const { isOpen: isKeyboardOpen } = useKeyboardInset();
+  // The icon only settles on a tab the user just tapped, not on whichever
+  // tab happens to be active when the bar first appears.
+  const [tappedId, setTappedId] = useState<string | null>(null);
 
   return (
     // z-40 keeps the nav above page content but below dialogs/sheets (z-50),
@@ -64,7 +69,7 @@ export function MobileBottomNav({
         <div className="pointer-events-none absolute inset-x-0 top-[5px] h-8" aria-hidden="true">
           <div
             className={cn(
-              'h-full transition-[transform,opacity] duration-300 ease-pop motion-reduce:transition-none',
+              'h-full transition-[transform,opacity] duration-[250ms] ease-in-out-strong motion-reduce:transition-none',
               activeIndex < 0 && 'opacity-0'
             )}
             style={{
@@ -89,14 +94,17 @@ export function MobileBottomNav({
             <button
               key={item.id}
               type="button"
-              onClick={() => onSelect(item.id)}
+              onClick={() => {
+                setTappedId(item.id);
+                onSelect(item.id);
+              }}
               aria-current={isActive ? 'page' : undefined}
               className="group relative flex flex-1 flex-col items-center gap-1 pt-[5px] touch-manipulation focus-visible:outline-none"
             >
               <span
                 className={cn(
-                  'flex h-8 w-16 items-center justify-center rounded-full transition-transform duration-200',
-                  'group-active:scale-90 motion-reduce:transition-none',
+                  'flex h-8 w-16 items-center justify-center rounded-full transition-transform duration-150 ease-out-strong',
+                  'group-active:scale-95 motion-reduce:transition-none',
                   'group-focus-visible:ring-2 group-focus-visible:ring-ring'
                 )}
               >
@@ -106,7 +114,8 @@ export function MobileBottomNav({
                       'h-[22px] w-[22px] transition-colors',
                       isActive
                         ? cn(
-                            'stroke-[2.2] animate-tab-pop',
+                            'stroke-[2.2]',
+                            tappedId === item.id && 'animate-tab-pop',
                             isBrand ? 'text-brand-foreground' : 'text-foreground'
                           )
                         : 'stroke-[1.75] text-muted-foreground'

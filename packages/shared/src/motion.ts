@@ -12,6 +12,8 @@ export const EASE = {
   out: [0.23, 1, 0.32, 1],
   /** Small celebratory pops (a ticked set, a completion mark): overshoots, then settles */
   pop: [0.34, 1.56, 0.64, 1],
+  /** Something already on screen moving to a new place (the tab bar's pill): eases away and eases in, no overshoot */
+  inOut: [0.77, 0, 0.175, 1],
 } as const satisfies Record<string, Bezier>;
 
 /** Milliseconds */
@@ -24,8 +26,8 @@ export const DURATION = {
   pop: 250,
   /** Content fading up into place */
   enter: 300,
-  /** The tab bar icon landing with the pill */
-  tabPop: 350,
+  /** The tab bar's pill travelling to another tab */
+  tabSlide: 250,
   /** A completion mark popping in */
   celebrate: 400,
   /** A progress bar moving to a new value */
@@ -40,6 +42,9 @@ export const PRESS_SCALE_SMALL = 0.92;
 export const CHECK_POP_FROM = 0.9;
 /** Where a completion mark starts from */
 export const CELEBRATE_POP_FROM = 0.6;
+/** How far the tab bar's icon dips under the thumb, and where it lands from when its tab opens */
+export const TAB_PRESS_SCALE = 0.95;
+export const TAB_LAND_FROM = 0.9;
 /** How far content travels as it fades up, in px */
 export const ENTER_OFFSET = 6;
 
