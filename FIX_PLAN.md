@@ -110,9 +110,10 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 - [ ] **2.7** Plan-builder error surfacing: replace the seven swallowed catches with
       toasts and don't close drawers on failure.
       (`PlanEditorDrawer.tsx:197-327`, `ExerciseEditorDrawer.tsx:167-172`). Effort: S–M
-- [ ] **2.8** Workout set-write 4xx: toast "couldn't save these sets" instead of
+- [x] **2.8** Workout set-write 4xx: toast "couldn't save these sets" instead of
       silently reverting; keep ≤100-set batches (chunk the flush).
       (`useWorkoutExecution.ts:133-144`, `schemas.ts:255-256`). Effort: S
+      *Done:* shared flush in `packages/shared/src/set-writes.ts`, used by web and app.
 - [x] **2.9** Signup hardening: handle Prisma `P2002` as 409, keep the submit button
       disabled through navigation. (`api/auth/signup/route.ts:107-115,221-226`,
       `SignupClient.tsx:181-185`). Effort: S

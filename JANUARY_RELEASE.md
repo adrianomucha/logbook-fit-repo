@@ -66,11 +66,13 @@ a client screen, to `mobile/` as well.
 - [ ] **Plan builder swallows save errors.** `PlanEditorDrawer.tsx` has six
       catch blocks and no toast; a failed exercise save or rename looks like it
       worked. (FIX_PLAN 2.7) (C, S)
-- [ ] **Rejected set saves vanish.** A 4xx on the sets write drops the batch
+- [x] **Rejected set saves vanish.** A 4xx on the sets write drops the batch
       and reverts the checkmarks with no message, on web
       (`useWorkoutExecution.ts`) and in the app
       (`mobile/src/hooks/useWorkoutExecution.ts`). Network failures already
       show a toast; this case does not. (FIX_PLAN 2.8) (C, S)
+      *Done:* both apps now say how many sets weren't saved, and a flush goes
+      out in requests of at most 100 sets (`packages/shared/src/set-writes.ts`).
 - [ ] **An empty plan can be assigned.** The assign route never looks at
       exercise count and the modal does not warn. (FIX_PLAN 2.6) (C, S)
 - [ ] **Past clients have no read path.** Rows on the Past clients page only
