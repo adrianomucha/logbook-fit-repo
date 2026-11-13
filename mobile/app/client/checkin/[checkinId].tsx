@@ -10,6 +10,7 @@ import { useCheckIn } from '@/hooks/useCheckIns';
 import { Button, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ChoiceGrid, type Choice } from '@/components/checkin/ChoiceGrid';
 import { BACK_HOME, CHECKIN_ALREADY_SENT, CHECKIN_EXPIRED, checkInReplyNote } from '@logbook/shared/client-copy';
+import { PressableScale } from '@/components/motion';
 
 const EFFORT_OPTIONS: Choice[] = [
   { value: 'EASY', label: 'Too Easy', emoji: '😴', tone: 'success' },
@@ -116,9 +117,9 @@ function SentScreen({
           <Button variant="brand" onPress={onHome}>
             {BACK_HOME}
           </Button>
-          <Pressable onPress={onMessage} accessibilityRole="button" className="h-11 items-center justify-center rounded-xl active:opacity-70">
+          <PressableScale onPress={onMessage} accessibilityRole="button" className="h-11 items-center justify-center rounded-xl">
             <Text className="font-sans-medium text-sm text-muted-foreground">Message {coachFirstName ?? 'your coach'}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
     </ScrollView>

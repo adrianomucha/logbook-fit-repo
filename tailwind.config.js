@@ -4,6 +4,11 @@ module.exports = {
   content: [
     './src/**/*.{ts,tsx}',
   ],
+  // Phones fake :hover on tap and leave it stuck until the next tap. Only
+  // apply hover styles where the pointer can actually hover.
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     container: {
       center: true,
@@ -100,10 +105,15 @@ module.exports = {
           to: { opacity: 1, transform: "translateY(0)" },
         },
       },
+      // The shared curves from globals.css (see packages/shared/src/motion.ts)
+      transitionTimingFunction: {
+        "out-strong": "var(--ease-out)",
+        "pop": "var(--ease-pop)",
+      },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "enter": "enter 0.4s cubic-bezier(0.25, 1, 0.5, 1) both",
+        "enter": "enter 0.4s var(--ease-out) both",
       },
     },
   },

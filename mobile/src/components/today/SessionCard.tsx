@@ -2,6 +2,7 @@ import { Text, View } from 'react-native';
 import type { WorkoutDay } from '@logbook/shared/types';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { Button, Card, Eyebrow } from '@/components/ui';
+import { MeterFill } from '@/components/motion';
 import { ExercisePreview } from './ExercisePreview';
 
 interface SessionCardProps {
@@ -75,7 +76,7 @@ export function SessionCard({ workoutDay, coachName, state, completionPct = 0, i
               <Eyebrow>complete</Eyebrow>
             </View>
             <View className="h-1.5 overflow-hidden rounded-full bg-muted">
-              <View className="h-full rounded-full bg-brand" style={{ width: `${completionPct}%` }} />
+              <MeterFill pct={completionPct} />
             </View>
           </View>
         ) : null}

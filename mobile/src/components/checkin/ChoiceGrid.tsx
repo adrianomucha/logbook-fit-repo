@@ -1,4 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { PressableScale } from '@/components/motion';
 
 export interface Choice {
   value: string;
@@ -31,13 +33,16 @@ export function ChoiceGrid({ choices, value, onChange, columns, accessibilityLab
         const selected = value === choice.value;
         const look = SELECTED[choice.tone];
         return (
-          <Pressable
+          <PressableScale
             key={choice.value}
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
-            onPress={() => onChange(choice.value)}
+            onPress={() => {
+              if (!selected) void Haptics.selectionAsync();
+              onChange(choice.value);
+            }}
             style={{ width: columns === 3 ? '31.5%' : '48.5%' }}
-            className={`min-h-[64px] items-center justify-center gap-1 rounded-lg border-2 px-1 py-3 active:opacity-80 ${
+            className={`min-h-[64px] items-center justify-center gap-1 rounded-lg border-2 px-1 py-3 ${
               selected ? look.shell : 'border-transparent bg-muted/50'
             }`}
           >
@@ -45,7 +50,7 @@ export function ChoiceGrid({ choices, value, onChange, columns, accessibilityLab
             <Text className={`font-sans-bold text-xs uppercase tracking-[0.3px] ${selected ? look.text : 'text-muted-foreground'}`}>
               {choice.label}
             </Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>

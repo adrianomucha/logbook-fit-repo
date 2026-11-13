@@ -8,6 +8,7 @@ import { Button, Card, Eyebrow } from '@/components/ui';
 
 import type { EffortRating } from '@logbook/shared/client-copy';
 import { EffortPicker } from '@/components/EffortPicker';
+import { PopIn } from '@/components/motion';
 
 interface SessionCompleteCardProps {
   workoutName?: string;
@@ -55,9 +56,9 @@ export function SessionCompleteCard({
           <Text className="mt-2.5 font-sans-bold text-[26px] leading-[30px] tracking-tight text-foreground">{title}</Text>
           {subtitle ? <Text className="mt-1.5 font-sans text-[15px] text-muted-foreground">{subtitle}</Text> : null}
         </View>
-        <View className="h-11 w-11 items-center justify-center rounded-full bg-brand">
+        <PopIn className="h-11 w-11 items-center justify-center rounded-full bg-brand">
           <Feather name="check" size={20} color="#1e2702" />
-        </View>
+        </PopIn>
       </View>
 
       <View className="mt-4 flex-row items-baseline border-t border-border/50 pt-4">

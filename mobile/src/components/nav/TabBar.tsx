@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from 'expo-router/build/layouts/Tabs';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useUnreadMessages } from '@/hooks/useUnreadMessages';
+import { TabIconPop } from '@/components/motion';
 
 export const TAB_BAR_HEIGHT = 56;
 const PILL_WIDTH = 64;
@@ -31,7 +32,7 @@ const TABS: { name: string; label: string; icon: (color: string, active: boolean
 
 /**
  * The web's MobileBottomNav, native: a hairline-topped bar with a single volt
- * pill that slides to the active tab, the icon popping as it lands, labels
+ * pill that slides to the active tab, the icon popping as it lands (TabIconPop), labels
  * in sentence case beneath. Hidden while the keyboard is up — a tab bar
  * behind the keys is unreachable chrome, and chat apps drop theirs too.
  */
@@ -103,7 +104,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
             >
               <View className="items-center justify-center" style={{ width: PILL_WIDTH, height: PILL_HEIGHT }}>
                 <View>
-                  {tab.icon(color, isActive)}
+                  <TabIconPop active={isActive}>{tab.icon(color, isActive)}</TabIconPop>
                   {badge > 0 ? (
                     <View className="absolute -right-2.5 -top-1.5 h-4 min-w-4 items-center justify-center rounded-full border-2 border-background bg-destructive px-1">
                       <Text className="font-sans-semibold text-[10px] leading-none text-destructive-foreground">

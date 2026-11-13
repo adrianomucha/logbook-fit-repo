@@ -296,7 +296,7 @@ export function ClientCheckIn() {
         </StateView>
 
         {completedCheckIns.length > 0 && (
-          <div className="animate-enter" style={{ animationDelay: '200ms' }}>
+          <div className="animate-enter" style={{ animationDelay: '80ms' }}>
             <PreviousCheckInsList checkIns={completedCheckIns} />
           </div>
         )}
@@ -314,7 +314,7 @@ export function ClientCheckIn() {
         subtitle={`Sent ${sentAgo}`}
         onBack={handleBack}
       >
-        <div className="animate-enter" style={{ animationDelay: '100ms' }}>
+        <div className="animate-enter" style={{ animationDelay: '40ms' }}>
           <SectionCard className="max-w-2xl text-center py-10">
             <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-warning/10 text-warning-text font-mono text-[10px] uppercase tracking-[0.12em] font-medium antialiased">
               <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" aria-hidden="true" />
@@ -366,12 +366,12 @@ export function ClientCheckIn() {
           </SectionCard>
         </div>
 
-        <div className="animate-enter" style={{ animationDelay: '200ms' }}>
+        <div className="animate-enter" style={{ animationDelay: '80ms' }}>
           <CheckInWorkouts client={client} exerciseNames={exerciseNames} weeklyTarget={plan?.workoutsPerWeek ?? null} />
         </div>
 
         {completedCheckIns.length > 0 && (
-          <div className="animate-enter" style={{ animationDelay: '300ms' }}>
+          <div className="animate-enter" style={{ animationDelay: '120ms' }}>
             <PreviousCheckInsList checkIns={completedCheckIns} />
           </div>
         )}
@@ -405,7 +405,7 @@ export function ClientCheckIn() {
         <div className="space-y-6 sm:space-y-8 min-w-0">
           {/* Client response — the page's headline data: bare mono-labelled
               vitals, no box-in-box */}
-          <section className="animate-enter" style={{ animationDelay: '100ms' }}>
+          <section className="animate-enter" style={{ animationDelay: '40ms' }}>
             <SectionLabel>{firstName}’s response</SectionLabel>
             <SectionCard>
               {/* Answers in the brand's instrument-readout voice — mono caps,
@@ -462,20 +462,20 @@ export function ClientCheckIn() {
           {/* Recent workouts — the client-profile payload carries the review
               context the check-in payload lacks: abandoned sessions, mid-workout
               exercise flags, and prescription deviations */}
-          <div className="animate-enter" style={{ animationDelay: '175ms' }}>
+          <div className="animate-enter" style={{ animationDelay: '80ms' }}>
             <CheckInWorkouts client={client} exerciseNames={exerciseNames} weeklyTarget={plan?.workoutsPerWeek ?? null} />
           </div>
 
           {/* Previous check-ins close the reading column (desktop) */}
           {completedCheckIns.length > 0 && (
-            <div className="hidden lg:block animate-enter" style={{ animationDelay: '250ms' }}>
+            <div className="hidden lg:block animate-enter" style={{ animationDelay: '120ms' }}>
               <PreviousCheckInsList checkIns={completedCheckIns} />
             </div>
           )}
         </div>
 
         {/* Action column — composer and CTA as one unit, pinned on desktop */}
-        <section className="lg:sticky lg:top-6 animate-enter" style={{ animationDelay: '150ms' }}>
+        <section className="lg:sticky lg:top-6 animate-enter" style={{ animationDelay: '60ms' }}>
           <SectionLabel>Your response</SectionLabel>
           <SectionCard>
             <div>
@@ -526,7 +526,7 @@ export function ClientCheckIn() {
 
         {/* Previous check-ins after the action on mobile */}
         {completedCheckIns.length > 0 && (
-          <div className="lg:hidden animate-enter" style={{ animationDelay: '250ms' }}>
+          <div className="lg:hidden animate-enter" style={{ animationDelay: '120ms' }}>
             <PreviousCheckInsList checkIns={completedCheckIns} />
           </div>
         )}

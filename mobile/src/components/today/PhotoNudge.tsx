@@ -1,6 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { UserAvatar } from '@/components/UserAvatar';
+import { PressableScale } from '@/components/motion';
 
 interface PhotoNudgeProps {
   clientName: string;
@@ -24,14 +25,14 @@ export function PhotoNudge({ clientName, coachName, onAddPhoto }: PhotoNudgeProp
           <Text className="mt-0.5 font-sans text-xs leading-5 text-muted-foreground">{coachFirst} sees this on your card. A photo helps.</Text>
         </View>
       </View>
-      <Pressable
+      <PressableScale
         onPress={onAddPhoto}
         accessibilityRole="button"
-        className="ml-12 h-9 flex-row items-center gap-1.5 self-start rounded-lg border border-border bg-background px-3 active:scale-[0.96]"
+        className="ml-12 h-9 flex-row items-center gap-1.5 self-start rounded-lg border border-border bg-background px-3"
       >
         <Feather name="camera" size={14} color="#0a0a0a" />
         <Text className="font-sans-semibold text-sm text-foreground">Add photo</Text>
-      </Pressable>
+      </PressableScale>
     </View>
   );
 }

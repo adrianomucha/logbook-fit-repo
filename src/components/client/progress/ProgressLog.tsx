@@ -19,7 +19,7 @@ export function WeekCircles({ week }: { week: ThisWeek }) {
   return (
     <div role="img" aria-label={`${week.completed} of ${week.target} workouts done this week`} className="relative">
       <div className="absolute h-1 rounded-full bg-muted" style={{ left: size / 2, right: size / 2, top: size / 2 - 2 }}>
-        <div className="h-full rounded-full bg-brand transition-[width] duration-500" style={{ width: `${lit * 100}%` }} />
+        <div className="h-full rounded-full bg-brand transition-[width] duration-500 ease-out-strong" style={{ width: `${lit * 100}%` }} />
       </div>
       <div className="relative flex justify-between">
         {slots.map((slot, i) => (
