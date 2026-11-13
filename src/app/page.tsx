@@ -4,7 +4,6 @@ import {
   Check,
   ClipboardList,
   Dumbbell,
-  FileSpreadsheet,
   LayoutDashboard,
   Library,
   Link2,
@@ -16,6 +15,7 @@ import {
 import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
+import { RosterPreview } from '@/components/landing/RosterPreview';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
 import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
 import { FOUNDING_PRICE, FORM_PROMISES } from '@/lib/landing-copy';
@@ -189,6 +189,7 @@ const CHECK_IN_LOOP = [
   },
 ];
 
+// Spreadsheet import is left out: it has a whole section of its own below.
 const COACH_FEATURES = [
   {
     icon: LayoutDashboard,
@@ -199,11 +200,6 @@ const COACH_FEATURES = [
     icon: ClipboardList,
     title: 'Workout plan builder',
     body: 'Multi-week plans with a visual week/day sidebar. Duplicate, reorder, and copy across days.',
-  },
-  {
-    icon: FileSpreadsheet,
-    title: 'Spreadsheet import',
-    body: 'Upload the Excel or CSV you coach from. Check every week before it saves.',
   },
   {
     icon: Library,
@@ -284,11 +280,15 @@ export default function HomePage() {
           waitlist CTA sit inside the document's main landmark rather than
           floating outside it. */}
       <main>
-      {/* Hero: dark brand canvas, centered display type */}
-      <section className="dark flex min-h-dvh flex-col bg-background text-foreground">
+      {/* Hero: dark brand canvas, centered display type, then the product.
+          The headline promises a ranked roster, so the roster is the next
+          thing on the page rather than something four sections down. The
+          form stays above it: on a phone the ask has to land before the
+          scroll. */}
+      <section className="dark flex flex-col bg-background text-foreground">
         <LandingHeader />
 
-        <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-16 pt-10 text-center sm:px-6 sm:pb-24 sm:pt-12">
           <div className="animate-enter flex flex-col items-center">
             <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
@@ -320,6 +320,8 @@ export default function HomePage() {
               <WaitlistForm promises={FORM_PROMISES} />
             </div>
           </div>
+
+          <RosterPreview className="mt-14 max-w-3xl sm:mt-16" />
         </div>
       </section>
 
@@ -347,12 +349,148 @@ export default function HomePage() {
         </div>
       </div>
 
+        {/* Check-in loop: how the ranking above gets its signal.
+
+            The two photo sections share one grid shape: heading, photo, list
+            as three children. Stacked on a phone that is the reading order
+            (what the section is, the picture, the detail). On desktop the
+            photo takes a column of its own and spans both text rows, so the
+            zigzag is purely a large-screen concern. */}
+        <section>
+          <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:grid-rows-[auto_1fr]">
+            <div>
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                The north star
+              </p>
+              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+                A loop, not a group chat.
+              </h2>
+              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
+                A focused, contextual conversation that lives right inside the
+                client workspace, not buried in WhatsApp.
+              </p>
+            </div>
+
+            {/* A coach reading a client's check-in on his phone between
+                sessions, with the review card over the photo: her notes and the
+                exercise she flagged that week, sitting right beside each other.
+                That context is exactly what a group chat never gives you.
+                On desktop the slot stretches to the text's height, narrower
+                than 4:5, so the crop is anchored near the left edge: the card
+                and the coach stay whole and the towel shelves take the trim. */}
+            <ImageSlot
+              label="The check-in review"
+              src="/landing/checkin-gym.webp"
+              alt="A coach in a gym reading a client's check-in on his phone: her notes about heavy Romanian deadlifts and a tight lower back, with the exercise she flagged that week beside them"
+              className="aspect-[4/5] rounded-xl lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:aspect-auto lg:h-full"
+              objectPosition="8% center"
+              hideCaption
+            />
+
+            <div>
+              <ol>
+                {CHECK_IN_LOOP.map((item) => (
+                  <li
+                    key={item.step}
+                    className="flex gap-6 border-t border-border/70 py-6 sm:gap-8"
+                  >
+                    <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
+                      {item.step}
+                    </span>
+                    <div>
+                      <h3 className="text-base font-semibold antialiased sm:text-lg">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased sm:text-base">
+                        {item.body}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        {/* For clients: the same grid, mirrored. The photo keeps its 4:5 so
+            the exercise card over it is never cropped; the two text blocks
+            pull together so they sit centered beside it. */}
+        <section className="border-t border-border/70">
+          <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2">
+            <div className="lg:col-start-2 lg:row-start-1 lg:self-end">
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                Their side
+              </p>
+              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+                They&rsquo;ll actually use it.
+              </h2>
+              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
+                An early warning only works if the data arrives. Your clients get
+                an app worth opening.
+              </p>
+            </div>
+
+            {/* A client on the bench between sets, phone in hand, with the
+                exercise card from the Today view over the photo: two sets
+                logged, the third about to be, the coach's cue right there.
+                Captions are off on every slot; the photos carry it. */}
+            <ImageSlot
+              label="Between sets"
+              src="/landing/client-between-sets.webp"
+              alt="A client sitting on a gym bench between sets, logging a set on her phone: the Dumbbell Goblet Squat card shows two of three sets done and the coach's cue to keep the chest tall"
+              className="aspect-[4/5] rounded-xl lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-center"
+              hideCaption
+            />
+
+            <div className="lg:col-start-2 lg:row-start-2 lg:self-start">
+              <FeatureList features={CLIENT_FEATURES} />
+            </div>
+          </div>
+        </section>
+
+        {/* For coaches: the rest of the toolkit. No photo here on purpose.
+            The roster already opened the page, and a third photo-and-list
+            section in a row made all three read as the same weight. */}
+        <section className="border-t border-border/70">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+            <div className="max-w-2xl">
+              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+                For coaches
+              </p>
+              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
+                Built for coaches.
+              </h2>
+              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
+                No manual triage. A workspace that surfaces the right client at the
+                right time.
+              </p>
+            </div>
+            {/* Hairlines come from the 1px gap over a border-coloured grid, so
+                they stay single-width at every column count. */}
+            <ul className="mt-10 grid gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70 sm:mt-14 sm:grid-cols-2 lg:grid-cols-4">
+              {COACH_FEATURES.map((feature) => (
+                <li key={feature.title} className="bg-background p-6">
+                  <feature.icon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                  <h3 className="mt-5 text-base font-semibold antialiased">{feature.title}</h3>
+                  <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased">
+                    {feature.body}
+                  </p>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </section>
+
         {/* Who it's for: the filter. Naming who this isn't for is what makes
             the right coach feel it was built for them specifically. Two columns
             rather than prose: the section is *about* a line between two groups,
-            so it should be shaped like one instead of describing it. */}
-        <section className="border-b border-border/70">
-          <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-20">
+            so it should be shaped like one instead of describing it.
+
+            It sits after the tour, dark, as the page's mid-point beat: by now
+            the coach knows what the product is, so "is this me?" is the live
+            question, and the invite button is the answer for the left column. */}
+        <section className="dark bg-background text-foreground">
+          <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
             <div className="text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Who it&rsquo;s for
@@ -387,14 +525,23 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
+
+            <div className="mt-12 flex justify-center">
+              <Link
+                href="#waitlist"
+                className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-colors hover:bg-brand/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                Request an invite
+              </Link>
+            </div>
           </div>
         </section>
 
         {/* Spreadsheet import: answers the audience list's "today it lives in
             spreadsheets" the moment it's read. Switching cost is the reason a
             coach who agrees with everything above still doesn't move, so it's
-            settled here, before the product tour starts. */}
-        <section className="border-b border-border/70">
+            the last thing settled before the questions and the ask. */}
+        <section>
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
             <div className="mx-auto max-w-2xl text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
@@ -417,136 +564,6 @@ export default function HomePage() {
               >
                 How importing works
               </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* Check-in loop.
-
-            Every image/text section keeps the ImageSlot FIRST in source order
-            and reorders with lg:order-*, never the other way round. Stacked at
-            mobile width the source order is the only order, so leading with the
-            image in the markup is what makes each section read image → text all
-            the way down the page; the desktop zigzag is then purely a
-            large-screen concern. */}
-        <section>
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-14">
-            {/* Stretch to the list's exact height on desktop so both columns
-                end on the same line; the 4:5 ratio stays for stacked mobile */}
-            {/* A coach reading a client's check-in on his phone between
-                sessions, with the review card over the photo: her notes and the
-                exercise she flagged that week, sitting right beside each other.
-                That context is exactly what a group chat never gives you.
-                On desktop the slot is narrower than 4:5, so the crop is
-                anchored near the left edge: the card and the coach stay whole
-                and the towel shelves on the right take the trim. */}
-            <ImageSlot
-              label="The check-in review"
-              src="/landing/checkin-gym.webp"
-              alt="A coach in a gym reading a client's check-in on his phone: her notes about heavy Romanian deadlifts and a tight lower back, with the exercise she flagged that week beside them"
-              className="aspect-[4/5] rounded-xl lg:order-2 lg:aspect-auto lg:h-full"
-              objectPosition="8% center"
-              hideCaption
-            />
-            <div className="lg:order-1">
-              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                The north star
-              </p>
-              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
-                A loop, not a group chat.
-              </h2>
-              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
-                A focused, contextual conversation that lives right inside the
-                client workspace, not buried in WhatsApp.
-              </p>
-
-              <ol className="mt-8">
-                {CHECK_IN_LOOP.map((item) => (
-                  <li
-                    key={item.step}
-                    className="flex gap-6 border-t border-border/70 py-6 sm:gap-8"
-                  >
-                    <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
-                      {item.step}
-                    </span>
-                    <div>
-                      <h3 className="text-base font-semibold antialiased sm:text-lg">
-                        {item.title}
-                      </h3>
-                      <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased sm:text-base">
-                        {item.body}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </div>
-        </section>
-
-        {/* For coaches */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
-            {/* The single most important image on the page: it's the proof of
-                the headline. A coach at her laptop on the gym floor, with the
-                Needs Attention list from her dashboard over the photo, ranked
-                by who needs her first. The photo is exactly 4:5, so it fills
-                the slot with nothing cropped. */}
-            <ImageSlot
-              label="In the product: who needs you today"
-              src="/landing/coach-dashboard.webp"
-              alt="A coach at a laptop in a gym, with her dashboard's Needs Attention list over the photo: seven clients ranked by urgency, the first waiting on a plan"
-              className="aspect-[4/5] rounded-xl"
-              hideCaption
-            />
-            <div>
-              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                For coaches
-              </p>
-              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
-                Built for coaches.
-              </h2>
-              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
-                No manual triage. A workspace that surfaces the right client at the
-                right time.
-              </p>
-              <div className="mt-8">
-                <FeatureList features={COACH_FEATURES} />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* For clients: mirrored */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:items-center lg:gap-14">
-            <div className="lg:order-2">
-              {/* A client on the bench between sets, phone in hand, with the
-                  exercise card from the Today view over the photo: two sets
-                  logged, the third about to be, the coach's cue right there.
-                  Captions are off on every slot; the photos carry it. */}
-              <ImageSlot
-                label="Between sets"
-                src="/landing/client-between-sets.webp"
-                alt="A client sitting on a gym bench between sets, logging a set on her phone: the Dumbbell Goblet Squat card shows two of three sets done and the coach's cue to keep the chest tall"
-                className="aspect-[4/5] rounded-xl"
-                hideCaption
-              />
-            </div>
-            <div className="lg:order-1">
-              <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                Their side
-              </p>
-              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
-                They&rsquo;ll actually use it.
-              </h2>
-              <p className="mt-4 max-w-lg text-pretty text-muted-foreground antialiased sm:text-lg">
-                An early warning only works if the data arrives. Your clients get
-                an app worth opening.
-              </p>
-              <div className="mt-8">
-                <FeatureList features={CLIENT_FEATURES} />
-              </div>
             </div>
           </div>
         </section>
