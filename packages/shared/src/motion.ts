@@ -12,6 +12,8 @@ export const EASE = {
   out: [0.23, 1, 0.32, 1],
   /** Small celebratory pops (a ticked set, a completion mark): overshoots, then settles */
   pop: [0.34, 1.56, 0.64, 1],
+  /** The tab bar's pill travelling to another tab: lands with a slight overshoot, about 5% of the trip */
+  slide: [0.34, 1.4, 0.5, 1],
 } as const satisfies Record<string, Bezier>;
 
 /** Milliseconds */

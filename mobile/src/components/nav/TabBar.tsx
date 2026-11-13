@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -51,14 +51,18 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   const columnWidth = width / routes.length;
 
   const pillX = useSharedValue(0);
+  const isPillPlaced = useRef(false);
   useEffect(() => {
-    if (activeIndex >= 0) {
-      pillX.value = withSpring(activeIndex * columnWidth + (columnWidth - PILL_WIDTH) / 2, {
-        damping: 16,
-        stiffness: 180,
-        mass: 0.8,
-      });
+    if (activeIndex < 0) return;
+    const target = activeIndex * columnWidth + (columnWidth - PILL_WIDTH) / 2;
+    if (!isPillPlaced.current) {
+      // First appearance: sit under the active tab at once. Springing here
+      // made the pill slide in from the screen edge every time the app opened.
+      isPillPlaced.current = true;
+      pillX.value = target;
+      return;
     }
+    pillX.value = withSpring(target, { damping: 16, stiffness: 180, mass: 0.8 });
   }, [activeIndex, columnWidth, pillX]);
   const pillStyle = useAnimatedStyle(() => ({ transform: [{ translateX: pillX.value }] }));
 

@@ -109,6 +109,7 @@ module.exports = {
       transitionTimingFunction: {
         "out-strong": "var(--ease-out)",
         "pop": "var(--ease-pop)",
+        "slide": "var(--ease-slide)",
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
