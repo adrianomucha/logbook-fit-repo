@@ -4,6 +4,10 @@
 
 @layer base {
   :root {
+    /* Motion curves. Mirror EASE in packages/shared/src/motion.ts, which the
+       native app reads; a test keeps the two in step. */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -94,6 +98,26 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  /* No rubber-banding or pull-to-refresh on the page itself: it reads as a
+     website, and it fights the sheets and the chat list. Only in a browser
+     tab, which has its own reload button. Installed to the home screen,
+     pulling down is the only way to reload, so it stays. */
+  @media not all and (display-mode: standalone) {
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
+  }
+  /* A long press on a control should not select its label. Content stays
+     selectable. */
+  button,
+  [role='button'],
+  [role='tab'],
+  [role='radio'],
+  [role='switch'] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 
 @layer utilities {
@@ -124,7 +148,7 @@
 
   /* Subtle fade-in + slide-up for content entrance */
   .animate-fade-in-up {
-    animation: fadeInUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation: fadeInUp 0.3s var(--ease-out) both;
   }
   @keyframes fadeInUp {
     from {
@@ -138,6 +162,9 @@
   }
 
   /* Completion celebration pop */
+  .animate-completion-pop {
+    animation: completionPop 0.4s var(--ease-pop) both;
+  }
   @keyframes completionPop {
     0% {
       transform: scale(0.6);
@@ -150,6 +177,9 @@
   }
 
   /* Plan-complete meter filling from the left */
+  .animate-meter-fill {
+    animation: meterFill 0.7s var(--ease-out) 0.15s both;
+  }
   @keyframes meterFill {
     0% {
       transform: scaleX(0);
@@ -159,13 +189,14 @@
     }
   }
 
-  /* Set completion check pop: snappy scale + fade */
+  /* Set completion check pop: snappy scale + fade. Starts near full size,
+     never from 0: nothing appears from nothing. */
   .animate-set-complete {
-    animation: setComplete 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: setComplete 0.25s var(--ease-pop) both;
   }
   @keyframes setComplete {
     0% {
-      transform: scale(0);
+      transform: scale(0.9);
       opacity: 0;
     }
     100% {
@@ -203,7 +234,7 @@
   /* Mobile tab bar: the icon lands with the sliding pill instead of
      just changing colour */
   .animate-tab-pop {
-    animation: tabPop 0.35s cubic-bezier(0.34, 1.5, 0.5, 1) both;
+    animation: tabPop 0.35s var(--ease-pop) both;
   }
   @keyframes tabPop {
     0% {
@@ -219,7 +250,7 @@
 
   /* Single playful bounce, not repeating */
   .animate-bounce-once {
-    animation: bounceOnce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: bounceOnce 0.6s var(--ease-pop) both;
   }
   @keyframes bounceOnce {
     0% {
@@ -246,8 +277,8 @@
   .animate-bounce-once,
   .animate-marquee,
   .animate-tab-pop,
-  [class*="animate-[completionPop"],
-  [class*="animate-[meterFill"] {
+  .animate-completion-pop,
+  .animate-meter-fill {
     animation: none !important;
   }
 }

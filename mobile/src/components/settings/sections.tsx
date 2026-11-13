@@ -19,6 +19,7 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { PasswordRules } from '@/components/auth/PasswordRules';
 import { NotificationPreferenceTile } from '@/components/notifications/NotificationPreferenceTile';
 import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
+import { PressableScale } from '@/components/motion';
 
 /**
  * The settings panes — the web's components/settings/sections.tsx for the
@@ -63,15 +64,15 @@ function SectionHeader({ section }: { section: SettingsSectionId }) {
 function SaveButton({ label, onPress, disabled, busy }: { label: string; onPress: () => void; disabled?: boolean; busy?: boolean }) {
   const off = disabled || busy;
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       disabled={off}
       accessibilityRole="button"
-      className={`h-11 flex-row items-center justify-center gap-1.5 rounded-lg bg-primary px-5 active:scale-[0.96] ${off ? 'opacity-50' : ''}`}
+      className={`h-11 flex-row items-center justify-center gap-1.5 rounded-lg bg-primary px-5 ${off ? 'opacity-50' : ''}`}
     >
       {busy ? <ActivityIndicator size="small" color="#fafafa" /> : null}
       <Text className="font-sans-semibold text-sm text-primary-foreground">{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 
@@ -196,12 +197,12 @@ export function ProfileSection() {
           <FieldLabel>Photo & name</FieldLabel>
           <View className="flex-row items-center gap-3">
             <View className="relative">
-              <Pressable
+              <PressableScale
                 onPress={() => void pickPhoto()}
                 disabled={isPhotoBusy}
                 accessibilityRole="button"
                 accessibilityLabel={avatarUrl ? 'Change profile photo' : 'Add profile photo'}
-                className="overflow-hidden rounded-full active:scale-[0.96]"
+                className="overflow-hidden rounded-full"
               >
                 <UserAvatar name={name.trim() || savedName || 'You'} avatarUrl={avatarUrl} size={44} textSize={16} />
                 {isPhotoBusy ? (
@@ -209,7 +210,7 @@ export function ProfileSection() {
                     <ActivityIndicator size="small" color="#0a0a0a" />
                   </View>
                 ) : null}
-              </Pressable>
+              </PressableScale>
               <View
                 pointerEvents="none"
                 className="absolute -bottom-0.5 -right-0.5 h-4 w-4 items-center justify-center rounded-full border-2 border-card bg-foreground"
@@ -424,13 +425,13 @@ function PasswordField() {
               ••••••••
             </Text>
           )}
-          <Pressable
+          <PressableScale
             onPress={() => setIsOpen(true)}
             accessibilityRole="button"
-            className="h-9 items-center justify-center rounded-md border border-border bg-background px-3 active:scale-[0.96]"
+            className="h-9 items-center justify-center rounded-md border border-border bg-background px-3"
           >
             <Text className="font-sans-medium text-sm text-foreground">{copy.open}</Text>
-          </Pressable>
+          </PressableScale>
         </View>
       </View>
     );
@@ -487,14 +488,14 @@ function PasswordField() {
       ) : null}
 
       <View className="flex-row items-center justify-end gap-2 pt-1">
-        <Pressable
+        <PressableScale
           onPress={close}
           disabled={isSaving}
           accessibilityRole="button"
-          className={`h-11 items-center justify-center rounded-lg px-4 active:scale-[0.96] ${isSaving ? 'opacity-50' : ''}`}
+          className={`h-11 items-center justify-center rounded-lg px-4 ${isSaving ? 'opacity-50' : ''}`}
         >
           <Text className="font-sans-medium text-sm text-foreground">{copy.cancel}</Text>
-        </Pressable>
+        </PressableScale>
         <SaveButton label={copy.submit} onPress={() => void handleSubmit()} disabled={!currentPassword || !newPassword} busy={isSaving} />
       </View>
     </View>
@@ -555,14 +556,14 @@ export function AccountSection() {
         <Text className="mt-1.5 font-sans text-xs leading-5 text-muted-foreground">
           Deleting your account removes your name and email everywhere. Your coach keeps their history under “Deleted account”. This can’t be undone.
         </Text>
-        <Pressable
+        <PressableScale
           onPress={() => setIsDeleteOpen(true)}
           accessibilityRole="button"
-          className="mt-3 h-11 flex-row items-center justify-center gap-1.5 self-start rounded-lg border border-destructive/40 bg-background px-4 active:scale-[0.96]"
+          className="mt-3 h-11 flex-row items-center justify-center gap-1.5 self-start rounded-lg border border-destructive/40 bg-background px-4"
         >
           <Feather name="trash-2" size={14} color="#c52020" />
           <Text className="font-sans-semibold text-sm text-destructive-text">Delete account…</Text>
-        </Pressable>
+        </PressableScale>
       </View>
 
       <DeleteAccountSheet

@@ -4,6 +4,7 @@ import * as Haptics from 'expo-haptics';
 import { formatClock } from '@logbook/shared/set-timer';
 import { formatDuration } from '@logbook/shared/reps';
 import { useSetTimer } from '@/hooks/useSetTimer';
+import { PressableScale } from '@/components/motion';
 
 interface SetTimerProps {
   setNumber: number;
@@ -35,17 +36,17 @@ function Control({
 }) {
   const primary = variant === 'primary';
   return (
-    <Pressable
+    <PressableScale
       onPress={onPress}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      className={`h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-lg px-4 active:scale-[0.97] ${
+      className={`h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-lg px-4 ${
         primary ? 'bg-primary' : 'bg-background'
       }`}
     >
       <Feather name={icon} size={16} color={primary ? '#fafafa' : '#0a0a0a'} />
       <Text className={`font-sans-semibold text-sm ${primary ? 'text-primary-foreground' : 'text-foreground'}`}>{label}</Text>
-    </Pressable>
+    </PressableScale>
   );
 }
 

@@ -23,6 +23,7 @@ import { useWorkoutClock } from '@/hooks/useWorkoutClock';
 import { formatWorkoutClock, WORKOUT_CLOCK_LABEL } from '@logbook/shared/workout-clock';
 import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { WORKOUT_LOAD_ERROR_COPY, WORKOUT_NOT_FOUND_COPY } from '@logbook/shared/state-copy';
+import { FadeInUp, MeterFill, PopIn } from '@/components/motion';
 import { ExerciseCard } from '@/components/workout/ExerciseCard';
 import { FlagMessageSheet } from '@/components/workout/FlagMessageSheet';
 import { KeypadDoneBar } from '@/components/workout/KeypadDoneBar';
@@ -244,13 +245,13 @@ export default function WorkoutScreen() {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6" style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}>
         <View className="mb-8 items-center">
-          <View className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-brand">
+          <PopIn className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-brand">
             <Feather name="check" size={40} color="#1e2702" />
-          </View>
+          </PopIn>
           <Eyebrow className="mb-1.5">Workout complete</Eyebrow>
           <Text className="text-center font-sans-bold text-2xl tracking-tight text-foreground">{workoutTitle(day.name ?? 'Workout')}</Text>
         </View>
-        <View className="mb-10 w-full max-w-xs flex-row gap-3">
+        <FadeInUp delay={80} className="mb-10 w-full max-w-xs flex-row gap-3">
           <View className="flex-1 items-center rounded-xl bg-muted/60 px-3 py-6">
             <Text className="font-mono-bold text-2xl text-foreground">
               {celebration.exercisesDone}/{celebration.exercisesTotal}
@@ -261,11 +262,13 @@ export default function WorkoutScreen() {
             <Text className="font-mono-bold text-2xl text-foreground">{celebration.durationMin}</Text>
             <Eyebrow className="mt-2">Minutes</Eyebrow>
           </View>
-        </View>
-        <Eyebrow className="mb-4">How did that feel?</Eyebrow>
-        <View className="w-full">
-          <EffortPicker onPick={(rating) => void rateEffort(rating)} disabled={isSavingRating} />
-        </View>
+        </FadeInUp>
+        <FadeInUp delay={140} className="w-full items-center">
+          <Eyebrow className="mb-4">How did that feel?</Eyebrow>
+          <View className="w-full">
+            <EffortPicker onPick={(rating) => void rateEffort(rating)} disabled={isSavingRating} />
+          </View>
+        </FadeInUp>
         <Pressable onPress={() => router.replace('/client')} disabled={isSavingRating} className="mt-8 min-h-[44px] justify-center px-4">
           <Eyebrow>Skip for now</Eyebrow>
         </Pressable>
@@ -326,7 +329,7 @@ export default function WorkoutScreen() {
           accessibilityValue={{ min: 0, max: stats.exercisesTotal, now: stats.exercisesDone }}
           className="mt-3.5 h-1.5 w-full overflow-hidden rounded-full bg-muted"
         >
-          <View className="h-full rounded-full bg-brand" style={{ width: `${pct}%` }} />
+          <MeterFill pct={pct} />
         </View>
       </View>
 

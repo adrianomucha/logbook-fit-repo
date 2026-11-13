@@ -57,7 +57,7 @@ export function PlanCompleteCard({
           </h1>
         </div>
         <div
-          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
+          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-completion-pop"
           aria-hidden="true"
         >
           <Flag className="w-5 h-5 text-brand-foreground stroke-[2.75]" />
@@ -77,7 +77,7 @@ export function PlanCompleteCard({
           </div>
           <div className="mt-4 h-1.5 rounded-full bg-muted overflow-hidden" aria-hidden="true">
             <div
-              className="h-full rounded-full bg-brand origin-left animate-[meterFill_0.7s_cubic-bezier(0.22,1,0.36,1)_0.15s_both]"
+              className="h-full rounded-full bg-brand origin-left animate-meter-fill"
               style={{ width: `${pct}%` }}
             />
           </div>

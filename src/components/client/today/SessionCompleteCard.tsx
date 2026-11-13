@@ -79,7 +79,7 @@ export function SessionCompleteCard({
           )}
         </div>
         <div
-          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
+          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-completion-pop"
           aria-hidden="true"
         >
           <Check className="w-5 h-5 text-brand-foreground stroke-[3.5]" />

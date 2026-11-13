@@ -1,5 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { EFFORT_CHOICES, type EffortRating } from '@logbook/shared/client-copy';
+import { PressableScale } from '@/components/motion';
 
 /**
  * "How did that feel?": the one effort picker, on the workout-finished
@@ -20,18 +22,22 @@ export function EffortPicker({
       {EFFORT_CHOICES.map((choice) => {
         const isSelected = value === choice.value;
         return (
-          <Pressable
+          <PressableScale
             key={choice.value}
             accessibilityRole="radio"
             accessibilityState={{ checked: isSelected, disabled }}
-            onPress={() => onPick(choice.value)}
+            onPress={() => {
+              // A tick as the choice lands, like a picker detent
+              void Haptics.selectionAsync();
+              onPick(choice.value);
+            }}
             disabled={disabled}
-            className={`min-h-[52px] flex-1 items-center justify-center rounded-full border-2 px-3 active:opacity-80 ${
+            className={`min-h-[52px] flex-1 items-center justify-center rounded-full border-2 px-3 ${
               isSelected ? 'border-foreground bg-foreground' : 'border-border bg-card'
             } ${disabled ? 'opacity-50' : ''}`}
           >
             <Text className={`font-sans-semibold text-sm ${isSelected ? 'text-background' : 'text-foreground'}`}>{choice.label}</Text>
-          </Pressable>
+          </PressableScale>
         );
       })}
     </View>

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, Text, useWindowDimensions, View, type PressableProps } from 'react-native';
+import { ActivityIndicator, Text, useWindowDimensions, View, type PressableProps } from 'react-native';
 import type { StateArtId } from '@logbook/shared/state-art';
+import { PressableScale } from './motion';
 import { StateArt } from './StateArt';
 
 /** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
@@ -16,7 +17,7 @@ export function Card({ children, className = '' }: { children: ReactNode; classN
   return <View className={`rounded-2xl border border-border/70 bg-card p-5 ${className}`}>{children}</View>;
 }
 
-interface ButtonProps extends Omit<PressableProps, 'children'> {
+interface ButtonProps extends Omit<PressableProps, 'children' | 'style'> {
   children: ReactNode;
   variant?: 'brand' | 'primary' | 'ghost';
   loading?: boolean;
@@ -37,10 +38,10 @@ export function Button({ children, variant = 'primary', loading, disabled, class
         : 'text-muted-foreground';
   const isDisabled = disabled || loading;
   return (
-    <Pressable
+    <PressableScale
       accessibilityRole="button"
       disabled={isDisabled}
-      className={`h-14 flex-row items-center justify-center rounded-xl active:opacity-80 ${shell} ${isDisabled ? 'opacity-60' : ''} ${className}`}
+      className={`h-14 flex-row items-center justify-center rounded-xl ${shell} ${isDisabled ? 'opacity-60' : ''} ${className}`}
       {...rest}
     >
       {loading ? (
@@ -48,7 +49,7 @@ export function Button({ children, variant = 'primary', loading, disabled, class
       ) : (
         <Text className={`font-sans-bold text-sm uppercase tracking-[0.7px] ${text}`}>{children}</Text>
       )}
-    </Pressable>
+    </PressableScale>
   );
 }
 

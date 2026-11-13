@@ -368,7 +368,7 @@ export function ClientWorkoutExecution() {
       >
         {/* Celebration Header — volt burst, mono eyebrow */}
         <div className="text-center mb-8">
-          <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-in zoom-in duration-300">
+          <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-brand flex items-center justify-center animate-completion-pop">
             <Check className="w-10 h-10 text-brand-foreground" strokeWidth={3} />
           </div>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
@@ -380,7 +380,10 @@ export function ClientWorkoutExecution() {
         </div>
 
         {/* Workout Summary — flat stat blocks, mono data voice */}
-        <div className="flex gap-2 sm:gap-3 mb-8 sm:mb-10 w-full max-w-xs">
+        <div
+          className="flex gap-2 sm:gap-3 mb-8 sm:mb-10 w-full max-w-xs animate-fade-in-up"
+          style={{ animationDelay: '80ms' }}
+        >
           <div className="flex-1 bg-muted/60 rounded-xl px-3 py-5 sm:py-6 text-center">
             <p className="font-mono text-2xl font-bold tabular-nums leading-none">
               {completedWorkoutData.exercisesDone}/{completedWorkoutData.exercisesTotal}
@@ -396,7 +399,7 @@ export function ClientWorkoutExecution() {
         </div>
 
         {/* Effort Rating */}
-        <div className="text-center">
+        <div className="text-center animate-fade-in-up" style={{ animationDelay: '140ms' }}>
           <p id="celebration-effort-label" className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-4">
             How did that feel?
           </p>

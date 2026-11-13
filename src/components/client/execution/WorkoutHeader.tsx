@@ -109,7 +109,7 @@ export function WorkoutHeader({
           className="mt-3.5 h-1.5 w-full rounded-full bg-muted overflow-hidden"
         >
           <div
-            className="h-full rounded-full bg-brand transition-[width] duration-500 ease-out"
+            className="h-full rounded-full bg-brand transition-[width] duration-500 ease-out-strong"
             style={{ width: `${pct}%` }}
           />
         </div>
