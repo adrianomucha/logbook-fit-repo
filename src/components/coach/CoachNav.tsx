@@ -59,7 +59,9 @@ export function CoachNav({
   return (
     <>
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 flex h-12 items-center justify-between">
+        {/* Same gutters as every coach page container, so the logotype and
+            the account menu sit on the content's left and right edges */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex h-12 items-center justify-between">
           <div className="flex items-center self-stretch gap-4 sm:gap-6">
             {/* Logotype */}
             <button
