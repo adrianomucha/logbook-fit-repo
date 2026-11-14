@@ -60,6 +60,8 @@ export interface PlanSummary {
   updatedAt: string;
   deletedAt: string | null;
   weeks: { id: string; weekNumber: number }[];
+  /** Exercises across every week and day. 0 = nothing to train on yet. */
+  exerciseCount: number;
   assignedTo: {
     id: string;
     user: { name: string | null; avatarUrl: string | null };

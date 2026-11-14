@@ -42,3 +42,13 @@ export const PLAN_SAVE_ERROR = {
   dayName: "The day name wasn't saved, so it's back to what it was.",
   dayDescription: "The day notes weren't saved, so they're back to what they were.",
 } as const;
+
+/** A plan with no exercises in it: nothing for a client to train on yet. */
+export const EMPTY_PLAN = {
+  /** Tag on the plan's row in a list */
+  tag: 'No exercises yet',
+  /** Why it can't be picked, under a list that has one */
+  hint: 'A plan needs at least one exercise before you can assign it. Add some on the Plans page.',
+  /** The server's refusal */
+  error: 'This plan has no exercises yet. Add at least one before assigning it.',
+} as const;

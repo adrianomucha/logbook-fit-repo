@@ -42,6 +42,8 @@ export interface WorkoutPlan {
   isTemplate?: boolean;        // true = template (shown on Plans page), false/undefined = instance
   sourceTemplateId?: string;   // for instances: which template it was forked from
   archivedAt?: string;         // ISO date for soft delete (archive)
+  /** Exercises across the whole plan, when the list endpoint supplied it */
+  exerciseCount?: number;
 }
 
 export interface Message {

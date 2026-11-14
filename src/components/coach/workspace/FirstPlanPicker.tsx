@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Loader2, Plus, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FIRST_PLAN_COPY } from '@logbook/shared/client-profile';
+import { EMPTY_PLAN } from '@logbook/shared/coach-copy';
 import type { PlanSummary } from '@/types/api';
 
 // Enough to pick from at a glance; the full list lives in the assign modal
@@ -76,6 +77,7 @@ export function FirstPlanPicker({
         <ul className="divide-y divide-border rounded-lg border border-border lg:min-h-0 lg:overflow-y-auto">
           {visible.map((plan) => {
             const onIt = plan.assignedTo.length;
+            const isEmpty = plan.exerciseCount === 0;
             return (
               <li key={plan.id} className="flex items-center gap-3 px-3 py-2.5">
                 <div className="min-w-0 flex-1">
@@ -83,12 +85,14 @@ export function FirstPlanPicker({
                   <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground tabular-nums mt-1 antialiased">
                     {plan.durationWeeks} {plan.durationWeeks === 1 ? 'week' : 'weeks'} · {plan.workoutsPerWeek}×/week
                     {onIt > 0 && ` · ${onIt} ${onIt === 1 ? 'client' : 'clients'} on it`}
+                    {isEmpty && <span className="text-warning-text"> · {EMPTY_PLAN.tag}</span>}
                   </p>
                 </div>
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={!!assigningId}
+                  disabled={!!assigningId || isEmpty}
+                  title={isEmpty ? EMPTY_PLAN.hint : undefined}
                   onClick={() => handleAssign(plan.id)}
                   className="shrink-0 active:scale-[0.96] transition-transform duration-150"
                 >

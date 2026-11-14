@@ -8,6 +8,7 @@ import { assignPlanSchema } from "@/lib/validations/schemas";
 import { clonePlanForClient } from "@/lib/plan-clone";
 import { notifyPlanAssigned } from "@/lib/push";
 import { planStartDateFor } from "@logbook/shared/plan-start";
+import { EMPTY_PLAN } from "@logbook/shared/coach-copy";
 
 /**
  * POST /api/plans/[id]/assign
@@ -39,7 +40,7 @@ export const POST = withCoach(
 
     const result = await parseBody(req, assignPlanSchema);
     if (!result.success) return result.response;
-    const { clientProfileId, startOn = "today" } = result.data;
+    const { clientProfileId, startOn = "today", allowEmpty = false } = result.data;
 
     // Verify coach-client relationship
     const relationship = await prisma.coachClientRelationship.findFirst({
@@ -80,6 +81,18 @@ export const POST = withCoach(
         planStartDate: current.planStartDate,
         user: { name: current.user.name },
       });
+    }
+
+    // A template with nothing in it gives the client an empty week and a
+    // push saying their plan is ready. Refuse unless the coach is building
+    // a brand-new plan for this client on purpose.
+    if (!allowEmpty) {
+      const exerciseCount = await prisma.workoutExercise.count({
+        where: { day: { week: { planId } } },
+      });
+      if (exerciseCount === 0) {
+        return NextResponse.json({ error: EMPTY_PLAN.error, code: "EMPTY_PLAN" }, { status: 409 });
+      }
     }
 
     // Clone-on-assign: the client gets their own copy of the plan
