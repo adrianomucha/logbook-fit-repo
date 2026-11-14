@@ -3,7 +3,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Loader2, Plus, Search } from 'lucide-react';
-import { CREATE_PLAN, EMPTY_PLAN } from '@logbook/shared/coach-copy';
+import { CREATE_PLAN, EMPTY_PLAN, REMOVE_PLAN } from '@logbook/shared/coach-copy';
 import { cn } from '@/lib/utils';
 import type { WorkoutPlan } from '@/types';
 import { NO_TEMPLATES_COPY } from '@logbook/shared/state-copy';
@@ -176,6 +176,7 @@ export function AssignPlanModal({
               onClick={handleRemove}
               onBlur={() => setConfirmingRemove(false)}
               disabled={isSubmitting}
+              aria-describedby={confirmingRemove ? 'remove-plan-warning' : undefined}
               className={cn(
                 'mr-auto text-sm font-medium antialiased rounded-md px-2 py-1.5 -ml-2 transition-colors tap-target',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
@@ -184,7 +185,7 @@ export function AssignPlanModal({
                   : 'text-muted-foreground hover:text-destructive-text'
               )}
             >
-              {confirmingRemove ? 'Tap again to remove' : 'Remove plan'}
+              {confirmingRemove ? REMOVE_PLAN.confirm : REMOVE_PLAN.action}
             </button>
           )}
           <Button
@@ -332,8 +333,19 @@ export function AssignPlanModal({
           <p className="text-[13px] text-muted-foreground antialiased px-1">{EMPTY_PLAN.hint}</p>
         )}
 
+        {/* Say what removing costs before the second tap does it */}
+        {confirmingRemove && currentPlan && (
+          <p
+            id="remove-plan-warning"
+            role="alert"
+            className="text-[13px] text-destructive-text antialiased rounded-lg bg-destructive/10 px-3 py-2"
+          >
+            {REMOVE_PLAN.warning(firstName, currentPlan.name)}
+          </p>
+        )}
+
         {/* Say what a switch does before it happens */}
-        {selectedPlan && currentPlan && (
+        {selectedPlan && currentPlan && !confirmingRemove && (
           <p className="text-[13px] text-muted-foreground antialiased px-1">
             {firstName ?? 'Your client'} starts week 1 of{' '}
             <span className="font-semibold text-foreground">{selectedPlan.name}</span>.

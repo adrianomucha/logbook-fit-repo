@@ -63,9 +63,11 @@ slows over the December holidays. Aim to submit by mid-December.
 Silent data loss and dead ends. All of these apply to web and, where there is
 a client screen, to `mobile/` as well.
 
-- [ ] **Plan builder swallows save errors.** `PlanEditorDrawer.tsx` has six
+- [x] **Plan builder swallows save errors.** `PlanEditorDrawer.tsx` has six
       catch blocks and no toast; a failed exercise save or rename looks like it
       worked. (FIX_PLAN 2.7) (C, S)
+      *Done:* every failed save, rename or remove in the builder shows a toast,
+      and the exercise editor stays open on failure.
 - [x] **Rejected set saves vanish.** A 4xx on the sets write drops the batch
       and reverts the checkmarks with no message, on web
       (`useWorkoutExecution.ts`) and in the app
@@ -73,21 +75,34 @@ a client screen, to `mobile/` as well.
       show a toast; this case does not. (FIX_PLAN 2.8) (C, S)
       *Done:* both apps now say how many sets weren't saved, and a flush goes
       out in requests of at most 100 sets (`packages/shared/src/set-writes.ts`).
-- [ ] **An empty plan can be assigned.** The assign route never looks at
+- [x] **An empty plan can be assigned.** The assign route never looks at
       exercise count and the modal does not warn. (FIX_PLAN 2.6) (C, S)
-- [ ] **Past clients have no read path.** Rows on the Past clients page only
+      *Done:* the assign route refuses a plan with no exercises (409) and both
+      pickers tag it and keep it unpickable. Creating a new plan from a
+      client's profile to build on their copy still works.
+- [x] **Past clients have no read path.** Rows on the Past clients page only
       offer Restore, and the client API 404s on an ended relationship, while
       the copy promises nothing is deleted. Add a read-only view or soften the
       promise. (FIX_PLAN 2.11) (C, M)
-- [ ] **Plan card menu shows controls that do nothing.** Duplicate, Archive
+      *Done as the read-only view:* each row opens workouts, check-ins and the
+      conversation (`/coach/clients/past/[clientId]`).
+- [x] **Plan card menu shows controls that do nothing.** Duplicate, Archive
       and Restore are never wired, and the "Archived" section can never fill.
       Remove them or build them. (FIX_PLAN 3.3) (C, S to remove)
-- [ ] **Builder "Library" tab is a hardcoded list**, not the coach's own
+      *Done as a removal:* the dead Duplicate, Archive and Restore plumbing and
+      the Archived section are gone. The menu is Edit and Delete.
+- [x] **Builder "Library" tab is a hardcoded list**, not the coach's own
       exercises, and exercises cannot be deleted. (FIX_PLAN 3.4) (C, M)
-- [ ] **Waitlist repeat signup says "Watch your inbox" but sends nothing.**
+      *Done:* the coach's own exercises come first, then starters they have not
+      used; exercises can be removed (soft delete).
+- [x] **Waitlist repeat signup says "Watch your inbox" but sends nothing.**
       Resend the confirmation or change the line. (FIX_PLAN 3.9) (C, S)
-- [ ] **Unassign plan: confirm it warns that week progress resets** on every
+      *Done:* a repeat signup re-sends the confirmation, at most once a day per
+      address and only while still waiting.
+- [x] **Unassign plan: confirm it warns that week progress resets** on every
       path. Not verified in this pass. (FIX_PLAN 3.7) (C, S)
+      *Done:* there is one path (Remove plan in the assign modal). Its second
+      tap now comes with a warning that the client loses their place.
 
 ## 3. Release safety
 

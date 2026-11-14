@@ -61,7 +61,7 @@ import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
 import { newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanEndsOn, getPlanProgressStatus, getPlanStartDay, getPlanStartsOn, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
-import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN } from '@logbook/shared/coach-copy';
+import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN, REMOVE_PLAN } from '@logbook/shared/coach-copy';
 import { URGENCY_LABEL } from '@logbook/shared/roster';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -439,6 +439,7 @@ export function UnifiedClientProfile() {
       await apiFetch(`/api/coach/clients/${clientId}/plan`, { method: 'DELETE' });
       refreshClient();
       refreshPlan();
+      toast.success(REMOVE_PLAN.done(client?.name?.split(' ')[0]));
     } catch {
       toast.error('Failed to remove the plan. Please try again.');
     }

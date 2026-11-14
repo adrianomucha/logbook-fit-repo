@@ -80,3 +80,13 @@ export const EXERCISE_LIBRARY = {
   removed: (name: string) => `${name} removed from your library. Plans that use it keep it.`,
   removeFailed: "That exercise wasn't removed. Check your connection and try again.",
 } as const;
+
+/** Taking a client's plan away, said before the second tap that does it. */
+export const REMOVE_PLAN = {
+  action: 'Remove plan',
+  confirm: 'Tap again to remove',
+  /** What is lost, and what is not */
+  warning: (clientFirstName: string | undefined, planName: string) =>
+    `${clientFirstName ?? 'Your client'} loses their place in ${planName}. Assigning it again starts from week 1. Past workouts stay in their history.`,
+  done: (clientFirstName: string | undefined) => `${clientFirstName ?? 'Your client'} has no plan now.`,
+} as const;

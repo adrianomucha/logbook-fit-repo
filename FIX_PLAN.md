@@ -104,12 +104,14 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       (`sendClientInvite`, `POST /api/invites/[token]/send`) with the coach's
       note; typing an address alone sends nothing. Per-coach hourly cap and a
       2-minute resend guard; `emailSentAt` drives "Emailed to x" on the card.
-- [ ] **2.6** Empty-plan guard: block (or warn on) assigning a plan with zero
+- [x] **2.6** Empty-plan guard: block (or warn on) assigning a plan with zero
       exercises; return day/exercise counts from `GET /api/plans`.
       (`plans/[id]/assign/route.ts:82`, `plans/route.ts:26-29`). Effort: S–M
-- [ ] **2.7** Plan-builder error surfacing: replace the seven swallowed catches with
+      *Done:* 409 from the assign route, `exerciseCount` on `GET /api/plans`, empty templates unpickable.
+- [x] **2.7** Plan-builder error surfacing: replace the seven swallowed catches with
       toasts and don't close drawers on failure.
       (`PlanEditorDrawer.tsx:197-327`, `ExerciseEditorDrawer.tsx:167-172`). Effort: S–M
+      *Done:* toasts on every failure; the exercise editor stays open.
 - [x] **2.8** Workout set-write 4xx: toast "couldn't save these sets" instead of
       silently reverting; keep ≤100-set batches (chunk the flush).
       (`useWorkoutExecution.ts:133-144`, `schemas.ts:255-256`). Effort: S
@@ -131,10 +133,11 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       unanswered check-ins expire). Coach-side check-in reads are now scoped to
       the coach so a new coach never sees a previous one's. Clients with an
       active coach, and coach accounts, are told why they can't accept.
-- [ ] **2.11** Past-client read-only view: make rows clickable to a read-only
+- [x] **2.11** Past-client read-only view: make rows clickable to a read-only
       profile (history + conversation), per the "nothing is deleted" promise,
       or soften the promise. (`PastClientsPage.tsx:29-64`,
       `coach/clients/[id]/route.ts:26-32`, `messages/[userId]/route.ts:69-74`). Effort: M
+      *Done:* read-only record at `/coach/clients/past/[clientId]` (`GET /api/coach/clients/[id]/archive`).
 - [ ] **2.12** Week math honesty: snap `planStartDate` to the coming Monday (or ask
       the coach) on assign, and add prev-week navigation so unfinished weeks aren't
       stranded. (`plans/[id]/assign/route.ts:91`, `WeeklyOverview.tsx:32-35`). Effort: M
@@ -154,10 +157,12 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       Restore menu + permanent-empty "Archived" section.
       (`ExerciseEditorDrawer.tsx:399-408`, `PlanEditorDrawer.tsx:172-187`,
       `PlanTemplateList.tsx:66,136-143`). Effort: M
-- [ ] **3.4** Builder "Library" tab = the coach's real library, not the static
+- [x] **3.4** Builder "Library" tab = the coach's real library, not the static
       dataset; add exercise DELETE (soft-delete via existing `deletedAt`) and
       case-insensitive uniqueness. (`ExerciseEditorDrawer.tsx:17`,
       `api/exercises/[id]/route.ts`, hardening migration index). Effort: M
+      *Done:* own exercises first, starters after; soft-delete `DELETE /api/exercises/[id]`;
+      duplicate names compared case-insensitively in the routes (the index is unchanged).
 - [ ] **3.5** Server validation parity: zod on `PUT /api/plans/[id]`,
       `PUT /api/days/[id]`, `POST /api/plans/[id]/weeks`; `clientFeeling` as enum;
       non-empty `coachFeedback`; align length caps (flag note 200 vs 500).
@@ -165,16 +170,18 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 - [ ] **3.6** Effort-feedback fixes: key `feedbackSent` to completion id; stop
       claiming "can rate later" for non-final workouts.
       (`ClientDashboard.tsx:51,596`, `ClientWorkoutExecution.tsx:280-286`). Effort: S
-- [ ] **3.7** Unassign-plan confirm on all paths + warn that week progress resets.
+- [x] **3.7** Unassign-plan confirm on all paths + warn that week progress resets.
       (`UnifiedClientProfile.tsx:311-321`). Effort: S
+      *Done:* the one unassign path warns before its second tap.
 - [ ] **3.8** Delete dead files: `prisma/sql/post_00*.sql` (content lives in
       migrations), unreachable `InlinePlanEditor` menu, `TEST_CASES_PHASE_3_4.md`
       (retire or rewrite), stale "no self-serve reset" comment in the admin
       password route. Effort: S
-- [ ] **3.9** Waitlist: allow re-triggering the confirmation email (or change the
+- [x] **3.9** Waitlist: allow re-triggering the confirmation email (or change the
       repeat-signup copy); return `inviteUrl` to `InviteActions` so a failed email
       still yields a copyable link immediately.
       (`api/waitlist/route.ts:41-50`, `InviteActions.tsx:39-51`). Effort: S
+      *Done:* repeat signups re-send the confirmation, once a day per address.
 
 ## Explicitly deferred (decide, don't drift)
 
