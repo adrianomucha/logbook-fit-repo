@@ -28,3 +28,17 @@ export const CHECKIN_ACTION = {
 export const CREATE_PLAN = 'Create a plan';
 
 export const INVITE_CLIENT = 'Invite client';
+
+/**
+ * Plan builder saves that failed. Each one says what was not saved, because
+ * the editor keeps the coach's typing on screen and it would otherwise look
+ * like it went through.
+ */
+export const PLAN_SAVE_ERROR = {
+  addExercise: "That exercise wasn't added. Check your connection and try again.",
+  updateExercise: "Your changes to that exercise weren't saved. Check your connection and try again.",
+  removeExercise: "That exercise wasn't removed. Check your connection and try again.",
+  planName: "The plan name wasn't saved, so it's back to what it was.",
+  dayName: "The day name wasn't saved, so it's back to what it was.",
+  dayDescription: "The day notes weren't saved, so they're back to what they were.",
+} as const;

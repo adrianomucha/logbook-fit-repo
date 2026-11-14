@@ -18,7 +18,9 @@ import {
 } from 'lucide-react';
 import { TallyMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-client';
+import { toast } from 'sonner';
+import { PLAN_SAVE_ERROR } from '@logbook/shared/coach-copy';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import { parsePrescriptionInput } from '@/lib/reps';
 import { groupBySuperset, isSuperset } from '@/lib/superset';
 import { WorkoutPlan, Exercise } from '@/types';
@@ -150,9 +152,11 @@ export function PlanEditorDrawer({
     setExerciseDrawerOpen(true);
   };
 
-  // Save exercise (new or update) — persists via API
-  const handleSaveExercise = async (exercise: Exercise) => {
-    if (!plan || !currentDay || isSaving) return;
+  // Save exercise (new or update): persists via API. Resolves false when the
+  // save failed, so the editor stays open with the coach's work in it.
+  const handleSaveExercise = async (exercise: Exercise): Promise<boolean> => {
+    if (!plan || !currentDay || isSaving) return false;
+    const isUpdate = editingExerciseIndex !== null;
     const dayId = currentDay.id;
     setIsSaving(true);
 
@@ -187,8 +191,10 @@ export function PlanEditorDrawer({
             body: JSON.stringify({ name: exercise.name, trackingType }),
           });
           libraryExerciseId = created.id;
-        } catch {
-          // 409 = already exists — search for it
+        } catch (err) {
+          // 409 = already in the coach's library, so look it up. Anything
+          // else is a real failure.
+          if (!(err instanceof ApiError && err.status === 409)) throw err;
           const results = await apiFetch<{ id: string; name: string }[]>(
             `/api/exercises?search=${encodeURIComponent(exercise.name)}`
           );
@@ -216,17 +222,19 @@ export function PlanEditorDrawer({
       }
     } catch (err) {
       console.error('Failed to save exercise:', err);
-      return; // Don't refresh on error
+      toast.error(isUpdate ? PLAN_SAVE_ERROR.updateExercise : PLAN_SAVE_ERROR.addExercise);
+      return false; // Don't refresh on error
     } finally {
       setIsSaving(false);
     }
 
     onRefresh?.();
+    return true;
   };
 
-  // Delete exercise — persists via API
-  const handleDeleteExercise = async () => {
-    if (!plan || editingExerciseIndex === null || !currentDay || isSaving) return;
+  // Delete exercise: persists via API. Resolves false when it failed.
+  const handleDeleteExercise = async (): Promise<boolean> => {
+    if (!plan || editingExerciseIndex === null || !currentDay || isSaving) return false;
     const exerciseToDelete = currentDay.exercises[editingExerciseIndex];
     setIsSaving(true);
 
@@ -236,12 +244,14 @@ export function PlanEditorDrawer({
       });
     } catch (err) {
       console.error('Failed to delete exercise:', err);
-      return;
+      toast.error(PLAN_SAVE_ERROR.removeExercise);
+      return false;
     } finally {
       setIsSaving(false);
     }
 
     onRefresh?.();
+    return true;
   };
 
   // Commit the plan name to the API on blur
@@ -256,8 +266,9 @@ export function PlanEditorDrawer({
       // Refresh parent list so card title updates too
       onUpdatePlan({ ...plan, name: trimmed, updatedAt: new Date().toISOString() });
     } catch {
-      // Revert on error
+      // Revert on error, and say so: a silent revert reads as a glitch
       setLocalPlanName(plan.name);
+      toast.error(PLAN_SAVE_ERROR.planName);
     }
   };
 
@@ -271,8 +282,8 @@ export function PlanEditorDrawer({
       });
       onRefresh?.();
     } catch {
-      // Revert on error
       setLocalDayName(currentDay.name || '');
+      toast.error(PLAN_SAVE_ERROR.dayName);
     }
   };
 
@@ -290,6 +301,7 @@ export function PlanEditorDrawer({
       onRefresh?.();
     } catch {
       setLocalDayDescription(currentDay.description || '');
+      toast.error(PLAN_SAVE_ERROR.dayDescription);
     }
   };
 

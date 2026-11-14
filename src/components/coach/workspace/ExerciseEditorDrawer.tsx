@@ -26,12 +26,13 @@ function toFormWeight(stored: string | number | undefined, unit: WeightUnit): st
 interface ExerciseEditorContentProps {
   /** Existing exercise to edit, or null for new exercise */
   exercise: Exercise | null;
-  /** Called when exercise is saved */
-  onSave: (exercise: Exercise) => void | Promise<void>;
+  /** Called when exercise is saved. Resolve false if the save failed: the editor then stays open. */
+  onSave: (exercise: Exercise) => boolean | void | Promise<boolean | void>;
   /** Called to close the editor */
   onClose: () => void;
   /** Called when exercise is deleted (only shown when editing existing) */
-  onDelete?: () => void;
+  /** Resolve false if the delete failed: the editor then stays open. */
+  onDelete?: () => boolean | void | Promise<boolean | void>;
   /** Exercise number for display (1-indexed) */
   exerciseNumber?: number;
   /** Whether this is rendered inline (true) or standalone */
@@ -179,12 +180,27 @@ export function ExerciseEditorContent({
       notes: notes.trim() || undefined,
       supersetWithPrevious: previousExerciseName ? supersetWithPrevious : false,
     };
+    let saved: boolean | void;
     try {
-      await onSave(savedExercise);
+      saved = await onSave(savedExercise);
     } finally {
       setIsSaving(false);
     }
-    onClose();
+    // A failed save keeps the editor open, so nothing typed is lost
+    if (saved !== false) onClose();
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete || isSaving) return;
+    setIsSaving(true);
+    let deleted: boolean | void;
+    try {
+      deleted = await onDelete();
+    } finally {
+      setIsSaving(false);
+    }
+    if (deleted !== false) onClose();
+    else setShowDeleteConfirm(false);
   };
 
   const canSave = name.trim().length > 0 && parseInt(sets) > 0;
@@ -503,10 +519,8 @@ export function ExerciseEditorContent({
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => {
-                      onDelete();
-                      onClose();
-                    }}
+                    disabled={isSaving}
+                    onClick={handleDelete}
                   >
                     Remove
                   </Button>
@@ -536,10 +550,8 @@ export function ExerciseEditorContent({
             </StatusLine>
             {!isNew && onDelete && (
               <button
-                onClick={() => {
-                  onDelete();
-                  onClose();
-                }}
+                disabled={isSaving}
+                onClick={handleDelete}
                 className={removeLink}
               >
                 <Trash2 className="w-3.5 h-3.5" />
