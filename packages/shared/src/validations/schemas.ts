@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { MAX_SETS_PER_REQUEST } from "../set-writes";
 import { WEIGHT_UNITS } from "../weight-units";
 
 // Weights travel in lb (the storage unit). 2,500 lb leaves room for a kg
@@ -410,7 +411,7 @@ export const updateSetsSchema = z.object({
       })
     )
     .min(1)
-    .max(100),
+    .max(MAX_SETS_PER_REQUEST),
 });
 
 export const flagExerciseSchema = z.object({
