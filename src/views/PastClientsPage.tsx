@@ -10,16 +10,20 @@ import { Button } from '@/components/ui/button';
 import { apiFetch } from '@/lib/api-client';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
-import { Loader2, RotateCcw } from 'lucide-react';
+import { ChevronRight, Loader2, RotateCcw } from 'lucide-react';
 import { NO_PAST_CLIENTS_COPY } from '@logbook/shared/state-copy';
+import { PAST_CLIENT } from '@logbook/shared/coach-copy';
 import { StateView } from '@/components/states/StateView';
 
 function PastClientRow({
   client,
+  onOpen,
   onRestore,
   isRestoring,
 }: {
   client: PastClient;
+  /** Opens their read-only record */
+  onOpen: () => void;
   onRestore: () => void;
   isRestoring: boolean;
 }) {
@@ -27,7 +31,13 @@ function PastClientRow({
   const leftThemselves = client.endedBy === 'CLIENT';
 
   return (
-    <div className="flex items-center gap-3 sm:gap-4 py-3.5 px-3 sm:py-4 sm:px-4">
+    <div className="flex items-center gap-3 sm:gap-4 pr-3 sm:pr-4">
+      {/* The row opens the record; Restore sits beside it, not inside it */}
+      <button
+        onClick={onOpen}
+        aria-label={`Open ${displayName}'s record`}
+        className="group flex flex-1 min-w-0 items-center gap-3 sm:gap-4 py-3.5 pl-3 sm:py-4 sm:pl-4 text-start transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+      >
       <UserAvatar
         name={displayName}
         avatarUrl={client.user.avatarUrl}
@@ -38,11 +48,15 @@ function PastClientRow({
           {displayName}
         </h3>
         <p className="text-xs sm:text-sm text-muted-foreground/80 truncate mt-0.5 leading-snug">
-          {leftThemselves ? 'Left' : 'Ended'}
-          {client.endedAt ? ` ${format(new Date(client.endedAt), 'MMM d, yyyy')}` : ''}
-          {leftThemselves ? ' · can rejoin with a new invite' : ''}
+          {PAST_CLIENT.ended(
+            leftThemselves,
+            client.endedAt ? format(new Date(client.endedAt), 'MMM d, yyyy') : null
+          )}
+          {leftThemselves ? ` · ${PAST_CLIENT.canRejoin}` : ''}
         </p>
       </div>
+      <ChevronRight className="w-4 h-4 shrink-0 text-muted-foreground/60 transition-transform duration-150 group-hover:translate-x-0.5" aria-hidden="true" />
+      </button>
       {!leftThemselves && (
         <Button
           size="sm"
@@ -129,6 +143,7 @@ export function PastClientsPage() {
               <PastClientRow
                 key={client.clientProfileId}
                 client={client}
+                onOpen={() => router.push(`/coach/clients/past/${client.clientProfileId}`)}
                 onRestore={() => handleRestore(client)}
                 isRestoring={restoringId === client.clientProfileId}
               />

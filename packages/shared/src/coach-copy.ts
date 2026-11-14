@@ -52,3 +52,21 @@ export const EMPTY_PLAN = {
   /** The server's refusal */
   error: 'This plan has no exercises yet. Add at least one before assigning it.',
 } as const;
+
+/** A past client's read-only record, opened from the Past clients list. */
+export const PAST_CLIENT = {
+  eyebrow: 'Past client',
+  readOnly: 'Read only',
+  /** "Left Mar 3, 2026" when the client ended it, "Ended ..." when the coach did */
+  ended: (leftThemselves: boolean, date: string | null) =>
+    `${leftThemselves ? 'Left' : 'Ended'}${date ? ` ${date}` : ''}`,
+  workouts: 'Workouts',
+  noWorkouts: 'No finished workouts on your plans.',
+  checkIns: 'Check-ins',
+  noCheckIns: 'No check-ins were answered.',
+  conversation: 'Conversation',
+  noMessages: 'No messages were sent.',
+  notFound: "This past client's record isn't available.",
+  /** List row hint for a client who ended it themselves */
+  canRejoin: 'can rejoin with a new invite',
+} as const;
