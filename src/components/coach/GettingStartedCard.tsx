@@ -119,7 +119,6 @@ export function GettingStartedCard({
           variant="outline"
           size="sm"
           onClick={onSetUpProfile}
-          className="active:scale-[0.96] transition-transform duration-150"
         >
           <UserRound className="w-4 h-4 mr-1.5" />
           Set up profile
@@ -144,7 +143,6 @@ export function GettingStartedCard({
           variant="outline"
           size="sm"
           onClick={onCreatePlan}
-          className="active:scale-[0.96] transition-transform duration-150"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           {CREATE_PLAN}
@@ -182,7 +180,6 @@ export function GettingStartedCard({
             variant="outline"
             size="sm"
             onClick={handleCopy}
-            className="active:scale-[0.96] transition-transform duration-150"
           >
             {copied ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
             {copied ? 'Copied!' : 'Copy link'}
@@ -200,7 +197,6 @@ export function GettingStartedCard({
         <Button
           size="sm"
           onClick={onInviteClient}
-          className="active:scale-[0.96] transition-transform duration-150"
         >
           <UserPlus className="w-4 h-4 mr-1.5" />
           {INVITE_CLIENT}
@@ -312,7 +308,7 @@ export function GettingStartedCard({
             size="sm"
             onClick={onAddSampleClient}
             disabled={isAddingSample}
-            className="mt-3 active:scale-[0.96] transition-transform duration-150"
+            className="mt-3"
           >
             {isAddingSample ? (
               <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />

@@ -81,7 +81,7 @@ export function WelcomeAwaitingPlan({
           </p>
           <Button
             onClick={onMessageCoach}
-            className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150 mt-3"
+            className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 mt-3"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
             {WELCOME_COPY.sayHiCta(coachFirstName)}
@@ -117,7 +117,7 @@ export function WelcomeAwaitingPlan({
             variant="outline"
             size="sm"
             onClick={onAddPhoto}
-            className="shrink-0 self-start sm:self-auto ms-12 sm:ms-0 active:scale-[0.96] transition-transform duration-150"
+            className="shrink-0 self-start sm:self-auto ms-12 sm:ms-0"
           >
             <Camera className="w-3.5 h-3.5 mr-1.5" aria-hidden="true" />
             Add photo

@@ -394,7 +394,7 @@ export function ClientDashboard() {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <StateView art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
-          <Button onClick={() => window.location.reload()} className="active:scale-[0.96] transition-transform duration-150">
+          <Button onClick={() => window.location.reload()}>
             {LOAD_ERROR_COPY.retry}
           </Button>
           <Button variant="ghost" onClick={() => signOut({ callbackUrl: '/login' })}>
@@ -420,7 +420,7 @@ export function ClientDashboard() {
         >
           {/* This screen replaces the whole dashboard, nav included, so it
               carries its own ways out */}
-          <Button onClick={() => router.push('/client/settings')} className="active:scale-[0.96] transition-transform duration-150">
+          <Button onClick={() => router.push('/client/settings')}>
             {NO_COACH_COPY.settings}
           </Button>
           <Button variant="ghost" onClick={() => signOut({ callbackUrl: '/login' })}>
@@ -498,7 +498,7 @@ export function ClientDashboard() {
                   tail={PROGRESS_BEFORE_PLAN_COPY.tail}
                 >
                   {coachUserId && (
-                    <Button onClick={handleMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+                    <Button onClick={handleMessageCoach}>
                       {PROGRESS_BEFORE_PLAN_COPY.message(coach?.user.name)}
                     </Button>
                   )}
@@ -571,7 +571,7 @@ export function ClientDashboard() {
               <p className="text-[15px] font-bold tracking-tight antialiased">Your coach wants to hear how training is going</p>
               <Button
                 onClick={() => router.push(`/client/checkin/${pendingCheckIn.id}`)}
-                className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150 mt-3"
+                className="w-full h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 mt-3"
                 size="sm"
               >
                 Complete check-in
@@ -607,13 +607,13 @@ export function ClientDashboard() {
                 title={WEEK_NOT_BUILT_COPY.title}
                 tail={WEEK_NOT_BUILT_COPY.tail(coach?.user.name)}
               >
-                <Button onClick={handleMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+                <Button onClick={handleMessageCoach}>
                   {WEEK_NOT_BUILT_COPY.message(coach?.user.name)}
                 </Button>
               </StateView>
             ) : (
               <StateView fill art={LOAD_ERROR_COPY.art} title={LOAD_ERROR_COPY.title} tail={LOAD_ERROR_COPY.tail}>
-                <Button onClick={() => refreshWeek()} className="active:scale-[0.96] transition-transform duration-150">
+                <Button onClick={() => refreshWeek()}>
                   {LOAD_ERROR_COPY.retry}
                 </Button>
               </StateView>

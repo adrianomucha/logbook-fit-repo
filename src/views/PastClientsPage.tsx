@@ -49,7 +49,7 @@ function PastClientRow({
           variant="outline"
           onClick={onRestore}
           disabled={isRestoring}
-          className="shrink-0 active:scale-[0.96] transition-transform duration-150"
+          className="shrink-0"
         >
           {isRestoring ? (
             <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
@@ -119,7 +119,7 @@ export function PastClientsPage() {
             title={NO_PAST_CLIENTS_COPY.title}
             tail={NO_PAST_CLIENTS_COPY.tail}
           >
-            <Button onClick={() => router.push('/coach')} className="active:scale-[0.96] transition-transform duration-150">
+            <Button onClick={() => router.push('/coach')}>
               {NO_PAST_CLIENTS_COPY.back}
             </Button>
           </StateView>

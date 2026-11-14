@@ -490,7 +490,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               type="button"
               onClick={handleAccept}
               disabled={isSubmitting}
-              className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground transition-transform duration-150 hover:bg-brand/90 active:scale-[0.98]"
+              className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90"
             >
               {isSubmitting ? (
                 <>
@@ -614,7 +614,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground transition-transform duration-150 hover:bg-brand/90 active:scale-[0.98]"
+            className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90"
           >
             {isSubmitting ? (
               <>

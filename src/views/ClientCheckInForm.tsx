@@ -81,7 +81,7 @@ export function ClientCheckInForm() {
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in not found</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">This check-in doesn&apos;t exist or has expired.</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">{BACK_HOME}</Button>
+            <Button onClick={() => router.push('/client')}>{BACK_HOME}</Button>
           </div>
         </div>
       </div>
@@ -185,7 +185,7 @@ export function ClientCheckInForm() {
             <AlertTriangle className="w-10 h-10 mx-auto mb-4 text-muted-foreground/60" />
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Check-in expired</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">{CHECKIN_EXPIRED}</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">{BACK_HOME}</Button>
+            <Button onClick={() => router.push('/client')}>{BACK_HOME}</Button>
           </div>
         </div>
       </div>
@@ -203,7 +203,7 @@ export function ClientCheckInForm() {
             </div>
             <h2 className="text-lg font-bold mb-1.5 tracking-tight antialiased">Already sent</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">{CHECKIN_ALREADY_SENT}</p>
-            <Button onClick={() => router.push('/client')} className="active:scale-[0.96] transition-transform duration-150">{BACK_HOME}</Button>
+            <Button onClick={() => router.push('/client')}>{BACK_HOME}</Button>
           </div>
         </div>
       </div>
@@ -406,7 +406,7 @@ export function ClientCheckInForm() {
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="w-full h-14 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150"
+          className="w-full h-14 text-sm font-bold uppercase tracking-wider bg-brand text-brand-foreground hover:bg-brand/90"
           size="lg"
         >
           {isSubmitting ? (

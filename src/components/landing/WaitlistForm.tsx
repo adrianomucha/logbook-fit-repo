@@ -262,7 +262,7 @@ export function WaitlistForm({
           disabled={status === 'loading'}
           className={cn(
             'h-11 shrink-0 bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground',
-            'hover:bg-brand/90 active:scale-[0.97] transition-transform duration-150'
+            'hover:bg-brand/90'
           )}
         >
           {status === 'loading' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

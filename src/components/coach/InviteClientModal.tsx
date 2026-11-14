@@ -248,7 +248,7 @@ export function InviteClientModal({ isOpen, onClose }: InviteClientModalProps) {
           <Button
             onClick={handleCopy}
             disabled={isGenerating || !invite}
-            className="h-12 flex-1 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.98] transition-[background-color,transform] duration-150"
+            className="h-12 flex-1 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider"
           >
             {isGenerating ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

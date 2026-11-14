@@ -64,7 +64,7 @@ export function ProgressHistory({
     return (
       <StateView fill art={LOG_EMPTY_COPY.art} title={LOG_EMPTY_COPY.title} tail={LOG_EMPTY_COPY.tail}>
         {onOpenWorkout && (
-          <Button onClick={onOpenWorkout} className="active:scale-[0.96] transition-transform duration-150">
+          <Button onClick={onOpenWorkout}>
             {LOG_EMPTY_COPY.cta}
           </Button>
         )}

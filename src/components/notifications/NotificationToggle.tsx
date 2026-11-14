@@ -160,7 +160,7 @@ export function NotificationToggle({ className, hideWhenOn, iconOnly }: Notifica
           <span
             className={cn(
               'absolute inset-0 flex items-center justify-center',
-              'transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+              'transition-[opacity,filter,transform] duration-300 ease-out-strong',
               isSubscribed ? 'scale-100 opacity-100 blur-0' : 'scale-[0.25] opacity-0 blur-[4px]'
             )}
           >
@@ -169,7 +169,7 @@ export function NotificationToggle({ className, hideWhenOn, iconOnly }: Notifica
           <span
             className={cn(
               'flex items-center justify-center',
-              'transition-[opacity,filter,transform] duration-300 ease-[cubic-bezier(0.2,0,0,1)]',
+              'transition-[opacity,filter,transform] duration-300 ease-out-strong',
               isSubscribed ? 'scale-[0.25] opacity-0 blur-[4px]' : 'scale-100 opacity-100 blur-0'
             )}
           >

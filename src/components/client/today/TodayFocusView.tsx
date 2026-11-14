@@ -99,7 +99,7 @@ export function TodayFocusView({
           tail={EMPTY_WEEK_COPY.tail}
         >
           {onMessageCoach && (
-            <Button onClick={onMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+            <Button onClick={onMessageCoach}>
               {EMPTY_WEEK_COPY.message(coachName)}
             </Button>
           )}

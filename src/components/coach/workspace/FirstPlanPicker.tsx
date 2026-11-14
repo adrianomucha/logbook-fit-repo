@@ -90,7 +90,7 @@ export function FirstPlanPicker({
                   variant="outline"
                   disabled={!!assigningId}
                   onClick={() => handleAssign(plan.id)}
-                  className="shrink-0 active:scale-[0.96] transition-transform duration-150"
+                  className="shrink-0"
                 >
                   {assigningId === plan.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Assign'}
                 </Button>

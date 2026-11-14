@@ -64,7 +64,7 @@ export function WeeklyOverview({
         tail={WEEK_NOT_BUILT_COPY.tail(coachName)}
       >
         {onMessageCoach && (
-          <Button onClick={onMessageCoach} className="active:scale-[0.96] transition-transform duration-150">
+          <Button onClick={onMessageCoach}>
             {WEEK_NOT_BUILT_COPY.message(coachName)}
           </Button>
         )}

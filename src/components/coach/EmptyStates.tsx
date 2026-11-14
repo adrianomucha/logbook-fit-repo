@@ -51,7 +51,7 @@ export function EmptyStateNoPlans({
         <Button
           onClick={onImport}
           variant="outline"
-          className="h-11 px-6 rounded-xl gap-2 text-sm font-medium active:scale-[0.97] transition-transform duration-150"
+          className="h-11 px-6 rounded-xl gap-2 text-sm font-medium"
         >
           <FileSpreadsheet className="w-4 h-4" />
           Import from Excel

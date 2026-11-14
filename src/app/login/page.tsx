@@ -155,7 +155,7 @@ export default function LoginPage() {
         )}
         <Button
           type="submit"
-          className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground transition-transform duration-150 hover:bg-brand/90 active:scale-[0.98]"
+          className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90"
           disabled={loading === 'form'}
         >
           {loading === 'form' ? (

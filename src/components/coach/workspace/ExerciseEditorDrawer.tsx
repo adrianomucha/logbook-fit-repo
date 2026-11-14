@@ -240,7 +240,7 @@ export function ExerciseEditorContent({
             aria-label={`Back to ${dayName || 'workout'}`}
             className="group flex items-center gap-0.5 -ms-1.5 min-w-0 font-mono text-[11px] uppercase tracking-[0.12em] font-medium text-muted-foreground hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring tap-target"
           >
-            <ChevronLeft className="w-3.5 h-3.5 shrink-0 group-hover:-translate-x-0.5 transition-transform duration-150" />
+            <ChevronLeft className="w-3.5 h-3.5 shrink-0" />
             <span className="truncate">{dayName || 'Workout'}</span>
           </button>
 
@@ -316,7 +316,7 @@ export function ExerciseEditorContent({
                   className="w-full flex items-center gap-3 text-left px-4 sm:px-5 py-3 transition-colors hover:bg-muted/60 active:bg-muted/80 group"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="font-bold text-sm leading-snug truncate group-hover:translate-x-0.5 transition-transform duration-150">
+                    <p className="font-bold text-sm leading-snug truncate">
                       {ex.name}
                     </p>
                     <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground truncate antialiased">
@@ -487,7 +487,7 @@ export function ExerciseEditorContent({
             <Button
               onClick={handleSave}
               disabled={!canSave || isSaving}
-              className="w-full h-12 rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.98] transition-[background-color,transform] duration-150"
+              className="w-full h-12 rounded-xl bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider"
             >
               {isSaving ? (
                 <Loader2 className="w-4 h-4 animate-spin" />

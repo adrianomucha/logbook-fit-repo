@@ -348,7 +348,6 @@ export function ProfileSection({ role }: { role: SettingsRole }) {
           <Button
             onClick={handleSave}
             disabled={!isDirty || isSaving || !name.trim()}
-            className="active:scale-[0.96] transition-transform duration-150"
           >
             {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
             Save profile
@@ -564,7 +563,7 @@ function PasswordField() {
           variant="outline"
           size="sm"
           onClick={() => setIsOpen(true)}
-          className="shrink-0 active:scale-[0.96] transition-transform duration-150"
+          className="shrink-0"
         >
           {copy.open}
         </Button>
@@ -625,14 +624,12 @@ function PasswordField() {
           variant="ghost"
           onClick={close}
           disabled={isSaving}
-          className="active:scale-[0.96] transition-transform duration-150"
         >
           {copy.cancel}
         </Button>
         <Button
           type="submit"
           disabled={isSaving || !currentPassword || !newPassword}
-          className="active:scale-[0.96] transition-transform duration-150"
         >
           {isSaving && <Loader2 className="w-3.5 h-3.5 me-1.5 animate-spin" />}
           {copy.submit}
@@ -706,7 +703,7 @@ export function AccountSection({ role }: { role: SettingsRole }) {
         <Button
           variant="outline"
           onClick={() => setIsDeleteOpen(true)}
-          className="mt-3 border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-500/10 dark:hover:text-red-300 active:scale-[0.96] transition-transform duration-150"
+          className="mt-3 border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive dark:border-red-400/30 dark:text-red-300 dark:hover:bg-red-500/10 dark:hover:text-red-300"
         >
           <Trash2 className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
           Delete account…

@@ -141,7 +141,7 @@ export function AssignPlanModal({
                 handleClose();
                 onCreatePlan();
               }}
-              className="h-10 px-5 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider active:scale-[0.97] transition-[background-color,transform] duration-150"
+              className="h-10 px-5 rounded-xl gap-2 bg-brand text-brand-foreground hover:bg-brand/90 text-sm font-bold uppercase tracking-wider"
             >
               <Plus className="w-4 h-4" />
               {CREATE_PLAN}
@@ -191,14 +191,14 @@ export function AssignPlanModal({
             variant="ghost"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="ml-auto text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target"
+            className="ml-auto text-muted-foreground hover:text-foreground tap-target"
           >
             Cancel
           </Button>
           <Button
             onClick={handleAssign}
             disabled={!selectedPlanId || isSubmitting}
-            className="flex items-center gap-2 active:scale-[0.96] transition-transform duration-150 tap-target"
+            className="flex items-center gap-2 tap-target"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {confirmLabel}

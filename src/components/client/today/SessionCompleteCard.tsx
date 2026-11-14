@@ -156,7 +156,7 @@ export function SessionCompleteCard({
             <Button
               onClick={handleSubmit}
               disabled={isSubmittingFeedback}
-              className="w-full mt-3 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
+              className="w-full mt-3 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
             >
               <Send className="w-4 h-4 mr-2" />
               {isSubmittingFeedback
