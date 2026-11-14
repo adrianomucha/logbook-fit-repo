@@ -57,9 +57,9 @@ export function AssignPlanModal({
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [query, setQuery] = useState('');
 
-  // Assignable templates (not archived), excluding whatever is already assigned
+  // Assignable templates, excluding whatever is already assigned
   const templatePlans = useMemo(
-    () => plans.filter((p) => p.isTemplate && !p.archivedAt),
+    () => plans.filter((p) => p.isTemplate),
     [plans]
   );
   const currentPlan = useMemo(
