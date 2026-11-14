@@ -61,7 +61,7 @@ import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
 import { newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanEndsOn, getPlanProgressStatus, getPlanStartDay, getPlanStartsOn, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
-import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN } from '@logbook/shared/coach-copy';
+import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN, REMOVE_PLAN } from '@logbook/shared/coach-copy';
 import { URGENCY_LABEL } from '@logbook/shared/roster';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -179,7 +179,7 @@ export function UnifiedClientProfile() {
   const [isContinuingPlan, setIsContinuingPlan] = useState(false);
   // A plan picked (or just created) for the client, waiting on the coach's
   // choice of start: today or next Monday
-  const [pendingAssign, setPendingAssign] = useState<{ planId: string; planName?: string } | null>(null);
+  const [pendingAssign, setPendingAssign] = useState<{ planId: string; planName?: string; isNew?: boolean } | null>(null);
   const [startChoice, setStartChoice] = useState<StartChoice>('today');
   // Optimistic override for the check-in schedule settings (null = follow server)
   const [scheduleOverride, setScheduleOverride] =
@@ -294,6 +294,7 @@ export function UnifiedClientProfile() {
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
         isTemplate: true,
+        exerciseCount: p.exerciseCount,
       })),
     [coachPlans]
   );
@@ -438,6 +439,7 @@ export function UnifiedClientProfile() {
       await apiFetch(`/api/coach/clients/${clientId}/plan`, { method: 'DELETE' });
       refreshClient();
       refreshPlan();
+      toast.success(REMOVE_PLAN.done(client?.name?.split(' ')[0]));
     } catch {
       toast.error('Failed to remove the plan. Please try again.');
     }
@@ -451,9 +453,9 @@ export function UnifiedClientProfile() {
 
   // Week 1 is either what's left of this week or a full week from Monday;
   // the coach decides, preselected by the client's weekday
-  const askWhenItStarts = (planId: string, planName?: string) => {
+  const askWhenItStarts = (planId: string, planName?: string, isNew = false) => {
     setStartChoice(defaultPlanStart(apiClient?.user.timezone));
-    setPendingAssign({ planId, planName });
+    setPendingAssign({ planId, planName, isNew });
   };
 
   const handlePlanCreated = async (formData: import('@/types').PlanSetupFormData) => {
@@ -473,7 +475,9 @@ export function UnifiedClientProfile() {
     setShowPlanSetupModal(false);
     refreshCoachPlans();
     // Assigned once the coach picks when it starts
-    askWhenItStarts(newPlan.id, newPlan.name);
+    // Just created, so it is empty on purpose: the coach builds it on the
+    // client's copy. The server refuses any other empty plan.
+    askWhenItStarts(newPlan.id, newPlan.name, true);
   };
 
   // The finished plan is working — run it again rather than build a new block.
@@ -516,10 +520,17 @@ export function UnifiedClientProfile() {
     try {
       await apiFetch(`/api/plans/${pendingAssign.planId}/assign`, {
         method: 'POST',
-        body: JSON.stringify({ clientProfileId: clientId, startOn: startChoice }),
+        body: JSON.stringify({
+          clientProfileId: clientId,
+          startOn: startChoice,
+          ...(pendingAssign.isNew ? { allowEmpty: true } : {}),
+        }),
       });
-    } catch {
-      toast.error('Failed to assign plan. Please try again.');
+    } catch (e) {
+      // 409 = the plan has no exercises; the server's sentence says so
+      toast.error(
+        e instanceof ApiError && e.status === 409 ? e.message : 'Failed to assign plan. Please try again.'
+      );
       return;
     }
     // The assignment is saved; refreshing is best-effort, so a flaky

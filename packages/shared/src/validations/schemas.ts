@@ -293,6 +293,10 @@ export const planStartChoiceSchema = z.enum(["today", "monday"]);
 export const assignPlanSchema = z.object({
   clientProfileId: z.string().uuid(),
   startOn: planStartChoiceSchema.optional(),
+  // Only the "build a new plan for this client" flow sets this: the coach
+  // creates the plan and fills it in on the client's copy. Picking an
+  // existing template that happens to be empty is refused.
+  allowEmpty: z.boolean().optional(),
 });
 
 export const continuePlanSchema = z.object({

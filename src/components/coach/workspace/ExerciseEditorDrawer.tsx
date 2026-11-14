@@ -6,7 +6,16 @@ import { Switch } from '@/components/ui/switch';
 import { ChevronLeft, Library, Link2, Loader2, Plus, Search, Trash2 } from 'lucide-react';
 import { Exercise } from '@/types';
 import { cn } from '@/lib/utils';
-import { exerciseLibrary, ExerciseTemplate, searchExercises } from '@/lib/exercise-library';
+import useSWR from 'swr';
+import { toast } from 'sonner';
+import { EXERCISE_LIBRARY } from '@logbook/shared/coach-copy';
+import { apiFetch } from '@/lib/api-client';
+import {
+  buildLibraryRows,
+  filterLibraryRows,
+  type LibraryRow,
+  type OwnExercise,
+} from '@/lib/exercise-library';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { TallyMark } from '@/components/brand/LogoMark';
 import { FieldLabel, FieldShell, StatusLine } from '../shared/formSurfaces';
@@ -26,12 +35,13 @@ function toFormWeight(stored: string | number | undefined, unit: WeightUnit): st
 interface ExerciseEditorContentProps {
   /** Existing exercise to edit, or null for new exercise */
   exercise: Exercise | null;
-  /** Called when exercise is saved */
-  onSave: (exercise: Exercise) => void | Promise<void>;
+  /** Called when exercise is saved. Resolve false if the save failed: the editor then stays open. */
+  onSave: (exercise: Exercise) => boolean | void | Promise<boolean | void>;
   /** Called to close the editor */
   onClose: () => void;
   /** Called when exercise is deleted (only shown when editing existing) */
-  onDelete?: () => void;
+  /** Resolve false if the delete failed: the editor then stays open. */
+  onDelete?: () => boolean | void | Promise<boolean | void>;
   /** Exercise number for display (1-indexed) */
   exerciseNumber?: number;
   /** Whether this is rendered inline (true) or standalone */
@@ -61,11 +71,37 @@ export function ExerciseEditorContent({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-  // Get unique categories from the library
-  const categories = useMemo(() =>
-    Array.from(new Set(exerciseLibrary.map((ex) => ex.category))),
-    []
+  // The coach's own exercises come first; starters fill in what they
+  // haven't used yet. Until the fetch lands the starters stand alone.
+  const { data: ownExercises, mutate: mutateOwn } = useSWR<OwnExercise[]>('/api/exercises');
+  const libraryRows = useMemo(() => buildLibraryRows(ownExercises ?? []), [ownExercises]);
+
+  const categories = useMemo(
+    () => Array.from(new Set(libraryRows.map((ex) => ex.category))),
+    [libraryRows]
   );
+
+  // Two-tap remove for one of the coach's own exercises
+  const [armedRemoveId, setArmedRemoveId] = useState<string | null>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const handleRemoveFromLibrary = async (row: LibraryRow) => {
+    if (!row.ownId || removingId) return;
+    if (armedRemoveId !== row.ownId) {
+      setArmedRemoveId(row.ownId);
+      return;
+    }
+    setRemovingId(row.ownId);
+    try {
+      await apiFetch(`/api/exercises/${row.ownId}`, { method: 'DELETE' });
+      await mutateOwn();
+      toast.success(EXERCISE_LIBRARY.removed(row.name));
+    } catch {
+      toast.error(EXERCISE_LIBRARY.removeFailed);
+    } finally {
+      setRemovingId(null);
+      setArmedRemoveId(null);
+    }
+  };
 
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -113,18 +149,13 @@ export function ExerciseEditorContent({
   }, [exercise, open, weightUnit]);
 
   // Filter exercises from library
-  const filteredLibrary = useMemo(() => {
-    if (searchQuery) {
-      return searchExercises(searchQuery);
-    }
-    if (selectedCategory) {
-      return exerciseLibrary.filter((ex) => ex.category === selectedCategory);
-    }
-    return exerciseLibrary;
-  }, [searchQuery, selectedCategory]);
+  const filteredLibrary = useMemo(
+    () => filterLibraryRows(libraryRows, searchQuery, selectedCategory),
+    [libraryRows, searchQuery, selectedCategory]
+  );
 
   // Select from library (for new exercises)
-  const handleSelectFromLibrary = (template: ExerciseTemplate) => {
+  const handleSelectFromLibrary = (template: LibraryRow) => {
     setName(template.name);
     setTrackingType(template.trackingType || 'REPS');
     if (template.defaultSets) setSets(template.defaultSets.toString());
@@ -134,7 +165,7 @@ export function ExerciseEditorContent({
   };
 
   // Replace with library exercise (for existing)
-  const handleReplaceWithLibrary = (template: ExerciseTemplate) => {
+  const handleReplaceWithLibrary = (template: LibraryRow) => {
     setName(template.name);
     const templateType = template.trackingType || 'REPS';
     if (templateType !== trackingType) {
@@ -179,12 +210,27 @@ export function ExerciseEditorContent({
       notes: notes.trim() || undefined,
       supersetWithPrevious: previousExerciseName ? supersetWithPrevious : false,
     };
+    let saved: boolean | void;
     try {
-      await onSave(savedExercise);
+      saved = await onSave(savedExercise);
     } finally {
       setIsSaving(false);
     }
-    onClose();
+    // A failed save keeps the editor open, so nothing typed is lost
+    if (saved !== false) onClose();
+  };
+
+  const handleDelete = async () => {
+    if (!onDelete || isSaving) return;
+    setIsSaving(true);
+    let deleted: boolean | void;
+    try {
+      deleted = await onDelete();
+    } finally {
+      setIsSaving(false);
+    }
+    if (deleted !== false) onClose();
+    else setShowDeleteConfirm(false);
   };
 
   const canSave = name.trim().length > 0 && parseInt(sets) > 0;
@@ -310,16 +356,22 @@ export function ExerciseEditorContent({
             </div>
             <div className="divide-y">
               {filteredLibrary.map((ex) => (
+                <div key={ex.key} className="flex items-stretch">
                 <button
-                  key={ex.id}
                   onClick={() => isNew ? handleSelectFromLibrary(ex) : handleReplaceWithLibrary(ex)}
-                  className="w-full flex items-center gap-3 text-left px-4 sm:px-5 py-3 transition-colors hover:bg-muted/60 active:bg-muted/80 group"
+                  className="flex-1 min-w-0 flex items-center gap-3 text-left px-4 sm:px-5 py-3 transition-colors hover:bg-muted/60 active:bg-muted/80 group"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm leading-snug truncate group-hover:translate-x-0.5 transition-transform duration-150">
                       {ex.name}
                     </p>
                     <p className="mt-0.5 font-mono text-[10px] uppercase tracking-[0.12em] text-muted-foreground truncate antialiased">
+                      {ex.ownId && (
+                        <>
+                          <span className="text-foreground">{EXERCISE_LIBRARY.yours}</span>
+                          <span className="text-border mx-1.5" aria-hidden="true">/</span>
+                        </>
+                      )}
                       {ex.category}
                       {ex.equipment && <span className="text-border mx-1.5" aria-hidden="true">/</span>}
                       {ex.equipment}
@@ -333,6 +385,30 @@ export function ExerciseEditorContent({
                     </span>
                   )}
                 </button>
+                {ex.ownId && (
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveFromLibrary(ex)}
+                    onBlur={() => setArmedRemoveId(null)}
+                    disabled={removingId === ex.ownId}
+                    aria-label={armedRemoveId === ex.ownId ? EXERCISE_LIBRARY.confirmRemove : EXERCISE_LIBRARY.remove(ex.name)}
+                    className={cn(
+                      'shrink-0 flex items-center gap-1.5 px-3 sm:px-4 text-xs font-medium transition-colors tap-target',
+                      'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring disabled:opacity-50',
+                      armedRemoveId === ex.ownId
+                        ? 'text-destructive-text bg-destructive/10'
+                        : 'text-muted-foreground/60 hover:text-destructive-text'
+                    )}
+                  >
+                    {removingId === ex.ownId ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
+                    )}
+                    {armedRemoveId === ex.ownId && <span>{EXERCISE_LIBRARY.confirmRemove}</span>}
+                  </button>
+                )}
+                </div>
               ))}
               {filteredLibrary.length === 0 && (
                 <div className="flex flex-col items-center text-center py-10 px-8">
@@ -503,10 +579,8 @@ export function ExerciseEditorContent({
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={() => {
-                      onDelete();
-                      onClose();
-                    }}
+                    disabled={isSaving}
+                    onClick={handleDelete}
                   >
                     Remove
                   </Button>
@@ -536,10 +610,8 @@ export function ExerciseEditorContent({
             </StatusLine>
             {!isNew && onDelete && (
               <button
-                onClick={() => {
-                  onDelete();
-                  onClose();
-                }}
+                disabled={isSaving}
+                onClick={handleDelete}
                 className={removeLink}
               >
                 <Trash2 className="w-3.5 h-3.5" />

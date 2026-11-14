@@ -60,6 +60,8 @@ export interface PlanSummary {
   updatedAt: string;
   deletedAt: string | null;
   weeks: { id: string; weekNumber: number }[];
+  /** Exercises across every week and day. 0 = nothing to train on yet. */
+  exerciseCount: number;
   assignedTo: {
     id: string;
     user: { name: string | null; avatarUrl: string | null };
@@ -95,6 +97,38 @@ export interface PastClient {
   joinedAt: string;
   endedAt: string | null;
   endedBy: 'COACH' | 'CLIENT' | null;
+}
+
+// GET /api/coach/clients/[id]/archive
+/** A past client's read-only record: what was between this coach and them. */
+export interface PastClientArchive extends PastClient {
+  workouts: {
+    id: string;
+    dayName: string | null;
+    planName: string;
+    completedAt: string | null;
+    completionPct: number | null;
+    exercisesDone: number | null;
+    exercisesTotal: number | null;
+    durationSec: number | null;
+  }[];
+  checkIns: {
+    id: string;
+    status: string;
+    effortRating: string | null;
+    clientFeeling: string | null;
+    painBlockers: string | null;
+    clientRespondedAt: string | null;
+    coachFeedback: string | null;
+    createdAt: string;
+    completedAt: string | null;
+  }[];
+  messages: {
+    id: string;
+    fromCoach: boolean;
+    content: string;
+    createdAt: string;
+  }[];
 }
 
 // GET /api/coach/clients/[id]
