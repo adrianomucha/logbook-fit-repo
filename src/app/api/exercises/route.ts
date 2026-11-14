@@ -56,7 +56,8 @@ export const POST = withCoach(
     const existing = await prisma.exercise.findFirst({
       where: {
         ...coachScope(coachProfileId),
-        name,
+        // "Back Squat" and "back squat" are the same exercise to a coach
+        name: { equals: name, mode: "insensitive" },
       },
     });
     if (existing) {

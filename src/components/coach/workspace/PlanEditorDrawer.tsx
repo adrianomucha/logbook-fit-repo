@@ -19,6 +19,7 @@ import {
 import { TallyMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
+import { mutate as globalMutate } from 'swr';
 import { PLAN_SAVE_ERROR } from '@logbook/shared/coach-copy';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { parsePrescriptionInput } from '@/lib/reps';
@@ -165,6 +166,27 @@ export function PlanEditorDrawer({
     const trackingType = exercise.trackingType ?? 'REPS';
     const { reps, repsMax } = parsePrescriptionInput(exercise.reps, trackingType);
 
+    // Find-or-create the exercise in the coach's library by name
+    const resolveLibraryExerciseId = async (): Promise<string> => {
+      try {
+        const created = await apiFetch<{ id: string }>('/api/exercises', {
+          method: 'POST',
+          body: JSON.stringify({ name: exercise.name, trackingType }),
+        });
+        return created.id;
+      } catch (err) {
+        // 409 = already in the coach's library, so look it up. Anything
+        // else is a real failure.
+        if (!(err instanceof ApiError && err.status === 409)) throw err;
+        const results = await apiFetch<{ id: string; name: string }[]>(
+          `/api/exercises?search=${encodeURIComponent(exercise.name)}`
+        );
+        const match = results.find((e) => e.name.toLowerCase() === exercise.name.toLowerCase());
+        if (!match) throw new Error('Could not find or create exercise');
+        return match.id;
+      }
+    };
+
     try {
       if (editingExerciseIndex !== null) {
         // Update existing workout exercise
@@ -184,26 +206,7 @@ export function PlanEditorDrawer({
         });
       } else {
         // New exercise: find-or-create in the library, then add to day
-        let libraryExerciseId: string;
-        try {
-          const created = await apiFetch<{ id: string }>('/api/exercises', {
-            method: 'POST',
-            body: JSON.stringify({ name: exercise.name, trackingType }),
-          });
-          libraryExerciseId = created.id;
-        } catch (err) {
-          // 409 = already in the coach's library, so look it up. Anything
-          // else is a real failure.
-          if (!(err instanceof ApiError && err.status === 409)) throw err;
-          const results = await apiFetch<{ id: string; name: string }[]>(
-            `/api/exercises?search=${encodeURIComponent(exercise.name)}`
-          );
-          const match = results.find(
-            (e) => e.name.toLowerCase() === exercise.name.toLowerCase()
-          );
-          if (!match) throw new Error('Could not find or create exercise');
-          libraryExerciseId = match.id;
-        }
+        const libraryExerciseId = await resolveLibraryExerciseId();
 
         await apiFetch(`/api/days/${dayId}/exercises`, {
           method: 'POST',
@@ -229,6 +232,8 @@ export function PlanEditorDrawer({
     }
 
     onRefresh?.();
+    // The picker lists the coach's own exercises; this one may be new to it
+    void globalMutate('/api/exercises');
     return true;
   };
 

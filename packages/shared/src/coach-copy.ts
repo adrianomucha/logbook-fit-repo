@@ -70,3 +70,13 @@ export const PAST_CLIENT = {
   /** List row hint for a client who ended it themselves */
   canRejoin: 'can rejoin with a new invite',
 } as const;
+
+/** The plan builder's exercise picker: the coach's own exercises, then starters. */
+export const EXERCISE_LIBRARY = {
+  /** Tag on an exercise the coach has used or created */
+  yours: 'Yours',
+  remove: (name: string) => `Remove ${name} from your library`,
+  confirmRemove: 'Tap again to remove',
+  removed: (name: string) => `${name} removed from your library. Plans that use it keep it.`,
+  removeFailed: "That exercise wasn't removed. Check your connection and try again.",
+} as const;

@@ -10,6 +10,99 @@ export interface ExerciseTemplate {
   notes?: string;
 }
 
+/** A row in the builder's picker: one of the coach's own exercises, or a starter. */
+export interface LibraryRow {
+  /** Unique within the list */
+  key: string;
+  /** Set for the coach's own exercises: the library row that can be removed */
+  ownId?: string;
+  name: string;
+  /** Lowercase, for the filter chips ("chest", "full body") */
+  category: string;
+  equipment?: string;
+  trackingType?: 'REPS' | 'TIME';
+  defaultSets?: number;
+  defaultReps?: string;
+  notes?: string;
+}
+
+/** The coach's saved exercise, as GET /api/exercises returns it */
+export interface OwnExercise {
+  id: string;
+  name: string;
+  category: string;
+  trackingType?: 'REPS' | 'TIME' | null;
+  defaultSets?: number | null;
+  /** Rep count, or seconds when trackingType is TIME */
+  defaultReps?: number | null;
+  instructions?: string | null;
+}
+
+function formatSeconds(totalSeconds: number): string {
+  if (totalSeconds < 60) return `${totalSeconds}s`;
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return s === 0 ? `${m} min` : `${m}m ${s}s`;
+}
+
+/**
+ * The picker's list: the coach's own exercises first (A to Z), then the
+ * starter exercises they don't already have. A starter the coach has used
+ * shows once, as theirs, so the same name never appears twice.
+ */
+export function buildLibraryRows(own: OwnExercise[], starters: ExerciseTemplate[] = exerciseLibrary): LibraryRow[] {
+  const ownRows: LibraryRow[] = [...own]
+    .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }))
+    .map((ex) => {
+      const trackingType = ex.trackingType ?? 'REPS';
+      // The coach's row has no category of its own until they set one; a
+      // starter of the same name knows where it belongs
+      const starter = starters.find((s) => s.name.toLowerCase() === ex.name.toLowerCase());
+      const category =
+        ex.category && ex.category !== 'OTHER'
+          ? ex.category.toLowerCase().replace(/_/g, ' ')
+          : starter?.category ?? 'other';
+      return {
+        key: `own-${ex.id}`,
+        ownId: ex.id,
+        name: ex.name,
+        category,
+        equipment: starter?.equipment,
+        trackingType,
+        defaultSets: ex.defaultSets ?? starter?.defaultSets ?? undefined,
+        defaultReps:
+          starter?.defaultReps ??
+          (ex.defaultReps != null
+            ? trackingType === 'TIME'
+              ? formatSeconds(ex.defaultReps)
+              : String(ex.defaultReps)
+            : undefined),
+        notes: ex.instructions ?? starter?.notes ?? undefined,
+      };
+    });
+
+  const ownNames = new Set(own.map((ex) => ex.name.toLowerCase()));
+  const starterRows: LibraryRow[] = starters
+    .filter((s) => !ownNames.has(s.name.toLowerCase()))
+    .map((s) => ({ ...s, key: `starter-${s.id}` }));
+
+  return [...ownRows, ...starterRows];
+}
+
+/** Narrow the picker by a search (name, category or equipment) or a category chip. */
+export function filterLibraryRows(rows: LibraryRow[], query: string, category: string | null): LibraryRow[] {
+  const q = query.trim().toLowerCase();
+  if (q) {
+    return rows.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.category.includes(q) ||
+        !!r.equipment?.toLowerCase().includes(q)
+    );
+  }
+  return category ? rows.filter((r) => r.category === category) : rows;
+}
+
 export const exerciseLibrary: ExerciseTemplate[] = [
   // Chest
   { id: 'bench-press', name: 'Barbell Bench Press', category: 'chest', equipment: 'Barbell', defaultSets: 4, defaultReps: '8-10' },
@@ -69,12 +162,3 @@ export const exerciseLibrary: ExerciseTemplate[] = [
   { id: 'jump-rope', name: 'Jump Rope', category: 'cardio', equipment: 'Jump Rope', trackingType: 'TIME', defaultSets: 3, defaultReps: '2 min' },
   { id: 'mountain-climbers', name: 'Mountain Climbers', category: 'cardio', equipment: 'Bodyweight', trackingType: 'TIME', defaultSets: 3, defaultReps: '30s' },
 ];
-
-export const searchExercises = (query: string) => {
-  const lowerQuery = query.toLowerCase();
-  return exerciseLibrary.filter((ex) =>
-    ex.name.toLowerCase().includes(lowerQuery) ||
-    ex.category.toLowerCase().includes(lowerQuery) ||
-    ex.equipment?.toLowerCase().includes(lowerQuery)
-  );
-};
