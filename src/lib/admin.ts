@@ -9,7 +9,7 @@
 import { createHash, timingSafeEqual } from "crypto";
 
 /** Emails allowed into admin surfaces, normalized to lowercase. */
-function adminEmails(): string[] {
+export function adminEmails(): string[] {
   return (process.env.ADMIN_EMAILS ?? "")
     .split(",")
     .map((e) => e.trim().toLowerCase())

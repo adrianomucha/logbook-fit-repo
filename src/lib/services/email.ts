@@ -515,3 +515,21 @@ export function sendPasswordReset(
     passwordResetText(resetUrl)
   );
 }
+
+/**
+ * An alert to the people who run the product (see lib/operator-alerts.ts).
+ * Plain on purpose: it is read on a phone, in a hurry.
+ */
+export function sendOperatorAlert(
+  to: string[],
+  subject: string,
+  summary: string,
+  detail: string
+): Promise<boolean> {
+  if (to.length === 0) return Promise.resolve(false);
+  const html = `<div style="font-family:${SANS};font-size:14px;line-height:1.5;color:${INK};">
+    <p style="margin:0 0 12px 0;">${escapeHtml(summary)}</p>
+    <pre style="margin:0;padding:12px;background:${PANEL};border:1px solid ${BORDER};border-radius:8px;font-family:${MONO};font-size:12px;white-space:pre-wrap;word-break:break-word;">${escapeHtml(detail)}</pre>
+  </div>`;
+  return sendEmail(to.join(","), subject, html, `${summary}\n\n${detail}`);
+}

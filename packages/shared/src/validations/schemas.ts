@@ -516,6 +516,9 @@ export const clientErrorReportSchema = z.object({
   digest: z.string().trim().max(100).optional(),
   url: z.string().trim().max(1000).optional(),
   stack: z.string().max(4000).optional(),
+  // Which app crashed. Absent from the web's reports (older cached clients
+  // included), so absent means web.
+  platform: z.enum(["web", "ios", "android"]).optional(),
 });
 
 // ──────────────────────────────────────

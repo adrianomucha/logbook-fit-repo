@@ -43,8 +43,8 @@ function useNotificationDeepLinks() {
  * navigate to: retry is the only way back. The client screens have their
  * own boundary (app/client/_layout.tsx) that can also go home.
  */
-export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
-  return <CrashScreen onRetry={() => void retry()} />;
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <CrashScreen error={error} screen="root" onRetry={() => void retry()} />;
 }
 
 export default function RootLayout() {
