@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
+import { markPlanEdited } from "@/lib/plan-edits";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { updateWorkoutExerciseSchema } from "@/lib/validations/schemas";
@@ -19,7 +20,7 @@ async function verifyWorkoutExerciseOwnership(
         include: {
           week: {
             include: {
-              plan: { select: { coachId: true, deletedAt: true } },
+              plan: { select: { id: true, coachId: true, deletedAt: true } },
             },
           },
         },
@@ -74,6 +75,8 @@ export const PUT = withCoach(
       },
     });
 
+    await markPlanEdited(we.day.week.plan.id);
+
     return NextResponse.json(updated);
   }
 );
@@ -98,6 +101,8 @@ export const DELETE = withCoach(
     await prisma.workoutExercise.delete({
       where: { id: weId },
     });
+
+    await markPlanEdited(we.day.week.plan.id);
 
     return NextResponse.json({ success: true });
   }

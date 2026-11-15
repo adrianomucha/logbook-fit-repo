@@ -168,6 +168,8 @@ export interface ClientDetail {
    * below is a recent window. Optional so older fixtures still type-check.
    */
   activePlanCompletions?: { dayId: string; durationSec: number | null }[];
+  /** Set while a promised plan adjustment has not happened (shared/plan-adjustment) */
+  planAdjustmentOwed?: { checkInId: string; promisedAt: string } | null;
   completions: {
     id: string;
     dayId: string;

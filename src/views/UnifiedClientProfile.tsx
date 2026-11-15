@@ -61,7 +61,7 @@ import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
 import { newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanEndsOn, getPlanProgressStatus, getPlanStartDay, getPlanStartsOn, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
-import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN, REMOVE_PLAN } from '@logbook/shared/coach-copy';
+import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN, PLAN_ADJUSTMENT_REMINDER, REMOVE_PLAN } from '@logbook/shared/coach-copy';
 import { URGENCY_LABEL } from '@logbook/shared/roster';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -848,6 +848,37 @@ export function UnifiedClientProfile() {
 
         {/* Final week / plan complete — the block's end is the coach's
             next real decision, so it gets said before anything else */}
+        {/* A promised plan adjustment that has not happened yet. Goes away on
+            its own once the plan is edited or replaced. */}
+        {apiClient.planAdjustmentOwed && (
+          <div
+            role="status"
+            className="flex flex-col gap-3 rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between animate-enter"
+          >
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-warning-text font-medium antialiased">
+                {PLAN_ADJUSTMENT_REMINDER.eyebrow}
+              </p>
+              <p className="text-sm mt-1 antialiased">
+                {/* From the client record, not the plan fetch: that one may
+                    still be loading, which is not the same as "no plan" */}
+                {(apiClient.activePlan ? PLAN_ADJUSTMENT_REMINDER.body : PLAN_ADJUSTMENT_REMINDER.noPlan)(
+                  firstName,
+                  format(new Date(apiClient.planAdjustmentOwed.promisedAt), 'MMM d')
+                )}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={apiClient.activePlan ? handleEditPlan : handleChangePlan}
+              className="shrink-0 self-start sm:self-auto active:scale-[0.96] transition-transform duration-150"
+            >
+              {apiClient.activePlan ? PLAN_ADJUSTMENT_REMINDER.action : 'Assign plan'}
+            </Button>
+          </div>
+        )}
+
         {plan && planSummary && planEndsOn && (isFinalWeek || planEnded) && (
         <div className="animate-enter" style={{ animationDelay: '30ms' }}>
           <SectionCard>

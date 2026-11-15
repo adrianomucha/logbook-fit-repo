@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withCoach } from "@/lib/middleware/withAuth";
 import prisma from "@/lib/prisma";
+import { markPlanEdited } from "@/lib/plan-edits";
 import { Session } from "next-auth";
 import { parseBody } from "@/lib/validations/parseBody";
 import { addWorkoutExerciseSchema } from "@/lib/validations/schemas";
@@ -80,6 +81,8 @@ export const POST = withCoach(
         },
       },
     });
+
+    await markPlanEdited(day.week.plan.id);
 
     return NextResponse.json(workoutExercise, { status: 201 });
   }

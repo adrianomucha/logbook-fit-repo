@@ -6,6 +6,7 @@ import { ensureScheduledCheckIn } from "@/lib/checkin-schedule";
 import { endCoachClientRelationship } from "@/lib/relationship-termination";
 import { deleteSampleClient } from "@/lib/sample-client";
 import { getClientUrgency } from "@/lib/urgency";
+import { planAdjustmentOwed } from "@logbook/shared/plan-adjustment";
 
 /**
  * GET /api/coach/clients/[id]
@@ -60,6 +61,9 @@ export const GET = withCoach(
             name: true,
             description: true,
             durationWeeks: true,
+            // When the plan last changed: edited, or assigned if never edited
+            editedAt: true,
+            createdAt: true,
           },
         },
         completions: {
@@ -208,6 +212,11 @@ export const GET = withCoach(
       urgency,
       planStatus,
       activePlanCompletions,
+      // The coach ticked "I'll adjust the plan" and the plan has not changed
+      planAdjustmentOwed: planAdjustmentOwed(
+        client.checkIns,
+        client.activePlan ? client.activePlan.editedAt ?? client.activePlan.createdAt : null
+      ),
     });
   }
 );
