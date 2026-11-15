@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Check, Loader2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { cn } from '@/lib/utils';
 import { WAITLIST_NEXT_STEPS } from '@/lib/landing-copy';
+import { readAttribution, trackFunnel } from '@/lib/funnel';
 
 /** Buckets for the confirmation-screen question. Values match `waitlistQualifySchema`. */
 const CLIENT_COUNTS = [
@@ -27,37 +28,6 @@ const CURRENT_TOOLS = [
   { value: 'everfit', label: 'Everfit' },
   { value: 'other-app', label: 'Another app' },
 ] as const;
-
-/**
- * Reads campaign attribution from the current URL, falling back to the
- * referring host so an untagged link from a forum or newsletter still lands
- * in a bucket instead of "unknown". `pageCampaign` names the page the form
- * sits on, for signups whose link carried no utm_campaign of its own.
- */
-function readAttribution(pageCampaign?: string) {
-  if (typeof window === 'undefined') return {};
-
-  const params = new URLSearchParams(window.location.search);
-  const referrer = document.referrer || undefined;
-
-  let referrerHost: string | undefined;
-  if (referrer) {
-    try {
-      const url = new URL(referrer);
-      // Same-origin navigations say nothing about acquisition.
-      if (url.host !== window.location.host) referrerHost = url.host;
-    } catch {
-      // A malformed referrer is not worth failing a signup over.
-    }
-  }
-
-  return {
-    source: params.get('utm_source') ?? referrerHost ?? 'direct',
-    medium: params.get('utm_medium') ?? undefined,
-    campaign: params.get('utm_campaign') ?? pageCampaign,
-    referrer,
-  };
-}
 
 /**
  * Email capture for the public landing pages. Posts to /api/waitlist, then
@@ -80,6 +50,18 @@ export function WaitlistForm({
     'idle' | 'loading' | 'qualify' | 'tool' | 'done'
   >('idle');
   const [error, setError] = useState<'registered' | string>('');
+
+  // Funnel: one "started" per page view, on the first character typed
+  const startedRef = useRef(false);
+  const funnelProps = () => {
+    const from = readAttribution(campaign);
+    return { source: from.source, medium: from.medium, campaign: from.campaign };
+  };
+  const markStarted = () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackFunnel('Waitlist started', funnelProps());
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +90,7 @@ export function WaitlistForm({
         return;
       }
 
+      trackFunnel('Waitlist joined', funnelProps());
       setStatus('qualify');
     } catch {
       setError('Something went wrong. Please try again.');
@@ -203,7 +186,7 @@ export function WaitlistForm({
               type="button"
               onClick={() => question.pick(option.value)}
               style={{ animationDelay: `${150 + i * 50}ms` }}
-              className="animate-fade-in-up rounded-lg border-2 border-brand-foreground/30 px-3.5 py-2 font-mono text-xs font-medium uppercase tracking-[0.08em] antialiased transition-colors hover:border-brand-foreground hover:bg-brand-foreground hover:text-brand active:scale-[0.97]"
+              className="animate-fade-in-up min-h-11 rounded-lg border-2 border-brand-foreground/30 px-3.5 font-mono text-xs font-medium uppercase tracking-[0.08em] antialiased transition-[color,background-color,border-color,transform] duration-150 ease-out-strong hover:border-brand-foreground hover:bg-brand-foreground hover:text-brand active:scale-[0.97] active:border-brand-foreground"
             >
               {option.label}
             </button>
@@ -212,7 +195,7 @@ export function WaitlistForm({
         <button
           type="button"
           onClick={question.skip}
-          className="mt-4 text-sm text-brand-foreground/60 antialiased underline-offset-4 transition-colors hover:text-brand-foreground hover:underline"
+          className="mt-1 inline-flex min-h-11 items-center text-sm text-brand-foreground/60 antialiased underline-offset-4 transition-colors hover:text-brand-foreground hover:underline active:text-brand-foreground"
         >
           Skip
         </button>
@@ -251,9 +234,19 @@ export function WaitlistForm({
           id={inputId}
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            markStarted();
+            setEmail(e.target.value);
+          }}
           placeholder="you@example.com"
           autoComplete="email"
+          // The phone keyboard: an email layout, a Send key, and no
+          // capitalising or correcting an address
+          inputMode="email"
+          enterKeyHint="send"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           required
           className="h-11 flex-1"
         />
@@ -262,7 +255,7 @@ export function WaitlistForm({
           disabled={status === 'loading'}
           className={cn(
             'h-11 shrink-0 bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground',
-            'hover:bg-brand/90 active:scale-[0.97] transition-[background-color,transform] duration-150 ease-out'
+            'hover:bg-brand/90'
           )}
         >
           {status === 'loading' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

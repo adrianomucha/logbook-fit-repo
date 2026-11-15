@@ -18,12 +18,22 @@ import {
 } from 'lucide-react';
 import { TallyMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
-import { apiFetch } from '@/lib/api-client';
+import { toast } from 'sonner';
+import { mutate as globalMutate } from 'swr';
+import { PLAN_SAVE_ERROR } from '@logbook/shared/coach-copy';
+import { apiFetch, ApiError } from '@/lib/api-client';
 import { parsePrescriptionInput } from '@/lib/reps';
 import { groupBySuperset, isSuperset } from '@/lib/superset';
 import { WorkoutPlan, Exercise } from '@/types';
 import { ExerciseCard } from './ExerciseCard';
 import { ExerciseEditorContent } from './ExerciseEditorDrawer';
+
+/**
+ * Exercise cards fade up one after another, but only the first few are
+ * staggered. Past that they arrive together, so a long day does not take
+ * most of a second to finish appearing.
+ */
+const MAX_STAGGERED = 6;
 
 interface PlanEditorDrawerProps {
   open: boolean;
@@ -150,9 +160,11 @@ export function PlanEditorDrawer({
     setExerciseDrawerOpen(true);
   };
 
-  // Save exercise (new or update) — persists via API
-  const handleSaveExercise = async (exercise: Exercise) => {
-    if (!plan || !currentDay || isSaving) return;
+  // Save exercise (new or update): persists via API. Resolves false when the
+  // save failed, so the editor stays open with the coach's work in it.
+  const handleSaveExercise = async (exercise: Exercise): Promise<boolean> => {
+    if (!plan || !currentDay || isSaving) return false;
+    const isUpdate = editingExerciseIndex !== null;
     const dayId = currentDay.id;
     setIsSaving(true);
 
@@ -160,6 +172,27 @@ export function PlanEditorDrawer({
     // "6-8" reps, or "30-60s" seconds for time-based exercises.
     const trackingType = exercise.trackingType ?? 'REPS';
     const { reps, repsMax } = parsePrescriptionInput(exercise.reps, trackingType);
+
+    // Find-or-create the exercise in the coach's library by name
+    const resolveLibraryExerciseId = async (): Promise<string> => {
+      try {
+        const created = await apiFetch<{ id: string }>('/api/exercises', {
+          method: 'POST',
+          body: JSON.stringify({ name: exercise.name, trackingType }),
+        });
+        return created.id;
+      } catch (err) {
+        // 409 = already in the coach's library, so look it up. Anything
+        // else is a real failure.
+        if (!(err instanceof ApiError && err.status === 409)) throw err;
+        const results = await apiFetch<{ id: string; name: string }[]>(
+          `/api/exercises?search=${encodeURIComponent(exercise.name)}`
+        );
+        const match = results.find((e) => e.name.toLowerCase() === exercise.name.toLowerCase());
+        if (!match) throw new Error('Could not find or create exercise');
+        return match.id;
+      }
+    };
 
     try {
       if (editingExerciseIndex !== null) {
@@ -180,24 +213,7 @@ export function PlanEditorDrawer({
         });
       } else {
         // New exercise: find-or-create in the library, then add to day
-        let libraryExerciseId: string;
-        try {
-          const created = await apiFetch<{ id: string }>('/api/exercises', {
-            method: 'POST',
-            body: JSON.stringify({ name: exercise.name, trackingType }),
-          });
-          libraryExerciseId = created.id;
-        } catch {
-          // 409 = already exists — search for it
-          const results = await apiFetch<{ id: string; name: string }[]>(
-            `/api/exercises?search=${encodeURIComponent(exercise.name)}`
-          );
-          const match = results.find(
-            (e) => e.name.toLowerCase() === exercise.name.toLowerCase()
-          );
-          if (!match) throw new Error('Could not find or create exercise');
-          libraryExerciseId = match.id;
-        }
+        const libraryExerciseId = await resolveLibraryExerciseId();
 
         await apiFetch(`/api/days/${dayId}/exercises`, {
           method: 'POST',
@@ -216,17 +232,21 @@ export function PlanEditorDrawer({
       }
     } catch (err) {
       console.error('Failed to save exercise:', err);
-      return; // Don't refresh on error
+      toast.error(isUpdate ? PLAN_SAVE_ERROR.updateExercise : PLAN_SAVE_ERROR.addExercise);
+      return false; // Don't refresh on error
     } finally {
       setIsSaving(false);
     }
 
     onRefresh?.();
+    // The picker lists the coach's own exercises; this one may be new to it
+    void globalMutate('/api/exercises');
+    return true;
   };
 
-  // Delete exercise — persists via API
-  const handleDeleteExercise = async () => {
-    if (!plan || editingExerciseIndex === null || !currentDay || isSaving) return;
+  // Delete exercise: persists via API. Resolves false when it failed.
+  const handleDeleteExercise = async (): Promise<boolean> => {
+    if (!plan || editingExerciseIndex === null || !currentDay || isSaving) return false;
     const exerciseToDelete = currentDay.exercises[editingExerciseIndex];
     setIsSaving(true);
 
@@ -236,12 +256,14 @@ export function PlanEditorDrawer({
       });
     } catch (err) {
       console.error('Failed to delete exercise:', err);
-      return;
+      toast.error(PLAN_SAVE_ERROR.removeExercise);
+      return false;
     } finally {
       setIsSaving(false);
     }
 
     onRefresh?.();
+    return true;
   };
 
   // Commit the plan name to the API on blur
@@ -256,8 +278,9 @@ export function PlanEditorDrawer({
       // Refresh parent list so card title updates too
       onUpdatePlan({ ...plan, name: trimmed, updatedAt: new Date().toISOString() });
     } catch {
-      // Revert on error
+      // Revert on error, and say so: a silent revert reads as a glitch
       setLocalPlanName(plan.name);
+      toast.error(PLAN_SAVE_ERROR.planName);
     }
   };
 
@@ -271,8 +294,8 @@ export function PlanEditorDrawer({
       });
       onRefresh?.();
     } catch {
-      // Revert on error
       setLocalDayName(currentDay.name || '');
+      toast.error(PLAN_SAVE_ERROR.dayName);
     }
   };
 
@@ -290,6 +313,7 @@ export function PlanEditorDrawer({
       onRefresh?.();
     } catch {
       setLocalDayDescription(currentDay.description || '');
+      toast.error(PLAN_SAVE_ERROR.dayDescription);
     }
   };
 
@@ -350,7 +374,7 @@ export function PlanEditorDrawer({
             </div>
             <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-center">
               <p className="text-sm text-muted-foreground antialiased">{error}</p>
-              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="active:scale-[0.96] transition-transform duration-150">
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
             </div>
@@ -373,7 +397,7 @@ export function PlanEditorDrawer({
               <p className="text-xs text-muted-foreground antialiased">
                 Try deleting it and creating a new one
               </p>
-              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} className="active:scale-[0.96] transition-transform duration-150">
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
                 Close
               </Button>
             </div>
@@ -484,7 +508,7 @@ export function PlanEditorDrawer({
                         size="icon"
                         aria-label="Previous week"
                         className={cn(
-                          'h-7 w-7 shrink-0 rounded-md active:scale-[0.96] transition-[background-color,color,transform,opacity]',
+                          'h-7 w-7 shrink-0 rounded-md transition-[background-color,color,transform,opacity]',
                           selectedWeek === 0 && 'opacity-30 pointer-events-none'
                         )}
                         onClick={goToPrevWeek}
@@ -497,7 +521,7 @@ export function PlanEditorDrawer({
                         size="icon"
                         aria-label="Next week"
                         className={cn(
-                          'h-7 w-7 shrink-0 rounded-md active:scale-[0.96] transition-[background-color,color,transform,opacity]',
+                          'h-7 w-7 shrink-0 rounded-md transition-[background-color,color,transform,opacity]',
                           selectedWeek === plan.weeks.length - 1 && 'opacity-30 pointer-events-none'
                         )}
                         onClick={goToNextWeek}
@@ -699,7 +723,7 @@ export function PlanEditorDrawer({
                       <Button
                         onClick={handleAddExercise}
                         size="lg"
-                        className="active:scale-[0.96] transition-transform duration-150 shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
+                        className="shadow-[0_2px_8px_rgba(0,0,0,0.12)]"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add First Exercise
@@ -718,7 +742,7 @@ export function PlanEditorDrawer({
                               <div
                                 key={group[0].id}
                                 className="animate-fade-in-up"
-                                style={{ animationDelay: `${baseIdx * 40}ms`, animationFillMode: 'backwards' }}
+                                style={{ animationDelay: `${Math.min(baseIdx, MAX_STAGGERED) * 40}ms`, animationFillMode: 'backwards' }}
                               >
                                 <ExerciseCard
                                   exercise={group[0]}
@@ -733,7 +757,7 @@ export function PlanEditorDrawer({
                             <div
                               key={group[0].id}
                               className="animate-fade-in-up py-2"
-                              style={{ animationDelay: `${baseIdx * 40}ms`, animationFillMode: 'backwards' }}
+                              style={{ animationDelay: `${Math.min(baseIdx, MAX_STAGGERED) * 40}ms`, animationFillMode: 'backwards' }}
                             >
                               <div className="flex items-center gap-1.5 px-4 sm:px-5 pb-1">
                                 <Link2 className="w-3 h-3 text-muted-foreground/60" />

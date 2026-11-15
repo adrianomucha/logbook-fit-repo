@@ -24,7 +24,11 @@ export const GET = withCoach(
       where: { ...coachScope(coachProfileId), sourceTemplateId: null },
       include: {
         weeks: {
-          select: { id: true, weekNumber: true },
+          select: {
+            id: true,
+            weekNumber: true,
+            days: { select: { _count: { select: { exercises: true } } } },
+          },
           orderBy: { weekNumber: "asc" },
         },
         // Legacy direct assignments (pre clone-on-assign)
@@ -65,6 +69,12 @@ export const GET = withCoach(
     return NextResponse.json(
       plans.map((p) => ({
         ...p,
+        // The per-day counts only exist to add up; the list stays light
+        weeks: p.weeks.map(({ id, weekNumber }) => ({ id, weekNumber })),
+        exerciseCount: p.weeks.reduce(
+          (sum, w) => sum + w.days.reduce((s, d) => s + d._count.exercises, 0),
+          0
+        ),
         assignedTo: [...p.assignedTo, ...(byTemplate.get(p.id) ?? [])],
       }))
     );

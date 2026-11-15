@@ -39,7 +39,8 @@ export function ImageSlot({
   const revealAttr = reveal ? { 'data-reveal': '' } : {};
   if (src) {
     return (
-      <div {...revealAttr} className={cn('relative overflow-hidden', className)}>
+      // bg-muted: a quiet block where the photo will be, not a hole in the page
+      <div {...revealAttr} className={cn('relative overflow-hidden bg-muted', className)}>
         <Image
           src={src}
           alt={alt ?? label}

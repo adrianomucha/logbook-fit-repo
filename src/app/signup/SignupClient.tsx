@@ -1,6 +1,7 @@
 'use client';
 
-import { Suspense, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect, useRef } from 'react';
+import { signupKind, trackFunnel } from '@/lib/funnel';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { signIn, signOut } from 'next-auth/react';
@@ -162,6 +163,15 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Funnel: one "started" per visit, on the first character typed
+  const startedRef = useRef(false);
+  const kind = signupKind(inviteToken, betaToken);
+  const markStarted = () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackFunnel('Signup started', { kind });
+  };
+
   // Validate whichever token is present on mount (client invite wins if both)
   useEffect(() => {
     if (!inviteToken && !betaToken) {
@@ -241,6 +251,8 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
         setIsSubmitting(false);
         return;
       }
+
+      trackFunnel('Signup completed', { kind });
 
       // Auto-login
       const loginResult = await signIn('credentials', {
@@ -490,7 +502,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               type="button"
               onClick={handleAccept}
               disabled={isSubmitting}
-              className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground transition-transform duration-150 hover:bg-brand/90 active:scale-[0.98]"
+              className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90"
             >
               {isSubmitting ? (
                 <>
@@ -552,7 +564,10 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             id="name"
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={(e) => {
+              markStarted();
+              setName(e.target.value);
+            }}
             placeholder="Your name"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
@@ -565,7 +580,10 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             id="email"
             type="email"
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => {
+              markStarted();
+              setEmail(e.target.value);
+            }}
             placeholder="you@example.com"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
@@ -582,7 +600,10 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             id="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              markStarted();
+              setPassword(e.target.value);
+            }}
             placeholder="Make it a strong one"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
@@ -614,7 +635,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground transition-transform duration-150 hover:bg-brand/90 active:scale-[0.98]"
+            className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90"
           >
             {isSubmitting ? (
               <>

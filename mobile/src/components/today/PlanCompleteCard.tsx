@@ -1,10 +1,9 @@
-import { useEffect } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import type { WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { formatTrainingTime, summarizeCompletedPlan } from '@logbook/shared/plan-summary';
 import { Button, Card, Eyebrow } from '@/components/ui';
+import { MeterFill, PopIn, PressableScale } from '@/components/motion';
 
 interface PlanCompleteCardProps {
   plan: WorkoutPlan;
@@ -32,13 +31,6 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
     stats.push([avgSessionMin, 'min avg workout']);
   }
 
-  // Meter fills in from the left; reanimated skips it under Reduce Motion
-  const fill = useSharedValue(0);
-  useEffect(() => {
-    fill.value = withDelay(150, withTiming(pct, { duration: 700, easing: Easing.bezier(0.22, 1, 0.36, 1) }));
-  }, [pct, fill]);
-  const fillStyle = useAnimatedStyle(() => ({ width: `${fill.value}%` }));
-
   return (
     <Card>
       {/* Header — eyebrow + plan name, volt flag as the celebration mark */}
@@ -49,9 +41,9 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
           </Eyebrow>
           <Text className="mt-2.5 font-sans-bold text-[26px] leading-[30px] tracking-tight text-foreground">{plan.name}</Text>
         </View>
-        <View className="h-11 w-11 items-center justify-center rounded-full bg-brand">
+        <PopIn className="h-11 w-11 items-center justify-center rounded-full bg-brand">
           <Feather name="flag" size={20} color="#1e2702" />
-        </View>
+        </PopIn>
       </View>
 
       {planned > 0 ? (
@@ -64,7 +56,8 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
             </Text>
           </View>
           <View className="mt-4 h-1.5 overflow-hidden rounded-full bg-muted" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
-            <Animated.View className="h-full rounded-full bg-brand" style={fillStyle} />
+            {/* Fills in from the left; skipped under Reduce Motion */}
+            <MeterFill pct={pct} from={0} delay={150} duration={700} />
           </View>
           <Text className="mt-3 font-sans text-sm text-muted-foreground">{missNote}</Text>
         </>
@@ -92,13 +85,13 @@ export function PlanCompleteCard({ plan, completions, coachName, onMessageCoach,
         <Button onPress={onMessageCoach} className="mt-4 h-11">
           {`Message ${coachFirst ?? 'coach'}`}
         </Button>
-        <Pressable
+        <PressableScale
           accessibilityRole="button"
           onPress={onViewProgress}
-          className="mt-2 h-11 items-center justify-center rounded-xl border border-border active:opacity-70"
+          className="mt-2 h-11 items-center justify-center rounded-xl border border-border"
         >
           <Text className="font-sans-semibold text-sm text-foreground">See your progress</Text>
-        </Pressable>
+        </PressableScale>
       </View>
     </Card>
   );

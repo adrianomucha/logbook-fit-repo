@@ -61,7 +61,7 @@ import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { coachOpeners } from '@logbook/shared/client-profile';
 import { newPlanHint } from '@logbook/shared/urgency';
 import { getCurrentWeekNumber, getPlanEndsOn, getPlanProgressStatus, getPlanStartDay, getPlanStartsOn, getWeekDays, getWeekProgress } from '@/lib/workout-week-helpers';
-import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN } from '@logbook/shared/coach-copy';
+import { CHECKIN_ACTION, CHECKIN_STATUS, CREATE_PLAN, PLAN_ADJUSTMENT_REMINDER, REMOVE_PLAN } from '@logbook/shared/coach-copy';
 import { URGENCY_LABEL } from '@logbook/shared/roster';
 
 // Compact relative-day label for the vitals strip — "Today", "1d ago", …
@@ -179,7 +179,7 @@ export function UnifiedClientProfile() {
   const [isContinuingPlan, setIsContinuingPlan] = useState(false);
   // A plan picked (or just created) for the client, waiting on the coach's
   // choice of start: today or next Monday
-  const [pendingAssign, setPendingAssign] = useState<{ planId: string; planName?: string } | null>(null);
+  const [pendingAssign, setPendingAssign] = useState<{ planId: string; planName?: string; isNew?: boolean } | null>(null);
   const [startChoice, setStartChoice] = useState<StartChoice>('today');
   // Optimistic override for the check-in schedule settings (null = follow server)
   const [scheduleOverride, setScheduleOverride] =
@@ -294,6 +294,7 @@ export function UnifiedClientProfile() {
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
         isTemplate: true,
+        exerciseCount: p.exerciseCount,
       })),
     [coachPlans]
   );
@@ -438,6 +439,7 @@ export function UnifiedClientProfile() {
       await apiFetch(`/api/coach/clients/${clientId}/plan`, { method: 'DELETE' });
       refreshClient();
       refreshPlan();
+      toast.success(REMOVE_PLAN.done(client?.name?.split(' ')[0]));
     } catch {
       toast.error('Failed to remove the plan. Please try again.');
     }
@@ -451,9 +453,9 @@ export function UnifiedClientProfile() {
 
   // Week 1 is either what's left of this week or a full week from Monday;
   // the coach decides, preselected by the client's weekday
-  const askWhenItStarts = (planId: string, planName?: string) => {
+  const askWhenItStarts = (planId: string, planName?: string, isNew = false) => {
     setStartChoice(defaultPlanStart(apiClient?.user.timezone));
-    setPendingAssign({ planId, planName });
+    setPendingAssign({ planId, planName, isNew });
   };
 
   const handlePlanCreated = async (formData: import('@/types').PlanSetupFormData) => {
@@ -473,7 +475,9 @@ export function UnifiedClientProfile() {
     setShowPlanSetupModal(false);
     refreshCoachPlans();
     // Assigned once the coach picks when it starts
-    askWhenItStarts(newPlan.id, newPlan.name);
+    // Just created, so it is empty on purpose: the coach builds it on the
+    // client's copy. The server refuses any other empty plan.
+    askWhenItStarts(newPlan.id, newPlan.name, true);
   };
 
   // The finished plan is working — run it again rather than build a new block.
@@ -516,10 +520,17 @@ export function UnifiedClientProfile() {
     try {
       await apiFetch(`/api/plans/${pendingAssign.planId}/assign`, {
         method: 'POST',
-        body: JSON.stringify({ clientProfileId: clientId, startOn: startChoice }),
+        body: JSON.stringify({
+          clientProfileId: clientId,
+          startOn: startChoice,
+          ...(pendingAssign.isNew ? { allowEmpty: true } : {}),
+        }),
       });
-    } catch {
-      toast.error('Failed to assign plan. Please try again.');
+    } catch (e) {
+      // 409 = the plan has no exercises; the server's sentence says so
+      toast.error(
+        e instanceof ApiError && e.status === 409 ? e.message : 'Failed to assign plan. Please try again.'
+      );
       return;
     }
     // The assignment is saved; refreshing is best-effort, so a flaky
@@ -616,7 +627,6 @@ export function UnifiedClientProfile() {
           <StateView fill art={CLIENT_NOT_FOUND_COPY.art} title={CLIENT_NOT_FOUND_COPY.title} tail={CLIENT_NOT_FOUND_COPY.tail}>
             <Button
               onClick={() => router.push('/coach')}
-              className="active:scale-[0.96] transition-transform duration-150"
             >
               {CLIENT_NOT_FOUND_COPY.back}
             </Button>
@@ -838,8 +848,39 @@ export function UnifiedClientProfile() {
 
         {/* Final week / plan complete — the block's end is the coach's
             next real decision, so it gets said before anything else */}
+        {/* A promised plan adjustment that has not happened yet. Goes away on
+            its own once the plan is edited or replaced. */}
+        {apiClient.planAdjustmentOwed && (
+          <div
+            role="status"
+            className="flex flex-col gap-3 rounded-2xl border border-warning/40 bg-warning/10 px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between animate-enter"
+          >
+            <div className="min-w-0">
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-warning-text font-medium antialiased">
+                {PLAN_ADJUSTMENT_REMINDER.eyebrow}
+              </p>
+              <p className="text-sm mt-1 antialiased">
+                {/* From the client record, not the plan fetch: that one may
+                    still be loading, which is not the same as "no plan" */}
+                {(apiClient.activePlan ? PLAN_ADJUSTMENT_REMINDER.body : PLAN_ADJUSTMENT_REMINDER.noPlan)(
+                  firstName,
+                  format(new Date(apiClient.planAdjustmentOwed.promisedAt), 'MMM d')
+                )}
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={apiClient.activePlan ? handleEditPlan : handleChangePlan}
+              className="shrink-0 self-start sm:self-auto active:scale-[0.96] transition-transform duration-150"
+            >
+              {apiClient.activePlan ? PLAN_ADJUSTMENT_REMINDER.action : 'Assign plan'}
+            </Button>
+          </div>
+        )}
+
         {plan && planSummary && planEndsOn && (isFinalWeek || planEnded) && (
-        <div className="animate-enter" style={{ animationDelay: '60ms' }}>
+        <div className="animate-enter" style={{ animationDelay: '30ms' }}>
           <SectionCard>
             {planEnded ? (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -870,7 +911,7 @@ export function UnifiedClientProfile() {
                     setShowContinueConfirm(true);
                   }}
                   disabled={isContinuingPlan}
-                  className="shrink-0 self-start sm:self-auto active:scale-[0.96] transition-transform duration-150"
+                  className="shrink-0 self-start sm:self-auto"
                 >
                   <RotateCcw className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
                   {isContinuingPlan ? 'Starting…' : 'Run it again'}
@@ -899,7 +940,6 @@ export function UnifiedClientProfile() {
                       setChatPrefill('You’re into the final week of this block. What do you want the next one to focus on?');
                       chatRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                     }}
-                    className="active:scale-[0.96] transition-transform duration-150"
                   >
                     <MessageCircle className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
                     Ask about next block
@@ -907,7 +947,6 @@ export function UnifiedClientProfile() {
                   <Button
                     variant="outline"
                     onClick={() => router.push('/coach?view=plans')}
-                    className="active:scale-[0.96] transition-transform duration-150"
                   >
                     {CREATE_PLAN}
                   </Button>
@@ -921,7 +960,7 @@ export function UnifiedClientProfile() {
         {/* At-a-glance vitals — where the client is, how consistent they've
             been, what they last did, and where the check-in stands */}
         {plan && weekProgress && (
-        <div className="animate-enter" style={{ animationDelay: '100ms' }}>
+        <div className="animate-enter" style={{ animationDelay: '60ms' }}>
           <SectionCard>
             {/* Once the plan has ended, the banner above carries the plan,
                 the adherence and the final week — the strip keeps only what
@@ -1059,7 +1098,7 @@ export function UnifiedClientProfile() {
           || activeCheckIn?.status === 'responded'
           || (!activeCheckIn && primaryAction?.kind !== 'send')
         ) && (
-        <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '140ms' }}>
+        <section ref={checkInRef} className="animate-enter" style={{ animationDelay: '90ms' }}>
           {/* The flags list titles itself; a "Check-in" label over it would mislabel it */}
           {!(activeCheckIn?.status === 'pending' && !justSentCheckIn) && (
             <SectionLabel>{activeCheckIn ? 'Latest check-in' : 'Check-in'}</SectionLabel>
@@ -1091,7 +1130,7 @@ export function UnifiedClientProfile() {
             the pairing tidy on desktop; one column through tablet widths,
             where two columns wrapped the tab labels and truncated the plan
             name. */}
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '200ms' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 animate-enter" style={{ animationDelay: '120ms' }}>
           {/* Messages */}
           <section className="lg:col-span-2">
             <div ref={chatRef} className={cn(
@@ -1191,11 +1230,11 @@ export function UnifiedClientProfile() {
                         {/* -ms cancels the first button's padding so the
                             stacked row's icon sits flush with the title */}
                         <div className="flex items-center gap-0.5 shrink-0 -ms-2.5 sm:ms-0">
-                          <Button variant="ghost" size="sm" onClick={handleChangePlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
+                          <Button variant="ghost" size="sm" onClick={handleChangePlan} className="ps-2.5 text-muted-foreground hover:text-foreground tap-target">
                             <ArrowLeftRight className="w-3.5 h-3.5 me-1.5" />
                             Change
                           </Button>
-                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="ps-2.5 text-muted-foreground hover:text-foreground active:scale-[0.96] transition-transform duration-150 tap-target">
+                          <Button variant="ghost" size="sm" onClick={handleEditPlan} className="ps-2.5 text-muted-foreground hover:text-foreground tap-target">
                             <Pencil className="w-3.5 h-3.5 me-1.5" />
                             Edit
                           </Button>

@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useId, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { useDialogBehavior } from '@/hooks/useDialogBehavior';
+import { useExitAnimation } from '@/hooks/useExitAnimation';
 import { Button } from './button';
 
 /** How long the exit animation runs before the panel unmounts. */
@@ -35,24 +36,7 @@ export function Modal({
   // panel can animate out. The dialog behavior hook keys off isOpen, so the
   // scroll lock and focus restore still release immediately on close; the
   // lingering panel is made inert with pointer-events-none.
-  const [isClosing, setIsClosing] = useState(false);
-  const [shouldRender, setShouldRender] = useState(isOpen);
-  const closeTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  useEffect(() => {
-    if (isOpen) {
-      clearTimeout(closeTimerRef.current);
-      setShouldRender(true);
-      setIsClosing(false);
-      return;
-    }
-    if (!shouldRender) return;
-    setIsClosing(true);
-    closeTimerRef.current = setTimeout(() => {
-      setShouldRender(false);
-      setIsClosing(false);
-    }, CLOSE_MS);
-    return () => clearTimeout(closeTimerRef.current);
-  }, [isOpen, shouldRender]);
+  const { shouldRender, isClosing } = useExitAnimation(isOpen, CLOSE_MS);
 
   if (!shouldRender) return null;
 

@@ -496,9 +496,17 @@ describe("clientRespondSchema", () => {
     const result = clientRespondSchema.safeParse({
       effortRating: "HARD",
       painBlockers: "Knee pain during squats",
-      clientFeeling: "Good overall",
+      clientFeeling: "TIRED",
     });
     expect(result.success).toBe(true);
+  });
+
+  it("accepts each of the four body feelings and nothing else", () => {
+    for (const clientFeeling of ["FRESH", "NORMAL", "TIRED", "RUN_DOWN"]) {
+      expect(clientRespondSchema.safeParse({ clientFeeling }).success).toBe(true);
+    }
+    expect(clientRespondSchema.safeParse({ clientFeeling: "Good overall" }).success).toBe(false);
+    expect(clientRespondSchema.safeParse({ clientFeeling: "" }).success).toBe(false);
   });
 
   it("accepts empty object (all optional)", () => {
@@ -511,11 +519,9 @@ describe("clientRespondSchema", () => {
     expect(result.success).toBe(false);
   });
 
-  it("rejects painBlockers over 1000 characters", () => {
-    const result = clientRespondSchema.safeParse({
-      painBlockers: "a".repeat(1001),
-    });
-    expect(result.success).toBe(false);
+  it("caps painBlockers at the column's 500 characters", () => {
+    expect(clientRespondSchema.safeParse({ painBlockers: "a".repeat(500) }).success).toBe(true);
+    expect(clientRespondSchema.safeParse({ painBlockers: "a".repeat(501) }).success).toBe(false);
   });
 });
 
@@ -530,6 +536,17 @@ describe("coachRespondSchema", () => {
       planAdjustment: true,
     });
     expect(result.success).toBe(true);
+  });
+
+  it("requires a reply with something in it", () => {
+    expect(coachRespondSchema.safeParse({}).success).toBe(false);
+    expect(coachRespondSchema.safeParse({ coachFeedback: "" }).success).toBe(false);
+    expect(coachRespondSchema.safeParse({ coachFeedback: "   " }).success).toBe(false);
+  });
+
+  it("trims the reply", () => {
+    const result = coachRespondSchema.safeParse({ coachFeedback: "  Nice week.  " });
+    expect(result.success && result.data.coachFeedback).toBe("Nice week.");
   });
 
   it("rejects feedback over 2000 characters", () => {
@@ -736,12 +753,10 @@ describe("flagExerciseSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects note over 500 characters", () => {
-    const result = flagExerciseSchema.safeParse({
-      workoutExerciseId: validUuid,
-      note: "a".repeat(501),
-    });
-    expect(result.success).toBe(false);
+  it("caps the note at the column's 200 characters", () => {
+    const base = { workoutExerciseId: "550e8400-e29b-41d4-a716-446655440000" };
+    expect(flagExerciseSchema.safeParse({ ...base, note: "a".repeat(200) }).success).toBe(true);
+    expect(flagExerciseSchema.safeParse({ ...base, note: "a".repeat(201) }).success).toBe(false);
   });
 });
 

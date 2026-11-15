@@ -33,7 +33,7 @@ export const PUT = withCoach(
       const duplicate = await prisma.exercise.findFirst({
         where: {
           coachId: coachProfileId,
-          name,
+          name: { equals: name, mode: "insensitive" },
           deletedAt: null,
           NOT: { id: exerciseId },
         },
@@ -61,5 +61,33 @@ export const PUT = withCoach(
     });
 
     return NextResponse.json(exercise);
+  }
+);
+
+/**
+ * DELETE /api/exercises/[id]
+ * Removes an exercise from the coach's library. A soft delete: plans that
+ * already use it keep it, name and all; it just stops being offered.
+ */
+export const DELETE = withCoach(
+  async (
+    _req: Request,
+    ctx: { params: Record<string, string> },
+    _session: Session,
+    coachProfileId: string
+  ) => {
+    const exerciseId = ctx.params.id;
+
+    const owned = await verifyCoachOwnership(coachProfileId, "exercise", exerciseId);
+    if (!owned) {
+      return NextResponse.json({ error: "Exercise not found" }, { status: 404 });
+    }
+
+    await prisma.exercise.update({
+      where: { id: exerciseId },
+      data: { deletedAt: new Date() },
+    });
+
+    return NextResponse.json({ success: true });
   }
 );

@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Pressable, Text, TextInput, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { Text, TextInput, View } from 'react-native';
+import { haptic } from '@/lib/haptics';
 import type { TrackingType } from '@logbook/shared/reps';
 import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook/shared/workout-execution';
 import { fromDisplayWeight, toDisplayWeight, type WeightUnit } from '@logbook/shared/weight-units';
+import { PRESS_SCALE_SMALL } from '@logbook/shared/motion';
+import { CheckCircle, PressableScale } from '@/components/motion';
 import { SetTimer } from './SetTimer';
 import { KEYPAD_DONE_BAR_ID } from './KeypadDoneBar';
 
@@ -96,7 +97,7 @@ export function SetRow({
       if (!Number.isNaN(r) && r >= 0) onChangeReps?.(r);
       const w = parseFloat(weight);
       if (!Number.isNaN(w) && w >= 0) logWeight(w);
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      haptic.tap();
     }
     onToggle();
   };
@@ -110,7 +111,7 @@ export function SetRow({
     onChangeReps?.(seconds);
     const w = parseFloat(weight);
     if (!Number.isNaN(w) && w >= 0) logWeight(w);
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    haptic.tap();
     onToggle();
   };
 
@@ -163,20 +164,17 @@ export function SetRow({
         selectTextOnFocus
         accessibilityLabel={`Set ${setNumber} ${isTime ? 'seconds' : 'reps'}`}
       />
-      <Pressable
+      <PressableScale
+        scaleTo={PRESS_SCALE_SMALL}
         onPress={toggle}
         disabled={isReadOnly}
         accessibilityRole="button"
         accessibilityState={{ checked: completed }}
         accessibilityLabel={completed ? `Mark set ${setNumber} incomplete` : `Mark set ${setNumber} complete`}
         hitSlop={8}
-        style={{ width: SET_COLS.check, height: SET_COLS.check }}
-        className={`items-center justify-center rounded-full border-2 active:scale-95 ${
-          completed ? 'border-brand bg-brand' : 'border-foreground/15 bg-transparent'
-        }`}
       >
-        {completed ? <Feather name="check" size={16} color="#1e2702" /> : null}
-      </Pressable>
+        <CheckCircle checked={completed} size={SET_COLS.check} />
+      </PressableScale>
     </View>
   );
 

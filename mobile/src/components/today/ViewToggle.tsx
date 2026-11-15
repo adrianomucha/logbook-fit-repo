@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
+import { haptic } from '@/lib/haptics';
 
 export type WorkoutViewMode = 'today' | 'weekly';
 
@@ -22,7 +23,10 @@ export function ViewToggle({ value, onChange }: { value: WorkoutViewMode; onChan
             key={id}
             accessibilityRole="radio"
             accessibilityState={{ checked: active }}
-            onPress={() => onChange(id)}
+            onPress={() => {
+              if (!active) haptic.select();
+              onChange(id);
+            }}
             className={`flex-1 items-center justify-center rounded-lg ${active ? 'border border-border bg-card' : ''}`}
           >
             <Text className={`font-mono-medium text-[11px] uppercase tracking-[1.3px] ${active ? 'text-foreground' : 'text-muted-foreground'}`}>

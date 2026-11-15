@@ -41,7 +41,7 @@ export function ExerciseCard({
 
         {/* Exercise details */}
         <div className="flex-1 min-w-0">
-          <div className="font-bold text-sm leading-snug truncate group-hover:translate-x-0.5 transition-transform duration-150">
+          <div className="font-bold text-sm leading-snug truncate">
             {exercise.name || 'Untitled Exercise'}
           </div>
         </div>

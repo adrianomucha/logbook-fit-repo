@@ -4,6 +4,12 @@
 
 @layer base {
   :root {
+    /* Motion curves. Mirror EASE in packages/shared/src/motion.ts, which the
+       native app reads; a test keeps the two in step. */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -94,6 +100,27 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+  /* No rubber-banding or pull-to-refresh on the page itself: it reads as a
+     website, and it fights the sheets and the chat list. Only in a browser
+     tab, which has its own reload button. Installed to the home screen,
+     pulling down is the only way to reload, so it stays. */
+  @media not all and (display-mode: standalone) {
+    html,
+    body {
+      overscroll-behavior-y: none;
+    }
+  }
+  /* A long press on a control should not select its label. Content stays
+     selectable. */
+  button,
+  summary,
+  [role='button'],
+  [role='tab'],
+  [role='radio'],
+  [role='switch'] {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 
 @layer utilities {
@@ -124,7 +151,7 @@
 
   /* Subtle fade-in + slide-up for content entrance */
   .animate-fade-in-up {
-    animation: fadeInUp 0.3s cubic-bezier(0.25, 1, 0.5, 1) both;
+    animation: fadeInUp 0.3s var(--ease-out) both;
   }
   @keyframes fadeInUp {
     from {
@@ -138,6 +165,9 @@
   }
 
   /* Completion celebration pop */
+  .animate-completion-pop {
+    animation: completionPop 0.4s var(--ease-pop) both;
+  }
   @keyframes completionPop {
     0% {
       transform: scale(0.6);
@@ -150,6 +180,9 @@
   }
 
   /* Plan-complete meter filling from the left */
+  .animate-meter-fill {
+    animation: meterFill 0.7s var(--ease-out) 0.15s both;
+  }
   @keyframes meterFill {
     0% {
       transform: scaleX(0);
@@ -159,13 +192,14 @@
     }
   }
 
-  /* Set completion check pop: snappy scale + fade */
+  /* Set completion check pop: snappy scale + fade. Starts near full size,
+     never from 0: nothing appears from nothing. */
   .animate-set-complete {
-    animation: setComplete 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: setComplete 0.25s var(--ease-pop) both;
   }
   @keyframes setComplete {
     0% {
-      transform: scale(0);
+      transform: scale(0.9);
       opacity: 0;
     }
     100% {
@@ -200,17 +234,33 @@
     }
   }
 
-  /* Mobile tab bar: the icon lands with the sliding pill instead of
-     just changing colour */
+  /* FAQ rows (native <details>): the answer's height eases open and shut.
+     Only where the browser can animate to an automatic height; elsewhere the
+     row opens at once, as before. */
+  @supports (interpolate-size: allow-keywords) {
+    .faq-item {
+      interpolate-size: allow-keywords;
+    }
+    .faq-item::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size 0.25s var(--ease-out),
+        content-visibility 0.25s allow-discrete;
+    }
+    .faq-item[open]::details-content {
+      block-size: auto;
+    }
+  }
+
+  /* Mobile tab bar: the icon settles into place as the pill arrives. Small
+     and quick on purpose: tabs are switched all day, so no overshoot. */
   .animate-tab-pop {
-    animation: tabPop 0.35s cubic-bezier(0.34, 1.5, 0.5, 1) both;
+    animation: tabPop 0.2s var(--ease-out) both;
   }
   @keyframes tabPop {
     0% {
-      transform: scale(0.85);
-    }
-    55% {
-      transform: scale(1.15);
+      transform: scale(0.9);
     }
     100% {
       transform: scale(1);
@@ -219,7 +269,7 @@
 
   /* Single playful bounce, not repeating */
   .animate-bounce-once {
-    animation: bounceOnce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation: bounceOnce 0.6s var(--ease-pop) both;
   }
   @keyframes bounceOnce {
     0% {
@@ -261,8 +311,26 @@
   .animate-bounce-once,
   .animate-marquee,
   .animate-tab-pop,
-  [class*="animate-[completionPop"],
-  [class*="animate-[meterFill"] {
+  .animate-completion-pop,
+  .animate-meter-fill,
+  .animate-ping {
     animation: none !important;
+  }
+  .faq-item::details-content {
+    transition: none !important;
+  }
+  /* Drawers, sheets, menus and inline panels (tailwindcss-animate's
+     animate-in / animate-out): keep the fade, which shows something changed,
+     and drop the slide and the zoom. */
+  /* Matched by substring: most uses are variants such as
+     data-[state=open]:animate-in, which the plain class would miss. */
+  [class*='animate-in'],
+  [class*='animate-out'] {
+    --tw-enter-translate-x: 0 !important;
+    --tw-enter-translate-y: 0 !important;
+    --tw-enter-scale: 1 !important;
+    --tw-exit-translate-x: 0 !important;
+    --tw-exit-translate-y: 0 !important;
+    --tw-exit-scale: 1 !important;
   }
 }

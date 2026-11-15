@@ -194,6 +194,21 @@ export const waitlistLimiter = rateLimit("waitlist", {
   maxRequests: 10,
 });
 
+// A repeat waitlist signup re-sends the confirmation. Keyed by the email
+// itself, so nobody can use the form to flood someone else's inbox: one
+// re-send a day, whoever asks and from wherever.
+export const waitlistResendLimiter = rateLimit("waitlist-resend", {
+  windowMs: 24 * 60 * 60 * 1000, // 1 day
+  maxRequests: 1,
+});
+
+// Alert emails to the operators, keyed by the kind of problem: enough to
+// know something is wrong and see a couple of examples, never a flood.
+export const operatorAlertLimiter = rateLimit("operator-alert", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 3,
+});
+
 // Reset requests are keyed by IP + email: tight enough that one address
 // can't be flooded with reset mail, without one shared office IP starving
 // everyone. The confirm side is keyed by IP alone — its failure mode is

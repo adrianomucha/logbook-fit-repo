@@ -4,6 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { ApiError, apiFetch } from '@/lib/api';
 import { Button, Eyebrow } from '@/components/ui';
+import { PressableScale } from '@/components/motion';
+import { haptic } from '@/lib/haptics';
 
 /** The typed phrase that arms the delete button. Exact, case-sensitive. */
 const CONFIRM_PHRASE = 'DELETE';
@@ -23,6 +25,8 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
 
   useEffect(() => {
     if (!visible) return;
+    // This sheet is the confirm in front of the one action that can't be undone
+    haptic.warning();
     setPassword('');
     setConfirmText('');
     setIsDeleting(false);
@@ -39,6 +43,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
       await apiFetch('/api/me', { method: 'DELETE', body: JSON.stringify({ password }) });
       await onDeleted();
     } catch (e) {
+      haptic.error();
       setError(e instanceof ApiError && (e.status === 403 || e.status === 429) ? e.message : 'Couldn’t delete the account. Nothing was changed. Try again.');
       setIsDeleting(false);
     }
@@ -100,15 +105,15 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
 
           <View className="mt-6 flex-row items-center justify-end gap-2">
             <Button variant="ghost" className="h-11 px-4" onPress={onClose} disabled={isDeleting}>Keep my account</Button>
-            <Pressable
+            <PressableScale
               onPress={remove}
               disabled={isDeleting || !isArmed}
               accessibilityRole="button"
-              className={`h-11 flex-row items-center justify-center gap-2 rounded-xl bg-destructive px-5 active:opacity-80 ${isDeleting || !isArmed ? 'opacity-60' : ''}`}
+              className={`h-11 flex-row items-center justify-center gap-2 rounded-xl bg-destructive px-5 ${isDeleting || !isArmed ? 'opacity-60' : ''}`}
             >
               <Feather name="trash-2" size={16} color="#fafafa" />
               <Text className="font-sans-bold text-sm uppercase tracking-[0.7px] text-destructive-foreground">Delete account</Text>
-            </Pressable>
+            </PressableScale>
           </View>
         </View>
       </KeyboardAvoidingView>

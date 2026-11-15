@@ -36,7 +36,7 @@ export function PlanStartsCard({ clientName, startsOn, coachName, workoutCount, 
         <p className="mb-5 text-pretty text-sm text-muted-foreground antialiased">
           {PLAN_STARTS_COPY.body(coachName, workoutCount)}
         </p>
-        <Button onClick={onPreviewWeek} className="transition-transform duration-150 active:scale-[0.96]">
+        <Button onClick={onPreviewWeek}>
           {PLAN_STARTS_COPY.action}
         </Button>
       </section>

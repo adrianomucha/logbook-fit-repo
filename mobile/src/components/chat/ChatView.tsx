@@ -6,6 +6,7 @@ import type { Message } from '@logbook/shared/types';
 import { stripFlagContext } from '@logbook/shared/flag-message';
 import { chatRowsNewestFirst, type ChatRow } from '@logbook/shared/chat-rows';
 import { UserAvatar } from '@/components/UserAvatar';
+import { haptic } from '@/lib/haptics';
 
 /** Server-side cap on message content (sendMessageSchema) */
 const MAX_MESSAGE_LENGTH = 5000;
@@ -107,6 +108,7 @@ export function ChatView({
   const send = async () => {
     const content = draft.trim();
     if (!content) return;
+    haptic.tap();
     justSentRef.current = true;
     setDraft('');
     setSendError(null);
@@ -114,6 +116,7 @@ export function ChatView({
       await onSendMessage(content);
     } catch {
       // Restore the draft so a failed send never eats the message
+      haptic.error();
       setDraft(content);
       setSendError('Message failed to send. Please try again.');
     }

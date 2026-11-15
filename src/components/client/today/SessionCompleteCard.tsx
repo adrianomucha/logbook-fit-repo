@@ -79,7 +79,7 @@ export function SessionCompleteCard({
           )}
         </div>
         <div
-          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-[completionPop_0.4s_cubic-bezier(0.34,1.56,0.64,1)_both]"
+          className="w-11 h-11 rounded-full bg-brand flex items-center justify-center shrink-0 animate-completion-pop"
           aria-hidden="true"
         >
           <Check className="w-5 h-5 text-brand-foreground stroke-[3.5]" />
@@ -156,7 +156,7 @@ export function SessionCompleteCard({
             <Button
               onClick={handleSubmit}
               disabled={isSubmittingFeedback}
-              className="w-full mt-3 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
+              className="w-full mt-3 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
             >
               <Send className="w-4 h-4 mr-2" />
               {isSubmittingFeedback

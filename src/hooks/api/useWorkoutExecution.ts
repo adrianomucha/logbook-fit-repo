@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import useSWR from 'swr';
 import { toast } from 'sonner';
-import { apiFetch, ApiError } from '@/lib/api-client';
+import { apiFetch } from '@/lib/api-client';
 import type { WorkoutDayDetail } from '@/types/api';
 import {
   getCompletionStats,
@@ -11,10 +11,24 @@ import {
   getCompletedSetsCount,
   getNextIncompleteExerciseId,
 } from '@logbook/shared/workout-execution';
+import {
+  chunkSetWrites,
+  flushSetWrites,
+  setsNotSavedMessage,
+  SETS_REJECTED_ON_FINISH,
+  SETS_SAVE_RETRYING,
+  SETS_UNSAVED_ON_FINISH,
+  type SetWrite,
+} from '@logbook/shared/set-writes';
 
 // The pure parts live in @logbook/shared so the native app shares them;
 // re-exported here for the components that always imported them from the hook.
 export { isSetCompleted, isExerciseComplete, getCompletedSetsCount, getNextIncompleteExerciseId };
+
+type FlushOutcome = 'saved' | 'rejected' | 'pending';
+
+/** One toast for refused sets however many flushes report them. */
+const SETS_NOT_SAVED_TOAST_ID = 'sets-not-saved';
 
 export function useWorkoutExecution(dayId: string | null) {
   const { data, error, isLoading, mutate } = useSWR<WorkoutDayDetail>(
@@ -22,18 +36,7 @@ export function useWorkoutExecution(dayId: string | null) {
   );
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pendingSetsRef = useRef<
-    Map<
-      string,
-      {
-        workoutExerciseId: string;
-        setNumber: number;
-        completed: boolean;
-        actualReps?: number;
-        actualWeight?: number;
-      }
-    >
-  >(new Map());
+  const pendingSetsRef = useRef<Map<string, SetWrite>>(new Map());
 
   const completionId = data?.completion?.id ?? null;
   const isReadOnly = data?.completion?.status === 'COMPLETED';
@@ -44,7 +47,7 @@ export function useWorkoutExecution(dayId: string | null) {
   /**
    * Create the WorkoutCompletion if it doesn't exist yet and return its id.
    * The workout only counts as started on the first real interaction (set
-   * toggle, weight/reps edit, flag, finish) — never from merely viewing the
+   * toggle, weight/reps edit, flag, finish): never from merely viewing the
    * page, so the dashboard doesn't show "Continue workout" after a peek.
    */
   const ensureStarted = useCallback(async (): Promise<string> => {
@@ -98,73 +101,67 @@ export function useWorkoutExecution(dayId: string | null) {
 
   // Serialize flushes so requests never interleave, and make the
   // "couldn't save" toast fire once per outage, not once per retry.
-  const flushPromiseRef = useRef<Promise<boolean> | null>(null);
+  const flushPromiseRef = useRef<Promise<FlushOutcome> | null>(null);
   const saveErrorToastShownRef = useRef(false);
 
   /**
    * Flush pending set changes to the API (starting the workout if needed).
-   * Entries stay queued until the server confirms them — a failed request
-   * must never silently drop logged sets. Resolves true once the queue is
-   * fully persisted (waiting behind any flush already in flight).
+   * Entries stay queued until the server answers for them, so a failed
+   * request never silently drops logged sets. Resolves 'saved' once the
+   * queue is fully persisted (waiting behind any flush already in flight),
+   * 'rejected' if the server refused some, 'pending' if some still wait.
    */
-  const flushSets = useCallback((): Promise<boolean> => {
-    const run = async (): Promise<boolean> => {
-      if (pendingSetsRef.current.size === 0) return true;
+  const flushSets = useCallback((): Promise<FlushOutcome> => {
+    const run = async (): Promise<FlushOutcome> => {
+      if (pendingSetsRef.current.size === 0) return 'saved';
 
       let id = completionId;
       if (!id) {
         try {
           id = await ensureStarted();
         } catch {
-          // Keep the sets queued — the next interaction retries the start
-          return false;
+          // Keep the sets queued: the next interaction retries the start
+          return 'pending';
         }
       }
 
-      // Snapshot without clearing: writes enqueued while the request is in
-      // flight supersede their snapshot entry and survive for the next flush.
-      const batch = new Map(pendingSetsRef.current);
-      const sets = Array.from(batch.values());
-
-      try {
-        await apiFetch(`/api/client/workout/${id}/sets`, {
+      // Goes out in requests no bigger than the server's cap. Writes queued
+      // while a request is in flight survive for the next flush.
+      const { rejected, failed } = await flushSetWrites(pendingSetsRef.current, (sets) =>
+        apiFetch(`/api/client/workout/${id}/sets`, {
           method: 'PUT',
           body: JSON.stringify({ sets }),
-        });
-        for (const [key, value] of batch) {
-          if (pendingSetsRef.current.get(key) === value) {
-            pendingSetsRef.current.delete(key);
-          }
-        }
-        saveErrorToastShownRef.current = false;
-        return pendingSetsRef.current.size === 0;
-      } catch (err) {
-        if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
-          // Deterministic rejection (e.g. workout already completed) —
-          // retrying can never succeed. Drop the batch and resync.
-          for (const [key, value] of batch) {
-            if (pendingSetsRef.current.get(key) === value) {
-              pendingSetsRef.current.delete(key);
-            }
-          }
-          mutate();
-          return pendingSetsRef.current.size === 0;
-        }
-        // Transient failure: keep everything queued and retry — don't
-        // revalidate, that would visually revert checkmarks the queue is
-        // still going to persist
+        })
+      );
+
+      if (rejected > 0) {
+        // The server said no (e.g. workout already completed), so retrying
+        // can never succeed. Resync to what is saved, and say so: the
+        // checkmarks are about to revert under the client's thumb.
+        mutate();
+        toast.error(setsNotSavedMessage(rejected), { id: SETS_NOT_SAVED_TOAST_ID });
+      }
+
+      if (failed) {
+        // Transient failure: keep everything queued and retry. Don't
+        // revalidate for this alone, that would visually revert checkmarks
+        // the queue is still going to persist.
         if (!saveErrorToastShownRef.current) {
           saveErrorToastShownRef.current = true;
-          toast.error("Couldn't save your sets — retrying. Check your connection.");
+          toast.error(SETS_SAVE_RETRYING);
         }
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => flushSets(), 4000);
-        return false;
+        return rejected > 0 ? 'rejected' : 'pending';
       }
+
+      saveErrorToastShownRef.current = false;
+      if (rejected > 0) return 'rejected';
+      return pendingSetsRef.current.size === 0 ? 'saved' : 'pending';
     };
 
-    const prev = flushPromiseRef.current ?? Promise.resolve(true);
-    const next = prev.catch(() => false).then(run);
+    const prev = flushPromiseRef.current ?? Promise.resolve('saved' as const);
+    const next = prev.catch(() => 'pending' as const).then(run);
     flushPromiseRef.current = next;
     next.finally(() => {
       if (flushPromiseRef.current === next) flushPromiseRef.current = null;
@@ -172,7 +169,7 @@ export function useWorkoutExecution(dayId: string | null) {
     return next;
   }, [completionId, ensureStarted, mutate]);
 
-  // Last-chance flush when the tab is hidden or the page unloads — "check the
+  // Last-chance flush when the tab is hidden or the page unloads: "check the
   // final set, lock the phone" is the most common gym gesture, and the 500ms
   // debounce timer dies with the page. keepalive lets the write outlive it.
   // Entries stay queued: if the page survives, the normal flush reconciles
@@ -180,13 +177,14 @@ export function useWorkoutExecution(dayId: string | null) {
   useEffect(() => {
     const flushBeforeHide = () => {
       if (pendingSetsRef.current.size === 0 || !completionId) return;
-      const sets = Array.from(pendingSetsRef.current.values());
-      fetch(`/api/client/workout/${completionId}/sets`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sets }),
-        keepalive: true,
-      }).catch(() => {});
+      for (const sets of chunkSetWrites(Array.from(pendingSetsRef.current.values()))) {
+        fetch(`/api/client/workout/${completionId}/sets`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sets }),
+          keepalive: true,
+        }).catch(() => {});
+      }
     };
     const onVisibilityChange = () => {
       if (document.visibilityState === 'hidden') flushBeforeHide();
@@ -236,7 +234,7 @@ export function useWorkoutExecution(dayId: string | null) {
     [data, flushSets]
   );
 
-  /** Toggle a set's completion — optimistic update + debounced API save */
+  /** Toggle a set's completion: optimistic update + debounced API save */
   const toggleSet = useCallback(
     (workoutExerciseId: string, setNumber: number) => {
       if (isReadOnly || !data) return;
@@ -280,7 +278,7 @@ export function useWorkoutExecution(dayId: string | null) {
     [isReadOnly, data, mutate, enqueueSetWrite]
   );
 
-  /** Update a set's logged reps and/or weight — optimistic update + debounced save */
+  /** Update a set's logged reps and/or weight: optimistic update + debounced save */
   const updateSet = useCallback(
     (
       workoutExerciseId: string,
@@ -371,7 +369,7 @@ export function useWorkoutExecution(dayId: string | null) {
     [completionId, isReadOnly, ensureStarted, mutate]
   );
 
-  /** Unflag an exercise — optimistic removal plus a real delete on the server */
+  /** Unflag an exercise: optimistic removal plus a real delete on the server */
   const unflagExercise = useCallback(
     async (workoutExerciseId: string) => {
       if (isReadOnly) return;
@@ -398,7 +396,7 @@ export function useWorkoutExecution(dayId: string | null) {
           body: JSON.stringify({ workoutExerciseId }),
         });
       } catch {
-        // Restore server truth — otherwise the flag resurrects on the next
+        // Restore server truth: otherwise the flag resurrects on the next
         // revalidation and the coach keeps seeing something the athlete removed
         mutate();
         toast.error("Couldn't remove the flag. Please try again.");
@@ -450,7 +448,7 @@ export function useWorkoutExecution(dayId: string | null) {
     };
   }, []);
 
-  /** Update flag note — optimistic locally, saved after typing pauses */
+  /** Update flag note: optimistic locally, saved after typing pauses */
   const updateFlagNote = useCallback(
     (workoutExerciseId: string, note: string) => {
       if (isReadOnly) return;
@@ -484,7 +482,7 @@ export function useWorkoutExecution(dayId: string | null) {
     [isReadOnly, mutate, flagExercise]
   );
 
-  /** Restart the workout — resets all sets/flags and starts fresh */
+  /** Restart the workout: resets all sets/flags and starts fresh */
   const restartWorkout = useCallback(async () => {
     if (!completionId) return null;
 
@@ -496,19 +494,18 @@ export function useWorkoutExecution(dayId: string | null) {
     return result;
   }, [completionId, mutate]);
 
-  /** Finish the workout — throws on failure so callers can handle */
+  /** Finish the workout: throws on failure so callers can handle */
   const finishWorkout = useCallback(
     async (effortRating?: string) => {
       if (isReadOnly) return null;
 
-      // All logged sets must be on the server before finishing — otherwise
+      // All logged sets must be on the server before finishing: otherwise
       // the workout completes at 0% while the UI celebrates a full session
       const flushed = await flushSets();
-      if (!flushed) {
-        throw new Error(
-          "Couldn't save your logged sets. Check your connection and try again."
-        );
-      }
+      if (flushed === 'pending') throw new Error(SETS_UNSAVED_ON_FINISH);
+      // Some sets were refused and have just been unchecked. Don't finish a
+      // workout the client hasn't seen in its real state.
+      if (flushed === 'rejected') throw new Error(SETS_REJECTED_ON_FINISH);
 
       try {
         const id = completionId ?? (await ensureStarted());

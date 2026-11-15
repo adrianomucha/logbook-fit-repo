@@ -4,10 +4,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, Edit, Copy, Archive, Trash2, RotateCcw } from 'lucide-react';
+import { MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { WorkoutPlan } from '@/types';
 
@@ -17,9 +16,6 @@ interface PlanTemplateCardProps {
   /** Names of clients on this plan — rendered as a mini-avatar stack when provided */
   clients?: { name: string; avatarUrl: string | null }[];
   onEdit: () => void;
-  onDuplicate?: () => void;
-  onArchive?: () => void;
-  onRestore?: () => void;
   onDelete: () => void;
 }
 
@@ -35,13 +31,8 @@ export function PlanTemplateCard({
   clientCount,
   clients,
   onEdit,
-  onDuplicate,
-  onArchive,
-  onRestore,
   onDelete,
 }: PlanTemplateCardProps) {
-  const isArchived = !!plan.archivedAt;
-
   const weeksLabel = plan.durationWeeks
     ? `${plan.durationWeeks} ${plan.durationWeeks === 1 ? 'week' : 'weeks'}`
     : null;
@@ -53,8 +44,7 @@ export function PlanTemplateCard({
       className={cn(
         'group flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-3.5 cursor-pointer transition-colors',
         'hover:bg-muted/50 active:bg-muted/70',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
-        isArchived && 'opacity-50 grayscale'
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring'
       )}
       role="button"
       tabIndex={0}
@@ -141,24 +131,6 @@ export function PlanTemplateCard({
             <Edit className="w-4 h-4 mr-2" />
             Edit Template
           </DropdownMenuItem>
-          {onDuplicate && (
-            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onDuplicate(); }}>
-              <Copy className="w-4 h-4 mr-2" />
-              Duplicate
-            </DropdownMenuItem>
-          )}
-          {(onDuplicate || onArchive || onRestore) && <DropdownMenuSeparator />}
-          {isArchived && onRestore ? (
-            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRestore(); }}>
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Restore
-            </DropdownMenuItem>
-          ) : onArchive ? (
-            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onArchive(); }}>
-              <Archive className="w-4 h-4 mr-2" />
-              Archive
-            </DropdownMenuItem>
-          ) : null}
           <DropdownMenuItem
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="text-destructive-text focus:text-destructive-text"

@@ -1,11 +1,18 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { format } from 'date-fns';
 import type { CheckIn, WorkoutCompletion, WorkoutPlan } from '@logbook/shared/types';
 import { apiCheckInToCheckIn, apiPlanToWorkoutPlan, apiProgressToWorkoutCompletions } from '@logbook/shared/adapters/api';
-import { getActiveWorkout, getWeekDays, type WeekDayInfo } from '@logbook/shared/workout-week-helpers';
+import {
+  getActiveWorkout,
+  getWeekDays,
+  unfinishedInEarlierWeeks,
+  weekStep,
+  withEarlierCompletions,
+  type WeekDayInfo,
+} from '@logbook/shared/workout-week-helpers';
 import { EMPTY_WEEK_COPY, LOAD_ERROR_COPY, WEEK_NOT_BUILT_COPY } from '@logbook/shared/client-empty-states';
 import { PLAN_STARTS_COPY } from '@logbook/shared/plan-start';
 import { ApiError, apiFetch } from '@/lib/api';
@@ -29,6 +36,7 @@ import { useDismissedCheckInReply } from '@/hooks/useDismissedCheckInReply';
 import { CheckInDetailSheet } from '@/components/checkin/CheckInDetailSheet';
 import { NoCoachState } from '@/components/NoCoachState';
 import { useAuth } from '@/lib/auth';
+import { haptic } from '@/lib/haptics';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -49,7 +57,9 @@ export default function TodayScreen() {
   const { signOut } = useAuth();
   const [view, setView] = useState<WorkoutViewMode>('today');
   const [showCheckInDetail, setShowCheckInDetail] = useState(false);
-  const [feedbackSent, setFeedbackSent] = useState(false);
+  // The workout whose effort rating was just sent. Keyed by completion so a
+  // second workout in the same session asks its own question.
+  const [feedbackSentFor, setFeedbackSentFor] = useState<string | null>(null);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -109,6 +119,26 @@ export default function TodayScreen() {
     const days = getWeekDays(week, completions, clientProfileId);
     return { weekDays: days, today: getActiveWorkout(days) };
   }, [plan, weekOverview, completions, clientProfileId]);
+
+  // The week on the "This week" view. Starts on the current one; the client
+  // can step back to finish a workout an earlier week left open.
+  const currentWeekNumber = weekOverview?.weekNumber ?? 1;
+  const [viewedWeek, setViewedWeek] = useState(currentWeekNumber);
+  useEffect(() => setViewedWeek(currentWeekNumber), [currentWeekNumber]);
+  // Earlier weeks need the finished workouts from every week, not just this one
+  const historyReady = !!progress;
+  const step = weekStep(viewedWeek, currentWeekNumber, historyReady);
+  const { viewedDays, leftBehind } = useMemo(() => {
+    if (!plan || !clientProfileId) return { viewedDays: [] as WeekDayInfo[], leftBehind: null };
+    const week = plan.weeks.find((w) => w.weekNumber === step.viewed);
+    const everything = withEarlierCompletions(completions, allCompletions);
+    return {
+      viewedDays: week ? getWeekDays(week, everything, clientProfileId) : [],
+      leftBehind: historyReady
+        ? unfinishedInEarlierWeeks(plan.weeks, everything, clientProfileId, currentWeekNumber)
+        : null,
+    };
+  }, [plan, completions, allCompletions, clientProfileId, step.viewed, currentWeekNumber, historyReady]);
 
   const refresh = () => {
     void refreshWeek();
@@ -199,12 +229,15 @@ export default function TodayScreen() {
         try {
           await sendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
         } catch {
+          haptic.error();
           Alert.alert('Feedback saved', 'Your note didn’t send. Try it from Chat.');
         }
       }
-      setFeedbackSent(true);
+      setFeedbackSentFor(completionId);
+      haptic.success();
       await refreshWeek();
     } catch {
+      haptic.error();
       Alert.alert("Couldn't send feedback", 'Please try again.');
     } finally {
       setIsSendingFeedback(false);
@@ -215,6 +248,7 @@ export default function TodayScreen() {
     const completionId = today?.completion?.id;
     const dayId = today?.workoutDay?.id;
     if (!completionId || !dayId) return;
+    haptic.warning();
     Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this workout are cleared.", [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -227,6 +261,7 @@ export default function TodayScreen() {
             await refreshWeek();
             router.push({ pathname: '/client/workout/[dayId]', params: { dayId } });
           } catch {
+            haptic.error();
             Alert.alert("Couldn't restart", 'Please try again.');
           } finally {
             setIsRestarting(false);
@@ -249,6 +284,8 @@ export default function TodayScreen() {
   // fails, open the workout anyway — the first logged set still starts it.
   const startToday = async () => {
     if (!today?.workoutDay) return;
+    // Start, resume or review: the day's one big button lands with some weight
+    haptic.press();
     if (state === 'scheduled') {
       setIsStarting(true);
       try {
@@ -297,9 +334,16 @@ export default function TodayScreen() {
         <>
           <WeekOverview
             planName={plan.name}
-            weekNumber={weekOverview.weekNumber}
+            step={step}
+            onStep={(week) => {
+              // A choice changed, like the Today / This week toggle
+              haptic.select();
+              setViewedWeek(week);
+            }}
+            currentWeekNumber={currentWeekNumber}
+            leftBehind={leftBehind}
             durationWeeks={weekOverview.plan.durationWeeks}
-            days={weekDays}
+            days={viewedDays}
             onOpenDay={openDay}
             coachName={coach.user.name}
             onMessageCoach={() => router.push('/client/chat')}
@@ -324,7 +368,7 @@ export default function TodayScreen() {
               workoutName={today.workoutDay.name}
               completion={today.completion}
               coachName={coach.user.name}
-              feedbackSubmitted={feedbackSent || !!today.completion.effortRating}
+              feedbackSubmitted={feedbackSentFor === today.completion.id || !!today.completion.effortRating}
               isSubmittingFeedback={isSendingFeedback}
               onSubmitFeedback={(rating, notes) => void sendFeedback(rating, notes)}
             />

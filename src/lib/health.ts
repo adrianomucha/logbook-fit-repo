@@ -107,7 +107,8 @@ export function checkMailer(): HealthCheck {
         id: "mailer",
         label: "Email (Resend)",
         level: "ok",
-        detail: "Configured. Sends are best-effort; failures log [EMAIL_ALERT].",
+        detail:
+          "Configured. Sends are best-effort; failures log [EMAIL_ALERT]. Crashes and failed requests are emailed to ADMIN_EMAILS.",
       }
     : { id: "mailer", label: "Email (Resend)", level: "down", detail: status.reason };
 }

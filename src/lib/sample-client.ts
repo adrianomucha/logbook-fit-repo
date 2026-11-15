@@ -260,9 +260,10 @@ export async function createSampleClient(
       clientId,
       status: "CLIENT_RESPONDED",
       effortRating: "HARD",
-      clientFeeling:
-        "Strong week. Hit all my sessions and squats are moving well. Deadlifts felt heavy on the last set though.",
-      painBlockers: "Some lower-back tightness after deadlifts",
+      // One of the form's four answers; the words go in the note
+      clientFeeling: "TIRED",
+      painBlockers:
+        "Strong week. Hit all my sessions and squats are moving well. Deadlifts felt heavy on the last set, with some lower-back tightness after.",
       clientRespondedAt: hoursAgo(3),
       createdAt: daysAgo(2),
     },

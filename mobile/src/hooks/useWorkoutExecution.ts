@@ -3,22 +3,24 @@ import { AppState } from 'react-native';
 import useSWR from 'swr';
 import type { WorkoutDayDetail } from '@logbook/shared/types/api';
 import { getCompletionStats, upsertLocalSet } from '@logbook/shared/workout-execution';
-import { ApiError, apiFetch } from '@/lib/api';
+import {
+  flushSetWrites,
+  setsNotSavedMessage,
+  SETS_REJECTED_ON_FINISH,
+  SETS_SAVE_RETRYING,
+  SETS_UNSAVED_ON_FINISH,
+  type SetWrite,
+} from '@logbook/shared/set-writes';
+import { apiFetch } from '@/lib/api';
 
-type SetWrite = {
-  workoutExerciseId: string;
-  setNumber: number;
-  completed: boolean;
-  actualReps?: number;
-  actualWeight?: number;
-};
+type FlushOutcome = 'saved' | 'rejected' | 'pending';
 
 /**
  * The live workout, ported from the web's hook of the same name with the
  * same guarantees: viewing never starts the workout (the first interaction
  * does), set writes are optimistic, debounced, merged per set and kept
  * queued until the server confirms them, and a flaky gym connection retries
- * instead of dropping logged sets. Backgrounding the app flushes at once —
+ * instead of dropping logged sets. Backgrounding the app flushes at once:
  * "check the last set, pocket the phone" is the commonest gesture there is.
  */
 export function useWorkoutExecution(dayId: string | null) {
@@ -28,7 +30,10 @@ export function useWorkoutExecution(dayId: string | null) {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingSetsRef = useRef<Map<string, SetWrite>>(new Map());
-  /** Set when a save keeps failing; cleared on the next success. */
+  /**
+   * Set when a save keeps failing, or when the server refused sets and they
+   * were unchecked. Cleared on the next save that goes through.
+   */
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const completionId = data?.completion?.id ?? null;
@@ -76,54 +81,55 @@ export function useWorkoutExecution(dayId: string | null) {
     return startPromiseRef.current;
   }, [data, dayId, mutate]);
 
-  const flushPromiseRef = useRef<Promise<boolean> | null>(null);
+  const flushPromiseRef = useRef<Promise<FlushOutcome> | null>(null);
 
-  const flushSets = useCallback((): Promise<boolean> => {
-    const run = async (): Promise<boolean> => {
-      if (pendingSetsRef.current.size === 0) return true;
+  const flushSets = useCallback((): Promise<FlushOutcome> => {
+    const run = async (): Promise<FlushOutcome> => {
+      if (pendingSetsRef.current.size === 0) return 'saved';
 
       let id = completionId;
       if (!id) {
         try {
           id = await ensureStarted();
         } catch {
-          return false;
+          return 'pending';
         }
       }
 
-      const batch = new Map(pendingSetsRef.current);
-      const sets = Array.from(batch.values());
-      try {
-        await apiFetch(`/api/client/workout/${id}/sets`, {
+      // Goes out in requests no bigger than the server's cap. Writes queued
+      // while a request is in flight survive for the next flush.
+      const { rejected, failed } = await flushSetWrites(pendingSetsRef.current, (sets) =>
+        apiFetch(`/api/client/workout/${id}/sets`, {
           method: 'PUT',
           body: JSON.stringify({ sets }),
-        });
-        for (const [key, value] of batch) {
-          if (pendingSetsRef.current.get(key) === value) pendingSetsRef.current.delete(key);
-        }
-        setSaveError(null);
-        return pendingSetsRef.current.size === 0;
-      } catch (err) {
-        if (err instanceof ApiError && err.status >= 400 && err.status < 500) {
-          // Deterministic rejection (e.g. workout already completed) —
-          // retrying can never succeed. Drop the batch and resync.
-          for (const [key, value] of batch) {
-            if (pendingSetsRef.current.get(key) === value) pendingSetsRef.current.delete(key);
-          }
-          void mutate();
-          return pendingSetsRef.current.size === 0;
-        }
-        // Transient: keep everything queued and retry, without revalidating —
-        // that would visually revert checkmarks the queue will still persist.
-        setSaveError("Couldn't save your sets — retrying. Check your connection.");
+        })
+      );
+
+      if (rejected > 0) {
+        // The server said no (e.g. workout already completed), so retrying
+        // can never succeed. Resync to what is saved, and say so: the
+        // checkmarks are about to revert under the client's thumb.
+        void mutate();
+        setSaveError(setsNotSavedMessage(rejected));
+      }
+
+      if (failed) {
+        // Transient: keep everything queued and retry, without revalidating
+        // for this alone. That would visually revert checkmarks the queue
+        // will still persist.
+        if (rejected === 0) setSaveError(SETS_SAVE_RETRYING);
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => void flushSets(), 4000);
-        return false;
+        return rejected > 0 ? 'rejected' : 'pending';
       }
+
+      if (rejected > 0) return 'rejected';
+      setSaveError(null);
+      return pendingSetsRef.current.size === 0 ? 'saved' : 'pending';
     };
 
-    const prev = flushPromiseRef.current ?? Promise.resolve(true);
-    const next = prev.catch(() => false).then(run);
+    const prev = flushPromiseRef.current ?? Promise.resolve('saved' as const);
+    const next = prev.catch(() => 'pending' as const).then(run);
     flushPromiseRef.current = next;
     next.finally(() => {
       if (flushPromiseRef.current === next) flushPromiseRef.current = null;
@@ -321,14 +327,15 @@ export function useWorkoutExecution(dayId: string | null) {
     return result;
   }, [completionId, mutate]);
 
-  /** Finish the workout — throws on failure so callers can handle */
+  /** Finish the workout: throws on failure so callers can handle */
   const finishWorkout = useCallback(
     async (effortRating?: string) => {
       if (isReadOnly) return null;
       const flushed = await flushSets();
-      if (!flushed) {
-        throw new Error("Couldn't save your logged sets. Check your connection and try again.");
-      }
+      if (flushed === 'pending') throw new Error(SETS_UNSAVED_ON_FINISH);
+      // Some sets were refused and have just been unchecked. Don't finish a
+      // workout the client hasn't seen in its real state.
+      if (flushed === 'rejected') throw new Error(SETS_REJECTED_ON_FINISH);
       try {
         const id = completionId ?? (await ensureStarted());
         const result = await apiFetch<{

@@ -3,6 +3,7 @@ import { Pressable, Text, View } from 'react-native';
 import { Feather, MaterialCommunityIcons } from '@expo/vector-icons';
 import { LOG_EMPTY_TEXT, LOG_PAGE_WEEKS, type LogBadge, type LogEntry, type LogWeek, type LogWin, type ThisWeek } from '@logbook/shared/progress';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
+import { MeterFill } from '@/components/motion';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
 
 /**
@@ -19,7 +20,7 @@ export function WeekCircles({ week }: { week: ThisWeek }) {
   return (
     <View accessibilityRole="image" accessibilityLabel={`${week.completed} of ${week.target} workouts done this week`}>
       <View className="absolute h-1 rounded-full bg-muted" style={{ left: size / 2, right: size / 2, top: size / 2 - 2 }}>
-        <View className="h-full rounded-full bg-brand" style={{ width: `${lit * 100}%` }} />
+        <MeterFill pct={lit * 100} />
       </View>
       <View className="flex-row justify-between">
         {slots.map((slot, i) => (

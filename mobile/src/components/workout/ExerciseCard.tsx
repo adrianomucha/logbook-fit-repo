@@ -12,9 +12,12 @@ import {
   parseTargetWeight,
 } from '@logbook/shared/workout-execution';
 import { weightUnitLabel } from '@logbook/shared/weight-units';
+import { PRESS_SCALE_SMALL } from '@logbook/shared/motion';
 import { Eyebrow } from '@/components/ui';
+import { CheckCircle, FadeInUp, PressableScale } from '@/components/motion';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { SET_COLS, SetRow } from './SetRow';
+import { haptic } from '@/lib/haptics';
 
 interface ExerciseCardProps {
   exercise: WorkoutExercise;
@@ -62,6 +65,8 @@ export function ExerciseCard({
   // exactly like a per-set tap, so bulk-completed exercises still log data.
   const toggleAll = () => {
     if (isReadOnly) return;
+    // The whole exercise in one go weighs more than a single set's tick
+    if (!isComplete) haptic.press();
     const targets = isComplete
       ? setNumbers.filter((n) => isSetCompleted(exercise.setCompletions, n))
       : setNumbers.filter((n) => !isSetCompleted(exercise.setCompletions, n));
@@ -114,23 +119,21 @@ export function ExerciseCard({
           </View>
         </Pressable>
 
-        <Pressable
+        <PressableScale
+          scaleTo={PRESS_SCALE_SMALL}
           onPress={toggleAll}
           disabled={isReadOnly}
           accessibilityRole="button"
           accessibilityState={{ checked: isComplete }}
           accessibilityLabel={isComplete ? 'Mark all sets incomplete' : 'Mark all sets complete'}
           hitSlop={8}
-          className={`h-8 w-8 items-center justify-center rounded-full border-2 ${
-            isComplete ? 'border-brand bg-brand' : 'border-foreground/15 bg-transparent'
-          }`}
         >
-          {isComplete ? <Feather name="check" size={16} color="#1e2702" /> : null}
-        </Pressable>
+          <CheckCircle checked={isComplete} />
+        </PressableScale>
       </View>
 
       {isExpanded ? (
-        <View className="gap-3.5 pb-4 pl-[42px] pr-1 pt-1.5">
+        <FadeInUp className="gap-3.5 pb-4 pl-[42px] pr-1 pt-1.5">
           {exercise.coachNotes ? (
             <Text className="border-l-2 border-brand pl-3 font-sans text-sm leading-5 text-foreground/75">
               {exercise.coachNotes}
@@ -220,7 +223,7 @@ export function ExerciseCard({
               <Eyebrow>Flag for coach</Eyebrow>
             </Pressable>
           ) : null}
-        </View>
+        </FadeInUp>
       ) : null}
     </View>
   );

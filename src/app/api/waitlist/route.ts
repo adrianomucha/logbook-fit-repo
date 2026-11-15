@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { parseBody } from "@/lib/validations/parseBody";
 import { waitlistSchema, waitlistQualifySchema } from "@/lib/validations/schemas";
-import { waitlistLimiter, getClientIp } from "@/lib/rate-limit";
+import { waitlistLimiter, waitlistResendLimiter, getClientIp } from "@/lib/rate-limit";
 import { sendWaitlistWelcome } from "@/lib/services/email";
 
 export async function POST(req: Request) {
@@ -25,8 +25,8 @@ export async function POST(req: Request) {
     // to the sign-in instead of parking them on the list. This does disclose
     // that the email is registered, but signup's "Email already registered"
     // response discloses the same thing, so it opens no new enumeration
-    // channel. (Repeat WAITLIST signups below stay a quiet no-op, since being on
-    // the list is not an account and stays undisclosed.)
+    // channel. (Repeat WAITLIST signups below answer like a first one, since
+    // being on the list is not an account and stays undisclosed.)
     const registered = await prisma.user.findFirst({
       where: { email, deletedAt: null },
       select: { id: true },
@@ -35,18 +35,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "already_registered" }, { status: 409 });
     }
 
-    // Only the first signup for an email creates a row; repeats are quiet
-    // no-ops so the response never reveals whether an email was already on
+    // Only the first signup for an email creates a row; repeats answer the
+    // same way so the response never reveals whether an email was already on
     // the list. `createMany({ skipDuplicates })` tells us if a row was added.
     const { count } = await prisma.waitlistEntry.createMany({
       data: [{ email, source, medium, campaign, referrer }],
       skipDuplicates: true,
     });
 
-    // Send the confirmation only on a genuinely new signup, and only as a
-    // best-effort side effect: a mail failure must not fail the request.
+    // The confirmation is a best-effort side effect: a mail failure must not
+    // fail the request.
     if (count > 0) {
       await sendWaitlistWelcome(email);
+    } else {
+      // A repeat signup is usually someone who never saw the first email.
+      // The screen tells them to watch their inbox, so put something in it:
+      // re-send the confirmation, at most once a day per address, and only
+      // while they are still waiting (an invited coach already has the
+      // email that matters). The response stays identical either way.
+      const entry = await prisma.waitlistEntry.findUnique({
+        where: { email },
+        select: { status: true },
+      });
+      if (entry?.status === "PENDING" && (await waitlistResendLimiter(email)).allowed) {
+        await sendWaitlistWelcome(email);
+      }
     }
 
     return NextResponse.json({ ok: true }, { status: 201 });

@@ -93,7 +93,6 @@ export function CoachDashboard() {
   const [currentView, setCurrentView] = useState<View>('clients');
   const [showPlanSetupModal, setShowPlanSetupModal] = useState(false);
   const [showImportModal, setShowImportModal] = useState(false);
-  const [showSuccessToast, setShowSuccessToast] = useState(false);
   const [editingPlanId, setEditingPlanId] = useState<string | null>(null);
   const [planToDelete, setPlanToDelete] = useState<string | null>(null);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -173,8 +172,9 @@ export function CoachDashboard() {
         workoutsPerWeek: formData.workoutsPerWeek,
       });
       setShowPlanSetupModal(false);
-      setShowSuccessToast(true);
-      setTimeout(() => setShowSuccessToast(false), 3000);
+      // Through the app's one toaster, so it enters, stacks and leaves like
+      // every other notice
+      toast.success('Plan created');
       if (openEditorAfterCreate.current) {
         openEditorAfterCreate.current = false;
         setEditingPlanId(newPlan.id);
@@ -244,25 +244,6 @@ export function CoachDashboard() {
     // both, and stacking a second full-viewport box inside the first pushed the
     // page ~76px past the fold on mobile no matter how little content it held.
     <div className="pb-0 sm:pb-4">
-      {/* Success Toast — checkmark draws in */}
-      {showSuccessToast && (
-        <div className="fixed top-4 right-4 z-50 bg-foreground text-background px-5 py-3.5 rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.2)] flex items-center gap-2.5 animate-in slide-in-from-top duration-300">
-          {/* Lime check on ink: the app's "done", not a stray green */}
-          <svg className="w-5 h-5 shrink-0 text-brand" viewBox="0 0 24 24" fill="none">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
-            <path
-              d="M8 12.5l2.5 2.5 5.5-5.5"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="animate-draw-check"
-            />
-          </svg>
-          <span className="font-semibold text-sm tracking-tight">Plan created</span>
-        </div>
-      )}
-
       {/* Invite Client Modal */}
       <InviteClientModal
         isOpen={showInviteModal}
@@ -395,7 +376,7 @@ export function CoachDashboard() {
                       </p>
                     </div>
                     <div className="flex gap-2 shrink-0">
-                      <Button size="sm" onClick={() => setShowInviteModal(true)} className="active:scale-[0.96] transition-transform duration-150">
+                      <Button size="sm" onClick={() => setShowInviteModal(true)}>
                         Invite real client
                       </Button>
                       <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={() => setShowRemoveSampleConfirm(true)}>
@@ -421,7 +402,7 @@ export function CoachDashboard() {
                 subtitle={templates.length > 0 ? `${templates.length} ${templates.length === 1 ? 'plan' : 'plans'}` : undefined}
                 action={templates.length > 0 ? (
                   <div className="flex items-center gap-2">
-                    <Button onClick={() => setShowImportModal(true)} size="sm" variant="outline" className="active:scale-[0.96] transition-transform duration-150 tap-target">
+                    <Button onClick={() => setShowImportModal(true)} size="sm" variant="outline" className="tap-target">
                       <FileSpreadsheet className="w-4 h-4 mr-1.5" />
                       Import
                     </Button>
