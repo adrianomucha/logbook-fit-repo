@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { useSWRConfig } from 'swr';
 import type { Client, CheckIn, WorkoutPlan, WorkoutCompletion, Message } from '@/types';
-import { getWeekDays, getActiveWorkout } from '@/lib/workout-week-helpers';
+import { getWeekDays, getActiveWorkout, withEarlierCompletions } from '@/lib/workout-week-helpers';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useKeyboardInset } from '@/hooks/useKeyboardInset';
 import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
@@ -672,7 +672,8 @@ export function ClientDashboard() {
               client={client}
               plan={plan}
               currentWeekNumber={weekOverview.weekNumber}
-              completions={clientWorkoutCompletions}
+              completions={withEarlierCompletions(clientWorkoutCompletions, allWorkoutCompletions)}
+              historyReady={!!progress}
               coachName={coach?.user.name}
               onMessageCoach={coachUserId ? handleMessageCoach : undefined}
             />
