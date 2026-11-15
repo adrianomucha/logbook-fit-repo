@@ -11,8 +11,8 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/admin/users/[id]/password — owner-only password reset.
  *
- * There is no self-serve reset flow yet, so this is how the owner regains
- * access to legacy accounts. Generates a strong temporary password and
+ * Users can reset their own password by email; this is the owner's fallback
+ * for an account whose email no longer reaches anyone. Generates a strong temporary password and
  * returns it ONCE in the response for the admin to hand over out-of-band;
  * only the bcrypt hash is stored.
  *

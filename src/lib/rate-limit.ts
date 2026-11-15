@@ -202,6 +202,13 @@ export const waitlistResendLimiter = rateLimit("waitlist-resend", {
   maxRequests: 1,
 });
 
+// Alert emails to the operators, keyed by the kind of problem: enough to
+// know something is wrong and see a couple of examples, never a flood.
+export const operatorAlertLimiter = rateLimit("operator-alert", {
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxRequests: 3,
+});
+
 // Reset requests are keyed by IP + email: tight enough that one address
 // can't be flooded with reset mail, without one shared office IP starving
 // everyone. The confirm side is keyed by IP alone — its failure mode is

@@ -90,3 +90,14 @@ export const REMOVE_PLAN = {
     `${clientFirstName ?? 'Your client'} loses their place in ${planName}. Assigning it again starts from week 1. Past workouts stay in their history.`,
   done: (clientFirstName: string | undefined) => `${clientFirstName ?? 'Your client'} has no plan now.`,
 } as const;
+
+/** The reminder that a promised plan adjustment has not happened yet. */
+export const PLAN_ADJUSTMENT_REMINDER = {
+  eyebrow: 'You said you would adjust the plan',
+  /** "You told Sam on Mar 3. Their plan has not changed since." */
+  body: (clientFirstName: string, date: string) =>
+    `You told ${clientFirstName} on ${date}. Their plan has not changed since.`,
+  noPlan: (clientFirstName: string, date: string) =>
+    `You told ${clientFirstName} on ${date}. They have no plan right now.`,
+  action: 'Edit plan',
+} as const;

@@ -10,8 +10,8 @@ import { CrashScreen } from '@/components/CrashScreen';
  * and clears the error; the front door then sends the client back in fresh.
  * Retrying alone can fail the same way, so both are offered.
  */
-export function ErrorBoundary({ retry }: ErrorBoundaryProps) {
-  return <CrashScreen onRetry={() => void retry()} onHome={() => router.replace('/')} />;
+export function ErrorBoundary({ error, retry }: ErrorBoundaryProps) {
+  return <CrashScreen error={error} screen="client" onRetry={() => void retry()} onHome={() => router.replace('/')} />;
 }
 
 /** The client app: the web's three tabs with the same bottom bar. */

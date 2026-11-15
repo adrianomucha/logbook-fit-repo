@@ -81,12 +81,14 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 
 ## Phase 2: Dead ends, false screens, tester traps
 
-- [ ] **2.1** Terminated client: honest "Your coaching with X has ended" screen with
+- [x] **2.1** Terminated client: honest "Your coaching with X has ended" screen with
       nav + sign-out, instead of `WelcomeAwaitingPlan`'s "your coach is putting your
       plan together". Detect via ended relationship, not just missing plan.
       (`ClientDashboard.tsx:388-403,457-462`, `src/lib/relationship-termination.ts`). Effort: M
-- [ ] **2.2** Add `ClientNav`/`AccountMenu` (at minimum sign-out) to the no-coach and
+      *Done:* a client whose coaching ended gets an honest screen with Settings and Sign out.
+- [x] **2.2** Add `ClientNav`/`AccountMenu` (at minimum sign-out) to the no-coach and
       no-clientProfile screens. (`ClientDashboard.tsx:372-403`). Effort: S
+      *Done* with 2.1.
 - [x] **2.3** Empty/mismatched week: explanatory state with a "message your coach"
       CTA instead of a bare greeting. (`ClientDashboard.tsx:204-210`,
       `TodayFocusView.tsx:65`). Effort: S
@@ -138,45 +140,59 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       or soften the promise. (`PastClientsPage.tsx:29-64`,
       `coach/clients/[id]/route.ts:26-32`, `messages/[userId]/route.ts:69-74`). Effort: M
       *Done:* read-only record at `/coach/clients/past/[clientId]` (`GET /api/coach/clients/[id]/archive`).
-- [ ] **2.12** Week math honesty: snap `planStartDate` to the coming Monday (or ask
+- [x] **2.12** Week math honesty: snap `planStartDate` to the coming Monday (or ask
       the coach) on assign, and add prev-week navigation so unfinished weeks aren't
       stranded. (`plans/[id]/assign/route.ts:91`, `WeeklyOverview.tsx:32-35`). Effort: M
+      *Done:* the coach picks the start (today or next Monday) and weeks run on the
+      client's calendar; the week view now steps back to earlier weeks, on web and in the app.
 
 ## Phase 3: Copy truth, seed, cleanup (before or during the test round)
 
-- [ ] **3.1** Refresh `prisma/seed.ts`: set `checkInScheduleEnabled`, use plan
+- [x] **3.1** Refresh `prisma/seed.ts`: set `checkInScheduleEnabled`, use plan
       instances (`sourceTemplateId`), `isSample`, `linkedUserId`, `repsMax`,
       `supersetWithPrevious`; add a `ClientInvite` + `WaitlistEntry`; fix
       QUICKSTART's "1 coach, 1 client" count. Effort: M
-- [ ] **3.2** Exclude the sample client from dashboard counts and fix
+      *Done:* per-client plan copies, valid check-in answers, sample client, invite,
+      waitlist rows, linked accounts, a rep range and a superset. QUICKSTART updated.
+- [x] **3.2** Exclude the sample client from dashboard counts and fix
       `WeeklyConfidenceStrip` bucket labels (`NEEDS_PLAN`/`PLAN_ENDED` ≠
       "awaiting replies"). (`api/coach/dashboard/route.ts:22-23`,
       `WeeklyConfidenceStrip.tsx:13-17,91`). Effort: S
+      *Done:* the sample client is out of the counts and the confidence strip is gone.
 - [ ] **3.3** Remove or implement decorative controls: weight-unit selector,
       "replace with library exercise" on existing rows, plan Archive/Duplicate/
       Restore menu + permanent-empty "Archived" section.
       (`ExerciseEditorDrawer.tsx:399-408`, `PlanEditorDrawer.tsx:172-187`,
       `PlanTemplateList.tsx:66,136-143`). Effort: M
+      *Partly done:* the weight unit is real and the plan menu's dead items are removed.
+      "Replace" on an existing exercise row still only changes the form (the schema
+      keeps `exerciseId` immutable on purpose): decide to build it or remove the tab.
 - [x] **3.4** Builder "Library" tab = the coach's real library, not the static
       dataset; add exercise DELETE (soft-delete via existing `deletedAt`) and
       case-insensitive uniqueness. (`ExerciseEditorDrawer.tsx:17`,
       `api/exercises/[id]/route.ts`, hardening migration index). Effort: M
       *Done:* own exercises first, starters after; soft-delete `DELETE /api/exercises/[id]`;
       duplicate names compared case-insensitively in the routes (the index is unchanged).
-- [ ] **3.5** Server validation parity: zod on `PUT /api/plans/[id]`,
+- [x] **3.5** Server validation parity: zod on `PUT /api/plans/[id]`,
       `PUT /api/days/[id]`, `POST /api/plans/[id]/weeks`; `clientFeeling` as enum;
       non-empty `coachFeedback`; align length caps (flag note 200 vs 500).
       (`schemas.ts:170-179`, respective routes). Effort: S–M
-- [ ] **3.6** Effort-feedback fixes: key `feedbackSent` to completion id; stop
+      *Done:* zod on the plan, day and week routes; `clientFeeling` is one of four
+      values; a coach reply cannot be empty; the check-in note (500) and the flag note (200)
+      are capped at their columns.
+- [x] **3.6** Effort-feedback fixes: key `feedbackSent` to completion id; stop
       claiming "can rate later" for non-final workouts.
       (`ClientDashboard.tsx:51,596`, `ClientWorkoutExecution.tsx:280-286`). Effort: S
+      *Done:* the rating prompt is keyed to the completion, on web and in the app.
 - [x] **3.7** Unassign-plan confirm on all paths + warn that week progress resets.
       (`UnifiedClientProfile.tsx:311-321`). Effort: S
       *Done:* the one unassign path warns before its second tap.
-- [ ] **3.8** Delete dead files: `prisma/sql/post_00*.sql` (content lives in
+- [x] **3.8** Delete dead files: `prisma/sql/post_00*.sql` (content lives in
       migrations), unreachable `InlinePlanEditor` menu, `TEST_CASES_PHASE_3_4.md`
       (retire or rewrite), stale "no self-serve reset" comment in the admin
       password route. Effort: S
+      *Done:* `prisma/sql/` and `TEST_CASES_PHASE_3_4.md` deleted, comment corrected.
+      `InlinePlanEditor` was already gone.
 - [x] **3.9** Waitlist: allow re-triggering the confirmation email (or change the
       repeat-signup copy); return `inviteUrl` to `InviteActions` so a failed email
       still yields a copyable link immediately.
@@ -185,11 +201,12 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
 
 ## Explicitly deferred (decide, don't drift)
 
-- Session invalidation on password reset (30-day JWTs survive): accepted risk,
-  revisit before public launch.
+- ~~Session invalidation on password reset~~: done, a password change or reset
+  signs out every other device.
 - Offline/PWA set-queue persistence (localStorage mirror) and offline indicator.
-- User timezone field + consistent week/streak math (root cause of #19).
-- E2E test suite; route-level tests for auth/scoping.
+- ~~User timezone field + consistent week math~~: done, weeks run in the client's timezone.
+- E2E test suite. (Route-level tests for auth and scoping now exist:
+  `src/app/api/__tests__/data-guard-smoke.test.ts`.)
 - Pagination (invites `take:20`, check-ins, workouts) beyond the caps raised in 1.5.
 - Per-exercise progression view; coach message inbox; CSP `object-src`/`base-uri`;
   waitlist beta-token expiry; soft-delete purging; admin audit log.

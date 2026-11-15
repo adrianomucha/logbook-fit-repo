@@ -236,3 +236,82 @@ export function workoutMark(day: WeekDayInfo): WorkoutMark {
   if (day.status === 'CURRENT') return 'next';
   return 'upcoming';
 }
+
+/**
+ * Stepping back through the weeks of a plan from the "This week" view, so a
+ * workout left unfinished in an earlier week can still be opened and done.
+ * Earlier weeks and the current one only: the plan's future is not on offer.
+ */
+export interface WeekStep {
+  /** The week on screen, kept inside 1..currentWeek */
+  viewed: number;
+  /** Looking at a week before the current one */
+  isEarlier: boolean;
+  canGoBack: boolean;
+  canGoForward: boolean;
+}
+
+/**
+ * `historyReady` false pins the view to the current week with nowhere to
+ * step: until the client's past workouts have loaded, an earlier week would
+ * show every one of them as never done.
+ */
+export function weekStep(viewedWeek: number, currentWeek: number, historyReady = true): WeekStep {
+  const current = Math.max(1, currentWeek);
+  if (!historyReady) return { viewed: current, isEarlier: false, canGoBack: false, canGoForward: false };
+  const viewed = Math.min(Math.max(1, viewedWeek), current);
+  return {
+    viewed,
+    isEarlier: viewed < current,
+    canGoBack: viewed > 1,
+    canGoForward: viewed < current,
+  };
+}
+
+/**
+ * Workouts in weeks before the current one that the client never finished,
+ * and the earliest week that has one. Null when there are none.
+ */
+export function unfinishedInEarlierWeeks(
+  weeks: WorkoutWeek[],
+  completions: WorkoutCompletion[],
+  clientId: string,
+  currentWeekNumber: number
+): { count: number; weekNumber: number } | null {
+  let count = 0;
+  let weekNumber: number | null = null;
+  for (const week of weeks) {
+    if (week.weekNumber >= currentWeekNumber) continue;
+    const open = getWeekDays(week, completions, clientId).filter((d) => d.status !== 'COMPLETED').length;
+    if (open === 0) continue;
+    count += open;
+    if (weekNumber === null || week.weekNumber < weekNumber) weekNumber = week.weekNumber;
+  }
+  return weekNumber === null ? null : { count, weekNumber };
+}
+
+/** Wording for the week stepper, the same on web and in the app */
+export const WEEK_STEP_COPY = {
+  previous: 'Previous week',
+  next: 'Next week',
+  /** Tag beside the week number when it is not the current week */
+  earlier: 'Earlier week',
+  backToCurrent: 'Back to this week',
+  /** The pointer on the current week to work left behind */
+  unfinished: (count: number) =>
+    count === 1 ? '1 unfinished workout from an earlier week' : `${count} unfinished workouts from earlier weeks`,
+} as const;
+
+/**
+ * This week's completions (from the week overview, which also knows about a
+ * workout in progress) plus the finished ones from every other week (from
+ * the progress history). The week view needs both once it can step back:
+ * with only this week's, every earlier workout would read as never done.
+ */
+export function withEarlierCompletions(
+  thisWeek: WorkoutCompletion[],
+  history: WorkoutCompletion[]
+): WorkoutCompletion[] {
+  const seen = new Set(thisWeek.map((c) => `${c.weekId}:${c.dayId}`));
+  return [...thisWeek, ...history.filter((c) => !seen.has(`${c.weekId}:${c.dayId}`))];
+}
