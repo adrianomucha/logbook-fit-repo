@@ -1,6 +1,6 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Check, Loader2 } from 'lucide-react';
 import { FormError } from '@/components/ui/form-error';
 import { cn } from '@/lib/utils';
 import { WAITLIST_NEXT_STEPS } from '@/lib/landing-copy';
+import { readAttribution, trackFunnel } from '@/lib/funnel';
 
 /** Buckets for the confirmation-screen question. Values match `waitlistQualifySchema`. */
 const CLIENT_COUNTS = [
@@ -27,37 +28,6 @@ const CURRENT_TOOLS = [
   { value: 'everfit', label: 'Everfit' },
   { value: 'other-app', label: 'Another app' },
 ] as const;
-
-/**
- * Reads campaign attribution from the current URL, falling back to the
- * referring host so an untagged link from a forum or newsletter still lands
- * in a bucket instead of "unknown". `pageCampaign` names the page the form
- * sits on, for signups whose link carried no utm_campaign of its own.
- */
-function readAttribution(pageCampaign?: string) {
-  if (typeof window === 'undefined') return {};
-
-  const params = new URLSearchParams(window.location.search);
-  const referrer = document.referrer || undefined;
-
-  let referrerHost: string | undefined;
-  if (referrer) {
-    try {
-      const url = new URL(referrer);
-      // Same-origin navigations say nothing about acquisition.
-      if (url.host !== window.location.host) referrerHost = url.host;
-    } catch {
-      // A malformed referrer is not worth failing a signup over.
-    }
-  }
-
-  return {
-    source: params.get('utm_source') ?? referrerHost ?? 'direct',
-    medium: params.get('utm_medium') ?? undefined,
-    campaign: params.get('utm_campaign') ?? pageCampaign,
-    referrer,
-  };
-}
 
 /**
  * Email capture for the public landing pages. Posts to /api/waitlist, then
@@ -80,6 +50,18 @@ export function WaitlistForm({
     'idle' | 'loading' | 'qualify' | 'tool' | 'done'
   >('idle');
   const [error, setError] = useState<'registered' | string>('');
+
+  // Funnel: one "started" per page view, on the first character typed
+  const startedRef = useRef(false);
+  const funnelProps = () => {
+    const from = readAttribution(campaign);
+    return { source: from.source, medium: from.medium, campaign: from.campaign };
+  };
+  const markStarted = () => {
+    if (startedRef.current) return;
+    startedRef.current = true;
+    trackFunnel('Waitlist started', funnelProps());
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +90,7 @@ export function WaitlistForm({
         return;
       }
 
+      trackFunnel('Waitlist joined', funnelProps());
       setStatus('qualify');
     } catch {
       setError('Something went wrong. Please try again.');
@@ -251,7 +234,10 @@ export function WaitlistForm({
           id={inputId}
           type="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            markStarted();
+            setEmail(e.target.value);
+          }}
           placeholder="you@example.com"
           autoComplete="email"
           required
