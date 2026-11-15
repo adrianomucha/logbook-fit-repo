@@ -101,3 +101,11 @@ export const PLAN_ADJUSTMENT_REMINDER = {
     `You told ${clientFirstName} on ${date}. They have no plan right now.`,
   action: 'Edit plan',
 } as const;
+
+/** Swapping which exercise a plan row is ("Replace" in the builder). */
+export const REPLACE_EXERCISE = {
+  /** The server's refusal once the client has trained that row */
+  logged:
+    "This exercise already has logged sets on this day, so it can't be swapped: their history would change. Edit a day they haven't trained yet, or add the new exercise alongside.",
+  failed: "The exercise wasn't replaced. Check your connection and try again.",
+} as const;
