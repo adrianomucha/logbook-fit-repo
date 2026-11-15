@@ -335,7 +335,11 @@ export default function TodayScreen() {
           <WeekOverview
             planName={plan.name}
             step={step}
-            onStep={setViewedWeek}
+            onStep={(week) => {
+              // A choice changed, like the Today / This week toggle
+              haptic.select();
+              setViewedWeek(week);
+            }}
             currentWeekNumber={currentWeekNumber}
             leftBehind={leftBehind}
             durationWeeks={weekOverview.plan.durationWeeks}
