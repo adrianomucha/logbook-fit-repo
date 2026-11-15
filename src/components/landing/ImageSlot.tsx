@@ -16,6 +16,8 @@ interface ImageSlotProps {
   hideCaption?: boolean;
   /** Priority-load the image (use for the above-the-fold hero) */
   priority?: boolean;
+  /** Mark the slot for the landing page's scroll reveal */
+  reveal?: boolean;
 }
 
 /**
@@ -32,10 +34,12 @@ export function ImageSlot({
   objectPosition,
   hideCaption,
   priority,
+  reveal,
 }: ImageSlotProps) {
+  const revealAttr = reveal ? { 'data-reveal': '' } : {};
   if (src) {
     return (
-      <div className={cn('relative overflow-hidden', className)}>
+      <div {...revealAttr} className={cn('relative overflow-hidden', className)}>
         <Image
           src={src}
           alt={alt ?? label}
@@ -61,7 +65,7 @@ export function ImageSlot({
   }
 
   return (
-    <div className={cn('relative overflow-hidden bg-secondary', className)}>
+    <div {...revealAttr} className={cn('relative overflow-hidden bg-secondary', className)}>
       {/* Faint diagonal grain so the block reads as intentional, not broken */}
       <div
         className="absolute inset-0 bg-[repeating-linear-gradient(-60deg,transparent,transparent_46px,hsl(var(--border)/0.55)_46px,hsl(var(--border)/0.55)_47px)]"

@@ -237,6 +237,21 @@
   }
 }
 
+/* Landing-page scroll reveals (see RevealScope). Nothing is hidden until the
+   scope has mounted and marked itself ready, and reduced-motion visitors are
+   never marked ready, so there is no rule to undo for them. Transform and
+   opacity only. */
+[data-reveal-ready] [data-reveal] {
+  transition:
+    opacity 600ms cubic-bezier(0.23, 1, 0.32, 1),
+    transform 600ms cubic-bezier(0.23, 1, 0.32, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+[data-reveal-ready] [data-reveal]:not([data-revealed]) {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,

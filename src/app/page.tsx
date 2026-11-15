@@ -16,6 +16,7 @@ import { WaitlistForm } from '@/components/landing/WaitlistForm';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
 import { RosterPreview } from '@/components/landing/RosterPreview';
+import { RevealScope } from '@/components/landing/RevealScope';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
 import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
 import { FOUNDING_PRICE, FORM_PROMISES } from '@/lib/landing-copy';
@@ -250,6 +251,19 @@ function IconTile({ icon: Icon }: { icon: (typeof COACH_FEATURES)[number]['icon'
   );
 }
 
+/**
+ * Stagger for scroll reveals: marks an element and delays it against its
+ * neighbours. The steps shrink as they go, so a group lands as one motion
+ * and not as a metronome.
+ */
+const STAGGER = [0, 70, 120, 160, 190];
+function reveal(order = 0) {
+  return {
+    'data-reveal': '',
+    style: { '--reveal-delay': `${STAGGER[Math.min(order, STAGGER.length - 1)]}ms` } as React.CSSProperties,
+  };
+}
+
 function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
   return (
     <ul className="divide-y divide-border/70 border-t border-border/70">
@@ -281,7 +295,7 @@ export default function HomePage() {
   // the page back off the CDN. Revisit with `revalidate` once the number is
   // big enough to be worth showing.
   return (
-    <div className="bg-background">
+    <RevealScope className="bg-background">
       <script
         type="application/ld+json"
         // Serialised from a literal defined in this file, no user input reaches it.
@@ -384,7 +398,7 @@ export default function HomePage() {
             zigzag is purely a large-screen concern. */}
         <section>
           <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 pb-10 pt-16 sm:px-6 sm:pb-14 sm:pt-24 lg:grid-cols-2 lg:grid-rows-[auto_1fr]">
-            <div>
+            <div {...reveal()}>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 The north star
               </p>
@@ -411,13 +425,15 @@ export default function HomePage() {
               className="aspect-[4/5] rounded-xl lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:aspect-auto lg:h-full"
               objectPosition="8% center"
               hideCaption
+              reveal
             />
 
             <div>
               <ol>
-                {CHECK_IN_LOOP.map((item) => (
+                {CHECK_IN_LOOP.map((item, i) => (
                   <li
                     key={item.step}
+                    {...reveal(i)}
                     className="flex gap-6 border-t border-border/70 py-6 sm:gap-8"
                   >
                     <span className="font-mono text-3xl font-bold tabular-nums leading-none text-brand antialiased sm:text-4xl">
@@ -443,7 +459,7 @@ export default function HomePage() {
             pull together so they sit centered beside it. */}
         <section>
           <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-2">
-            <div className="lg:col-start-2 lg:row-start-1 lg:self-end">
+            <div {...reveal(1)} className="lg:col-start-2 lg:row-start-1 lg:self-end">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Their side
               </p>
@@ -466,9 +482,10 @@ export default function HomePage() {
               alt="A client sitting on a gym bench between sets, logging a set on her phone: the Dumbbell Goblet Squat card shows two of three sets done and the coach's cue to keep the chest tall"
               className="aspect-[4/5] rounded-xl lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-center"
               hideCaption
+              reveal
             />
 
-            <div className="lg:col-start-2 lg:row-start-2 lg:self-start">
+            <div {...reveal(2)} className="lg:col-start-2 lg:row-start-2 lg:self-start">
               <FeatureList features={CLIENT_FEATURES} />
             </div>
           </div>
@@ -479,7 +496,7 @@ export default function HomePage() {
             section in a row made all three read as the same weight. */}
         <section>
           <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-14">
-            <div className="max-w-2xl">
+            <div {...reveal()} className="max-w-2xl">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 For coaches
               </p>
@@ -494,13 +511,17 @@ export default function HomePage() {
             {/* Hairlines come from the 1px gap over a border-coloured grid, so
                 they stay single-width at every column count. */}
             <ul className="mt-10 grid gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70 sm:mt-14 sm:grid-cols-2 lg:grid-cols-4">
-              {COACH_FEATURES.map((feature) => (
+              {COACH_FEATURES.map((feature, i) => (
+                // The reveal is on the card's contents, not the card: a
+                // hidden card would show the grid's hairline colour through.
                 <li key={feature.title} className="bg-background p-6">
-                  <IconTile icon={feature.icon} />
-                  <h3 className="mt-5 text-base font-semibold antialiased">{feature.title}</h3>
-                  <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased">
-                    {feature.body}
-                  </p>
+                  <div {...reveal(i)}>
+                    <IconTile icon={feature.icon} />
+                    <h3 className="mt-5 text-base font-semibold antialiased">{feature.title}</h3>
+                    <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased">
+                      {feature.body}
+                    </p>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -517,7 +538,7 @@ export default function HomePage() {
             question, and the invite button is the answer for the left column. */}
         <section className="dark bg-background text-foreground">
           <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
-            <div className="text-center">
+            <div {...reveal()} className="text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Who it&rsquo;s for
               </p>
@@ -529,8 +550,8 @@ export default function HomePage() {
             </div>
 
             <div className="mt-12 grid gap-8 sm:grid-cols-2 sm:gap-12">
-              {AUDIENCE.map((group) => (
-                <div key={group.title}>
+              {AUDIENCE.map((group, i) => (
+                <div key={group.title} {...reveal(i)}>
                   <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                     {group.title}
                   </h3>
@@ -552,7 +573,7 @@ export default function HomePage() {
               ))}
             </div>
 
-            <div className="mt-12 flex justify-center">
+            <div {...reveal(2)} className="mt-12 flex justify-center">
               <Link
                 href="#waitlist"
                 className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
@@ -569,7 +590,7 @@ export default function HomePage() {
             the last thing settled before the questions and the ask. */}
         <section>
           <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
-            <div className="mx-auto max-w-2xl text-center">
+            <div {...reveal()} className="mx-auto max-w-2xl text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Already in a spreadsheet?
               </p>
@@ -582,7 +603,9 @@ export default function HomePage() {
                 train from your program the same day.
               </p>
             </div>
-            <SheetToPlan className="mt-12" />
+            <div {...reveal(1)} className="mt-12">
+              <SheetToPlan />
+            </div>
             <div className="mt-8 flex justify-center">
               <Link
                 href="/spreadsheet-migration"
@@ -603,6 +626,6 @@ export default function HomePage() {
       </main>
 
       <LandingFooter />
-    </div>
+    </RevealScope>
   );
 }
