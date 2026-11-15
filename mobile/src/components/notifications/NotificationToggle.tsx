@@ -2,6 +2,7 @@ import { ActivityIndicator, Alert, Linking, Pressable } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { ALERTS_COPY } from '@logbook/shared/alerts-copy';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { haptic } from '@/lib/haptics';
 
 /**
  * The bell in the chat header, same as the web's icon-only NotificationToggle:
@@ -36,7 +37,9 @@ export function NotificationToggle() {
     try {
       if (isSubscribed) await disable();
       else await enable();
+      haptic.select();
     } catch (e) {
+      haptic.error();
       Alert.alert(ALERTS_COPY.failed, e instanceof Error ? e.message : undefined);
     }
   };

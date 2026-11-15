@@ -5,6 +5,7 @@ import type { WorkoutExercise } from '@logbook/shared/types/api';
 import { formatExercisePrescription, getCompletedSetsCount } from '@logbook/shared/workout-execution';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { Button, Eyebrow } from '@/components/ui';
+import { haptic } from '@/lib/haptics';
 
 interface FlagMessageSheetProps {
   exercise: WorkoutExercise | null;
@@ -35,7 +36,9 @@ export function FlagMessageSheet({ exercise, onClose, onSend }: FlagMessageSheet
     setError(null);
     try {
       await onSend(message);
+      haptic.success();
     } catch {
+      haptic.error();
       setError('Message failed to send. Try again.');
       setSending(false);
     }

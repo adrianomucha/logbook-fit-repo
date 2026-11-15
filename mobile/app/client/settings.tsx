@@ -13,6 +13,7 @@ import {
   type SettingsSectionId,
 } from '@/components/settings/sections';
 import { HOME_TAB } from '@logbook/shared/client-copy';
+import { haptic } from '@/lib/haptics';
 
 /**
  * The client's settings — the web's /client/settings: one column under the
@@ -62,7 +63,10 @@ export default function SettingsScreen() {
                 return (
                   <Pressable
                     key={id}
-                    onPress={() => setSection(id)}
+                    onPress={() => {
+                      if (!active) haptic.select();
+                      setSection(id);
+                    }}
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
                     style={{ marginBottom: -1 }}

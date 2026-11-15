@@ -1,6 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { haptic } from '@/lib/haptics';
 import { formatClock } from '@logbook/shared/set-timer';
 import { formatDuration } from '@logbook/shared/reps';
 import { useSetTimer } from '@/hooks/useSetTimer';
@@ -14,11 +14,6 @@ interface SetTimerProps {
   onFinish: (seconds: number) => void;
   /** Stopped early: log the seconds actually held, leave the set unticked. */
   onStop: (seconds: number) => void;
-}
-
-/** The buzzer — a firm double tap, the native stand-in for the web's vibrate pattern. */
-function buzz() {
-  void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => undefined);
 }
 
 function Control({
@@ -37,7 +32,10 @@ function Control({
   const primary = variant === 'primary';
   return (
     <PressableScale
-      onPress={onPress}
+      onPress={() => {
+        haptic.tap();
+        onPress();
+      }}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       className={`h-11 flex-1 flex-row items-center justify-center gap-1.5 rounded-lg px-4 ${
@@ -60,7 +58,8 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
   const timer = useSetTimer({
     targetSeconds,
     onFinish: (seconds) => {
-      buzz();
+      // The buzzer: the native stand-in for the web's vibrate pattern
+      haptic.success();
       onFinish(seconds);
     },
   });
@@ -68,7 +67,10 @@ export function SetTimer({ setNumber, targetSeconds, onFinish, onStop }: SetTime
   if (timer.status === 'idle') {
     return (
       <Pressable
-        onPress={timer.start}
+        onPress={() => {
+          haptic.tap();
+          timer.start();
+        }}
         accessibilityRole="button"
         accessibilityLabel={
           timer.isCountdown

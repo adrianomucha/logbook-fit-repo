@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { haptic } from '@/lib/haptics';
 import { EFFORT_CHOICES, type EffortRating } from '@logbook/shared/client-copy';
 import { PressableScale } from '@/components/motion';
 
@@ -28,7 +28,7 @@ export function EffortPicker({
             accessibilityState={{ checked: isSelected, disabled }}
             onPress={() => {
               // A tick as the choice lands, like a picker detent
-              void Haptics.selectionAsync();
+              haptic.select();
               onPick(choice.value);
             }}
             disabled={disabled}

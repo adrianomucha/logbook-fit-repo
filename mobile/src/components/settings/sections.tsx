@@ -20,6 +20,7 @@ import { PasswordRules } from '@/components/auth/PasswordRules';
 import { NotificationPreferenceTile } from '@/components/notifications/NotificationPreferenceTile';
 import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
 import { PressableScale } from '@/components/motion';
+import { haptic } from '@/lib/haptics';
 
 /**
  * The settings panes — the web's components/settings/sections.tsx for the
@@ -150,7 +151,9 @@ export function ProfileSection() {
       await uploadAvatar(asset.uri);
       await refresh();
       setFlash('Photo updated');
+      haptic.success();
     } catch (e) {
+      haptic.error();
       Alert.alert("Couldn't upload the photo", e instanceof Error ? e.message : undefined);
     } finally {
       setIsPhotoBusy(false);
@@ -164,7 +167,9 @@ export function ProfileSection() {
       await removeAvatar();
       await refresh();
       setFlash('Photo removed');
+      haptic.success();
     } catch (e) {
+      haptic.error();
       Alert.alert("Couldn't remove the photo", e instanceof Error ? e.message : undefined);
     } finally {
       setIsPhotoBusy(false);
@@ -181,7 +186,9 @@ export function ProfileSection() {
       await apiFetch('/api/account/profile', { method: 'PUT', body: JSON.stringify({ name: name.trim() }) });
       await refresh();
       setFlash('Profile saved');
+      haptic.success();
     } catch (e) {
+      haptic.error();
       Alert.alert("Couldn't save your profile", e instanceof Error ? e.message : undefined);
     } finally {
       setIsSaving(false);
@@ -260,6 +267,7 @@ function WeightUnitField() {
 
   const handleChange = async (next: WeightUnit) => {
     if (!user || next === weightUnit || isSaving) return;
+    haptic.select();
     setIsSaving(true);
     try {
       await refresh(
@@ -271,6 +279,7 @@ function WeightUnitField() {
       );
       setFlash(WEIGHT_UNIT_SETTING.saved(next));
     } catch (e) {
+      haptic.error();
       Alert.alert("Couldn't change the unit", e instanceof Error ? e.message : undefined);
     } finally {
       setIsSaving(false);
@@ -373,6 +382,7 @@ function PasswordField() {
   };
 
   const failField = (field: 'current' | 'new' | null, message: string) => {
+    haptic.error();
     setError(message);
     setErrorField(field);
     if (field === 'current') currentRef.current?.focus();
@@ -401,6 +411,7 @@ function PasswordField() {
       if (res.session) await saveSession(res.session);
       close();
       setFlash(copy.saved);
+      haptic.success();
     } catch (e) {
       // A 400 is the wrong current password; anything else (429, 500) is
       // the form's problem, not a field's
@@ -590,6 +601,7 @@ function CoachingRow() {
   if (!coach) return null;
 
   const leave = () => {
+    haptic.warning();
     Alert.alert(LEAVE_COACH_COPY.title, `${LEAVE_COACH_COPY.message(coach.user.name)} ${LEAVE_COACH_COPY.warning}`, [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -601,6 +613,7 @@ function CoachingRow() {
             // Refetch the profile — this row disappears and the app drops to the no-coach state
             await mutate('/api/me');
           } catch {
+            haptic.error();
             Alert.alert(LEAVE_COACH_COPY.failedTitle, LEAVE_COACH_COPY.failed);
           }
         },

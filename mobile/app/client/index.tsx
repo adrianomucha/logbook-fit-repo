@@ -29,6 +29,7 @@ import { useDismissedCheckInReply } from '@/hooks/useDismissedCheckInReply';
 import { CheckInDetailSheet } from '@/components/checkin/CheckInDetailSheet';
 import { NoCoachState } from '@/components/NoCoachState';
 import { useAuth } from '@/lib/auth';
+import { haptic } from '@/lib/haptics';
 
 function greeting(): string {
   const hour = new Date().getHours();
@@ -199,12 +200,15 @@ export default function TodayScreen() {
         try {
           await sendMessage(`Workout feedback: ${rating.toLowerCase()}. ${notes}`);
         } catch {
+          haptic.error();
           Alert.alert('Feedback saved', 'Your note didn’t send. Try it from Chat.');
         }
       }
       setFeedbackSent(true);
+      haptic.success();
       await refreshWeek();
     } catch {
+      haptic.error();
       Alert.alert("Couldn't send feedback", 'Please try again.');
     } finally {
       setIsSendingFeedback(false);
@@ -215,6 +219,7 @@ export default function TodayScreen() {
     const completionId = today?.completion?.id;
     const dayId = today?.workoutDay?.id;
     if (!completionId || !dayId) return;
+    haptic.warning();
     Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this workout are cleared.", [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -227,6 +232,7 @@ export default function TodayScreen() {
             await refreshWeek();
             router.push({ pathname: '/client/workout/[dayId]', params: { dayId } });
           } catch {
+            haptic.error();
             Alert.alert("Couldn't restart", 'Please try again.');
           } finally {
             setIsRestarting(false);
@@ -249,6 +255,8 @@ export default function TodayScreen() {
   // fails, open the workout anyway — the first logged set still starts it.
   const startToday = async () => {
     if (!today?.workoutDay) return;
+    // Start, resume or review: the day's one big button lands with some weight
+    haptic.press();
     if (state === 'scheduled') {
       setIsStarting(true);
       try {

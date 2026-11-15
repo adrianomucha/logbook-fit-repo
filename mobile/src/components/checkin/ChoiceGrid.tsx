@@ -1,5 +1,5 @@
 import { Text, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { haptic } from '@/lib/haptics';
 import { PressableScale } from '@/components/motion';
 
 export interface Choice {
@@ -38,7 +38,7 @@ export function ChoiceGrid({ choices, value, onChange, columns, accessibilityLab
             accessibilityRole="radio"
             accessibilityState={{ checked: selected }}
             onPress={() => {
-              if (!selected) void Haptics.selectionAsync();
+              if (!selected) haptic.select();
               onChange(choice.value);
             }}
             style={{ width: columns === 3 ? '31.5%' : '48.5%' }}

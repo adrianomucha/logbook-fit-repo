@@ -17,6 +17,7 @@ import { Eyebrow } from '@/components/ui';
 import { CheckCircle, FadeInUp, PressableScale } from '@/components/motion';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { SET_COLS, SetRow } from './SetRow';
+import { haptic } from '@/lib/haptics';
 
 interface ExerciseCardProps {
   exercise: WorkoutExercise;
@@ -64,6 +65,8 @@ export function ExerciseCard({
   // exactly like a per-set tap, so bulk-completed exercises still log data.
   const toggleAll = () => {
     if (isReadOnly) return;
+    // The whole exercise in one go weighs more than a single set's tick
+    if (!isComplete) haptic.press();
     const targets = isComplete
       ? setNumbers.filter((n) => isSetCompleted(exercise.setCompletions, n))
       : setNumbers.filter((n) => !isSetCompleted(exercise.setCompletions, n));

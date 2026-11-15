@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SignInError, useAuth } from '@/lib/auth';
 import { webUrl } from '@/lib/config';
 import { Button, Eyebrow } from '@/components/ui';
+import { haptic } from '@/lib/haptics';
 
 const inputClass =
   'h-12 rounded-lg border border-border/60 bg-secondary/50 px-3.5 font-sans text-base text-foreground';
@@ -28,7 +29,9 @@ export default function LoginScreen() {
     setError(null);
     try {
       await signIn(email.trim(), password);
+      haptic.success();
     } catch (e) {
+      haptic.error();
       setError(e instanceof SignInError ? e.message : 'Something went wrong. Try again.');
       setBusy(false);
     }

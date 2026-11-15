@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { ApiError, apiFetch } from '@/lib/api';
 import { Button, Eyebrow } from '@/components/ui';
 import { PressableScale } from '@/components/motion';
+import { haptic } from '@/lib/haptics';
 
 /** The typed phrase that arms the delete button. Exact, case-sensitive. */
 const CONFIRM_PHRASE = 'DELETE';
@@ -24,6 +25,8 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
 
   useEffect(() => {
     if (!visible) return;
+    // This sheet is the confirm in front of the one action that can't be undone
+    haptic.warning();
     setPassword('');
     setConfirmText('');
     setIsDeleting(false);
@@ -40,6 +43,7 @@ export function DeleteAccountSheet({ visible, onClose, role, onDeleted }: { visi
       await apiFetch('/api/me', { method: 'DELETE', body: JSON.stringify({ password }) });
       await onDeleted();
     } catch (e) {
+      haptic.error();
       setError(e instanceof ApiError && (e.status === 403 || e.status === 429) ? e.message : 'Couldn’t delete the account. Nothing was changed. Try again.');
       setIsDeleting(false);
     }

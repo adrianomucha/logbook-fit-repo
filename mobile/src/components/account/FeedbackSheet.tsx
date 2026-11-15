@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { ApiError, apiFetch } from '@/lib/api';
 import { Button, Eyebrow } from '@/components/ui';
+import { haptic } from '@/lib/haptics';
 
 const MESSAGE_MAX_LENGTH = 2000;
 const CATEGORIES = [
@@ -39,7 +40,9 @@ export function FeedbackSheet({ visible, onClose, pageUrl }: { visible: boolean;
     try {
       await apiFetch('/api/feedback', { method: 'POST', body: JSON.stringify({ category, message: trimmed, pageUrl }) });
       setIsSent(true);
+      haptic.success();
     } catch (e) {
+      haptic.error();
       setError(e instanceof ApiError && e.status === 429 ? e.message : 'Couldn’t send that. Try again.');
     } finally {
       setIsSending(false);
@@ -77,7 +80,10 @@ export function FeedbackSheet({ visible, onClose, pageUrl }: { visible: boolean;
                         key={value}
                         accessibilityRole="radio"
                         accessibilityState={{ checked: active }}
-                        onPress={() => setCategory(value)}
+                        onPress={() => {
+                          if (!active) haptic.select();
+                          setCategory(value);
+                        }}
                         className={`h-8 flex-row items-center gap-1.5 rounded-full border px-3 ${active ? 'border-foreground bg-foreground' : 'border-border bg-background'}`}
                       >
                         <Feather name={icon} size={14} color={active ? '#ffffff' : '#737373'} />

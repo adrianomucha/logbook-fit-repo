@@ -3,7 +3,7 @@ import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, Vie
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
+import { haptic } from '@/lib/haptics';
 import { format } from 'date-fns';
 import type { WorkoutExercise } from '@logbook/shared/types/api';
 import { exerciseLabel, groupBySuperset, isSuperset } from '@logbook/shared/superset';
@@ -130,7 +130,7 @@ export default function WorkoutScreen() {
     };
     try {
       const result = await finishWorkout();
-      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      haptic.success();
       // The server's duration is what the Today card and the coach see; show
       // the same number here rather than the phone's own estimate.
       const durationSec = result?.durationSec;
@@ -138,6 +138,7 @@ export default function WorkoutScreen() {
     } catch (err) {
       finishingRef.current = false;
       setIsFinishing(false);
+      haptic.error();
       Alert.alert('Not finished yet', err instanceof Error && err.message ? err.message : 'Failed to finish the workout. Try again.');
     }
   }, [completion, stats, finishWorkout]);
@@ -163,6 +164,7 @@ export default function WorkoutScreen() {
   };
 
   const onRestartPress = () => {
+    haptic.warning();
     Alert.alert('Restart this workout?', "You'll start again from the first set. All progress, flags and notes from this workout are cleared.", [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -177,6 +179,7 @@ export default function WorkoutScreen() {
             completeIds.current = null;
             setExpandedId(null);
           } catch {
+            haptic.error();
             Alert.alert("Couldn't restart", 'Please try again.');
           } finally {
             setIsRestarting(false);
@@ -187,8 +190,12 @@ export default function WorkoutScreen() {
   };
 
   const onToggleFlag = async (workoutExerciseId: string) => {
+    haptic.tap();
     const ok = await toggleFlag(workoutExerciseId);
-    if (!ok) Alert.alert("Couldn't save the flag", 'Please try again.');
+    if (!ok) {
+      haptic.error();
+      Alert.alert("Couldn't save the flag", 'Please try again.');
+    }
   };
 
   const sendMessage = async (content: string) => {

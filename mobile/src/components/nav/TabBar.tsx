@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Keyboard, Pressable, Text, View, useWindowDimensions } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import { haptic } from '@/lib/haptics';
 import { DURATION } from '@logbook/shared/motion';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // expo-router 57 ships its own copy of react-navigation's tab bar types
@@ -109,7 +109,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
                 const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
                 if (!isActive && !event.defaultPrevented) {
                   // A tick on the tap itself, not when the pill lands
-                  void Haptics.selectionAsync();
+                  haptic.select();
                   navigation.navigate(route.name);
                 }
               }}

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Text, TextInput, View } from 'react-native';
-import * as Haptics from 'expo-haptics';
+import { haptic } from '@/lib/haptics';
 import type { TrackingType } from '@logbook/shared/reps';
 import { parseTargetReps, parseTargetSeconds, parseTargetWeight } from '@logbook/shared/workout-execution';
 import { fromDisplayWeight, toDisplayWeight, type WeightUnit } from '@logbook/shared/weight-units';
@@ -97,7 +97,7 @@ export function SetRow({
       if (!Number.isNaN(r) && r >= 0) onChangeReps?.(r);
       const w = parseFloat(weight);
       if (!Number.isNaN(w) && w >= 0) logWeight(w);
-      void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      haptic.tap();
     }
     onToggle();
   };
@@ -111,7 +111,7 @@ export function SetRow({
     onChangeReps?.(seconds);
     const w = parseFloat(weight);
     if (!Number.isNaN(w) && w >= 0) logWeight(w);
-    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    haptic.tap();
     onToggle();
   };
 

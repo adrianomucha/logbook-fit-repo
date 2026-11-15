@@ -11,6 +11,7 @@ import { Button, Eyebrow, LoadingScreen } from '@/components/ui';
 import { ChoiceGrid, type Choice } from '@/components/checkin/ChoiceGrid';
 import { BACK_HOME, CHECKIN_ALREADY_SENT, CHECKIN_EXPIRED, checkInReplyNote } from '@logbook/shared/client-copy';
 import { PressableScale } from '@/components/motion';
+import { haptic } from '@/lib/haptics';
 
 const EFFORT_OPTIONS: Choice[] = [
   { value: 'EASY', label: 'Too Easy', emoji: '😴', tone: 'success' },
@@ -175,7 +176,10 @@ export default function CheckInScreen() {
     if (!effortRating) next.effortRating = 'Choose how your workouts felt';
     if (!clientFeeling) next.clientFeeling = 'Choose how your body feels';
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      haptic.error();
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -185,7 +189,9 @@ export default function CheckInScreen() {
         painBlockers: painBlockers.trim() || undefined,
       });
       setShowSuccess(true);
+      haptic.success();
     } catch (err) {
+      haptic.error();
       if (err instanceof ApiError && err.status === 404) {
         // Answered elsewhere or expired while the form sat open — refetch so
         // the right terminal screen renders instead of a dead end.
