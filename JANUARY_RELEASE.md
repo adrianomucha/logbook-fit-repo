@@ -176,7 +176,7 @@ a client screen, to `mobile/` as well.
       *Done:* the two dead files. The orphaned exercise-library UI and the extra
       dataset were already gone; the two lists left are both in use.
 - [x] Update `FIX_PLAN.md` checkboxes; it is out of date (see below). (C, S)
-      *Done.* One box is left open there on purpose (3.3, "Replace").
+      *Done.*
 - [ ] Clear out Linear: all 53 issues are the January 2026 MVP plan, still in
       Backlog although most of it shipped. Archive them or stop using it. (A, S)
 

@@ -20,7 +20,7 @@ import { TallyMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { mutate as globalMutate } from 'swr';
-import { PLAN_SAVE_ERROR } from '@logbook/shared/coach-copy';
+import { PLAN_SAVE_ERROR, REPLACE_EXERCISE } from '@logbook/shared/coach-copy';
 import { apiFetch, ApiError } from '@/lib/api-client';
 import { parsePrescriptionInput } from '@/lib/reps';
 import { groupBySuperset, isSuperset } from '@/lib/superset';
@@ -165,6 +165,12 @@ export function PlanEditorDrawer({
   const handleSaveExercise = async (exercise: Exercise): Promise<boolean> => {
     if (!plan || !currentDay || isSaving) return false;
     const isUpdate = editingExerciseIndex !== null;
+    // A different name on an existing row means the coach replaced the
+    // exercise itself (the Replace tab, or a retyped name), not just its sets
+    const isReplace =
+      isUpdate &&
+      exercise.name.trim().toLowerCase() !==
+        currentDay.exercises[editingExerciseIndex].name.trim().toLowerCase();
     const dayId = currentDay.id;
     setIsSaving(true);
 
@@ -201,6 +207,7 @@ export function PlanEditorDrawer({
         await apiFetch(`/api/workout-exercises/${existingExercise.id}`, {
           method: 'PUT',
           body: JSON.stringify({
+            ...(isReplace ? { exerciseId: await resolveLibraryExerciseId() } : {}),
             trackingType,
             sets: exercise.sets,
             reps: reps ?? undefined,
@@ -232,7 +239,16 @@ export function PlanEditorDrawer({
       }
     } catch (err) {
       console.error('Failed to save exercise:', err);
-      toast.error(isUpdate ? PLAN_SAVE_ERROR.updateExercise : PLAN_SAVE_ERROR.addExercise);
+      toast.error(
+        // 409 on a replace: the client has trained this row. The server says so.
+        isReplace && err instanceof ApiError && err.status === 409
+          ? err.message
+          : isReplace
+            ? REPLACE_EXERCISE.failed
+            : isUpdate
+              ? PLAN_SAVE_ERROR.updateExercise
+              : PLAN_SAVE_ERROR.addExercise
+      );
       return false; // Don't refresh on error
     } finally {
       setIsSaving(false);

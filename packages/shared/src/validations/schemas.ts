@@ -194,7 +194,10 @@ export const addWorkoutExerciseSchema = z.object({
   supersetWithPrevious: z.boolean().optional(),
 });
 
-export const updateWorkoutExerciseSchema = addWorkoutExerciseSchema.omit({
+// exerciseId is optional here: sent only when the coach swaps the exercise
+// itself ("Replace"), never on an ordinary edit of sets and reps. The route
+// refuses the swap once the client has logged sets on the row.
+export const updateWorkoutExerciseSchema = addWorkoutExerciseSchema.partial({
   exerciseId: true,
 });
 

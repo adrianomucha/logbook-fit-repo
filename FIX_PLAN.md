@@ -159,14 +159,14 @@ each phase unblocks the next. Effort: S (&lt; half day) · M (1–2 days) · L (
       "awaiting replies"). (`api/coach/dashboard/route.ts:22-23`,
       `WeeklyConfidenceStrip.tsx:13-17,91`). Effort: S
       *Done:* the sample client is out of the counts and the confidence strip is gone.
-- [ ] **3.3** Remove or implement decorative controls: weight-unit selector,
+- [x] **3.3** Remove or implement decorative controls: weight-unit selector,
       "replace with library exercise" on existing rows, plan Archive/Duplicate/
       Restore menu + permanent-empty "Archived" section.
       (`ExerciseEditorDrawer.tsx:399-408`, `PlanEditorDrawer.tsx:172-187`,
       `PlanTemplateList.tsx:66,136-143`). Effort: M
-      *Partly done:* the weight unit is real and the plan menu's dead items are removed.
-      "Replace" on an existing exercise row still only changes the form (the schema
-      keeps `exerciseId` immutable on purpose): decide to build it or remove the tab.
+      *Done:* the weight unit is real, the plan menu's dead items are removed, and
+      "Replace" now swaps the exercise. It is refused once the client has logged
+      sets or a flag on that row, so their history never changes under them.
 - [x] **3.4** Builder "Library" tab = the coach's real library, not the static
       dataset; add exercise DELETE (soft-delete via existing `deletedAt`) and
       case-insensitive uniqueness. (`ExerciseEditorDrawer.tsx:17`,

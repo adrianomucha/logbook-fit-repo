@@ -446,14 +446,13 @@ describe("updateWorkoutExerciseSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("does not accept exerciseId (immutable after creation)", () => {
-    const result = updateWorkoutExerciseSchema.safeParse({
+  it("accepts an exerciseId, for swapping the exercise, and still does not require one", () => {
+    const swap = updateWorkoutExerciseSchema.safeParse({
       exerciseId: "550e8400-e29b-41d4-a716-446655440000",
     });
-    expect(result.success).toBe(true);
-    if (result.success) {
-      expect("exerciseId" in result.data).toBe(false);
-    }
+    expect(swap.success && swap.data.exerciseId).toBe("550e8400-e29b-41d4-a716-446655440000");
+    expect(updateWorkoutExerciseSchema.safeParse({ sets: 4 }).success).toBe(true);
+    expect(updateWorkoutExerciseSchema.safeParse({ exerciseId: "not-a-uuid" }).success).toBe(false);
   });
 
   it("rejects out-of-range values", () => {
