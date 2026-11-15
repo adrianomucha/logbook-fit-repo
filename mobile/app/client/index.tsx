@@ -50,7 +50,9 @@ export default function TodayScreen() {
   const { signOut } = useAuth();
   const [view, setView] = useState<WorkoutViewMode>('today');
   const [showCheckInDetail, setShowCheckInDetail] = useState(false);
-  const [feedbackSent, setFeedbackSent] = useState(false);
+  // The workout whose effort rating was just sent. Keyed by completion so a
+  // second workout in the same session asks its own question.
+  const [feedbackSentFor, setFeedbackSentFor] = useState<string | null>(null);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const [isStarting, setIsStarting] = useState(false);
@@ -204,7 +206,7 @@ export default function TodayScreen() {
           Alert.alert('Feedback saved', 'Your note didn’t send. Try it from Chat.');
         }
       }
-      setFeedbackSent(true);
+      setFeedbackSentFor(completionId);
       haptic.success();
       await refreshWeek();
     } catch {
@@ -332,7 +334,7 @@ export default function TodayScreen() {
               workoutName={today.workoutDay.name}
               completion={today.completion}
               coachName={coach.user.name}
-              feedbackSubmitted={feedbackSent || !!today.completion.effortRating}
+              feedbackSubmitted={feedbackSentFor === today.completion.id || !!today.completion.effortRating}
               isSubmittingFeedback={isSendingFeedback}
               onSubmitFeedback={(rating, notes) => void sendFeedback(rating, notes)}
             />

@@ -208,14 +208,23 @@ export const createCheckInSchema = z.object({
 
 const effortRatingEnum = z.enum(["EASY", "MEDIUM", "HARD"]);
 
+/** How the client's body feels: the four answers both apps offer. */
+export const CLIENT_FEELINGS = ["FRESH", "NORMAL", "TIRED", "RUN_DOWN"] as const;
+
 export const clientRespondSchema = z.object({
   effortRating: effortRatingEnum.optional(),
-  painBlockers: z.string().max(1000).optional(),
-  clientFeeling: z.string().max(1000).optional(),
+  // The column is VARCHAR(500); a longer note used to pass here and 500
+  painBlockers: z.string().max(500).optional(),
+  // One of the form's four answers, not free text: the coach's screens map
+  // it to a label and a colour, and anything else rendered as nothing
+  clientFeeling: z.enum(CLIENT_FEELINGS).optional(),
 });
 
 export const coachRespondSchema = z.object({
-  coachFeedback: z.string().max(2000).optional(),
+  // Both review screens refuse an empty reply; so does the server. A
+  // check-in completed with no words would push "your coach replied" at
+  // the client with nothing to read.
+  coachFeedback: z.string().trim().min(1, "Write a response before completing the check-in").max(2000),
   planAdjustment: z.boolean().optional(),
 });
 

@@ -62,7 +62,9 @@ export function ClientDashboard() {
   const [workoutViewMode, setWorkoutViewMode] = useState<WorkoutViewMode>('today');
   const [showCheckInModal, setShowCheckInModal] = useState(false);
   const [isSendingFeedback, setIsSendingFeedback] = useState(false);
-  const [feedbackSent, setFeedbackSent] = useState(false);
+  // The workout whose effort rating was just sent. Keyed by completion so a
+  // second workout in the same session asks its own question.
+  const [feedbackSentFor, setFeedbackSentFor] = useState<string | null>(null);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const { mutate } = useSWRConfig();
 
@@ -321,7 +323,7 @@ export function ClientDashboard() {
           toast.error('Feedback saved, but your note failed to send.');
         }
       }
-      setFeedbackSent(true);
+      setFeedbackSentFor(todayCompletion.id);
       await refreshWeek();
     } catch {
       toast.error('Failed to send feedback. Please try again.');
@@ -642,7 +644,7 @@ export function ClientDashboard() {
             coachNote={todayCoachNote}
             coachName={coach?.user.name ?? undefined}
             coachAvatar={coach?.user.avatarUrl ?? undefined}
-            feedbackSubmitted={feedbackSent || !!todayCompletion?.effortRating}
+            feedbackSubmitted={(!!todayCompletion && feedbackSentFor === todayCompletion.id) || !!todayCompletion?.effortRating}
             isSendingFeedback={isSendingFeedback}
             onStartWorkout={handleStartWorkout}
             isStartingWorkout={isStartingWorkout}
