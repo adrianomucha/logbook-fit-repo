@@ -69,7 +69,7 @@ export function MobileBottomNav({
         <div className="pointer-events-none absolute inset-x-0 top-[5px] h-8" aria-hidden="true">
           <div
             className={cn(
-              'h-full transition-[transform,opacity] duration-[250ms] ease-in-out-strong motion-reduce:transition-none',
+              'h-full transition-[transform,opacity] duration-250 ease-in-out-strong motion-reduce:transition-none',
               activeIndex < 0 && 'opacity-0'
             )}
             style={{

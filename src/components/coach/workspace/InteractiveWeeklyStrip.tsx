@@ -138,16 +138,19 @@ export function InteractiveWeeklyStrip({
             <div
               key={day.orderIndex}
               className={cn(
-                'flex-1 h-4 rounded-full transition-[transform,background-color] duration-500 ease-out',
+                'flex-1 h-4 rounded-full transition-[transform,opacity,background-color] duration-300 ease-out-strong',
                 // Lime for done, as the client's week shows it
                 day.status === 'COMPLETED'
                   ? 'bg-brand'
                   : 'bg-muted-foreground/15'
               )}
               style={{
-                transform: pillsMounted ? 'scaleX(1)' : 'scaleX(0)',
+                // Fades in from just short of full width. Never from 0, and
+                // quick: a coach opens client profiles all day.
+                transform: pillsMounted ? 'scaleX(1)' : 'scaleX(0.9)',
+                opacity: pillsMounted ? 1 : 0,
                 transformOrigin: 'left',
-                transitionDelay: `${i * 80}ms`,
+                transitionDelay: `${i * 30}ms`,
               }}
             />
           ))}
@@ -242,7 +245,7 @@ export function InteractiveWeeklyStrip({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 text-xs text-muted-foreground hover:text-foreground active:scale-[0.96] transition-[color,background-color,transform] duration-150 tap-target"
+                        className="h-7 text-xs text-muted-foreground hover:text-foreground transition-[color,background-color,transform] tap-target"
                         onClick={editHandler}
                       >
                         <Edit2 className="w-3 h-3 me-1" />

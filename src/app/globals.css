@@ -9,6 +9,7 @@
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
     --background: 0 0% 100%;
     --foreground: 0 0% 3.9%;
     --card: 0 0% 100%;
@@ -276,7 +277,22 @@
   .animate-marquee,
   .animate-tab-pop,
   .animate-completion-pop,
-  .animate-meter-fill {
+  .animate-meter-fill,
+  .animate-ping {
     animation: none !important;
+  }
+  /* Drawers, sheets, menus and inline panels (tailwindcss-animate's
+     animate-in / animate-out): keep the fade, which shows something changed,
+     and drop the slide and the zoom. */
+  /* Matched by substring: most uses are variants such as
+     data-[state=open]:animate-in, which the plain class would miss. */
+  [class*='animate-in'],
+  [class*='animate-out'] {
+    --tw-enter-translate-x: 0 !important;
+    --tw-enter-translate-y: 0 !important;
+    --tw-enter-scale: 1 !important;
+    --tw-exit-translate-x: 0 !important;
+    --tw-exit-translate-y: 0 !important;
+    --tw-exit-scale: 1 !important;
   }
 }

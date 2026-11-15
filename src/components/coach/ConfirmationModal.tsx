@@ -2,8 +2,12 @@ import { useState, useCallback, useEffect, useId, type ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useDialogBehavior } from '@/hooks/useDialogBehavior';
+import { useExitAnimation } from '@/hooks/useExitAnimation';
 import { cn, noWidows } from '@/lib/utils';
 import { AlertTriangle, Check, HelpCircle, Loader2, X, type LucideIcon } from 'lucide-react';
+
+/** How long the exit animation runs before the dialog unmounts. Matches Modal. */
+const CLOSE_MS = 150;
 
 type ConfirmIntent = 'default' | 'destructive';
 
@@ -106,14 +110,23 @@ export function ConfirmationModal({
     }
   }, [onConfirm, isPending]);
 
-  if (!isOpen) return null;
+  // Leaves the way the shared Modal does, not by vanishing: fade plus a
+  // small slide down, then unmount.
+  const { shouldRender, isClosing } = useExitAnimation(isOpen, CLOSE_MS);
+
+  if (!shouldRender) return null;
 
   const styles = INTENT_STYLES[confirmVariant];
   const Icon = icon ?? styles.icon;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/55 backdrop-blur-sm sm:items-center sm:p-4 animate-in fade-in-0 duration-200 motion-reduce:animate-none"
+      className={cn(
+        'fixed inset-0 z-50 flex items-end justify-center bg-black/55 backdrop-blur-sm sm:items-center sm:p-4 motion-reduce:animate-none',
+        isClosing
+          ? 'animate-out fade-out-0 fill-mode-forwards duration-150 ease-out pointer-events-none'
+          : 'animate-in fade-in-0 duration-200 ease-out'
+      )}
       onClick={(e) => {
         if (e.target === e.currentTarget) requestClose();
       }}
@@ -130,7 +143,12 @@ export function ConfirmationModal({
         // the title asks the question — announce both, in reading order
         aria-labelledby={`${eyebrowId} ${titleId}`}
         aria-describedby={messageId}
-        className="relative flex w-full max-h-[calc(100dvh-2.5rem)] flex-col overflow-hidden rounded-t-2xl bg-background text-foreground pb-[env(safe-area-inset-bottom)] shadow-2xl ring-1 ring-border focus:outline-none sm:max-h-[85vh] sm:max-w-md sm:rounded-2xl sm:pb-0 animate-in fade-in-0 slide-in-from-bottom-4 duration-200 sm:slide-in-from-bottom-0 sm:zoom-in-95 motion-reduce:animate-none"
+        className={cn(
+          'relative flex w-full max-h-[calc(100dvh-2.5rem)] flex-col overflow-hidden rounded-t-2xl bg-background text-foreground pb-[env(safe-area-inset-bottom)] shadow-2xl ring-1 ring-border focus:outline-none sm:max-h-[85vh] sm:max-w-md sm:rounded-2xl sm:pb-0 motion-reduce:animate-none',
+          isClosing
+            ? 'animate-out fade-out-0 slide-out-to-bottom-2 fill-mode-forwards duration-150 ease-out'
+            : 'animate-in fade-in-0 slide-in-from-bottom-4 duration-200 ease-out sm:slide-in-from-bottom-0 sm:zoom-in-95'
+        )}
       >
         {/* Positioning lives on the wrapper — .tap-target sets position:
             relative and would override `absolute` on the button itself */}
@@ -244,7 +262,7 @@ export function ConfirmationModal({
               variant="outline"
               onClick={requestClose}
               disabled={isPending}
-              className="h-11 flex-1 font-medium transition-transform duration-150 active:scale-[0.97] sm:flex-initial sm:px-5"
+              className="h-11 flex-1 font-medium sm:flex-initial sm:px-5"
             >
               {cancelLabel}
             </Button>
@@ -252,7 +270,7 @@ export function ConfirmationModal({
               onClick={handleConfirm}
               disabled={isPending || !textConfirmed}
               className={cn(
-                'h-11 flex-1 text-sm font-bold uppercase tracking-wider transition-transform duration-150 active:scale-[0.97] sm:flex-initial sm:px-7',
+                'h-11 flex-1 text-sm font-bold uppercase tracking-wider sm:flex-initial sm:px-7',
                 styles.confirm
               )}
             >

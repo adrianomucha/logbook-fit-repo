@@ -14,6 +14,8 @@ export const EASE = {
   pop: [0.34, 1.56, 0.64, 1],
   /** Something already on screen moving to a new place (the tab bar's pill): eases away and eases in, no overshoot */
   inOut: [0.77, 0, 0.175, 1],
+  /** A drawer or sheet sliding in from an edge: the iOS sheet curve */
+  drawer: [0.32, 0.72, 0, 1],
 } as const satisfies Record<string, Bezier>;
 
 /** Milliseconds */

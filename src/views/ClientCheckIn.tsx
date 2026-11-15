@@ -231,7 +231,7 @@ export function ClientCheckIn() {
           <SectionCard className="max-w-md mx-auto text-center py-12 animate-enter">
             <h2 className="text-xl font-bold mb-2 tracking-tight antialiased">Can’t find this client</h2>
             <p className="text-sm text-muted-foreground mb-5 antialiased">They may have been removed, or the link might be outdated.</p>
-            <Button onClick={() => router.push('/coach')} className="active:scale-[0.96] transition-transform duration-150">Back to clients</Button>
+            <Button onClick={() => router.push('/coach')}>Back to clients</Button>
           </SectionCard>
         </div>
       </div>
@@ -259,7 +259,7 @@ export function ClientCheckIn() {
               Your response is on its way to {clientName}.
             </p>
             <div className="space-y-2">
-              <Button onClick={handleBack} className="w-full active:scale-[0.96] transition-transform duration-150">
+              <Button onClick={handleBack} className="w-full">
                 Back to {firstName}’s profile
               </Button>
               <Button variant="ghost" onClick={() => router.push('/coach')} className="w-full text-muted-foreground">

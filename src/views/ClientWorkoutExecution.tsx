@@ -340,7 +340,7 @@ export function ClientWorkoutExecution() {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <StateView art={WORKOUT_LOAD_ERROR_COPY.art} title={WORKOUT_LOAD_ERROR_COPY.title} tail={WORKOUT_LOAD_ERROR_COPY.tail}>
-          <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">
+          <Button onClick={handleBack}>
             {WORKOUT_LOAD_ERROR_COPY.back}
           </Button>
         </StateView>
@@ -352,7 +352,7 @@ export function ClientWorkoutExecution() {
     return (
       <div className="min-h-dvh bg-background p-3 sm:p-4 flex items-center justify-center">
         <StateView art={WORKOUT_NOT_FOUND_COPY.art} title={WORKOUT_NOT_FOUND_COPY.title} tail={WORKOUT_NOT_FOUND_COPY.tail}>
-          <Button onClick={handleBack} className="active:scale-[0.96] transition-transform duration-150">
+          <Button onClick={handleBack}>
             {WORKOUT_NOT_FOUND_COPY.back}
           </Button>
         </StateView>

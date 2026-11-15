@@ -100,21 +100,32 @@ module.exports = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: 0 },
         },
-        "enter": {
+        // Not "enter": tailwindcss-animate names its own keyframe that, and a
+        // keyframe here with the same name replaces it. That silently turned
+        // every animate-in (drawers, menus, dialogs) into this fade-up.
+        "page-enter": {
           from: { opacity: 0, transform: "translateY(8px)" },
           to: { opacity: 1, transform: "translateY(0)" },
         },
+      },
+      // Named, because an arbitrary duration-[250ms] or ease-[...] is silently
+      // dropped: with tailwindcss-animate installed it matches both the
+      // transition and the animation utility, and Tailwind emits neither.
+      transitionDuration: {
+        250: "250ms",
+        350: "350ms",
       },
       // The shared curves from globals.css (see packages/shared/src/motion.ts)
       transitionTimingFunction: {
         "out-strong": "var(--ease-out)",
         "pop": "var(--ease-pop)",
         "in-out-strong": "var(--ease-in-out)",
+        "drawer": "var(--ease-drawer)",
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "enter": "enter 0.4s var(--ease-out) both",
+        "enter": "page-enter 0.3s var(--ease-out) both",
       },
     },
   },

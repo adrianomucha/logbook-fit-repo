@@ -110,7 +110,7 @@ export function PlanCompleteCard({
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
           <Button
             onClick={onMessageCoach}
-            className="flex-1 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90 active:scale-[0.97] transition-transform duration-150"
+            className="flex-1 h-11 text-sm font-bold uppercase tracking-wider bg-foreground text-background hover:bg-foreground/90"
           >
             <MessageCircle className="w-4 h-4 mr-2" aria-hidden="true" />
             Message {coachFirst ?? 'coach'}
@@ -118,7 +118,7 @@ export function PlanCompleteCard({
           <Button
             variant="outline"
             onClick={onViewProgress}
-            className="h-11 sm:px-5 text-sm font-semibold active:scale-[0.97] transition-transform duration-150"
+            className="h-11 sm:px-5 text-sm font-semibold"
           >
             See your progress
           </Button>
