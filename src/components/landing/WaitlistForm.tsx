@@ -203,7 +203,7 @@ export function WaitlistForm({
               type="button"
               onClick={() => question.pick(option.value)}
               style={{ animationDelay: `${150 + i * 50}ms` }}
-              className="animate-fade-in-up rounded-lg border-2 border-brand-foreground/30 px-3.5 py-2 font-mono text-xs font-medium uppercase tracking-[0.08em] antialiased transition-colors hover:border-brand-foreground hover:bg-brand-foreground hover:text-brand active:scale-[0.97]"
+              className="animate-fade-in-up min-h-11 rounded-lg border-2 border-brand-foreground/30 px-3.5 font-mono text-xs font-medium uppercase tracking-[0.08em] antialiased transition-[color,background-color,border-color,transform] duration-150 ease-out-strong hover:border-brand-foreground hover:bg-brand-foreground hover:text-brand active:scale-[0.97] active:border-brand-foreground"
             >
               {option.label}
             </button>
@@ -212,7 +212,7 @@ export function WaitlistForm({
         <button
           type="button"
           onClick={question.skip}
-          className="mt-4 text-sm text-brand-foreground/60 antialiased underline-offset-4 transition-colors hover:text-brand-foreground hover:underline"
+          className="mt-1 inline-flex min-h-11 items-center text-sm text-brand-foreground/60 antialiased underline-offset-4 transition-colors hover:text-brand-foreground hover:underline active:text-brand-foreground"
         >
           Skip
         </button>
@@ -254,6 +254,13 @@ export function WaitlistForm({
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
           autoComplete="email"
+          // The phone keyboard: an email layout, a Send key, and no
+          // capitalising or correcting an address
+          inputMode="email"
+          enterKeyHint="send"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
           required
           className="h-11 flex-1"
         />

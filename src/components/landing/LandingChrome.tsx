@@ -27,7 +27,7 @@ export function LandingHeader({ linkHome = false }: { linkHome?: boolean }) {
       )}
       <Link
         href="/login"
-        className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
+        className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-medium antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-accent active:scale-[0.97] active:bg-accent"
       >
         Sign in
       </Link>
@@ -69,6 +69,11 @@ export function JoinListSection({
   );
 }
 
+// 44px tall so each is a fair target on a phone, and lit while pressed:
+// hover never fires on touch.
+const FOOTER_LINK =
+  'inline-flex min-h-11 items-center transition-colors hover:text-foreground active:text-foreground';
+
 export function LandingFooter() {
   return (
     <footer className="dark border-t border-border bg-background text-foreground">
@@ -76,17 +81,17 @@ export function LandingFooter() {
         <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
           © 2026 Logbook.fit · All rights reserved
         </p>
-        <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground antialiased">
-          <Link href="/spreadsheet-migration" className="transition-colors hover:text-foreground">
+        <nav className="flex flex-wrap items-center justify-center gap-x-5 text-sm text-muted-foreground antialiased">
+          <Link href="/spreadsheet-migration" className={FOOTER_LINK}>
             Spreadsheet import
           </Link>
-          <Link href="/privacy" className="transition-colors hover:text-foreground">
+          <Link href="/privacy" className={FOOTER_LINK}>
             Privacy
           </Link>
-          <Link href="/terms" className="transition-colors hover:text-foreground">
+          <Link href="/terms" className={FOOTER_LINK}>
             Terms
           </Link>
-          <Link href="/login" className="transition-colors hover:text-foreground">
+          <Link href="/login" className={FOOTER_LINK}>
             Sign in
           </Link>
         </nav>

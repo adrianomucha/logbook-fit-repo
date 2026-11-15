@@ -35,7 +35,8 @@ export function ImageSlot({
 }: ImageSlotProps) {
   if (src) {
     return (
-      <div className={cn('relative overflow-hidden', className)}>
+      // bg-muted: a quiet block where the photo will be, not a hole in the page
+      <div className={cn('relative overflow-hidden bg-muted', className)}>
         <Image
           src={src}
           alt={alt ?? label}

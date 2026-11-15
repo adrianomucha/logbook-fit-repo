@@ -266,7 +266,7 @@ export default function SpreadsheetMigrationPage() {
             </p>
             <Link
               href="/"
-              className="mt-8 inline-flex rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
+              className="mt-8 inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-medium antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-accent active:scale-[0.97] active:bg-accent"
             >
               See how Logbook.fit works
             </Link>

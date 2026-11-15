@@ -45,24 +45,27 @@ export function FaqSection({
         </h2>
         <div className="mt-10 divide-y divide-border/70 border-y border-border/70">
           {items.map(({ q, a, link }) => (
-            <details key={q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-start justify-between gap-6 text-base font-semibold antialiased marker:hidden [&::-webkit-details-marker]:hidden sm:text-lg">
+            // faq-item: the answer's height animates open where the browser can
+            // do it (see globals.css). The padding is on the summary, not the
+            // row, so the whole band is the tap target.
+            <details key={q} className="faq-item group">
+              <summary className="flex cursor-pointer touch-manipulation list-none items-start justify-between gap-6 py-5 text-base font-semibold antialiased marker:hidden [&::-webkit-details-marker]:hidden sm:text-lg">
                 <h3>{q}</h3>
                 <span
-                  className="mt-1 font-mono text-lg leading-none text-muted-foreground transition-transform group-open:rotate-45"
+                  className="mt-1 font-mono text-lg leading-none text-muted-foreground transition-transform duration-200 ease-out-strong group-open:rotate-45"
                   aria-hidden="true"
                 >
                   +
                 </span>
               </summary>
-              <p className="mt-3 max-w-2xl text-pretty text-muted-foreground antialiased">
+              <p className="-mt-2 max-w-2xl pb-5 text-pretty text-muted-foreground antialiased">
                 {a}
                 {link && (
                   <>
                     {' '}
                     <Link
                       href={link.href}
-                      className="font-medium text-foreground underline underline-offset-4 hover:text-brand"
+                      className="font-medium text-foreground underline underline-offset-4 hover:text-brand active:text-brand"
                     >
                       {link.label}
                     </Link>
