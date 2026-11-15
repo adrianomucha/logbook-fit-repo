@@ -345,7 +345,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             {errorContent.message}
           </p>
           <div className="pt-2">
-            <Button variant="outline" onClick={() => router.push('/login')}>
+            <Button variant="outline" className="h-11" onClick={() => router.push('/login')}>
               Go to sign in
             </Button>
           </div>
@@ -375,11 +375,11 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
           <div className="flex flex-wrap gap-3 pt-2">
             <Button
               onClick={() => router.push('/#waitlist')}
-              className="bg-brand text-brand-foreground hover:bg-brand/90 font-bold uppercase tracking-wider"
+              className="h-11 bg-brand text-brand-foreground hover:bg-brand/90 font-bold uppercase tracking-wider"
             >
               Join the waitlist
             </Button>
-            <Button variant="outline" onClick={() => router.push('/login')}>
+            <Button variant="outline" className="h-11" onClick={() => router.push('/login')}>
               Go to sign in
             </Button>
           </div>
@@ -411,7 +411,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             {errorContent.message}
           </p>
           <div className="pt-2">
-            <Button variant="outline" onClick={() => router.push('/login')}>
+            <Button variant="outline" className="h-11" onClick={() => router.push('/login')}>
               Go to sign in
             </Button>
           </div>
@@ -434,7 +434,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
       <button
         type="button"
         onClick={() => signOut({ callbackUrl: window.location.href })}
-        className="font-medium underline underline-offset-2 transition-colors hover:text-foreground"
+        className="tap-target font-medium underline underline-offset-2 transition-colors hover:text-foreground active:text-foreground"
       >
         {viewer.role === 'CLIENT' ? 'Not you? Sign out' : 'Sign out'}
       </button>
@@ -490,7 +490,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               {blocked.message}
             </p>
             {blocked.action && (
-              <Button variant="outline" onClick={() => router.push(blocked.action!.href)}>
+              <Button variant="outline" className="h-11" onClick={() => router.push(blocked.action!.href)}>
                 {blocked.action.label}
               </Button>
             )}
@@ -569,6 +569,9 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               setName(e.target.value);
             }}
             placeholder="Your name"
+            autoComplete="name"
+            autoCapitalize="words"
+            enterKeyHint="next"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
             autoFocus={isCoachSignup}
@@ -585,6 +588,15 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               setEmail(e.target.value);
             }}
             placeholder="you@example.com"
+            // So a password manager can fill the address
+            autoComplete="email"
+            // The phone keyboard: an email layout, and no capitalising or
+            // correcting an address
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="next"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
           />
@@ -605,6 +617,10 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               setPassword(e.target.value);
             }}
             placeholder="Make it a strong one"
+            // "new-password" is what lets a password manager offer to
+            // generate one here and save it
+            autoComplete="new-password"
+            enterKeyHint="go"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
             maxLength={72}
@@ -668,7 +684,7 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
               Already have an account?{' '}
               <Link
                 href={signInToAcceptHref}
-                className="font-medium text-foreground underline underline-offset-2"
+                className="tap-target font-medium text-foreground underline underline-offset-2 active:text-muted-foreground"
               >
                 Sign in to accept
               </Link>
@@ -679,14 +695,14 @@ function SignupContent({ coachSignupOpen }: { coachSignupOpen: boolean }) {
             By creating an account you agree to the{' '}
             <Link
               href="/terms"
-              className="underline underline-offset-2 transition-colors hover:text-foreground"
+              className="underline underline-offset-2 transition-colors hover:text-foreground active:text-foreground"
             >
               Terms of Service
             </Link>{' '}
             and{' '}
             <Link
               href="/privacy"
-              className="underline underline-offset-2 transition-colors hover:text-foreground"
+              className="underline underline-offset-2 transition-colors hover:text-foreground active:text-foreground"
             >
               Privacy Policy
             </Link>

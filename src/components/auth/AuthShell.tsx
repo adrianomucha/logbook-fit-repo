@@ -126,7 +126,8 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
                 </span>
                 <Link
                   href={altHref ?? alt.href}
-                  className="rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  // 44px tall, and it presses in: hover never fires on a phone
+                  className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-medium antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-accent active:scale-[0.97] active:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   {alt.label}
                 </Link>
@@ -150,10 +151,10 @@ export function AuthShell({ mode, altHref, children }: AuthShellProps) {
             © 2026 Logbook.fit
           </p>
           <nav className="flex items-center gap-4 font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-            <Link href="/privacy" className="transition-colors hover:text-foreground">
+            <Link href="/privacy" className="tap-target transition-colors hover:text-foreground active:text-foreground">
               Privacy
             </Link>
-            <Link href="/terms" className="transition-colors hover:text-foreground">
+            <Link href="/terms" className="tap-target transition-colors hover:text-foreground active:text-foreground">
               Terms
             </Link>
           </nav>

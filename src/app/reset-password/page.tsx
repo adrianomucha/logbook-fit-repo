@@ -71,7 +71,7 @@ function ResetPasswordForm() {
         </div>
         <Link
           href="/forgot-password"
-          className="inline-flex items-center gap-2 text-sm font-medium antialiased transition-colors hover:text-muted-foreground"
+          className="tap-target inline-flex items-center gap-2 text-sm font-medium antialiased transition-colors hover:text-muted-foreground active:text-muted-foreground"
         >
           Request a new link
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -82,7 +82,7 @@ function ResetPasswordForm() {
 
   if (done) {
     return (
-      <div className="space-y-5">
+      <div className="animate-fade-in-up space-y-5">
         <div className="flex items-start gap-3 rounded-xl border border-border p-4">
           <KeyRound className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
           <p className="text-sm leading-relaxed text-muted-foreground antialiased">
@@ -114,6 +114,7 @@ function ResetPasswordForm() {
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Make it a strong one"
           autoComplete="new-password"
+          enterKeyHint="next"
           className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
           required
           maxLength={72}
@@ -131,6 +132,7 @@ function ResetPasswordForm() {
           onChange={(e) => setConfirm(e.target.value)}
           placeholder="Same password again"
           autoComplete="new-password"
+          enterKeyHint="go"
           className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
           required
           maxLength={72}

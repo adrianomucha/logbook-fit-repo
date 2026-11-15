@@ -86,16 +86,32 @@ export function FadeInUp({ children, delay = 0, className }: { children: ReactNo
   );
 }
 
-/** A completion mark popping in on mount, the web's `animate-completion-pop`. */
-export function PopIn({ children, delay = 0, className }: { children: ReactNode; delay?: number; className?: string }) {
+/**
+ * A mark popping in on mount. By default a completion mark, the web's
+ * `animate-completion-pop`; pass `from` and `duration` for a smaller one
+ * (a ticked rule uses the set check's values, the web's `animate-set-complete`).
+ */
+export function PopIn({
+  children,
+  delay = 0,
+  from = CELEBRATE_POP_FROM,
+  duration = DURATION.celebrate,
+  className,
+}: {
+  children: ReactNode;
+  delay?: number;
+  from?: number;
+  duration?: number;
+  className?: string;
+}) {
   const progress = useSharedValue(0);
   useEffect(() => {
-    progress.value = withDelay(delay, withTiming(1, { duration: DURATION.celebrate, easing: EASE_POP }));
-  }, [delay, progress]);
+    progress.value = withDelay(delay, withTiming(1, { duration, easing: EASE_POP }));
+  }, [delay, duration, progress]);
   const style = useAnimatedStyle(() => ({
     // The pop curve overshoots past 1; opacity must not
     opacity: Math.min(1, Math.max(0, progress.value)),
-    transform: [{ scale: CELEBRATE_POP_FROM + (1 - CELEBRATE_POP_FROM) * progress.value }],
+    transform: [{ scale: from + (1 - from) * progress.value }],
   }));
   return (
     <Animated.View className={className} style={style}>

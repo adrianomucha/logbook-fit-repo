@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SignInError, useAuth } from '@/lib/auth';
 import { webUrl } from '@/lib/config';
-import { Button, Eyebrow } from '@/components/ui';
+import { Button, Eyebrow, FormError } from '@/components/ui';
 import { haptic } from '@/lib/haptics';
 
 const inputClass =
@@ -18,6 +18,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const passwordRef = useRef<TextInput>(null);
 
   if (status === 'signed-in') {
     return <Redirect href={session?.user.role === 'COACH' ? '/coach' : '/client'} />;
@@ -69,16 +70,25 @@ export default function LoginScreen() {
               textContentType="emailAddress"
               autoComplete="email"
               returnKeyType="next"
+              // "Next" moves to the password field and keeps the keyboard up
+              submitBehavior="submit"
+              onSubmitEditing={() => passwordRef.current?.focus()}
             />
           </View>
           <View className="gap-2">
             <View className="flex-row items-baseline justify-between">
               <Eyebrow>Password</Eyebrow>
-              <Pressable onPress={() => WebBrowser.openBrowserAsync(webUrl('/forgot-password'))}>
+              <Pressable
+                onPress={() => WebBrowser.openBrowserAsync(webUrl('/forgot-password'))}
+                hitSlop={16}
+                accessibilityRole="link"
+                className="active:opacity-60"
+              >
                 <Eyebrow>Forgot password?</Eyebrow>
               </Pressable>
             </View>
             <TextInput
+              ref={passwordRef}
               className={inputClass}
               value={password}
               onChangeText={setPassword}
@@ -92,7 +102,7 @@ export default function LoginScreen() {
             />
           </View>
 
-          {error ? <Text className="font-sans text-sm text-destructive-text">{error}</Text> : null}
+          {error ? <FormError>{error}</FormError> : null}
 
           <Button variant="primary" onPress={submit} loading={busy} disabled={!email.trim() || !password}>
             Sign in
