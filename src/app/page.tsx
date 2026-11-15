@@ -236,15 +236,26 @@ const CLIENT_FEATURES = [
   },
 ];
 
+/**
+ * Feature icon on a lime tile. Lime is the page's thread (headline, button,
+ * ticker, step numerals, checks), and a grey icon let it drop out for two
+ * whole sections. The tile is a fill with a dark glyph, since lime can't be
+ * small text on white.
+ */
+function IconTile({ icon: Icon }: { icon: (typeof COACH_FEATURES)[number]['icon'] }) {
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brand/30">
+      <Icon className="h-4 w-4 text-brand-foreground" aria-hidden="true" />
+    </span>
+  );
+}
+
 function FeatureList({ features }: { features: typeof COACH_FEATURES }) {
   return (
     <ul className="divide-y divide-border/70 border-t border-border/70">
       {features.map((feature) => (
         <li key={feature.title} className="flex gap-4 py-5">
-          <feature.icon
-            className="mt-0.5 h-5 w-5 shrink-0 text-muted-foreground"
-            aria-hidden="true"
-          />
+          <IconTile icon={feature.icon} />
           <div>
             <h3 className="text-sm font-semibold antialiased">{feature.title}</h3>
             <p className="mt-1 text-pretty text-sm text-muted-foreground antialiased">
@@ -288,7 +299,7 @@ export default function HomePage() {
       <section className="dark flex flex-col bg-background text-foreground">
         <LandingHeader />
 
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pb-16 pt-10 text-center sm:px-6 sm:pb-24 sm:pt-12">
+        <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pt-10 text-center sm:px-6 sm:pt-12">
           <div className="animate-enter flex flex-col items-center">
             <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
@@ -320,12 +331,21 @@ export default function HomePage() {
               <WaitlistForm promises={FORM_PROMISES} />
             </div>
           </div>
-
-          {/* Enters a beat after the headline block, so the eye lands on the
-              promise first and the proof second. */}
-          <RosterPreview className="animate-enter mt-14 max-w-3xl [animation-delay:120ms] sm:mt-16" />
         </div>
       </section>
+
+      {/* The roster, still visually part of the hero. It sits outside the
+          `dark` section on purpose: the panel is the app's own light UI, the
+          brightest thing under the headline, so the eye drops from the lime
+          button straight onto it and then on into the white page below. A
+          `dark` ancestor would switch every chip and avatar in it to its
+          dark variant, so the canvas colour is set literally here instead
+          (neutral-950 is the dark theme's background). */}
+      <div className="bg-neutral-950 px-4 pb-12 pt-14 sm:px-6 sm:pb-16 sm:pt-16">
+        {/* Enters a beat after the headline block, so the eye lands on the
+            promise first and the proof second. */}
+        <RosterPreview className="animate-enter mx-auto max-w-3xl [animation-delay:120ms]" />
+      </div>
 
       {/* Volt ticker */}
       <div className="overflow-hidden border-y border-border/70 bg-brand py-3" aria-hidden="true">
@@ -351,7 +371,11 @@ export default function HomePage() {
         </div>
       </div>
 
-        {/* Check-in loop: how the ranking above gets its signal.
+        {/* The tour: loop, client side, coach toolkit. Three sections with no
+            rules between them and less air than a full section break, so they
+            read as one run from the roster down to the dark band.
+
+            Check-in loop: how the ranking above gets its signal.
 
             The two photo sections share one grid shape: heading, photo, list
             as three children. Stacked on a phone that is the reading order
@@ -359,7 +383,7 @@ export default function HomePage() {
             photo takes a column of its own and spans both text rows, so the
             zigzag is purely a large-screen concern. */}
         <section>
-          <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2 lg:grid-rows-[auto_1fr]">
+          <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 pb-10 pt-16 sm:px-6 sm:pb-14 sm:pt-24 lg:grid-cols-2 lg:grid-rows-[auto_1fr]">
             <div>
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 The north star
@@ -417,8 +441,8 @@ export default function HomePage() {
         {/* For clients: the same grid, mirrored. The photo keeps its 4:5 so
             the exercise card over it is never cropped; the two text blocks
             pull together so they sit centered beside it. */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 py-16 sm:px-6 sm:py-24 lg:grid-cols-2">
+        <section>
+          <div className="mx-auto grid max-w-6xl gap-x-14 gap-y-8 px-4 py-10 sm:px-6 sm:py-14 lg:grid-cols-2">
             <div className="lg:col-start-2 lg:row-start-1 lg:self-end">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Their side
@@ -453,8 +477,8 @@ export default function HomePage() {
         {/* For coaches: the rest of the toolkit. No photo here on purpose.
             The roster already opened the page, and a third photo-and-list
             section in a row made all three read as the same weight. */}
-        <section className="border-t border-border/70">
-          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+        <section>
+          <div className="mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pb-24 sm:pt-14">
             <div className="max-w-2xl">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 For coaches
@@ -472,7 +496,7 @@ export default function HomePage() {
             <ul className="mt-10 grid gap-px overflow-hidden rounded-xl border border-border/70 bg-border/70 sm:mt-14 sm:grid-cols-2 lg:grid-cols-4">
               {COACH_FEATURES.map((feature) => (
                 <li key={feature.title} className="bg-background p-6">
-                  <feature.icon className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+                  <IconTile icon={feature.icon} />
                   <h3 className="mt-5 text-base font-semibold antialiased">{feature.title}</h3>
                   <p className="mt-1.5 text-pretty text-sm text-muted-foreground antialiased">
                     {feature.body}
@@ -570,7 +594,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <FaqSection eyebrow="Questions" title="Before you join." items={FAQ} />
+        <FaqSection eyebrow="Questions" title="Before you join." items={FAQ} centered />
 
         <JoinListSection>
           Ten coaches at a time. Every one gets a setup call where we import

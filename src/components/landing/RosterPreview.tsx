@@ -16,6 +16,10 @@ import { cn } from '@/lib/utils';
  * dashboard uses, drawn with the same chips and avatars. Nothing here is
  * worded by hand, so the page can't promise a ranking the product doesn't do.
  *
+ * Drawn in the light theme and meant for a dark canvas: keep it out of any
+ * `dark` ancestor, or the chips and avatars flip to their dark variants. The
+ * caption colour is literal for the same reason.
+ *
  * Static on purpose. Every date is measured from a fixed "now", so the page
  * still prerenders once and "9d silent" never drifts with the build date.
  */
@@ -138,7 +142,7 @@ export function RosterPreview({ className }: { className?: string }) {
           <Group label={ROSTER_COPY.rest} clients={groups.rest} />
         </div>
       </div>
-      <figcaption className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground antialiased sm:text-[11px]">
+      <figcaption className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 antialiased sm:text-[11px]">
         Your home screen: who needs you first, and why. Sample roster.
         <span className="sr-only">
           {' '}

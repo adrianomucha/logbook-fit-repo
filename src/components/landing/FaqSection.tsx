@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
 export interface FaqItem {
   q: string;
@@ -29,18 +30,21 @@ export function FaqSection({
   eyebrow = 'Questions',
   title,
   items,
+  centered = false,
 }: {
   eyebrow?: string;
   title: string;
   items: FaqItem[];
+  /** Centre the heading, for a page whose neighbouring sections are centred */
+  centered?: boolean;
 }) {
   return (
     <section className="border-t border-border/70">
       <div className="mx-auto max-w-3xl px-4 py-16 sm:px-6 sm:py-24">
-        <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+        <p className={cn('mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased', centered && 'text-center')}>
           {eyebrow}
         </p>
-        <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
+        <h2 className={cn('text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl', centered && 'text-center')}>
           {title}
         </h2>
         <div className="mt-10 divide-y divide-border/70 border-y border-border/70">
