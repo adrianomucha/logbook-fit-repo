@@ -46,7 +46,9 @@ steps needed.
 npx prisma db seed
 ```
 
-Creates: 1 coach, 1 client, 25 exercises, and a sample 4-week plan.
+Creates: 1 coach with 4 clients (each on their own copy of a plan, at different
+stages), a sample client, check-ins, messages, a pending client invite
+(`/signup?invite=demo-invite`) and waitlist entries. Safe to re-run.
 
 ## 5. Start the App
 

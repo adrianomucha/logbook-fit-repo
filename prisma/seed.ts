@@ -11,6 +11,7 @@ import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { QUICK_START_EXERCISES } from "../src/lib/quick-start-exercises";
 import { isDemoAccount } from "../src/lib/demo";
+import { createSampleClient } from "../src/lib/sample-client";
 
 const prisma = new PrismaClient();
 
@@ -120,7 +121,9 @@ async function seed() {
     data: {
       status: "PENDING" | "CLIENT_RESPONDED" | "COMPLETED";
       effortRating?: "EASY" | "MEDIUM" | "HARD";
-      clientFeeling?: string;
+      /** One of the form's four answers */
+      clientFeeling?: "FRESH" | "NORMAL" | "TIRED" | "RUN_DOWN";
+      /** "Anything else for your coach?" Unique per check-in in this seed. */
       painBlockers?: string | null;
       clientRespondedAt?: Date;
       coachFeedback?: string;
@@ -130,14 +133,32 @@ async function seed() {
       createdAt: Date;
     }
   ) {
-    // No unique key on check-ins — match the client's feeling text (unique per
-    // check-in in this seed), or any open PENDING check-in for content-less ones.
+    // No unique key on check-ins: match the client's note (unique per check-in
+    // in this seed), or any open PENDING check-in for content-less ones.
+    // Databases seeded before the feeling became one of four answers hold
+    // the note in clientFeeling; those rows are found too and converge.
     const existing = await prisma.checkIn.findFirst({
-      where: data.clientFeeling
-        ? { coachId: coachProfileId, clientId, clientFeeling: data.clientFeeling }
+      where: data.painBlockers
+        ? {
+            coachId: coachProfileId,
+            clientId,
+            OR: [
+              { painBlockers: data.painBlockers },
+              // The first sentence is enough to recognise the old row
+              { clientFeeling: { startsWith: data.painBlockers.slice(0, 20) } },
+            ],
+          }
         : { coachId: coachProfileId, clientId, status: "PENDING" },
     });
-    if (existing) return existing;
+    if (existing) {
+      if (existing.clientFeeling !== (data.clientFeeling ?? null) || existing.painBlockers !== (data.painBlockers ?? null)) {
+        return prisma.checkIn.update({
+          where: { id: existing.id },
+          data: { clientFeeling: data.clientFeeling ?? null, painBlockers: data.painBlockers ?? null },
+        });
+      }
+      return existing;
+    }
     return prisma.checkIn.create({ data: { coachId: coachProfileId, clientId, ...data } });
   }
 
@@ -193,8 +214,15 @@ async function seed() {
   for (const client of [mike, emma, alex, jordan]) {
     await prisma.coachClientRelationship.upsert({
       where: { coachId_clientId: { coachId: coachProfileId, clientId: client.profile.id } },
-      create: { coachId: coachProfileId, clientId: client.profile.id, status: "ACTIVE" },
-      update: { status: "ACTIVE", endedAt: null, endedBy: null },
+      // Weekly auto check-ins on, so the seeded workspace can demo the loop
+      create: {
+        coachId: coachProfileId,
+        clientId: client.profile.id,
+        status: "ACTIVE",
+        checkInScheduleEnabled: true,
+        checkInIntervalDays: 7,
+      },
+      update: { status: "ACTIVE", endedAt: null, endedBy: null, checkInScheduleEnabled: true },
     });
   }
   console.log(`✓ 4 clients ensured & linked to coach`);
@@ -202,7 +230,17 @@ async function seed() {
   // ─────────────────────────────────────────────
   // 4. PLANS
   // ─────────────────────────────────────────────
-  type ExTemplate = { name: string; sets: number; reps: number; weight?: number; trackingType?: "REPS" | "TIME" };
+  type ExTemplate = {
+    name: string;
+    sets: number;
+    reps: number;
+    /** Top of a rep range: reps 8 + repsMax 10 reads "8-10" */
+    repsMax?: number;
+    weight?: number;
+    trackingType?: "REPS" | "TIME";
+    /** Done back to back with the exercise above */
+    supersetWithPrevious?: boolean;
+  };
   type DayTemplate = { name: string; exercises: ExTemplate[] };
 
   async function ensurePlan(data: { name: string; description: string; durationWeeks: number }) {
@@ -211,6 +249,36 @@ async function seed() {
     });
     if (existing) return existing;
     return prisma.plan.create({ data: { coachId: coachProfileId, workoutsPerWeek: 4, ...data } });
+  }
+
+  // A client trains on their own copy of a template (clone-on-assign, see
+  // src/lib/plan-clone.ts), so the seed makes one copy per client rather than
+  // pointing everyone at the template. Found again by its source template
+  // and the client on it.
+  async function ensureInstance(
+    template: { id: string; name: string; description: string | null; durationWeeks: number },
+    clientProfileId: string
+  ) {
+    const profile = await prisma.clientProfile.findUnique({
+      where: { id: clientProfileId },
+      select: { activePlan: { select: { id: true, sourceTemplateId: true } } },
+    });
+    if (profile?.activePlan?.sourceTemplateId === template.id) {
+      return prisma.plan.findUniqueOrThrow({ where: { id: profile.activePlan.id } });
+    }
+    // Seeded before clone-on-assign: the client's workouts hang off the
+    // template itself. Drop them; they are re-created on the copy below.
+    await prisma.workoutCompletion.deleteMany({ where: { clientId: clientProfileId, planId: template.id } });
+    return prisma.plan.create({
+      data: {
+        coachId: coachProfileId,
+        name: template.name,
+        description: template.description,
+        durationWeeks: template.durationWeeks,
+        workoutsPerWeek: 4,
+        sourceTemplateId: template.id,
+      },
+    });
   }
 
   // Days are sequential workout days (orderIndex 1..N, rest days implicit).
@@ -262,9 +330,12 @@ async function seed() {
               trackingType: ex.trackingType ?? "REPS",
               sets: ex.sets,
               reps: ex.reps,
+              repsMax: ex.repsMax ?? null,
+              supersetWithPrevious: ex.supersetWithPrevious ?? false,
               weight: weightProgression,
             },
-            update: {},
+            // Converge older seeded rows onto ranges and supersets
+            update: { repsMax: ex.repsMax ?? null, supersetWithPrevious: ex.supersetWithPrevious ?? false },
           });
           weIds.push(we.id);
         }
@@ -292,8 +363,8 @@ async function seed() {
       exercises: [
         { name: "Barbell Bench Press", sets: 4, reps: 8, weight: 135 },
         { name: "Overhead Press", sets: 3, reps: 8, weight: 95 },
-        { name: "Incline Dumbbell Press", sets: 3, reps: 10, weight: 50 },
-        { name: "Tricep Pushdown", sets: 3, reps: 12 },
+        { name: "Incline Dumbbell Press", sets: 3, reps: 10, repsMax: 12, weight: 50 },
+        { name: "Tricep Pushdown", sets: 3, reps: 12, repsMax: 15, supersetWithPrevious: true },
       ],
     },
     {
@@ -325,7 +396,7 @@ async function seed() {
     },
   ];
 
-  const strengthWeeks = await ensurePlanWeeks(strengthPlan.id, strengthDays, 4, 5);
+  await ensurePlanWeeks(strengthPlan.id, strengthDays, 4, 5);
   console.log(`✓ Plan: ${strengthPlan.name} (4 weeks)`);
 
   // Plan 2: HIIT & Conditioning (assigned to Emma)
@@ -373,7 +444,7 @@ async function seed() {
     },
   ];
 
-  const hiitWeeks = await ensurePlanWeeks(hiitPlan.id, hiitDays, 2, 0);
+  await ensurePlanWeeks(hiitPlan.id, hiitDays, 2, 0);
   console.log(`✓ Plan: ${hiitPlan.name} (2 weeks seeded of 8)`);
 
   // ─────────────────────────────────────────────
@@ -390,14 +461,29 @@ async function seed() {
     });
   }
 
-  // Mike — on week 4 (started 3 weeks ago)
-  await ensureActivePlan(mike.profile.id, strengthPlan.id, 21);
-  // Emma — on week 2 (started ~1 week ago)
-  await ensureActivePlan(emma.profile.id, hiitPlan.id, 10);
-  // Alex — on week 3 (started 2 weeks ago)
-  await ensureActivePlan(alex.profile.id, strengthPlan.id, 14);
-  // Jordan — started ~2 weeks ago but dropped off (at-risk — hasn't worked out in 9 days)
-  await ensureActivePlan(jordan.profile.id, strengthPlan.id, 14);
+  // Each client gets their own copy of the template, as assigning does.
+  async function assignCopy(
+    clientProfileId: string,
+    template: Parameters<typeof ensureInstance>[0],
+    days: DayTemplate[],
+    numWeeks: number,
+    weeklyWeightIncrement: number,
+    startDaysAgo: number
+  ) {
+    const instance = await ensureInstance(template, clientProfileId);
+    const weeks = await ensurePlanWeeks(instance.id, days, numWeeks, weeklyWeightIncrement);
+    await ensureActivePlan(clientProfileId, instance.id, startDaysAgo);
+    return { planId: instance.id, weeks };
+  }
+
+  // Mike: on week 4 (started 3 weeks ago)
+  const mikePlan = await assignCopy(mike.profile.id, strengthPlan, strengthDays, 4, 5, 21);
+  // Emma: on week 2 (started about a week ago)
+  const emmaPlan = await assignCopy(emma.profile.id, hiitPlan, hiitDays, 2, 0, 10);
+  // Alex: on week 3 (started 2 weeks ago)
+  const alexPlan = await assignCopy(alex.profile.id, strengthPlan, strengthDays, 4, 5, 14);
+  // Jordan: started 2 weeks ago but dropped off (at risk: no workout in 9 days)
+  const jordanPlan = await assignCopy(jordan.profile.id, strengthPlan, strengthDays, 4, 5, 14);
 
   console.log(`✓ Plans assigned to all clients`);
 
@@ -472,11 +558,11 @@ async function seed() {
 
   // Mike's completions — Weeks 1-3 done, Week 4 Day 1 done yesterday
   const mikeId = mike.profile.id;
-  const [sw1, sw2, sw3, sw4] = strengthWeeks;
+  const [sw1, sw2, sw3, sw4] = mikePlan.weeks;
 
   // Week 1 — all 4 workout days
   for (let i = 0; i < sw1.days.length; i++) {
-    await ensureCompletion(mikeId, strengthPlan.id, sw1.days[i], {
+    await ensureCompletion(mikeId, mikePlan.planId, sw1.days[i], {
       completedDaysAgo: 21 - STRENGTH_OFFSETS[i] + 1,
       durationMin: 40 + Math.floor(Math.random() * 15),
       effort: "MEDIUM",
@@ -486,7 +572,7 @@ async function seed() {
 
   // Week 2 — all 4 workout days
   for (let i = 0; i < sw2.days.length; i++) {
-    await ensureCompletion(mikeId, strengthPlan.id, sw2.days[i], {
+    await ensureCompletion(mikeId, mikePlan.planId, sw2.days[i], {
       completedDaysAgo: 14 - STRENGTH_OFFSETS[i] + 1,
       durationMin: 42 + Math.floor(Math.random() * 10),
       effort: "MEDIUM",
@@ -496,7 +582,7 @@ async function seed() {
 
   // Week 3 — all 4 workout days
   for (let i = 0; i < sw3.days.length; i++) {
-    await ensureCompletion(mikeId, strengthPlan.id, sw3.days[i], {
+    await ensureCompletion(mikeId, mikePlan.planId, sw3.days[i], {
       completedDaysAgo: 7 - STRENGTH_OFFSETS[i] + 1,
       durationMin: 45 + Math.floor(Math.random() * 10),
       effort: i === sw3.days.length - 1 ? "HARD" : "MEDIUM",
@@ -505,7 +591,7 @@ async function seed() {
   }
 
   // Week 4 — first workout day done yesterday
-  await ensureCompletion(mikeId, strengthPlan.id, sw4.days[0], {
+  await ensureCompletion(mikeId, mikePlan.planId, sw4.days[0], {
     completedDaysAgo: 1,
     durationMin: 42,
     effort: "MEDIUM",
@@ -516,10 +602,10 @@ async function seed() {
 
   // Emma's completions — Week 1 full, Week 2 partial
   const emmaId = emma.profile.id;
-  const [hw1, hw2] = hiitWeeks;
+  const [hw1, hw2] = emmaPlan.weeks;
 
   for (let i = 0; i < hw1.days.length; i++) {
-    await ensureCompletion(emmaId, hiitPlan.id, hw1.days[i], {
+    await ensureCompletion(emmaId, emmaPlan.planId, hw1.days[i], {
       completedDaysAgo: 10 - HIIT_OFFSETS[i],
       durationMin: 35 + Math.floor(Math.random() * 10),
       effort: i < 2 ? "EASY" : "MEDIUM",
@@ -529,7 +615,7 @@ async function seed() {
 
   // Week 2 — days 1 and 2 done
   for (let i = 0; i < 2; i++) {
-    await ensureCompletion(emmaId, hiitPlan.id, hw2.days[i], {
+    await ensureCompletion(emmaId, emmaPlan.planId, hw2.days[i], {
       completedDaysAgo: 3 - HIIT_OFFSETS[i] + 1,
       durationMin: 38,
       effort: "MEDIUM",
@@ -541,9 +627,10 @@ async function seed() {
 
   // Alex's completions — Week 1 full, Week 2 only 3 days (missed one)
   const alexId = alex.profile.id;
+  const [aw1, aw2, aw3] = alexPlan.weeks;
 
-  for (let i = 0; i < sw1.days.length; i++) {
-    await ensureCompletion(alexId, strengthPlan.id, sw1.days[i], {
+  for (let i = 0; i < aw1.days.length; i++) {
+    await ensureCompletion(alexId, alexPlan.planId, aw1.days[i], {
       completedDaysAgo: 14 - STRENGTH_OFFSETS[i] + 1,
       durationMin: 50 + Math.floor(Math.random() * 10),
       effort: "MEDIUM",
@@ -553,7 +640,7 @@ async function seed() {
 
   // Week 2 — missed last workout day
   for (let i = 0; i < 3; i++) {
-    await ensureCompletion(alexId, strengthPlan.id, sw2.days[i], {
+    await ensureCompletion(alexId, alexPlan.planId, aw2.days[i], {
       completedDaysAgo: 7 - STRENGTH_OFFSETS[i] + 1,
       durationMin: 48,
       effort: i === 2 ? "HARD" : "MEDIUM",
@@ -562,7 +649,7 @@ async function seed() {
   }
 
   // Most recent — yesterday
-  await ensureCompletion(alexId, strengthPlan.id, sw3.days[0], {
+  await ensureCompletion(alexId, alexPlan.planId, aw3.days[0], {
     completedDaysAgo: 1,
     durationMin: 55,
     effort: "MEDIUM",
@@ -573,15 +660,16 @@ async function seed() {
 
   // Jordan — only 2 completions, last one 9 days ago (at-risk — triggers >7 day threshold)
   const jordanId = jordan.profile.id;
+  const [jw1] = jordanPlan.weeks;
 
-  await ensureCompletion(jordanId, strengthPlan.id, sw1.days[0], {
+  await ensureCompletion(jordanId, jordanPlan.planId, jw1.days[0], {
     completedDaysAgo: 12,
     durationMin: 35,
     effort: "HARD",
     setsPerExercise: 3,
   });
 
-  await ensureCompletion(jordanId, strengthPlan.id, sw1.days[1], {
+  await ensureCompletion(jordanId, jordanPlan.planId, jw1.days[1], {
     completedDaysAgo: 9,
     durationMin: 30,
     effort: "HARD",
@@ -598,8 +686,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "EASY",
-    clientFeeling: "Felt great this week. The weights are manageable — maybe time to bump up?",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "Felt great this week. The weights are manageable, maybe time to bump up?",
     clientRespondedAt: daysAgo(18),
     coachFeedback: "Great to hear! I've bumped your bench by 10 lbs starting next week. Keep the form tight.",
     planAdjustment: true,
@@ -611,8 +699,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "Good week overall. Hit a bench PR at 145 lbs! Squat felt solid too.",
-    painBlockers: null,
+    clientFeeling: "NORMAL",
+    painBlockers: "Good week overall. Hit a bench PR at 145 lbs! Squat felt solid too.",
     clientRespondedAt: daysAgo(11),
     coachFeedback: "That's a 10 lb PR on bench — awesome progress! Keep the squat form dialed in at this weight before we move up.",
     planAdjustment: false,
@@ -624,8 +712,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "HARD",
-    clientFeeling: "Tough week. Felt tired going into deadlifts. Lower back was a bit tight after the session.",
-    painBlockers: "Lower back tightness after deadlifts on Day 5",
+    clientFeeling: "TIRED",
+    painBlockers: "Tough week. Felt tired going into deadlifts. Lower back was a bit tight after the session.",
     clientRespondedAt: daysAgo(4),
     coachFeedback: "Let's reduce deadlift volume to 3x3 next week and add cat-cow stretches to your warm-up. If the tightness persists, let me know and we'll adjust further.",
     planAdjustment: true,
@@ -638,8 +726,8 @@ async function seed() {
   await ensureCheckIn(mikeId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "This week went great! Bench is at 155 — that's another PR. The back stretches you recommended are helping a lot.",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "This week went great! Bench is at 155, another PR. The back stretches you recommended are helping a lot.",
     clientRespondedAt: daysAgo(2),
     coachFeedback: "155 on bench — incredible! You're making amazing progress. Let's keep the current weights one more week to lock in form before we push further.",
     planAdjustment: false,
@@ -654,8 +742,8 @@ async function seed() {
   await ensureCheckIn(emmaId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "Really enjoying the HIIT circuits! Could I add an extra session on Saturdays?",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "Really enjoying the HIIT circuits! Could I add an extra session on Saturdays?",
     clientRespondedAt: daysAgo(5),
     coachFeedback: "I love the enthusiasm! Let's hold off on adding a 5th day for now — your body needs time to adapt. We'll reassess after week 4.",
     planAdjustment: false,
@@ -670,8 +758,8 @@ async function seed() {
   await ensureCheckIn(alexId, {
     status: "COMPLETED",
     effortRating: "HARD",
-    clientFeeling: "Struggled this week. Work has been stressful and I missed a session.",
-    painBlockers: "General fatigue from work stress",
+    clientFeeling: "RUN_DOWN",
+    painBlockers: "Struggled this week. Work has been stressful and I missed a session.",
     clientRespondedAt: daysAgo(8),
     coachFeedback: "No worries about the missed session — life happens. Focus on the sessions you do make and keep the quality high. Consider a 5-min walk before training to reset.",
     planAdjustment: false,
@@ -683,8 +771,8 @@ async function seed() {
   await ensureCheckIn(alexId, {
     status: "COMPLETED",
     effortRating: "MEDIUM",
-    clientFeeling: "Much better this week. Got back on track with all sessions. The pre-workout walk tip is a game changer.",
-    painBlockers: null,
+    clientFeeling: "NORMAL",
+    painBlockers: "Much better this week. Got back on track with all sessions. The pre-workout walk tip is a game changer.",
     clientRespondedAt: daysAgo(2),
     coachFeedback: "That's great to hear! Consistency > perfection. Let's keep this momentum going.",
     planAdjustment: false,
@@ -697,8 +785,8 @@ async function seed() {
   await ensureCheckIn(alexId, {
     status: "CLIENT_RESPONDED",
     effortRating: "MEDIUM",
-    clientFeeling: "Feeling strong this week! The pre-workout walks are becoming a habit. Squats felt heavy but manageable.",
-    painBlockers: null,
+    clientFeeling: "FRESH",
+    painBlockers: "Feeling strong this week! The pre-workout walks are becoming a habit. Squats felt heavy but manageable.",
     clientRespondedAt: hoursAgo(4),
     createdAt: daysAgo(1),
   });
@@ -842,6 +930,49 @@ async function seed() {
     });
     console.log(`✓ Mike: 1 exercise flag (OHP shoulder pinch)`);
   }
+
+  // ─────────────────────────────────────────────
+  // 10. THE REST OF THE SHIPPED PRODUCT
+  // ─────────────────────────────────────────────
+
+  // The sample client every new coach gets (ClientProfile.isSample), so the
+  // seeded roster shows the "sample" treatment and its one-tap removal.
+  await createSampleClient(coachProfileId, coachUser.id);
+  console.log("✓ Sample client");
+
+  // A pending client invite, so the Getting Started card and the invite
+  // page have something to show. Fixed token: /signup?invite=demo-invite
+  await prisma.clientInvite.upsert({
+    where: { token: "demo-invite" },
+    create: {
+      coachId: coachProfileId,
+      token: "demo-invite",
+      email: "new.client@example.com",
+      note: "Looking forward to working together. Your first week is ready when you are.",
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    },
+    // Re-seeding keeps the link alive
+    update: { status: "PENDING", expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+  });
+  console.log("✓ Pending client invite (/signup?invite=demo-invite)");
+
+  // Waitlist rows for the admin dashboard: one waiting with attribution and
+  // answers, one waiting with nothing, one already invited.
+  const waitlist = [
+    { email: "waiting.coach@example.com", source: "reddit", medium: "post", campaign: "launch", clientCount: "6-15", currentTool: "spreadsheets" },
+    { email: "curious@example.com", source: "direct" },
+    { email: "invited.coach@example.com", source: "newsletter", clientCount: "16-30", currentTool: "trainerize", status: "INVITED" as const, invitedAt: daysAgo(1), inviteToken: "demo-beta-invite" },
+  ];
+  for (const entry of waitlist) {
+    await prisma.waitlistEntry.upsert({ where: { email: entry.email }, create: entry, update: {} });
+  }
+  console.log(`✓ ${waitlist.length} waitlist entries (beta invite: /signup?beta=demo-beta-invite)`);
+
+  // The coach's own client account, paired so the nav's account switch has
+  // somewhere to go (User.linkedUserId, stored on both rows).
+  await prisma.user.update({ where: { id: coachUser.id }, data: { linkedUserId: mike.user.id } });
+  await prisma.user.update({ where: { id: mike.user.id }, data: { linkedUserId: coachUser.id } });
+  console.log("✓ Coach and client@logbook.fit linked for the account switch");
 
   // ─────────────────────────────────────────────
   // DONE
