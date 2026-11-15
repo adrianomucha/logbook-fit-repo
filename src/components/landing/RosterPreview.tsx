@@ -201,7 +201,9 @@ function Row({
           <span
             className={cn(
               'hidden shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition-[background-color,border-color,transform] duration-150 ease-out group-hover:border-foreground/30 group-hover:bg-muted group-active:scale-[0.97] sm:inline-flex',
-              pressing && 'scale-[0.97] border-foreground/30 bg-muted'
+              // Lime, not the grey hover: the autoplay's press has to be
+              // seen from across the page, and lime is the page's "act" colour
+              pressing && 'scale-[0.95] border-brand bg-brand text-brand-foreground'
             )}
           >
             {action.label}
@@ -235,7 +237,7 @@ function Row({
       className={cn(
         shape,
         'group cursor-pointer transition-colors duration-150 hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        pressing && 'bg-muted/50'
+        pressing && 'bg-brand/20'
       )}
     >
       {content}
@@ -253,12 +255,15 @@ function GroupLabel({ label, count }: { label: string; count: number }) {
 
 const CARD = 'rounded-2xl border border-border/70 bg-card';
 
-// Autoplay pacing. Slow on purpose: this is explaining, not responding, so
-// each state gets long enough to be read before the next press.
-const FIRST_PRESS_AFTER = 1400;
-const NEXT_PRESS_AFTER = 2100;
-const PRESS_HOLD = 420;
-const ALL_CLEAR_HOLD = 3600;
+// Autoplay pacing: brisk enough to read as something happening the moment
+// the panel scrolls in, with a pause on the all-clear, which is the payoff.
+const FIRST_PRESS_AFTER = 600;
+const NEXT_PRESS_AFTER = 1000;
+const PRESS_HOLD = 280;
+const ALL_CLEAR_HOLD = 2200;
+
+// The lime the pressed row lands with before it settles back to the card
+const LANDING_TINT = 'hsl(74 95% 52% / 0.3)';
 
 export function RosterPreview({ className }: { className?: string }) {
   const [steps, setSteps] = useState(NO_STEPS);
@@ -360,11 +365,19 @@ export function RosterPreview({ className }: { className?: string }) {
       row.style.zIndex = far ? '2' : '1';
       const flight = row.animate(
         [
-          { transform: `translateY(${from - top}px)`, boxShadow: far ? '0 8px 24px rgb(0 0 0 / 0.12)' : 'none' },
+          { transform: `translateY(${from - top}px)`, boxShadow: far ? '0 12px 32px rgb(0 0 0 / 0.18)' : 'none' },
           { transform: 'translateY(0)', boxShadow: 'none' },
         ],
         { duration: far ? 480 : 360, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' }
       );
+      // The pressed row carries the lime with it and lets it go after it
+      // lands, so the eye can follow which client just moved and where to.
+      if (far) {
+        row.animate(
+          [{ backgroundColor: LANDING_TINT }, { backgroundColor: LANDING_TINT, offset: 0.45 }, {}],
+          { duration: 1000, easing: 'ease-out' }
+        );
+      }
       flight.onfinish = flight.oncancel = () => {
         row.style.zIndex = '';
       };
