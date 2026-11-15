@@ -64,17 +64,32 @@ async function seed() {
 
   async function ensureExercise(
     coachId: string,
-    ex: { name: string; category: string; defaultSets?: number; defaultReps?: number; defaultRest?: number }
+    ex: {
+      name: string;
+      category: string;
+      trackingType?: "REPS" | "TIME";
+      defaultSets?: number;
+      defaultReps?: number;
+      defaultRest?: number;
+    }
   ) {
+    const trackingType = ex.trackingType ?? "REPS";
     const existing = await prisma.exercise.findFirst({
       where: { coachId, name: ex.name, deletedAt: null },
     });
-    if (existing) return existing;
+    if (existing) {
+      // Older seeds dropped the tracking type, so timed exercises read as reps
+      if (existing.trackingType !== trackingType) {
+        return prisma.exercise.update({ where: { id: existing.id }, data: { trackingType } });
+      }
+      return existing;
+    }
     return prisma.exercise.create({
       data: {
         coachId,
         name: ex.name,
         category: ex.category as never,
+        trackingType,
         defaultSets: ex.defaultSets,
         defaultReps: ex.defaultReps,
         defaultRest: ex.defaultRest,
