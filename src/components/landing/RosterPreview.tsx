@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { DashboardClient } from '@/types/api';
 import {
   ROSTER_COPY,
@@ -24,10 +24,17 @@ import { cn } from '@/lib/utils';
  * dashboard uses, drawn with the same chips and avatars. Nothing here is
  * worded by hand, so the page can't promise a ranking the product doesn't do.
  *
- * It is also a small playable demo. Each "To do" row does its action when
- * pressed: the sample client moves to their next state, the same functions
- * re-split the list, and the row glides to wherever it now belongs. Clear all
- * four and the roster shows the product's own all-clear line.
+ * It is also a small demo. Each "To do" row does its action when pressed: the
+ * sample client moves to their next state, the same functions re-split the
+ * list, and the row glides to wherever it now belongs. Clear all four and the
+ * roster shows the product's own all-clear line.
+ *
+ * Left alone, it plays itself: it presses the top row, waits, presses the
+ * next, shows the all-clear, resets and goes again. That is what tells a
+ * visitor the rows do something. The first real press takes over and the
+ * autoplay stops until the sample is reset. It only runs while the panel is
+ * on screen, holds while the mouse is over it (so a row never moves out from
+ * under the cursor), and never runs for reduced-motion visitors.
  *
  * Drawn in the light theme and meant for a dark canvas: keep it out of any
  * `dark` ancestor, or the chips and avatars flip to their dark variants. The
@@ -158,10 +165,13 @@ function Row({
   client,
   unread,
   onAct,
+  pressing = false,
 }: {
   client: DashboardClient;
   unread: number;
   onAct: () => void;
+  /** The autoplay is "pressing" this row: show the pressed look */
+  pressing?: boolean;
 }) {
   const style = urgencyStyle(client.urgency);
   const action = rosterAction(client, unread);
@@ -188,7 +198,12 @@ function Row({
       </div>
       {action && (
         <>
-          <span className="hidden shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition-[background-color,border-color,transform] duration-150 ease-out group-hover:border-foreground/30 group-hover:bg-muted group-active:scale-[0.97] sm:inline-flex">
+          <span
+            className={cn(
+              'hidden shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition-[background-color,border-color,transform] duration-150 ease-out group-hover:border-foreground/30 group-hover:bg-muted group-active:scale-[0.97] sm:inline-flex',
+              pressing && 'scale-[0.97] border-foreground/30 bg-muted'
+            )}
+          >
             {action.label}
           </span>
           <span className="shrink-0 pl-1 sm:hidden">
@@ -219,7 +234,8 @@ function Row({
       aria-label={`${action.label}: ${name} (demo)`}
       className={cn(
         shape,
-        'group cursor-pointer transition-colors duration-150 hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+        'group cursor-pointer transition-colors duration-150 hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        pressing && 'bg-muted/50'
       )}
     >
       {content}
@@ -237,20 +253,95 @@ function GroupLabel({ label, count }: { label: string; count: number }) {
 
 const CARD = 'rounded-2xl border border-border/70 bg-card';
 
+// Autoplay pacing. Slow on purpose: this is explaining, not responding, so
+// each state gets long enough to be read before the next press.
+const FIRST_PRESS_AFTER = 1400;
+const NEXT_PRESS_AFTER = 2100;
+const PRESS_HOLD = 420;
+const ALL_CLEAR_HOLD = 3600;
+
 export function RosterPreview({ className }: { className?: string }) {
   const [steps, setSteps] = useState(NO_STEPS);
+  // 'auto' until a visitor presses a row themselves
+  const [mode, setMode] = useState<'auto' | 'manual'>('auto');
+  const [onScreen, setOnScreen] = useState(false);
+  const [hovered, setHovered] = useState(false);
+  const [pressing, setPressing] = useState<string | null>(null);
+  const figureRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  // Row positions from just before the last press, consumed once after render
+  // Row positions from just before the last change, consumed once after render
   const before = useRef<Map<string, number> | null>(null);
 
   const { clients, unread } = useMemo(() => buildRoster(steps), [steps]);
   const groups = splitRoster(clients, unread);
   const touched = steps.some((step) => step > 0);
+  const nextUp = groups.toDo[0]?.clientProfileId ?? null;
 
   const update = (next: number[]) => {
     before.current = rowTops(listRef.current);
     setSteps(next);
   };
+  const act = (clientProfileId: string) => {
+    const index = Number(clientProfileId.replace('sample-', ''));
+    update(steps.map((step, i) => (i === index ? step + 1 : step)));
+  };
+
+  useEffect(() => {
+    const figure = figureRef.current;
+    if (!figure || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setOnScreen(entry.isIntersecting),
+      { threshold: 0.4 }
+    );
+    observer.observe(figure);
+    return () => observer.disconnect();
+  }, []);
+
+  // The all-clear state is a little taller than the others: its one line
+  // (50px) stands in for a group label and a card border (28px). On a loop
+  // that would nudge the page under the panel every few seconds, so the list
+  // reserves the difference up front.
+  useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const reserve = () => {
+      list.style.minHeight = '';
+      list.style.minHeight = `${list.offsetHeight + 22}px`;
+    };
+    reserve();
+    window.addEventListener('resize', reserve);
+    return () => window.removeEventListener('resize', reserve);
+  }, []);
+
+  // The autoplay: one press (or the reset) per pass, rescheduled by each
+  // change it makes. Any pause simply cancels the pending pass.
+  useEffect(() => {
+    if (mode !== 'auto' || !onScreen || hovered) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    if (nextUp === null) {
+      const reset = setTimeout(() => update(NO_STEPS), ALL_CLEAR_HOLD);
+      return () => clearTimeout(reset);
+    }
+    let fire: ReturnType<typeof setTimeout> | undefined;
+    const press = setTimeout(
+      () => {
+        setPressing(nextUp);
+        fire = setTimeout(() => {
+          setPressing(null);
+          act(nextUp);
+        }, PRESS_HOLD);
+      },
+      touched ? NEXT_PRESS_AFTER : FIRST_PRESS_AFTER
+    );
+    return () => {
+      clearTimeout(press);
+      clearTimeout(fire);
+      setPressing(null);
+    };
+    // `act` and `update` close over `steps`, which is already a dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, onScreen, hovered, steps]);
 
   // FLIP: every row that ended up somewhere new starts from where it was and
   // glides home. Transform only, so it stays on the compositor.
@@ -281,66 +372,76 @@ export function RosterPreview({ className }: { className?: string }) {
   }, [steps]);
 
   return (
-    <figure className={cn('w-full', className)}>
-      <div className="overflow-hidden rounded-2xl border border-border bg-background text-left text-foreground shadow-2xl shadow-black/40">
+    <figure ref={figureRef} className={cn('w-full', className)}>
+      <div
+        className="overflow-hidden rounded-2xl border border-border bg-background text-left text-foreground shadow-2xl shadow-black/40"
+        onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
+        onPointerLeave={() => setHovered(false)}
+      >
         <div className="flex items-baseline justify-between gap-4 border-b border-border/70 px-4 py-4 sm:px-6">
           <p className="text-lg font-bold tracking-tight antialiased sm:text-xl">Clients</p>
           <p className="truncate text-xs text-muted-foreground antialiased sm:text-sm">
             {rosterSummary(clients, NOW)}
           </p>
         </div>
-        <div ref={listRef} className="space-y-6 p-3 sm:p-6">
-          {groups.toDo.length > 0 ? (
-            <div>
-              <GroupLabel label={ROSTER_COPY.toDo} count={groups.toDo.length} />
-              <div className={CARD}>
-                {groups.toDo.map((client) => {
-                  const index = Number(client.clientProfileId.replace('sample-', ''));
-                  return (
+        <div ref={listRef} className="p-3 sm:p-6">
+          <div className="space-y-6">
+            {groups.toDo.length > 0 ? (
+              <div>
+                <GroupLabel label={ROSTER_COPY.toDo} count={groups.toDo.length} />
+                <div className={CARD}>
+                  {groups.toDo.map((client) => (
                     <Row
                       key={client.clientProfileId}
                       client={client}
                       unread={unread.get(client.user.id) ?? 0}
-                      onAct={() => update(steps.map((step, i) => (i === index ? step + 1 : step)))}
+                      pressing={pressing === client.clientProfileId}
+                      onAct={() => {
+                        setMode('manual');
+                        act(client.clientProfileId);
+                      }}
                     />
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : (
-            // As in the product: the whole "To do" group gives way to one line
-            <p className={cn(CARD, 'animate-fade-in-up flex items-center gap-2 px-4 py-3.5 text-sm font-medium antialiased')}>
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
-              {ROSTER_COPY.allClear}
-            </p>
-          )}
-          <div>
-            <GroupLabel label={ROSTER_COPY.rest} count={groups.rest.length} />
-            <div className={CARD}>
-              {groups.rest.map((client) => (
-                <Row
-                  key={client.clientProfileId}
-                  client={client}
-                  unread={unread.get(client.user.id) ?? 0}
-                  onAct={() => {}}
-                />
-              ))}
+            ) : (
+              // As in the product: the whole "To do" group gives way to one line
+              <p className={cn(CARD, 'animate-fade-in-up flex items-center gap-2 px-4 py-3.5 text-sm font-medium antialiased')}>
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
+                {ROSTER_COPY.allClear}
+              </p>
+            )}
+            <div>
+              <GroupLabel label={ROSTER_COPY.rest} count={groups.rest.length} />
+              <div className={CARD}>
+                {groups.rest.map((client) => (
+                  <Row
+                    key={client.clientProfileId}
+                    client={client}
+                    unread={unread.get(client.user.id) ?? 0}
+                    onAct={() => {}}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
       <figcaption className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 antialiased sm:text-[11px]">
         Your home screen: who needs you first, and why.{' '}
-        {touched ? (
+        {mode === 'manual' ? (
           <button
             type="button"
-            onClick={() => update(NO_STEPS)}
+            onClick={() => {
+              update(NO_STEPS);
+              setMode('auto');
+            }}
             className="uppercase tracking-[0.16em] underline underline-offset-4 transition-colors hover:text-neutral-100"
           >
             Reset the sample
           </button>
         ) : (
-          <>Sample roster: try clearing the to-do list.</>
+          <>Sample roster: press a row to try it.</>
         )}
       </figcaption>
     </figure>
