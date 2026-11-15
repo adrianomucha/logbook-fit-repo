@@ -753,12 +753,10 @@ describe("flagExerciseSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("rejects note over 500 characters", () => {
-    const result = flagExerciseSchema.safeParse({
-      workoutExerciseId: validUuid,
-      note: "a".repeat(501),
-    });
-    expect(result.success).toBe(false);
+  it("caps the note at the column's 200 characters", () => {
+    const base = { workoutExerciseId: "550e8400-e29b-41d4-a716-446655440000" };
+    expect(flagExerciseSchema.safeParse({ ...base, note: "a".repeat(200) }).success).toBe(true);
+    expect(flagExerciseSchema.safeParse({ ...base, note: "a".repeat(201) }).success).toBe(false);
   });
 });
 

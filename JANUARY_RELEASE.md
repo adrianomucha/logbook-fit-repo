@@ -110,22 +110,28 @@ a client screen, to `mobile/` as well.
       accounts: waitlist, invite, coach signup, import or build a plan, invite
       a client, client trains on web and on iOS, check-in, reply, message,
       leave coach, delete account. Write down every stumble. (A + C, M)
-- [ ] **Error reporting you will actually see.** There is no Sentry or similar
+- [x] **Error reporting you will actually see.** There is no Sentry or similar
       SDK in either app; errors go to server logs only. Add one, or at least
       an alert on the existing `[EMAIL_ALERT]` and `[RATE-LIMIT_ALERT]` log
       lines, before strangers arrive. (C, M)
+      *Done without a new service:* a crash screen (web or app) and any request the
+      server fails now email `ADMIN_EMAILS`, at most three an hour per kind. The
+      app's crash screens report too. Needs `ADMIN_EMAILS` and the mailer set in
+      production. Sentry is still an option later.
 - [ ] **Production env check**: `/admin` health panel is green for mailer,
       Upstash, `NEXTAUTH_URL`, `ADMIN_EMAILS`, cron secrets, Expo push. (A, S)
 - [ ] **Confirm both crons ran** in Vercel (`/api/cron/check-ins`,
       `/api/cron/idle-workouts`) and the pg_cron sweep is scheduled. (A, S)
 - [ ] **Database backup and restore drill** on Supabase: know the plan's
       retention and restore once into a scratch project. (A, S)
-- [ ] **Smoke tests for the routes that guard data**: auth, coach/client
+- [x] **Smoke tests for the routes that guard data**: auth, coach/client
       scoping, the check-in scheduler. Unit tests are strong; there is no
       end-to-end suite. A handful of route tests is enough for January. (C, M)
-- [ ] **Refresh `prisma/seed.ts`** so a fresh local or demo database shows
+      *Done:* 23 route tests in `src/app/api/__tests__/data-guard-smoke.test.ts`.
+- [x] **Refresh `prisma/seed.ts`** so a fresh local or demo database shows
       the shipped product (check-in schedule, plan instances, sample client,
       an invite, a waitlist row). (FIX_PLAN 3.1) (C, M)
+      *Done,* and run twice against a local Postgres (fresh and previously seeded).
 - [ ] **Support path**: a support address in the app, the listing and the
       footer, and a decision on who answers it. (A, S)
 
@@ -133,11 +139,16 @@ a client screen, to `mobile/` as well.
 
 - [ ] **Landing page matches the January offer** (waitlist vs open signup,
       free vs paid, App Store badge once live). (C, S to M)
+      *Not started:* it depends on the two open decisions in section 0 (open
+      signup or waitlist, free or paid).
 - [ ] **Coach signup journey tested end to end** on a phone: form,
       confirmation email, invite, first login. (A, S)
-- [ ] **Conversion tracking**: tell apart visits, signup starts and
+- [x] **Conversion tracking**: tell apart visits, signup starts and
       completed signups, by source. Only `@vercel/analytics` page views exist
       today. (C, S)
+      *Done:* four custom events (waitlist started and joined, signup started and
+      completed) labelled by source, campaign or kind of signup. Custom events
+      need a Vercel plan that includes them; check the Analytics tab shows them.
 - [ ] **SEO check**: crawl fixes and Search Console verification shipped in
       October; confirm the pages are indexed and the two supporting pages
       (check-in template, client check-in software) are live and linked. (A, S)
@@ -147,18 +158,25 @@ a client screen, to `mobile/` as well.
 
 ## 5. Should do if time allows
 
-- [ ] Server validation: `clientFeeling` is still a free string and feedback
+- [x] Server validation: `clientFeeling` is still a free string and feedback
       can be empty (FIX_PLAN 3.5; the plan, day and week routes are done). (C, S)
-- [ ] Effort rating: `feedbackSent` does not reset between workouts in one
+      *Done:* one of four values; a coach reply cannot be empty.
+- [x] Effort rating: `feedbackSent` does not reset between workouts in one
       session (FIX_PLAN 3.6). (C, S)
-- [ ] Unfinished workouts from a past week cannot be reopened; only the
+      *Done* on web and in the app.
+- [x] Unfinished workouts from a past week cannot be reopened; only the
       Progress log shows them (rest of FIX_PLAN 2.12). (C, M)
-- [ ] "I'll adjust the plan" is recorded but nothing tracks the follow-through
+      *Done:* the week view steps back to earlier weeks, on web and in the app.
+- [x] "I'll adjust the plan" is recorded but nothing tracks the follow-through
       (backlog 12). (C, S to M)
-- [ ] Delete dead files: `prisma/sql/post_00*.sql`,
+      *Done:* the client profile reminds the coach until the plan changes.
+- [x] Delete dead files: `prisma/sql/post_00*.sql`,
       `TEST_CASES_PHASE_3_4.md`, the orphaned exercise-library UI and the
       three overlapping exercise datasets (FIX_PLAN 3.8, backlog 31 to 35). (C, S)
-- [ ] Update `FIX_PLAN.md` checkboxes; it is out of date (see below). (C, S)
+      *Done:* the two dead files. The orphaned exercise-library UI and the extra
+      dataset were already gone; the two lists left are both in use.
+- [x] Update `FIX_PLAN.md` checkboxes; it is out of date (see below). (C, S)
+      *Done.* One box is left open there on purpose (3.3, "Replace").
 - [ ] Clear out Linear: all 53 issues are the January 2026 MVP plan, still in
       Backlog although most of it shipped. Archive them or stop using it. (A, S)
 

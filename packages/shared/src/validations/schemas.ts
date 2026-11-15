@@ -429,7 +429,9 @@ export const updateSetsSchema = z.object({
 
 export const flagExerciseSchema = z.object({
   workoutExerciseId: z.string().uuid(),
-  note: z.string().max(500).optional(),
+  // The column is VARCHAR(200) and both apps cap the field there; 500 here
+  // let a longer note through validation to fail in the database
+  note: z.string().max(200).optional(),
 });
 
 export const unflagExerciseSchema = z.object({
