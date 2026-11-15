@@ -113,6 +113,7 @@
   /* A long press on a control should not select its label. Content stays
      selectable. */
   button,
+  summary,
   [role='button'],
   [role='tab'],
   [role='radio'],
@@ -233,6 +234,25 @@
     }
   }
 
+  /* FAQ rows (native <details>): the answer's height eases open and shut.
+     Only where the browser can animate to an automatic height; elsewhere the
+     row opens at once, as before. */
+  @supports (interpolate-size: allow-keywords) {
+    .faq-item {
+      interpolate-size: allow-keywords;
+    }
+    .faq-item::details-content {
+      block-size: 0;
+      overflow: clip;
+      transition:
+        block-size 0.25s var(--ease-out),
+        content-visibility 0.25s allow-discrete;
+    }
+    .faq-item[open]::details-content {
+      block-size: auto;
+    }
+  }
+
   /* Mobile tab bar: the icon settles into place as the pill arrives. Small
      and quick on purpose: tabs are switched all day, so no overshoot. */
   .animate-tab-pop {
@@ -280,6 +300,9 @@
   .animate-meter-fill,
   .animate-ping {
     animation: none !important;
+  }
+  .faq-item::details-content {
+    transition: none !important;
   }
   /* Drawers, sheets, menus and inline panels (tailwindcss-animate's
      animate-in / animate-out): keep the fade, which shows something changed,

@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import Link from 'next/link';
 import {
   Check,
@@ -28,6 +28,13 @@ import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 // of '/' on /privacy or /login marks those pages as duplicates of the homepage.
 export const metadata: Metadata = {
   alternates: { canonical: '/' },
+};
+
+// The page opens on a near-black hero, but the document body is white. With
+// no theme colour a phone's browser bar takes the body's white and sits as a
+// pale strip on top of the dark hero. This is the hero's background.
+export const viewport: Viewport = {
+  themeColor: '#0a0a0a',
 };
 
 /**
@@ -284,19 +291,26 @@ export default function HomePage() {
           waitlist CTA sit inside the document's main landmark rather than
           floating outside it. */}
       <main>
-      {/* Hero: dark brand canvas, centered display type */}
-      <section className="dark flex min-h-dvh flex-col bg-background text-foreground">
+      {/* Hero: dark brand canvas, centered display type. svh, not dvh: the
+          dynamic unit resizes the hero as the phone's URL bar collapses, and
+          everything below it jumps mid-scroll. */}
+      <section className="dark flex min-h-svh flex-col bg-background text-foreground">
         <LandingHeader />
 
         <div className="mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center px-4 py-16 text-center sm:px-6">
-          <div className="animate-enter flex flex-col items-center">
-            <p className="mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+          {/* Each piece arrives a beat after the one above it. The page's one
+              first-view moment, so it can afford the stagger. */}
+          <div className="flex flex-col items-center">
+            <p className="animate-enter mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
               Private beta · for independent coaches
             </p>
             {/* Sized so "Your quietest client" holds one line on desktop:
                 the three-line break is the rhythm of the sentence. */}
-            <h1 className="text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
+            <h1
+              className="animate-enter text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased"
+              style={{ animationDelay: '50ms' }}
+            >
               Your quietest client
               <br />
               is your next
@@ -312,11 +326,18 @@ export default function HomePage() {
                 coaches.
               </span>
             </h1>
-            <p className="mt-8 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg">
+            <p
+              className="animate-enter mt-8 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg"
+              style={{ animationDelay: '110ms' }}
+            >
               Clients go quiet weeks before they quit. Logbook.fit ranks your
               roster by who needs you today.
             </p>
-            <div id="waitlist" className="mt-10 w-full max-w-md scroll-mt-24">
+            <div
+              id="waitlist"
+              className="animate-enter mt-10 w-full max-w-md scroll-mt-24"
+              style={{ animationDelay: '180ms' }}
+            >
               <WaitlistForm promises={FORM_PROMISES} />
             </div>
           </div>
@@ -413,7 +434,7 @@ export default function HomePage() {
             <div className="mt-8 flex justify-center">
               <Link
                 href="/spreadsheet-migration"
-                className="inline-flex rounded-lg border border-border px-4 py-2 text-sm font-medium antialiased transition-colors hover:bg-accent"
+                className="inline-flex min-h-11 items-center rounded-lg border border-border px-4 text-sm font-medium antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-accent active:scale-[0.97] active:bg-accent"
               >
                 How importing works
               </Link>
