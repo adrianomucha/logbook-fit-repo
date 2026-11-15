@@ -20,6 +20,7 @@ import { apiFetch } from '@/lib/api';
 import { useWorkoutExecution } from '@/hooks/useWorkoutExecution';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { useWorkoutClock } from '@/hooks/useWorkoutClock';
+import { useClientWeekOverview } from '@/hooks/useClientWeek';
 import { formatWorkoutClock, WORKOUT_CLOCK_LABEL } from '@logbook/shared/workout-clock';
 import { Button, EmptyState, Eyebrow, LoadingScreen } from '@/components/ui';
 import { WORKOUT_LOAD_ERROR_COPY, WORKOUT_NOT_FOUND_COPY } from '@logbook/shared/state-copy';
@@ -32,6 +33,8 @@ import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 import { workoutTitle } from '@logbook/shared/progress';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
+import { weekCompletedBy, WEEK_COMPLETE_COPY, type CompletedWeek } from '@logbook/shared/week-complete';
+import { Confetti } from '@/components/Confetti';
 
 const FINISH_BAR_HEIGHT = 56 + 24;
 
@@ -74,6 +77,9 @@ export default function WorkoutScreen() {
   const [isRestarting, setIsRestarting] = useState(false);
   const [messageExercise, setMessageExercise] = useState<WorkoutExercise | null>(null);
   const [celebration, setCelebration] = useState<{ exercisesDone: number; exercisesTotal: number; durationMin: number } | null>(null);
+  // Set when the workout just finished was the week's last one open
+  const [completedWeek, setCompletedWeek] = useState<CompletedWeek | null>(null);
+  const { weekOverview } = useClientWeekOverview();
   const [isSavingRating, setIsSavingRating] = useState(false);
 
   const scrollRef = useRef<ScrollView>(null);
@@ -130,7 +136,11 @@ export default function WorkoutScreen() {
     };
     try {
       const result = await finishWorkout();
-      haptic.success();
+      // The last workout of the week gets the confetti and the bigger haptic
+      const week = weekCompletedBy(weekOverview, dayId);
+      setCompletedWeek(week);
+      if (week) haptic.celebrate();
+      else haptic.success();
       // The server's duration is what the Today card and the coach see; show
       // the same number here rather than the phone's own estimate.
       const durationSec = result?.durationSec;
@@ -141,7 +151,7 @@ export default function WorkoutScreen() {
       haptic.error();
       Alert.alert('Not finished yet', err instanceof Error && err.message ? err.message : 'Failed to finish the workout. Try again.');
     }
-  }, [completion, stats, finishWorkout]);
+  }, [completion, stats, finishWorkout, weekOverview, dayId]);
 
   const onFinishPress = () => {
     // Nothing logged isn't a workout; say how to finish instead
@@ -255,8 +265,11 @@ export default function WorkoutScreen() {
           <PopIn className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-brand">
             <Feather name="check" size={40} color="#1e2702" />
           </PopIn>
-          <Eyebrow className="mb-1.5">Workout complete</Eyebrow>
+          <Eyebrow className="mb-1.5">{completedWeek ? WEEK_COMPLETE_COPY.eyebrow(completedWeek.weekNumber) : 'Workout complete'}</Eyebrow>
           <Text className="text-center font-sans-bold text-2xl tracking-tight text-foreground">{workoutTitle(day.name ?? 'Workout')}</Text>
+          {completedWeek ? (
+            <Text className="mt-1.5 text-center font-sans text-sm text-muted-foreground">{WEEK_COMPLETE_COPY.tally(completedWeek.total)}</Text>
+          ) : null}
         </View>
         <FadeInUp delay={80} className="mb-10 w-full max-w-xs flex-row gap-3">
           <View className="flex-1 items-center rounded-xl bg-muted/60 px-3 py-6">
@@ -279,6 +292,7 @@ export default function WorkoutScreen() {
         <Pressable onPress={() => router.replace('/client')} disabled={isSavingRating} className="mt-8 min-h-[44px] justify-center px-4">
           <Eyebrow>Skip for now</Eyebrow>
         </Pressable>
+        {completedWeek ? <Confetti /> : null}
       </View>
     );
   }

@@ -179,6 +179,27 @@
     }
   }
 
+  /* Week-complete confetti: each piece falls once from above the top edge to
+     below the bottom one, drifting and spinning by its own amounts (set
+     inline from @logbook/shared/week-complete). Linear: paper falls at a
+     steady rate. */
+  .confetti-piece {
+    position: absolute;
+    top: 0;
+    border-radius: 1.5px;
+    transform: translate3d(0, -40px, 0);
+    animation: confettiFall 2.4s linear both;
+    will-change: transform;
+  }
+  @keyframes confettiFall {
+    from {
+      transform: translate3d(0, -40px, 0) rotate(0deg);
+    }
+    to {
+      transform: translate3d(var(--confetti-drift, 0), calc(100dvh + 40px), 0) rotate(var(--confetti-spin, 360deg));
+    }
+  }
+
   /* Plan-complete meter filling from the left */
   .animate-meter-fill {
     animation: meterFill 0.7s var(--ease-out) 0.15s both;
@@ -300,6 +321,10 @@
   .animate-meter-fill,
   .animate-ping {
     animation: none !important;
+  }
+  /* Confetti has no still frame worth showing: leave it out entirely */
+  .confetti-piece {
+    display: none !important;
   }
   .faq-item::details-content {
     transition: none !important;
