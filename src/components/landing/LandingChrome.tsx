@@ -1,10 +1,11 @@
 import Link from 'next/link';
 import { Logo, LogoMark } from '@/components/brand/LogoMark';
-import { WaitlistForm } from '@/components/landing/WaitlistForm';
+import { OfferCta } from '@/components/landing/OfferCta';
+import type { Offer } from '@/lib/offer';
 
 /**
  * The frame shared by the public marketing pages (the homepage and the pages
- * that link into it): the header, the closing waitlist CTA and the footer.
+ * that link into it): the header, the closing call to action and the footer.
  * Kept in one place so a second page can't drift from the first.
  */
 
@@ -35,13 +36,19 @@ export function LandingHeader({ linkHome = false }: { linkHome?: boolean }) {
   );
 }
 
-/** The closing "Get on the list." section, dark, with the second waitlist form. */
+/**
+ * The closing section, dark, with the page's second call to action: "Get on
+ * the list." with the waitlist form, or "Start today." with the way into
+ * signup, depending on the offer.
+ */
 export function JoinListSection({
   children,
+  offer,
   campaign,
 }: {
   /** The line under the heading */
   children: React.ReactNode;
+  offer: Offer;
   /** Passed to the form, see WaitlistForm */
   campaign?: string;
 }) {
@@ -53,15 +60,16 @@ export function JoinListSection({
             <LogoMark size={44} />
           </div>
           <h2 className="text-[clamp(2.75rem,9vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
-            Get on
+            {offer.copy.closingTitle[0]}
             <br />
-            the list<span className="text-brand">.</span>
+            {offer.copy.closingTitle[1]}
+            <span className="text-brand">.</span>
           </h2>
           <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
             {children}
           </p>
           <div className="mx-auto mt-9 max-w-md text-left">
-            <WaitlistForm campaign={campaign} />
+            <OfferCta offer={offer} campaign={campaign} />
           </div>
         </div>
       </div>
@@ -74,7 +82,7 @@ export function JoinListSection({
 const FOOTER_LINK =
   'inline-flex min-h-11 items-center transition-colors hover:text-foreground active:text-foreground';
 
-export function LandingFooter() {
+export function LandingFooter({ appStoreUrl }: { appStoreUrl?: string | null } = {}) {
   return (
     <footer className="dark border-t border-border bg-background text-foreground">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
@@ -85,6 +93,11 @@ export function LandingFooter() {
           <Link href="/spreadsheet-migration" className={FOOTER_LINK}>
             Spreadsheet import
           </Link>
+          {appStoreUrl && (
+            <a href={appStoreUrl} className={FOOTER_LINK} rel="noopener">
+              iPhone app
+            </a>
+          )}
           <Link href="/privacy" className={FOOTER_LINK}>
             Privacy
           </Link>

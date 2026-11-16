@@ -1,11 +1,14 @@
 import Link from 'next/link';
 import { Check, NotebookPen } from 'lucide-react';
-import { WaitlistForm } from '@/components/landing/WaitlistForm';
+import { OfferCta } from '@/components/landing/OfferCta';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
 import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
-import { FOUNDING_PRICE, FORM_PROMISES } from '@/lib/landing-copy';
+import { getOffer } from '@/lib/offer';
 import { SITE_URL, absoluteUrl, pageMetadata } from '@/lib/seo';
+
+// Waitlist or open signup: the same switch the homepage reads
+const OFFER = getOffer();
 
 const PATH = '/spreadsheet-migration';
 
@@ -84,11 +87,11 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'What if my file doesn’t come across cleanly?',
-    a: 'Every coach in the beta gets a setup call. Bring the file and we’ll get your first program in with you, and use what tripped it up to improve the importer.',
+    a: OFFER.copy.importHelp,
   },
   {
     q: 'What does it cost?',
-    a: FOUNDING_PRICE,
+    a: OFFER.copy.price,
   },
 ];
 
@@ -143,7 +146,7 @@ export default function SpreadsheetMigrationPage() {
                 you say so.
               </p>
               <div className="mt-10 w-full max-w-md">
-                <WaitlistForm campaign={CAMPAIGN} promises={FORM_PROMISES} />
+                <OfferCta offer={OFFER} campaign={CAMPAIGN} showPromises />
               </div>
             </div>
           </div>
@@ -275,12 +278,11 @@ export default function SpreadsheetMigrationPage() {
 
         <FaqSection title="Before you switch." items={FAQ} />
 
-        <JoinListSection campaign={CAMPAIGN}>
-          Ten coaches at a time. Every one gets a setup call where we bring your
-          first program across with you.
+        <JoinListSection offer={OFFER} campaign={CAMPAIGN}>
+          {OFFER.copy.closingBody.spreadsheet}
         </JoinListSection>
       </main>
-      <LandingFooter />
+      <LandingFooter appStoreUrl={OFFER.appStoreUrl} />
     </div>
   );
 }

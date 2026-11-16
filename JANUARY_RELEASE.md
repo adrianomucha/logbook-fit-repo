@@ -20,8 +20,8 @@ in a Claude Code session.
 - [ ] **Pick the date.** Everything below is sequenced backwards from it. (A)
 - [ ] **Coach signup: open or still invite-only?** Today a coach can only sign
       up from a waitlist invite. Opening it is one env var
-      (`OPEN_COACH_SIGNUP=true`), but it also means rewriting the landing page,
-      which currently sells a waitlist for a "free private beta". (A)
+      (`OPEN_COACH_SIGNUP=true`), and the landing page now follows that same
+      switch (see section 4), so no rewrite is needed. (A)
 - [ ] **Free or paid in January?** There is no billing code. If January is
       still free, say so on the landing page and in the terms. If paid, that is
       an L item of its own and should be the first thing started. (A)
@@ -137,10 +137,17 @@ a client screen, to `mobile/` as well.
 
 ## 4. Getting coaches in (from the Notion weekly priorities, all unchecked)
 
-- [ ] **Landing page matches the January offer** (waitlist vs open signup,
+- [x] **Landing page matches the January offer** (waitlist vs open signup,
       free vs paid, App Store badge once live). (C, S to M)
-      *Not started:* it depends on the two open decisions in section 0 (open
-      signup or waitlist, free or paid).
+      *Done as a switch, so it holds whichever way section 0 goes:* the public
+      pages follow `OPEN_COACH_SIGNUP`. Unset, they collect waitlist emails as
+      today; `true`, they send coaches straight to signup with no waitlist or
+      setup-call wording. Both say it is free (there is no billing) and keep
+      the founding-price promise. Set `NEXT_PUBLIC_APP_STORE_URL` once the app
+      is live and the pages name the iPhone app and link to it. Read the
+      open-signup wording in `src/lib/offer.ts` before flipping the switch,
+      and note the terms still say "private beta". Going paid is still its
+      own item.
 - [ ] **Coach signup journey tested end to end** on a phone: form,
       confirmation email, invite, first login. (A, S)
 - [x] **Conversion tracking**: tell apart visits, signup starts and
