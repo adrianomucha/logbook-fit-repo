@@ -6,6 +6,7 @@ import { LogoMark } from '@/components/brand/LogoMark';
 import { cn } from '@/lib/utils';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { isFromApp } from '@logbook/shared/app-handoff';
+import { appStoreUrl } from '@/lib/app-store';
 import {
   INSTALL_PROMPT_STORAGE_KEY,
   NATIVE_APP_STORAGE_KEY,
@@ -44,11 +45,11 @@ function readState(): InstallPromptState {
 
 /** Spends this device's single ask. Called the moment the banner goes on
  *  screen, and again on the way out in case that first write was refused. */
-function persistOffered(): void {
+function persistOffered(method: InstallMethod = 'none'): void {
   try {
     window.localStorage.setItem(
       INSTALL_PROMPT_STORAGE_KEY,
-      JSON.stringify(markOffered(Date.now()))
+      JSON.stringify(markOffered(Date.now(), method, readState()))
     );
   } catch {
     // Nothing to do. The banner still goes away for this page view.
@@ -99,6 +100,11 @@ const COPY: Record<InstallAudience, Record<Exclude<InstallMethod, 'none'>, Copy>
       body: 'Opens straight to your workout. No browser, no searching.',
       cta: 'Show me how',
     },
+    'app-store': {
+      title: 'Get the Logbook app',
+      body: 'Free on the App Store. Opens straight to your workout, with alerts when your coach writes.',
+      cta: 'Open the App Store',
+    },
   },
   coach: {
     native: {
@@ -121,6 +127,12 @@ const COPY: Record<InstallAudience, Record<Exclude<InstallMethod, 'none'>, Copy>
       body: 'Your clients in their own window, one click away. No tab to dig for.',
       cta: 'Show me how',
     },
+    // Never resolved for coaches (the app is the client's side); here for the type.
+    'app-store': {
+      title: 'Get the Logbook app',
+      body: 'Free on the App Store.',
+      cta: 'Open the App Store',
+    },
   },
 };
 
@@ -140,7 +152,8 @@ function Step({ index, children }: { index: number; children: React.ReactNode })
 }
 
 /**
- * Nudges people to install the PWA.
+ * Nudges people to install the PWA, or, for a client on an iPhone once the
+ * real app is in the App Store, to get that.
  *
  * Two very different mechanics behind one banner: Chromium hands us a real
  * install dialog via `beforeinstallprompt`, while Safari (iOS and macOS)
@@ -216,6 +229,7 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
           hasNativePrompt: deferred !== null,
           openedFromNativeApp: fromNativeApp.current || openedFromNativeApp(),
           accountHasNativeApp,
+          appStoreAvailable: appStoreUrl() !== null,
         },
         readState(),
         audience
@@ -226,7 +240,7 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
       // opens a workout before the delay elapses never saw it, so they keep
       // their turn.
       offered.current = true;
-      persistOffered();
+      persistOffered(resolved);
       setMethod(resolved);
     }, SHOW_DELAY_MS);
 
@@ -241,6 +255,12 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
   }, []);
 
   const handleCta = useCallback(async () => {
+    if (method === 'app-store') {
+      const url = appStoreUrl();
+      dismiss();
+      if (url) window.location.assign(url);
+      return;
+    }
     if (method !== 'native') {
       // Second press ("Got it") closes up rather than collapsing back: they
       // have the instructions, and hovering over the Share sheet they are
@@ -265,12 +285,13 @@ export function InstallPrompt({ audience }: { audience: InstallAudience }) {
   if (method === 'none') return null;
 
   const copy = COPY[audience][method];
-  // Every path but Chromium's is walked through by hand.
-  const hasSteps = method !== 'native';
+  // Chromium installs from its own dialog and the App Store is a link;
+  // every other path is walked through by hand.
+  const hasSteps = method !== 'native' && method !== 'app-store';
 
   return (
     <section
-      aria-label="Install Logbook"
+      aria-label={method === 'app-store' ? 'Get the Logbook app' : 'Install Logbook'}
       className={cn(
         // z-40 matches the mobile tab bar and stays under sheets/dialogs (z-50).
         'fixed z-40 animate-enter',
