@@ -145,10 +145,10 @@ export function FeedbackDialog({ isOpen, onClose }: FeedbackDialogProps) {
                     aria-checked={isActive}
                     onClick={() => setCategory(value)}
                     className={cn(
-                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target',
+                      'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 text-xs font-medium transition-[color,background-color,border-color,transform] duration-150 ease-out-strong active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 tap-target',
                       isActive
                         ? 'border-foreground bg-foreground text-background'
-                        : 'border-border bg-background text-muted-foreground hover:border-foreground/25 hover:text-foreground'
+                        : 'border-border bg-background text-muted-foreground hover:border-foreground/25 hover:text-foreground active:border-foreground/25 active:text-foreground'
                     )}
                   >
                     <Icon className="h-3.5 w-3.5" aria-hidden="true" />
