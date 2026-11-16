@@ -75,7 +75,7 @@ export function CoachSettingsPage() {
                       // Lime underline, as the client's settings and the nav tabs
                       section === id
                         ? 'border-brand text-foreground'
-                        : 'border-transparent text-muted-foreground hover:text-foreground'
+                        : 'border-transparent text-muted-foreground hover:text-foreground active:text-foreground'
                     )}
                   >
                     <Icon

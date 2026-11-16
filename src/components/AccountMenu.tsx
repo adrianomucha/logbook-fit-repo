@@ -93,7 +93,9 @@ export function AccountMenu({ className }: { className?: string }) {
         <DropdownMenuTrigger
           aria-label="Account menu"
           className={cn(
-            'inline-flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation',
+            // tap-target: the avatar is 28px, the hit area 44. It dims while pressed,
+            // since hover never fires on a phone.
+            'tap-target inline-flex items-center gap-1 rounded-full py-0.5 pl-0.5 pr-1.5 text-muted-foreground transition-[color,opacity] duration-150 hover:text-foreground active:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation',
             className
           )}
         >

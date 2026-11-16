@@ -406,10 +406,10 @@ function WeightUnitField({ role }: { role: SettingsRole }) {
               disabled={isSaving}
               onClick={() => void handleChange(unit)}
               className={cn(
-                'flex-1 rounded-lg font-mono text-[11px] uppercase tracking-[0.12em] font-medium transition-colors touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                'flex-1 rounded-lg font-mono text-[11px] uppercase tracking-[0.12em] font-medium transition-[color,background-color,border-color,transform] duration-150 ease-out-strong active:scale-[0.97] touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 isActive
                   ? 'bg-card text-foreground border border-border/70'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : 'text-muted-foreground hover:text-foreground active:text-foreground'
               )}
             >
               {weightUnitLabel(unit)}
@@ -572,7 +572,8 @@ function PasswordField() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="py-3.5 border-t border-border/60 space-y-4">
+    // Fades up as it opens: a one-line row just became a three-field form
+    <form onSubmit={handleSubmit} className="animate-fade-in-up py-3.5 border-t border-border/60 space-y-4">
       <div className="space-y-1">
         <FieldLabel>{copy.open}</FieldLabel>
         <FieldHint>{copy.hint}</FieldHint>
@@ -585,6 +586,7 @@ function PasswordField() {
           id="settings-current-password"
           type="password"
           autoComplete="current-password"
+          enterKeyHint="next"
           value={currentPassword}
           onChange={(e) => setCurrentPassword(e.target.value)}
           aria-invalid={errorField === 'current' || undefined}
@@ -601,6 +603,7 @@ function PasswordField() {
           id="settings-new-password"
           type="password"
           autoComplete="new-password"
+          enterKeyHint="go"
           value={newPassword}
           onChange={(e) => setNewPassword(e.target.value)}
           placeholder="Make it a strong one"

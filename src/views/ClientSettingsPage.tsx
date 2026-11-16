@@ -80,7 +80,7 @@ export function ClientSettingsPage() {
                     'border-b-2 px-1 sm:px-0.5 pb-2.5 pt-1',
                     section === id
                       ? 'border-brand text-foreground'
-                      : 'border-transparent text-muted-foreground hover:text-foreground'
+                      : 'border-transparent text-muted-foreground hover:text-foreground active:text-foreground'
                   )}
                 >
                   <Icon className="hidden min-[400px]:block h-3.5 w-3.5 shrink-0" aria-hidden="true" />

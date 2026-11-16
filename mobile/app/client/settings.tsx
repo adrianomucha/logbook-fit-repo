@@ -70,7 +70,7 @@ export default function SettingsScreen() {
                     accessibilityRole="tab"
                     accessibilityState={{ selected: active }}
                     style={{ marginBottom: -1 }}
-                    className={`min-h-[44px] flex-1 items-center justify-end border-b-2 px-1 pb-2.5 pt-1 ${
+                    className={`min-h-[44px] flex-1 items-center justify-end border-b-2 px-1 pb-2.5 pt-1 active:opacity-60 ${
                       active ? 'border-brand' : 'border-transparent'
                     }`}
                   >

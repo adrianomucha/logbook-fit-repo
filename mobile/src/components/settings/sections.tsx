@@ -19,7 +19,10 @@ import { UserAvatar } from '@/components/UserAvatar';
 import { PasswordRules } from '@/components/auth/PasswordRules';
 import { NotificationPreferenceTile } from '@/components/notifications/NotificationPreferenceTile';
 import { DeleteAccountSheet } from '@/components/account/DeleteAccountSheet';
-import { PressableScale } from '@/components/motion';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+import { DURATION } from '@logbook/shared/motion';
+import { FormError } from '@/components/ui';
+import { EASE_OUT, FadeInUp, PressableScale } from '@/components/motion';
 import { haptic } from '@/lib/haptics';
 
 /**
@@ -96,12 +99,29 @@ function useFlash(): [string | null, (message: string) => void] {
 }
 
 function Flash({ message }: { message: string | null }) {
-  if (!message) return <View className="flex-1" />;
+  // The last message stays in place while the line fades out; without it the
+  // text would vanish the moment `message` clears and there would be nothing
+  // left to fade.
+  const [shown, setShown] = useState(message);
+  const opacity = useSharedValue(0);
+  useEffect(() => {
+    if (message) {
+      setShown(message);
+      opacity.value = withTiming(1, { duration: DURATION.state, easing: EASE_OUT });
+    } else {
+      opacity.value = withTiming(0, { duration: DURATION.enter, easing: EASE_OUT });
+    }
+  }, [message, opacity]);
+  const style = useAnimatedStyle(() => ({ opacity: opacity.value }));
   return (
-    <View className="flex-1 flex-row items-center gap-1.5" accessibilityLiveRegion="polite">
-      <Feather name="check" size={12} color="#157f3c" />
-      <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-success-text">{message}</Text>
-    </View>
+    <Animated.View className="flex-1 flex-row items-center gap-1.5" style={style} accessibilityLiveRegion="polite">
+      {shown ? (
+        <>
+          <Feather name="check" size={12} color="#157f3c" />
+          <Text className="font-mono-medium text-[10px] uppercase tracking-[1.4px] text-success-text">{shown}</Text>
+        </>
+      ) : null}
+    </Animated.View>
   );
 }
 
@@ -240,7 +260,7 @@ export function ProfileSection() {
           <View className="flex-row items-baseline justify-between gap-2">
             <FieldHint>JPG, PNG, or WebP, up to 4MB.</FieldHint>
             {avatarUrl ? (
-              <Pressable onPress={() => void handlePhotoRemove()} disabled={isPhotoBusy} hitSlop={8} className="min-h-[32px] justify-center">
+              <Pressable onPress={() => void handlePhotoRemove()} disabled={isPhotoBusy} hitSlop={8} className="min-h-[32px] justify-center active:opacity-60">
                 <Text className="font-sans text-xs text-muted-foreground">Remove photo</Text>
               </Pressable>
             ) : null}
@@ -300,7 +320,7 @@ function WeightUnitField() {
                 accessibilityState={{ checked: active, disabled: isSaving }}
                 disabled={isSaving}
                 onPress={() => void handleChange(unit)}
-                className={`flex-1 items-center justify-center rounded-lg ${active ? 'border border-border bg-card' : ''}`}
+                className={`flex-1 items-center justify-center rounded-lg active:opacity-60 ${active ? 'border border-border bg-card' : ''}`}
               >
                 <Text className={`font-mono-medium text-[11px] uppercase tracking-[1.3px] ${active ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {weightUnitLabel(unit)}
@@ -449,7 +469,8 @@ function PasswordField() {
   }
 
   return (
-    <View className="gap-4 border-t border-border/60 py-3.5">
+    // Fades up as it opens: a one-line row just became a three-field form
+    <FadeInUp className="gap-4 border-t border-border/60 py-3.5">
       <View className="gap-1">
         <FieldLabel>{copy.open}</FieldLabel>
         <FieldHint>{copy.hint}</FieldHint>
@@ -491,12 +512,7 @@ function PasswordField() {
         {newPassword.length > 0 ? <PasswordRules password={newPassword} /> : null}
       </View>
 
-      {error ? (
-        <View className="flex-row items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2.5">
-          <Feather name="alert-triangle" size={14} color="#c52020" style={{ marginTop: 2 }} />
-          <Text className="flex-1 font-sans text-sm text-destructive-text">{error}</Text>
-        </View>
-      ) : null}
+      {error ? <FormError>{error}</FormError> : null}
 
       <View className="flex-row items-center justify-end gap-2 pt-1">
         <PressableScale
@@ -509,7 +525,7 @@ function PasswordField() {
         </PressableScale>
         <SaveButton label={copy.submit} onPress={() => void handleSubmit()} disabled={!currentPassword || !newPassword} busy={isSaving} />
       </View>
-    </View>
+    </FadeInUp>
   );
 }
 
