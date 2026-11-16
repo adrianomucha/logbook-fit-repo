@@ -152,13 +152,20 @@ function buildRoster(steps: number[]) {
 
 const NO_STEPS = SAMPLES.map(() => 0);
 
-/** Where each row sits, so a re-split can be animated from the old spot. */
-function rowTops(root: HTMLElement | null) {
-  const tops = new Map<string, number>();
-  root?.querySelectorAll<HTMLElement>('[data-row]').forEach((row) => {
-    tops.set(row.dataset.row ?? '', row.getBoundingClientRect().top);
+/**
+ * Where everything that moves sits (rows and group labels), so a re-split can
+ * be animated from the old spot. Rows also report what they say, so a row
+ * whose status changed can ease its new wording in.
+ */
+function snapshot(root: HTMLElement | null) {
+  const spots = new Map<string, { top: number; says: string }>();
+  root?.querySelectorAll<HTMLElement>('[data-flip]').forEach((el) => {
+    spots.set(el.dataset.flip ?? '', {
+      top: el.getBoundingClientRect().top,
+      says: el.dataset.says ?? '',
+    });
   });
-  return tops;
+  return spots;
 }
 
 function Row({
@@ -185,6 +192,7 @@ function Row({
           <p className="truncate text-sm font-semibold leading-tight sm:text-[15px]">{name}</p>
           <UnreadChip count={unread} />
           <span
+            data-detail
             className={cn(
               'inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-1.5 py-0.5 text-[10px] font-medium leading-none sm:text-[11px]',
               style.chip
@@ -194,13 +202,16 @@ function Row({
             {style.label}
           </span>
         </div>
-        <SignalLine signal={clientSignal(client, NOW.getTime())} />
+        <div data-detail>
+          <SignalLine signal={clientSignal(client, NOW.getTime())} />
+        </div>
       </div>
       {action && (
         <>
           <span
+            data-detail
             className={cn(
-              'hidden shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition-[background-color,border-color,transform] duration-150 ease-out group-hover:border-foreground/30 group-hover:bg-muted group-active:scale-[0.97] sm:inline-flex',
+              'hidden shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-xs font-medium transition-[background-color,border-color,transform] duration-200 ease-out group-hover:border-foreground/30 group-hover:bg-muted group-active:scale-[0.97] sm:inline-flex',
               // Lime, not the grey hover: the autoplay's press has to be
               // seen from across the page, and lime is the page's "act" colour
               pressing && 'scale-[0.95] border-brand bg-brand text-brand-foreground'
@@ -216,14 +227,18 @@ function Row({
     </>
   );
 
-  // Rows carry their own background and corners (the card can't clip them,
-  // or a row gliding between the two cards would be cut off mid-flight).
+  // There is no card element: each row draws its own slice of the outline
+  // (sides, a divider above, and the rounded ends on the first and last).
+  // A real card would snap to its new height the instant a row left, while
+  // the rows were still gliding. Drawn this way the outline travels with
+  // the rows, so the two groups part and close up as one motion.
   const shape =
-    'relative flex w-full items-center gap-3 border-t border-border/50 bg-card px-3 py-3 text-left first:rounded-t-2xl first:border-t-0 last:rounded-b-2xl sm:gap-4 sm:px-4 sm:py-3.5';
+    'relative flex w-full items-center gap-3 border-x border-t border-border/70 border-t-border/50 bg-card px-3 py-3 text-left first:rounded-t-2xl first:border-t-border/70 last:rounded-b-2xl last:border-b sm:gap-4 sm:px-4 sm:py-3.5';
+  const says = `${style.label}|${action?.label ?? ''}`;
 
   if (!action) {
     return (
-      <div data-row={client.clientProfileId} className={shape}>
+      <div data-flip={client.clientProfileId} data-says={says} className={shape}>
         {content}
       </div>
     );
@@ -231,12 +246,13 @@ function Row({
   return (
     <button
       type="button"
-      data-row={client.clientProfileId}
+      data-flip={client.clientProfileId}
+      data-says={says}
       onClick={onAct}
       aria-label={`${action.label}: ${name} (demo)`}
       className={cn(
         shape,
-        'group cursor-pointer transition-colors duration-150 hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        'group cursor-pointer transition-colors duration-200 hover:bg-muted/50 focus-visible:z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
         pressing && 'bg-brand/20'
       )}
     >
@@ -247,48 +263,65 @@ function Row({
 
 function GroupLabel({ label, count }: { label: string; count: number }) {
   return (
-    <p className="px-1 pb-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground antialiased">
+    <p
+      data-flip={`label:${label}`}
+      className="px-1 pb-2.5 font-mono text-[11px] font-medium uppercase tracking-[0.15em] text-muted-foreground antialiased"
+    >
       {label} · {count}
     </p>
   );
 }
 
-const CARD = 'rounded-2xl border border-border/70 bg-card';
+const ALL_CLEAR = 'rounded-2xl border border-border/70 bg-card';
 
-// Autoplay pacing: brisk enough to read as something happening the moment
-// the panel scrolls in, with a pause on the all-clear, which is the payoff.
+// Autoplay pacing. Each beat finishes before the next begins: press, glide,
+// let the lime go, a moment of rest, then the next press. Overlapping them
+// is what made the loop feel hurried.
 const FIRST_PRESS_AFTER = 600;
-const NEXT_PRESS_AFTER = 1000;
-const PRESS_HOLD = 280;
-const ALL_CLEAR_HOLD = 2200;
+const NEXT_PRESS_AFTER = 1500;
+const PRESS_HOLD = 340;
+const ALL_CLEAR_HOLD = 2600;
 
-// The lime the pressed row lands with before it settles back to the card
-const LANDING_TINT = 'hsl(74 95% 52% / 0.3)';
+// One duration and one curve for everything that moves in a pass, so rows,
+// labels and the pressed row travel as a single motion and arrive together.
+// Ease-in-out, since these are things changing place on screen, not entering.
+const GLIDE = { duration: 620, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' } as const;
+
+// The lime the pressed row carries, and lets go of after it lands. Opaque
+// (the brand lime at 30% over white, flattened): the row passes over others
+// on its way, and a see-through tint lets their text show through it.
+const LANDING_TINT = '#eefdb7';
 
 export function RosterPreview({ className }: { className?: string }) {
   const [steps, setSteps] = useState(NO_STEPS);
   // 'auto' until a visitor presses a row themselves
   const [mode, setMode] = useState<'auto' | 'manual'>('auto');
   const [onScreen, setOnScreen] = useState(false);
+  // Mouse over the panel, or keyboard focus inside it: either way someone is
+  // about to act on a row, so the autoplay must not move it away
   const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
   const [pressing, setPressing] = useState<string | null>(null);
   const figureRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  // Row positions from just before the last change, consumed once after render
-  const before = useRef<Map<string, number> | null>(null);
+  // Positions from just before the last change, consumed once after render,
+  // and the row whose press caused it (none for a reset)
+  const before = useRef<ReturnType<typeof snapshot> | null>(null);
+  const pressed = useRef<string | null>(null);
 
   const { clients, unread } = useMemo(() => buildRoster(steps), [steps]);
   const groups = splitRoster(clients, unread);
   const touched = steps.some((step) => step > 0);
   const nextUp = groups.toDo[0]?.clientProfileId ?? null;
 
-  const update = (next: number[]) => {
-    before.current = rowTops(listRef.current);
+  const update = (next: number[], pressedRow: string | null = null) => {
+    before.current = snapshot(listRef.current);
+    pressed.current = pressedRow;
     setSteps(next);
   };
   const act = (clientProfileId: string) => {
     const index = Number(clientProfileId.replace('sample-', ''));
-    update(steps.map((step, i) => (i === index ? step + 1 : step)));
+    update(steps.map((step, i) => (i === index ? step + 1 : step)), clientProfileId);
   };
 
   useEffect(() => {
@@ -321,7 +354,7 @@ export function RosterPreview({ className }: { className?: string }) {
   // The autoplay: one press (or the reset) per pass, rescheduled by each
   // change it makes. Any pause simply cancels the pending pass.
   useEffect(() => {
-    if (mode !== 'auto' || !onScreen || hovered) return;
+    if (mode !== 'auto' || !onScreen || hovered || focused) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     if (nextUp === null) {
@@ -346,41 +379,61 @@ export function RosterPreview({ className }: { className?: string }) {
     };
     // `act` and `update` close over `steps`, which is already a dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, onScreen, hovered, steps]);
+  }, [mode, onScreen, hovered, focused, steps]);
 
-  // FLIP: every row that ended up somewhere new starts from where it was and
-  // glides home. Transform only, so it stays on the compositor.
+  // FLIP: everything that ended up somewhere new starts from where it was
+  // and glides home. Transform and opacity only, so it stays on the compositor.
   useLayoutEffect(() => {
     const previous = before.current;
+    const pressedRow = pressed.current;
     before.current = null;
+    pressed.current = null;
     if (!previous || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    for (const [id, top] of rowTops(listRef.current)) {
-      const from = previous.get(id);
-      if (from === undefined || Math.abs(from - top) < 1) continue;
-      const row = listRef.current?.querySelector<HTMLElement>(`[data-row="${id}"]`);
-      if (!row) continue;
-      // The row that travels furthest is the one that was pressed: lift it
-      // over the rows it passes.
-      const far = Math.abs(from - top) > row.offsetHeight * 1.5;
-      row.style.zIndex = far ? '2' : '1';
-      const flight = row.animate(
-        [
-          { transform: `translateY(${from - top}px)`, boxShadow: far ? '0 12px 32px rgb(0 0 0 / 0.18)' : 'none' },
-          { transform: 'translateY(0)', boxShadow: 'none' },
-        ],
-        { duration: far ? 480 : 360, easing: 'cubic-bezier(0.32, 0.72, 0, 1)' }
-      );
-      // The pressed row carries the lime with it and lets it go after it
-      // lands, so the eye can follow which client just moved and where to.
-      if (far) {
-        row.animate(
-          [{ backgroundColor: LANDING_TINT }, { backgroundColor: LANDING_TINT, offset: 0.45 }, {}],
-          { duration: 1000, easing: 'ease-out' }
+
+    for (const [id, now] of snapshot(listRef.current)) {
+      const was = previous.get(id);
+      if (!was) continue;
+      const el = listRef.current?.querySelector<HTMLElement>(`[data-flip="${CSS.escape(id)}"]`);
+      if (!el) continue;
+      const isPressed = id === pressedRow;
+
+      if (Math.abs(was.top - now.top) >= 1) {
+        // The pressed row lifts over the rows it passes on its way
+        el.style.zIndex = isPressed ? '2' : '1';
+        const lift = isPressed ? '0 12px 32px rgb(0 0 0 / 0.16)' : '0 0 0 rgb(0 0 0 / 0)';
+        const glide = el.animate(
+          [
+            { transform: `translateY(${was.top - now.top}px)`, boxShadow: '0 0 0 rgb(0 0 0 / 0)' },
+            { boxShadow: lift, offset: 0.5 },
+            { transform: 'translateY(0)', boxShadow: '0 0 0 rgb(0 0 0 / 0)' },
+          ],
+          GLIDE
+        );
+        glide.onfinish = glide.oncancel = () => {
+          el.style.zIndex = '';
+        };
+      }
+
+      // The pressed row carries the lime with it and lets it go once it has
+      // landed, so the eye can follow which client moved and where to.
+      if (isPressed) {
+        el.animate(
+          [{ backgroundColor: LANDING_TINT }, { backgroundColor: LANDING_TINT, offset: 0.55 }, {}],
+          { duration: GLIDE.duration + 500, easing: 'ease-out' }
         );
       }
-      flight.onfinish = flight.oncancel = () => {
-        row.style.zIndex = '';
-      };
+
+      // New wording (chip, reason, action) eases in instead of swapping
+      if (was.says !== now.says) {
+        el.querySelectorAll<HTMLElement>('[data-detail]').forEach((detail) => {
+          detail.animate([{ opacity: 0 }, { opacity: 1 }], {
+            duration: 420,
+            delay: 120,
+            easing: 'ease-out',
+            fill: 'backwards',
+          });
+        });
+      }
     }
   }, [steps]);
 
@@ -390,6 +443,10 @@ export function RosterPreview({ className }: { className?: string }) {
         className="overflow-hidden rounded-2xl border border-border bg-background text-left text-foreground shadow-2xl shadow-black/40"
         onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
         onPointerLeave={() => setHovered(false)}
+        onFocus={() => setFocused(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget)) setFocused(false);
+        }}
       >
         <div className="flex items-baseline justify-between gap-4 border-b border-border/70 px-4 py-4 sm:px-6">
           <p className="text-lg font-bold tracking-tight antialiased sm:text-xl">Clients</p>
@@ -402,7 +459,7 @@ export function RosterPreview({ className }: { className?: string }) {
             {groups.toDo.length > 0 ? (
               <div>
                 <GroupLabel label={ROSTER_COPY.toDo} count={groups.toDo.length} />
-                <div className={CARD}>
+                <div>
                   {groups.toDo.map((client) => (
                     <Row
                       key={client.clientProfileId}
@@ -419,14 +476,14 @@ export function RosterPreview({ className }: { className?: string }) {
               </div>
             ) : (
               // As in the product: the whole "To do" group gives way to one line
-              <p className={cn(CARD, 'animate-fade-in-up flex items-center gap-2 px-4 py-3.5 text-sm font-medium antialiased')}>
+              <p className={cn(ALL_CLEAR, 'animate-fade-in-up flex items-center gap-2 px-4 py-3.5 text-sm font-medium antialiased')}>
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
                 {ROSTER_COPY.allClear}
               </p>
             )}
             <div>
               <GroupLabel label={ROSTER_COPY.rest} count={groups.rest.length} />
-              <div className={CARD}>
+              <div>
                 {groups.rest.map((client) => (
                   <Row
                     key={client.clientProfileId}
@@ -448,6 +505,9 @@ export function RosterPreview({ className }: { className?: string }) {
             onClick={() => {
               update(NO_STEPS);
               setMode('auto');
+              // A pressed row is removed while it still has focus, which
+              // never fires blur: clear it here or the autoplay stays held
+              setFocused(false);
             }}
             className="uppercase tracking-[0.16em] underline underline-offset-4 transition-colors hover:text-neutral-100"
           >
