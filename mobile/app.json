@@ -11,6 +11,7 @@
     "ios": {
       "bundleIdentifier": "fit.logbook.app",
       "supportsTablet": false,
+      "associatedDomains": ["applinks:logbook.fit"],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
