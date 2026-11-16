@@ -2,16 +2,20 @@ import type { WeekOverview } from './types/api';
 
 /**
  * The week-complete moment: finishing the last open workout of the week
- * turns the workout-finished screen into a small party (a burst of confetti,
- * a second haptic in the app, and the week named in the headline). The rule
- * for when, the wording and the confetti itself live here so the web app and
- * the native app throw the same one.
+ * takes over the workout-finished screen. Volt floods the screen from the
+ * centre, an ink medal stamped with the week number spins in and lands (and
+ * can be spun by hand afterwards), the week's workouts tick off in a row,
+ * and confetti falls once. The rule for when, the wording, the timings and
+ * the confetti itself live here so the web app and the native app put on
+ * the same show.
  */
 
 export interface CompletedWeek {
   weekNumber: number;
   /** Workouts in the week, all of them now done */
   total: number;
+  /** Seconds trained in the week's other workouts; add the one just finished for the week's total */
+  otherSec: number;
 }
 
 /**
@@ -34,15 +38,70 @@ export function weekCompletedBy(
   const workouts = overview.days.filter((d) => d.exerciseCount > 0);
   if (!workouts.some((d) => d.dayId === dayId)) return null;
   const othersDone = workouts.every((d) => d.dayId === dayId || d.status === 'COMPLETED');
-  return othersDone ? { weekNumber: overview.weekNumber, total: workouts.length } : null;
+  if (!othersDone) return null;
+  const otherSec = workouts.reduce((sum, d) => (d.dayId === dayId ? sum : sum + (d.durationSec ?? 0)), 0);
+  return { weekNumber: overview.weekNumber, total: workouts.length, otherSec };
 }
 
 export const WEEK_COMPLETE_COPY = {
   /** Replaces "Workout complete" above the workout's name */
   eyebrow: (weekNumber: number) => `Week ${weekNumber} complete`,
-  /** The line under the workout's name */
-  tally: (total: number) => (total === 1 ? '1 of 1 workout this week' : `${total} of ${total} workouts this week`),
+  /** The medal's face: a label over the week number, the tally under it */
+  medalLabel: 'Week',
+  medalNumber: (weekNumber: number) => String(weekNumber).padStart(2, '0'),
+  medalTally: (total: number) => `${total} of ${total}`,
+  /** The medal's back */
+  medalBack: 'Logged',
+  /** For screen readers, in place of the medal's parts */
+  medalA11y: (weekNumber: number, total: number) =>
+    `Week ${weekNumber} medal. ${total} of ${total} ${total === 1 ? 'workout' : 'workouts'} done. Drag to spin.`,
+  /** The two stat blocks: the week's totals, not the one workout's */
+  workoutsStat: 'Workouts',
+  minutesStat: 'Min this week',
 } as const;
+
+/** Whole minutes trained this week, the workout just finished included */
+export function weekMinutes(week: CompletedWeek, finishedDurationMin: number): number {
+  return Math.round(week.otherSec / 60) + finishedDurationMin;
+}
+
+/**
+ * The show's timeline, in ms from the screen appearing. One beat hands over
+ * to the next: the flood, then the medal, then the row of ticks, with the
+ * confetti released as the medal lands.
+ */
+export const WEEK_MOMENT = {
+  /** Volt spreading from the medal's centre to the corners */
+  floodMs: 550,
+  /** The medal starts its spin while the flood is still spreading */
+  medalDelay: 180,
+  medalSpinMs: 1300,
+  /** Full turns on the way in; whole, so it lands face up */
+  medalTurns: 2,
+  /** Where the medal scales up from */
+  medalFrom: 0.5,
+  /** Medal diameter, px */
+  medalSize: 176,
+  /** Degrees of spin per px dragged */
+  dragDegPerPx: 0.9,
+  /** A flick carries the medal on by its speed (px per ms) times this, in degrees */
+  flickDegPerSpeed: 220,
+  /** However hard the flick, it carries no further than this: two full turns */
+  flickMaxDeg: 720,
+  /** The copy and stats fade up once the screen is volt */
+  contentDelay: 420,
+  /** The week's ticks pop one after another, the last as the medal lands */
+  ticksDelay: 900,
+  tickStagger: 110,
+  /** Released as the medal lands */
+  confettiDelay: 1250,
+} as const;
+
+/** Where a released medal comes to rest: carried on by the flick, then onto the nearest face */
+export function medalRestAngle(angle: number, speedPxPerMs: number): number {
+  const carry = Math.max(-WEEK_MOMENT.flickMaxDeg, Math.min(WEEK_MOMENT.flickMaxDeg, speedPxPerMs * WEEK_MOMENT.flickDegPerSpeed));
+  return Math.round((angle + carry) / 180) * 180;
+}
 
 /** One piece of confetti. Lengths are fractions of the screen so both apps scale them. */
 export interface ConfettiPiece {
@@ -58,7 +117,8 @@ export interface ConfettiPiece {
   spin: number;
   /** Width in px; the height is `size * CONFETTI.aspect[shape]` */
   size: number;
-  color: 'brand' | 'ink';
+  /** On the volt screen: ink leads, white is the accent */
+  color: 'ink' | 'paper';
   shape: 'strip' | 'square';
 }
 
@@ -66,7 +126,7 @@ export const CONFETTI = {
   count: 44,
   /** Height over width, per shape */
   aspect: { strip: 0.42, square: 1 },
-  /** The whole burst is over by this many ms; unmount the layer after it */
+  /** The whole burst is over this many ms after its release; unmount the layer then */
   totalMs: 3400,
 } as const;
 
@@ -99,8 +159,8 @@ export function confettiPieces(count: number = CONFETTI.count, seed = 7): Confet
       duration,
       spin: (rand() < 0.5 ? -1 : 1) * (360 + Math.round(rand() * 540)),
       size: 7 + Math.round(rand() * 5),
-      // Volt leads, ink is the accent: two brand pieces for every ink one
-      color: i % 3 === 2 ? 'ink' : 'brand',
+      // Two ink pieces for every white one
+      color: i % 3 === 2 ? 'paper' : 'ink',
       shape: rand() < 0.6 ? 'strip' : 'square',
     };
   });

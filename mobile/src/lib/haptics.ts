@@ -30,14 +30,8 @@ export const haptic = {
   press: () => fire(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)),
   /** Something the athlete was waiting on went through: workout finished, check-in sent, the timer's buzzer. */
   success: () => fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)),
-  /**
-   * The big one, for the week-complete moment only: the success pattern, then
-   * a second one as the confetti lands. Rare on purpose.
-   */
-  celebrate: () => {
-    fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success));
-    setTimeout(() => fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)), 450);
-  },
+  /** Something heavy came to rest: the week medal landing. Rare on purpose. */
+  land: () => fire(() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)),
   /** About to do something that can't be undone: the confirm in front of a destructive action. */
   warning: () => fire(() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)),
   /** It didn't work: a failed save or send, a rejected form. */

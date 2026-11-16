@@ -179,6 +179,21 @@
     }
   }
 
+  /* Week-complete flood: volt spreading from the medal's centre to the
+     corners. Without the animation (reduced motion) it is simply volt. */
+  .week-flood {
+    animation: weekFlood 0.55s var(--ease-in-out) both;
+  }
+  @keyframes weekFlood {
+    from {
+      clip-path: circle(var(--flood-from, 88px) at 50% var(--flood-y, 24%));
+    }
+    to {
+      /* Just past the far corner */
+      clip-path: circle(110% at 50% var(--flood-y, 24%));
+    }
+  }
+
   /* Week-complete confetti: each piece falls once from above the top edge to
      below the bottom one, drifting and spinning by its own amounts (set
      inline from @logbook/shared/week-complete). Linear: paper falls at a
@@ -319,6 +334,7 @@
   .animate-tab-pop,
   .animate-completion-pop,
   .animate-meter-fill,
+  .week-flood,
   .animate-ping {
     animation: none !important;
   }

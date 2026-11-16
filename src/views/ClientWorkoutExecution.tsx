@@ -28,9 +28,9 @@ import { EffortPicker } from '@/components/client/EffortPicker';
 import { workoutTitle } from '@logbook/shared/progress';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
-import { weekCompletedBy, WEEK_COMPLETE_COPY, type CompletedWeek } from '@logbook/shared/week-complete';
+import { weekCompletedBy, type CompletedWeek } from '@logbook/shared/week-complete';
 import { useClientWeekOverview } from '@/hooks/api/useClientWeekOverview';
-import { Confetti } from '@/components/client/Confetti';
+import { WeekCompleteCelebration } from '@/components/client/execution/WeekCompleteCelebration';
 
 export function ClientWorkoutExecution() {
   const router = useRouter();
@@ -267,7 +267,7 @@ export function ClientWorkoutExecution() {
           durationMin: Math.max(1, Math.round(result.durationSec / 60)),
         });
       }
-      // The last workout of the week gets the confetti
+      // The last workout of the week gets the week-complete screen
       setCompletedWeek(weekCompletedBy(weekOverview, dayId));
       setShowCelebration(true);
       // No auto-dismiss timer: the effort-rating buttons are a live decision,
@@ -368,6 +368,20 @@ export function ClientWorkoutExecution() {
     );
   }
 
+  // The workout that closed out the week gets the week-complete screen
+  if (showCelebration && completedWorkoutData && completedWeek) {
+    return (
+      <WeekCompleteCelebration
+        week={completedWeek}
+        workoutTitle={workoutTitle(day.name ?? 'Workout')}
+        durationMin={completedWorkoutData.durationMin}
+        onRate={handleEffortRating}
+        onSkip={handleCelebrationDismiss}
+        isSavingRating={isSavingRating}
+      />
+    );
+  }
+
   // Celebration overlay with effort rating
   if (showCelebration && completedWorkoutData) {
     return (
@@ -380,14 +394,11 @@ export function ClientWorkoutExecution() {
             <Check className="w-10 h-10 text-brand-foreground" strokeWidth={3} />
           </div>
           <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-muted-foreground mb-1.5">
-            {completedWeek ? WEEK_COMPLETE_COPY.eyebrow(completedWeek.weekNumber) : 'Workout complete'}
+            Workout complete
           </p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
             {workoutTitle(day.name ?? 'Workout')}
           </h1>
-          {completedWeek && (
-            <p className="mt-1.5 text-sm text-muted-foreground">{WEEK_COMPLETE_COPY.tally(completedWeek.total)}</p>
-          )}
         </div>
 
         {/* Workout Summary — flat stat blocks, mono data voice */}
@@ -428,7 +439,6 @@ export function ClientWorkoutExecution() {
         >
           Skip for now
         </button>
-        {completedWeek && <Confetti />}
       </div>
     );
   }

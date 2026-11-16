@@ -33,8 +33,8 @@ import { buildFlagMessageContent } from '@logbook/shared/flag-message';
 import { workoutTitle } from '@logbook/shared/progress';
 import { parseSessionName } from '@logbook/shared/parse-session-name';
 import { AUTO_FINISHED_COPY } from '@logbook/shared/auto-finish';
-import { weekCompletedBy, WEEK_COMPLETE_COPY, type CompletedWeek } from '@logbook/shared/week-complete';
-import { Confetti } from '@/components/Confetti';
+import { weekCompletedBy, type CompletedWeek } from '@logbook/shared/week-complete';
+import { WeekCompleteCelebration } from '@/components/workout/WeekCompleteCelebration';
 
 const FINISH_BAR_HEIGHT = 56 + 24;
 
@@ -136,11 +136,9 @@ export default function WorkoutScreen() {
     };
     try {
       const result = await finishWorkout();
-      // The last workout of the week gets the confetti and the bigger haptic
-      const week = weekCompletedBy(weekOverview, dayId);
-      setCompletedWeek(week);
-      if (week) haptic.celebrate();
-      else haptic.success();
+      haptic.success();
+      // The last workout of the week gets the week-complete screen
+      setCompletedWeek(weekCompletedBy(weekOverview, dayId));
       // The server's duration is what the Today card and the coach see; show
       // the same number here rather than the phone's own estimate.
       const durationSec = result?.durationSec;
@@ -258,6 +256,19 @@ export default function WorkoutScreen() {
     );
   }
 
+  if (celebration && completedWeek) {
+    return (
+      <WeekCompleteCelebration
+        week={completedWeek}
+        workoutTitle={workoutTitle(day.name ?? 'Workout')}
+        durationMin={celebration.durationMin}
+        onRate={(rating) => void rateEffort(rating)}
+        onSkip={() => router.replace('/client')}
+        isSavingRating={isSavingRating}
+      />
+    );
+  }
+
   if (celebration) {
     return (
       <View className="flex-1 items-center justify-center bg-background px-6" style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}>
@@ -265,11 +276,8 @@ export default function WorkoutScreen() {
           <PopIn className="mb-5 h-20 w-20 items-center justify-center rounded-full bg-brand">
             <Feather name="check" size={40} color="#1e2702" />
           </PopIn>
-          <Eyebrow className="mb-1.5">{completedWeek ? WEEK_COMPLETE_COPY.eyebrow(completedWeek.weekNumber) : 'Workout complete'}</Eyebrow>
+          <Eyebrow className="mb-1.5">Workout complete</Eyebrow>
           <Text className="text-center font-sans-bold text-2xl tracking-tight text-foreground">{workoutTitle(day.name ?? 'Workout')}</Text>
-          {completedWeek ? (
-            <Text className="mt-1.5 text-center font-sans text-sm text-muted-foreground">{WEEK_COMPLETE_COPY.tally(completedWeek.total)}</Text>
-          ) : null}
         </View>
         <FadeInUp delay={80} className="mb-10 w-full max-w-xs flex-row gap-3">
           <View className="flex-1 items-center rounded-xl bg-muted/60 px-3 py-6">
@@ -292,7 +300,6 @@ export default function WorkoutScreen() {
         <Pressable onPress={() => router.replace('/client')} disabled={isSavingRating} className="mt-8 min-h-[44px] justify-center px-4">
           <Eyebrow>Skip for now</Eyebrow>
         </Pressable>
-        {completedWeek ? <Confetti /> : null}
       </View>
     );
   }
