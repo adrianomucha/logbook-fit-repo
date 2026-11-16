@@ -12,14 +12,14 @@ import {
   Sun,
   X,
 } from 'lucide-react';
-import { WaitlistForm } from '@/components/landing/WaitlistForm';
+import { OfferCta } from '@/components/landing/OfferCta';
 import { ImageSlot } from '@/components/landing/ImageSlot';
 import { SheetToPlan } from '@/components/landing/SheetToPlan';
 import { RosterPreview } from '@/components/landing/RosterPreview';
 import { RevealScope } from '@/components/landing/RevealScope';
 import { JoinListSection, LandingFooter, LandingHeader } from '@/components/landing/LandingChrome';
 import { FaqSection, faqJsonLd, type FaqItem } from '@/components/landing/FaqSection';
-import { FOUNDING_PRICE, FORM_PROMISES } from '@/lib/landing-copy';
+import { clientNeeds, getOffer } from '@/lib/offer';
 import { SITE_DESCRIPTION, SITE_NAME, SITE_URL, absoluteUrl } from '@/lib/seo';
 
 // Title/description/OG for this route come from the root layout: the landing
@@ -37,6 +37,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   themeColor: '#0a0a0a',
 };
+
+// Waitlist or open signup, and whether the iPhone app is in the store. Read
+// once from the environment: the page is still static.
+const OFFER = getOffer();
 
 /**
  * The objections a coach has before handing over their email: who it's for,
@@ -60,16 +64,14 @@ const FAQ: FaqItem[] = [
   },
   {
     q: 'What do my clients need?',
-    a: 'Just their phone. They join from the invite link you send, train from Logbook.fit in their browser, and can add it to their home screen like an app.',
+    a: clientNeeds(!!OFFER.appStoreUrl),
+    ...(OFFER.appStoreUrl ? { link: { href: OFFER.appStoreUrl, label: 'Logbook.fit on the App Store' } } : {}),
   },
   {
     q: 'What does it cost?',
-    a: FOUNDING_PRICE,
+    a: OFFER.copy.price,
   },
-  {
-    q: 'When will I get my invite?',
-    a: 'When your spot opens, the invite comes to the email you signed up with. We let coaches in a small batch at a time so each one gets a setup call, where we bring your programs across with you.',
-  },
+  OFFER.copy.nextStep,
   {
     q: 'Who can see my clients’ data?',
     a: 'You and the clients you coach, and nobody else. We don’t sell data or run ad trackers.',
@@ -78,7 +80,7 @@ const FAQ: FaqItem[] = [
 ];
 
 /**
- * Structured data for the waitlist page. Tells Google what Logbook.fit is
+ * Structured data for the homepage. Tells Google what Logbook.fit is
  * (a product, not a blog), which entity owns the domain, and what to show in
  * the knowledge panel / sitelinks, none of which is inferable from a hero
  * that leads with a point of view rather than a product category.
@@ -124,9 +126,8 @@ const JSON_LD = {
         '@type': 'Offer',
         price: '0',
         priceCurrency: 'USD',
-        description:
-          'Free during the private beta. Beta coaches keep a founding price once paid plans start.',
-        availability: 'https://schema.org/PreOrder',
+        description: OFFER.copy.structured.description,
+        availability: OFFER.copy.structured.availability,
       },
       featureList: [
         'Multi-week workout plan builder',
@@ -146,7 +147,7 @@ const MARQUEE_ITEMS = [
   'Catch the fade before the refund',
   'For independent coaches',
   'Plan · Train · Check in',
-  'Private beta · onboarding in small batches',
+  OFFER.copy.marquee,
 ];
 
 // The filter, as two lists. Every line is short enough to scan in one pass:
@@ -309,7 +310,7 @@ export default function HomePage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }}
       />
       {/* One <main> around every content section, so the h1 and the primary
-          waitlist CTA sit inside the document's main landmark rather than
+          call to action sit inside the document's main landmark rather than
           floating outside it. */}
       <main>
       {/* Hero: dark brand canvas, centered display type, then the product.
@@ -327,7 +328,7 @@ export default function HomePage() {
           <div className="flex flex-col items-center">
             <p className="animate-enter mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
-              Private beta · for independent coaches
+              {OFFER.copy.heroEyebrow}
             </p>
             {/* Sized so "Your quietest client" holds one line on desktop:
                 the three-line break is the rhythm of the sentence. */}
@@ -362,7 +363,7 @@ export default function HomePage() {
               className="animate-enter mt-10 w-full max-w-md scroll-mt-24"
               style={{ animationDelay: '180ms' }}
             >
-              <WaitlistForm promises={FORM_PROMISES} />
+              <OfferCta offer={OFFER} showPromises />
             </div>
           </div>
         </div>
@@ -595,10 +596,10 @@ export default function HomePage() {
 
             <div {...reveal(2)} className="mt-12 flex justify-center">
               <Link
-                href="#waitlist"
+                href={OFFER.copy.midCta.href}
                 className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
-                Request an invite
+                {OFFER.copy.midCta.label}
               </Link>
             </div>
           </div>
@@ -639,13 +640,10 @@ export default function HomePage() {
 
         <FaqSection eyebrow="Questions" title="Before you join." items={FAQ} centered />
 
-        <JoinListSection>
-          Ten coaches at a time. Every one gets a setup call where we import
-          your roster with you.
-        </JoinListSection>
+        <JoinListSection offer={OFFER}>{OFFER.copy.closingBody.home}</JoinListSection>
       </main>
 
-      <LandingFooter />
+      <LandingFooter appStoreUrl={OFFER.appStoreUrl} />
     </RevealScope>
   );
 }
