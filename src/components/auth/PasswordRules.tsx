@@ -62,7 +62,8 @@ export function PasswordRules({ password }: { password: string }) {
                 )}
                 aria-hidden="true"
               >
-                {met && <Check className="h-2.5 w-2.5" strokeWidth={3} />}
+                {/* Pops in like a ticked set in the app */}
+                {met && <Check className="h-2.5 w-2.5 animate-set-complete" strokeWidth={3} />}
               </span>
               {rule.label}
               <span className="sr-only">{met ? ', done' : ', missing'}</span>

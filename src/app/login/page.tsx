@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, UserCog, User, Loader2 } from 'lucide-react';
 import { AuthShell, AuthDivider, AuthFieldLabel } from '@/components/auth/AuthShell';
+import { FormError } from '@/components/ui/form-error';
 import { isDemoModeEnabled } from '@/lib/demo';
 import { LOGIN_ERROR_DEMO_LOCKED, LOGIN_ERROR_RATE_LIMITED } from '@/lib/auth-errors';
 
@@ -123,6 +124,13 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             placeholder="you@example.com"
             autoComplete="email"
+            // The phone keyboard: an email layout, and no capitalising or
+            // correcting an address
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="next"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
           />
@@ -132,7 +140,10 @@ export default function LoginPage() {
             <AuthFieldLabel htmlFor="password">Password</AuthFieldLabel>
             <Link
               href="/forgot-password"
-              className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased transition-colors hover:text-foreground"
+              // A taller hit area that grows upward only, into the gap above.
+              // Not the centred tap-target helper: anything that reaches down
+              // toward the password field steals taps meant for its top edge.
+              className="-mt-5 inline-block pt-5 font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground antialiased transition-colors hover:text-foreground active:text-foreground"
             >
               Forgot password?
             </Link>
@@ -144,15 +155,12 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Your password"
             autoComplete="current-password"
+            enterKeyHint="go"
             className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
             required
           />
         </div>
-        {error && (
-          <p role="alert" className="border-l-2 border-destructive pl-3 text-sm text-destructive-text">
-            {error}
-          </p>
-        )}
+        {error && <FormError>{error}</FormError>}
         <Button
           type="submit"
           className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90"

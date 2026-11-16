@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { ActivityIndicator, Text, useWindowDimensions, View, type PressableProps } from 'react-native';
 import type { StateArtId } from '@logbook/shared/state-art';
-import { PressableScale } from './motion';
+import { Feather } from '@expo/vector-icons';
+import { FadeInUp, PressableScale } from './motion';
 import { StateArt } from './StateArt';
 
 /** Mono, uppercase, tracked — the brand's eyebrow/label voice. */
@@ -107,6 +108,21 @@ export function EmptyState({
       ) : null}
       {children ? <View className={`w-full items-center gap-2.5 ${small ? 'mt-4' : 'mt-6'}`}>{children}</View> : null}
     </View>
+  );
+}
+
+/**
+ * The one way form errors look, the web's FormError: a tinted card with an
+ * icon, fading up into place, not a bare red line.
+ */
+export function FormError({ children }: { children: ReactNode }) {
+  return (
+    <FadeInUp>
+      <View accessibilityRole="alert" className="flex-row items-start gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-3.5">
+        <Feather name="alert-triangle" size={16} color="#c52020" style={{ marginTop: 2 }} />
+        <Text className="flex-1 font-sans text-sm leading-5 text-destructive-text">{children}</Text>
+      </View>
+    </FadeInUp>
   );
 }
 

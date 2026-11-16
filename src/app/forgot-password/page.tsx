@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FormError } from '@/components/ui/form-error';
 import { ArrowRight, ArrowLeft, Loader2, MailCheck } from 'lucide-react';
 import { AuthShell, AuthDivider, AuthFieldLabel } from '@/components/auth/AuthShell';
 
@@ -61,7 +62,8 @@ export default function ForgotPasswordPage() {
       {sent ? (
         // Same message whether or not the account exists — the API is
         // deliberately silent about that, and so is this screen.
-        <div className="space-y-5">
+        // Fades up: the form just left, and this is what replaced it
+        <div className="animate-fade-in-up space-y-5">
           <div className="flex items-start gap-3 rounded-xl border border-border p-4">
             <MailCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
             <p className="text-sm leading-relaxed text-muted-foreground antialiased">
@@ -73,7 +75,7 @@ export default function ForgotPasswordPage() {
           </div>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 text-sm font-medium antialiased transition-colors hover:text-muted-foreground"
+            className="tap-target inline-flex items-center gap-2 text-sm font-medium antialiased transition-colors hover:text-muted-foreground active:text-muted-foreground"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back to sign in
@@ -90,15 +92,18 @@ export default function ForgotPasswordPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
+              // The phone keyboard: an email layout, and no capitalising or
+              // correcting an address
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="send"
               className="h-12 rounded-lg border-border/60 bg-secondary/50 px-3.5 transition-colors focus-visible:bg-background"
               required
             />
           </div>
-          {error && (
-            <p role="alert" className="border-l-2 border-destructive pl-3 text-sm text-destructive-text">
-              {error}
-            </p>
-          )}
+          {error && <FormError>{error}</FormError>}
           <Button
             type="submit"
             className="h-12 w-full rounded-lg bg-brand text-sm font-bold uppercase tracking-wider text-brand-foreground hover:bg-brand/90"
@@ -110,7 +115,7 @@ export default function ForgotPasswordPage() {
           </Button>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 text-sm font-medium antialiased transition-colors hover:text-muted-foreground"
+            className="tap-target inline-flex items-center gap-2 text-sm font-medium antialiased transition-colors hover:text-muted-foreground active:text-muted-foreground"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Back to sign in
