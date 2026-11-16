@@ -25,6 +25,10 @@ in a Claude Code session.
 - [ ] **Free or paid in January?** There is no billing code. If January is
       still free, say so on the landing page and in the terms. If paid, that is
       an L item of its own and should be the first thing started. (A)
+      *Proposed:* January stays free, with the price and the date it starts
+      announced on the landing page (for example "free until March 1, then
+      $29 a month, founding coaches $19 a month for as long as they stay").
+      Billing is built after the iOS submission; the plan is section 6.
 - [ ] **Staging database: yes or no.** There is only the production Supabase
       project, so TestFlight builds and App Review both run against production.
       Acceptable for January if decided on purpose. (A)
@@ -162,14 +166,124 @@ a client screen, to `mobile/` as well.
 - [ ] Clear out Linear: all 53 issues are the January 2026 MVP plan, still in
       Backlog although most of it shipped. Archive them or stop using it. (A, S)
 
-## 6. Not for January (decided, do not drift)
+## 6. Billing (build after the iOS submission)
+
+Coaches pay, clients never do. Billing lives only on the web: the native app
+is the client app, and its coach screen (`mobile/app/coach.tsx`) already sends
+coaches to logbook.fit, so there are no purchase screens in iOS and no App
+Store payment rules to meet. Total build is about 2 days.
+
+**Pricing (a hypothesis to test on coach calls, not final).** Priced by active
+clients, monthly. Past clients do not count.
+
+| Plan | Active clients | Regular | Founding |
+|---|---|---|---|
+| Free | up to 3 | $0 | $0 |
+| Solo | up to 15 | $29 | $19 |
+| Pro | up to 40 | $59 | $39 |
+
+Founding means that monthly price, locked for as long as the coach stays
+subscribed. It ends if they cancel and later rejoin. A founding coach who
+outgrows Solo moves to the founding Pro price, not the regular one. Offer an
+annual option next to each monthly price ("2 months free"): it cuts Stripe's
+fixed 30 cents per charge and failed-card churn.
+
+**Provider: Stripe** (Checkout, Billing, Customer Portal, Stripe Tax). Almost
+every coach is in the US, so a merchant of record (Paddle, Lemon Squeezy) is
+not worth its higher fee. Stripe costs roughly 2.9% + 30 cents per charge plus
+0.7% for Billing: about $0.98 on $19 and $1.34 on $29. Budget 5% of revenue.
+Verify current rates on stripe.com/pricing before launch.
+
+**Sales tax.** A state's tax is only owed past its economic threshold (usually
+$100k a year of sales into that state), except the home state, which is owed
+from the first sale if that state taxes SaaS at all. Check the home state
+once, and let Stripe Tax monitor the thresholds.
+
+### Setup in Stripe (A)
+
+- [ ] Create the Stripe account and connect the bank account. (A, S)
+- [ ] Create the products and prices: Solo $29, Solo Founding $19, Pro $59,
+      Pro Founding $39, each monthly and annual. Founding is just which price a
+      coach is subscribed to; Stripe keeps charging existing subscribers their
+      price, so the lock needs no code. (A, S)
+- [ ] Turn on the Customer Portal (change card, switch plan, cancel) and
+      Stripe Tax monitoring. Find out whether the home state taxes SaaS. (A, S)
+- [ ] Add the webhook endpoint and put `STRIPE_SECRET_KEY`,
+      `STRIPE_WEBHOOK_SECRET` and the price IDs in Vercel (test mode first,
+      live mode at launch). (A, S)
+
+### How payment connects to access
+
+Stripe is the source of truth for who has paid. A webhook keeps a copy on the
+coach's row, and the app only ever reads that copy, never Stripe, when
+deciding what a coach can do.
+
+1. **Upgrade** on the web creates a Checkout session tagged with the coach's
+   id and sends them to Stripe's payment page.
+2. After payment Stripe redirects to `/coach?upgraded=1`. The redirect grants
+   nothing (anyone can type that URL); it only shows a "finishing up" state
+   until the webhook lands.
+3. Stripe calls `/api/billing/webhook`. The route verifies the signature and
+   writes the plan to the coach. Every later change (renewal, failed card,
+   plan switch, cancellation) arrives the same way.
+4. **Manage billing** in Settings opens the Customer Portal.
+
+### Build (C)
+
+- [ ] **Migration** on `CoachProfile`: `stripeCustomerId`,
+      `stripeSubscriptionId`, `plan` (FREE, SOLO, PRO; default FREE),
+      `billingStatus` (active, past_due, canceled), `currentPeriodEnd`. (C, S)
+- [ ] **Plan limits and copy in `packages/shared`**: client limit per plan
+      (3, 15, 40) and the upgrade wording, so web and any later coach screen
+      in `mobile/` use the same numbers. (C, S)
+- [ ] **`POST /api/billing/checkout`**: creates or reuses the Stripe customer,
+      starts a Checkout session for the chosen price, returns its URL. Coach
+      only. (C, S)
+- [ ] **`POST /api/billing/portal`**: returns a Customer Portal URL. Coach
+      only. (C, S)
+- [ ] **`POST /api/billing/webhook`**: verifies the signature, handles
+      `checkout.session.completed`, `customer.subscription.created`,
+      `.updated`, `.deleted` and `invoice.payment_failed`, maps the price id to
+      a plan, and is safe to receive the same event twice or out of order
+      (always re-read the subscription from the event, never increment). Tests
+      for every event, including an unknown price id. (C, M)
+- [ ] **Client limit check** in one shared helper, called from sending an
+      invite (`POST /api/invites`), restoring a past client, and accepting an
+      invite. It counts the coach's `ACTIVE` plus `INVITED` relationships
+      against the plan limit and refuses with "Upgrade to add more clients".
+      Nothing else is gated. (C, S)
+- [ ] **Coach UI**: Upgrade button where the limit is hit, a billing section in
+      Settings (plan, next charge date, Manage billing), and a banner while
+      `past_due`. (C, M)
+- [ ] **Backfill**: every existing beta coach is FREE with no limit until they
+      pick a plan, then gets the founding price. Decide how long that grace
+      lasts before switching it on. (A decides, C builds, S)
+- [ ] **Landing page and terms**: real prices, the founding promise in the
+      same words as above, and a refund and cancellation line. (C drafts, A
+      approves, S)
+- [ ] **End-to-end in test mode** with Stripe's test cards: pay, renew via a
+      test clock, fail a card, cancel, upgrade from Solo to Pro. (C, S)
+
+### When payment fails or a coach cancels
+
+Never cut off a coach's clients. They are mid-program and they are the
+coach's own paying customers.
+
+- **Card fails (`past_due`)**: everything keeps working and the coach sees a
+  banner. Stripe retries the card for about two weeks (Smart Retries).
+- **Retries run out, or the coach cancels**: the webhook sets the coach to
+  FREE. Existing clients keep working, but the coach cannot add or restore a
+  client until they are back under the Free limit or upgrade.
+
+## 7. Not for January (decided, do not drift)
 
 - Offline workout logging that survives a killed tab or app.
 - Coach triage in the iOS app; Android.
 - Add, remove and reorder weeks and days in the plan builder.
 - Concurrent plan edits (last write wins), roster pagination.
 - One account being both coach and client.
-- Billing, unless section 0 says otherwise.
+- Charging money, unless section 0 says otherwise. Building billing is
+  section 6, after the iOS submission.
 
 ---
 
