@@ -25,3 +25,23 @@ export const FORM_PROMISES = [
  */
 export const WAITLIST_NEXT_STEPS =
   'Your invite comes to this inbox when your spot opens. We let coaches in a small batch at a time so each one gets a setup call, where we bring your programs across with you.';
+
+/**
+ * The confirmation screen's last step, for coaches: book the setup call on
+ * Cal.com, which sends the invite straight away (see lib/setup-call.ts).
+ */
+export const SETUP_CALL_OFFER = {
+  lead: 'Last step, and the quickest way in:',
+  prompt: 'Book your setup call and your invite comes straight away.',
+  detail: 'A video call where we bring your programs across with you.',
+  cta: 'Pick a time',
+  skip: 'Not now',
+  /** On the sign-off, for a coach who said "Not now" */
+  reconsider: 'Want in sooner? Book your setup call',
+} as const;
+
+/** After booking: the spreadsheet upload. */
+export const SETUP_FILE_ASK =
+  'Coach from a spreadsheet? Upload it now and we’ll have it imported before the call.';
+export const SETUP_FILE_FALLBACK =
+  'Or reply to your invite email with it attached.';

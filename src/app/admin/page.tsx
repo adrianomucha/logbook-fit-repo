@@ -42,7 +42,7 @@ export default async function AdminPage() {
         ),
         waitlist: (
           <Suspense fallback={<PanelLoading label="Waitlist" />}>
-            <WaitlistPanel />
+            <WaitlistPanel adminUserId={session?.user?.id} />
           </Suspense>
         ),
         accounts: (

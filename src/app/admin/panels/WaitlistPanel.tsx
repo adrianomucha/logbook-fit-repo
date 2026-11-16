@@ -1,5 +1,5 @@
-import { Download } from 'lucide-react';
-import type { WaitlistStatus } from '@prisma/client';
+import { Download, FileSpreadsheet } from 'lucide-react';
+import type { SetupCallStatus, WaitlistStatus } from '@prisma/client';
 import { waitlistInvitePath } from '@/lib/waitlist';
 import prisma from '@/lib/prisma';
 import { InviteActions } from './InviteActions';
@@ -44,9 +44,79 @@ function StatusBadge({
   );
 }
 
+/**
+ * The setup call cell: when it is (in the admin's own time zone), struck
+ * through when cancelled, muted once it's in the past.
+ */
+function CallCell({
+  status,
+  startsAt,
+  timeZone,
+}: {
+  status: SetupCallStatus | null;
+  startsAt: Date | null;
+  timeZone: string;
+}) {
+  if (!status || !startsAt) return <span className="text-muted-foreground">–</span>;
+  const label = new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone,
+  }).format(startsAt);
+  if (status === 'CANCELLED') {
+    return (
+      <span className="text-muted-foreground">
+        <span className="line-through">{label}</span> cancelled
+      </span>
+    );
+  }
+  const past = startsAt.getTime() < Date.now();
+  return (
+    <span className={past ? 'text-muted-foreground' : 'font-semibold text-foreground'}>
+      {label}
+    </span>
+  );
+}
+
+/** Upcoming setup calls first, soonest at the top; then everyone else, newest first. */
+function upcomingCallFirst(
+  a: { callStatus: SetupCallStatus | null; callStartsAt: Date | null; createdAt: Date },
+  b: { callStatus: SetupCallStatus | null; callStartsAt: Date | null; createdAt: Date }
+): number {
+  const now = Date.now();
+  const upcoming = (e: typeof a) =>
+    e.callStatus === 'BOOKED' && e.callStartsAt && e.callStartsAt.getTime() >= now
+      ? e.callStartsAt.getTime()
+      : null;
+  const ua = upcoming(a);
+  const ub = upcoming(b);
+  if (ua !== null && ub !== null) return ua - ub;
+  if (ua !== null) return -1;
+  if (ub !== null) return 1;
+  return b.createdAt.getTime() - a.createdAt.getTime();
+}
+
 /** Waitlist tab. Access is checked once by the /admin page that renders it. */
-export async function WaitlistPanel() {
-  const entries = await prisma.waitlistEntry.findMany({
+export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = {}) {
+  const admin = adminUserId
+    ? await prisma.user.findUnique({
+        where: { id: adminUserId },
+        select: { timezone: true },
+      })
+    : null;
+  const timeZone = (() => {
+    const tz = admin?.timezone || 'UTC';
+    try {
+      new Intl.DateTimeFormat('en-US', { timeZone: tz });
+      return tz;
+    } catch {
+      return 'UTC';
+    }
+  })();
+
+  const rows = await prisma.waitlistEntry.findMany({
     orderBy: { createdAt: 'desc' },
     select: {
       id: true,
@@ -59,8 +129,16 @@ export async function WaitlistPanel() {
       source: true,
       clientCount: true,
       currentTool: true,
+      callStatus: true,
+      callStartsAt: true,
+      setupFileName: true,
+      setupFilePath: true,
     },
   });
+  const entries = [...rows].sort(upcomingCallFirst);
+  const upcomingCalls = entries.filter(
+    (e) => e.callStatus === 'BOOKED' && e.callStartsAt && e.callStartsAt.getTime() >= Date.now()
+  ).length;
 
   const counts = entries.reduce(
     (acc, e) => {
@@ -101,7 +179,8 @@ export async function WaitlistPanel() {
               <span className="font-mono text-[11px] uppercase tracking-[0.08em]">
                 {' '}
                 · {counts.PENDING} pending · {counts.INVITED} invited ·{' '}
-                {counts.JOINED} joined
+                {counts.JOINED} joined · {upcomingCalls} upcoming{' '}
+                {upcomingCalls === 1 ? 'call' : 'calls'}
               </span>
             </p>
           </div>
@@ -153,6 +232,8 @@ export async function WaitlistPanel() {
                   <th className="px-4 py-3 font-medium">Clients</th>
                   <th className="px-4 py-3 font-medium">Uses</th>
                   <th className="px-4 py-3 font-medium">Joined</th>
+                  <th className="px-4 py-3 font-medium">Setup call</th>
+                  <th className="px-4 py-3 font-medium">File</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 text-right font-medium">
                     <span className="sr-only">Actions</span>
@@ -177,6 +258,27 @@ export async function WaitlistPanel() {
                     </td>
                     <td className="px-4 py-3 font-mono tabular-nums text-muted-foreground">
                       {dateFmt.format(entry.createdAt)}
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 font-mono tabular-nums">
+                      <CallCell
+                        status={entry.callStatus}
+                        startsAt={entry.callStartsAt}
+                        timeZone={timeZone}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      {entry.setupFilePath ? (
+                        <a
+                          href={`/api/admin/waitlist/${entry.id}/setup-file`}
+                          title={entry.setupFileName ?? undefined}
+                          className="inline-flex max-w-[12rem] items-center gap-1.5 font-medium underline-offset-4 hover:underline"
+                        >
+                          <FileSpreadsheet className="h-4 w-4 shrink-0" aria-hidden="true" />
+                          <span className="truncate">{entry.setupFileName ?? 'Spreadsheet'}</span>
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">–</span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge
@@ -210,7 +312,9 @@ export async function WaitlistPanel() {
 
         <p className="mt-4 text-xs text-muted-foreground">
           Sending an invite emails a single-use signup link. Re-sending
-          replaces the previous link, so it also works as a revoke.
+          replaces the previous link, so it also works as a revoke. Booking a
+          setup call on Cal.com sends the invite on its own, and call times
+          show in your time zone ({timeZone}).
         </p>
       </div>
     </div>

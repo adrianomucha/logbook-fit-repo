@@ -123,4 +123,23 @@ describe("envProblems", () => {
     });
     expect(envProblems(process.env)).toHaveLength(6);
   });
+
+  it("flags setup calls offered without a webhook secret", () => {
+    stubEnv({ NEXT_PUBLIC_CAL_SETUP_CALL_LINK: "adrian/setup-call" });
+    const problems = envProblems();
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("CAL_WEBHOOK_SECRET");
+  });
+
+  it("flags a setup call link that is not an event type", () => {
+    stubEnv({ NEXT_PUBLIC_CAL_SETUP_CALL_LINK: "adrian", CAL_WEBHOOK_SECRET: "s" });
+    const problems = envProblems();
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("NEXT_PUBLIC_CAL_SETUP_CALL_LINK");
+  });
+
+  it("is quiet when setup calls are fully configured", () => {
+    stubEnv({ NEXT_PUBLIC_CAL_SETUP_CALL_LINK: "adrian/setup-call", CAL_WEBHOOK_SECRET: "s" });
+    expect(envProblems()).toEqual([]);
+  });
 });

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   emailConfigStatus,
   sendClientInvite,
+  sendWaitlistInvite,
   sendWaitlistWelcome,
 } from "../email";
 
@@ -170,5 +171,54 @@ describe("sendClientInvite", () => {
     const { html, text } = sentBody(fetchMock);
     expect(html).not.toContain("A note from");
     expect(text).not.toContain("A note from");
+  });
+});
+
+describe("sendWaitlistInvite", () => {
+  const url = "https://logbook.fit/signup?beta=tok_abc";
+
+  function sentBody(fetchMock: ReturnType<typeof vi.fn>) {
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, { body: string }];
+    return JSON.parse(init.body) as { subject: string; html: string; text: string };
+  }
+
+  it("names the booked call in the coach's time zone and asks for the spreadsheet", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendWaitlistInvite("coach@example.com", url, {
+      booked: { startsAt: new Date("2026-11-18T13:00:00Z"), timeZone: "Europe/Warsaw" },
+    });
+
+    const body = sentBody(fetchMock);
+    expect(body.subject).toContain("setup call is booked");
+    expect(body.text).toContain("Wednesday, November 18 at 2:00 PM GMT+1");
+    expect(body.text).toContain("Reply to this email with it attached");
+    expect(body.text).toContain(`Create your account: ${url}`);
+    expect(body.text).not.toContain("Book your setup call");
+  });
+
+  it("links to the booking page when no call is booked", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendWaitlistInvite("coach@example.com", url, {
+      bookingUrl: "https://cal.com/adrian/setup-call?email=coach%40example.com",
+    });
+
+    const body = sentBody(fetchMock);
+    expect(body.subject).toBe("Your Logbook.fit invite is ready");
+    expect(body.html).toContain('href="https://cal.com/adrian/setup-call?email=coach%40example.com"');
+    expect(body.text).toContain("Book your setup call: https://cal.com/adrian/setup-call");
+  });
+
+  it("says nothing about a call when none is offered", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendWaitlistInvite("coach@example.com", url);
+
+    const body = sentBody(fetchMock);
+    expect(body.text).not.toContain("setup call");
   });
 });

@@ -16,7 +16,9 @@ export type FunnelEvent =
   /** Typed into the signup form */
   | 'Signup started'
   /** Account created */
-  | 'Signup completed';
+  | 'Signup completed'
+  /** Booked a setup call from the waitlist confirmation */
+  | 'Setup call booked';
 
 /** How someone reached the signup form */
 export type SignupKind = 'coach-beta-invite' | 'coach-open' | 'client-invite';

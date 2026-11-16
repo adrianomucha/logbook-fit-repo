@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import prisma from "@/lib/prisma";
 import { bearerToken, isAdminEmail, isValidAdminToken } from "@/lib/admin";
 import { parseBody } from "@/lib/validations/parseBody";
 import { waitlistInviteSchema } from "@/lib/validations/schemas";
-import { generateSecureToken } from "@/lib/tokens";
-import { appBaseUrl, waitlistInvitePath } from "@/lib/waitlist";
-import { sendWaitlistInvite } from "@/lib/services/email";
+import { issueWaitlistInvite } from "@/lib/waitlist-invite";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +13,10 @@ export const dynamic = "force-dynamic";
  * Authorized like the CSV export: an admin session or
  * `Authorization: Bearer <WAITLIST_ADMIN_TOKEN>` for scripts.
  *
- * Generates a fresh single-use token, marks the entry INVITED, and emails
- * the signup link. Re-sending rotates the token, so the previously emailed
- * link stops working — rotation doubles as revocation. The invite URL is
- * returned either way so the admin can deliver it by hand when email isn't
- * configured or the send fails.
+ * See issueWaitlistInvite: a fresh single-use token, the entry marked
+ * INVITED, and the signup link emailed (re-sending rotates the token). The
+ * invite URL is returned either way so the admin can deliver it by hand
+ * when email isn't configured or the send fails.
  */
 export async function POST(req: Request) {
   try {
@@ -35,42 +31,18 @@ export async function POST(req: Request) {
     const result = await parseBody(req, waitlistInviteSchema);
     if (!result.success) return result.response;
 
-    const entry = await prisma.waitlistEntry.findUnique({
-      where: { id: result.data.id },
-      select: { id: true, email: true, status: true },
+    const invite = await issueWaitlistInvite(result.data.id);
+    if (!invite.ok) {
+      return invite.reason === "not_found"
+        ? NextResponse.json({ error: "Waitlist entry not found" }, { status: 404 })
+        : NextResponse.json({ error: "This person has already joined" }, { status: 409 });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      emailSent: invite.emailSent,
+      inviteUrl: invite.inviteUrl,
     });
-    if (!entry) {
-      return NextResponse.json(
-        { error: "Waitlist entry not found" },
-        { status: 404 }
-      );
-    }
-    if (entry.status === "JOINED") {
-      return NextResponse.json(
-        { error: "This person has already joined" },
-        { status: 409 }
-      );
-    }
-
-    // The JOINED guard in the WHERE closes the race against a concurrent
-    // redemption — a signup between the read above and this write makes
-    // count 0 instead of silently un-joining the entry.
-    const inviteToken = generateSecureToken();
-    const { count } = await prisma.waitlistEntry.updateMany({
-      where: { id: entry.id, status: { not: "JOINED" } },
-      data: { status: "INVITED", inviteToken, invitedAt: new Date() },
-    });
-    if (count === 0) {
-      return NextResponse.json(
-        { error: "This person has already joined" },
-        { status: 409 }
-      );
-    }
-
-    const inviteUrl = `${appBaseUrl()}${waitlistInvitePath(inviteToken)}`;
-    const emailSent = await sendWaitlistInvite(entry.email, inviteUrl);
-
-    return NextResponse.json({ ok: true, emailSent, inviteUrl });
   } catch (error) {
     console.error("Waitlist invite error:", error);
     return NextResponse.json(

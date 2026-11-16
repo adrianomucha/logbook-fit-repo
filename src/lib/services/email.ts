@@ -23,6 +23,7 @@
  */
 
 import { FOUNDING_PRICE } from "@/lib/landing-copy";
+import { formatCallTime } from "@/lib/setup-call";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -226,14 +227,55 @@ function welcomeText(): string {
   ].join("\n");
 }
 
-function inviteHtml(inviteUrl: string): string {
+/**
+ * What the beta invite says about the setup call: either the call the coach
+ * just booked (the webhook sends the invite on booking), or a link to book
+ * one. Neither for someone who isn't offered a call.
+ */
+export interface InviteSetupCall {
+  /** The booked call, shown in the coach's time zone */
+  booked?: { startsAt: Date; timeZone?: string | null } | null;
+  /** The booking page, for an invite sent before any call was booked */
+  bookingUrl?: string | null;
+}
+
+const INVITE_INTRO =
+  "Your spot in the Logbook.fit private beta just opened up. Create your coach account and your workspace comes ready with a starter exercise library.";
+
+function bookedIntro(when: string): string {
+  return `Your setup call is booked for ${when}. Create your coach account before then, so on the call we can spend the time bringing your programs across.`;
+}
+
+const INVITE_FILE_REPLY =
+  "Didn&rsquo;t upload the spreadsheet you coach from when you booked? Reply to this email with it attached and we&rsquo;ll have it imported before the call.";
+
+const INVITE_BOOK_LINE =
+  "Next, pick a time for your setup call. We&rsquo;ll bring your programs across with you.";
+
+function inviteHtml(inviteUrl: string, call: InviteSetupCall = {}): string {
+  const when = call.booked
+    ? formatCallTime(call.booked.startsAt, call.booked.timeZone)
+    : null;
+  const intro = when
+    ? bookedIntro(`<strong style="color:${INK};">${when}</strong>`)
+    : INVITE_INTRO;
+  const after = when
+    ? `<p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              ${INVITE_FILE_REPLY}
+            </p>`
+    : call.bookingUrl
+      ? `<p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              ${INVITE_BOOK_LINE}
+              <a href="${call.bookingUrl}" style="color:${INK};font-weight:700;">Book your setup call&nbsp;&#8594;</a>
+            </p>`
+      : "";
   return emailShell(
-    "Your spot in the private beta just opened up. Create your coach account.",
+    when
+      ? "Your setup call is booked. Create your coach account before then."
+      : "Your spot in the private beta just opened up. Create your coach account.",
     `${heading("Your invite", "is ready.")}
             <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
-              Your spot in the Logbook.fit private beta just opened up. Create
-              your coach account and your workspace comes ready with a starter
-              exercise library.
+              ${intro}
             </p>
             <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
               <tr><td align="center" style="background:${LIME};border-radius:10px;">
@@ -242,6 +284,7 @@ function inviteHtml(inviteUrl: string): string {
                 </a>
               </td></tr>
             </table>
+            ${after}
             <p style="margin:0 0 32px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
               This link is yours alone and works once. If the button doesn&rsquo;t
               work, paste this into your browser:<br>
@@ -250,15 +293,29 @@ function inviteHtml(inviteUrl: string): string {
   );
 }
 
-function inviteText(inviteUrl: string): string {
+/** The HTML copy's entities, as plain text. */
+function plain(html: string): string {
+  return html.replace(/&rsquo;/g, "'");
+}
+
+function inviteText(inviteUrl: string, call: InviteSetupCall = {}): string {
+  const when = call.booked
+    ? formatCallTime(call.booked.startsAt, call.booked.timeZone)
+    : null;
+  const after = when
+    ? ["", plain(INVITE_FILE_REPLY)]
+    : call.bookingUrl
+      ? ["", plain(INVITE_BOOK_LINE), `Book your setup call: ${call.bookingUrl}`]
+      : [];
   return [
     "LOGBOOK.FIT · PRIVATE BETA",
     "",
     "Your invite is ready.",
     "",
-    "Your spot in the Logbook.fit private beta just opened up. Create your coach account and your workspace comes ready with a starter exercise library.",
+    when ? bookedIntro(when) : INVITE_INTRO,
     "",
     `Create your account: ${inviteUrl}`,
+    ...after,
     "",
     "This link is yours alone and works once.",
     "",
@@ -472,13 +529,16 @@ export function sendWaitlistWelcome(to: string): Promise<boolean> {
  */
 export function sendWaitlistInvite(
   to: string,
-  inviteUrl: string
+  inviteUrl: string,
+  call: InviteSetupCall = {}
 ): Promise<boolean> {
   return sendEmail(
     to,
-    "Your Logbook.fit invite is ready",
-    inviteHtml(inviteUrl),
-    inviteText(inviteUrl)
+    call.booked
+      ? "Your setup call is booked: here's your Logbook.fit invite"
+      : "Your Logbook.fit invite is ready",
+    inviteHtml(inviteUrl, call),
+    inviteText(inviteUrl, call)
   );
 }
 
