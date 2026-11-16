@@ -255,7 +255,8 @@ npm. `babel-preset-expo` and `@expo/metro-runtime` must be top-level deps.
       description of the coach/client relationship (reviewers cannot invite
       themselves).
 - [ ] Screenshots for 6.7" and 6.1" from the preview build.
-- [ ] App name "Logbook.fit", subtitle from `SITE_DESCRIPTION`.
+- [x] App name and subtitle: drafted with the rest of the listing in
+      `APP_STORE_LISTING.md`.
 - [ ] Sign in with Apple is **not** required: the app offers no third-party
       social login, only email/password.
 
@@ -270,8 +271,8 @@ npm. `babel-preset-expo` and `@expo/metro-runtime` must be top-level deps.
   queue already survives a request failure, so this is an upgrade, not a fix.
 - **Android**: same codebase, `eas build -p android`.
 - **Live Activity / Dynamic Island** for an in-progress workout.
-- Retire `InstallPrompt` on iOS once the store listing exists (point at the
-  App Store instead of the Share sheet).
+- ~~Retire `InstallPrompt` on iOS once the store listing exists~~: done, it
+  points clients at the App Store once `NEXT_PUBLIC_APP_STORE_URL` is set.
 
 ---
 
