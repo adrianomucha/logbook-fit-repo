@@ -155,7 +155,9 @@ const MARQUEE_ITEMS = [
 /**
  * The two sides of the filter. Row N on the left and row N on the right are a
  * pair (a real roster vs training alone, writing plans vs logging workouts,
- * outgrowing the spreadsheet vs happy in it), so the table aligns them.
+ * outgrowing the spreadsheet vs happy in it), so the table aligns them. Keep
+ * each line about as long as its partner: if one side wraps and the other
+ * doesn't, the halves stop looking like a matched pair.
  */
 const AUDIENCE = [
   {
@@ -163,8 +165,8 @@ const AUDIENCE = [
     icon: Check,
     items: [
       'Independent coaches with a real roster',
-      'You write the plans and run the check\u2011ins yourself',
-      'Today it lives in spreadsheets and WhatsApp',
+      'You write the plans and run the check\u2011ins',
+      'Outgrowing spreadsheets and WhatsApp',
     ],
   },
   {
@@ -561,7 +563,7 @@ export default function HomePage() {
             the coach knows what the product is, so "is this me?" is the live
             question, and the invite button is the answer for the left column. */}
         <section className="dark bg-background text-foreground">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
             <div {...reveal()} className="text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Who it&rsquo;s for
@@ -573,11 +575,12 @@ export default function HomePage() {
               </h2>
             </div>
 
-            {/* One table, two halves. On a phone the halves stack. From sm up
+            {/* One table, two halves. Below lg the halves stack: side by side
+                any narrower, most lines wrap. From lg up
                 each half is a subgrid of the parent's rows (header, three
                 items, footer), so paired rows share a height and the hairlines
                 run straight across however long either side's line is. */}
-            <div className="mt-12 grid overflow-hidden rounded-2xl border border-border/70 sm:mt-16 sm:grid-cols-2 sm:grid-rows-[repeat(5,auto)]">
+            <div className="mt-12 grid overflow-hidden rounded-2xl border border-border/70 sm:mt-16 lg:grid-cols-2 lg:grid-rows-[repeat(5,auto)]">
               {AUDIENCE.map((group, g) => {
                 const built = g === 0;
                 return (
@@ -586,8 +589,8 @@ export default function HomePage() {
                     {...reveal(g + 1)}
                     className={
                       built
-                        ? 'bg-brand/[0.06] sm:row-span-5 sm:grid sm:grid-rows-subgrid'
-                        : 'border-t border-border/70 sm:row-span-5 sm:grid sm:grid-rows-subgrid sm:border-l sm:border-t-0'
+                        ? 'bg-brand/[0.06] lg:row-span-5 lg:grid lg:grid-rows-subgrid'
+                        : 'border-t border-border/70 lg:row-span-5 lg:grid lg:grid-rows-subgrid lg:border-l lg:border-t-0'
                     }
                   >
                     <div className="flex items-center gap-3 px-6 py-5 sm:px-8">
@@ -607,7 +610,7 @@ export default function HomePage() {
                       </h3>
                     </div>
 
-                    <ul className="sm:row-span-3 sm:grid sm:grid-rows-subgrid">
+                    <ul className="lg:row-span-3 lg:grid lg:grid-rows-subgrid">
                       {group.items.map((item, i) => (
                         <li
                           key={item}
@@ -658,7 +661,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Spreadsheet import: answers the audience list's "today it lives in
+        {/* Spreadsheet import: answers the audience list's "outgrowing
             spreadsheets" the moment it's read. Switching cost is the reason a
             coach who agrees with everything above still doesn't move, so it's
             the last thing settled before the questions and the ask. */}
