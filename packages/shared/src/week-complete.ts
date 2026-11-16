@@ -5,7 +5,8 @@ import type { WeekOverview } from './types/api';
  * takes over the workout-finished screen. Volt floods the screen from the
  * centre, an ink medal stamped with the week number spins in and lands (and
  * can be spun by hand afterwards), the week's workouts tick off in a row,
- * and confetti falls once. The rule for when, the wording, the timings and
+ * and confetti falls once. Two colours only, volt and ink: nothing white, no
+ * in-between greens. The rule for when, the wording, the timings and
  * the confetti itself live here so the web app and the native app put on
  * the same show.
  */
@@ -117,8 +118,6 @@ export interface ConfettiPiece {
   spin: number;
   /** Width in px; the height is `size * CONFETTI.aspect[shape]` */
   size: number;
-  /** On the volt screen: ink leads, white is the accent */
-  color: 'ink' | 'paper';
   shape: 'strip' | 'square';
 }
 
@@ -159,8 +158,6 @@ export function confettiPieces(count: number = CONFETTI.count, seed = 7): Confet
       duration,
       spin: (rand() < 0.5 ? -1 : 1) * (360 + Math.round(rand() * 540)),
       size: 7 + Math.round(rand() * 5),
-      // Two ink pieces for every white one
-      color: i % 3 === 2 ? 'paper' : 'ink',
       shape: rand() < 0.6 ? 'strip' : 'square',
     };
   });

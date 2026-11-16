@@ -10,12 +10,19 @@ export function EffortPicker({
   onPick,
   disabled,
   labelledBy,
+  tone = 'default',
 }: {
   value?: EffortRating | null;
   onPick: (rating: EffortRating) => void;
   disabled?: boolean;
   labelledBy: string;
+  /**
+   * `onVolt` for the week-complete screen: ink outlines straight on the volt,
+   * no white fill, and the chosen one fills ink with volt text.
+   */
+  tone?: 'default' | 'onVolt';
 }) {
+  const onVolt = tone === 'onVolt';
   return (
     <div role="group" aria-labelledby={labelledBy} className="flex gap-2.5">
       {EFFORT_CHOICES.map((choice) => {
@@ -30,10 +37,18 @@ export function EffortPicker({
             className={cn(
               'flex-1 min-h-[52px] px-3 rounded-full border-2 text-sm font-semibold touch-manipulation',
               'transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97] disabled:opacity-50',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              isSelected
-                ? 'bg-foreground border-foreground text-background'
-                : 'bg-card border-border text-foreground hover:border-foreground/40'
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
+              // Fixed ink, not the theme's foreground: the volt screen is the same in dark mode
+              onVolt
+                ? 'focus-visible:ring-[#0a0a0a] focus-visible:ring-offset-brand border-[#0a0a0a]'
+                : 'focus-visible:ring-ring',
+              onVolt
+                ? isSelected
+                  ? 'bg-[#0a0a0a] text-brand'
+                  : 'bg-transparent text-[#0a0a0a] hover:bg-[#0a0a0a]/10'
+                : isSelected
+                  ? 'bg-foreground border-foreground text-background'
+                  : 'bg-card border-border text-foreground hover:border-foreground/40'
             )}
           >
             {choice.label}

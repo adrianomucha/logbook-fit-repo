@@ -21,8 +21,8 @@ import { EASE_IN_OUT, EASE_OUT, FadeInUp, PopIn } from '@/components/motion';
 
 const VOLT = '#c3f910';
 const INK = '#0a0a0a';
-/** Ink on volt: the brand's foreground-on-brand */
-const ON_VOLT = '#1e2702';
+/** Quieter ink for labels: the same ink, let through at 72%. No third colour. */
+const INK_DIM = 'rgba(10, 10, 10, 0.72)';
 
 /** Where the medal's centre sits down the screen, as a fraction of its height: the flood starts here */
 const MEDAL_CENTER_Y = 0.24;
@@ -165,7 +165,7 @@ function WeekMedal({ week }: { week: CompletedWeek }) {
       </Animated.View>
       <Animated.View
         pointerEvents="none"
-        style={[{ marginTop: 14, width: size * 0.62, height: 10, borderRadius: 5, backgroundColor: 'rgba(30, 39, 2, 0.18)' }, shadowStyle]}
+        style={[{ marginTop: 14, width: size * 0.62, height: 10, borderRadius: 5, backgroundColor: 'rgba(10, 10, 10, 0.16)' }, shadowStyle]}
       />
     </View>
   );
@@ -210,7 +210,7 @@ interface WeekCompleteCelebrationProps {
 export function WeekCompleteCelebration({ week, workoutTitle, durationMin, onRate, onSkip, isSavingRating }: WeekCompleteCelebrationProps) {
   const insets = useSafeAreaInsets();
   const eyebrow = 'font-mono text-[10px] uppercase tracking-[1.6px]';
-  const dim = { color: 'rgba(30, 39, 2, 0.7)' };
+  const dim = { color: INK_DIM };
   return (
     <View className="flex-1 items-center justify-center bg-background px-6" style={{ paddingTop: insets.top, paddingBottom: insets.bottom + 24 }}>
       <VoltFlood />
@@ -221,7 +221,7 @@ export function WeekCompleteCelebration({ week, workoutTitle, durationMin, onRat
           <Text className={`mb-1.5 ${eyebrow}`} style={dim}>
             {WEEK_COMPLETE_COPY.eyebrow(week.weekNumber)}
           </Text>
-          <Text accessibilityRole="header" className="text-center font-sans-bold text-2xl tracking-tight" style={{ color: ON_VOLT }}>
+          <Text accessibilityRole="header" className="text-center font-sans-bold text-2xl tracking-tight" style={{ color: INK }}>
             {workoutTitle}
           </Text>
         </FadeInUp>
@@ -235,11 +235,12 @@ export function WeekCompleteCelebration({ week, workoutTitle, durationMin, onRat
             [weekMinutes(week, durationMin), WEEK_COMPLETE_COPY.minutesStat],
           ] as const
         ).map(([value, label]) => (
-          <View key={label} className="flex-1 items-center rounded-xl px-3 py-5" style={{ backgroundColor: 'rgba(30, 39, 2, 0.1)' }}>
-            <Text className="font-mono-bold text-2xl" style={{ color: ON_VOLT }}>
+          // Ink blocks with volt figures, like the medal: no in-between green
+          <View key={label} className="flex-1 items-center rounded-xl px-3 py-5" style={{ backgroundColor: INK }}>
+            <Text className="font-mono-bold text-2xl" style={{ color: VOLT }}>
               {value}
             </Text>
-            <Text className={`mt-2 ${eyebrow}`} style={dim}>
+            <Text className={`mt-2 ${eyebrow}`} style={{ color: 'rgba(195, 249, 16, 0.7)' }}>
               {label}
             </Text>
           </View>
@@ -251,7 +252,7 @@ export function WeekCompleteCelebration({ week, workoutTitle, durationMin, onRat
           How did that feel?
         </Text>
         <View className="w-full">
-          <EffortPicker onPick={onRate} disabled={isSavingRating} />
+          <EffortPicker onPick={onRate} disabled={isSavingRating} tone="onVolt" />
         </View>
       </FadeInUp>
       <Pressable onPress={onSkip} disabled={isSavingRating} className="mt-6 min-h-[44px] justify-center px-4">

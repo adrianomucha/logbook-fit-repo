@@ -103,7 +103,7 @@ function WeekMedal({ week }: { week: CompletedWeek }) {
         onClick={(e) => {
           if (e.detail === 0) settle(rot.current + 180);
         }}
-        className="relative rounded-full bg-[#0a0a0a] text-brand cursor-grab active:cursor-grabbing select-none touch-pan-y [transform-style:preserve-3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-foreground focus-visible:ring-offset-4 focus-visible:ring-offset-brand"
+        className="relative rounded-full bg-[#0a0a0a] text-brand cursor-grab active:cursor-grabbing select-none touch-pan-y [transform-style:preserve-3d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a] focus-visible:ring-offset-4 focus-visible:ring-offset-brand"
         style={{ width: size, height: size }}
       >
         {/* The struck rim */}
@@ -123,7 +123,7 @@ function WeekMedal({ week }: { week: CompletedWeek }) {
         </span>
       </button>
       {/* Its shadow on the floor */}
-      <span aria-hidden="true" className="mt-3.5 h-2.5 rounded-full bg-brand-foreground/[0.18]" style={{ width: size * 0.62 }} />
+      <span aria-hidden="true" className="mt-3.5 h-2.5 rounded-full bg-[#0a0a0a]/[0.16]" style={{ width: size * 0.62 }} />
     </div>
   );
 }
@@ -146,10 +146,12 @@ interface WeekCompleteCelebrationProps {
  * @logbook/shared/week-complete for the show and its timings.
  */
 export function WeekCompleteCelebration({ week, workoutTitle, durationMin, onRate, onSkip, isSavingRating }: WeekCompleteCelebrationProps) {
-  const eyebrow = 'font-mono text-[10px] uppercase tracking-[0.16em] text-brand-foreground/70';
+  // Labels are the same ink let through at 72%: no third colour
+  const eyebrow = 'font-mono text-[10px] uppercase tracking-[0.16em]';
+  const dim = 'text-[#0a0a0a]/[0.72]';
   const delay = (ms: number): CSSProperties => ({ animationDelay: `${ms}ms` });
   return (
-    <div className="fixed inset-0 z-50 bg-background text-brand-foreground flex flex-col items-center justify-center overflow-hidden p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+    <div className="fixed inset-0 z-50 bg-background text-[#0a0a0a] flex flex-col items-center justify-center overflow-hidden p-6 pt-[env(safe-area-inset-top)] pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       {/* Volt spreading from the medal's centre until it covers the screen */}
       <div
         aria-hidden="true"
@@ -166,7 +168,7 @@ export function WeekCompleteCelebration({ week, workoutTitle, durationMin, onRat
       <div className="relative flex flex-col items-center mb-7">
         <WeekMedal week={week} />
         <div className="mt-5 text-center animate-fade-in-up" style={delay(WEEK_MOMENT.contentDelay)}>
-          <p className={`${eyebrow} mb-1.5`}>{WEEK_COMPLETE_COPY.eyebrow(week.weekNumber)}</p>
+          <p className={`${eyebrow} ${dim} mb-1.5`}>{WEEK_COMPLETE_COPY.eyebrow(week.weekNumber)}</p>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{workoutTitle}</h1>
         </div>
         {/* One ink tick per workout of the week, popping in left to right */}
@@ -190,25 +192,26 @@ export function WeekCompleteCelebration({ week, workoutTitle, durationMin, onRat
             [weekMinutes(week, durationMin), WEEK_COMPLETE_COPY.minutesStat],
           ] as const
         ).map(([value, label]) => (
-          <div key={label} className="flex-1 rounded-xl bg-brand-foreground/10 px-3 py-5 text-center">
+          // Ink blocks with volt figures, like the medal: no in-between green
+          <div key={label} className="flex-1 rounded-xl bg-[#0a0a0a] px-3 py-5 text-center text-brand">
             <p className="font-mono text-2xl font-bold tabular-nums leading-none">{value}</p>
-            <p className={`${eyebrow} mt-2`}>{label}</p>
+            <p className={`${eyebrow} mt-2 text-brand/70`}>{label}</p>
           </div>
         ))}
       </div>
 
       <div className="relative text-center animate-fade-in-up" style={delay(WEEK_MOMENT.contentDelay + 140)}>
-        <p id="week-effort-label" className={`${eyebrow} mb-4`}>
+        <p id="week-effort-label" className={`${eyebrow} ${dim} mb-4`}>
           How did that feel?
         </p>
-        <EffortPicker onPick={onRate} disabled={isSavingRating} labelledBy="week-effort-label" />
+        <EffortPicker onPick={onRate} disabled={isSavingRating} labelledBy="week-effort-label" tone="onVolt" />
       </div>
 
       <button
         type="button"
         onClick={onSkip}
         disabled={isSavingRating}
-        className={`${eyebrow} relative hover:text-brand-foreground transition-colors mt-6 min-h-[44px] px-4 rounded-lg touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-brand`}
+        className={`${eyebrow} ${dim} relative hover:text-[#0a0a0a] transition-colors mt-6 min-h-[44px] px-4 rounded-lg touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0a0a0a] focus-visible:ring-offset-2 focus-visible:ring-offset-brand`}
       >
         Skip for now
       </button>

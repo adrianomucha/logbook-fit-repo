@@ -3,7 +3,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { CONFETTI, confettiPieces, type ConfettiPiece } from '@logbook/shared/week-complete';
 
-const COLORS = { ink: '#0a0a0a', paper: '#ffffff' } as const;
+const INK = '#0a0a0a';
 /** Pieces start this far above the screen and end this far below it, in px */
 const OVERSHOOT = 40;
 
@@ -30,7 +30,7 @@ function Piece({ piece, delay, width, height }: { piece: ConfettiPiece; delay: n
           width: piece.size,
           height: piece.size * CONFETTI.aspect[piece.shape],
           borderRadius: 1.5,
-          backgroundColor: COLORS[piece.color],
+          backgroundColor: INK,
         },
         style,
       ]}
@@ -39,7 +39,7 @@ function Piece({ piece, delay, width, height }: { piece: ConfettiPiece; delay: n
 }
 
 /**
- * A burst of ink and white confetti falling once over the volt screen, the
+ * A burst of ink confetti falling once over the volt screen, the
  * web's Confetti. For the week-complete moment only. It sits above the
  * content but takes no touches, removes itself when the last piece has
  * left, and does not render at all under Reduce Motion.

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { CONFETTI, confettiPieces } from '@logbook/shared/week-complete';
 
 /**
- * A burst of ink and white confetti falling once over the volt screen, the
+ * A burst of ink confetti falling once over the volt screen, the
  * native app's Confetti. For the week-complete moment only. It sits above
  * the content but takes no clicks, removes itself when the last piece has
  * left, and is hidden under reduced motion (see .confetti-piece in
@@ -23,7 +23,7 @@ export function Confetti({ delay = 0 }: { delay?: number }) {
       {pieces.map((piece, i) => (
         <span
           key={i}
-          className={`confetti-piece ${piece.color === 'ink' ? 'bg-[#0a0a0a]' : 'bg-white'}`}
+          className="confetti-piece bg-[#0a0a0a]"
           style={
             {
               left: `${piece.x * 100}%`,

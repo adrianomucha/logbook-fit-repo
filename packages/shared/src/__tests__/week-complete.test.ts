@@ -83,11 +83,6 @@ describe('confettiPieces', () => {
     }
   });
 
-  it('leads with ink', () => {
-    const pieces = confettiPieces();
-    const ink = pieces.filter((p) => p.color === 'ink').length;
-    expect(ink).toBeGreaterThan(pieces.length - ink);
-  });
 });
 
 describe('WEEK_MOMENT', () => {
