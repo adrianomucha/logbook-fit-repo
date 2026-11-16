@@ -288,3 +288,48 @@ describe("resolveInstallPrompt", () => {
     );
   });
 });
+
+describe("the App Store offer", () => {
+  const live = { appStoreAvailable: true };
+
+  it("offers a client on an iPhone the real app, not the home screen", () => {
+    expect(detectInstallMethod(snapshot(live))).toBe("app-store");
+    expect(detectInstallMethod(snapshot())).toBe("ios-safari");
+  });
+
+  it("reaches iOS browsers that cannot add to the home screen at all", () => {
+    for (const userAgent of [UA.iphoneChrome, UA.instagram]) {
+      expect(detectInstallMethod(snapshot({ userAgent, ...live }))).toBe("app-store");
+    }
+  });
+
+  it("is for clients only: the app is the client's side", () => {
+    expect(detectInstallMethod(snapshot(live), "coach")).toBe("ios-safari");
+  });
+
+  it("is not shown off iOS, or to someone who already has the app", () => {
+    expect(detectInstallMethod(snapshot({ userAgent: UA.androidChrome, maxTouchPoints: 5, ...live }))).toBe("none");
+    expect(detectInstallMethod(snapshot({ accountHasNativeApp: true, ...live }))).toBe("none");
+    expect(detectInstallMethod(snapshot({ openedFromNativeApp: true, ...live }))).toBe("none");
+  });
+
+  it("gets its own single ask, even after the home-screen banner was shown", () => {
+    const shownHomeScreen = markOffered(NOW, "ios-safari");
+    expect(resolveInstallPrompt(snapshot(), shownHomeScreen)).toBe("none");
+    expect(resolveInstallPrompt(snapshot(live), shownHomeScreen)).toBe("app-store");
+  });
+
+  it("is never shown twice, and is not followed by the home-screen banner", () => {
+    const shownApp = markOffered(NOW, "app-store");
+    expect(resolveInstallPrompt(snapshot(live), shownApp)).toBe("none");
+    // Listing pulled again: the home-screen ask was spent with it
+    expect(resolveInstallPrompt(snapshot(), shownApp)).toBe("none");
+  });
+
+  it("keeps earlier marks when it records a new one, and survives a round trip", () => {
+    const first = markOffered(NOW, "ios-safari");
+    const second = markOffered(NOW + 5000, "app-store", first);
+    expect(second).toEqual({ offeredAt: NOW, appOfferedAt: NOW + 5000 });
+    expect(parseInstallPromptState(JSON.stringify(second))).toEqual(second);
+  });
+});

@@ -22,6 +22,8 @@ export type InstallMethod =
   | 'ios-browser'
   /** Safari 17+ on a Mac: File ▸ Add to Dock (macOS Sonoma and later). */
   | 'macos-safari'
+  /** A client on an iPhone or iPad, and the real app is in the App Store. */
+  | 'app-store'
   /** Already installed, no install path, or already offered. Render nothing. */
   | 'none';
 
@@ -51,6 +53,11 @@ export interface BrowserSnapshot {
    * arrives in real Safari, say from a password reset email.
    */
   accountHasNativeApp: boolean;
+  /**
+   * The client app has an App Store page (NEXT_PUBLIC_APP_STORE_URL is
+   * set). On iOS the banner then offers the real app, not the home screen.
+   */
+  appStoreAvailable?: boolean;
 }
 
 /** localStorage key remembering that this browser is the native app's sheet.
@@ -72,6 +79,12 @@ export interface InstallPromptState {
    * how an install nudge turns into a cookie banner.
    */
   offeredAt?: number;
+  /**
+   * Epoch ms of the one time the App Store banner was shown. Kept apart from
+   * `offeredAt`: the real app is a different, better offer, so someone who
+   * was shown "Add to Home Screen" before it existed still gets told once.
+   */
+  appOfferedAt?: number;
 }
 
 /** True when the app has already used up its one ask on this device. */
@@ -79,9 +92,26 @@ export function hasBeenOffered(state: InstallPromptState): boolean {
   return isFiniteNumber(state.offeredAt);
 }
 
-/** The record to persist the moment the banner actually goes on screen. */
-export function markOffered(now: number): InstallPromptState {
-  return { offeredAt: now };
+/** True when this device has already been told about the App Store app. */
+export function hasBeenOfferedApp(state: InstallPromptState): boolean {
+  return isFiniteNumber(state.appOfferedAt);
+}
+
+/**
+ * The record to persist the moment the banner actually goes on screen.
+ * Showing the App Store banner spends both asks: there is no reason to
+ * follow it with "Add to Home Screen". Earlier marks are kept.
+ */
+export function markOffered(
+  now: number,
+  method: InstallMethod = 'none',
+  previous: InstallPromptState = {}
+): InstallPromptState {
+  return {
+    ...previous,
+    offeredAt: previous.offeredAt ?? now,
+    ...(method === 'app-store' ? { appOfferedAt: now } : {}),
+  };
 }
 
 /** True when the page is already running as an installed app. */
@@ -148,6 +178,10 @@ export function detectInstallMethod(
     return 'macos-safari';
   }
   if (!isIOS(snapshot.userAgent, snapshot.maxTouchPoints)) return 'none';
+  // The real app beats a home-screen shortcut, and unlike that shortcut a
+  // link to the App Store works in every iOS browser, in-app ones included.
+  // Clients only: the app is the client's side.
+  if (audience === 'client' && snapshot.appStoreAvailable) return 'app-store';
   if (IOS_BROWSER_TOKENS.test(snapshot.userAgent)) return 'ios-browser';
   return isRealIOSSafari(snapshot.userAgent) ? 'ios-safari' : 'none';
 }
@@ -157,8 +191,11 @@ export function parseInstallPromptState(raw: string | null): InstallPromptState 
   try {
     const parsed: unknown = JSON.parse(raw);
     if (!parsed || typeof parsed !== 'object') return {};
-    const { offeredAt } = parsed as Record<string, unknown>;
-    return isFiniteNumber(offeredAt) ? { offeredAt } : {};
+    const { offeredAt, appOfferedAt } = parsed as Record<string, unknown>;
+    return {
+      ...(isFiniteNumber(offeredAt) ? { offeredAt } : {}),
+      ...(isFiniteNumber(appOfferedAt) ? { appOfferedAt } : {}),
+    };
   } catch {
     // Corrupt or hand-edited value. Treating it as "never offered" is the safe
     // read: the worst case is one extra ask, not a thrown render.
@@ -176,6 +213,9 @@ export function resolveInstallPrompt(
   state: InstallPromptState,
   audience: InstallAudience = 'client'
 ): InstallMethod {
+  const method = detectInstallMethod(snapshot, audience);
+  // The App Store offer has its own single ask (see InstallPromptState)
+  if (method === 'app-store') return hasBeenOfferedApp(state) ? 'none' : 'app-store';
   if (hasBeenOffered(state)) return 'none';
-  return detectInstallMethod(snapshot, audience);
+  return method;
 }

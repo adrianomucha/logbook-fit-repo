@@ -49,13 +49,23 @@ slows over the December holidays. Aim to submit by mid-December.
 - [ ] **Privacy nutrition labels**: email, name, health and fitness, user
       content. No tracking. (A, S)
 - [ ] **Screenshots** for 6.7" and 6.1" from the TestFlight build. (A, S)
-- [ ] **Listing copy**: name, subtitle, description, keywords, support URL,
+- [x] **Listing copy**: name, subtitle, description, keywords, support URL,
       review notes (text is drafted in `TESTFLIGHT.md` §5). (C drafts, A pastes)
-- [ ] **Universal links** so an emailed `logbook.fit/client/...` link opens the
+      *Drafted:* `APP_STORE_LISTING.md` has the name, subtitle, promotional text,
+      description, keywords, URLs, rating answers and review notes, each inside
+      Apple's limit. Still yours: pick the support URL, and paste it in.
+- [x] **Universal links** so an emailed `logbook.fit/client/...` link opens the
       app. Not built: no `apple-app-site-association`, no `associatedDomains`
       in `mobile/app.json`. Nice to have for 1.0; needs a new build. (C, M)
-- [ ] **Point the web install banner at the App Store** once the listing is
+      *Built, needs two things from you:* set `APPLE_TEAM_ID` in production (the
+      website then serves `/.well-known/apple-app-site-association` for the
+      `/client` pages), and ship a new build (it carries `associatedDomains`).
+      Until both are true, links keep opening in the browser as they do now.
+- [x] **Point the web install banner at the App Store** once the listing is
       live (`InstallPrompt`). (C, S)
+      *Built, switched on by one setting:* once `NEXT_PUBLIC_APP_STORE_URL` is
+      set (`https://apps.apple.com/app/id6824789302` when the listing is live),
+      a client on an iPhone is offered the real app, not Add to Home Screen.
 - [ ] **Submit for review.** (A)
 
 ## 2. Must fix before real users (verified still open in code)

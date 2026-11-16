@@ -1,5 +1,8 @@
 import { isCoachSignupOpen } from '@/lib/waitlist';
 import { FORM_PROMISES, FOUNDING_PRICE } from '@/lib/landing-copy';
+import { appStoreUrl } from '@/lib/app-store';
+
+export { appStoreUrl };
 
 /**
  * What the public pages are offering right now, decided by the same switch
@@ -16,23 +19,6 @@ export type OfferMode = 'waitlist' | 'open';
 
 export function offerMode(): OfferMode {
   return isCoachSignupOpen() ? 'open' : 'waitlist';
-}
-
-/**
- * The client app's App Store page, once it is live. Set
- * NEXT_PUBLIC_APP_STORE_URL to show the link; anything that is not an
- * apps.apple.com address is ignored, so a typo cannot put a bad link on the
- * homepage.
- */
-export function appStoreUrl(): string | null {
-  const raw = process.env.NEXT_PUBLIC_APP_STORE_URL?.trim();
-  if (!raw) return null;
-  try {
-    const url = new URL(raw);
-    return url.protocol === 'https:' && url.hostname === 'apps.apple.com' ? url.toString() : null;
-  } catch {
-    return null;
-  }
 }
 
 export interface OfferCopy {

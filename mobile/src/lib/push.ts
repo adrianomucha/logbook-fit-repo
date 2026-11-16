@@ -1,4 +1,5 @@
 import * as Notifications from 'expo-notifications';
+import { appRouteForWebPath } from '@logbook/shared/app-links';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
@@ -85,23 +86,7 @@ export async function disablePush(): Promise<void> {
 
 /**
  * Where a notification's `url` (a web path from lib/push.ts on the server)
- * lands in the app. The route tree mirrors the web's, so most paths pass
- * straight through; the web's `?tab=` query becomes the matching tab.
+ * lands in the app. The mapping is shared with universal links
+ * (@logbook/shared/app-links), so a push and an emailed link agree.
  */
-export function resolveNotificationUrl(url: unknown): string | null {
-  if (typeof url !== 'string' || !url.startsWith('/')) return null;
-  const [path, query = ''] = url.split('?');
-  const tab = new URLSearchParams(query).get('tab');
-  if (path === '/client' || path === '/client/') {
-    if (tab === 'chat') return '/client/chat';
-    if (tab === 'progress') return '/client/progress';
-    return '/client';
-  }
-  // The web nests a session under its week (/client/workout/<weekId>/<dayId>);
-  // the app's route is the day alone
-  const workout = path.match(/^\/client\/workout\/(?:[^/]+\/)?([^/]+)\/?$/);
-  if (workout) return `/client/workout/${workout[1]}`;
-  if (path.startsWith('/client/checkin/')) return path;
-  if (path.startsWith('/coach')) return '/coach';
-  return '/client';
-}
+export const resolveNotificationUrl = appRouteForWebPath;
