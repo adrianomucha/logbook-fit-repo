@@ -577,8 +577,9 @@ export default function HomePage() {
 
             {/* One table, two halves. Below lg the halves stack: side by side
                 any narrower, most lines wrap. From lg up each half is a
-                subgrid of the parent's rows (header, three items), so paired
-                rows share a height and the hairlines run straight across. */}
+                subgrid of the parent's first four rows (header, three items),
+                so paired rows share a height and the hairlines run straight
+                across. */}
             <div className="mt-12 grid overflow-hidden rounded-2xl border border-border/70 sm:mt-16 lg:grid-cols-2 lg:grid-rows-[repeat(4,auto)]">
               {AUDIENCE.map((group, g) => {
                 const built = g === 0;
@@ -637,16 +638,20 @@ export default function HomePage() {
                   </div>
                 );
               })}
-            </div>
-
-            {/* The invite is the answer for the left column. */}
-            <div {...reveal(3)} className="mt-10 flex justify-center sm:mt-12">
-              <Link
-                href={OFFER.copy.midCta.href}
-                className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                {OFFER.copy.midCta.label}
-              </Link>
+              {/* The invite closes the table instead of floating under it:
+                  a full-width last row, so it reads as the answer to the
+                  whole comparison. */}
+              <div className="flex flex-col items-start gap-4 border-t border-border/70 px-6 py-6 sm:flex-row sm:items-center sm:justify-between sm:px-8 lg:col-span-2">
+                <p className="text-lg font-semibold antialiased sm:text-xl">
+                  Sound like you?
+                </p>
+                <Link
+                  href={OFFER.copy.midCta.href}
+                  className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                >
+                  {OFFER.copy.midCta.label}
+                </Link>
+              </div>
             </div>
           </div>
         </section>
