@@ -41,8 +41,8 @@ const CURRENT_TOOLS = [
  *
  * Then, for anyone coaching (see offersSetupCall), a last step: book the
  * setup call on Cal.com. Booking sends the invite straight away (the Cal.com
- * webhook does it), and the card turns into the booked state, where the
- * coach can upload the spreadsheet they coach from.
+ * webhook does it), and the card turns into the booked state, which points
+ * the coach at importing their program before the call.
  */
 export function WaitlistForm({
   campaign,

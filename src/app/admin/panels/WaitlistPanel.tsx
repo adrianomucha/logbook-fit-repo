@@ -1,4 +1,4 @@
-import { Download, FileSpreadsheet } from 'lucide-react';
+import { Download } from 'lucide-react';
 import type { SetupCallStatus, WaitlistStatus } from '@prisma/client';
 import { waitlistInvitePath } from '@/lib/waitlist';
 import prisma from '@/lib/prisma';
@@ -131,8 +131,6 @@ export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = 
       currentTool: true,
       callStatus: true,
       callStartsAt: true,
-      setupFileName: true,
-      setupFilePath: true,
     },
   });
   const entries = [...rows].sort(upcomingCallFirst);
@@ -233,7 +231,6 @@ export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = 
                   <th className="px-4 py-3 font-medium">Uses</th>
                   <th className="px-4 py-3 font-medium">Joined</th>
                   <th className="px-4 py-3 font-medium">Setup call</th>
-                  <th className="px-4 py-3 font-medium">File</th>
                   <th className="px-4 py-3 font-medium">Status</th>
                   <th className="px-4 py-3 text-right font-medium">
                     <span className="sr-only">Actions</span>
@@ -265,20 +262,6 @@ export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = 
                         startsAt={entry.callStartsAt}
                         timeZone={timeZone}
                       />
-                    </td>
-                    <td className="px-4 py-3">
-                      {entry.setupFilePath ? (
-                        <a
-                          href={`/api/admin/waitlist/${entry.id}/setup-file`}
-                          title={entry.setupFileName ?? undefined}
-                          className="inline-flex max-w-[12rem] items-center gap-1.5 font-medium underline-offset-4 hover:underline"
-                        >
-                          <FileSpreadsheet className="h-4 w-4 shrink-0" aria-hidden="true" />
-                          <span className="truncate">{entry.setupFileName ?? 'Spreadsheet'}</span>
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">–</span>
-                      )}
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge

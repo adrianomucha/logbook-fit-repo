@@ -54,9 +54,8 @@ export function useSetupCallWidget({
         cal('on', {
           action: 'bookingSuccessfulV2',
           callback: (e) => {
-            const { uid, startTime } = e.detail.data;
-            if (!startTime) return;
-            onBookedRef.current({ uid: uid ?? null, startTime });
+            const { startTime } = e.detail.data;
+            if (startTime) onBookedRef.current({ startTime });
           },
         });
       })

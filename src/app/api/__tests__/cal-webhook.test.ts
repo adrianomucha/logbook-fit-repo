@@ -107,6 +107,7 @@ describe("POST /api/webhooks/cal", () => {
         callTimeZone: "Europe/Warsaw",
         callBookingUid: "bk_1",
       }),
+      select: { id: true },
     });
     expect(db.entryUpdateMany).toHaveBeenCalledWith({
       where: { id: "e1", status: { not: "JOINED" } },
@@ -127,6 +128,7 @@ describe("POST /api/webhooks/cal", () => {
     expect(db.entryUpdate).toHaveBeenCalledWith({
       where: { id: "e1" },
       data: expect.objectContaining({ callBookingUid: "bk_2" }),
+      select: { id: true },
     });
     expect(db.sendWaitlistInvite).not.toHaveBeenCalled();
   });

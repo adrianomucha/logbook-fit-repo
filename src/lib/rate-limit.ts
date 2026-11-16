@@ -202,13 +202,6 @@ export const waitlistResendLimiter = rateLimit("waitlist-resend", {
   maxRequests: 1,
 });
 
-// Spreadsheet uploads after booking a setup call. Each one already needs the
-// booking's uid; this caps how much storage one address can churn through.
-export const setupFileLimiter = rateLimit("setup-file", {
-  windowMs: 60 * 60 * 1000, // 1 hour
-  maxRequests: 10,
-});
-
 // Alert emails to the operators, keyed by the kind of problem: enough to
 // know something is wrong and see a couple of examples, never a flood.
 export const operatorAlertLimiter = rateLimit("operator-alert", {

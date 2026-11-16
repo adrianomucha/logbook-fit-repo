@@ -182,7 +182,7 @@ describe("sendWaitlistInvite", () => {
     return JSON.parse(init.body) as { subject: string; html: string; text: string };
   }
 
-  it("names the booked call in the coach's time zone and asks for the spreadsheet", async () => {
+  it("names the booked call in the coach's time zone and points to the importer", async () => {
     const fetchMock = vi.fn(async () => ({ ok: true }));
     vi.stubGlobal("fetch", fetchMock);
 
@@ -193,7 +193,7 @@ describe("sendWaitlistInvite", () => {
     const body = sentBody(fetchMock);
     expect(body.subject).toContain("setup call is booked");
     expect(body.text).toContain("Wednesday, November 18 at 2:00 PM GMT+1");
-    expect(body.text).toContain("Reply to this email with it attached");
+    expect(body.text).toContain("import your program from the spreadsheet you coach from");
     expect(body.text).toContain(`Create your account: ${url}`);
     expect(body.text).not.toContain("Book your setup call");
   });

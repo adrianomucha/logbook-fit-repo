@@ -40,8 +40,10 @@ export const SETUP_CALL_OFFER = {
   reconsider: 'Want in sooner? Book your setup call',
 } as const;
 
-/** After booking: the spreadsheet upload. */
-export const SETUP_FILE_ASK =
-  'Coach from a spreadsheet? Upload it now and we’ll have it imported before the call.';
-export const SETUP_FILE_FALLBACK =
-  'Or reply to your invite email with it attached.';
+/**
+ * After booking: get into the product before the call. The invite is already
+ * on its way, and the in-app importer reads the coach's spreadsheet, so the
+ * call is for fixing what didn't come across, not for starting from zero.
+ */
+export const SETUP_CALL_PREP =
+  'Before the call, create your account from the invite and import your program from the spreadsheet you coach from. Anything that doesn’t come across, we’ll fix together on the call.';

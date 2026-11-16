@@ -57,6 +57,7 @@ export async function recordSetupCallBooked(
       callBookingUid: event.uid,
       callBookedAt: new Date(),
     },
+    select: { id: true },
   });
 
   if (entry.status === "PENDING" && offersSetupCall(entry.clientCount)) {
