@@ -576,11 +576,10 @@ export default function HomePage() {
             </div>
 
             {/* One table, two halves. Below lg the halves stack: side by side
-                any narrower, most lines wrap. From lg up
-                each half is a subgrid of the parent's rows (header, three
-                items, footer), so paired rows share a height and the hairlines
-                run straight across however long either side's line is. */}
-            <div className="mt-12 grid overflow-hidden rounded-2xl border border-border/70 sm:mt-16 lg:grid-cols-2 lg:grid-rows-[repeat(5,auto)]">
+                any narrower, most lines wrap. From lg up each half is a
+                subgrid of the parent's rows (header, three items), so paired
+                rows share a height and the hairlines run straight across. */}
+            <div className="mt-12 grid overflow-hidden rounded-2xl border border-border/70 sm:mt-16 lg:grid-cols-2 lg:grid-rows-[repeat(4,auto)]">
               {AUDIENCE.map((group, g) => {
                 const built = g === 0;
                 return (
@@ -589,8 +588,8 @@ export default function HomePage() {
                     {...reveal(g + 1)}
                     className={
                       built
-                        ? 'bg-brand/[0.06] lg:row-span-5 lg:grid lg:grid-rows-subgrid'
-                        : 'border-t border-border/70 lg:row-span-5 lg:grid lg:grid-rows-subgrid lg:border-l lg:border-t-0'
+                        ? 'bg-brand/[0.06] lg:row-span-4 lg:grid lg:grid-rows-subgrid'
+                        : 'border-t border-border/70 lg:row-span-4 lg:grid lg:grid-rows-subgrid lg:border-l lg:border-t-0'
                     }
                   >
                     <div className="flex items-center gap-3 px-6 py-5 sm:px-8">
@@ -635,28 +634,19 @@ export default function HomePage() {
                         </li>
                       ))}
                     </ul>
-
-                    {/* The invite is the answer for the left column, so it
-                        sits at its foot. The right column's foot points the
-                        coaches it turns away at what they need instead. */}
-                    <div className="flex items-center border-t border-border/70 px-6 py-6 sm:px-8">
-                      {built ? (
-                        <Link
-                          href={OFFER.copy.midCta.href}
-                          className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-                        >
-                          {OFFER.copy.midCta.label}
-                        </Link>
-                      ) : (
-                        <p className="text-pretty text-sm text-muted-foreground antialiased">
-                          Need nutrition tracking or payments? A bigger platform
-                          is the better fit.
-                        </p>
-                      )}
-                    </div>
                   </div>
                 );
               })}
+            </div>
+
+            {/* The invite is the answer for the left column. */}
+            <div {...reveal(3)} className="mt-10 flex justify-center sm:mt-12">
+              <Link
+                href={OFFER.copy.midCta.href}
+                className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+              >
+                {OFFER.copy.midCta.label}
+              </Link>
             </div>
           </div>
         </section>
