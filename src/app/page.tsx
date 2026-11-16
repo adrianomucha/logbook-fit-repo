@@ -152,28 +152,31 @@ const MARQUEE_ITEMS = [
 
 // The filter, as two lists. Every line is short enough to scan in one pass:
 // the point lands from the shape of the section before any of it is read.
+/**
+ * The two sides of the filter. Row N on the left and row N on the right are a
+ * pair (a real roster vs training alone, writing plans vs logging workouts,
+ * outgrowing the spreadsheet vs happy in it), so the table aligns them.
+ */
 const AUDIENCE = [
   {
     title: 'Built for',
     icon: Check,
-    iconClass: 'text-brand',
     items: [
       'Independent coaches with a real roster',
-      'You write the plans and run the check-ins yourself',
+      'You write the plans and run the check\u2011ins yourself',
       'Today it lives in spreadsheets and WhatsApp',
     ],
   },
   {
     title: 'Not for',
     icon: X,
-    iconClass: 'text-muted-foreground',
     items: [
       'Lifters training on their own',
       'Anyone who just wants a workout log',
       'Coaches happy with their spreadsheet',
     ],
   },
-];
+] as const;
 
 const CHECK_IN_LOOP = [
   {
@@ -558,49 +561,99 @@ export default function HomePage() {
             the coach knows what the product is, so "is this me?" is the live
             question, and the invite button is the answer for the left column. */}
         <section className="dark bg-background text-foreground">
-          <div className="mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
             <div {...reveal()} className="text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Who it&rsquo;s for
               </p>
-              <h2 className="text-balance text-3xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-5xl">
+              <h2 className="text-balance text-4xl font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-6xl">
                 Deliberately not
                 <br />
                 for everyone.
               </h2>
             </div>
 
-            <div className="mt-12 grid gap-8 sm:grid-cols-2 sm:gap-12">
-              {AUDIENCE.map((group, i) => (
-                <div key={group.title} {...reveal(i)}>
-                  <h3 className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-                    {group.title}
-                  </h3>
-                  <ul className="mt-4 space-y-3">
-                    {group.items.map((item) => (
-                      <li key={item} className="flex gap-3">
-                        <group.icon
-                          className={`mt-0.5 h-4 w-4 shrink-0 ${group.iconClass}`}
-                          strokeWidth={3}
-                          aria-hidden="true"
-                        />
-                        <span className="text-pretty text-base antialiased">
-                          {item}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
+            {/* One table, two halves. On a phone the halves stack. From sm up
+                each half is a subgrid of the parent's rows (header, three
+                items, footer), so paired rows share a height and the hairlines
+                run straight across however long either side's line is. */}
+            <div className="mt-12 grid overflow-hidden rounded-2xl border border-border/70 sm:mt-16 sm:grid-cols-2 sm:grid-rows-[repeat(5,auto)]">
+              {AUDIENCE.map((group, g) => {
+                const built = g === 0;
+                return (
+                  <div
+                    key={group.title}
+                    {...reveal(g + 1)}
+                    className={
+                      built
+                        ? 'bg-brand/[0.06] sm:row-span-5 sm:grid sm:grid-rows-subgrid'
+                        : 'border-t border-border/70 sm:row-span-5 sm:grid sm:grid-rows-subgrid sm:border-l sm:border-t-0'
+                    }
+                  >
+                    <div className="flex items-center gap-3 px-6 py-5 sm:px-8">
+                      <span
+                        className={`grid h-7 w-7 place-items-center rounded-full ${
+                          built ? 'bg-brand text-brand-foreground' : 'border border-border text-muted-foreground'
+                        }`}
+                      >
+                        <group.icon className="h-3.5 w-3.5" strokeWidth={3} aria-hidden="true" />
+                      </span>
+                      <h3
+                        className={`font-mono text-xs font-semibold uppercase tracking-[0.16em] antialiased ${
+                          built ? 'text-brand' : 'text-muted-foreground'
+                        }`}
+                      >
+                        {group.title}
+                      </h3>
+                    </div>
 
-            <div {...reveal(2)} className="mt-12 flex justify-center">
-              <Link
-                href={OFFER.copy.midCta.href}
-                className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-              >
-                {OFFER.copy.midCta.label}
-              </Link>
+                    <ul className="sm:row-span-3 sm:grid sm:grid-rows-subgrid">
+                      {group.items.map((item, i) => (
+                        <li
+                          key={item}
+                          className="flex items-baseline gap-5 border-t border-border/70 px-6 py-5 sm:px-8 sm:py-6"
+                        >
+                          <span
+                            className={`font-mono text-xs tabular-nums antialiased ${
+                              built ? 'text-brand' : 'text-muted-foreground/60'
+                            }`}
+                          >
+                            0{i + 1}
+                          </span>
+                          <span
+                            className={`text-pretty text-lg leading-snug antialiased sm:text-xl ${
+                              built
+                                ? 'font-medium text-foreground'
+                                : 'text-muted-foreground line-through decoration-muted-foreground/40 decoration-1'
+                            }`}
+                          >
+                            {item}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* The invite is the answer for the left column, so it
+                        sits at its foot. The right column's foot points the
+                        coaches it turns away at what they need instead. */}
+                    <div className="flex items-center border-t border-border/70 px-6 py-6 sm:px-8">
+                      {built ? (
+                        <Link
+                          href={OFFER.copy.midCta.href}
+                          className="inline-flex h-11 items-center rounded-md bg-brand px-6 text-sm font-bold uppercase tracking-wider text-brand-foreground antialiased transition-[background-color,transform] duration-150 ease-out-strong hover:bg-brand/90 active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          {OFFER.copy.midCta.label}
+                        </Link>
+                      ) : (
+                        <p className="text-pretty text-sm text-muted-foreground antialiased">
+                          Need nutrition tracking or payments? A bigger platform
+                          is the better fit.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </section>
