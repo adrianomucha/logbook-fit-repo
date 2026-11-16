@@ -15,6 +15,8 @@ const supabaseOrigin = (() => {
   }
 })();
 
+const CAL_ORIGIN = "https://app.cal.com";
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -34,11 +36,14 @@ const securityHeaders = [
       // Next.js requires 'unsafe-inline' for hydration scripts;
       // dev mode also needs 'unsafe-eval' for hot-module replacement
       // and a websocket back to the dev server.
-      `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
+      // app.cal.com: the setup-call booking widget on the waitlist
+      // confirmation screen (its script, and the booking page it frames).
+      `script-src 'self' 'unsafe-inline' ${CAL_ORIGIN}${isDev ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       `img-src 'self' data: blob:${supabaseOrigin ? ` ${supabaseOrigin}` : ""}`,
       "font-src 'self'",
-      `connect-src 'self'${isDev ? " ws://localhost:3000" : ""}`,
+      `connect-src 'self' ${CAL_ORIGIN}${isDev ? " ws://localhost:3000" : ""}`,
+      `frame-src ${CAL_ORIGIN}`,
       "frame-ancestors 'none'",
     ].join("; "),
   },

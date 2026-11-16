@@ -1,4 +1,5 @@
 import { emailConfigStatus } from "@/lib/services/email";
+import { normalizeCalLink } from "@/lib/setup-call";
 
 /**
  * Production env sanity check.
@@ -60,6 +61,18 @@ export function envProblems(env: NodeJS.ProcessEnv = process.env): string[] {
   if (!env.ANTHROPIC_API_KEY) {
     problems.push(
       "ANTHROPIC_API_KEY is not set — plan import only reads spreadsheets laid out like the template; any other layout is rejected instead of read by the AI reader."
+    );
+  }
+
+  const calLink = env.NEXT_PUBLIC_CAL_SETUP_CALL_LINK;
+  if (calLink && !normalizeCalLink(calLink)) {
+    problems.push(
+      `NEXT_PUBLIC_CAL_SETUP_CALL_LINK ("${calLink}") is not a Cal.com event type link. Use "username/event-slug". The waitlist offers no setup call until it is fixed.`
+    );
+  }
+  if (calLink && !env.CAL_WEBHOOK_SECRET) {
+    problems.push(
+      "CAL_WEBHOOK_SECRET is not set, but the waitlist offers setup calls: bookings are not recorded and booking sends no invite. Add a webhook in Cal.com pointing at /api/webhooks/cal with the same secret."
     );
   }
 

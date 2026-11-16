@@ -52,7 +52,7 @@ export const OFFER_COPY: Record<OfferMode, OfferCopy> = {
     price: FOUNDING_PRICE,
     nextStep: {
       q: 'When will I get my invite?',
-      a: 'When your spot opens, the invite comes to the email you signed up with. We let coaches in a small batch at a time so each one gets a setup call, where we bring your programs across with you.',
+      a: 'Right away if you book your setup call when you sign up: the invite comes as soon as the call is booked, and on the call we bring your programs across with you. Otherwise it comes to the email you signed up with when your spot opens.',
     },
     midCta: { label: 'Request an invite', href: '#waitlist' },
     closingTitle: ['Get on', 'the list'],

@@ -61,6 +61,14 @@ enum WaitlistStatus {
   JOINED
 }
 
+// The setup call booked on Cal.com, kept apart from WaitlistStatus: the invite
+// lifecycle and the call lifecycle move independently (a coach can join and
+// then cancel the call, or be invited by hand and never book one).
+enum SetupCallStatus {
+  BOOKED
+  CANCELLED
+}
+
 enum FeedbackCategory {
   BUG
   IDEA
@@ -628,6 +636,25 @@ model WaitlistEntry {
   // The second confirmation-screen question: what they coach on today
   // (WAITLIST_CURRENT_TOOLS). Spreadsheet coaches are who the importer is for.
   currentTool String?
+
+  // The setup call, written by the Cal.com webhook (api/webhooks/cal). Booking
+  // one sends the beta invite straight away, so the coach arrives on the call
+  // with an account. callBookingUid is Cal.com's booking uid: it matches a
+  // later cancellation to this booking, and doubles as the proof of booking
+  // the spreadsheet upload asks for (only the person who booked has it).
+  callStatus     SetupCallStatus?
+  callStartsAt   DateTime?
+  // The coach's IANA time zone from the booking, so emails show their time
+  callTimeZone   String?
+  callBookingUid String?          @unique
+  callBookedAt   DateTime?
+
+  // The spreadsheet the coach coaches from, uploaded after booking so the
+  // import can be done before the call. Stored in the private
+  // `setup-files` Supabase Storage bucket (lib/setup-file-storage.ts).
+  setupFilePath       String?
+  setupFileName       String?
+  setupFileUploadedAt DateTime?
 
   createdAt DateTime @default(now())
 
