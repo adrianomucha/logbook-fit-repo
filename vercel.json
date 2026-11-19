@@ -9,6 +9,10 @@
     {
       "path": "/api/cron/idle-workouts",
       "schedule": "0 10 * * *"
+    },
+    {
+      "path": "/api/cron/setup-call-nudges",
+      "schedule": "0 17 * * *"
     }
   ]
 }

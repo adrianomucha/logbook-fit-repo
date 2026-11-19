@@ -41,6 +41,7 @@ export async function GET(req: Request) {
       currentTool: true,
       callStatus: true,
       callStartsAt: true,
+      callNudgedAt: true,
     },
   });
 
@@ -49,7 +50,7 @@ export async function GET(req: Request) {
   // Tokens are deliberately excluded: the CSV is a mailing list, not a
   // credential dump.
   const rows = [
-    "email,joined,status,invited_at,joined_at,source,medium,campaign,referrer,clients,current_tool,call_status,call_starts_at",
+    "email,joined,status,invited_at,joined_at,source,medium,campaign,referrer,clients,current_tool,call_status,call_starts_at,call_reminded_at",
     ...entries.map((e) =>
       [
         e.email,
@@ -65,6 +66,7 @@ export async function GET(req: Request) {
         e.currentTool ?? "",
         e.callStatus ?? "",
         e.callStartsAt?.toISOString() ?? "",
+        e.callNudgedAt?.toISOString() ?? "",
       ]
         .map(csvCell)
         .join(",")

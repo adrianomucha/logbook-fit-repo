@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   emailConfigStatus,
   sendClientInvite,
+  sendSetupCallNudge,
   sendWaitlistInvite,
   sendWaitlistWelcome,
 } from "../email";
@@ -220,5 +221,23 @@ describe("sendWaitlistInvite", () => {
 
     const body = sentBody(fetchMock);
     expect(body.text).not.toContain("setup call");
+  });
+});
+
+describe("sendSetupCallNudge", () => {
+  it("links to the booking page and says it's the only reminder", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    const url = "https://cal.com/adrian-logbook.fit/setup-call?email=sam%40example.com";
+
+    await expect(sendSetupCallNudge("sam@example.com", url)).resolves.toBe(true);
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, { body: string }];
+    const body = JSON.parse(init.body) as { to: string; subject: string; html: string; text: string };
+    expect(body.to).toBe("sam@example.com");
+    expect(body.subject).toBe("Want in sooner? Book your Logbook.fit setup call");
+    expect(body.html).toContain(`href="${url}"`);
+    expect(body.text).toContain(`Pick a time: ${url}`);
+    expect(body.text).toContain("this is the only reminder we'll send");
   });
 });

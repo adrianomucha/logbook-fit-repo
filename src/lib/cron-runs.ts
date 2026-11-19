@@ -15,6 +15,7 @@ import prisma from "@/lib/prisma";
 export const CRON_JOBS = {
   checkIns: "check-ins",
   idleWorkouts: "idle-workouts",
+  setupCallNudges: "setup-call-nudges",
 } as const;
 
 export type CronJob = (typeof CRON_JOBS)[keyof typeof CRON_JOBS];
