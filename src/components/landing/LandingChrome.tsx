@@ -80,34 +80,89 @@ export function JoinListSection({
 // 44px tall so each is a fair target on a phone, and lit while pressed:
 // hover never fires on touch.
 const FOOTER_LINK =
-  'inline-flex min-h-11 items-center transition-colors hover:text-foreground active:text-foreground';
+  'inline-flex min-h-11 items-center text-base text-muted-foreground antialiased transition-colors hover:text-foreground active:text-foreground';
 
-export function LandingFooter({ appStoreUrl }: { appStoreUrl?: string | null } = {}) {
+const FOOTER_HEADING =
+  'mb-2 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground/70 antialiased';
+
+/**
+ * Built like the page's other sections rather than as a thin strip: the
+ * content width, the brand and where things stand on the left, links grouped
+ * into columns, and the name set large to close the page in the same heavy
+ * uppercase as the headings above it.
+ */
+export function LandingFooter({ offer }: { offer: Offer }) {
   return (
-    <footer className="dark border-t border-border bg-background text-foreground">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-8 sm:flex-row sm:px-6">
-        <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
-          © 2026 Logbook.fit · All rights reserved
+    <footer className="dark overflow-hidden border-t border-border/70 bg-background text-foreground">
+      <div className="mx-auto max-w-6xl px-4 pt-14 sm:px-6 sm:pt-20">
+        <div className="grid grid-cols-2 gap-x-8 gap-y-12 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="col-span-2 lg:col-span-1">
+            <Logo markSize={28} />
+            <p className="mt-5 max-w-sm text-pretty text-muted-foreground antialiased sm:text-lg">
+              Coaching software for independent coaches. Your roster, ranked by who needs you
+              today.
+            </p>
+            <p className="mt-6 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+              {offer.copy.heroEyebrow}
+            </p>
+          </div>
+
+          <nav aria-label="Product">
+            <p className={FOOTER_HEADING}>Product</p>
+            <ul>
+              <li>
+                <Link href="/spreadsheet-migration" className={FOOTER_LINK}>
+                  Spreadsheet import
+                </Link>
+              </li>
+              {offer.appStoreUrl && (
+                <li>
+                  <a href={offer.appStoreUrl} className={FOOTER_LINK} rel="noopener">
+                    iPhone app
+                  </a>
+                </li>
+              )}
+              <li>
+                <Link href="/login" className={FOOTER_LINK}>
+                  Sign in
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
+          <nav aria-label="Legal">
+            <p className={FOOTER_HEADING}>Legal</p>
+            <ul>
+              <li>
+                <Link href="/privacy" className={FOOTER_LINK}>
+                  Privacy
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className={FOOTER_LINK}>
+                  Terms
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+
+        <div className="mt-14 border-t border-border/70 py-6 sm:mt-20">
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+            © 2026 Logbook.fit · All rights reserved
+          </p>
+        </div>
+
+        {/* The name, set to the content width and cut off by the page's
+            bottom edge, so the page ends on the brand instead of on a row of
+            links. Decorative: the logo above already names the site. */}
+        <p
+          className="-mb-[0.04em] select-none whitespace-nowrap text-[clamp(3rem,18.5vw,14.25rem)] font-bold uppercase leading-[0.9] tracking-tight text-foreground/[0.07] antialiased"
+          aria-hidden="true"
+        >
+          Logbook<span className="text-brand">.</span>
         </p>
-        <nav className="flex flex-wrap items-center justify-center gap-x-5 text-sm text-muted-foreground antialiased">
-          <Link href="/spreadsheet-migration" className={FOOTER_LINK}>
-            Spreadsheet import
-          </Link>
-          {appStoreUrl && (
-            <a href={appStoreUrl} className={FOOTER_LINK} rel="noopener">
-              iPhone app
-            </a>
-          )}
-          <Link href="/privacy" className={FOOTER_LINK}>
-            Privacy
-          </Link>
-          <Link href="/terms" className={FOOTER_LINK}>
-            Terms
-          </Link>
-          <Link href="/login" className={FOOTER_LINK}>
-            Sign in
-          </Link>
-        </nav>
       </div>
     </footer>
   );

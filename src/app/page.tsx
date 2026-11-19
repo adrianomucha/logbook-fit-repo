@@ -699,7 +699,7 @@ export default function HomePage() {
         <JoinListSection offer={OFFER}>{OFFER.copy.closingBody.home}</JoinListSection>
       </main>
 
-      <LandingFooter appStoreUrl={OFFER.appStoreUrl} />
+      <LandingFooter offer={OFFER} />
     </RevealScope>
   );
 }
