@@ -243,7 +243,7 @@ const INVITE_INTRO =
   "Your spot in the Logbook.fit private beta just opened up. Create your coach account and your workspace comes ready with a starter exercise library.";
 
 function bookedIntro(when: string): string {
-  return `Your setup call is booked for ${when}. Create your coach account before then, so on the call we can spend the time bringing your programs across.`;
+  return `Your setup call is booked for ${when}. Create your coach account before then.`;
 }
 
 const INVITE_IMPORT_NUDGE =
