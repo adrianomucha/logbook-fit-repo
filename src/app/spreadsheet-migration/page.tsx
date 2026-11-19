@@ -276,7 +276,11 @@ export default function SpreadsheetMigrationPage() {
           </div>
         </section>
 
-        <FaqSection title="Before you switch." items={FAQ} />
+        <FaqSection
+          title="Before you switch."
+          intro="What coaches ask before they move their programs over."
+          items={FAQ}
+        />
 
         <JoinListSection offer={OFFER} campaign={CAMPAIGN}>
           {OFFER.copy.closingBody.spreadsheet}
