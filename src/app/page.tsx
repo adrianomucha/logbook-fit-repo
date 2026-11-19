@@ -689,7 +689,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        <FaqSection eyebrow="Questions" title="Before you join." items={FAQ} centered />
+        <FaqSection
+          eyebrow="Questions"
+          title="Before you join."
+          intro="Straight answers to what coaches ask before they hand over an email."
+          items={FAQ}
+        />
 
         <JoinListSection offer={OFFER}>{OFFER.copy.closingBody.home}</JoinListSection>
       </main>
