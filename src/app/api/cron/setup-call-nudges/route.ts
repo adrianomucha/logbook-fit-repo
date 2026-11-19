@@ -3,6 +3,9 @@ import { bearerToken, isValidCronToken } from "@/lib/admin";
 import { CRON_JOBS, recordCronRun } from "@/lib/cron-runs";
 import { runSetupCallNudges } from "@/lib/setup-call-nudge";
 
+// A full batch at the mailer's pace (lib/setup-call-nudge.ts) takes about 30s
+export const maxDuration = 60;
+
 /**
  * Daily "book your setup call" reminder to waitlist coaches who didn't book
  * (see lib/setup-call-nudge.ts). Wired to a Vercel cron at 17:00 UTC

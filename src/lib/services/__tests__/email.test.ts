@@ -239,5 +239,19 @@ describe("sendSetupCallNudge", () => {
     expect(body.html).toContain(`href="${url}"`);
     expect(body.text).toContain(`Pick a time: ${url}`);
     expect(body.text).toContain("this is the only reminder we'll send");
+    expect(body.text).toContain("a few days ago");
+  });
+
+  it("words the backlog version for people who joined a while back", async () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await sendSetupCallNudge("old@example.com", "https://cal.com/x/setup-call", "backlog");
+
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, { body: string }];
+    const body = JSON.parse(init.body) as { subject: string; text: string };
+    expect(body.subject).toBe("You can skip the Logbook.fit waitlist now");
+    expect(body.text).toContain("a while back, and there's now a quicker way in");
+    expect(body.text).not.toContain("a few days ago");
   });
 });
