@@ -326,19 +326,30 @@ function inviteText(inviteUrl: string, call: InviteSetupCall = {}): string {
   ].join("\n");
 }
 
-const NUDGE_INTRO =
-  "You joined the Logbook.fit waitlist a few days ago. You don&rsquo;t have to wait for a batch to open: book a setup call and your invite comes straight away.";
+/**
+ * Which setup-call reminder: "recent" is the daily one, a few days after
+ * signup; "backlog" is the one-off send to people who joined before booking
+ * existed, for whom skipping the queue is news.
+ */
+export type SetupCallNudgeKind = "recent" | "backlog";
+
+const NUDGE_INTRO: Record<SetupCallNudgeKind, string> = {
+  recent:
+    "You joined the Logbook.fit waitlist a few days ago. You don&rsquo;t have to wait for a batch to open: book a setup call and your invite comes straight away.",
+  backlog:
+    "You joined the Logbook.fit waitlist a while back, and there&rsquo;s now a quicker way in. You don&rsquo;t have to wait for a batch to open: book a setup call and your invite comes straight away.",
+};
 const NUDGE_HOW =
   "Before the call, you create your account and import your program from the spreadsheet you coach from. On the call, we fix anything that didn&rsquo;t come across.";
 const NUDGE_NO_ACTION =
   "Rather wait? There&rsquo;s nothing to do: your spot in the queue is saved, and this is the only reminder we&rsquo;ll send.";
 
-function setupCallNudgeHtml(bookingUrl: string): string {
+function setupCallNudgeHtml(bookingUrl: string, kind: SetupCallNudgeKind): string {
   return emailShell(
     "Book a setup call and your invite comes straight away.",
     `${heading("Skip the", "queue.", true)}
             <p style="margin:0 0 16px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
-              ${NUDGE_INTRO}
+              ${NUDGE_INTRO[kind]}
             </p>
             <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
               ${NUDGE_HOW}
@@ -356,13 +367,13 @@ function setupCallNudgeHtml(bookingUrl: string): string {
   );
 }
 
-function setupCallNudgeText(bookingUrl: string): string {
+function setupCallNudgeText(bookingUrl: string, kind: SetupCallNudgeKind): string {
   return [
     "LOGBOOK.FIT · PRIVATE BETA",
     "",
     "Skip the queue.",
     "",
-    plain(NUDGE_INTRO),
+    plain(NUDGE_INTRO[kind]),
     "",
     plain(NUDGE_HOW),
     "",
@@ -600,14 +611,32 @@ export function sendWaitlistInvite(
  */
 export function sendSetupCallNudge(
   to: string,
-  bookingUrl: string
+  bookingUrl: string,
+  kind: SetupCallNudgeKind = "recent"
 ): Promise<boolean> {
   return sendEmail(
     to,
-    "Want in sooner? Book your Logbook.fit setup call",
-    setupCallNudgeHtml(bookingUrl),
-    setupCallNudgeText(bookingUrl)
+    setupCallNudgeSubject(kind),
+    setupCallNudgeHtml(bookingUrl, kind),
+    setupCallNudgeText(bookingUrl, kind)
   );
+}
+
+function setupCallNudgeSubject(kind: SetupCallNudgeKind): string {
+  return kind === "backlog"
+    ? "You can skip the Logbook.fit waitlist now"
+    : "Want in sooner? Book your Logbook.fit setup call";
+}
+
+/** The reminder as it will be sent, for the admin's preview before a send. */
+export function setupCallNudgePreview(
+  bookingUrl: string,
+  kind: SetupCallNudgeKind
+): { subject: string; html: string } {
+  return {
+    subject: setupCallNudgeSubject(kind),
+    html: setupCallNudgeHtml(bookingUrl, kind),
+  };
 }
 
 /**

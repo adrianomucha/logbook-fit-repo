@@ -3,6 +3,9 @@ import type { SetupCallStatus, WaitlistStatus } from '@prisma/client';
 import { waitlistInvitePath } from '@/lib/waitlist';
 import prisma from '@/lib/prisma';
 import { InviteActions } from './InviteActions';
+import { BacklogNudge } from './BacklogNudge';
+import { setupCallLink } from '@/lib/setup-call';
+import { countBacklogNudges } from '@/lib/setup-call-nudge';
 
 const dateFmt = new Intl.DateTimeFormat('en-US', {
   month: 'short',
@@ -146,6 +149,8 @@ export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = 
     },
   });
   const entries = [...rows].sort(upcomingCallFirst);
+  // Who the one-off backlog email would still reach (none without a link)
+  const backlogCount = setupCallLink() ? await countBacklogNudges() : 0;
   const upcomingCalls = entries.filter(
     (e) => e.callStatus === 'BOOKED' && e.callStartsAt && e.callStartsAt.getTime() >= Date.now()
   ).length;
@@ -194,13 +199,16 @@ export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = 
               </span>
             </p>
           </div>
-          <a
-            href="/api/waitlist/export"
-            className="inline-flex h-10 items-center gap-2 rounded-lg bg-foreground px-4 text-sm font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
-          >
-            <Download className="h-4 w-4" />
-            Download CSV
-          </a>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            {backlogCount > 0 && <BacklogNudge count={backlogCount} />}
+            <a
+              href="/api/waitlist/export"
+              className="inline-flex h-10 items-center gap-2 rounded-lg bg-foreground px-4 text-sm font-bold uppercase tracking-wider text-background transition-opacity hover:opacity-90"
+            >
+              <Download className="h-4 w-4" />
+              Download CSV
+            </a>
+          </div>
         </div>
 
         {bySource.length > 0 && (
