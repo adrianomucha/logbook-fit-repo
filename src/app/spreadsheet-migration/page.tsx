@@ -154,7 +154,7 @@ export default function SpreadsheetMigrationPage() {
 
         {/* The before and after */}
         <section className="border-b border-border/70">
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-24">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
             <div className="mx-auto max-w-2xl text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Keep your programming
