@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { Logo, LogoMark } from '@/components/brand/LogoMark';
+import { Check } from 'lucide-react';
+import { Logo } from '@/components/brand/LogoMark';
 import { OfferCta } from '@/components/landing/OfferCta';
 import type { Offer } from '@/lib/offer';
 
@@ -40,6 +41,11 @@ export function LandingHeader({ linkHome = false }: { linkHome?: boolean }) {
  * The closing section, dark, with the page's second call to action: "Get on
  * the list." with the waitlist form, or "Start today." with the way into
  * signup, depending on the offer.
+ *
+ * Laid out like the page's other sections: the content width, the pitch on
+ * the left (status, the heading, the promises) and on the right a card that
+ * says what happens next and ends on the form, so the ask comes with an
+ * answer to "and then what?".
  */
 export function JoinListSection({
   children,
@@ -53,22 +59,58 @@ export function JoinListSection({
   campaign?: string;
 }) {
   return (
-    <section className="dark border-t border-border/70 bg-background text-foreground">
-      <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="mb-8 flex justify-center">
-            <LogoMark size={44} />
-          </div>
-          <h2 className="text-[clamp(2.75rem,9vw,6rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased">
+    <section className="dark relative overflow-hidden border-t border-border/70 bg-background text-foreground">
+      {/* A low lime glow behind the card: the one warm spot on the page's
+          last dark band, sitting where the eye should land. */}
+      <div
+        className="pointer-events-none absolute -right-48 top-1/2 h-[40rem] w-[40rem] -translate-y-1/2 rounded-full bg-brand/[0.08] blur-3xl"
+        aria-hidden="true"
+      />
+      <div className="relative mx-auto grid max-w-6xl items-center gap-x-16 gap-y-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
+        <div>
+          <p className="mb-6 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
+            {offer.copy.heroEyebrow}
+          </p>
+          <h2 className="text-[clamp(3rem,10vw,6.5rem)] font-bold uppercase leading-[0.88] tracking-tight antialiased">
             {offer.copy.closingTitle[0]}
             <br />
             {offer.copy.closingTitle[1]}
             <span className="text-brand">.</span>
           </h2>
-          <p className="mx-auto mt-5 max-w-md text-balance text-muted-foreground antialiased sm:text-lg">
+          <p className="mt-6 max-w-md text-pretty text-muted-foreground antialiased sm:text-lg">
             {children}
           </p>
-          <div className="mx-auto mt-9 max-w-md text-left">
+          <ul className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-6">
+            {offer.copy.promises.map((promise) => (
+              <li key={promise} className="flex items-center gap-2 text-sm font-medium antialiased">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand text-brand-foreground">
+                  <Check className="h-3 w-3" strokeWidth={3.5} aria-hidden="true" />
+                </span>
+                {promise}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="rounded-2xl border border-border/70 bg-foreground/[0.03] p-6 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-8">
+          <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
+            What happens next
+          </p>
+          <ol className="mt-5 divide-y divide-border/70 border-y border-border/70">
+            {offer.copy.closingSteps.map((step, i) => (
+              <li key={step.title} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-x-3 py-4">
+                <span className="pt-0.5 font-mono text-sm font-medium tabular-nums text-brand antialiased" aria-hidden="true">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div>
+                  <p className="font-semibold antialiased">{step.title}</p>
+                  <p className="mt-0.5 text-pretty text-sm text-muted-foreground antialiased">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+          <div className="mt-6 text-left">
             <OfferCta offer={offer} campaign={campaign} />
           </div>
         </div>

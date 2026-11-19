@@ -38,6 +38,8 @@ export interface OfferCopy {
   closingTitle: readonly [string, string];
   /** The line under that heading, per page */
   closingBody: { home: string; spreadsheet: string };
+  /** The closing section's "What happens next", in order */
+  closingSteps: readonly { title: string; body: string }[];
   /** Spreadsheet page: "What if my file doesn't come across cleanly?" */
   importHelp: string;
   /** schema.org Offer fields */
@@ -60,6 +62,14 @@ export const OFFER_COPY: Record<OfferMode, OfferCopy> = {
       home: 'Ten coaches at a time. Every one gets a setup call where we import your roster with you.',
       spreadsheet: 'Ten coaches at a time. Every one gets a setup call where we bring your first program across with you.',
     },
+    closingSteps: [
+      { title: 'Request an invite', body: 'Leave your email below.' },
+      {
+        title: 'Book your setup call',
+        body: 'Your invite comes as soon as it’s booked, and we bring your programs across on the call.',
+      },
+      { title: 'Invite your clients', body: 'Send each one a link. They join already connected to you.' },
+    ],
     importHelp:
       'Every coach in the beta gets a setup call. Bring the file and we’ll get your first program in with you, and use what tripped it up to improve the importer.',
     structured: {
@@ -83,6 +93,11 @@ export const OFFER_COPY: Record<OfferMode, OfferCopy> = {
       home: 'Create your account, bring your programs across, and invite your first client today.',
       spreadsheet: 'Create your account and upload the file you coach from. Nothing is saved until you say so.',
     },
+    closingSteps: [
+      { title: 'Create your account', body: 'Free during the beta. Nothing to install.' },
+      { title: 'Bring your programs', body: 'Upload the spreadsheet you coach from, or build a plan from scratch.' },
+      { title: 'Invite your clients', body: 'Send each one a link. They join already connected to you.' },
+    ],
     importHelp:
       'Nothing is saved until you have checked it, so a messy import costs you nothing. Send us the file from Send feedback in the app and we’ll use what tripped it up to improve the importer. You can also download our template and paste your program into it.',
     structured: {
