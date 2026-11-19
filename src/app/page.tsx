@@ -318,32 +318,44 @@ export default function HomePage() {
           call to action sit inside the document's main landmark rather than
           floating outside it. */}
       <main>
-      {/* Hero: dark brand canvas, centered display type, then the product.
-          The headline promises a ranked roster, so the roster is the next
-          thing on the page rather than something four sections down. The
-          form stays above it: on a phone the ask has to land before the
-          scroll. */}
-      <section className="dark flex flex-col bg-background text-foreground">
-        <LandingHeader />
+      {/* Hero: dark brand canvas, the promise on the left and the product
+          on the right. The headline promises a ranked roster, so the roster
+          sits beside it as the proof rather than four sections down. Below
+          xl the two stack, copy first (the roster needs about 560px before
+          its names stop truncating), and on a phone the ask has to land
+          before the scroll anyway.
 
-        <div className="mx-auto flex w-full max-w-5xl flex-col items-center px-4 pt-10 text-center sm:px-6 sm:pt-12">
+          The section itself is not `dark`. The roster is the app's own light
+          UI, and a `dark` ancestor would switch every chip and avatar in it
+          to its dark variant, so `dark` goes on the header and the copy
+          column only and the canvas colour is set literally (neutral-950 is
+          the dark theme's background). */}
+      <section className="flex flex-col bg-neutral-950">
+        <div className="dark text-foreground">
+          <LandingHeader />
+        </div>
+
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] xl:gap-14 xl:pb-20 xl:pt-6">
           {/* Each piece arrives a beat after the one above it, and the roster
-              below follows them in. The page's one first-view moment, so it
-              can afford the stagger. */}
-          <div className="flex flex-col items-center">
+              follows them in. The page's one first-view moment, so it can
+              afford the stagger. */}
+          <div className="dark flex flex-col items-center text-center text-foreground xl:items-start xl:text-left">
             <p className="animate-enter mb-8 flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
               <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
               {OFFER.copy.heroEyebrow}
             </p>
-            {/* Sized so "Your quietest client" holds one line on desktop:
-                the three-line break is the rhythm of the sentence. */}
+            {/* Three lines when centred ("Your quietest client" on one), four
+                in the half-width column, where "cancellation." sets the
+                size. Each break is placed by hand so the sentence never
+                leaves "next" alone on a line. */}
             <h1
-              className="animate-enter text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased"
+              className="animate-enter text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased xl:text-[3.5rem]"
               style={{ animationDelay: '50ms' }}
             >
-              Your quietest client
-              <br />
-              is your next
+              Your quietest <br className="hidden xl:inline" />
+              client <br className="xl:hidden" />
+              is <br className="hidden xl:inline" />
+              your next
               <br />
               <span className="text-brand">cancellation.</span>
               {/* The display h1 states a problem, which is what earns the read,
@@ -357,7 +369,7 @@ export default function HomePage() {
               </span>
             </h1>
             <p
-              className="animate-enter mt-8 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg"
+              className="animate-enter mt-8 max-w-xl text-balance text-base text-muted-foreground antialiased sm:text-lg xl:max-w-md"
               style={{ animationDelay: '110ms' }}
             >
               Clients go quiet weeks before they quit. Logbook.fit ranks your
@@ -368,24 +380,24 @@ export default function HomePage() {
               className="animate-enter mt-10 w-full max-w-md scroll-mt-24"
               style={{ animationDelay: '180ms' }}
             >
-              <OfferCta offer={OFFER} showPromises />
+              {/* No reassurance row under the button here: with it the CTA
+                  carried four layers of small print. Price and the setup call
+                  are in the FAQ, and the call is offered straight after signup. */}
+              <OfferCta offer={OFFER} alignStartOnDesktop />
             </div>
           </div>
+
+          {/* Last in the hero's stagger, so the eye lands on the promise first
+              and the proof second. Beside the copy the full roster stands
+              twice as tall as it, so from xl up the panel is cut to the
+              copy's height and fades out: the four "To do" rows (the demo)
+              stay whole, and the rest reads as the list carrying on. */}
+          <RosterPreview
+            className="animate-enter mx-auto max-w-3xl [animation-delay:250ms] xl:max-w-none"
+            panelClassName="xl:max-h-[540px] xl:[mask-image:linear-gradient(to_bottom,#000_80%,transparent)]"
+          />
         </div>
       </section>
-
-      {/* The roster, still visually part of the hero. It sits outside the
-          `dark` section on purpose: the panel is the app's own light UI, the
-          brightest thing under the headline, so the eye drops from the lime
-          button straight onto it and then on into the white page below. A
-          `dark` ancestor would switch every chip and avatar in it to its
-          dark variant, so the canvas colour is set literally here instead
-          (neutral-950 is the dark theme's background). */}
-      <div className="bg-neutral-950 px-4 pb-12 pt-14 sm:px-6 sm:pb-16 sm:pt-16">
-        {/* Last in the hero's stagger, so the eye lands on the promise first
-            and the proof second. */}
-        <RosterPreview className="animate-enter mx-auto max-w-3xl [animation-delay:250ms]" />
-      </div>
 
       {/* Volt ticker */}
       <div className="overflow-hidden border-y border-border/70 bg-brand py-3" aria-hidden="true">
