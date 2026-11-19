@@ -59,14 +59,8 @@ export function JoinListSection({
   campaign?: string;
 }) {
   return (
-    <section className="dark relative overflow-hidden border-t border-border/70 bg-background text-foreground">
-      {/* A low lime glow behind the card: the one warm spot on the page's
-          last dark band, sitting where the eye should land. */}
-      <div
-        className="pointer-events-none absolute -right-48 top-1/2 h-[40rem] w-[40rem] -translate-y-1/2 rounded-full bg-brand/[0.08] blur-3xl"
-        aria-hidden="true"
-      />
-      <div className="relative mx-auto grid max-w-6xl items-center gap-x-16 gap-y-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
+    <section className="dark border-t border-border/70 bg-background text-foreground">
+      <div className="mx-auto grid max-w-6xl items-center gap-x-16 gap-y-12 px-4 py-20 sm:px-6 sm:py-28 lg:grid-cols-[minmax(0,6fr)_minmax(0,5fr)]">
         <div>
           <p className="mb-6 inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
             <span className="h-1.5 w-1.5 rounded-full bg-brand" aria-hidden="true" />
@@ -93,7 +87,7 @@ export function JoinListSection({
           </ul>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-foreground/[0.03] p-6 shadow-2xl shadow-black/40 backdrop-blur-sm sm:p-8">
+        <div className="rounded-2xl border border-border/70 bg-foreground/[0.03] p-6 sm:p-8">
           <p className="font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
             What happens next
           </p>
