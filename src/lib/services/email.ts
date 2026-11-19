@@ -243,11 +243,11 @@ const INVITE_INTRO =
   "Your spot in the Logbook.fit private beta just opened up. Create your coach account and your workspace comes ready with a starter exercise library.";
 
 function bookedIntro(when: string): string {
-  return `Your setup call is booked for ${when}. Create your coach account before then, so on the call we can spend the time bringing your programs across.`;
+  return `Your setup call is booked for ${when}. Create your coach account before then.`;
 }
 
-const INVITE_FILE_REPLY =
-  "Didn&rsquo;t upload the spreadsheet you coach from when you booked? Reply to this email with it attached and we&rsquo;ll have it imported before the call.";
+const INVITE_IMPORT_NUDGE =
+  "Once you&rsquo;re in, import your program from the spreadsheet you coach from. Anything that doesn&rsquo;t come across, we&rsquo;ll fix together on the call.";
 
 const INVITE_BOOK_LINE =
   "Next, pick a time for your setup call. We&rsquo;ll bring your programs across with you.";
@@ -261,7 +261,7 @@ function inviteHtml(inviteUrl: string, call: InviteSetupCall = {}): string {
     : INVITE_INTRO;
   const after = when
     ? `<p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
-              ${INVITE_FILE_REPLY}
+              ${INVITE_IMPORT_NUDGE}
             </p>`
     : call.bookingUrl
       ? `<p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
@@ -303,7 +303,7 @@ function inviteText(inviteUrl: string, call: InviteSetupCall = {}): string {
     ? formatCallTime(call.booked.startsAt, call.booked.timeZone)
     : null;
   const after = when
-    ? ["", plain(INVITE_FILE_REPLY)]
+    ? ["", plain(INVITE_IMPORT_NUDGE)]
     : call.bookingUrl
       ? ["", plain(INVITE_BOOK_LINE), `Book your setup call: ${call.bookingUrl}`]
       : [];

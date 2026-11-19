@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useId, useRef, useState } from 'react';
+import { Fragment, useCallback, useId, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -41,8 +41,8 @@ const CURRENT_TOOLS = [
  *
  * Then, for anyone coaching (see offersSetupCall), a last step: book the
  * setup call on Cal.com. Booking sends the invite straight away (the Cal.com
- * webhook does it), and the card turns into the booked state, where the
- * coach can upload the spreadsheet they coach from.
+ * webhook does it), and the card turns into the booked state, which points
+ * the coach at importing their program before the call.
  */
 export function WaitlistForm({
   campaign,
@@ -147,7 +147,8 @@ export function WaitlistForm({
   // Shared header for every confirmation state: the card keeps one identity
   // while its body swaps from the question to the sign-off. The volt fill is
   // deliberate: this is the page's accent color spent on its best moment.
-  const header = (eyebrow: string, title: readonly [string, string]) => (
+  // `title` is the heading's lines: one entry per line
+  const header = (eyebrow: string, title: readonly string[]) => (
     <>
       <div className="flex items-start justify-between gap-3">
         <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-foreground text-brand animate-bounce-once">
@@ -169,9 +170,12 @@ export function WaitlistForm({
         </p>
       </div>
       <p className="mt-5 text-[2rem] font-bold uppercase leading-[0.95] tracking-tight antialiased sm:text-[2.4rem]">
-        {title[0]}
-        <br />
-        {title[1]}
+        {title.map((line, i) => (
+          <Fragment key={line}>
+            {i > 0 && <br />}
+            {line}
+          </Fragment>
+        ))}
       </p>
     </>
   );
@@ -276,7 +280,7 @@ export function WaitlistForm({
   if (status === 'booked' && booking) {
     return (
       <SetupCallBooked
-        header={header('Call booked', ['You’re', 'in.'])}
+        header={header('Call booked', ['You’re in.'])}
         email={email}
         booking={booking}
       />
