@@ -647,6 +647,9 @@ model WaitlistEntry {
   callTimeZone   String?
   callBookingUid String?          @unique
   callBookedAt   DateTime?
+  // When the one-time "book your setup call" reminder went out to a coach
+  // who joined but didn't book (lib/setup-call-nudge.ts). Null: never sent.
+  callNudgedAt   DateTime?
 
   createdAt DateTime @default(now())
 

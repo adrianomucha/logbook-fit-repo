@@ -151,12 +151,14 @@ function emailShell(
  * closing words picked out by a lime highlight. Highlight (dark ink on lime)
  * rather than lime text: lime on white fails contrast, and a saturated
  * background block survives Gmail's dark-mode color transform far better
- * than colored text does.
+ * than colored text does. `oneLine` keeps a short heading on a single
+ * line instead of breaking before the highlight: no wrapping, and a size
+ * that still fits a 375px-wide phone.
  */
-function heading(plain: string, accentPart: string): string {
+function heading(plain: string, accentPart: string, oneLine = false): string {
   return `
-            <h1 style="margin:0 0 16px 0;font-family:${SANS};font-size:30px;line-height:1.15;font-weight:800;color:${INK};text-transform:uppercase;letter-spacing:-0.5px;">
-              ${plain}<br><span style="background:${LIME};color:${INK};padding:0 8px;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${accentPart}</span>
+            <h1 style="margin:0 0 16px 0;font-family:${SANS};font-size:${oneLine ? "26px;white-space:nowrap" : "30px"};line-height:1.15;font-weight:800;color:${INK};text-transform:uppercase;letter-spacing:-0.5px;">
+              ${plain}${oneLine ? " " : "<br>"}<span style="background:${LIME};color:${INK};padding:0 8px;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${accentPart}</span>
             </h1>`;
 }
 
@@ -318,6 +320,55 @@ function inviteText(inviteUrl: string, call: InviteSetupCall = {}): string {
     ...after,
     "",
     "This link is yours alone and works once.",
+    "",
+    "Plan · Train · Check in",
+    "You're receiving this because you joined the waitlist at https://logbook.fit",
+  ].join("\n");
+}
+
+const NUDGE_INTRO =
+  "You joined the Logbook.fit waitlist a few days ago. You don&rsquo;t have to wait for a batch to open: book a setup call and your invite comes straight away.";
+const NUDGE_HOW =
+  "Before the call, you create your account and import your program from the spreadsheet you coach from. On the call, we fix anything that didn&rsquo;t come across.";
+const NUDGE_NO_ACTION =
+  "Rather wait? There&rsquo;s nothing to do: your spot in the queue is saved, and this is the only reminder we&rsquo;ll send.";
+
+function setupCallNudgeHtml(bookingUrl: string): string {
+  return emailShell(
+    "Book a setup call and your invite comes straight away.",
+    `${heading("Skip the", "queue.", true)}
+            <p style="margin:0 0 16px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              ${NUDGE_INTRO}
+            </p>
+            <p style="margin:0 0 28px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
+              ${NUDGE_HOW}
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 28px 0;">
+              <tr><td align="center" style="background:${LIME};border-radius:10px;">
+                <a href="${bookingUrl}" style="display:inline-block;font-family:${SANS};font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:#0a0a0a;text-decoration:none;padding:15px 32px;">
+                  Pick a time&nbsp;&nbsp;&#8594;
+                </a>
+              </td></tr>
+            </table>
+            <p style="margin:0 0 32px 0;font-family:${SANS};font-size:13px;line-height:1.65;color:${FAINT};">
+              ${NUDGE_NO_ACTION}
+            </p>`
+  );
+}
+
+function setupCallNudgeText(bookingUrl: string): string {
+  return [
+    "LOGBOOK.FIT · PRIVATE BETA",
+    "",
+    "Skip the queue.",
+    "",
+    plain(NUDGE_INTRO),
+    "",
+    plain(NUDGE_HOW),
+    "",
+    `Pick a time: ${bookingUrl}`,
+    "",
+    plain(NUDGE_NO_ACTION),
     "",
     "Plan · Train · Check in",
     "You're receiving this because you joined the waitlist at https://logbook.fit",
@@ -539,6 +590,23 @@ export function sendWaitlistInvite(
       : "Your Logbook.fit invite is ready",
     inviteHtml(inviteUrl, call),
     inviteText(inviteUrl, call)
+  );
+}
+
+/**
+ * The one-time reminder to a waitlist coach who didn't book a setup call
+ * (see lib/setup-call-nudge.ts). The caller surfaces the boolean: false
+ * means "not sent", and the reminder is tried again on the next run.
+ */
+export function sendSetupCallNudge(
+  to: string,
+  bookingUrl: string
+): Promise<boolean> {
+  return sendEmail(
+    to,
+    "Want in sooner? Book your Logbook.fit setup call",
+    setupCallNudgeHtml(bookingUrl),
+    setupCallNudgeText(bookingUrl)
   );
 }
 

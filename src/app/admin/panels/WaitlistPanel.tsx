@@ -51,13 +51,24 @@ function StatusBadge({
 function CallCell({
   status,
   startsAt,
+  nudgedAt,
   timeZone,
 }: {
   status: SetupCallStatus | null;
   startsAt: Date | null;
+  /** When the "book your setup call" reminder went out, if it has */
+  nudgedAt: Date | null;
   timeZone: string;
 }) {
-  if (!status || !startsAt) return <span className="text-muted-foreground">–</span>;
+  if (!status || !startsAt) {
+    if (!nudgedAt) return <span className="text-muted-foreground">–</span>;
+    const reminded = new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      timeZone,
+    }).format(nudgedAt);
+    return <span className="text-muted-foreground">Reminded {reminded}</span>;
+  }
   const label = new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
@@ -131,6 +142,7 @@ export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = 
       currentTool: true,
       callStatus: true,
       callStartsAt: true,
+      callNudgedAt: true,
     },
   });
   const entries = [...rows].sort(upcomingCallFirst);
@@ -260,6 +272,7 @@ export async function WaitlistPanel({ adminUserId }: { adminUserId?: string } = 
                       <CallCell
                         status={entry.callStatus}
                         startsAt={entry.callStartsAt}
+                        nudgedAt={entry.callNudgedAt}
                         timeZone={timeZone}
                       />
                     </td>
