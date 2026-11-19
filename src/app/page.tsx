@@ -335,7 +335,7 @@ export default function HomePage() {
           <LandingHeader />
         </div>
 
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] xl:gap-14 xl:pb-20 xl:pt-6">
+        <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] xl:gap-14 xl:pb-20 xl:pt-6">
           {/* Each piece arrives a beat after the one above it, and the roster
               follows them in. The page's one first-view moment, so it can
               afford the stagger. */}
@@ -349,7 +349,7 @@ export default function HomePage() {
                 size. Each break is placed by hand so the sentence never
                 leaves "next" alone on a line. */}
             <h1
-              className="animate-enter text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased xl:text-[3.75rem]"
+              className="animate-enter text-[clamp(2.5rem,7vw,4.75rem)] font-bold uppercase leading-[0.9] tracking-tight antialiased xl:text-[3.5rem]"
               style={{ animationDelay: '50ms' }}
             >
               Your quietest <br className="hidden xl:inline" />
@@ -380,7 +380,10 @@ export default function HomePage() {
               className="animate-enter mt-10 w-full max-w-md scroll-mt-24"
               style={{ animationDelay: '180ms' }}
             >
-              <OfferCta offer={OFFER} showPromises alignStartOnDesktop />
+              {/* No reassurance row under the button here: with it the CTA
+                  carried four layers of small print. Price and the setup call
+                  are in the FAQ, and the call is offered straight after signup. */}
+              <OfferCta offer={OFFER} alignStartOnDesktop />
             </div>
           </div>
 
