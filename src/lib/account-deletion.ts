@@ -95,6 +95,12 @@ export async function deleteAccountIn(
       data: { status: "EXPIRED" },
     });
     invitesRevoked = revoked.count;
+    // The bio is free text the coach wrote about themselves (name, gym,
+    // city), so it is personal data like the name and goes with it.
+    await tx.coachProfile.update({
+      where: { id: user.coachProfile.id },
+      data: { bio: null },
+    });
   }
 
   const clientRel = user.clientProfile?.coachRelationship;

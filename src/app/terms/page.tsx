@@ -61,7 +61,9 @@ export default function TermsPage() {
           You must be at least 18 years old and able to enter into a contract
           to create an account. Keep your password to yourself — you&rsquo;re
           responsible for what happens under your account, and you&rsquo;ll
-          tell us if you think someone else has gotten into it.
+          tell us if you think someone else has gotten into it. You can stop
+          using Logbook.fit and delete your account at any time from the
+          account menu.
         </p>
       </LegalSection>
 
@@ -150,6 +152,10 @@ export default function TermsPage() {
             Privacy Policy
           </Link>
           .
+        </p>
+        <p>
+          If you send us feedback or ideas, we may use them to improve the
+          product without owing you anything for it.
         </p>
       </LegalSection>
 
