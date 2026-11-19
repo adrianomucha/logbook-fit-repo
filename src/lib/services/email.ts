@@ -151,12 +151,14 @@ function emailShell(
  * closing words picked out by a lime highlight. Highlight (dark ink on lime)
  * rather than lime text: lime on white fails contrast, and a saturated
  * background block survives Gmail's dark-mode color transform far better
- * than colored text does.
+ * than colored text does. `oneLine` keeps a short heading on a single
+ * line instead of breaking before the highlight: no wrapping, and a size
+ * that still fits a 375px-wide phone.
  */
-function heading(plain: string, accentPart: string): string {
+function heading(plain: string, accentPart: string, oneLine = false): string {
   return `
-            <h1 style="margin:0 0 16px 0;font-family:${SANS};font-size:30px;line-height:1.15;font-weight:800;color:${INK};text-transform:uppercase;letter-spacing:-0.5px;">
-              ${plain}<br><span style="background:${LIME};color:${INK};padding:0 8px;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${accentPart}</span>
+            <h1 style="margin:0 0 16px 0;font-family:${SANS};font-size:${oneLine ? "26px;white-space:nowrap" : "30px"};line-height:1.15;font-weight:800;color:${INK};text-transform:uppercase;letter-spacing:-0.5px;">
+              ${plain}${oneLine ? " " : "<br>"}<span style="background:${LIME};color:${INK};padding:0 8px;box-decoration-break:clone;-webkit-box-decoration-break:clone;">${accentPart}</span>
             </h1>`;
 }
 
@@ -334,7 +336,7 @@ const NUDGE_NO_ACTION =
 function setupCallNudgeHtml(bookingUrl: string): string {
   return emailShell(
     "Book a setup call and your invite comes straight away.",
-    `${heading("Skip the", "queue.")}
+    `${heading("Skip the", "queue.", true)}
             <p style="margin:0 0 16px 0;font-family:${SANS};font-size:15px;line-height:1.65;color:${MUTED};">
               ${NUDGE_INTRO}
             </p>
