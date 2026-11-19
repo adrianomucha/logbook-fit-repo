@@ -267,6 +267,20 @@
     }
   }
 
+  /* Landing import diagram (SheetToPlan): the live week pill fills up to the
+     next autoplay step. Duration is set inline to match the step. */
+  .sheet-autoplay-progress {
+    animation: sheetAutoplayProgress linear both;
+  }
+  @keyframes sheetAutoplayProgress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+
   /* Single playful bounce, not repeating */
   .animate-bounce-once {
     animation: bounceOnce 0.6s var(--ease-pop) both;
