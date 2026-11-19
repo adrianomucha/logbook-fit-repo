@@ -335,7 +335,7 @@ export default function HomePage() {
           <LandingHeader />
         </div>
 
-        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] xl:gap-12 xl:pb-20 xl:pt-6">
+        <div className="mx-auto grid w-full max-w-6xl items-center gap-12 px-4 pb-12 pt-10 sm:px-6 sm:pb-16 sm:pt-12 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] xl:gap-14 xl:pb-20 xl:pt-6">
           {/* Each piece arrives a beat after the one above it, and the roster
               follows them in. The page's one first-view moment, so it can
               afford the stagger. */}
@@ -385,8 +385,14 @@ export default function HomePage() {
           </div>
 
           {/* Last in the hero's stagger, so the eye lands on the promise first
-              and the proof second. */}
-          <RosterPreview className="animate-enter mx-auto max-w-3xl [animation-delay:250ms] xl:max-w-none" />
+              and the proof second. Beside the copy the full roster stands
+              twice as tall as it, so from xl up the panel is cut to the
+              copy's height and fades out: the four "To do" rows (the demo)
+              stay whole, and the rest reads as the list carrying on. */}
+          <RosterPreview
+            className="animate-enter mx-auto max-w-3xl [animation-delay:250ms] xl:max-w-none"
+            panelClassName="xl:max-h-[540px] xl:[mask-image:linear-gradient(to_bottom,#000_80%,transparent)]"
+          />
         </div>
       </section>
 

@@ -292,7 +292,14 @@ const GLIDE = { duration: 620, easing: 'cubic-bezier(0.65, 0, 0.35, 1)' } as con
 // on its way, and a see-through tint lets their text show through it.
 const LANDING_TINT = '#eefdb7';
 
-export function RosterPreview({ className }: { className?: string }) {
+export function RosterPreview({
+  className,
+  panelClassName,
+}: {
+  className?: string;
+  /** Extra classes for the panel itself, e.g. a height cap and fade */
+  panelClassName?: string;
+}) {
   const [steps, setSteps] = useState(NO_STEPS);
   // 'auto' until a visitor presses a row themselves
   const [mode, setMode] = useState<'auto' | 'manual'>('auto');
@@ -440,7 +447,10 @@ export function RosterPreview({ className }: { className?: string }) {
   return (
     <figure ref={figureRef} className={cn('w-full', className)}>
       <div
-        className="overflow-hidden rounded-2xl border border-border bg-background text-left text-foreground shadow-2xl shadow-black/40"
+        className={cn(
+          'overflow-hidden rounded-2xl border border-border bg-background text-left text-foreground shadow-2xl shadow-black/40',
+          panelClassName
+        )}
         onPointerEnter={(e) => e.pointerType === 'mouse' && setHovered(true)}
         onPointerLeave={() => setHovered(false)}
         onFocus={() => setFocused(true)}
@@ -498,7 +508,6 @@ export function RosterPreview({ className }: { className?: string }) {
         </div>
       </div>
       <figcaption className="mt-4 text-center font-mono text-[10px] uppercase tracking-[0.16em] text-neutral-400 antialiased sm:text-[11px]">
-        Your home screen: who needs you first, and why.{' '}
         {mode === 'manual' ? (
           <button
             type="button"
@@ -514,7 +523,7 @@ export function RosterPreview({ className }: { className?: string }) {
             Reset the sample
           </button>
         ) : (
-          <>Sample roster: press a row to try it.</>
+          <>Sample roster. Press a row to try it.</>
         )}
       </figcaption>
     </figure>
