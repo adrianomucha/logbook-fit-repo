@@ -620,25 +620,25 @@ function FlaggedExercisesSection({
 }) {
   return (
     <div>
-      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-warning-text font-medium antialiased mb-1.5">
+      <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-warning-text font-medium antialiased mb-3">
         Flagged this week · {flags.length}
       </p>
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         {flags.slice(0, 3).map(({ flag, exerciseName, workoutName, date }) => (
-          <div key={flag.id} className="rounded-md bg-warning/10 px-2.5 py-2 flex items-start justify-between gap-2">
+          <div key={flag.id} className="rounded-xl bg-warning/10 px-4 py-3.5 flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <p className="flex items-center gap-1.5 text-xs font-bold text-warning-text">
-                <Flag className="w-3 h-3 shrink-0" aria-hidden="true" />
+              <p className="flex items-center gap-2 text-sm font-bold text-warning-text">
+                <Flag className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                 {/* The icon carries "flagged" only visually — say it */}
                 <span className="sr-only">Flagged: </span>
                 <span className="truncate">{exerciseName}</span>
               </p>
               {/* foreground/70, not muted-foreground: the amber tint eats ~0.4 of contrast */}
-              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/70 font-medium mt-1">
+              <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-foreground/70 font-medium mt-1.5">
                 {workoutName} · {format(date, 'MMM d')}
               </p>
               {flag.note && (
-                <p className="text-xs text-foreground/80 leading-relaxed mt-1 text-pretty">
+                <p className="text-[13px] text-foreground/80 leading-relaxed mt-1.5 text-pretty">
                   &ldquo;{flag.note}&rdquo;
                 </p>
               )}
@@ -647,10 +647,10 @@ function FlaggedExercisesSection({
               <Button
                 variant="outline"
                 size="sm"
-                className="shrink-0 h-7 px-2.5 text-xs bg-card tap-target"
+                className="shrink-0 h-8 px-3 text-xs bg-card tap-target"
                 onClick={() => onMessageAboutFlag(flag, exerciseName)}
               >
-                <MessageSquare className="w-3 h-3 me-1" aria-hidden="true" />
+                <MessageSquare className="w-3.5 h-3.5 me-1.5" aria-hidden="true" />
                 Ask
                 <span className="sr-only"> about {exerciseName}</span>
               </Button>
