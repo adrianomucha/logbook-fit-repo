@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
  *
  * It's live: the week pills, the sheet's week headers and its tabs are all
  * buttons, and both sides follow the same selection, so a coach can see which
- * column and tab each plan row was read from. Once it scrolls into view it
+ * column and tab each plan row was read from. Once its section scrolls into view it
  * steps through the block on its own (every week of every day), reading each
  * cell down the column as it goes. Hovering, focusing or touching it pauses
  * that; picking anything stops it for good. With reduced motion nothing moves
@@ -183,11 +183,11 @@ export function SheetToPlan({ className }: { className?: string }) {
   }, []);
 
   useEffect(() => {
-    const el = figureRef.current;
+    // Watch the whole section, not just the diagram: it starts the moment
+    // the section's top edge comes on screen, while the heading is read.
+    const el = figureRef.current?.closest('section') ?? figureRef.current;
     if (!el || !('IntersectionObserver' in window)) return;
-    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), {
-      rootMargin: '0px 0px -15% 0px',
-    });
+    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting));
     observer.observe(el);
     return () => observer.disconnect();
   }, []);

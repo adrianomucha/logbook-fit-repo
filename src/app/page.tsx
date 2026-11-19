@@ -661,7 +661,7 @@ export default function HomePage() {
             coach who agrees with everything above still doesn't move, so it's
             the last thing settled before the questions and the ask. */}
         <section>
-          <div className="mx-auto max-w-5xl px-4 py-16 sm:px-6 sm:py-20">
+          <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
             <div {...reveal()} className="mx-auto max-w-2xl text-center">
               <p className="mb-3 font-mono text-[11px] uppercase tracking-[0.16em] text-muted-foreground antialiased">
                 Already in a spreadsheet?
