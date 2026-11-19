@@ -286,7 +286,7 @@ export default function SpreadsheetMigrationPage() {
           {OFFER.copy.closingBody.spreadsheet}
         </JoinListSection>
       </main>
-      <LandingFooter appStoreUrl={OFFER.appStoreUrl} />
+      <LandingFooter offer={OFFER} />
     </div>
   );
 }
