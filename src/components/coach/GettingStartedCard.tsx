@@ -276,8 +276,10 @@ export function GettingStartedCard({
                   />
                 )}
                 {/* The same marks as the client's week and welcome steps:
-                    lime tick done, dashed ring next, plain ring after */}
-                <span className="z-10 shrink-0 bg-card rounded-full" aria-hidden="true">
+                    lime tick done, dashed ring next, plain ring after.
+                    self-start keeps the white backing to the mark's own
+                    size: stretched to the row, it hid most of the spine. */}
+                <span className="z-10 shrink-0 self-start bg-card rounded-full" aria-hidden="true">
                   <WorkoutMarkIcon mark={step.done ? 'done' : i === nextIndex ? 'next' : 'upcoming'} size={28} />
                 </span>
                 <div className="min-w-0 pt-0.5">
