@@ -448,9 +448,6 @@ export function SheetToPlan({ className }: { className?: string }) {
       </div>
       <figcaption className="mt-4 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground antialiased">
         Your layout in, a plan out. Sets, reps and load split out, the rest kept as notes.
-        <span className="mt-1.5 block normal-case tracking-normal text-muted-foreground/80">
-          Pick a week or a sheet tab to see where each line comes from.
-        </span>
       </figcaption>
     </figure>
   );
