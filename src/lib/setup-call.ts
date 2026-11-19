@@ -41,6 +41,19 @@ export function setupCallBookingUrl(link: string, email?: string): string {
 }
 
 /**
+ * The getting-started screen's setup-call prompt, for coaches who signed up
+ * directly (open signup) or were invited without booking. Web only: the
+ * native app has no coach dashboard.
+ */
+export const SETUP_CALL_DASHBOARD = {
+  title: 'Book your setup call',
+  body: 'A video call where we bring your programs across with you and get you ready for your first client.',
+  cta: 'Pick a time',
+  bookedTitle: 'Setup call booked',
+  bookedBody: 'Import your program before then. Anything that doesn’t come across, we’ll fix together on the call.',
+} as const;
+
+/**
  * Whether a waitlist signup is offered a setup call, from their answer to
  * "how many clients are you coaching right now?". Someone not coaching yet
  * has nothing to bring across, so the call's time goes to coaches who do.
