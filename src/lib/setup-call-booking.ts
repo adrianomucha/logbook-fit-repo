@@ -8,7 +8,7 @@ export type BookingOutcome =
   | { outcome: "invited"; emailSent: boolean }
   /** Call recorded; no invite (already invited or joined, or not offered a call) */
   | { outcome: "recorded" }
-  /** The email already has an account and no waitlist entry: nothing to record */
+  /** The email belongs to a client account: nothing to record */
   | { outcome: "registered" };
 
 /**
@@ -24,6 +24,11 @@ export type BookingOutcome =
  * told us they aren't coaching yet is never shown the booking step; if they
  * book anyway the call is recorded for the admin to see, but no invite goes
  * out on its own.
+ *
+ * A coach who already has an account (signed up through open signup, and
+ * booked from the dashboard's getting-started screen) gets an entry marked
+ * JOINED, so the call shows on that screen and in the admin waitlist with
+ * every other setup call. No invite: they're already in.
  */
 export async function recordSetupCallBooked(
   event: CalBookingEvent
@@ -37,12 +42,19 @@ export async function recordSetupCallBooked(
   if (!entry) {
     const registered = await prisma.user.findFirst({
       where: { email: event.email, deletedAt: null },
-      select: { id: true },
+      select: { role: true, createdAt: true },
     });
-    if (registered) return { outcome: "registered" };
+    if (registered && registered.role !== "COACH") return { outcome: "registered" };
     entry = await prisma.waitlistEntry.upsert({
       where: { email: event.email },
-      create: { email: event.email, source: "cal.com" },
+      create: registered
+        ? {
+            email: event.email,
+            source: "cal.com",
+            status: "JOINED",
+            joinedAt: registered.createdAt,
+          }
+        : { email: event.email, source: "cal.com" },
       update: {},
       select,
     });

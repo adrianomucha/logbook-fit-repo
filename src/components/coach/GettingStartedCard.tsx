@@ -7,10 +7,13 @@ import { QUICK_START_EXERCISES } from '@/lib/quick-start-exercises';
 import type { CoachInvite } from '@/types/api';
 import { CREATE_PLAN, INVITE_CLIENT } from '@logbook/shared/coach-copy';
 import { WorkoutMarkIcon } from '@/components/WorkoutMarkIcon';
+import { SetupCallPrompt } from '@/components/coach/SetupCallPrompt';
 
 interface GettingStartedCardProps {
   /** Time-of-day greeting — doubles as the brand kicker on this screen */
   greeting: string;
+  /** The coach's email, prefilled in the setup-call booking popup */
+  email: string;
   /** Coach has uploaded a profile photo */
   hasPhoto: boolean;
   /** Coach has written a bio */
@@ -47,6 +50,7 @@ function daysUntil(iso: string): number {
  */
 export function GettingStartedCard({
   greeting,
+  email,
   hasPhoto,
   hasBio,
   hasPlan,
@@ -297,26 +301,32 @@ export function GettingStartedCard({
           </ol>
         </div>
 
-        {/* Sample-client escape hatch — feel the product before anyone joins */}
-        <div className="max-w-md rounded-xl border border-dashed border-border bg-muted/30 p-3.5 sm:p-4 lg:col-start-1 lg:row-start-2">
-          <p className="text-[13px] leading-[1.5] text-muted-foreground antialiased sm:leading-relaxed">
-            Want to see it working first? Add a demo client with a week of
-            training and a check-in to review. Remove them anytime.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onAddSampleClient}
-            disabled={isAddingSample}
-            className="mt-3"
-          >
-            {isAddingSample ? (
-              <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
-            ) : (
-              <FlaskConical className="w-4 h-4 mr-1.5" />
-            )}
-            {isAddingSample ? 'Setting up…' : 'Try a sample client'}
-          </Button>
+        {/* Under the brand: the setup call (when there's one to book or
+            coming up), then the sample-client escape hatch */}
+        <div className="max-w-md space-y-3 lg:col-start-1 lg:row-start-2">
+          <SetupCallPrompt email={email} />
+
+          {/* Sample-client escape hatch: feel the product before anyone joins */}
+          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-3.5 sm:p-4">
+            <p className="text-[13px] leading-[1.5] text-muted-foreground antialiased sm:leading-relaxed">
+              Want to see it working first? Add a demo client with a week of
+              training and a check-in to review. Remove them anytime.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onAddSampleClient}
+              disabled={isAddingSample}
+              className="mt-3"
+            >
+              {isAddingSample ? (
+                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+              ) : (
+                <FlaskConical className="w-4 h-4 mr-1.5" />
+              )}
+              {isAddingSample ? 'Setting up…' : 'Try a sample client'}
+            </Button>
+          </div>
         </div>
       </div>
     </section>

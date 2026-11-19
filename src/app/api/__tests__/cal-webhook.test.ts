@@ -155,13 +155,37 @@ describe("POST /api/webhooks/cal", () => {
     expect(db.sendWaitlistInvite).toHaveBeenCalledTimes(1);
   });
 
-  it("leaves an existing account alone", async () => {
+  it("ignores a booking from a client account", async () => {
     entryIs(null);
-    db.userFindFirst.mockResolvedValue({ id: "u1" });
+    db.userFindFirst.mockResolvedValue({ role: "CLIENT", createdAt: new Date() });
 
     const res = await deliver("BOOKING_CREATED");
     expect(await res.json()).toMatchObject({ outcome: "registered" });
     expect(db.entryUpsert).not.toHaveBeenCalled();
+    expect(db.sendWaitlistInvite).not.toHaveBeenCalled();
+  });
+
+  it("records a call booked by a coach who already has an account, without an invite", async () => {
+    entryIs(null);
+    const signedUp = new Date("2026-11-10T09:00:00Z");
+    db.userFindFirst.mockResolvedValue({ role: "COACH", createdAt: signedUp });
+    db.entryUpsert.mockResolvedValue({ id: "e5", status: "JOINED", clientCount: null });
+
+    const res = await deliver("BOOKING_CREATED");
+    expect(await res.json()).toMatchObject({ outcome: "recorded" });
+    expect(db.entryUpsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        create: {
+          email: "coach@example.com",
+          source: "cal.com",
+          status: "JOINED",
+          joinedAt: signedUp,
+        },
+      })
+    );
+    expect(db.entryUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: "e5" } })
+    );
     expect(db.sendWaitlistInvite).not.toHaveBeenCalled();
   });
 

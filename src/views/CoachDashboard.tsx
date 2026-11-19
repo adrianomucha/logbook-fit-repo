@@ -347,6 +347,7 @@ export function CoachDashboard() {
               <div className="animate-enter" style={{ animationDelay: '60ms' }}>
                 <GettingStartedCard
                   greeting={getGreeting()}
+                  email={user?.email ?? ''}
                   hasPhoto={!!user?.avatarUrl}
                   hasBio={!!user?.coachProfile?.bio?.trim()}
                   hasPlan={apiPlans.length > 0}
